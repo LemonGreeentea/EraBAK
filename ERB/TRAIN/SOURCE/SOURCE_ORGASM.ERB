@@ -1,0 +1,1018 @@
+﻿;SOURCE_CHECK로 사용하는 함수(사정·절정·분유 따위)
+
+;-------------------------------------------------
+;절정에 관한 처리
+;-------------------------------------------------
+@SOURCE_ORGASM(ARG:0)
+VARSET LOCAL, 0
+
+;표시용
+LOCALS:0 = Ｃ
+LOCALS:1 = Ｖ
+LOCALS:2 = Ａ
+LOCALS:3 = Ｂ
+LOCALS:4 = Ｍ
+;사정 개소 표시용
+LOCALS:5 = 
+;●절정의 판정과 표시
+LOCAL:5 = 0
+LOCAL:6 = 0
+LOCAL:10 = 0
+;사정 관련의 처리
+LOCAL:15 = 0
+FOR LOCAL:0, 0, 5
+	LOCAL:2 = PALAM:(ARG:0):(LOCAL:0) + CUP:(ARG:0):(LOCAL:0)
+
+	;절정 했을 경우
+	IF LOCAL:2 >= 10000
+		IF LOCAL:10
+			PRINT /
+		ELSE
+			IF !TFLAG:3
+				TFLAG:3 = 1
+				PRINTL 
+			ENDIF
+			PRINTFORM %ANAME(ARG:0), 8, RIGHT%:
+		ENDIF
+		LOCAL:10 = 1
+
+		;절정 개소의 수를 가산
+		LOCAL:5 ++
+
+		;절정 강도에 응해 NOWEX를 세트 해, 메세지의 표시를 실시한다
+		IF LOCAL:2 >= 150000
+			IF ARG:0 == MASTER
+				SETCOLOR 0x800080
+			ELSE
+				SETCOLOR 0xFF4000
+			ENDIF
+			NOWEX:(ARG:0):(LOCAL:0) = 9
+			PRINT 최강
+			;최강 절정 개소의 수를 가산
+			LOCAL:6 ++
+		ELSEIF LOCAL:2 >= 80000
+			IF ARG:0 == MASTER
+				SETCOLOR 0x6000FF
+			ELSE
+				SETCOLOR 칼라_오렌지
+			ENDIF
+			NOWEX:(ARG:0):(LOCAL:0) = 4
+			PRINT 초강
+		ELSEIF LOCAL:2 >= 30000
+			IF ARG:0 == MASTER
+				SETCOLOR 0x0080FF
+			ELSE
+				SETCOLOR 0xFFC000
+			ENDIF
+			NOWEX:(ARG:0):(LOCAL:0) = 2
+			PRINT 강
+		ELSE
+			IF ARG:0 == MASTER
+				SETCOLOR 칼라_시안
+			ELSE
+				SETCOLOR 칼라_주의
+			ENDIF
+			NOWEX:(ARG:0):(LOCAL:0) = 1
+		ENDIF
+		PRINTFORM 절정%LOCALS:(LOCAL:0)%
+
+		;정상위중 절정
+		IF SELECTCOM == 30 || GET_SEX_POSITION_SINGLE(ARG:0, "Ｖ") == 1
+			SEX_STATE = 1
+		;후배위중 절정
+		ELSEIF SELECTCOM == 31 || GET_SEX_POSITION_SINGLE(ARG:0, "Ｖ") == 2
+			SEX_STATE = 2
+		ENDIF
+
+		;절정경험을 늘린다
+		EXP:(ARG:0):절정경험 += NOWEX:(ARG:0):(LOCAL:0)
+		SIF TCVAR:(ARG:0):최면중 > 0
+			EXP:(ARG:0):최면절정경험 += NOWEX:(ARG:0):(LOCAL:0)
+	ENDIF
+NEXT
+RESETCOLOR
+
+;●사정의 판정과 표시
+LOCAL:2 = PALAM:(ARG:0):사정 + CUP:(ARG:0):사정
+
+;사정했을 경우
+IF LOCAL:2 >= 10000 && SOURCE:(ARG:0):쾌Ｐ + NOWEX:(ARG:0):Ｖ절정 + NOWEX:(ARG:0):Ａ절정 > 0
+	CALL PROCESS_EJACULATION(ARG:0, LOCAL:2, LOCAL:10)
+	LOCAL:10 = 1
+ENDIF
+
+;●분유의 판정과 표시
+LOCAL:2 = PALAM:(ARG:0):분유 + CUP:(ARG:0):분유
+
+;분유 했을 경우
+IF LOCAL:2 >= 10000 && SOURCE:(ARG:0):쾌Ｂ + SOURCE:(ARG:0):쾌Ｖ + SOURCE:(ARG:0):쾌Ａ > 0
+	IF LOCAL:10
+		PRINT /
+	ELSE
+		IF !TFLAG:3
+			TFLAG:3 = 1
+			PRINTL 
+		ENDIF
+		PRINTFORM %ANAME(ARG:0), 8, RIGHT%:
+	ENDIF
+	LOCAL:10 = 1
+
+	;절정 강도에 응해 NOWEX를 세트 해, 메세지의 표시를 실시한다
+	IF LOCAL:2 >= 300000
+		IF ARG:0 == MASTER
+			SETCOLOR 0x800080
+		ELSE
+			SETCOLOR 0xFF4000
+		ENDIF
+		NOWEX:(ARG:0):분유 = 9
+		PRINT 초초대형량
+	ELSEIF LOCAL:2 >= 150000
+		IF ARG:0 == MASTER
+			SETCOLOR 0x6000FF
+		ELSE
+			SETCOLOR 칼라_오렌지
+		ENDIF
+		NOWEX:(ARG:0):분유 = 4
+		PRINT 초대형량
+	ELSEIF LOCAL:2 >= 50000
+		IF ARG:0 == MASTER
+			SETCOLOR 0x0080FF
+		ELSE
+			SETCOLOR 0xFFC000
+		ENDIF
+		NOWEX:(ARG:0):분유 = 2
+		PRINT 대량
+	ELSE
+		IF ARG:0 == MASTER
+			SETCOLOR 칼라_시안
+		ELSE
+			SETCOLOR 칼라_주의
+		ENDIF
+		NOWEX:(ARG:0):분유 = 1
+	ENDIF
+	PRINTFORM 분유
+	RESETCOLOR
+
+	EXP:(ARG:0):분유경험치 += NOWEX:(ARG:0):분유
+
+	;촉수착유중이라면 상대의 요술경험치를 플러스
+	IF SELECTCOM == 207 && IS_MTAR(ARG:0)
+		FOR LOCAL:0, 0, MPLY_NUM
+			EXP:(MPLY:(LOCAL:0)):요술경험치 += NOWEX:(ARG:0):분유 * 2
+		NEXT
+	ELSEIF IS_EQUIP_TARGET(ARG:0, 207)
+		LOCAL:1 = SEARCH_EQUIP(207, -1, ARG:0)
+		IF LOCAL:1 >= 0
+			FOR LOCAL:0, 0, MEQUIP_PLAYER_NUM:(LOCAL:1)
+				EXP:(MEQUIP_PLAYER:(LOCAL:1):(LOCAL:0)):요술경험치 += NOWEX:(ARG:0):분유 * 2
+			NEXT
+		ENDIF
+	ENDIF
+ENDIF
+
+;●분수의 판정과 표시
+LOCAL:11 = 0
+IF CONFIG:9 == 1 && NOWEX:(ARG:0):사정 == 0
+	IF (NOWEX:(ARG:0):Ｃ절정 >= 2 || NOWEX:(ARG:0):Ｖ절정 >= 2) && PALAM:(ARG:0):분수 + CUP:(ARG:0):분수 >= 10000
+		LOCAL:11 = 1
+	ELSEIF (NOWEX:(ARG:0):Ｃ절정 >= 1 || NOWEX:(ARG:0):Ｖ절정 >= 1) && PALAM:(ARG:0):분수 + CUP:(ARG:0):분수 >= 20000
+		LOCAL:11 = 1
+	ENDIF
+ENDIF
+
+IF LOCAL:11
+	IF LOCAL:10
+		PRINT /
+	ELSE
+		IF !TFLAG:3
+			TFLAG:3 = 1
+			PRINTL 
+		ENDIF
+		PRINTFORM %ANAME(ARG:0), 8, RIGHT%:
+	ENDIF
+	LOCAL:10 = 1
+
+	IF ARG:0 == MASTER
+		SETCOLOR 0x0080FF
+	ELSE
+		SETCOLOR 0xFFC000
+	ENDIF
+	PRINT 분수
+	RESETCOLOR
+
+	NOWEX:(ARG:0):분수 = 1
+
+	SOURCE:(ARG:0):노출 += 100
+	IF !HAS_VAGINA(ARG:0)
+		SOURCE:(ARG:0):굴종 += 300
+	ELSE
+		SOURCE:(ARG:0):굴종 += 50
+	ENDIF
+ENDIF
+
+;●오줌 흘리기의 판정과 표시
+;절정·소변욕 한계에 의한 오줌 흘리기의 설정이 유효의 경우
+IF CONFIG:90 == 1
+	;소변욕이 있는 상태로 절정 강도의 합계가 4이상에 의하는 오줌 흘리기
+	IF TCVAR:(ARG:0):54 >= 1500 && SUM_NOWEX(ARG:0, 1, 0) >= 4
+		TCVAR:(ARG:0):0 = 1
+	;소변욕이 높은 상태로 절정 하는 것에 의한 오줌 흘리기
+	ELSEIF TCVAR:(ARG:0):54 >= 3000 && SUM_NOWEX(ARG:0, 1, 0) >= 1
+		TCVAR:(ARG:0):0 = 2
+	;소변욕의 한계에 의한 오줌 흘리기
+	ELSEIF TCVAR:(ARG:0):54 >= 4000
+		TCVAR:(ARG:0):0 = 3
+	ENDIF
+ENDIF
+
+IF TCVAR:(ARG:0):0
+	IF LOCAL:10
+		PRINT /
+	ELSE
+		IF !TFLAG:3
+			TFLAG:3 = 1
+			PRINTL 
+		ENDIF
+		PRINTFORM %ANAME(ARG:0), 8, RIGHT%:
+	ENDIF
+	LOCAL:10 = 1
+
+	IF ARG:0 == MASTER
+		SETCOLOR 칼라_시안
+	ELSE
+		SETCOLOR 칼라_주의
+	ENDIF
+	IF TCVAR:(ARG:0):54 >= 3000
+		PRINT 대량 오줌 흘리기
+		TCVAR:(ARG:0):1 = 2
+	ELSE
+		PRINT 오줌 흘리기
+		TCVAR:(ARG:0):1 = 1
+	ENDIF
+	RESETCOLOR
+
+	;뇨잔량을 0으로 한다
+	TCVAR:(ARG:0):54 = 0
+
+	;오줌 흘리기에 의한 경험·소스의 추가
+	EXP:(ARG:0):배설경험치 += 1
+	EXP:(ARG:0):실금경험 += TCVAR:(ARG:0):1
+
+	LOCAL:3 = 400
+
+	SELECTCASE ABL:(ARG:0):배설
+		CASE 0
+			TIMES LOCAL:3, 0.00
+		CASE 1
+			TIMES LOCAL:3, 0.10
+		CASE 2
+			TIMES LOCAL:3, 0.20
+		CASE 3
+			TIMES LOCAL:3, 0.40
+		CASE 4
+			TIMES LOCAL:3, 0.70
+		CASEELSE
+			LOCAL:3 = LOCAL:3 * (100 + (ABL:(ARG:0):배설 - 5) * 2) / 100
+	ENDSELECT
+
+	SOURCE:(ARG:0):노출 += 300
+	SOURCE:(ARG:0):일탈 += 80
+	SOURCE:(ARG:0):중독충족 += LOCAL:3
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(ARG:0, 20, 80)
+ENDIF
+
+;●소스의 추가·기력의 소모
+LOCAL:30 = 0
+LOCAL:31 = 0
+FOR LOCAL:0, 0, 7
+	LOCAL:2 = 0
+	LOCAL:3 = 0
+	IF NOWEX:(ARG:0):(LOCAL:0) > 0
+		;소스의 추가
+		CALL ADD_SOURCE_ORGASM(ARG:0, LOCAL:0)
+
+		;절정 개소에 응한 기본 소모도의 설정
+		SELECTCASE LOCAL:0
+			;Ｃ절정
+			CASE 0
+				LOCAL:2 = 15000
+				LOCAL:3 = 8000
+			;Ｖ절정
+			CASE 1
+				LOCAL:2 = 15000
+				LOCAL:3 = 10000
+			;Ａ절정
+			CASE 2
+				LOCAL:2 = 25000
+				LOCAL:3 = 17000
+			;Ｂ절정
+			CASE 3
+				LOCAL:2 = 10000
+				LOCAL:3 = 8000
+			;Ｍ절정
+			CASE 4
+				LOCAL:2 = 15000
+				LOCAL:3 = 7000
+			;사정
+			CASE 5
+				LOCAL:2 = 15000
+				LOCAL:3 = 10000
+			;분유
+			CASE 6
+				LOCAL:2 = 20000
+				LOCAL:3 = 10000
+			;분수
+			CASE 7
+				LOCAL:2 = 6000
+				LOCAL:3 = 6000
+		ENDSELECT
+		
+		;절정 강도에 근거하는 보정
+		LOCAL:2 *= MAX(NOWEX:(ARG:0):(LOCAL:0) / 3, 1)
+		LOCAL:3 *= MAX(NOWEX:(ARG:0):(LOCAL:0) / 3, 1)
+
+		IF LOCAL == 5
+			;사정에 의한 체력·기력의 소모를 계산
+			;사정 Lv에 의한 보정
+			SELECTCASE ABL:(ARG:0):사정
+				CASE 0
+					TIMES LOCAL:2, 1.00
+					TIMES LOCAL:3, 1.00
+				CASE 1
+					TIMES LOCAL:2, 0.80
+					TIMES LOCAL:3, 0.60
+				CASE 2
+					TIMES LOCAL:2, 0.60
+					TIMES LOCAL:3, 0.40
+				CASE 3
+					TIMES LOCAL:2, 0.45
+					TIMES LOCAL:3, 0.25
+				CASE 4
+					TIMES LOCAL:2, 0.30
+					TIMES LOCAL:3, 0.15
+				CASEELSE
+					LOCAL:2 = LOCAL:2 / (MIN(ABL:(ARG:0):사정 - 5, 55) + 5)
+					LOCAL:3 = LOCAL:3 / (MIN(ABL:(ARG:0):사정 - 5, 55) * 2 + 10)
+			ENDSELECT
+		ELSEIF LOCAL == 6
+			;분유에 의한 체력·기력의 소모를 계산
+			;분유Lv에 의한 보정
+			SELECTCASE ABL:(ARG:0):분유
+				CASE 0
+					TIMES LOCAL:2, 1.00
+					TIMES LOCAL:3, 1.00
+				CASE 1
+					TIMES LOCAL:2, 0.80
+					TIMES LOCAL:3, 0.60
+				CASE 2
+					TIMES LOCAL:2, 0.60
+					TIMES LOCAL:3, 0.40
+				CASE 3
+					TIMES LOCAL:2, 0.45
+					TIMES LOCAL:3, 0.25
+				CASE 4
+					TIMES LOCAL:2, 0.30
+					TIMES LOCAL:3, 0.15
+				CASEELSE
+					LOCAL:2 = LOCAL:2 / (MIN(ABL:(ARG:0):분유 - 5, 55) + 5)
+					LOCAL:3 = LOCAL:3 / (MIN(ABL:(ARG:0):분유 - 5, 55) * 2 + 10)
+			ENDSELECT
+		ENDIF
+		;욕망 Lv에 의한 보정
+		IF ABL:(ARG:0):욕망 < 5
+			LOCAL:2 = LOCAL:2 * (30 - ABL:(ARG:0):욕망) / 30
+			LOCAL:3 = LOCAL:3 * (15 - ABL:(ARG:0):욕망) / 15
+		ELSE
+			LOCAL:2 = LOCAL:2 * (130 - MIN(ABL:(ARG:0):욕망, 30)) / 150
+			LOCAL:3 = LOCAL:3 * (45 - MIN(ABL:(ARG:0):욕망, 30)) / 60
+		ENDIF
+		LOCAL:30 += LOCAL:2
+		LOCAL:31 += LOCAL:3
+	ENDIF
+NEXT
+
+;●동시절정 보너스의 설정
+LOCAL:7 = 1
+IF LOCAL:5 == 5
+	LOCAL:7 = 12
+ELSEIF LOCAL:5 == 4
+	LOCAL:7 = 8
+ELSEIF LOCAL:5 >= 2
+	IF LOCAL:5 == 3
+		LOCAL:7 = 4
+	ELSE
+		LOCAL:7 = 2
+	ENDIF
+ENDIF
+
+FOR LOCAL:0, 0, 100
+	;동시절정에 의한 보너스를 건다(폐지)
+	;NOWEX:(ARG:0):(LOCAL:0) *= LOCAL:7
+
+	;절정 회수를 가산
+	EX:(ARG:0):(LOCAL:0) += NOWEX:(ARG:0):(LOCAL:0) * LOCAL:7
+NEXT
+
+IF LOCAL:5 == 5
+	;오층 절정
+	IF LOCAL:6 == 5
+		SETCOLOR 칼라_경고
+		PRINT  <최강 오층 절정>
+	ELSE
+		SETCOLOR 0xFF4000
+		PRINT  <오층 절정>
+	ENDIF
+ELSEIF LOCAL:5 == 4
+	;사중절정
+	IF LOCAL:6 == 4
+		SETCOLOR 칼라_오렌지
+		PRINT  <최강 사중절정>
+	ELSE
+		SETCOLOR 0xFFC000
+		PRINT  <사중절정>
+	ENDIF
+ENDIF
+RESETCOLOR
+
+IF LOCAL:10
+	;절정에 의한 체력·기력의 소모
+	LOCAL:8 = LOCAL:30 / 200
+	LOCAL:9 = LOCAL:31 / 200
+	DOWNBASE:(ARG:0):체력 += LOCAL:8
+	DOWNBASE:(ARG:0):기력 += LOCAL:9
+;	PRINTFORM  체력-{LOCAL:8} 기력-{LOCAL:9}
+ENDIF
+
+SIF BASE:(ARG:0):정신력 > 0 && CFLAG:(ARG:0):붕괴
+	CFLAG:(ARG:0):붕괴 = MAX(CFLAG:(ARG:0):붕괴 - SUM_NOWEX(ARG:0) * 10, 0)
+
+IF LOCAL:10
+	PRINTL 
+ENDIF
+
+;IF FLAG:화상설정
+;	SELECTCASE SEX_STATE
+;		CASE 1
+;			CALL PRINT_IMAGE_ANIMATION_정상위("정상위_절정")
+;			SEX_STATE = 0
+;		CASE 2
+;			CALL PRINT_IMAGE_ANIMATION_후배위("후배위_절정", ARG:0)
+;			SEX_STATE = 0
+;		CASE 11
+;			CALL PRINT_IMAGE_ANIMATION_정상위("정상위_사정")
+;			SEX_STATE = 0
+;		CASE 12
+;			CALL PRINT_IMAGE_ANIMATION_후배위("후배위_사정", ARG:0)
+;			SEX_STATE = 0
+;		CASE 13
+;			CALL PRINT_IMAGE_ANIMATION_파이즈리("파이즈리_사정")
+;			SEX_STATE = 0
+;	ENDSELECT
+;ENDIF
+
+;-------------------------------------------------
+;사정의 내부 처리
+;-------------------------------------------------
+@PROCESS_EJACULATION(대상, 강도, 슬래시)
+#DIM 대상
+#DIM 사정상대
+#DIM 사정처
+#DIM 강도
+#DIM 사정량
+#DIMS 강도문자열
+#DIM 슬래시
+#DIMS 사정문자열
+#DIM 애정배율
+#DIM 굴종배율
+#DIM 공포배율
+
+VARSET LOCAL
+
+IF 슬래시
+	PRINT /
+ELSE
+	IF !TFLAG:3
+		TFLAG:3 = 1
+		PRINTL 
+	ENDIF
+	PRINTFORM %ANAME(대상), 8, RIGHT%:
+ENDIF
+강도문자열 =
+;절정 강도에 응해 NOWEX를 세트 해, 메세지의 표시를 실시한다
+IF 강도 >= 200000 || ((TALENT:(대상):절륜 || TCVAR:(대상):66) && 강도 >= 80000) || (TALENT:(대상):절륜 && TCVAR:(대상):66)
+	IF 대상 == MASTER
+		SETCOLOR 0x800080
+	ELSE
+		SETCOLOR 0xFF4000
+	ENDIF
+	사정량 = RAND(11, 16)
+	강도문자열 =  초초대량
+ELSEIF 강도 >= 80000 || ((TALENT:(대상):절륜 || TCVAR:(대상):66) && 강도 >= 40000)
+	IF 대상 == MASTER
+		SETCOLOR 0x6000FF
+	ELSE
+		SETCOLOR 칼라_오렌지
+	ENDIF
+	사정량 = RAND(7, 11)
+	강도문자열 = 초대량
+ELSEIF 강도 >= 40000 || TALENT:(대상):절륜 || TCVAR:(대상):66
+	IF 대상 == MASTER
+		SETCOLOR 0x0080FF
+	ELSE
+		SETCOLOR 0xFFC000
+	ENDIF
+	사정량 = RAND(4, 7)
+	강도문자열 = 대량
+ELSE
+	IF 대상 == MASTER
+		SETCOLOR 칼라_시안
+	ELSE
+		SETCOLOR 칼라_주의
+	ENDIF
+	사정량 = RAND:3 + 1
+ENDIF
+
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_사정광)
+	사정량 += RAND(3, 6)
+
+SIF IS_ANIMAL(대상)
+	사정량 += RAND(3, 6)
+
+SIF LOCAL:1 >= 0 && GETBIT(TALENT:대상:음란계, 소질_음란_진한정액)
+	사정량 += RAND(10, 20)
+
+SIF SOURCE:(대상):쾌Ｐ == 0 && NOWEX:대상:Ｖ절정 + NOWEX:대상:Ａ절정 > 0
+	강도문자열 = %강도문자열%우무
+
+PRINTFORM %강도문자열%사정
+RESETCOLOR
+NOWEX:대상:사정 = 사정량
+EXP:(대상):사정경험치 += 사정량
+EXP:(대상):절정경험 += 사정량
+
+;질, 애널에 사정하고 있는 것 같으면 그 이외를 소거
+FOR LOCAL:0, 400, 420
+	IF GROUPMATCH(TCVAR:(대상):(LOCAL:0 + 20), 사정부위_질내, 사정부위_애널)
+		FOR LOCAL:1, 400, 420
+			IF !GROUPMATCH(TCVAR:(대상):(LOCAL:1 + 20), 사정부위_질내, 사정부위_애널)
+				TCVAR:(대상):(LOCAL:1)      = -1
+				TCVAR:(대상):(LOCAL:1 + 20) = -1
+			ENDIF
+		NEXT
+		BREAK
+	ENDIF
+NEXT
+
+FOR LOCAL:0, 400, 420
+
+	SIF TCVAR:(대상):(LOCAL:0) < 0
+		CONTINUE
+
+	사정상대 = TCVAR:(대상):(LOCAL:0)
+	사정처 = TCVAR:(대상):(LOCAL:0 + 20)
+	;사정 장소에 응한 보정을 걸어 정애경험치를 가산
+	;사정 장소에 응한 소스를 추가(LOCAL:13=애정 배율, 굴종 배율=굴종 배율, 공포 배율=공포 배율)
+	애정배율 = 20
+	굴종배율 = 20
+	공포배율 = 20
+	SELECTCASE ABL:(사정상대):정애
+		CASE 0
+			LOCAL:12 = 0
+		CASE 1
+			LOCAL:12 = 20
+		CASE 2
+			LOCAL:12 = 50
+		CASE 3
+			LOCAL:12 = 80
+		CASE 4
+			LOCAL:12 = 120
+		CASEELSE
+			LOCAL:12 = MIN(ABL:(사정상대):정애 * 3 + 150, 2000)
+	ENDSELECT
+	SELECTCASE 사정처
+		;질내
+		CASE 1
+			애정배율 = 80
+			굴종배율 = 60
+			공포배율 = 200
+			IF IS_OVULATION(사정상대)
+				TIMES 애정배율, 1.5
+				TIMES 굴종배율, 1.5
+				TIMES 공포배율, 1.5
+				TIMES LOCAL:12, 1.5
+			ENDIF
+			EXP:사정상대:질내사정경험 += NOWEX:대상:사정
+			사정문자열 = 질내사정
+		;애널
+		CASE 2
+			애정배율 = 40
+			굴종배율 = 120
+			공포배율 = 40
+			사정문자열 = 장내사정
+			EXP:사정상대:장내사정경험 += NOWEX:대상:사정
+		CASE 3
+			사정문자열 = 손사정
+		;입
+		CASE 4
+			애정배율 = 50
+			굴종배율 = 40
+			공포배율 = 40
+			사정문자열 = 구강사정
+			EXP:사정상대:구강사정경험 += NOWEX:대상:사정
+		;가슴
+		CASE 5
+			애정배율 = 40
+			굴종배율 = 30
+			공포배율 = 30
+			사정문자열 = 유방사정
+		CASE 6
+			사정문자열 = 다리사정
+		CASE 7
+			사정문자열 = 꼬리사정
+		;얼굴
+		CASE 8
+			애정배율 = 30
+			굴종배율 = 30
+			공포배율 = 30
+			사정문자열 = 안면부카케
+		;머리카락
+		CASE 9
+			사정문자열 = 머리카락부카케
+		CASE 10
+			사정문자열 = 겨드랑이부카케
+		CASE 11
+			사정문자열 = 엉덩이부카케
+		;오나홀
+		CASE 12
+			사정문자열 = 오나홀사정
+		;촉수
+		CASE 13
+			사정문자열 = 촉수사정
+		;고무
+		CASE 14
+			사정문자열 = 고무사정
+		;그 외
+		CASEELSE
+			사정문자열 = 허공사정
+	ENDSELECT
+
+	;사정량에 의한 보정
+	SELECTCASE NOWEX:(대상):사정
+		CASE 1 TO 3
+			TIMES 애정배율, 1.00
+			TIMES 굴종배율, 1.00
+			TIMES 공포배율, 1.00
+		CASE 4 TO 6
+			TIMES 애정배율, 1.50
+			TIMES 굴종배율, 1.50
+			TIMES 공포배율, 1.50
+		CASE 7 TO 10
+			TIMES 애정배율, 2.00
+			TIMES 굴종배율, 2.00
+			TIMES 공포배율, 2.00
+		CASE IS > 10
+			TIMES 애정배율, 2.50
+			TIMES 굴종배율, 2.50
+			TIMES 공포배율, 2.50
+	ENDSELECT
+
+	EXP:(사정상대):정애경험치 += 사정량
+
+	;애정 소스의 추가
+	CALL ADD_SOURCE_AIZYOU(사정상대, 애정배율)
+
+	;굴종 소스의 추가
+	CALL ADD_SOURCE_INITIATIVE_U(대상, 0, 굴종배율)
+
+	IF !IS_INITIATIVE(사정상대)
+		LOCAL:16 = 100
+		IF TALENT:(사정상대):연모 || TALENT:(사정상대):복종
+			LOCAL:16 = 0
+		ELSEIF CFLAG:(사정상대):2 >= 1500
+			LOCAL:16 = 30
+		ELSEIF CFLAG:(사정상대):2 >= 800
+			LOCAL:16 = 60
+		ENDIF
+		SOURCE:(사정상대):공포 += 사정량 * 공포배율 * LOCAL:16 / 100
+	ENDIF
+
+
+
+	SOURCE:(사정상대):중독충족 += 사정량 * LOCAL:12
+
+	;질내사정인가 어떤가를 본다(질이 없는 경우는 장내사정도 본다) 콘돔의 경우 INJECTION 시키지 않다
+	SIF (사정처 == 1 || (!HAS_VAGINA(사정상대) && 사정처 == 2)) && !IS_EQUIP_PLAYER(대상, 75)
+		CALL RECORD_INJECTION(사정상대, GET_ID(대상), 사정량)
+
+	;사정 개소가 촉수라면 상대의 요술경험치를 플러스
+	IF 사정처 == 13
+		EXP:(사정상대):요술경험치 += 사정량 * 2
+	ENDIF
+
+	CUM_TO_COUNT:(대상):(사정처) += 사정량
+	PRINTFORM (
+	SIF GROUPMATCH(사정처, 1, 2)
+		SETCOLOR 칼라_핑크
+	PRINTFORM %사정문자열%
+	RESETCOLOR
+
+	IF !GROUPMATCH(사정처, 사정부위_낭비, 사정부위_고무, 사정부위_오나홀)
+		CUM_GET_COUNT:(사정상대):(사정처) += 사정량
+		PRINTFORM :%ANAME(사정상대)%)
+	ELSE
+		PRINTFORM )
+	ENDIF
+NEXT
+
+;정상위 사정
+IF (SELECTCOM == 30 || GET_SEX_POSITION(대상, 사정상대) == 1) && 사정처 == 1
+	SEX_STATE = 11
+;후배위 사정
+ELSEIF (SELECTCOM == 31 || GET_SEX_POSITION(대상, 사정상대) == 2) && 사정처 == 1
+	SEX_STATE = 12
+;파이즈리 사정
+ELSEIF SELECTCOM == 12 || 사정처 == 5
+	SEX_STATE = 13
+ENDIF
+
+
+;-------------------------------------------------
+;절정 했다／시켰을 때의 소스의 추가처리  ARG:0=절정 한 캐릭터의 번호, ARG:1=절정 개소
+;-------------------------------------------------
+@ADD_SOURCE_ORGASM(ARG:0, ARG:1)
+VARSET LOCAL, 0
+
+SELECTCASE NOWEX:(ARG:0):(ARG:1)
+	CASE 1
+		LOCAL:2 = 100
+	CASE 2
+		LOCAL:2 = 150
+	CASE 4
+		LOCAL:2 = 200
+	CASE 9
+		LOCAL:2 = 250
+ENDSELECT
+
+;●절정 한 캐릭터에게로의 소스의 추가
+SELECTCASE ARG:1
+	;Ｃ절정
+	CASE 0
+		SOURCE:(ARG:0):노출 += LOCAL:2 * 200 / 100
+		SOURCE:(ARG:0):굴종 += LOCAL:2 * 50 / 100
+		LOCAL:3 = LOCAL:2 * 100 / 100 + 100
+		LOCAL:4 = LOCAL:2 * 60 / 100
+		IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음핵)
+			SOURCE:(ARG:0):중독충족 += LOCAL:2 * 1000 / 100
+		ENDIF
+	;Ｖ절정
+	CASE 1
+		SOURCE:(ARG:0):애정 += LOCAL:2 * 100 / 100
+		SOURCE:(ARG:0):노출 += LOCAL:2 * 300 / 100
+		SOURCE:(ARG:0):굴종 += LOCAL:2 * 150 / 100
+		SOURCE:(ARG:0):욕정추가 += LOCAL:2 * 1000 / 100
+		LOCAL:3 = LOCAL:2 * 100 / 100 + 100
+		LOCAL:4 = LOCAL:2 * 100 / 100
+		IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음호)
+			SOURCE:(ARG:0):중독충족 += LOCAL:2 * 1000 / 100
+		ENDIF
+	;Ａ절정
+	CASE 2
+		SOURCE:(ARG:0):노출 += LOCAL:2 * 500 / 100
+		SOURCE:(ARG:0):욕정추가 += LOCAL:2 * 1000 / 100
+		LOCAL:3 = LOCAL:2 * 100 / 100 + 100
+		LOCAL:4 = LOCAL:2 * 160 / 100
+		IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_항문광)
+			SOURCE:(ARG:0):중독충족 += LOCAL:2 * 1000 / 100
+		ENDIF
+	;Ｂ절정
+	CASE 3
+		SOURCE:(ARG:0):노출 += LOCAL:2 * 200 / 100
+		SOURCE:(ARG:0):굴종 += LOCAL:2 * 80 / 100
+		LOCAL:3 = LOCAL:2 * 100 / 100 + 100
+		LOCAL:4 = LOCAL:2 * 60 / 100
+		IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음유)
+			SOURCE:(ARG:0):중독충족 += LOCAL:2 * 1000 / 100
+		ENDIF
+	;Ｍ절정
+	CASE 4
+		SOURCE:(ARG:0):애정 += LOCAL:2 * 100 / 100
+		SOURCE:(ARG:0):굴종 += LOCAL:2 * 50 / 100
+		LOCAL:3 = LOCAL:2 * 100 / 100 + 100
+		LOCAL:4 = LOCAL:2 * 60 / 100
+		IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_키스마)
+			SOURCE:(ARG:0):중독충족 += LOCAL:2 * 1000 / 100
+		ENDIF
+	;사정
+	CASE 5
+		SOURCE:(ARG:0):노출 += LOCAL:2 * 400 / 100
+		LOCAL:3 = LOCAL:2 * 200 / 100 + 200
+		LOCAL:4 = LOCAL:2 * 80 / 100
+		IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_사정광)
+			SOURCE:(ARG:0):중독충족 += LOCAL:2 * 1000 / 100
+		ENDIF
+
+		FOR LOCAL:0, 0, 20
+			;질내사정의 경우(콘돔 붙이고 있으면 안 돼）
+			LOCAL:6 = TCVAR:(ARG:0):(LOCAL:0 + 400)
+			IF LOCAL:6 >= 0 && TCVAR:(ARG:0):(LOCAL:0 + 420) == 1 && !IS_EQUIP_PLAYER(LOCAL:6, 75)
+				;짐승 변화중
+				IF TALENT:(ARG:0):동물귀 || TALENT:(ARG:0):꼬리
+					SOURCE:(ARG:0):환희 += 3000
+					;지문 표시용의 플래그를 세운다
+					TCVAR:(ARG:0):57 = 1
+				ENDIF
+				;미약
+				IF TCVAR:(LOCAL:6):60 == 1
+					SOURCE:(LOCAL:6):환희 += 700
+				ENDIF
+				;마약
+				IF TCVAR:(LOCAL:6):67 == 1
+					SOURCE:(LOCAL:6):환희 += 1000
+				ENDIF
+				;수정 중독
+				IF GETBIT(TALENT:(LOCAL:6):음란계, 소질_음란_임신하고싶어함)
+					SOURCE:(LOCAL:6):환희 += 1000
+				ENDIF
+				;양질모태
+				IF GETBIT(TALENT:(LOCAL:6):음란계, 소질_음란_양질모태)
+					SOURCE:(LOCAL:6):환희 += 1000
+				ENDIF
+				;도원향
+				IF TFLAG:69 == 1
+					SOURCE:(LOCAL:6):환희 += 300
+				ENDIF
+				LOCAL:6 = TCVAR:(ARG:0):(LOCAL:0 + 400)
+				;질내사정한 상대가 짐승 변화중
+				IF TALENT:(LOCAL:6):동물귀 || TALENT:(LOCAL:6):꼬리
+					SOURCE:(LOCAL:6):환희 += 3000
+					;지문 표시용의 플래그를 세운다
+					TCVAR:(ARG:0):56 = 1
+				ENDIF
+			;질내사정 했지만 고무 붙이고 있다
+			ELSEIF LOCAL:6 >= 0 && TCVAR:(ARG:0):(LOCAL:0 + 420) == 1 && IS_EQUIP_PLAYER(LOCAL:6, 75)
+				;수정 중독
+				IF GETBIT(TALENT:(LOCAL:6):음란계, 소질_음란_임신하고싶어함)
+					SOURCE:(LOCAL:6):반감 += 500
+				ENDIF
+			ENDIF
+			BREAK
+		NEXT
+	;분유
+	CASE 6
+		SOURCE:(ARG:0):노출 += LOCAL:2 * 300 / 100
+		LOCAL:3 = LOCAL:2 * 50 / 100 + 50
+		LOCAL:4 = LOCAL:2 * 80 / 100
+ENDSELECT
+
+;주도권에 응해 우월·굴종의 소스를 추가
+CALL ADD_SOURCE_INITIATIVE_U(ARG:0, LOCAL:3, LOCAL:4)
+
+;●절정 시킨 캐릭터에게로의 소스의 추가
+IF IS_MTAR(ARG:0)
+	LOCAL:10 = 0
+ELSEIF IS_MPLY(ARG:0)
+	LOCAL:10 = 1
+ELSE
+	;플레이어도 타겟도 아니면 돌아온다(절정 시킨 상대가 없다)
+	RETURN
+ENDIF
+
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0) && LOCAL:0 != ARG:0 && ((LOCAL:10 == 0 && IS_MPLY(LOCAL:0)) || (LOCAL:10 == 1 && IS_MTAR(LOCAL:0)))
+		SELECTCASE ARG:1
+			;Ｃ절정
+			CASE 0
+				LOCAL:3 = LOCAL:2 * 120 / 100
+				LOCAL:4 = LOCAL:2 * 30 / 100 + 30
+			;Ｖ절정
+			CASE 1
+				LOCAL:3 = LOCAL:2 * 200 / 100
+				LOCAL:4 = LOCAL:2 * 30 / 100 + 30
+			;Ａ절정
+			CASE 2
+				LOCAL:3 = LOCAL:2 * 320 / 100
+				LOCAL:4 = LOCAL:2 * 30 / 100 + 30
+			;Ｂ절정
+			CASE 3
+				LOCAL:3 = LOCAL:2 * 120 / 100
+				LOCAL:4 = LOCAL:2 * 30 / 100 + 30
+			;Ｍ절정
+			CASE 4
+				LOCAL:3 = LOCAL:2 * 120 / 100
+				LOCAL:4 = LOCAL:2 * 30 / 100 + 30
+			;사정
+			CASE 5
+				LOCAL:3 = LOCAL:2 * 160 / 100
+				LOCAL:4 = LOCAL:2 * 30 / 100 + 30
+			;분유
+			CASE 6
+				LOCAL:3 = LOCAL:2 * 160 / 100
+				LOCAL:4 = LOCAL:2 * 15 / 100 + 15
+			;분수
+			CASE 7
+				LOCAL:3 = LOCAL:2 * 350 / 100
+				LOCAL:4 = LOCAL:2 * 15 / 100 + 15
+		ENDSELECT
+
+		SELECTCASE ABL:(LOCAL:0):봉사
+			CASE 0
+				TIMES LOCAL:3, 0.50
+			CASE 1
+				SOURCE:(LOCAL:0):중독충족 += LOCAL:2 * 40 / 100
+				TIMES LOCAL:3, 0.80
+			CASE 2
+				SOURCE:(LOCAL:0):중독충족 += LOCAL:2 * 80 / 100
+				TIMES LOCAL:3, 1.00
+			CASE 3
+				SOURCE:(LOCAL:0):중독충족 += LOCAL:2 * 120 / 100
+				TIMES LOCAL:3, 1.10
+			CASE 4
+				SOURCE:(LOCAL:0):중독충족 += LOCAL:2 * 160 / 100
+				TIMES LOCAL:3, 1.20
+			CASEELSE
+				SOURCE:(LOCAL:0):중독충족 += LOCAL:2 * MIN(ABL:(LOCAL:0):봉사 * 2 + 200, 2000) / 100
+				LOCAL:3 = LOCAL:3 * MIN(ABL:(LOCAL:0):봉사 + 120, 500) / 100
+		ENDSELECT
+
+		;주도권에 응해 우월·굴종의 소스를 추가
+		CALL ADD_SOURCE_INITIATIVE_U(ARG:0, LOCAL:3, LOCAL:4)
+
+		IF ARG:0 == MASTER
+			;주인공을 절정 시켰을 경우, 애정의 소스를 추가
+			CALL ADD_SOURCE_AIZYOU(LOCAL:0, LOCAL:2 * 80 / 100)
+		ENDIF
+
+		;절정 강도에 응해 욕망경험치를 가산
+		EXP:(LOCAL:0):욕망경험치 += NOWEX:(ARG:0):(ARG:1)
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;질내사정량의 기록(임신 판정용) ※인수에 주의
+;ARG:0=질내사정된 캐릭터의 「캐릭터 번호」
+;ARG:1=질내사정한 캐릭터의 「ID」
+;ARG:2=정액량
+;-------------------------------------------------
+@RECORD_INJECTION(ARG:0, ARG:1, ARG:2)
+LOCAL:1 = ID_TO_CHARA(ARG:1)
+
+;위험일이라면 배
+SIF IS_OVULATION(ARG:0)
+	ARG:2 *= 2
+
+;대상이 동물의 경우, ID를 변환
+IF LOCAL:1 >= 0 && IS_ANIMAL(LOCAL:1)
+	SELECTCASE TALENT:(LOCAL:1):동물
+		CASE 동물_개
+			ARG:1 = GET_SPERM_ID("개")
+		CASE 동물_돼지
+			ARG:1 = GET_SPERM_ID("돼지")
+		CASE 동물_말
+			ARG:1 = GET_SPERM_ID("말")
+		CASE 동물_원숭이
+			ARG:1 = GET_SPERM_ID("원숭이")
+	ENDSELECT
+ENDIF
+
+SELECTCASE ARG:1
+	CASE GET_SPERM_ID("돼지")
+		ARG:2 += 10
+	CASE GET_SPERM_ID("말")
+		ARG:2 += 20
+ENDSELECT
+
+
+;대상이 특수 세력의 경우, ID를 변환
+SIF LOCAL:1 >= 0 && TALENT:(LOCAL:1):특수세력소질
+	ARG:1 = GET_SPERM_ID(SP_COUNTRY_NAME:(TALENT:(LOCAL:1):특수세력소질))
+;대상이 위안모브의 경우, ID를 변환
+SIF LOCAL:1 >= 0 && TALENT:(LOCAL:1):위안모브
+	ARG:1 = GET_SPERM_ID(IAN_SPERM_ARRAY:(TALENT:(LOCAL:1):위안모브))
+
+;성적 기호경험치를 가산
+;위험일이라면 배
+SEXUAL_PREFERENCE_EXP:(ARG:0):성적기호_임신하고싶다 += IS_OVULATION(ARG:0) + 1
+
+;이미 캐릭터가 리스트에 존재하면 정액량을 추가
+FOR LOCAL:0, 0, WOMB_RECORD_MAX
+	IF WOMB_SEMEN_ID:(ARG:0):(LOCAL:0) == ARG:1
+		WOMB_SEMEN_AMOUNT:(ARG:0):(LOCAL:0) += ARG:2
+		WOMB_SEMEN_COUNT:(ARG:0):(LOCAL:0) ++
+		WOMB_SEMEN_TIME:(ARG:0):(LOCAL:0) = 0
+		RETURN
+	ENDIF
+NEXT
+;캐릭터가 리스트에 실려 있지 않으면 새롭게 추가
+FOR LOCAL:0, 0, WOMB_RECORD_MAX
+	IF WOMB_SEMEN_ID:(ARG:0):(LOCAL:0) == 0
+		;질내사정한 캐릭터의 ID와 정액량을 기록
+		WOMB_SEMEN_ID:(ARG:0):(LOCAL:0) = ARG:1
+		WOMB_SEMEN_AMOUNT:(ARG:0):(LOCAL:0) = ARG:2
+		WOMB_SEMEN_COUNT:(ARG:0):(LOCAL:0) ++
+		WOMB_SEMEN_TIME:(ARG:0):(LOCAL:0) = 0
+		RETURN
+	ENDIF
+NEXT
+

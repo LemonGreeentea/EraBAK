@@ -1,0 +1,739 @@
+﻿;펠라치오인 어느 날상
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME330
+SELECTCASE PREVCOM
+	CASE 303, 304, 351
+		LOCALS:0 = 안하 페라
+	CASEELSE
+		LOCALS:0 = 페라
+ENDSELECT
+
+RESULTS:0 = %LOCALS:0%한다
+RESULTS:1 = %LOCALS:0%당한다
+RESULTS:2 = %LOCALS:0%해 받는다
+RESULTS:3 = %LOCALS:0%된다
+
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE330
+;공통 부분
+CALL COM_ABLE_COMMON(330)
+SIF RESULT == 0
+	RETURN 0
+;타겟으로 장대가 필요
+SIF !HAS_PENIS(MTAR:0)
+	RETURN 0
+;행동불능이라면 불가
+SIF !IS_PLAYABLE(MPLY:0)
+	RETURN 0
+;키스중은 불가
+SIF IS_EQUIP(MPLY:0, 342)
+	RETURN 0
+;주인공 이외가 실행하는 경우, 실행 가능하지 않으면 표시되지 않는다
+IF MPLY:0 != MASTER
+	TCVAR:(MPLY:0):24 = 0
+	SKIPDISP 1
+	CALL COM_ORDER_PLAYER330(MPLY:0)
+	SKIPDISP 0
+	SIF TCVAR:(MPLY:0):24 < TCVAR:(MPLY:0):25 
+		RETURN 0
+ENDIF
+;주도권을 잡고 있는 측에 페라의 지식이 필요
+LOCAL:0 = 0
+IF FLAG:주도권소유자 == -1
+	CALL CHECK_COM_KNOWLEDGE(MPLY:0, 11)
+	LOCAL:0 += RESULT
+	CALL CHECK_COM_KNOWLEDGE(MTAR:0, 11)
+	LOCAL:0 += RESULT
+ELSE
+	CALL CHECK_COM_KNOWLEDGE(FLAG:주도권소유자, 11)
+	LOCAL:0 += RESULT
+ENDIF
+IF !RESULT
+	RETURN 0
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;쾌Ｍ소스의 배율을 취득하는 함수 ARG:0=PLAYER의 캐릭터 번호
+;-------------------------------------------------
+@COM330_RATE_M(ARG:0)
+#FUNCTION
+LOCAL:5 = 1000
+SELECTCASE ABL:(ARG:0):봉사
+	CASE 0
+		TIMES LOCAL:5, 0.00
+		;TIMES SOURCE:(LOCAL:2):불결, 4.00
+	CASE 1
+		TIMES LOCAL:5, 0.10
+		;TIMES SOURCE:(LOCAL:2):불결, 2.50
+	CASE 2
+		TIMES LOCAL:5, 0.30
+		;TIMES SOURCE:(LOCAL:2):불결, 1.50
+	CASE 3
+		TIMES LOCAL:5, 0.80
+		;TIMES SOURCE:(LOCAL:2):불결, 1.00
+	CASE 4
+		TIMES LOCAL:5, 1.00
+		;TIMES SOURCE:(LOCAL:2):불결, 0.50
+	CASEELSE
+		LOCAL:5 = LOCAL:5 * (100 + (ABL:(ARG:0):봉사 - 5) * 3) / 100
+		;TIMES SOURCE:(LOCAL:2):불결, 0.10
+ENDSELECT
+
+SELECTCASE ABL:(ARG:0):성기술
+	CASE 0
+		TIMES LOCAL:5, 1.00
+	CASE 1
+		TIMES LOCAL:5, 1.10
+	CASE 2
+		TIMES LOCAL:5, 1.20
+	CASE 3
+		TIMES LOCAL:5, 1.30
+	CASE 4
+		TIMES LOCAL:5, 1.40
+	CASEELSE
+		LOCAL:5 = LOCAL:5 * ((ABL:(ARG:0):성기술 - 5) * 2 + 150) / 100
+ENDSELECT
+
+RETURNF LOCAL:5
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM330
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;●플레이어측의 처리
+DOWNBASE:(MPLY:0):체력 += 120
+
+EXP:(MPLY:0):성기술경험치 += 1
+EXP:(MPLY:0):구음경험 += 1
+
+SOURCE:(MPLY:0):봉사 = SERVE_HOUSHI(MPLY:0, 400)
+SOURCE:(MPLY:0):접촉 = 50
+SOURCE:(MPLY:0):쾌Ｍ = 300 * COM330_RATE_M(MPLY:0) / 1000
+;SOURCE:(MPLY:0):쾌Ｍ = 300 * COM11_RATE_M(MPLY:0)/1000
+SOURCE:(MPLY:0):성행동 = 300
+
+;주도권에 응한 우월·수동의 소스 추가
+CALL ADD_SOURCE_INITIATIVE_U(MPLY:0, 150, 120)
+
+;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+TCVAR:(MPLY:0):4 = 1
+
+IF HAS_PENIS(MTAR:0)
+	;페니스에의 키스
+	CALL KISS_COMMON(MPLY:0, @"%ANAME(MTAR:0)%의 페니스", GET_SITUATION_BY_TRAIN_MODE())
+ENDIF
+
+;●타겟측의 처리
+LOCAL:4 = SENSE_HOUSHI_P(MPLY:0, MTAR:0, 1500)
+IF TALENT:(MPLY:0):혀놀림
+	TIMES LOCAL:4, 1.50
+ENDIF
+SOURCE:(MTAR:0):쾌Ｐ += LOCAL:4
+
+;사정 개소와 대상을 세트
+CALL STACK_SPERM(MTAR:0, MPLY:0, 4)
+
+;●소스의 계산
+DOWNBASE:(MTAR:0):체력 += 60
+SOURCE:(MTAR:0):접촉 = 50
+SOURCE:(MTAR:0):성행동 = 180
+;주도권에 응한 우월·수동의 소스 추가
+CALL ADD_SOURCE_INITIATIVE_U(MTAR:0, 150, 70)
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = 2
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 7
+
+;페라의 지식이 없으면, 획득한다
+CALL SET_COM_KNOWLEDGE(MPLY:0, 11)
+CALL SET_COM_KNOWLEDGE(MTAR:0, 11)
+RETURN 1
+
+;-------------------------------------------------
+;계속 커맨드인가 어떤가를 설정
+;-------------------------------------------------
+@COM_IS_EQUIP330
+RETURN 0
+
+;-------------------------------------------------
+;고유의 실행 판정(플레이어측)
+;-------------------------------------------------
+@COM_ORDER_PLAYER330(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 90
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 4)
+CALL COM_ORDER_ELEMENT(ARG:0, @"정애Lv{ABL:(ARG:0):정애}", ABL:(ARG:0):정애 * 3)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 1, 10))
+
+;무드
+IF TFLAG:37 < 10
+	LOCAL:0 = -10
+ELSEIF TFLAG:37 < 30
+	LOCAL:0 = -5
+ELSEIF TFLAG:37 < 50
+	LOCAL:0 = 0
+ELSEIF TFLAG:37 < 100
+	LOCAL:0 = (TFLAG:37 - 50) / 10
+ELSE
+	LOCAL:0 = MIN(10, (TFLAG:37 - 100) / 50 + 5)
+ENDIF
+
+IF TALENT:(ARG:0):키스미경험
+	CALL COM_ORDER_ELEMENT(ARG:0, "키스미경험", -7)
+ENDIF
+IF TALENT:(ARG:0):정조관념
+	CALL COM_ORDER_ELEMENT(ARG:0, "정조관념", -6)
+ENDIF
+IF TALENT:(ARG:0):정조관념없음
+	CALL COM_ORDER_ELEMENT(ARG:0, "정조관념없음", 3)
+ENDIF
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -1)
+ENDIF
+IF TALENT:(ARG:0):악취둔감
+	CALL COM_ORDER_ELEMENT(ARG:0, "악취둔감", 1)
+ENDIF
+IF TALENT:(ARG:0):악취민감
+	CALL COM_ORDER_ELEMENT(ARG:0, "악취민감", -3)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 6)
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -1)
+ENDIF
+IF TALENT:(ARG:0):남성혐오
+	CALL COM_ORDER_ELEMENT(ARG:0, "남성혐오", -12)
+ENDIF
+IF TFLAG:54
+	CALL COM_ORDER_ELEMENT(ARG:0, "데이트중", 6)
+ENDIF
+
+;합의
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -10)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;고유의 실행 판정(타겟측)
+;-------------------------------------------------
+@COM_ORDER_TARGET330(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 90
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 4)
+CALL COM_ORDER_ELEMENT(ARG:0, @"정애Lv{ABL:(ARG:0):정애}", ABL:(ARG:0):정애 * 3)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 1, 10))
+
+;무드
+IF TFLAG:37 < 10
+	LOCAL:0 = -10
+ELSEIF TFLAG:37 < 30
+	LOCAL:0 = -5
+ELSEIF TFLAG:37 < 50
+	LOCAL:0 = 0
+ELSEIF TFLAG:37 < 100
+	LOCAL:0 = (TFLAG:37 - 50) / 10
+ELSE
+	LOCAL:0 = MIN(10, (TFLAG:37 - 100) / 50 + 5)
+ENDIF
+
+IF TALENT:(ARG:0):키스미경험
+	CALL COM_ORDER_ELEMENT(ARG:0, "키스미경험", -7)
+ENDIF
+IF TALENT:(ARG:0):정조관념
+	CALL COM_ORDER_ELEMENT(ARG:0, "정조관념", -6)
+ENDIF
+IF TALENT:(ARG:0):정조관념없음
+	CALL COM_ORDER_ELEMENT(ARG:0, "정조관념없음", 3)
+ENDIF
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -1)
+ENDIF
+IF TALENT:(ARG:0):악취둔감
+	CALL COM_ORDER_ELEMENT(ARG:0, "악취둔감", 1)
+ENDIF
+IF TALENT:(ARG:0):악취민감
+	CALL COM_ORDER_ELEMENT(ARG:0, "악취민감", -3)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 6)
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -1)
+ENDIF
+IF TALENT:(ARG:0):남성혐오
+	CALL COM_ORDER_ELEMENT(ARG:0, "남성혐오", -12)
+ENDIF
+IF TFLAG:54
+	CALL COM_ORDER_ELEMENT(ARG:0, "데이트중", 6)
+ENDIF
+
+;합의
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -10)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE330
+#DIMS PENIS_NAME
+;SKIPDISP 하고 나서 호출해 RESULT를 취하면, 캐릭터 구상으로부터 어느 패턴인가 읽을 수 있는…하즈
+LOCAL:3 = 0
+
+SELECTCASE RAND:10
+CASE 0 TO 3
+	PENIS_NAME = 페니스
+CASE 4 TO 5
+	PENIS_NAME = 노장
+CASE 6 TO 7
+	PENIS_NAME = 육봉
+CASE 8 TO 9
+	PENIS_NAME = 남근
+;보통은 볼 수 없다
+CASEELSE
+	PENIS_NAME = 발기자지
+ENDSELECT
+
+PRINTFORM %조사처리(ANAME(MPLY:0),"는")%
+
+
+SELECTCASE GET_COM_INITIATIVE()
+	;주도권이 타겟측
+	CASE 1
+		SELECTCASE PREVCOM
+			;안하 페라
+			CASE 303,304,351
+				LOCAL:3 = 1
+				PRINTDATA
+					DATAFORM %ANAME(MTAR:0)%에 명해지면
+					DATAFORM %ANAME(MTAR:0)%의 눈짓만으로 의도를 헤아려,
+					DATAFORM %ANAME(MTAR:0)%의 손짓함에 따라,
+					DATAFORM %조사처리(ANAME(MTAR:0),"가")% 말했던 대로
+					DATAFORM %ANAME(MTAR:0)%에 가르쳐졌던 대로
+				ENDDATA
+				PRINTDATAL
+					DATAFORM 책상아래에 기어들어, 눈앞에 들이댈 수 있었던 %조사처리(PENIS_NAME,"를")% 
+					DATAFORM 얼굴에 걸린 테이블크로스의 구석에서 이쪽의 모습을 물으면서 %조사처리(PENIS_NAME,"를")% 
+					DATAFORM 입을 물로 헹구면 소리를 내지 않고 당신의 발밑까지 저보다 %조사처리(PENIS_NAME,"를")% 
+					DATAFORM 도중에 부딪친 이마를 문지르면서, 책상아래에서 %조사처리(PENIS_NAME,"를")% 
+				ENDDATA
+			;뜸들고 페라
+			CASE 301, 302
+				LOCAL:3 = 2
+				PRINTDATA
+					DATAFORM 땀으로 테카리,
+					DATAFORM 훈련의 흥분으로 끓어올라,
+					DATAFORM 격렬한 운동으로 뜸들어,
+					DATAFORM 훈련의 피로감에 발기해,
+				ENDDATA
+				PRINTDATAL
+					DATAFORM 증기가 오르고 있는 %ANAME(MTAR:0)%의 %조사처리(PENIS_NAME,"를")% 
+					DATAFORM 수컷의 냄새를 흩뿌리는 %ANAME(MTAR:0)%의 %조사처리(PENIS_NAME,"를")% 
+					DATAFORM 남의 페로몬을 솟아오르게 한 %ANAME(MTAR:0)%의 %조사처리(PENIS_NAME,"를")% 
+					DATAFORM 격렬하게 뒤로 젖히고 있는 %ANAME(MTAR:0)%의 %조사처리(PENIS_NAME,"를")% 
+				ENDDATA
+				PRINTFORML 
+			;가창 페라
+			CASE 306
+				LOCAL:3 = 3
+				PRINTFORML 노랫소리를 연주하는 입술에 %ANAME(MTAR:0)%의 %조사처리(PENIS_NAME,"를")%  들이댈 수 있으면, 그대로
+			;청소 페라
+			CASE 310,311
+				LOCAL:3 = 4
+				PRINTDATAL
+					DATAFORM %조사처리(ANAME(MTAR:0),"가")% 잔으로부터 늘어뜨린 물방울에 이끌리도록(듯이) %PENIS_NAME%에 혀를 펴면
+					DATAFORM 술의 한 그릇 더를 한다고 해 당신의 %PENIS_NAME%에 술을 털어 놓은 %ANAME(MTAR:0)%의 가랑이에 얼굴을 묻으면
+				ENDDATA
+			;현장 연습
+			CASE 550
+				LOCAL:3 = 5
+				PRINTFORML 조속히 실천하도록(듯이)와 들이댈 수 있었던 %ANAME(MTAR:0)%의 %조사처리(PENIS_NAME,"를")% 
+			;뒷골목 페라
+			CASE 304
+				LOCAL:3 = 6
+				PRINTDATAL
+					DATAFORM %ANAME(MTAR:0)%에 인기척이 없는 뒷골목으로 데리고 들어가져 뺨을 노출한 %조사처리(PENIS_NAME,"로")% 얻어맞으면
+					DATAFORM %ANAME(MTAR:0)%에 인기척이 없는 뒷골목에서 요구되어 적어도 입으로 라며 %조사처리(PENIS_NAME,"를")% 뺨에 강압할 수 있다
+				ENDDATA
+			CASE 352
+				LOCAL:3 = 8
+				PRINTFORML %ANAME(MTAR:0)%에 책장의 그늘에 데리고 들어가져 뺨을 노출한 %조사처리(PENIS_NAME,"로")% 얻어맞으면
+			;음담
+			CASE 309
+				LOCAL:3 = 9
+				PRINTDATAL
+					DATAFORM 음담에 흥분한 %ANAME(MTAR:0)%에 지금의 이야기를 실연하도록(듯이) 요구되어 %조사처리(PENIS_NAME,"를")% 눈앞에 들이댈 수 있으면
+					DATAFORM 음담에 흥분한 %ANAME(MTAR:0)%에 밀어 쓰러트려져 %조사처리(PENIS_NAME,"를")% 눈앞에 내밀어지면
+					DATAFORM 음담에 흥분한 %ANAME(MTAR:0)%에, 조금 진정시켜 주어라와 부탁받아 %조사처리(PENIS_NAME,"를")% 노출시키면
+				ENDDATA
+			CASEELSE
+				IF GET_PLACENAME(TFLAG:54) == "성 주변 마을"
+					LOCAL:3 = 6
+				PRINTDATAL
+					DATAFORM %ANAME(MTAR:0)%에 인기척이 없는 뒷골목으로 데리고 들어가져 뺨을 노출한 %조사처리(PENIS_NAME,"로")% 얻어맞으면
+					DATAFORM %ANAME(MTAR:0)%에 인기척이 없는 뒷골목에서 요구되어 적어도 입으로 라며 %조사처리(PENIS_NAME,"를")% 뺨에 강압할 수 있다
+				ENDDATA
+			;온천
+				ELSEIF GET_PLACENAME(TFLAG:54) == "온천"
+					LOCAL:3 = 10
+					PRINTDATAL
+						DATAFORM 명령받은대로, %ANAME(MTAR:0)%의 허리를 결리면 수면으로부터 흘립 한 %조사처리(PENIS_NAME,"를")%
+						DATAFORM %ANAME(MTAR:0)%에 명해져 목욕탕 의자에 앉은 %ANAME(MTAR:0)%의 %조사처리(PENIS_NAME,"를")%
+						DATAFORM 비근한 바위에 앉은 %ANAME(MTAR:0)%에 부탁받아 더운 물이 방울져 떨어진 %조사처리(PENIS_NAME,"를")%
+					ENDDATA
+				ELSEIF GET_PLACENAME(TFLAG:54) == "강변"
+					LOCAL:3 = 11
+					PRINTDATAL
+						DATAFORM 헤엄쳐 피로바위에 앉은 %ANAME(MTAR:0)%에 부탁받아 물이 방울져 떨어진 %조사처리(PENIS_NAME,"를")%
+						DATAFORM %ANAME(MTAR:0)%에 바위 그늘에 데리고 들어가져 %조사처리(PENIS_NAME,"를")% 뺨에 꽉 누를 수 있다
+						DATAFORM %ANAME(MTAR:0)%에 부탁받아 수중에서 노출로 된 %조사처리(PENIS_NAME,"를")%
+						DATAFORM 헤엄쳐 차가워졌기 때문에 따뜻하게 해 줘 라며 %ANAME(MTAR:0)%에 부탁받아 %조사처리(PENIS_NAME,"를")%
+					ENDDATA
+				ELSEIF GET_PLACENAME(TFLAG:54) == "삼림"
+					LOCAL:3 = 10
+					PRINTDATAL
+						DATAFORM 사냥감을 쫓는데 질린 %ANAME(MTAR:0)%에 명해져 무릎 꿇어 %조사처리(PENIS_NAME,"를")% 노출시키면
+						DATAFORM %ANAME(MTAR:0)%에 나무 그늘에 데리고 들어가져 눈앞에 %조사처리(PENIS_NAME,"를")% 들이댈 수 있으면
+						DATAFORM %ANAME(MTAR:0)%에 숲오두막에 데리고 들어가져 %PENIS_NAME%에의 봉사를 명해지면
+					ENDDATA
+				ELSE
+					PRINTDATAL
+						DATAFORM 당돌하게 %조사처리(PENIS_NAME,"를")% 노출시키는 %ANAME(MTAR:0)%의 행동에 당황하면서도, 주위의 기색을 물으면서
+						DATAFORM %ANAME(MTAR:0)%에, 개최했기 때문에 처리해 주고 라며 %조사처리(PENIS_NAME,"를")% 들이댈 수 있다
+						DATAFORM %ANAME(MTAR:0)%에 그늘에 데리고 들어가져 눈앞에 %조사처리(PENIS_NAME,"를")% 들이댈 수 있다
+						DATAFORM %ANAME(MTAR:0)%에 무릎 꿇어져 모여 왔기 때문에 처리해 주고 라며 %조사처리(PENIS_NAME,"를")% 내밀어진다
+					ENDDATA
+				ENDIF
+		ENDSELECT
+		IF ABL:(MPLY:0):정애 > 4
+				PRINTDATA
+					DATAFORM 보류를 풀린 개처럼 광희 해,
+					DATAFORM 넘쳐 나오는 침과 함께 삼키는 것 같은 기세로,
+					DATAFORM 누구에게도 건네주지 않는다라는 듯이,
+					DATAFORM 입 끝으로부터 군침이 흘러넘치는 것도 신경쓰지 않고,
+					DATAFORM 녹일 수 있었던 표정을 숨기는 일 없이,
+					DATAFORM 봉사할 수 있는 기쁨으로부터인가 눈초리를 내려,
+					DATAFORM 뺨을 홍 조수 시키면서,
+					DATAFORM 코를 대로 가는 성취로 스윗치가 들어갔는지,
+					DATAFORM 쾌락에 무너진 표정인 일을 눈치채지 않는 정도에,
+					DATAFORM 서서히 쾌락에 녹은 표정을 보이면서,
+					DATAFORM 천한 소리를 내고 있는 일도 신경쓰지 않고,
+				ENDDATA
+		ENDIF
+		IF TALENT:(MPLY:0):체격 == 체격_작은체형
+			PRINTDATA
+				DATAFORM %조사처리(PENIS_NAME,"가")% 들어가지 않는 입으로 필사적이면서
+				DATAFORM 얇고 사랑스러운 입술로
+				DATAFORM 작은 입으로 필사적이면서
+				DATAFORM 
+			ENDDATA
+		ELSE
+			PRINTDATA
+				DATAFORM 입 안 가득
+				DATAFORM 요염한 입술로
+				DATAFORM 얼굴에 붙은 고기구멍으로
+				DATAFORM 젖은 입술로
+			ENDDATA
+		ENDIF
+		PRINTDATA
+			DATAFORM 물어,
+			DATAFORM 가득 넣으면,
+			DATAFORM 달라붙어,
+		ENDDATA
+		IF ABL:(MPLY:0):성기술 >= 3
+			PRINTDATA
+				DATAFORM 교묘한 혀놀림으로
+				DATAFORM 별의 구멍에 들어갈 수 있었는지라고 생각할 정도의 연동으로
+				DATAFORM 교묘한 입사용으로
+				DATAFORM 정중하고 섬세한 입 기술로
+			ENDDATA
+			SIF GETBIT(TALENT:(MPLY:0):음란계, 소질_음란_정액변소)
+				PRINTFORM 남을 기쁘게 하기 위한 변 여자답고
+			PRINTDATAW
+				DATAFORM %조사처리(ANAME(MTAR:0),"를")% 기쁘게 했다…
+				DATAFORM %조사처리(ANAME(MTAR:0),"를")% 대접했다…
+				DATAFORM %ANAME(MTAR:0)%에 봉사했다…
+				DATAFORM %ANAME(MTAR:0)%의 %조사처리(PENIS_NAME,"를")% 끈적 계속 빨았다…
+			ENDDATA
+		ELSE
+			PRINTDATA
+				DATAFORM 서투른 혀놀림으로
+				DATAFORM 어색한 움직임으로
+				DATAFORM 익숙해지지 않는 입사용으로
+				DATAFORM 가끔오면서
+			ENDDATA
+			SIF GETBIT(TALENT:(MPLY:0):음란계, 소질_음란_정액변소)
+				PRINTFORM 남을 기쁘게 하기 위한 변 여자답고
+			PRINTDATAW
+				DATAFORM %ANAME(MTAR:0)%의 %조사처리(PENIS_NAME,"를")% 꾸짖었다…
+				DATAFORM %ANAME(MTAR:0)%에의 봉사를 계속했다…
+				DATAFORM %ANAME(MTAR:0)%의 %조사처리(PENIS_NAME,"를")% 계속 빨았다…
+			ENDDATA
+		ENDIF
+	;주도권이 플레이어측
+	CASE 0
+		SELECTCASE PREVCOM
+			;안하 페라
+			CASE 302,303,351
+				LOCAL:3 = 21
+				PRINTFORML 남몰래 책상아래에 기어들어, %ANAME(MTAR:0)%의 %조사처리(PENIS_NAME,"를")% 노출시키면
+			;뜸들고 페라
+			CASE 301
+				LOCAL:3 = 22
+				PRINTFORML 땀으로 뜸들고 있는 %ANAME(MTAR:0)%의 속옷을 벗겨내, 증기가 오르고 있는 %조사처리(PENIS_NAME,"를")%
+			;가창 페라
+			CASE 306
+				LOCAL:3 = 23
+				PRINTFORML 노래를 계속하면서 얼굴을 %ANAME(MTAR:0)%의 사타구니에 접근해, 꺼낸 %PENIS_NAME%에 노래해 걸치도록(듯이)
+			;청소 페라
+			CASE 310,311
+				LOCAL:3 = 24
+				PRINTFORML 일부러 %ANAME(MTAR:0)%의 사타구니에\@ PREVCOM == 310 ? 술잔 # 벌꿀수 \@의 나머지를 흘리면, 젖은 속옷마다 %ANAME(MTAR:0)%의 %조사처리(PENIS_NAME,"를")%
+			;현장 연습
+			CASE 550
+				LOCAL:3 = 25
+				PRINTFORML 조속히 실천이다라는 듯이 %ANAME(MTAR:0)%의 %조사처리(PENIS_NAME,"를")% 꺼내면
+			;뒷골목 페라
+			CASE 304
+				LOCAL:3 = 26
+				PRINTFORML 인기척이 없는 뒷골목으로 데리고 들어가면, %ANAME(MTAR:0)%의 속옷을 벗겨내 그대로 %조사처리(PENIS_NAME,"를")%
+			CASE 352
+				LOCAL:3 = 28
+				PRINTFORML %조사처리(ANAME(MTAR:0),"를")% 책장의 그늘에 데리고 들어가, %ANAME(MTAR:0)%의 속옷을 벗겨내 그대로 %조사처리(PENIS_NAME,"를")%
+			;음담
+			CASE 307
+				LOCAL:3 = 29
+				PRINTFORML 음담에 흥분을 억제할 수 없게 되어, %ANAME(MTAR:0)%의 속옷을 벗겨내 그대로 %조사처리(PENIS_NAME,"를")%
+			CASEELSE
+				IF GET_PLACENAME(TFLAG:54) == "성 주변 마을"
+					LOCAL:3 = 26
+					PRINTFORML 인기척이 없는 뒷골목으로 데리고 들어가면, %ANAME(MTAR:0)%의 속옷을 벗겨내 그대로 %조사처리(PENIS_NAME,"를")%
+			;온천
+				ELSEIF GET_PLACENAME(TFLAG:54) == "온천"
+					LOCAL:3 = 27
+					IF RAND:2 == 0
+						PRINTFORML %ANAME(MTAR:0)%의 허리를 띄워%조사처리(PENIS_NAME,"를")% 수면으로부터 부상시키면
+					ELSE
+						PRINTFORML %조사처리(ANAME(MTAR:0),"를")% 비근한 바위에 앉게 하면, 더운 물이 방울져 떨어진 %조사처리(PENIS_NAME,"를")%
+					ENDIF
+				ELSEIF GET_PLACENAME(TFLAG:54) == "강변"
+					LOCAL:3 = 30
+					IF RAND:3 == 0
+						PRINTFORML %ANAME(MTAR:0)%의 허리를 띄워%조사처리(PENIS_NAME,"를")% 수면으로부터 부상시키면
+					ELSEIF RAND:2 == 0
+						PRINTFORML %ANAME(MTAR:0)%에 휘감겨, 수중에서 %조사처리(PENIS_NAME,"를")% 노출시키면
+					ELSE
+						PRINTFORML %조사처리(ANAME(MTAR:0),"를")% 비근한 바위에 앉게 하면, 물이 방울져 떨어진 %조사처리(PENIS_NAME,"를")%
+					ENDIF
+				ELSEIF GET_PLACENAME(TFLAG:54) == "삼림"
+					IF RAND:3 == 0
+						PRINTFORML 큰 사냥감이 있었다고 중얼거려, %ANAME(MTAR:0)%의 속옷을 벗겨내면
+					ELSE
+						PRINTFORML %조사처리(ANAME(MTAR:0),"를")% 나무 그늘에 데리고 들어가면, %조사처리(PENIS_NAME,"를")% 노출시키고
+					ENDIF
+				ELSE
+					LOCAL:3 = 20
+					PRINTFORML 주위에 인기척이 없는 것을 확인하면, %ANAME(MTAR:0)%의 %조사처리(PENIS_NAME,"를")% 노출시키고
+				ENDIF
+		ENDSELECT
+		IF ABL:(MPLY:0):정애 > 4
+			PRINTDATA
+				DATAFORM 인내의 한계라는 표정으로,
+				DATAFORM 반광란으로 뺨을 비비고 나서 단번에,
+				DATAFORM 소중히 하도록(듯이) 키스의 비를 흔들리게 하고 나서,
+				DATAFORM 숨이 막히는 것 같은 수컷의 냄새에 눈동자를 녹여,
+				DATAFORM 한껏 타액을 쳐바르면서
+			ENDDATA
+		ENDIF
+		IF TALENT:(MPLY:0):체격 == 체격_작은체형
+			IF RAND:2 == 0
+				PRINTFORM 작은 입으로 필사적으로
+			ELSE
+				PRINTFORM 얇고 사랑스러운 입술로
+			ENDIF
+		ELSE
+			IF RAND:2 == 0
+				PRINTFORM 입 안 가득
+			ELSE
+				PRINTFORM 요염한 입술로
+			ENDIF
+		ENDIF
+		IF RAND:3 == 0
+			PRINTFORM 뭄
+		ELSEIF RAND:2 == 0
+			PRINTFORM 가득 넣음
+		ELSE
+			PRINTFORM 달라붙음
+		ENDIF
+		IF GETBIT(TALENT:(MPLY:0):음란계, 소질_음란_정액변소)
+			PRINTFORM , 남자를 기쁘게 하기 위한 변 여자답고
+		ENDIF
+		IF RAND:2 == 0
+			PRINTFORMW 봉사하고 있다…
+		ELSE
+			PRINTFORMW 일심 불란에 맛보고 있다…
+		ENDIF
+ENDSELECT
+
+PRINTL 
+
+RETURN LOCAL:3
+
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST330
+
+LOCAL:0 = 0
+LOCAL:1 = 0
+
+;SKIPDISP 하고 나서 호출해 RESULT를 취하면, 캐릭터 구상으로부터 어느 패턴인가 읽을 수 있는…하즈
+
+LOCAL:3 = 0
+
+;사정함 다툴 수 있었는가 어떤가
+LOCAL:1 = NOWEX:(MTAR:0):사정
+
+;정애로 분기
+IF ABL:(MPLY:0):정애 > 4
+	LOCAL:0 = 2
+ELSEIF ABL:(MPLY:0):정애 > 1
+	LOCAL:0 = 1
+ENDIF
+
+
+SELECTCASE PREVCOM
+	;식 더-
+	CASE 351
+		IF LOCAL:1 > 0 && LOCAL:0 > 1
+			LOCAL:3 = 10
+			PRINTFORML 아무 일도 없는 것처럼 자리로 돌아간 %조사처리(ANAME(MPLY:0),"는")%, 입안에 남긴 %ANAME(MTAR:0)%의 정액을 요리에 늘어뜨리면
+			PRINTFORMW 매우 맛있을 것 같게, 한입 한입 맛보면서 완식 했다
+		ELSEIF LOCAL:0 > 1
+			LOCAL:3 = 11
+			PRINTFORML 서운한 듯이 %ANAME(MTAR:0)%의 페니스로부터 입을 떼어 놓아 자리로 돌아간 %조사처리(ANAME(MPLY:0),"는")%
+			PRINTFORMW 이제(이미/벌써/더는/정말) 한가닥 더하고 싶었다, 라고 나머지의 요리를 희롱하면서 다 먹었다
+		ELSEIF LOCAL:0 > 0
+			LOCAL:3 = 12
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 자리로 돌아가면, %ANAME(MTAR:0)%의 맛 밖에 하지 않다, 라고
+			PRINTFORMW 등진 것처럼, 하지만 기쁜듯이 푸념하면서 나머지의 식사를 맛보았다
+		ELSE
+		ENDIF
+	;음더-
+	CASE 310,311
+		IF LOCAL:1 > 0 && LOCAL:0 > 1
+			LOCAL:3 = 20
+			IF RAND:2 == 0
+				PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 더욱 더 요도구로부터 내뿜는 %ANAME(MTAR:0)%의 정액을 잔으로 받아 들여, 입을 대었다
+				PRINTFORMW 맛보면서 마지막 한입을 삼키면, 작은, 그리고 요염한 한숨을 흘렸다
+			ELSE
+				PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 입안에 남기고 있었던 %ANAME(MTAR:0)%의 정액을
+				PRINTFORMW 새로운\@ PREVCOM == 310 ? 술잔 # 벌꿀수 \@에 늘어뜨려, 때때로 휘저으면서 맛의 변화를 즐겼다
+			ENDIF
+		ELSEIF LOCAL:0 > 1
+			LOCAL:3 = 21
+			PRINTFORML 불을 정도로 %ANAME(MTAR:0)%의 페니스를 다 맛본 %조사처리(ANAME(MPLY:0),"는")%
+			PRINTFORMW 요도구의 앞에 잔을 내걸어, 정액으로 채웠으면 좋은 듯이 눈을 치켜 뜨고 간원 했다
+		ELSEIF LOCAL:0 > 0
+			LOCAL:3 = 22
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")%\@ PREVCOM == 310 ? 술잔 # 벌꿀수 \@의 나머지를 천천히, 한입씩 맛봐서는 얼굴을 정신나가게 하면서 삼켜 갔다
+		ELSEIF (ABL:(MPLY:0):주도도Ｕ <= -100 || CFLAG:(MPLY:0):4 >= 1500) && LOCAL:1 > 1
+			LOCAL:3 = 23
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 잔에 찰랑찰랑사정해, 다 마시도록(듯이) 재촉하면
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 몸을 진동시키면서 마지막 한 방울까지 다 마셨다
+		ELSE
+		ENDIF
+	;스윽스윽
+	CASE 321
+		LOCAL:3 = 30
+		PRINTFORMW 페니스를 문 채로 %ANAME(MTAR:0)%에 머리를 어루만질 수 있으면, %조사처리(ANAME(MPLY:0),"는")% 기쁜듯이 웃음을 띄웠다
+	;머리카락으로 닦는다
+	CASE 322,323
+		IF ABL:(MPLY:0):주도도Ｕ <= -100 || CFLAG:(MPLY:0):4 >= 1500
+			LOCAL:3 = 40
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")%, %ANAME(MPLY:0)%의 머리카락이 끈적끈적이 되는 것도 상관하지 않고 페니스의 더러움을 닦아 취했다
+			PRINTFORMW 추잡한 광택을 발하는 당신의 머리카락을 %조사처리(ANAME(MPLY:0),"는")% 뺨을 물들이면서 만지고 있다
+		ENDIF
+	CASEELSE
+	;파파의 밀크
+	;아저씨 냄새가 났기 때문에 코멘트 아웃
+;		IF TALENT:(MPLY:0):임신 || (TALENT:(MPLY:0):모유체질 && CFLAG:(MPLY:0):행동불능상태)
+;			IF LOCAL:1 > 0 && LOCAL:0 > 1
+;				IF RAND:3 == 0 && TALENT:(MPLY:0):임신
+;				LOCAL:3 = 50
+;					PRINTFORMW 배의 아이도 파파의 밀크를 아주 좋아하게 되도록, 라고 비는 %조사처리(ANAME(MPLY:0),"는")% 자모 그 자체인…기원의 내용 이외는
+;				ELSE
+;				LOCAL:3 = 51
+;					PRINTFORMW 모유가 나오는 것이 좋아진다, 라고 %조사처리(ANAME(MPLY:0),"는")% 기쁜듯이\@ TALENT:(MPLY:0):임신? 배 # 가슴 \@를 문지르고 있다
+;				ENDIF
+;			ELSEIF LOCAL:0 > 1
+;				LOCAL:3 = 52
+;				PRINTFORMW \@ TALENT:(MPLY:0):임신? 배의 아이에게 # 아이를 위해서(때문에)도\@파파의 밀크를 줘? (와)과%조사처리(ANAME(MPLY:0),"는")% 요염하게 미소지었다
+;			ELSEIF LOCAL:0 > 0 && TALENT:(MPLY:0):임신
+;				LOCAL:3 = 53
+;				PRINTFORMW %조사처리(ANAME(MPLY:0),"가")% 배를 문지르면서, 이 아이도 정액을 좋아하게 되면 어떻게 하지…라고 중얼거렸다
+;			ELSE
+;				LOCAL:3 = 54
+;				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 아이의 영양을 위해서(때문에), 라고 %ANAME(MTAR:0)%에 설득해지고 곤혹의 표정을 띄웠다
+;			ENDIF
+	;그 이외
+;		ELSE
+			IF LOCAL:1 > 0 && LOCAL:0 > 1
+				LOCAL:3 = 1
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 입도 도 마다 시켜 목을 울린 후, %ANAME(MTAR:0)%의 귓전으로 잘 먹었어요와 속삭였다
+			ELSEIF LOCAL:0 > 1
+				LOCAL:3 = 2
+				PRINTFORMW 서운한 듯이 %ANAME(MTAR:0)%의 페니스로부터 입을 떼어 놓은 %조사처리(ANAME(MPLY:0),"는")%, 손가락을 입에 대어 뭔가를 재촉 했다
+			ELSEIF LOCAL:0 > 0
+				LOCAL:3 = 3
+				PRINTFORML %조사처리(ANAME(MPLY:0),"는")%, %ANAME(MTAR:0)%의 페니스를 닦아 끈적끈적이 된 손수건으로 입을 닦았다
+				PRINTFORMW 그 눈은 물기 뺨은 세키 보고를 띠어 입가의 해이해짐은 잠깐 사라지는 일은 없었다
+			ELSE
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 페니스와 자신의 입을 손수건으로 예쁘게 닦아 잡기 몸 맵시를 정돈했다
+			ENDIF
+;		ENDIF
+ENDSELECT
+
+RETURN LOCAL:3
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN330
+RETURN 커맨드_일상

@@ -1,0 +1,69 @@
+﻿;LIFE 부분에 사용하는 변수를 정의(전반적으로 사용하는 변수는 VARIABLE.ERH 에)
+;
+;-------------------------------------------------
+;컬럼 전반
+;-------------------------------------------------
+;좌우 컬럼의 표시 개시시의 행 번호
+#DIM FIRST_COLUMN_RIGHT_LINE
+
+;FLAG:거점페이즈선택커맨드가 선택 불가 때 지정하는 Default의 메뉴 번호
+#DIM CONST DEFAULT_MENU_NUM = 11
+
+;메뉴에 사용하는 번호의 개시치와 종료치의 정수
+;개시치（10 이하는 오른쪽 컬럼의 버튼용）
+#DIM CONST COLUMN_LEFT_MENU_START_VALUE = 11
+;종료치（90이상은 설정용）
+#DIM CONST COLUMN_LEFT_MENU_END_VALUE = 89
+
+;최신의 오른쪽 컬럼（의 왼쪽 메뉴 번호）를 보존한다
+#DIM SAVEDATA COLUMN_RIGHT_MENU_SAVE_NUM = 11
+
+;-------------------------------------------------
+;왼쪽 컬럼 메뉴 관련
+;-------------------------------------------------
+;왼쪽 컬럼 메뉴의 카테고리 명칭을 보존하는 배열
+#DIMS COLUMN_LEFT_CATEGORY_NAME, 10
+
+;왼쪽 컬럼의 표시항목으로 대등해 순서를 보존한다（배열 번호=행 번호/현재의 최대행수는 37）
+;줄 순서 카테고리 번호
+#DIM COLUMN_LEFT_CATEGORY_NUM, 40
+;줄 순서 메뉴 번호
+#DIM COLUMN_LEFT_MENU_NUM, 40
+
+;-------------------------------------------------
+;오른쪽 컬럼 컨텐츠 관련
+;-------------------------------------------------
+;오른쪽 컬럼 캐릭터 리스트의 버튼 번호에의 추가치 정수
+;  캐릭터 리스트 1에서는 버튼 번호의 추가치 100
+;  캐릭터 리스트 2에서는 버튼 번호의 추가치 1100
+;  입력치로부터 이 추가값을 깎아 캐릭터 번호로 변환한다
+;  라는 처리가 다용되고 있기 때문에
+;  이 100/1100를 보기에 알기 쉽고하기 위한 정수
+#DIM CONST SHOP_LIFE_LIST1_ADD_INPUT = 100
+#DIM CONST SHOP_LIFE_LIST2_ADD_INPUT = 1100
+
+;캐릭터 리스트 페이지 이동 버튼에 할당하는 번호
+#DIM CONST SHOP_LIFE_LIST1_PAGE_BACK = 98
+#DIM CONST SHOP_LIFE_LIST1_PAGE_NEXT = 99
+#DIM CONST SHOP_LIFE_LIST2_PAGE_BACK = 96
+#DIM CONST SHOP_LIFE_LIST2_PAGE_NEXT = 97
+
+;캐릭터 리스트의 최대 페이지수
+;주로 리스트 함수로 계산되므로 함수내 선언으로 좋겠지만
+;리스트 함수가 사용할 수 없는 특수한 리스트를 작성하는 경우에 공유할 수 있도록(듯이) 여기에 배치
+#DIM SHOP_LIFE_LIST1_PAGE_MAX = 1
+#DIM SHOP_LIFE_LIST2_PAGE_MAX = 1
+
+;오른쪽 컬럼의 각 메뉴로 사용해 메뉴를 옮기면 리셋트 되는 범용 변수
+#DIM MENUVAR, 100
+#DIMS MENUVARS, 100
+
+;-------------------------------------------------
+;맵 번호
+;-------------------------------------------------
+#DIM SHOP_LIFE_MAP_FLAG
+#DIM CONST SHOP_LIFE_MAP_AREA_MAX = 51
+#DIM CONST SHOP_LIFE_MAP_AREA_COM_MAX = 10
+#DIM SAVEDATA SHOP_LIFE_MAP_NUM
+#DIM SAVEDATA SHOP_LIFE_MAP_AREA_NUM
+#DIM SAVEDATA SHOP_LIFE_MAP_AREA_COM_NUM

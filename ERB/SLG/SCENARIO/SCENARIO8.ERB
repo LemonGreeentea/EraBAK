@@ -1,0 +1,1756 @@
+﻿;-------------------------------------------------
+;시나리오 8
+;제２차 환상향대전
+;-------------------------------------------------
+;@SCENARIO_NAME_8
+;RESULTS =제２차 환상향대전
+;RETURN
+;
+;@SCENARIO_INTRO_8
+;PRINTFORML
+;PRINTFORMW 환상향대전의 뒤, 환상향은 다시 군웅할거가 되었다!
+;PRINTFORMW 비참한 대전의 결과, 마을 주변은 여러가지 세력이 혼잡하다!
+;PRINTFORMW 하지만 이것으로 단념하는 녀석들이 아니다, 호시탐탐 부활때를 기다리고 있었다!
+;PRINTFORMW 한편으로 대전을 경험하지 않았던 변경의 사람들은 힘을 모아, 새로운 시대의 패권을 노리고 있다!
+;PRINTFORMW 환상향의 장래는 어느 쪽이다!?
+;PRINTL
+;PRINTL
+;PRINTFORML 세력수를 줄여 플레이 합니까?
+;PRINTFORML （너무 무거운, 개양 플레이 하고 싶은, 등의 경우는 이쪽을）
+;CALL ASK_YN
+;SIF RESULT == 0
+;	SETBIT SCVAR:2, 0
+;;PRINTL
+;;PRINTFORML 각파파벌에 주요 도시를 마련합니까? （미실장)
+;;PRINTFORML （일부의 도시가 크게 강화되어 미니 이벤트가 추가됩니다）
+;;CALL ASK_YN
+;;SIF RESULT == 0
+;	SETBIT SCVAR:2, 1
+;PRINTL
+;PRINTFORML 파벌 마다 색을 두드러지게 합니까?
+;PRINTFORML （초기에 동맹을 짜고 있는 세력간은 거의 같은 색이 됩니다）
+;CALL ASK_YN
+;SIF RESULT == 0
+;	SETBIT SCVAR:2, 2
+;
+;
+;;랜덤 캐릭터는 선택에 맡긴다
+;FLAG:OP랜덤 캐릭터 사용 = 0
+;
+;@SCENARIO_PLACEMENT_8
+;
+;SIF GETBIT(SCVAR:2, 2)
+;;세력 설정
+;COUNTRY_BOSS:0 = 0
+;COUNTRY_COLOR:0 = GETDEFCOLOR()
+;
+;;;--------팀 하쿠레이의 무녀;--------
+;COUNTRY_BOSS:1 = GET_ID(NAME_TO_CHARA("레이무"))
+;COUNTRY_COLOR:1 = 0x808080
+;COUNTRY_AI_TYPE:1 = AI_외교
+;
+;CITY_OWNER:GET_CITYNUMBER("하쿠레이 신사") = 1
+;CITY_OWNER:GET_CITYNUMBER("신사 뒤쪽의 연못") = 1
+;CITY_OWNER:GET_CITYNUMBER("하쿠레이 신사") = 1
+;
+;CFLAG:(NAME_TO_CHARA("레이무")):1 = 1
+;;나여기에 있어
+;CFLAG:(NAME_TO_CHARA("미마")):1 = 1
+;CFLAG:(NAME_TO_CHARA("스이카")):1 = 1
+;
+;SIF GETBIT(SCVAR:2, 0)
+;	CFLAG:(NAME_TO_CHARA("카센")):1 = 15
+;
+;;;--------팀 홍마관;--------
+;COUNTRY_BOSS:2 = GET_ID(NAME_TO_CHARA("레밀리아"))
+;COUNTRY_COLOR:2 = 0xFF0000
+;COUNTRY_AI_TYPE:2 = AI_호전
+;
+;CITY_OWNER:GET_CITYNUMBER("홍마관") = 2
+;CITY_OWNER:GET_CITYNUMBER("지하도서관") = 2
+;CFLAG:(NAME_TO_CHARA("레밀리아")):1 = 2
+;CFLAG:(NAME_TO_CHARA("메이링")):1 = 2
+;CFLAG:(NAME_TO_CHARA("사쿠야")):1 = 2
+;CFLAG:(NAME_TO_CHARA("플랑도르")):1 = 2
+;CFLAG:(NAME_TO_CHARA("파츄리")):1 = 2
+;CFLAG:(NAME_TO_CHARA("소악마")):1 = 2
+;
+;;;--------팀 지하도서관;--------
+;COUNTRY_BOSS:3 = GET_ID(NAME_TO_CHARA("마리사"))
+;COUNTRY_COLOR:3 = 0x00ced1
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:3 = 0x66ffff
+;CITY_OWNER:GET_CITYNUMBER("키리사메 마법상점") = 3
+;CITY_OWNER:GET_CITYNUMBER("마가트로이드관") = 3
+;
+;CFLAG:(NAME_TO_CHARA("마리사")):1 = 3
+;CFLAG:(NAME_TO_CHARA("앨리스")):1 = 3
+;
+;;--------팀 백옥루;--------
+;COUNTRY_BOSS:4 = GET_ID(NAME_TO_CHARA("유유코"))
+;COUNTRY_COLOR:4 = 0xffb6c1
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:4 = 0xff66ff
+;COUNTRY_AI_TYPE:4 = AI_내정
+;
+;CITY_OWNER:GET_CITYNUMBER("백옥루") = 4
+;CITY_OWNER:GET_CITYNUMBER("칠천계단") = 4
+;CITY_OWNER:GET_CITYNUMBER("사이쿄우 아야카시") = 4
+;
+;CFLAG:(NAME_TO_CHARA("유유코")):1 = 4
+;CFLAG:(NAME_TO_CHARA("요우무")):1 = 4
+;CFLAG:(NAME_TO_CHARA("반령")):1 = 4
+;CFLAG:(NAME_TO_CHARA("요우키")):1 = 4
+;
+;
+;;--------팀 유령 악단;--------
+;COUNTRY_BOSS:5= GET_ID(NAME_TO_CHARA("루나사"))
+;COUNTRY_COLOR:5 = 0xe6e6fa
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:5 = 0xffffcc
+;CITY_OWNER:GET_CITYNUMBER("폐양관") = 5
+;
+;CFLAG:(NAME_TO_CHARA("리리카")):1 = 5
+;CFLAG:(NAME_TO_CHARA("메를랑")):1 = 5
+;CFLAG:(NAME_TO_CHARA("루나사")):1 = 5
+;
+;;--------팀마요이가;--------
+;COUNTRY_BOSS:6 = GET_ID(NAME_TO_CHARA("유카리"))
+;COUNTRY_COLOR:6 = 0xff00f
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:6 = 0xff33ff
+;COUNTRY_AI_TYPE:6 = AI_외교
+;
+;CITY_OWNER:GET_CITYNUMBER("마요이가") = 6
+;CITY_OWNER:GET_CITYNUMBER("야쿠모 저택") = 6
+;
+;CFLAG:(NAME_TO_CHARA("유카리")):1 = 6
+;CFLAG:(NAME_TO_CHARA("란")):1 = 6
+;CFLAG:(NAME_TO_CHARA("첸")):1 = 6
+;
+;;--------팀 영원정--------
+;COUNTRY_BOSS:7 = GET_ID(NAME_TO_CHARA("카구야"))
+;COUNTRY_COLOR:7 = 0x4b0082
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:7 = 0x003399
+;COUNTRY_AI_TYPE:7 = AI_내정
+;
+;CITY_OWNER:GET_CITYNUMBER("영원정") = 7
+;CITY_OWNER:GET_CITYNUMBER("흰 토끼의 취락") = 7
+;
+;CFLAG:(NAME_TO_CHARA("카구야")):1 = 7
+;CFLAG:(NAME_TO_CHARA("에이린")):1 = 7
+;CFLAG:(NAME_TO_CHARA("테위")):1 = 7
+;CFLAG:(NAME_TO_CHARA("레이센")):1 = 7
+;
+;;--------팀 시비곡직청--------
+;COUNTRY_BOSS:8 = GET_ID(NAME_TO_CHARA("시키에이키"))
+;COUNTRY_COLOR:8 = 0 x05ff82 
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:8 = 0x33ff33
+;COUNTRY_AI_TYPE:8 = AI_내정
+;
+;CITY_OWNER:GET_CITYNUMBER("시비곡직청") = 8
+;CITY_OWNER:GET_CITYNUMBER("피안") = 8
+;
+;CFLAG:(NAME_TO_CHARA("시키에이키")):1 = 8
+;CFLAG:(NAME_TO_CHARA("코마치")):1 = 8
+;CFLAG:(NAME_TO_CHARA("릴리블랙")):1 = 8
+;
+;;--------팀 모리야 신사--------
+;COUNTRY_BOSS:9 = GET_ID(NAME_TO_CHARA("카나코"))
+;COUNTRY_COLOR:9 = 0x228b22
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:9 = 0x00cc00
+;COUNTRY_AI_TYPE:9 = AI_호전
+;
+;CITY_OWNER:GET_CITYNUMBER("모리야 신사") = 9
+;CITY_OWNER:GET_CITYNUMBER("풍신의 호수") = 9
+;
+;CFLAG:(NAME_TO_CHARA("카나코")):1 = 9
+;CFLAG:(NAME_TO_CHARA("스와코")):1 = 9
+;CFLAG:(NAME_TO_CHARA("사나에")):1 = 9
+;
+;
+;IF ! GETBIT(SCVAR:2, 0)
+;;--------팀 들신님--------
+;	COUNTRY_BOSS:10 = GET_ID(NAME_TO_CHARA("카센"))
+;	COUNTRY_COLOR:10 = 0x808000
+;	SIF GETBIT(SCVAR:2, 2)
+;		COUNTRY_COLOR:10 = 0x669900
+;	COUNTRY_AI_TYPE:10 = AI_방위
+;
+;	CITY_OWNER:GET_CITYNUMBER("요괴의 산 기슭") = 10
+;	CITY_OWNER:GET_CITYNUMBER("요괴의 산 수해") = 10
+;	CITY_OWNER:GET_CITYNUMBER("카센의 저택") = 10
+;
+;	CFLAG:(NAME_TO_CHARA("시즈하")):1 = 10
+;	CFLAG:(NAME_TO_CHARA("미노리코")):1 = 10
+;	CFLAG:(NAME_TO_CHARA("카센")):1 = 10
+;;------------------------------
+;ENDIF
+;
+;;--------팀 텐구--------
+;COUNTRY_BOSS:11 = GET_ID(NAME_TO_CHARA("아야"))
+;COUNTRY_COLOR:11 = 0xbdb76b
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:11 = 0x66cc33
+;COUNTRY_AI_TYPE:11 = AI_외교
+;
+;CITY_OWNER:GET_CITYNUMBER("구천폭포") = 11
+;CITY_OWNER:GET_CITYNUMBER("큰 두꺼비 연못") = 11
+;CFLAG:(NAME_TO_CHARA("아야")):1 = 11
+;CFLAG:(NAME_TO_CHARA("모미지")):1 = 11
+;CFLAG:(NAME_TO_CHARA("하타테")):1 = 11
+;
+;;--------팀 천계--------
+;COUNTRY_BOSS:12 = GET_ID(NAME_TO_CHARA("텐시"))
+;COUNTRY_COLOR:12 = 0x87ceeb
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:12 = 0x0000ff
+;COUNTRY_AI_TYPE:12 = AI_내정
+;CITY_OWNER:GET_CITYNUMBER("도원") = 12
+;CITY_OWNER:GET_CITYNUMBER("용궁의 사용인 전용 숙소") = 12
+;CITY_OWNER:GET_CITYNUMBER("히나나이 저택") = 12
+;
+;CFLAG:(NAME_TO_CHARA("텐시")):1 = 12
+;CFLAG:(NAME_TO_CHARA("이쿠")):1 = 12
+;
+;;--------팀 지령전--------
+;COUNTRY_BOSS:13 = GET_ID(NAME_TO_CHARA("사토리"))
+;COUNTRY_COLOR:13 = 0xff1493
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:13 = 0 x996699 
+;COUNTRY_AI_TYPE:13 = AI_내정
+;
+;CITY_OWNER:GET_CITYNUMBER("지령전") = 13
+;
+;CFLAG:(NAME_TO_CHARA("사토리")):1 = 13
+;CFLAG:(NAME_TO_CHARA("오린")):1 = 13
+;CFLAG:(NAME_TO_CHARA("우츠호")):1 = 13
+;CFLAG:(NAME_TO_CHARA("코이시")):1 = 13
+;
+;;--------팀 명련사--------
+;COUNTRY_BOSS:14 = GET_ID(NAME_TO_CHARA("뱌쿠렌"))
+;COUNTRY_COLOR:14 = 0x0000cd
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:14 = 0x66ffcc
+;COUNTRY_AI_TYPE:14 = AI_외교
+;
+;CITY_OWNER:GET_CITYNUMBER("명련사") = 14
+;
+;
+;CFLAG:(NAME_TO_CHARA("쇼우")):1 = 14
+;CFLAG:(NAME_TO_CHARA("뱌쿠렌")):1 = 14
+;CFLAG:(NAME_TO_CHARA("이치린")):1 = 14
+;CFLAG:(NAME_TO_CHARA("운잔")):1 = 14
+;CFLAG:(NAME_TO_CHARA("미나미츠")):1 = 14
+;
+;
+;;--------팀 요괴의산--------
+;COUNTRY_BOSS:15 = GET_ID(NAME_TO_CHARA("니토리"))
+;COUNTRY_COLOR:15 = 0X00fa9a
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:11 = 0x00cc66
+;COUNTRY_AI_TYPE:15 = AI_방위
+;CITY_OWNER:GET_CITYNUMBER("현무의 늪") = 15
+;CITY_OWNER:GET_CITYNUMBER("미답의 계곡") = 15
+;CFLAG:(NAME_TO_CHARA("니토리")):1 = 15
+;CFLAG:(NAME_TO_CHARA("히나")):1 = 15
+;
+;IF GETBIT(SCVAR:2, 0)
+;	CITY_OWNER:GET_CITYNUMBER("요괴의 산 기슭") = 15
+;	CFLAG:(NAME_TO_CHARA("시즈하")):1 = 15
+;	CFLAG:(NAME_TO_CHARA("미노리코")):1 = 15
+;	CFLAG:(NAME_TO_CHARA("카센")):1 = 15
+;ENDIF
+;;--------팀 상급 들요괴--------
+;COUNTRY_BOSS:16 = GET_ID(NAME_TO_CHARA("누에"))
+;COUNTRY_COLOR:16 = 0xba55d3
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:16 = 0xff3300
+;COUNTRY_AI_TYPE:16 = AI_호전
+;
+;CITY_OWNER:GET_CITYNUMBER("마법의 숲 북부") = 16
+;CITY_OWNER:GET_CITYNUMBER("마법의 숲 서부") = 16
+;
+;CFLAG:(NAME_TO_CHARA("누에")):1 = 16
+;CFLAG:(NAME_TO_CHARA("마미조")):1 = 16
+;CFLAG:(NAME_TO_CHARA("코코로")):1 = 1
+;
+;;--------팀 신령묘--------
+;COUNTRY_BOSS:17 = GET_ID(NAME_TO_CHARA("미코"))
+;COUNTRY_COLOR:17 = 0x4169e1
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:17 = 0x6699ff
+;COUNTRY_AI_TYPE:17 = AI_외교
+;
+;CITY_OWNER:GET_CITYNUMBER("신령묘") = 17
+;CITY_OWNER:GET_CITYNUMBER("몽전대사묘") = 17
+;
+;CFLAG:(NAME_TO_CHARA("미코")):1 = 17
+;CFLAG:(NAME_TO_CHARA("후토")):1 = 17
+;CFLAG:(NAME_TO_CHARA("토지코")):1 = 17
+;IF GETBIT(SCVAR:2, 0)
+;	CITY_OWNER:GET_CITYNUMBER("몽전대사묘") = 17
+;	CFLAG:(NAME_TO_CHARA("요시카")):1 = 17
+;	CFLAG:(NAME_TO_CHARA("청아")):1 = 17
+;ENDIF
+;
+;;--------팀휘침성--------
+;COUNTRY_BOSS:18 = GET_ID(NAME_TO_CHARA("신묘마루"))
+;COUNTRY_COLOR:18 = 0xff0066
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:18 = 0 xff6666 
+;CITY_OWNER:GET_CITYNUMBER("휘침성") = 18
+;
+;CFLAG:(NAME_TO_CHARA("신묘마루")):1 = 18
+;CFLAG:(NAME_TO_CHARA("세이자")):1 = 18
+;
+;IF GETBIT(SCVAR:2, 0)
+;	CITY_OWNER:GET_CITYNUMBER("미혹의 죽림 남부") = 18
+;	CFLAG:(NAME_TO_CHARA("라이코")):1 = 18
+;	CFLAG:(NAME_TO_CHARA("벤벤")):1 = 18
+;	CFLAG:(NAME_TO_CHARA("야츠하시")):1 = 18
+;ENDIF
+;
+;;--------팀 민간 네트워크--------
+;COUNTRY_BOSS:19 = GET_ID(NAME_TO_CHARA("카게로"))
+;COUNTRY_COLOR:19 = 0x800000
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:19 = 0xff3333
+;CITY_OWNER:GET_CITYNUMBER("태양의 밭") = 19
+;CITY_OWNER:GET_CITYNUMBER("인간마을의 밭") = 19
+;
+;CFLAG:(NAME_TO_CHARA("카게로")):1 = 19
+;CFLAG:(NAME_TO_CHARA("와카사기히메")):1 = 19
+;CFLAG:(NAME_TO_CHARA("세키반키")):1 = 19
+;CFLAG:(NAME_TO_CHARA("토키코")):1 = 19
+;
+;
+;;--------팀 대나무숲--------
+;COUNTRY_BOSS:20 = GET_ID(NAME_TO_CHARA("케이네"))
+;COUNTRY_COLOR:20 = 0x6a5acd
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:20 = 0x66cccc
+;COUNTRY_AI_TYPE:20 = AI_방위
+;
+;CITY_OWNER:GET_CITYNUMBER("모코우 집") = 20
+;CITY_OWNER:GET_CITYNUMBER("서당") = 20
+;CITY_OWNER:GET_CITYNUMBER("키리사메 상점") = 20
+;
+;CFLAG:(NAME_TO_CHARA("케이네")):1 = 20
+;CFLAG:(NAME_TO_CHARA("모코우")):1 = 20
+;
+;;--------팀 마을--------
+;COUNTRY_BOSS:21 = GET_ID(NAME_TO_CHARA("아큐"))
+;COUNTRY_COLOR:21 = 0x00bfff
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:21 = 0x66ccff
+;COUNTRY_AI_TYPE:21 = AI_방위
+;
+;CITY_OWNER:GET_CITYNUMBER("아큐저택") = 21
+;CITY_OWNER:GET_CITYNUMBER("영나암") = 21
+;CITY_OWNER:GET_CITYNUMBER("인간마을 주택가") = 21
+;
+;CFLAG:(NAME_TO_CHARA("아큐")):1 = 21
+;CFLAG:(NAME_TO_CHARA("코스즈")):1 = 21
+;
+;
+;IF ! GETBIT(SCVAR:2, 0)
+;;--------팀 츠쿠모 신--------
+;	COUNTRY_BOSS:22 = GET_ID(NAME_TO_CHARA("라이코"))
+;	COUNTRY_COLOR:22 = 0 x7affff 
+;	SIF GETBIT(SCVAR:2, 2)
+;		COUNTRY_COLOR:22 = 0xffcccc
+;
+;	CITY_OWNER:GET_CITYNUMBER("미혹의 죽림 남부") = 22
+;	CITY_OWNER:GET_CITYNUMBER("미혹의 죽림") = 22
+;	CFLAG:(NAME_TO_CHARA("라이코")):1 = 22
+;	CFLAG:(NAME_TO_CHARA("벤벤")):1 = 22
+;	CFLAG:(NAME_TO_CHARA("야츠하시")):1 = 22
+;;----------------------------
+;ENDIF
+;
+;;--------팀 달의 궁전--------
+;COUNTRY_BOSS:23 = GET_ID(NAME_TO_CHARA("요리히메"))
+;COUNTRY_COLOR:23 = 0xffd700
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:23 = 0xffff00
+;COUNTRY_AI_TYPE:23 = AI_내정
+;
+;CITY_OWNER:GET_CITYNUMBER("달의 궁전") = 23
+;CITY_OWNER:GET_CITYNUMBER("와타츠키노 저택") = 23
+;CFLAG:(NAME_TO_CHARA("요리히메")):1 = 23
+;CFLAG:(NAME_TO_CHARA("토요히메")):1 = 23
+;CFLAG:(NAME_TO_CHARA("달레이센")):1 = 23
+;
+;;--------팀빙정--------
+;COUNTRY_BOSS:24 = GET_ID(NAME_TO_CHARA("치르노"))
+;COUNTRY_COLOR:24 = 0xafeeee
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:24 = 0xccffff
+;CITY_OWNER:GET_CITYNUMBER("안개의 호수 근처") = 24
+;CITY_OWNER:GET_CITYNUMBER("요정의 숲") = 24
+;CFLAG:(NAME_TO_CHARA("레티")):1 = 24
+;CFLAG:(NAME_TO_CHARA("대요정")):1 = 24
+;CFLAG:(NAME_TO_CHARA("치르노")):1 = 24
+;CFLAG:(NAME_TO_CHARA("릴리화이트")):1 = 24
+;
+;;--------팀 구지옥거리--------
+;COUNTRY_BOSS:25 = GET_ID(NAME_TO_CHARA("유우기"))
+;COUNTRY_COLOR:25 = 0xcc9966
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:25 = 0x996666
+;COUNTRY_AI_TYPE:25 = AI_호전
+;
+;CITY_OWNER:GET_CITYNUMBER("옛 도시 환락가") = 25
+;CITY_OWNER:GET_CITYNUMBER("옛 지옥 큰길") = 25
+;CITY_OWNER:GET_CITYNUMBER("건너는 발길이 끊어진 다리") = 25
+;
+;CFLAG:(NAME_TO_CHARA("키스메")):1 = 25
+;CFLAG:(NAME_TO_CHARA("야마메")):1 = 25
+;CFLAG:(NAME_TO_CHARA("파르시")):1 = 25
+;CFLAG:(NAME_TO_CHARA("유우기")):1 = 25
+;
+;;;--------팀 3 요정--------
+;COUNTRY_BOSS:26 = GET_ID(NAME_TO_CHARA("서니밀크"))
+;COUNTRY_COLOR:26 = 0Xffdab9
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:26 = 0xccffcc
+;CITY_OWNER:GET_CITYNUMBER("미즈나라의 나무") = 26
+;CITY_OWNER:GET_CITYNUMBER("뒷산의 호수") = 26
+;
+;CFLAG:(NAME_TO_CHARA("서니밀크")):1 = 26
+;CFLAG:(NAME_TO_CHARA("루나차일드")):1 = 26
+;CFLAG:(NAME_TO_CHARA("스타사파이어")):1 = 26
+;
+;;--------팀 인형 개방 동맹--------
+;COUNTRY_BOSS:27 = GET_ID(NAME_TO_CHARA("메디슨"))
+;COUNTRY_COLOR:27 = 0 Xff0099   
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:27 = 0xff6666
+;CITY_OWNER:GET_CITYNUMBER("무명의 언덕") = 27
+;
+;CFLAG:(NAME_TO_CHARA("메디슨")):1 = 27
+;CFLAG:(NAME_TO_CHARA("샹하이인형")):1 = 27
+;CFLAG:(NAME_TO_CHARA("호라이인형")):1 = 27
+;CFLAG:(NAME_TO_CHARA("오오에도인형")):1 = 27
+;CFLAG:(NAME_TO_CHARA("골리아테인형")):1 = 27
+;
+;
+;;--------팀 태양의 밭--------
+;COUNTRY_BOSS:28 = GET_ID(NAME_TO_CHARA("유카"))
+;COUNTRY_COLOR:28 = 0Xff3366
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:28 = 0xff9966
+;COUNTRY_AI_TYPE:28 = AI_호전
+;
+;CITY_OWNER:GET_CITYNUMBER("몽환문") = 28
+;CITY_OWNER:GET_CITYNUMBER("몽환관") = 28
+;
+;CFLAG:(NAME_TO_CHARA("유카")):1 = 28
+;CFLAG:(NAME_TO_CHARA("무게츠")):1 = 28
+;CFLAG:(NAME_TO_CHARA("겐게츠")):1 = 28
+;
+;
+;;--------팀 똘마니급 들요괴--------
+;COUNTRY_BOSS:29 = GET_ID(NAME_TO_CHARA("미스티아"))
+;COUNTRY_COLOR:29 = 0Xfa8072
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:29 = 0 xff0066   
+;COUNTRY_AI_TYPE:29 = AI_호전
+;CITY_OWNER:GET_CITYNUMBER("인간이 사라지는 길") = 29
+;CITY_OWNER:GET_CITYNUMBER("칠성장어구이 포장마차") = 29
+;
+;CFLAG:(NAME_TO_CHARA("루미아")):1 = 29
+;CFLAG:(NAME_TO_CHARA("미스티아")):1 = 29
+;CFLAG:(NAME_TO_CHARA("리글")):1 = 29
+;
+;;--------팀옥토--------
+;COUNTRY_BOSS:30 = GET_ID(NAME_TO_CHARA("사구메"))
+;COUNTRY_COLOR:30 = 0xffff66
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:30 = 0xffff66
+;COUNTRY_AI_TYPE:30 = AI_방위
+;
+;CITY_OWNER:GET_CITYNUMBER("달토끼 거리") = 30
+;CITY_OWNER:GET_CITYNUMBER("약도장") = 30
+;CITY_OWNER:GET_CITYNUMBER("꿈의 세계") = 30
+;
+;CFLAG:(NAME_TO_CHARA("사구메")):1 = 30
+;CFLAG:(NAME_TO_CHARA("도레미")):1 = 30
+;CFLAG:(NAME_TO_CHARA("링고")):1 = 30
+;CFLAG:(NAME_TO_CHARA("세이란")):1 = 30
+;
+;;--------팀 중급 들요괴--------
+;COUNTRY_BOSS:31 = GET_ID(NAME_TO_CHARA("쿄코"))
+;COUNTRY_COLOR:31 = 0Xcc6600
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:31 = 0xff3333
+;CITY_OWNER:GET_CITYNUMBER("묘지") = 31
+;
+;CFLAG:(NAME_TO_CHARA("쿄코")):1 = 31
+;CFLAG:(NAME_TO_CHARA("코가사")):1 = 31
+;CFLAG:(NAME_TO_CHARA("나즈린")):1 = 31
+;
+;;이봐…
+;;이봐!!!!!!! 1!!! 1!! 11
+;;두고 달!!!! 11! 111 후그논이전의 적! 11
+;;달 보고 있을까!!!!! 11!! 11! 1
+;;월의 백성의 농 한 우책을!! 111욕구에 빠지고 생사를 탐내는 더러워진 인간의 모습을!!!!! 11
+;COUNTRY_BOSS:32 = GET_ID(NAME_TO_CHARA("순호"))
+;COUNTRY_COLOR:32 = 0Xffa500
+;SIF GETBIT(SCVAR:2, 2)
+;	COUNTRY_COLOR:32 = 0xffcc00
+;COUNTRY_AI_TYPE:32 = AI_호전
+;
+;CITY_OWNER:GET_CITYNUMBER("고요의 바다") = 32
+;CITY_OWNER:GET_CITYNUMBER("겉(표)의 월면") = 32
+;;조각달
+;CFLAG:(NAME_TO_CHARA("순호")):1 = 32
+;CFLAG:(NAME_TO_CHARA("헤카티아")):1 = 32
+;CFLAG:(NAME_TO_CHARA("클라운피스")):1 = 32
+;
+;
+;IF ! GETBIT(SCVAR:2, 0)
+;;--------팀 청아--------
+;	COUNTRY_BOSS:33 = GET_ID(NAME_TO_CHARA("청아"))
+;	COUNTRY_COLOR:33 = 0X5f9ea0
+;	SIF GETBIT(SCVAR:2, 2)
+;		COUNTRY_COLOR:33 = 0x99ccff
+;	COUNTRY_AI_TYPE:33 = AI_외교
+;	
+;	CITY_OWNER:GET_CITYNUMBER("몽전대사묘") = 33
+;	CFLAG:(NAME_TO_CHARA("요시카")):1 = 33
+;	CFLAG:(NAME_TO_CHARA("청아")):1 = 33
+;;---------------------------
+;ENDIF
+;
+;
+;;지정되지 않았던 캐릭터는 방랑 「당신」는 제외（MASTER 바꿔 넣었을 때에 방랑하는 것을 막는다）.
+;FOR LOCAL:0, 1, CHARANUM
+;	SIF CFLAG:(LOCAL:0):1 == 0  && CSTR:(LOCAL:0):99 != "당신"
+;		CFLAG:(LOCAL:0):특수상태 =특수상태_방랑
+;NEXT
+;
+;;병력의 초기 배치
+;CALL INIT_ARMY
+;
+;
+;
+;;무소속 도시의 병수는 경제의 20%
+;FOR LOCAL:0, 0, MAX_CITY
+;	SIF CITY_OWNER:(LOCAL:0) == 0
+;		CITY_SOLDIER:(LOCAL:0) = CITY_ECONOMY:(LOCAL:0) * 20/100
+;NEXT
+;
+;;■관계 설정
+;CALL SHARED_SETTING_RELATION
+;
+;;아타이 알고 있다! 이런 것을 집단적 자위권이라는거죠!
+;CALL INIT_RELATION("레이무", "마리사", 1500, 0)
+;CALL INIT_RELATION("레이무", "케이네", 800, 0)
+;CALL INIT_RELATION("레이무", "텐시", 800, 200)
+;CALL INIT_RELATION("레이무", "뱌쿠렌", 800, 0)
+;CALL INIT_RELATION("레이무", "미코", 800, 0)
+;CALL INIT_RELATION("레이무", "아큐", 800, 0)
+;
+;CALL INIT_RELATION("마리사", "레이무", 1500, 0)
+;CALL INIT_RELATION("마리사", "케이네", 800, 0)
+;CALL INIT_RELATION("마리사", "텐시", 800, 0)
+;CALL INIT_RELATION("마리사", "뱌쿠렌", 1000, 0)
+;CALL INIT_RELATION("마리사", "미코", 800, 0)
+;CALL INIT_RELATION("마리사", "아큐", 1000, 0)
+;
+;CALL INIT_RELATION("케이네", "레이무", 1000, 0)
+;CALL INIT_RELATION("케이네", "마리사", 800, 0)
+;CALL INIT_RELATION("케이네", "텐시", 800, 200)
+;CALL INIT_RELATION("케이네", "뱌쿠렌", 800, 0)
+;CALL INIT_RELATION("케이네", "미코", 800, 0)
+;CALL INIT_RELATION("케이네", "아큐", 1500, 0)
+;
+;CALL INIT_RELATION("텐시", "레이무", 800, 0)
+;CALL INIT_RELATION("텐시", "마리사", 800, 0)
+;CALL INIT_RELATION("텐시", "케이네", 800, 0)
+;CALL INIT_RELATION("텐시", "뱌쿠렌", 800, 200)
+;CALL INIT_RELATION("텐시", "미코", 1000, 0)
+;CALL INIT_RELATION("텐시", "아큐", 800, 0)
+;
+;CALL INIT_RELATION("뱌쿠렌", "레이무", 800, 0)
+;CALL INIT_RELATION("뱌쿠렌", "마리사", 800, 0)
+;CALL INIT_RELATION("뱌쿠렌", "케이네", 800, 0)
+;CALL INIT_RELATION("뱌쿠렌", "텐시", 800, 0)
+;CALL INIT_RELATION("뱌쿠렌", "미코", 800, 0)
+;CALL INIT_RELATION("뱌쿠렌", "아큐", 800, 0)
+;
+;CALL INIT_RELATION("미코", "레이무", 800, 0)
+;CALL INIT_RELATION("미코", "마리사", 800, 0)
+;CALL INIT_RELATION("미코", "케이네", 800, 0)
+;CALL INIT_RELATION("미코", "텐시", 800, 0)
+;CALL INIT_RELATION("미코", "뱌쿠렌", 800, 0)
+;CALL INIT_RELATION("미코", "아큐", 800, 0)
+;
+;CALL INIT_RELATION("아큐", "레이무", 800, 0)
+;CALL INIT_RELATION("아큐", "마리사", 800, 0)
+;CALL INIT_RELATION("아큐", "케이네", 1500, 0)
+;CALL INIT_RELATION("아큐", "텐시", 800, 0)
+;CALL INIT_RELATION("아큐", "뱌쿠렌", 800, 0)
+;CALL INIT_RELATION("아큐", "미코", 800, 0)
+;
+;;요괴들의 상호 보증
+;CALL INIT_RELATION("레밀리아", "유유코", 800, 0)
+;CALL INIT_RELATION("레밀리아", "유카리", 1000, 200)
+;CALL INIT_RELATION("레밀리아", "신묘마루", 1500, 0)
+;CALL INIT_RELATION("레밀리아", "카게로", 1500, 0)
+;CALL INIT_RELATION("레밀리아", "누에", 800, 0)
+;CALL INIT_RELATION("레밀리아", "메디슨", 1500, 0)
+;CALL INIT_RELATION("레밀리아", "유카", 800, 0)
+;CALL INIT_RELATION("레밀리아", "미스티아", 1500, 0)
+;CALL INIT_RELATION("레밀리아", "쿄코", 1500, 0)
+;
+;CALL INIT_RELATION("유유코", "레밀리아", 800, 0)
+;CALL INIT_RELATION("유유코", "유카리", 1500, 0)
+;CALL INIT_RELATION("유유코", "신묘마루", 800, 0)
+;CALL INIT_RELATION("유유코", "카게로", 800, 0)
+;CALL INIT_RELATION("유유코", "누에", 800, 0)
+;CALL INIT_RELATION("유유코", "메디슨", 800, 0)
+;CALL INIT_RELATION("유유코", "유카", 800, 0)
+;CALL INIT_RELATION("유유코", "미스티아", 1500, 0)
+;CALL INIT_RELATION("유유코", "쿄코", 800, 0)
+;
+;CALL INIT_RELATION("유카리", "레밀리아", 800, 400)
+;CALL INIT_RELATION("유카리", "유유코", 1500, 0)
+;CALL INIT_RELATION("유카리", "신묘마루", 800, 800)
+;CALL INIT_RELATION("유카리", "카게로", 800, 0)
+;CALL INIT_RELATION("유카리", "누에", 800, 0)
+;CALL INIT_RELATION("유카리", "메디슨", 800, 0)
+;CALL INIT_RELATION("유카리", "유카", 800, 0)
+;CALL INIT_RELATION("유카리", "미스티아", 800, 0)
+;CALL INIT_RELATION("유카리", "쿄코", 800, 0)
+;
+;CALL INIT_RELATION("신묘마루", "레밀리아", 800, 0)
+;CALL INIT_RELATION("신묘마루", "유유코", 800, 0)
+;CALL INIT_RELATION("신묘마루", "유카리", 1000, 600)
+;CALL INIT_RELATION("신묘마루", "카게로", 800, 0)
+;CALL INIT_RELATION("신묘마루", "누에", 1500, 0)
+;CALL INIT_RELATION("신묘마루", "메디슨", 800, 0)
+;CALL INIT_RELATION("신묘마루", "유카", 800, 0)
+;CALL INIT_RELATION("신묘마루", "미스티아", 800, 0)
+;CALL INIT_RELATION("신묘마루", "쿄코", 800, 0)
+;
+;CALL INIT_RELATION("카게로", "레밀리아", 900, 0)
+;CALL INIT_RELATION("카게로", "유유코", 800, 0)
+;CALL INIT_RELATION("카게로", "유카리", 800, 300)
+;CALL INIT_RELATION("카게로", "신묘마루", 1500, 0)
+;CALL INIT_RELATION("카게로", "누에", 800, 0)
+;CALL INIT_RELATION("카게로", "메디슨", 1500, 0)
+;CALL INIT_RELATION("카게로", "유카", 800, 0)
+;CALL INIT_RELATION("카게로", "미스티아", 1500, 0)
+;CALL INIT_RELATION("카게로", "쿄코", 1500, 0)
+;
+;CALL INIT_RELATION("누에", "레밀리아", 800, 0)
+;CALL INIT_RELATION("누에", "유유코", 800, 0)
+;CALL INIT_RELATION("누에", "유카리", 800, 0)
+;CALL INIT_RELATION("누에", "신묘마루", 800, 0)
+;CALL INIT_RELATION("누에", "카게로", 800, 0)
+;CALL INIT_RELATION("누에", "메디슨", 800, 0)
+;CALL INIT_RELATION("누에", "유카", 800, 0)
+;CALL INIT_RELATION("누에", "미스티아", 800, 0)
+;CALL INIT_RELATION("누에", "쿄코", 800, 0)
+;
+;CALL INIT_RELATION("메디슨", "레밀리아", 800, 0)
+;CALL INIT_RELATION("메디슨", "유유코", 800, 0)
+;CALL INIT_RELATION("메디슨", "유카리", 800, 0)
+;CALL INIT_RELATION("메디슨", "신묘마루", 800, 0)
+;CALL INIT_RELATION("메디슨", "카게로", 800, 0)
+;CALL INIT_RELATION("메디슨", "누에", 800, 0)
+;CALL INIT_RELATION("메디슨", "유카", 1500, 0)
+;CALL INIT_RELATION("메디슨", "미스티아", 800, 0)
+;CALL INIT_RELATION("메디슨", "쿄코", 800, 0)
+;
+;CALL INIT_RELATION("유카", "레밀리아", 800, 0)
+;CALL INIT_RELATION("유카", "유유코", 800, 0)
+;CALL INIT_RELATION("유카", "유카리", 1000, 200)
+;CALL INIT_RELATION("유카", "신묘마루", 800, 0)
+;CALL INIT_RELATION("유카", "카게로", 800, 0)
+;CALL INIT_RELATION("유카", "누에", 800, 0)
+;CALL INIT_RELATION("유카", "메디슨", 1500, 0)
+;CALL INIT_RELATION("유카", "미스티아", 1500, 0)
+;CALL INIT_RELATION("유카", "쿄코", 800, 0)
+;
+;CALL INIT_RELATION("미스티아", "레밀리아", 1000, 0)
+;CALL INIT_RELATION("미스티아", "유유코", 800, 300)
+;CALL INIT_RELATION("미스티아", "유카리", 800, 0)
+;CALL INIT_RELATION("미스티아", "신묘마루", 1500, 0)
+;CALL INIT_RELATION("미스티아", "카게로", 1500, 0)
+;CALL INIT_RELATION("미스티아", "누에", 800, 0)
+;CALL INIT_RELATION("미스티아", "메디슨", 800, 0)
+;CALL INIT_RELATION("미스티아", "유카", 800, 0)
+;CALL INIT_RELATION("미스티아", "쿄코", 1500, 0)
+;
+;CALL INIT_RELATION("쿄코", "레밀리아", 800, 0)
+;CALL INIT_RELATION("쿄코", "유유코", 800, 0)
+;CALL INIT_RELATION("쿄코", "유카리", 800, 0)
+;CALL INIT_RELATION("쿄코", "신묘마루", 1500, 0)
+;CALL INIT_RELATION("쿄코", "카게로", 1500, 0)
+;CALL INIT_RELATION("쿄코", "누에", 1500, 0)
+;CALL INIT_RELATION("쿄코", "메디슨", 800, 0)
+;CALL INIT_RELATION("쿄코", "유카", 800, 0)
+;CALL INIT_RELATION("쿄코", "미스티아", 1500, 0)
+;
+;;요괴의산 평의회
+;CALL INIT_RELATION("카나코", "카센", 800, 0)
+;CALL INIT_RELATION("카나코", "아야", 1500, 0)
+;CALL INIT_RELATION("카나코", "니토리", 1500, 0)
+;
+;CALL INIT_RELATION("카센", "카나코", 1000, 0)
+;CALL INIT_RELATION("카센", "아야", 800, 0)
+;CALL INIT_RELATION("카센", "니토리", 800, 0)
+;
+;CALL INIT_RELATION("아야", "카나코", 1500, 200)
+;CALL INIT_RELATION("아야", "카센", 800, 0)
+;CALL INIT_RELATION("아야", "니토리", 1500, 0)
+;
+;CALL INIT_RELATION("니토리", "카나코", 1500, 0)
+;CALL INIT_RELATION("니토리", "카센", 1000, 0)
+;CALL INIT_RELATION("니토리", "아야", 800, 200)
+;
+;;월의 통신망
+;CALL INIT_RELATION("요리히메", "사구메", 1500, 0)
+;CALL INIT_RELATION("요리히메", "순호", 0, 800)
+;CALL INIT_RELATION("요리히메", "카구야", 1200, 0)
+;
+;CALL INIT_RELATION("사구메", "요리히메", 1500, 0)
+;CALL INIT_RELATION("사구메", "순호", 0, 800)
+;CALL INIT_RELATION("사구메", "카구야", 800, 0)
+;
+;CALL INIT_RELATION("순호", "요리히메", 0, 800)
+;CALL INIT_RELATION("순호", "사구메", 0, 800)
+;CALL INIT_RELATION("순호", "카구야", 200, 200)
+;
+;CALL INIT_RELATION("카구야", "요리히메", 1200, 0)
+;CALL INIT_RELATION("카구야", "사구메", 800, 0)
+;CALL INIT_RELATION("카구야", "순호", 800, 0)
+;
+;;그 외（파벌의 벽을 넘어 외교 병합 되는 것에 의해 랜덤 요소가 태어나? ）
+;CALL INIT_RELATION("케이네", "미스티아", 800, 0)
+;CALL INIT_RELATION("미스티아", "케이네", 800, 0)
+;CALL INIT_RELATION("쿄코", "뱌쿠렌", 1500, 0)
+;CALL INIT_RELATION("뱌쿠렌", "쿄코", 1500, 0)
+;CALL INIT_RELATION("치르노", "서니밀크", 1500, 200)
+;CALL INIT_RELATION("서니밀크", "치르노", 1500, 200)
+;CALL INIT_RELATION("치르노", "미스티아", 1500, 0)
+;CALL INIT_RELATION("미스티아", "치르노", 1500, 0)
+;CALL INIT_RELATION("레이무", "서니밀크", 1500, 200)
+;CALL INIT_RELATION("서니밀크", "레이무", 1500, 200)
+;CALL INIT_RELATION("청아", "미코", 1500, 200)
+;CALL INIT_RELATION("미코", "청아", 1500, 200)
+;CALL INIT_RELATION("메디슨", "카구야", 1500, 0)
+;CALL INIT_RELATION("카구야", "메디슨", 1500, 0)
+;CALL INIT_RELATION("루나사", "유유코", 1500, 0)
+;CALL INIT_RELATION("유유코", "루나사", 1500, 0)
+;
+;
+;;동맹 관계（여기서 동맹이 짜여지고 있어 우호도가 1500의 세력간에 병합이 발생할 가능성이 있습니다）
+;CALL INIT_ALLIANCE_BY_NAME("케이네", "아큐", 30)
+;CALL INIT_ALLIANCE_BY_NAME("레이무", "마리사", 30)
+;
+;;악의 추축
+;CALL INIT_ALLIANCE_BY_NAME("유카리", "유유코", 30)
+;CALL INIT_ALLIANCE_BY_NAME("유카리", "레밀리아", 30)
+;CALL INIT_ALLIANCE_BY_NAME("레밀리아", "카게로", 30)
+;CALL INIT_ALLIANCE_BY_NAME("레밀리아", "미스티아", 30)
+;CALL INIT_ALLIANCE_BY_NAME("레밀리아", "메디슨", 30)
+;CALL INIT_ALLIANCE_BY_NAME("레밀리아", "신묘마루", 30)
+;CALL INIT_ALLIANCE_BY_NAME("쿄코", "누에", 30)
+;CALL INIT_ALLIANCE_BY_NAME("미스티아", "카게로", 30)
+;CALL INIT_ALLIANCE_BY_NAME("신묘마루", "카게로", 30)
+;
+;CALL INIT_ALLIANCE_BY_NAME("카나코", "아야", 30)
+;CALL INIT_ALLIANCE_BY_NAME("아야", "니토리", 30)
+;CALL INIT_ALLIANCE_BY_NAME("카나코", "니토리", 30)
+;CALL INIT_ALLIANCE_BY_NAME("카센", "니토리", 30)
+;
+;CALL INIT_ALLIANCE_BY_NAME("요리히메", "사구메", 30)
+;
+;CALL INIT_ALLIANCE_BY_NAME("치르노", "서니밀크", 30)
+;CALL INIT_ALLIANCE_BY_NAME("유카", "메디슨", 30)
+;CALL INIT_ALLIANCE_BY_NAME("카구야", "메디슨", 30)
+;CALL INIT_ALLIANCE_BY_NAME("유유코", "루나사", 30)
+;CALL INIT_ALLIANCE_BY_NAME("사토리", "시키에이키", 30)
+;;-------------------------------------------------
+;@SCENARIO_EVENT_8
+;#DIM UNIFY
+;
+;;------------------------------------------------------------------------------------------
+;;1～7 턴까지의 이벤트
+;
+;IF INRANGE(DAY , 1, 7)
+;
+;
+;
+;	;어느 처리를 누가 실시할까의 판정
+;	LOCAL:0 = RAND:6
+;	LOCAL:1 = RAND:5
+;	LOCAL:14 = RAND:4
+;
+;	;합병
+;	DO
+;	LOCAL:10 = RAND:11
+;	IF LOCAL:10 == 0 && ! GETBIT(SCVAR:3, 0) && ! GETBIT(SCVAR:4, 6) && ! GETBIT(SCVAR:5, 5)
+;		LOCAL:2 = FINDCHARA(CSTR:99, "누에")
+;		IF GETBIT(SCVAR:2, 0)
+;			LOCAL:3 = FINDCHARA(CSTR:99, "신묘마루")
+;		ELSE
+;			LOCAL:3 = FINDCHARA(CSTR:99, "라이코")
+;		ENDIF
+;	ELSEIF LOCAL:10 == 1 && ! GETBIT(SCVAR:4, 0) && ! GETBIT(SCVAR:3, 1)
+;		LOCAL:2 = FINDCHARA(CSTR:99, "미스티아")
+;		LOCAL:3 = FINDCHARA(CSTR:99, "쿄코")
+;		BREAK
+;	ELSEIF LOCAL:10 == 2 && ! GETBIT(SCVAR:4, 8) && ! GETBIT(SCVAR:3, 2)
+;		LOCAL:2 = FINDCHARA(CSTR:99, "치르노")
+;		LOCAL:3 = FINDCHARA(CSTR:99, "서니밀크")
+;		BREAK
+;	ELSEIF LOCAL:10 == 3 && ! GETBIT(SCVAR:3, 3)
+;		LOCAL:2 = FINDCHARA(CSTR:99, "케이네")
+;		LOCAL:3 = FINDCHARA(CSTR:99, "아큐")
+;		BREAK
+;	ELSEIF LOCAL:10 == 4 && ! GETBIT(SCVAR:3, 4) && ! GETBIT(SCVAR:5, 4)
+;		LOCAL:2 = FINDCHARA(CSTR:99, "마리사")
+;		LOCAL:3 = FINDCHARA(CSTR:99, "니토리")
+;		BREAK
+;	ELSEIF LOCAL:10 == 5 && ! GETBIT(SCVAR:3, 0) && ! GETBIT(SCVAR:3, 5) && ! GETBIT(SCVAR:5, 5)
+;		LOCAL:2 = FINDCHARA(CSTR:99, "신묘마루")
+;		IF GETBIT(SCVAR:2, 0)
+;			LOCAL:3 = FINDCHARA(CSTR:99, "라이코")
+;		ELSE
+;			LOCAL:3 = FINDCHARA(CSTR:99, "메디슨")
+;		ENDIF
+;		BREAK
+;	ELSEIF LOCAL:10 == 6 && ! GETBIT(SCVAR:3, 1) && ! GETBIT(SCVAR:4, 7)
+;		LOCAL:2 = FINDCHARA(CSTR:99, "누에")
+;		LOCAL:3 = FINDCHARA(CSTR:99, "쿄코")
+;		BREAK
+;	ELSEIF LOCAL:10 == 7 && ! GETBIT(SCVAR:3, 7)
+;		LOCAL:2 = FINDCHARA(CSTR:99, "유카리")
+;		LOCAL:3 = FINDCHARA(CSTR:99, "레이무")
+;		BREAK
+;	ELSEIF LOCAL:10 == 8 && ! GETBIT(SCVAR:3, 8)
+;		LOCAL:2 = FINDCHARA(CSTR:99, "사토리")
+;		LOCAL:3 = FINDCHARA(CSTR:99, "시키에이키")
+;		BREAK
+;	ELSEIF LOCAL:10 == 9 && ! GETBIT(SCVAR:3, 8)
+;		LOCAL:2 = FINDCHARA(CSTR:99, "유카리")
+;		LOCAL:3 = FINDCHARA(CSTR:99, "시키에이키")
+;		BREAK
+;	ELSEIF LOCAL:10 == 10 && ! GETBIT(SCVAR:3, 7) && ! GETBIT(SCVAR:3, 10)
+;		LOCAL:2 = FINDCHARA(CSTR:99, "레이무")
+;		LOCAL:3 = FINDCHARA(CSTR:99, "텐시")
+;		BREAK
+;	ELSE
+;		SETBIT SCVAR:3, 22
+;	ENDIF
+;	LOOP GETBIT(SCVAR:3, 22)
+;	;병합
+;	DO
+;	LOCAL:20 = RAND:11
+;	IF LOCAL:20 == 0 && ! GETBIT(SCVAR:4, 0) && ! GETBIT(SCVAR:5, 1)
+;		LOCAL:4 = FINDCHARA(CSTR:99, "레밀리아")
+;		LOCAL:5 = FINDCHARA(CSTR:99, "미스티아")
+;		BREAK
+;	ELSEIF LOCAL:20 == 1 && ! GETBIT(SCVAR:3, 1) && ! GETBIT(SCVAR:4, 0) && ! GETBIT(SCVAR:5, 1)
+;		LOCAL:4 = FINDCHARA(CSTR:99, "레밀리아")
+;		LOCAL:5 = FINDCHARA(CSTR:99, "쿄코")
+;		BREAK
+;	ELSEIF LOCAL:20 == 2 && ! GETBIT(SCVAR:4, 2) && ! GETBIT(SCVAR:5, 1)
+;		LOCAL:4 = FINDCHARA(CSTR:99, "레밀리아")
+;		LOCAL:5 = FINDCHARA(CSTR:99, "카게로")
+;		BREAK
+;	ELSEIF LOCAL:20 == 3 && ! GETBIT(SCVAR:3, 1) && ! GETBIT(SCVAR:4, 5)
+;		IF GETBIT(SCVAR:2, 0)
+;			LOCAL:4 = FINDCHARA(CSTR:99, "청아")
+;		ELSE
+;			LOCAL:4 = FINDCHARA(CSTR:99, "미코")
+;		ENDIF
+;		LOCAL:5 = FINDCHARA(CSTR:99, "쿄코")
+;		BREAK
+;	ELSEIF LOCAL:20 == 4 && ! GETBIT(SCVAR:3, 1)
+;		LOCAL:4 = FINDCHARA(CSTR:99, "뱌쿠렌")
+;		LOCAL:5 = FINDCHARA(CSTR:99, "쿄코")
+;		BREAK
+;	ELSEIF LOCAL:20 == 5 && ! GETBIT(SCVAR:4, 7) && ! GETBIT(SCVAR:4, 5)
+;		IF GETBIT(SCVAR:2, 0)
+;		LOCAL:4 = FINDCHARA(CSTR:99, "뱌쿠렌")
+;		LOCAL:5 = FINDCHARA(CSTR:99, "누에")
+;		ELSE
+;		LOCAL:4 = FINDCHARA(CSTR:99, "미코")
+;		LOCAL:5 = FINDCHARA(CSTR:99, "청아")
+;		ENDIF
+;		BREAK
+;	ELSEIF LOCAL:20 == 6 && ! GETBIT(SCVAR:4, 6)
+;		LOCAL:4 = FINDCHARA(CSTR:99, "유유코")
+;		LOCAL:5 = FINDCHARA(CSTR:99, "루나사")
+;		BREAK
+;	ELSEIF LOCAL:20 == 7 && ! GETBIT(SCVAR:3, 5)
+;		LOCAL:4 = FINDCHARA(CSTR:99, "유카")
+;		LOCAL:5 = FINDCHARA(CSTR:99, "메디슨")
+;		BREAK
+;	ELSEIF LOCAL:20 == 8 && ! GETBIT(SCVAR:3, 5)
+;		LOCAL:4 = FINDCHARA(CSTR:99, "카구야")
+;		LOCAL:5 = FINDCHARA(CSTR:99, "메디슨")
+;		BREAK
+;	ELSEIF LOCAL:20 == 9 && ! GETBIT(SCVAR:4, 0) && ! GETBIT(SCVAR:4, 8)
+;		LOCAL:4 = FINDCHARA(CSTR:99, "미스티아")
+;		LOCAL:5 = FINDCHARA(CSTR:99, "치르노")
+;	ELSEIF LOCAL:20 == 10 && ! GETBIT(SCVAR:3, 5)
+;		LOCAL:4 = FINDCHARA(CSTR:99, "마리사")
+;		LOCAL:5 = FINDCHARA(CSTR:99, "메디슨")
+;		BREAK
+;	ELSE
+;		SETBIT SCVAR:4, 22
+;	ENDIF
+;	LOOP GETBIT(SCVAR:4, 22)
+;
+;	;쿠데타
+;	DO
+;	LOCAL:0 = RAND:6
+;	IF LOCAL:0 == 0
+;		IF ! GETBIT(SCVAR:5, 0)
+;			LOCAL:6 = FINDCHARA(CSTR:99, "카구야")
+;			LOCAL:7 = FINDCHARA(CSTR:99, "테위")
+;		ELSEIF GETBIT(SCVAR:5, 0) && ! GETBIT(SCVAR:5, 20)
+;			LOCAL:6 = FINDCHARA(CSTR:99, "테위")
+;			LOCAL:7 = FINDCHARA(CSTR:99, "레이센")
+;		ELSEIF GETBIT(SCVAR:5, 20)
+;			LOCAL:6 = FINDCHARA(CSTR:99, "레이센")
+;		ENDIF	
+;		BREAK
+;	ELSEIF LOCAL:0 == 1
+;		IF ! GETBIT(SCVAR:5, 1)
+;			LOCAL:6 = FINDCHARA(CSTR:99, "레밀리아")
+;			LOCAL:7 = FINDCHARA(CSTR:99, "플랑도르")
+;		ELSEIF GETBIT(SCVAR:5, 1) && ! GETBIT(SCVAR:5, 21)
+;			LOCAL:6 = FINDCHARA(CSTR:99, "플랑도르")
+;			LOCAL:7 = FINDCHARA(CSTR:99, "레밀리아")
+;		ELSEIF GETBIT(SCVAR:5, 21)
+;			LOCAL:6 = FINDCHARA(CSTR:99, "레밀리아")
+;		ENDIF
+;		BREAK
+;	ELSEIF LOCAL:0 == 2
+;		IF ! GETBIT(SCVAR:5, 2)
+;			LOCAL:6 = FINDCHARA(CSTR:99, "카나코")
+;			LOCAL:7 = FINDCHARA(CSTR:99, "스와코")
+;		ELSEIF GETBIT(SCVAR:5, 2) && ! GETBIT(SCVAR:5, 22)
+;			LOCAL:6 = FINDCHARA(CSTR:99, "스와코")
+;			LOCAL:7 = FINDCHARA(CSTR:99, "사나에")
+;		ELSEIF GETBIT(SCVAR:5, 22)
+;			LOCAL:6 = FINDCHARA(CSTR:99, "사나에")
+;		ENDIF
+;		BREAK
+;	ELSEIF LOCAL:0 == 3
+;		IF ! GETBIT(SCVAR:5, 3)
+;			LOCAL:6 = FINDCHARA(CSTR:99, "요리히메")
+;			LOCAL:7 = FINDCHARA(CSTR:99, "달레이센")
+;		ELSE
+;			LOCAL:6 = FINDCHARA(CSTR:99, "달레이센")
+;		ENDIF
+;		BREAK
+;	ELSEIF LOCAL:0 == 4
+;		IF ! GETBIT(SCVAR:5, 4)
+;			LOCAL:6 = FINDCHARA(CSTR:99, "마리사")
+;			LOCAL:7 = FINDCHARA(CSTR:99, "앨리스")
+;		ELSE
+;			LOCAL:6 = FINDCHARA(CSTR:99, "앨리스")
+;		ENDIF
+;		BREAK
+;	ELSEIF LOCAL:0 == 5 && ! GETBIT(SCVAR:3, 0)
+;		IF ! GETBIT(SCVAR:5, 5) && ! GETBIT(SCVAR:3, 0)
+;			LOCAL:6 = FINDCHARA(CSTR:99, "신묘마루")
+;			LOCAL:7 = FINDCHARA(CSTR:99, "세이자")
+;		ELSE
+;			LOCAL:6 = FINDCHARA(CSTR:99, "세이자")
+;		ENDIF
+;		BREAK
+;	ELSE
+;		SETBIT SCVAR:5, 22
+;	ENDIF
+;	LOOP GETBIT(SCVAR:5, 22)
+;
+;	DO
+;	;동맹 배반
+;	LOCAL:30 = RAND:6
+;	IF LOCAL:30 == 0 && ! GETBIT(SCVAR:3, 4)
+;		LOCAL:8 = FINDCHARA(CSTR:99, "니토리")
+;		LOCAL:9 = FINDCHARA(CSTR:99, "아야")
+;		BREAK
+;	ELSEIF LOCAL:30 == 1
+;		LOCAL:8 = FINDCHARA(CSTR:99, "아야")
+;		LOCAL:9 = FINDCHARA(CSTR:99, "카나코")
+;		BREAK
+;	ELSEIF LOCAL:30 == 2 && ! GETBIT(SCVAR:3, 7)
+;		LOCAL:8 = FINDCHARA(CSTR:99, "마리사")
+;		LOCAL:9 = FINDCHARA(CSTR:99, "레이무")
+;		BREAK
+;	ELSEIF LOCAL:30 == 3 && ! GETBIT(SCVAR:3, 3)
+;		LOCAL:8 = FINDCHARA(CSTR:99, "아큐")
+;		LOCAL:9 = FINDCHARA(CSTR:99, "케이네")
+;		BREAK
+;	ELSEIF LOCAL:30 == 4
+;		LOCAL:8 = FINDCHARA(CSTR:99, "유유코")
+;		LOCAL:9 = FINDCHARA(CSTR:99, "유카리")
+;		BREAK
+;	ELSEIF LOCAL:30 == 5
+;		LOCAL:8 = FINDCHARA(CSTR:99, "사구메")
+;		LOCAL:9 = FINDCHARA(CSTR:99, "요리히메")
+;		BREAK
+;	ELSE
+;		SETBIT SCVAR:6, 22
+;	ENDIF	
+;	LOOP GETBIT(SCVAR:6, 22)
+;
+;
+;	;실제의 처리
+;	IF LOCAL:1 == 0
+;		PRINTFORMW  %조사처리(ANAME(LOCAL:2),"는")% 근년의 환상향의 긴장의 높아짐에 붙어, %ANAME(LOCAL:3)%라고 서로 이야기하기로 했다
+;		SIF LOCAL:10 == 0
+;			PRINTFORMW  「츠쿠모가미모두의 군세를 만드는거야」
+;		SIF LOCAL:10 == 1
+;			PRINTFORMW  「조수 탈을 쓰고 음악에 맞춰 춤을 춤 결성이야!」
+;		SIF LOCAL:10 == 2
+;			PRINTFORMW  「샤크이지만, 협력해 주어요!」
+;		SIF LOCAL:10 == 3
+;			PRINTFORMW  「마을 자경단을 결성합시다」
+;		SIF LOCAL:10 == 4
+;			PRINTFORMW  「나는 요괴의산에도 얼굴이 얘기한다」
+;		SIF LOCAL:10 == 5
+;			PRINTFORMW  「작은 망치의 힘으로 혁명이야!」
+;		SIF LOCAL:10 == 6
+;			PRINTFORMW  「우리로 환상향안을 놀래켜 주어라!」
+;		SIF LOCAL:10 == 7
+;			PRINTFORMW  「당신은 나의 말하는 것만 (듣)묻고 있으면 좋은거야…」
+;		SIF LOCAL:10 == 8
+;			PRINTFORMW  「구지옥의 관할은 신치감옥에 흡수됩니다」
+;		SIF LOCAL:10 == 9
+;			PRINTFORMW  「재미있는 이야기가 있는 것이지만」
+;		SIF LOCAL:10 == 10
+;			PRINTFORMW  「신사를 망쳐 준 빚을 갚아 받을까」
+;
+;		PRINTL …
+;		PRINTL …
+;		PRINTL
+;		IF RAND:3 >= 1
+;			PRINTFORMW  %조사처리(ANAME(LOCAL:2),"는")% %조사처리(ANAME(LOCAL:3),"과")% 협력해 걸어 가기로 한 것 같다
+;			SETCOLOR 칼라_주의
+;			PRINTFORMW ! %NAME_FORMAL(LOCAL:2)%과 %NAME_FORMAL(LOCAL:3)%는 동군 연합이 되었습니다!
+;			RESETCOLOR
+;
+;			;합병 처리
+;			;-------------------------------------------------
+;			IF LOCAL:10 == 0
+;				IF GETBIT(SCVAR:2, 0)
+;					LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("신묘마루")
+;					SETBIT SCVAR:3, 0
+;				ELSE
+;					LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("라이코")
+;					SETBIT SCVAR:3, 6
+;				ENDIF
+;				LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("누에")
+;				LOCAL:13 = (NAME_TO_CHARA("누에"))
+;			ELSEIF LOCAL:10 == 1
+;				LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("쿄코")
+;				LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("미스티아")
+;				LOCAL:13 = (NAME_TO_CHARA("미스티아"))
+;				SETBIT SCVAR:3, 1
+;			ELSEIF LOCAL:10 == 2
+;				LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("서니밀크")
+;				LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("치르노")
+;				LOCAL:13 = (NAME_TO_CHARA("치르노"))
+;				SETBIT SCVAR:3, 2
+;			ELSEIF LOCAL:10 == 3
+;				LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("아큐")
+;				LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("케이네")
+;				LOCAL:13 = (NAME_TO_CHARA("케이네"))
+;				SETBIT SCVAR:3, 3
+;			ELSEIF LOCAL:10 == 4
+;				LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("니토리")
+;				LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("마리사")
+;				LOCAL:13 = (NAME_TO_CHARA("마리사"))
+;				SETBIT SCVAR:3, 4
+;			ELSEIF LOCAL:10 == 5
+;				IF GETBIT(SCVAR:2, 0)
+;					LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("메디슨")
+;					SETBIT SCVAR:3, 5
+;				ELSE
+;					LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("라이코")
+;					SETBIT SCVAR:3, 6
+;				ENDIF
+;				LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("신묘마루")
+;				LOCAL:13 = (NAME_TO_CHARA("신묘마루"))
+;			ELSEIF LOCAL:10 == 6
+;				LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("쿄코")
+;				LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("누에")
+;				LOCAL:13 = (NAME_TO_CHARA("누에"))
+;				SETBIT SCVAR:3, 1
+;			ELSEIF LOCAL:10 == 7
+;				LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("레이무")
+;				LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("유카리")
+;				LOCAL:13 = (NAME_TO_CHARA("유카리"))
+;				SETBIT SCVAR:3, 7
+;			ELSEIF LOCAL:10 == 8
+;				LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("사토리")
+;				LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("시키에이키")
+;				LOCAL:13 = (NAME_TO_CHARA("시키에이키"))
+;				SETBIT SCVAR:3, 8
+;			ELSEIF LOCAL:10 == 9
+;				LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("시키에이키")
+;				LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("유카리")
+;				LOCAL:13 = (NAME_TO_CHARA("유카리"))
+;				SETBIT SCVAR:3, 9
+;			ELSEIF LOCAL:10 == 10
+;				LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("텐시")
+;				LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("레이무")
+;				LOCAL:13 = (NAME_TO_CHARA("레이무"))
+;				SETBIT SCVAR:3, 10
+;			ENDIF
+;			;-----------------------------------------------------------------------------
+;			SIF LOCAL:11 != -1
+;				CALL CLEAR_ALL_UNIT(LOCAL:11)
+;			COUNTRY_SOLDIER:(CFLAG:(LOCAL:13):1) += COUNTRY_SOLDIER:(LOCAL:11)
+;			COUNTRY_SOLDIER:(LOCAL:11) = 0
+;			FOR LOCAL:0, 0, MAX_CITY
+;				IF CITY_OWNER:(LOCAL:0) == (LOCAL:11)
+;					CITY_OWNER:(LOCAL:0) = CFLAG:(LOCAL:13):1
+;				ENDIF
+;			NEXT
+;			FOR LOCAL:0, 0, CHARANUM
+;				IF CFLAG:(LOCAL:0):1 == LOCAL:11 || CFLAG:(LOCAL:0):포로처 == LOCAL:11
+;					CALL FORCE_FREE(LOCAL:0)
+;					CFLAG:(LOCAL:0):1 = CFLAG:(LOCAL:13):1
+;				ENDIF
+;			NEXT
+;			CALL DESTROY_COUNTRY(LOCAL:11)
+;			LOCAL:0 = 0
+;			LOCAL:11 = 0
+;			LOCAL:12 = 0
+;			LOCAL:13 = 0
+;		ELSE
+;			PRINTFORMW  대화는 결정되지 않았던 것 같다…
+;		ENDIF
+;	ELSEIF LOCAL:1 == 1
+;		PRINTFORMW  %조사처리(ANAME(LOCAL:4),"는")%, %조사처리(ANAME(LOCAL:5),"를")% 끌어들이기 위해서(때문에) 외교 공세를 걸쳤다!
+;		SIF LOCAL:20 == 0
+;			PRINTFORMW  「밤의 요괴끼리, 협력합시다?」
+;		SIF LOCAL:20 == 1
+;			PRINTFORMW  「내가 있으면, 전세계를 진감 시켜 주어요」
+;		SIF LOCAL:20 == 2
+;			PRINTFORMW  「사쿠야! 저 녀석들 조금 재미있을 것 같으니까 데리고 와서요」
+;		SIF LOCAL:20 == 3
+;			PRINTFORMW  「사람을 놀래키는 것을 흥미는 없을까?」
+;		SIF LOCAL:20 == 4
+;			PRINTFORMW  「법아래에서 인 요는 서로 협력한다고 생각합니다」
+;		SIF LOCAL:20 == 5
+;			PRINTFORMW  「시시한 것을 하지 않고 빨리 돌아오세요」
+;		SIF LOCAL:20 == 6
+;			PRINTFORMW  「나의 전속 악단이 되어 주지 않겠어?」
+;		SIF LOCAL:20 == 7
+;			PRINTFORMW  「혼자 걷기는 금물이야」
+;		SIF LOCAL:20 == 8
+;			PRINTFORMW  「방울꽃에서 연구시켜 받을 수 없을까」
+;		SIF LOCAL:20 == 9
+;			PRINTFORMW  「여느 때처럼 4명이 야단 법석합시다?」
+;		SIF LOCAL:20 == 10
+;			PRINTFORMW  「인형의 연구 대상으로 시켜 받을 수 없을까」
+;		PRINTL …
+;		PRINTL …
+;		PRINTL
+;		IF RAND:3 >= 1
+;			SETCOLOR 칼라_주의
+;			PRINTFORMW ! %NAME_FORMAL(LOCAL:4)%과 %NAME_FORMAL(LOCAL:5)%는 합병(안슈르트)했습니다!
+;			RESETCOLOR
+;			PRINTFORMW  %ANAME(LOCAL:4)%만세!
+;
+;			;합병 처리
+;			;-------------------------------------------------
+;			IF LOCAL:20 == 0
+;				LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("미스티아")
+;				LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("레밀리아")
+;				LOCAL:13 = (NAME_TO_CHARA("레밀리아"))
+;				SETBIT SCVAR:4, 0
+;			ELSEIF LOCAL:20 == 1
+;				LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("쿄코")
+;				LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("레밀리아")
+;				LOCAL:13 = (NAME_TO_CHARA("레밀리아"))
+;				SETBIT SCVAR:3, 1
+;			ELSEIF LOCAL:20 == 2
+;				LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("카게로")
+;				LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("레밀리아")
+;				LOCAL:13 = (NAME_TO_CHARA("레밀리아"))
+;				SETBIT SCVAR:4, 2
+;			ELSEIF LOCAL:20 == 3
+;				LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("쿄코")
+;				IF GETBIT(SCVAR:2, 0)
+;					LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("미코")
+;					LOCAL:13 = NAME_TO_CHARA("미코")
+;				ELSE
+;					LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("청아")
+;					LOCAL:13 = (NAME_TO_CHARA("청아"))
+;				ENDIF
+;				SETBIT SCVAR:4, 1
+;			ELSEIF LOCAL:20 == 4
+;				LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("쿄코")
+;				LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("뱌쿠렌")
+;				LOCAL:13 = (NAME_TO_CHARA("뱌쿠렌"))
+;				SETBIT SCVAR:4, 1
+;			ELSEIF LOCAL:20 == 5
+;				IF GETBIT(SCVAR:2, 0)
+;					LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("청아")
+;					LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("미코")
+;					LOCAL:13 = (NAME_TO_CHARA("미코"))
+;					SETBIT SCVAR:4, 5
+;				ELSE
+;					LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("누에")
+;					LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("뱌쿠렌")
+;					LOCAL:13 = (NAME_TO_CHARA("뱌쿠렌"))
+;					SETBIT SCVAR:4, 7
+;				ENDIF
+;			ELSEIF LOCAL:20 == 6
+;				LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("루나사")
+;				LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("유유코")
+;				LOCAL:13 = (NAME_TO_CHARA("유유코"))
+;				SETBIT SCVAR:4, 6
+;			ELSEIF LOCAL:20 == 7
+;				LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("메디슨")
+;				LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("유카")
+;				LOCAL:13 = (NAME_TO_CHARA("유카"))
+;				SETBIT SCVAR:4, 7
+;			ELSEIF LOCAL:20 == 8
+;				LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("메디슨")
+;				LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("카구야")
+;				LOCAL:13 = (NAME_TO_CHARA("카구야"))
+;				SETBIT SCVAR:3, 5
+;			ELSEIF LOCAL:20 == 9
+;				LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("치르노")
+;				LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("미스티아")
+;				LOCAL:13 = (NAME_TO_CHARA("미스티아"))
+;				SETBIT SCVAR:4, 9
+;			ELSEIF LOCAL:20 == 10
+;				LOCAL:11 = GET_COUNTRY_FROM_BOSS_NAME("메디슨")
+;				LOCAL:12 = GET_COUNTRY_FROM_BOSS_NAME("마리사")
+;				LOCAL:13 = (NAME_TO_CHARA("마리사"))
+;				SETBIT SCVAR:4, 7
+;			ENDIF
+;			;-----------------------------------------------------------------------------
+;			SIF LOCAL:11 != -1
+;				CALL CLEAR_ALL_UNIT(LOCAL:11)
+;			COUNTRY_SOLDIER:(CFLAG:(LOCAL:13):1) += COUNTRY_SOLDIER:(LOCAL:11)
+;			COUNTRY_SOLDIER:(LOCAL:11) = 0
+;			FOR LOCAL:0, 0, MAX_CITY
+;				IF CITY_OWNER:(LOCAL:0) == (LOCAL:11)
+;					CITY_OWNER:(LOCAL:0) = CFLAG:(LOCAL:13):1
+;				ENDIF
+;			NEXT
+;			FOR LOCAL:0, 0, CHARANUM
+;				IF CFLAG:(LOCAL:0):1 == LOCAL:11 || CFLAG:(LOCAL:0):포로처 == LOCAL:11
+;					CALL FORCE_FREE(LOCAL:0)
+;					CFLAG:(LOCAL:0):1 = CFLAG:(LOCAL:13):1
+;				ENDIF
+;			NEXT
+;			CALL DESTROY_COUNTRY(LOCAL:11)
+;			LOCAL:0 = 0		
+;			LOCAL:11 = 0
+;			LOCAL:12 = 0
+;			LOCAL:13 = 0
+;		ELSE
+;			PRINTFORMW  잘 되지 않았던 것 같다…
+;		ENDIF
+;	ELSEIF LOCAL:1 == 2
+;		PRINTFORMW  뭐라는 것이다! %ANAME(LOCAL:6)%의 영내에서 쿠데타가 발생했다!
+;		PRINTL …
+;		PRINTL …
+;		PRINTL
+;		IF RAND:3 >= 1
+;			SETCOLOR 칼라_주의
+;			PRINTFORMW 지금은 %NAME_FORMAL(LOCAL:6)%는 세력의 리더가 아닙니다.
+;			PRINTFORMW 대신에 %NAME_FORMAL(LOCAL:7)%가 지도권을 잡았습니다.
+;			PRINTFORMW 그녀는 전지도자와는 다른 길을 걸을 생각과 같습니다!
+;			RESETCOLOR	
+;			;지도자의 갈아끼우기
+;			IF LOCAL:6 == FINDCHARA(CSTR:99, "카구야")
+;				COUNTRY_BOSS:7 = GET_ID(NAME_TO_CHARA("테위"))
+;				COUNTRY_COLOR:7 = 0xffdab9
+;				SIF GETBIT(SCVAR:2, 2)
+;					COUNTRY_COLOR:7 = 0xffdab9
+;				COUNTRY_AI_TYPE:7 = AI_호전	
+;				PRINTL
+;				PRINTFORMW  테위는, 취임 연설에서
+;				PRINTFORMW 「영원정의 폐쇄성에는 물러나고 있던 곳우사」
+;				PRINTFORMW 「만약 싸움이 시작된다면 인 요 묻지 않고 영원정의 물자를 렌다리스 하는 우사」
+;				PRINTFORMW 「물론 이것은 인도적 배려로부터 우사」
+;				PRINTFORMW 라고 말했다…
+;				PRINTL
+;				SETCOLOR 칼라_주의
+;				PRINTL 에이린·카구야가 포박 되었습니다!
+;				PRINTL 테위의 외교 관계가 변화했습니다
+;				PRINTL 테위에 찬동 하는 군세가 모여 있는 것 같습니다
+;				PRINTL 흰 토끼의 취락의 경제 상황이 향상된 것 같습니다
+;				RESETCOLOR	
+;
+;				CALL INIT_RELATION("테위", "레밀리아", 800, 0)
+;				CALL INIT_RELATION("테위", "케이네", 800, 0)
+;				CALL INIT_RELATION("테위", "카나코", 800, 0)
+;				COUNTRY_SOLDIER:7 = 4000
+;				CFLAG:(NAME_TO_CHARA("카구야")):포로처 = 7
+;				CFLAG:(NAME_TO_CHARA("카구야")):해방카운터 = 7
+;				CFLAG:(NAME_TO_CHARA("에이린")):포로처 = 7
+;				CFLAG:(NAME_TO_CHARA("에이린")):해방카운터 = 7
+;				CITY_ECONOMY:GET_CITYNUMBER("흰 토끼의 취락") = 40000
+;				CITY_ECONOMY_LIMIT:GET_CITYNUMBER("흰 토끼의 취락") = MIN(CITY_ECONOMY:GET_CITYNUMBER("흰 토끼의 취락") * 2, 300000)
+;				SETBIT SCVAR:5, 0
+;
+;			ELSEIF LOCAL:6 == FINDCHARA(CSTR:99, "테위")
+;				CFLAG:(NAME_TO_CHARA("카구야")):포로처 = 0
+;				CFLAG:(NAME_TO_CHARA("에이린")):포로처 = 0
+;				COUNTRY_BOSS:7 = GET_ID(NAME_TO_CHARA("카구야"))
+;				COUNTRY_COLOR:7 = 0x003399
+;				COUNTRY_AI_TYPE:7 = AI_외교	
+;				PRINTL
+;				PRINTFORMW  테위와 토끼들에 의한 하룻밤 정권은, 레이센에 의해 타도해졌다!
+;				PRINTFORMW 레이센은 다시 카구야를 리더에게 둔 것 같다…
+;				PRINTL
+;				SETCOLOR 칼라_주의
+;				PRINTL 테위가 포박 되었습니다!
+;				RESETCOLOR	
+;				CALL INIT_RELATION("카구야", "요리히메", 1200, 0)
+;				CALL INIT_RELATION("카구야", "사구메", 800, 0)
+;				CALL INIT_RELATION("카구야", "순호", 800, 0)
+;				CFLAG:(NAME_TO_CHARA("테위")):포로처 = 7
+;				CFLAG:(NAME_TO_CHARA("테위")):해방카운터 = 7
+;				SETBIT SCVAR:5, 20
+;
+;			ELSEIF LOCAL:6 == FINDCHARA(CSTR:99, "레밀리아")
+;				COUNTRY_BOSS:2 = GET_ID(NAME_TO_CHARA("플랑도르"))
+;				COUNTRY_COLOR:2 = 0xFF0000
+;				COUNTRY_AI_TYPE:2 = AI_방위
+;				PRINTL
+;				PRINTFORMW  플랑도르는, 취임 연설에서
+;				PRINTFORMW 「밤의 왕짓거리는 벌써 끝이야」
+;				PRINTFORMW 「만약 싸움이 시작된다면 홍마관은 정관 해요」
+;				PRINTFORMW 「물론 공격을 거는 녀석에게는 용서는 하지 않지만」
+;				PRINTFORMW 라고 말했다…
+;				SETCOLOR 칼라_주의
+;				PRINTL 레밀리아가 포박 되었습니다!
+;				PRINTL 플랑도르의 외교 관계가 변화했습니다
+;				PRINTL 홍마관의 경제 상황이 향상된 것 같습니다
+;				RESETCOLOR	
+;				CFLAG:(NAME_TO_CHARA("레밀리아")):해방카운터 = 2
+;				CFLAG:(NAME_TO_CHARA("레밀리아")):포로처 = 2
+;				CITY_ECONOMY:GET_CITYNUMBER("홍마관") = 100000
+;				CITY_ECONOMY_LIMIT:GET_CITYNUMBER("홍마관") = MIN(CITY_ECONOMY:GET_CITYNUMBER("홍마관") * 2, 300000)
+;				CALL INIT_RELATION("플랑도르", "유카리", 800, 0)
+;				CALL INIT_RELATION("유카리", "플랑도르", 400, 400)
+;				CALL INIT_RELATION("플랑도르", "마리사", 800, 0)
+;				CALL INIT_RELATION("마리사", "플랑도르", 800, 0)
+;				CALL INIT_RELATION("레이무", "플랑도르", 800, 0)
+;				CALL INIT_RELATION("플랑도르", "카나코", 0, 400)
+;				CALL INIT_RELATION("카나코", "플랑도르", 0, 400)
+;				SETBIT SCVAR:5, 1
+;
+;			ELSEIF LOCAL:6 == FINDCHARA(CSTR:99, "플랑도르")
+;				CFLAG:(NAME_TO_CHARA("레밀리아")):포로처 = 0
+;				COUNTRY_BOSS:2 = GET_ID(NAME_TO_CHARA("레밀리아"))
+;				COUNTRY_COLOR:2 = 0xFF0000
+;				COUNTRY_AI_TYPE:2 = AI_호전
+;				PRINTL
+;				PRINTFORMW  레밀리아가 홍마관의 주도권을 되찾았다!
+;				PRINTFORMW  귀찮은 자매 싸움은 끝 것 같지도 않다…
+;				SETCOLOR 칼라_주의
+;				PRINTL 플랑도르가 포박 되었습니다!
+;				RESETCOLOR	
+;				CFLAG:(NAME_TO_CHARA("플랑도르")):해방카운터 = 2
+;				CFLAG:(NAME_TO_CHARA("플랑도르")):포로처 = 2
+;				CALL INIT_RELATION("레밀리아", "유유코", 800, 0)
+;				CALL INIT_RELATION("레밀리아", "유카리", 1000, 200)
+;				CALL INIT_RELATION("레밀리아", "신묘마루", 1500, 0)
+;				CALL INIT_RELATION("레밀리아", "카게로", 1500, 0)
+;				CALL INIT_RELATION("레밀리아", "누에", 800, 0)
+;				CALL INIT_RELATION("레밀리아", "메디슨", 1500, 0)
+;				CALL INIT_RELATION("레밀리아", "유카", 800, 0)
+;				CALL INIT_RELATION("레밀리아", "미스티아", 1500, 0)
+;				CALL INIT_RELATION("레밀리아", "쿄코", 1500, 0)
+;				SETBIT SCVAR:5, 21
+;
+;			ELSEIF LOCAL:6 == FINDCHARA(CSTR:99, "카나코")
+;				COUNTRY_BOSS:9 = GET_ID(NAME_TO_CHARA("스와코"))
+;				COUNTRY_COLOR:9 = 0x336600
+;				SIF GETBIT(SCVAR:2, 2)
+;					COUNTRY_COLOR:9 = 0x336600
+;				COUNTRY_AI_TYPE:9 = AI_호전
+;				COUNTRY_SOLDIER:9 = 5000
+;				PRINTL
+;				PRINTFORMW  스와코는, 취임 연설에서
+;				PRINTFORMW 「카나코는 미지근해요!」
+;				PRINTFORMW 「완전한 통치는 공포에 의해 이루어지는거야!」
+;				PRINTFORMW 라고 말했다…
+;				SETCOLOR 칼라_주의
+;				PRINTL 스와코의 외교 관계가 변화했습니다
+;				PRINTL 모리야 신사에 군세가 모여 있는 것 같습니다
+;				RESETCOLOR	
+;				CALL INIT_RELATION("스와코", "유카리", 0, 800)
+;				CALL INIT_RELATION("유카리", "스와코", 0, 800)
+;				CALL INIT_RELATION("스와코", "아야", 400, 0)
+;				CALL INIT_RELATION("아야", "스와코", 0, 400)
+;				CALL INIT_RELATION("스와코", "니토리", 400, 400)
+;				CALL INIT_RELATION("니토리", "스와코", 0, 400)
+;				SETBIT SCVAR:5, 2
+;
+;			ELSEIF LOCAL:6 == FINDCHARA(CSTR:99, "스와코")
+;				COUNTRY_BOSS:9 = GET_ID(NAME_TO_CHARA("사나에"))
+;				COUNTRY_COLOR:9 = 0x00ff00
+;				SIF GETBIT(SCVAR:2, 2)
+;					COUNTRY_COLOR:9 = 0xccff99
+;				COUNTRY_AI_TYPE:9 = AI_외교
+;				PRINTL
+;				PRINTFORMW  사나에는, 취임 연설에서
+;				PRINTFORMW 「카나코님·스와코님의 말하는 싸움은 무서운 것입니다!」
+;				PRINTFORMW 「나는 사람이 죽는 것을 바라지 않습니다!」
+;				PRINTFORMW 「그러니까 여러분도, 탄막놀이로 대결(결착)을 붙입시다!」
+;				PRINTFORMW 라고 말했다…
+;				SETCOLOR 칼라_주의
+;				PRINTL 사나에의 외교 관계가 변화했습니다
+;				PRINTL 모리야 신사의 경제 상황이 향상된 것 같습니다
+;				CITY_ECONOMY:GET_CITYNUMBER("모리야 신사") = 80000
+;				CITY_ECONOMY_LIMIT:GET_CITYNUMBER("모리야 신사") = MIN(CITY_ECONOMY:GET_CITYNUMBER("모리야 신사") * 2, 300000)
+;				RESETCOLOR	
+;				CALL INIT_RELATION("사나에", "유카리", 800, 0)
+;				CALL INIT_RELATION("유카리", "사나에", 400, 400)
+;				CALL INIT_RELATION("사나에", "레이무", 800, 0)
+;				CALL INIT_RELATION("레이무", "사나에", 800, 0)
+;				CALL INIT_RELATION("사나에", "아야", 800, 0)
+;				CALL INIT_RELATION("아야", "사나에", 800, 400)
+;				CALL INIT_RELATION("사나에", "니토리", 800, 400)
+;				CALL INIT_RELATION("니토리", "사나에", 800, 400)
+;				SETBIT SCVAR:5, 22
+;
+;
+;			ELSEIF LOCAL:6 == FINDCHARA(CSTR:99, "요리히메")
+;				COUNTRY_BOSS:23 = GET_ID(NAME_TO_CHARA("달레이센"))
+;				COUNTRY_COLOR:23 = 0xb0e0e6
+;				SIF GETBIT(SCVAR:2, 2)
+;					COUNTRY_COLOR:23 = 0xccff66
+;				COUNTRY_AI_TYPE:23 = AI_외교
+;				PRINTFORMW  달레이센은, 취임 연설에서, 토끼 지상 주의와 지상에의 개입을 표명했다
+;				SETCOLOR 칼라_주의
+;				PRINTL 달레이센의 외교 관계가 변화했습니다
+;				PRINTL 달레이센에 찬동 하는 제후가 모여 있는 것 같습니다
+;				PRINTL 달레이센에 찬동 하는 군세가 모여 있는 것 같습니다
+;				PRINTL 토요히메·요리히메는 사구메의 아래에 도망치기 시작한 것 같습니다
+;				RESETCOLOR	
+;				COUNTRY_SOLDIER:23 = 10000
+;				COUNTRY_SOLDIER:30 = 10000
+;				CFLAG:(NAME_TO_CHARA("요리히메")):1 = 30
+;				CFLAG:(NAME_TO_CHARA("토요히메")):1 = 30
+;				CFLAG:(NAME_TO_CHARA("링고")):1 = 23
+;				CFLAG:(NAME_TO_CHARA("세이란")):1 = 23
+;				COUNTRY_SOLDIER:30 = 10000
+;				CALL INIT_RELATION("달레이센", "유카리", 0, 800)
+;				CALL INIT_RELATION("유카리", "달레이센", 0, 800)
+;				CALL INIT_RELATION("레밀리아", "달레이센", 0, 800)
+;				CALL INIT_RELATION("달레이센", "레밀리아", 0, 800)
+;				CALL INIT_RELATION("레이무", "달레이센", 0, 800)
+;				CALL INIT_RELATION("달레이센", "레이무", 0, 800)
+;				CALL INIT_RELATION("카나코", "달레이센", 0, 800)
+;				CALL INIT_RELATION("달레이센", "카나코", 0, 800)
+;				CALL INIT_RELATION("사구메", "달레이센", 0, 800)
+;				CALL INIT_RELATION("달레이센", "사구메", 0, 800)
+;				CALL INIT_RELATION("카구야", "달레이센", 1200, 800)
+;				CALL INIT_RELATION("달레이센", "카구야", 1200, 800)
+;				SETBIT SCVAR:5, 3
+;
+;			ELSEIF LOCAL:6 == FINDCHARA(CSTR:99, "마리사")
+;				COUNTRY_BOSS:3 = GET_ID(NAME_TO_CHARA("앨리스"))
+;				COUNTRY_COLOR:3 = 0xff1493
+;				SIF GETBIT(SCVAR:2, 2)
+;					COUNTRY_COLOR:3 = 0xff33cc
+;				COUNTRY_AI_TYPE:3 = AI_내정
+;				PRINTFORMW  앨리스는, 취임 연설에서, 친요괴 노선을 표명했다
+;				SETCOLOR 칼라_주의
+;				PRINTFORMW 앨리스의 세력에 신키가 더해진 것 같습니다	
+;				PRINTFORMW 마리사는 타세력에 피한 것 같습니다
+;				PRINTFORMW 앨리스의 외교 관계에 변화가 있었습니다
+;				RESETCOLOR
+;				CFLAG:(NAME_TO_CHARA("신키")):1 = 3
+;				IF RAND:3 == 1
+;					CFLAG:(NAME_TO_CHARA("마리사")):1 = 1
+;				ELSEIF  RAND:3 == 2
+;					CFLAG:(NAME_TO_CHARA("마리사")):1 = 2
+;				ELSE 
+;					CFLAG:(NAME_TO_CHARA("마리사")):1 = 20
+;				ENDIF
+;				CALL INIT_RELATION("앨리스", "유카리", 800, 0)
+;				CALL INIT_RELATION("유카리", "앨리스", 800, 0)
+;				CALL INIT_RELATION("앨리스", "레밀리아", 800, 0)
+;				CALL INIT_RELATION("레밀리아", "앨리스", 800, 0)
+;				CALL INIT_RELATION("앨리스", "메디슨", 1200, 0)
+;				CALL INIT_RELATION("메디슨", "앨리스", 1200, 0)
+;				SETBIT SCVAR:5, 4
+;
+;
+;			ELSEIF LOCAL:6 == FINDCHARA(CSTR:99, "신묘마루")
+;				COUNTRY_BOSS:18 = GET_ID(NAME_TO_CHARA("세이자"))
+;				COUNTRY_COLOR:18 = 0x00ced1
+;				SIF GETBIT(SCVAR:2, 2)
+;					COUNTRY_COLOR:18 = 0x6666ff
+;				COUNTRY_AI_TYPE:18 = AI_호전
+;				COUNTRY_SOLDIER:18 = 7000
+;				PRINTL
+;				PRINTFORMW  세이자는, 취임 연설에서
+;				PRINTFORMW 「뭔가 송사리 요괴들이 궤도에 오르고 있는 것 같지 않은가」
+;				PRINTFORMW 「그늘 캐릭터가 우쭐해지고 있는 것을 보면 화가 나는거네요」
+;				PRINTFORMW 「나는 인간 측에 붙어 싸워요. 인 요혁명의 시작이다!」
+;				PRINTFORMW 라고 말한 것 같다…
+;				SETCOLOR 칼라_주의
+;				PRINTL 세이자의 외교 관계가 변화했습니다
+;				PRINTL 세이자에 찬동 하는 군세가 모여 있는 것 같습니다
+;				RESETCOLOR
+;				CALL INIT_RELATION("세이자", "유카리", 0, 800)
+;				CALL INIT_RELATION("유카리", "세이자", 0, 800)
+;				CALL INIT_RELATION("레밀리아", "세이자", 0, 800)
+;				CALL INIT_RELATION("세이자", "레밀리아", 0, 800)
+;				CALL INIT_RELATION("레이무", "세이자", 800, 800)
+;				CALL INIT_RELATION("세이자", "레이무", 800, 800)
+;				CALL INIT_RELATION("케이네", "세이자", 800, 0)
+;				CALL INIT_RELATION("세이자", "케이네", 800, 800)
+;				SETBIT SCVAR:5, 5
+;			ELSE
+;				PRINTFORMW  쿠데타는 미수에 끝나, 주모자는 분명하게는 안 되었다…
+;			ENDIF
+;		ELSE
+;			PRINTFORMW  쿠데타는 미수에 끝나, 주모자는 분명하게는 안 되었다…
+;		ENDIF
+;	ELSEIF LOCAL:1 == 3
+;		PRINTFORMW %ANAME(LOCAL:8)%의 영내에서는, 난폭한 %조사처리(ANAME(LOCAL:9),"과")%의 협조 노선에 대한 반발이 퍼지고 있다.
+;		PRINTFORMW 데모대가 관저를 둘러싸, 각자가 %조사처리(ANAME(LOCAL:9),"는")% 제국주의적이라고 외치고 있다.
+;		PRINTL …
+;		PRINTL …
+;		PRINTL
+;		IF RAND:3 >= 1
+;			SETCOLOR 칼라_주의
+;			PRINTFORMW %NAME_FORMAL(LOCAL:8)%는 %NAME_FORMAL(LOCAL:9)%과의 동맹에 종지부를 찍었습니다
+;			PRINTFORMW %NAME_FORMAL(LOCAL:8)%는 독자 노선을 모색하는 것 같습니다
+;			RESETCOLOR	
+;			IF LOCAL:8 == FINDCHARA(CSTR:99, "니토리")
+;					PRINTFORMW 텐구로부터 갓파의 자치를 되찾는다!
+;					PRINTFORMW  %NAME_FORMAL(LOCAL:8)%의 과감하게 다수의 애국 주의자가 모여 있습니다!
+;					PRINTFORMW  하지만 %NAME_FORMAL(LOCAL:9)%과의 오랜 세월의 신뢰는 잿더미에 돌아갔습니다…
+;					COUNTRY_COLOR:15 = 0X33ffcc
+;					COUNTRY_AI_TYPE:15 = AI_외교
+;					COUNTRY_SOLDIER:15 = 10000
+;					CALL INIT_ALLIANCE_BY_NAME("아야", "니토리", 1)
+;					CALL INIT_ALLIANCE_BY_NAME("카나코", "니토리", 1)
+;					CALL INIT_ALLIANCE_BY_NAME("니토리", "카센", 30)
+;					CALL INIT_RELATION("아야", "니토리", 0, 800)
+;					CALL INIT_RELATION("니토리", "아야", 0, 800)
+;					CALL INIT_RELATION("카센", "니토리", 800, 800)
+;					CALL INIT_RELATION("니토리", "카센", 800, 800)
+;					CALL INIT_RELATION("카나코", "니토리", 0, 800)
+;					CALL INIT_RELATION("니토리", "카나코", 0, 800)
+;					CALL INIT_RELATION("레밀리아", "니토리", 800, 400)
+;					CALL INIT_RELATION("니토리", "레밀리아", 800, 400)
+;					CALL INIT_RELATION("누에", "니토리", 800, 0)
+;					CALL INIT_RELATION("니토리", "누에", 800, 0)
+;					SETBIT SCVAR:6, 0
+;
+;
+;			ELSEIF LOCAL:8 == FINDCHARA(CSTR:99, "아야")
+;
+;					PRINTFORMW 텐구는 그 불손한 신과는 결별한다!
+;					PRINTFORMW  %NAME_FORMAL(LOCAL:8)%의 과감하게 다수의 애국 주의자가 모여 있습니다!
+;					PRINTFORMW  하지만 %NAME_FORMAL(LOCAL:9)%과의 오랜 세월의 신뢰는 잿더미에 돌아갔습니다…
+;					COUNTRY_COLOR:11 = 0xff9900
+;					COUNTRY_AI_TYPE:11 = AI_호전
+;					COUNTRY_SOLDIER:11 = 10000
+;					CALL INIT_ALLIANCE_BY_NAME("카나코", "아야", 1)
+;					CALL INIT_ALLIANCE_BY_NAME("아야", "니토리", 1)
+;					CALL INIT_ALLIANCE_BY_NAME("아야", "카센", 1)
+;					CALL INIT_ALLIANCE_BY_NAME("카나코", "니토리", 30)
+;					CALL INIT_RELATION("카나코", "아야", 800, 0)
+;					CALL INIT_RELATION("아야", "카나코", 0, 800)
+;					CALL INIT_RELATION("니토리", "아야", 800, 800)
+;					CALL INIT_RELATION("아야", "니토리", 800, 800)
+;					CALL INIT_RELATION("레밀리아", "아야", 800, 400)
+;					CALL INIT_RELATION("아야", "레밀리아", 800, 400)
+;
+;					SETBIT SCVAR:6, 1
+;
+;
+;			ELSEIF LOCAL:8 == FINDCHARA(CSTR:99, "마리사")
+;
+;					PRINTFORMW 「우리들의 길을 간다. 그것은 반드시 매우 좋은 아이디어가 틀림없어요.」
+;					CALL INIT_ALLIANCE_BY_NAME("레이무", "마리사", 1)
+;					CALL INIT_RELATION("레밀리아", "마리사", 200, 0)
+;					CALL INIT_RELATION("누에", "마리사", 200, 0)
+;					CALL INIT_RELATION("니토리", "마리사", 200, 0)
+;					CALL INIT_RELATION("카나코", "마리사", 200, 0)
+;					SETBIT SCVAR:6, 2
+;
+;
+;			ELSEIF LOCAL:8 == FINDCHARA(CSTR:99, "아큐")
+;
+;					PRINTFORMW 「우리들의 길을 간다. 그것은 반드시 매우 좋은 아이디어가 틀림없어요.」
+;					COUNTRY_COLOR:21 = 0x00bfff
+;					CALL INIT_ALLIANCE_BY_NAME("아큐", "케이네", 1)
+;					CALL INIT_RELATION("아큐", "케이네", 0, 400)
+;					CALL INIT_RELATION("케이네", "아큐", 0, 400)
+;					SETBIT SCVAR:6, 3
+;
+;
+;			ELSEIF LOCAL:8 == FINDCHARA(CSTR:99, "유유코")
+;
+;					PRINTFORMW 「우리들의 길을 간다. 그것은 반드시 매우 좋은 아이디어가 틀림없어요.」
+;					CALL INIT_ALLIANCE_BY_NAME("유카리", "유유코", 1)
+;					CALL INIT_RELATION("유유코", "유카리", 800, 400)
+;					CALL INIT_RELATION("유카리", "유유코", 400, 800)
+;					SETBIT SCVAR:6, 4
+;					COUNTRY_COLOR:4 = 0xffccff
+;
+;			ELSEIF LOCAL:8 == FINDCHARA(CSTR:99, "사구메")
+;
+;					PRINTFORMW 월인의 부적에는 벌써 지쳤다
+;					PRINTFORMW  %NAME_FORMAL(LOCAL:8)%는 부하를 동반해, 도로부터의 무선을 무시해, 독자 행동을 취했다.
+;					COUNTRY_COLOR:30 = 0x90ee90
+;					COUNTRY_AI_TYPE:30 = AI_호전
+;					CALL INIT_ALLIANCE_BY_NAME("요리히메", "사구메", 1)
+;					CALL INIT_RELATION("사구메", "요리히메", 800, 400)
+;					CALL INIT_RELATION("사구메", "순호", 400, 800)
+;					SETBIT SCVAR:6, 5
+;
+;
+;			ENDIF
+;		ELSE
+;			PRINTFORMW  데모대는 %NAME_FORMAL(LOCAL:8)%의 위병에 의해 진압된 것 같다…
+;		ENDIF
+;	ELSEIF LOCAL:1 == 4 && ! GETBIT(SCVAR:7, 22)
+;		IF LOCAL:14 == 0
+;			IF ! GETBIT(SCVAR:7, 0)
+;				PRINTFORMW 「인간이 사라지는 길」은, 이전부터 방위의 요소로서 보여지고 있었다
+;				PRINTFORMW 거기서, 이번 요새화가 진행되게 되었다
+;				CITY_GUARD:GET_CITYNUMBER("인간이 사라지는 길") = 200
+;				SETCOLOR 칼라_주의
+;				PRINTFORMW 방위력이 올랐습니다
+;				RESETCOLOR
+;				SETBIT SCVAR:7, 0
+;			ELSE
+;				PRINTFORMW 「인간이 사라지는 길」은, 한층 더 요새화가 진행되었다
+;				CITY_GUARD:GET_CITYNUMBER("인간이 사라지는 길") = 250
+;				SETCOLOR 칼라_주의
+;				PRINTFORMW 방위력이 올랐습니다
+;				RESETCOLOR
+;				SETBIT SCVAR:7, 22
+;			ENDIF
+;		ELSEIF LOCAL:14 == 1
+;			IF ! GETBIT(SCVAR:7, 1)
+;				PRINTFORMW 「휘침성」은, 이전부터 방위의 요소로서 보여지고 있었다
+;				PRINTFORMW 거기서, 이번 요새화가 진행되게 되었다
+;				CITY_GUARD:GET_CITYNUMBER("휘침성") = 200
+;				SETCOLOR 칼라_주의
+;				PRINTFORMW 방위력이 올랐습니다
+;				RESETCOLOR
+;				SETBIT SCVAR:7, 1
+;			ELSE
+;				PRINTFORMW 「휘침성」은, 한층 더 요새화가 진행되었다
+;				CITY_GUARD:GET_CITYNUMBER("휘침성") = 250
+;				SETCOLOR 칼라_주의
+;				PRINTFORMW 방위력이 올랐습니다
+;				RESETCOLOR
+;				SETBIT SCVAR:7, 22
+;			ENDIF
+;		ELSEIF LOCAL:14 == 2 
+;			IF ! GETBIT(SCVAR:7, 2)
+;				PRINTFORMW 「간헐천 지하센터」는, 이전부터 방위의 요소로서 보여지고 있었다
+;				PRINTFORMW 거기서, 이번 요새화가 진행되게 되었다
+;				CITY_GUARD:GET_CITYNUMBER("간헐천 지하센터") = 200
+;				SETCOLOR 칼라_주의
+;				PRINTFORMW 방위력이 올랐습니다
+;				RESETCOLOR
+;				SETBIT SCVAR:7, 2
+;			ELSE
+;				PRINTFORMW 「간헐천 지하센터」는, 한층 더 요새화가 진행되었다
+;				CITY_GUARD:GET_CITYNUMBER("간헐천 지하센터") = 250
+;				SETCOLOR 칼라_주의
+;				PRINTFORMW 방위력이 올랐습니다
+;				RESETCOLOR
+;				SETBIT SCVAR:7, 22
+;			ENDIF
+;		ELSEIF LOCAL:14 == 3
+;			IF ! GETBIT(SCVAR:7, 2)
+;				PRINTFORMW 「삼도천」은, 이전부터 방위의 요소로서 보여지고 있었다
+;				PRINTFORMW 거기서, 이번 요새화가 진행되게 되었다
+;				CITY_GUARD:GET_CITYNUMBER("삼도천") = 200
+;				SETCOLOR 칼라_주의
+;				PRINTFORMW 방위력이 올랐습니다
+;				RESETCOLOR
+;				SETBIT SCVAR:7, 3
+;			ELSE
+;				PRINTFORMW 「삼도천」은, 한층 더 요새화가 진행되었다
+;				CITY_GUARD:GET_CITYNUMBER("삼도천") = 250
+;				SETCOLOR 칼라_주의
+;				PRINTFORMW 방위력이 올랐습니다
+;				RESETCOLOR	
+;				SETBIT SCVAR:7, 22
+;			ENDIF
+;		ENDIF
+;
+;	ELSE
+;		PRINTL	세계는 놀라울 정도 평화롭다.
+;	ENDIF
+;ELSEIF DAY == 8 && RAND:4 == 0
+;	PRINTFORMW …
+;	PRINTFORMW 레밀리아를 중심으로 한 요괴 파벌과 유카리의 파벌은 오랜 세월 동맹 관계에 있었다
+;	PRINTFORMW 하지만, 힘을 북돋우고 있는 레밀리아를 위험시 한 유카리는, 일방적으로 동맹을 파기해
+;	PRINTFORMW 스스로 요괴의 몸이면서, 마을의 백성을 아군에게 반요괴 포위망을 깔았다
+;	SETCOLOR 칼라_주의
+;	PRINTFORMW 환상향의 외교 관계에 큰 변화가 있었습니다
+;	RESETCOLOR
+;
+;	CALL INIT_RELATION("레밀리아", "유유코", 200, 400)
+;	CALL INIT_RELATION("레밀리아", "유카리", 0, 400)
+;	CALL INIT_RELATION("유유코", "레밀리아", 400, 400)
+;	CALL INIT_RELATION("유유코", "유카리", 1500, 0)
+;	CALL INIT_RELATION("유카리", "레밀리아", 0, 400)
+;	CALL INIT_RELATION("유카리", "유유코", 1500, 0)
+;	CALL INIT_RELATION("신묘마루", "유유코", 0, 400)
+;	CALL INIT_RELATION("신묘마루", "유카리", 0, 600)
+;	CALL INIT_RELATION("카게로", "유유코", 0, 400)
+;	CALL INIT_RELATION("카게로", "유카리", 0, 40)
+;	CALL INIT_RELATION("누에", "유유코", 0, 400)
+;	CALL INIT_RELATION("누에", "유카리", 800, 0)
+;	CALL INIT_RELATION("메디슨", "유유코", 0, 400)
+;	CALL INIT_RELATION("메디슨", "유카리", 0, 400)
+;	CALL INIT_RELATION("유카", "유유코", 0, 400)
+;	CALL INIT_RELATION("유카", "유카리", 0, 400)
+;	CALL INIT_RELATION("미스티아", "유유코", 0, 600)
+;	CALL INIT_RELATION("미스티아", "유카리", 0, 400)
+;	CALL INIT_RELATION("쿄코", "유유코", 0, 400)
+;	CALL INIT_RELATION("쿄코", "유카리", 0, 400)
+;
+;	CALL INIT_RELATION("유카리", "마리사", 800, 0)
+;	CALL INIT_RELATION("유카리", "케이네", 800, 0)
+;	CALL INIT_RELATION("유카리", "텐시", 800, 800)
+;	CALL INIT_RELATION("유카리", "뱌쿠렌", 800, 200)
+;	CALL INIT_RELATION("유카리", "미코", 800, 200)
+;	CALL INIT_RELATION("유카리", "아큐", 800, 0)
+;	CALL INIT_RELATION("마리사", "유카리", 200, 200)
+;	CALL INIT_RELATION("케이네", "유카리", 800, 400)
+;	CALL INIT_RELATION("텐시", "유카리", 200, 800)
+;	CALL INIT_RELATION("뱌쿠렌", "유카리", 800, 0)
+;	CALL INIT_RELATION("미코", "유카리", 800, 200)
+;	CALL INIT_RELATION("아큐", "유카리", 800, 400)
+;
+;	CALL INIT_ALLIANCE_BY_NAME("유카리", "레이무", 30)
+;	CALL INIT_ALLIANCE_BY_NAME("유카리", "케이네", 30)
+;	CALL INIT_ALLIANCE_BY_NAME("유카리", "아큐", 30)
+;	CALL INIT_ALLIANCE_BY_NAME("유카리", "레밀리아", 1)
+;	COUNTRY_COLOR:6 = 0xcc00ff
+;ENDIF

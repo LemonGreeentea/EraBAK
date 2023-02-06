@@ -1,0 +1,75 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_PITFALL_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_PITFALL_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_PITFALL(대상)
+#DIM 대상
+
+PRINTFORMW %조사처리(ANAME(대상),"가")% 탐색하고 있으면, 돌연 발 밑이 빠졌다!
+PRINTFORMW 아무래도 함정에 빠져 버린 것 같다
+PRINTFORML 허리까지 빠져 있어 버려, 빠져 나갈 수 있을 것 같지 않다
+
+IF IS_MALE(대상)
+	PRINTFORML 우연히 지나간 사람에게 말을 걸면, 그는 금 3000을 요구했다
+	PRINTFORML 
+	PRINTFORML 현재의 돈:{MONEY}
+	CALL ASK_MULTI_JUDGE("지불한다", MONEY >= 3000, "자력으로 빠져 나간다", 1)
+	IF RESULT == 0
+		PRINTFORML 마지못해 승낙하면, 그는 간신히 도와 주었다
+		CALL ICPRINT("금<3000>을 지불했다", "L", 칼라_주의)
+		MONEY -= 3000
+	ELSE
+		PRINTFORML 자력으로 탈출하기로 했다
+		PRINTFORMW ……결국 밤까지 걸려 버렸다
+		CALL ADD_COOLTIME(대상, 1)
+	ENDIF
+	RETURN 1
+ENDIF
+
+PRINTFORML 우연히 지나간 사람에게 말을 걸면, 그는 히죽히죽한 미소를 띄운다
+PRINTFORML 공짜로는 도와 줄 수 없구나?   라고 말해 왔다
+PRINTFORML 
+CALL ASK_MULTI_JUDGE("지불한다", MONEY >= 3000, "손으로 봉사한다", 1, "입으로 봉사한다", 1, "자력으로 빠져 나간다", 1)
+
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 마지못해 승낙하면, 그는 간신히 도와 주었다
+		CALL ICPRINT("금<3000>을 지불했다", "L", 칼라_주의)
+		MONEY -= 3000
+	CASE 1
+		PRINTFORML 손으로 봉사한다고 전하면, 그는 조속히 페니스를 꺼냈다
+		PRINTFORMW %ANAME(대상)%의 얼굴(정도)만큼도 있으리라고 말하는 잘 드는 칼이다
+		PRINTFORMW 다루고 있는 동안에, 손바닥이나 손가락으로부터 전해지는 뜨거움이 %조사처리(ANAME(대상),"를")% 고조되게 한다
+		PRINTFORMW 쑤셔 버린 %조사처리(ANAME(대상),"는")%, 구멍중에 있는 스스로의 하반신을, 눈치채지지 않게 만지작거리기 시작한다
+		PRINTFORMW 그렇게 하고 있는 동안에, 마지못해서였던 봉사도 열심인 것이 되어 갔다
+		PRINTFORMW 남이 사정하면, %조사처리(ANAME(대상),"는")% 스스로 내미도록(듯이)해, 안면에서 백탁을 받아 들였다……
+		CALL FUCK(대상, "욕망, Ｃ, 봉사, 정애, 성기술, 자위")
+	CASE 2
+		PRINTFORML 입으로 봉사한다고 전하면, 그는 조속히 페니스를 꺼냈다
+		PRINTFORMW %ANAME(대상)%의 얼굴(정도)만큼도 있으리라고 말하는 잘 드는 칼이다
+		PRINTFORMW 주뼛주뼛 빨고 있는 동안에, 혀나 구강으로부터 전해지는 뜨거움과 수컷의 냄새가 %조사처리(ANAME(대상),"를")% 고조되게 한다
+		PRINTFORMW 쑤셔 버린 %조사처리(ANAME(대상),"는")%, 구멍중에 있는 스스로의 하반신을, 눈치채지지 않게 만지작거리기 시작한다
+		PRINTFORMW 그렇게 하고 있는 동안에, 아니아니였던 펠라치오도 열심인 것이 되어 있었다
+		PRINTFORMW 남이 사정하면, %조사처리(ANAME(대상),"는")% 아무것도 말해지지 않고도 목을 울려 백탁을 삼켰다……
+		CALL FUCK(대상, "욕망, Ｃ, 봉사, 정애, 성기술, 펠라티오", "키스상실", 0, "지나가는 남자의 페니스")
+	CASE 3
+		PRINTFORML 자력으로 탈출하기로 했다
+		PRINTFORMW ……결국 밤까지 걸려 버렸다
+		CALL ADD_COOLTIME(대상, 1)
+ENDSELECT
+
+RETURN 1

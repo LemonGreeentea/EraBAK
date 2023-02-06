@@ -1,0 +1,846 @@
+﻿;-------------------------------------------------
+;시간 경과 이벤트
+;-------------------------------------------------
+@EVENTTURNEND
+#PRI
+
+FLAG:전략페이즈페이지 = 1
+
+;거점 페이즈
+IF TIME == 0
+	IF SHOP_TIME >= CALC_SHOP_TIME() || CFLAG:MASTER:포로처
+		CALL TURNEND_LIFE
+	ELSE
+		CALL COOK_HEAL
+		BEGIN SHOP
+	ENDIF
+;전략 페이즈
+ELSE
+	CALL TURNEND_POLITICS
+ENDIF
+
+;역조교요구 일수가 남아 있는 경우
+IF DIPLOMACY_TRAINED_DAY > 0 && !FLAG:턴엔드조교 && !FLAG:조교요구플래그
+	DIPLOMACY_TRAINED_DAY --
+	;전원의 조교참가플래그를 해제
+	CVARSET CFLAG, 6, 0
+	CFLAG:DIPLOMACY_TRAINING_CHARA:조교참가플래그 = 1
+	;포로 역조교모드
+	FLAG:조교모드 = 5
+	;우후후모드
+	FLAG:우후후플래그 = 1
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% 외교교섭의 담보로서 %ANAME(DIPLOMACY_TRAINING_CHARA)%의 침실에 향했다……
+	CALL START_TRAIN_COMMON
+	RETURN
+ENDIF
+
+;군주 역조교요구 일수가 남아 있는 경우
+IF DIPLOMACY_TRAINED_DAY < 0 && !FLAG:조교요구플래그
+	DIPLOMACY_TRAINED_DAY ++
+	;포로 역조교모드
+	FLAG:조교모드 = 조교_위안
+	FLAG:위안모드 = 3
+	FLAG:위안장소 = 위안_행선지_귀족의거주지
+	;우후후모드
+	FLAG:우후후플래그 = 1
+	FLAG:조교요구플래그 = 1
+	FLAG:요바이 = 0
+	; 아이템을 대충 추가
+	ITEM:A_로터 = 1
+	ITEM:A_바이브 = 1
+	ITEM:A_애널바이브 = 1
+	ITEM:A_페니스밴드 = 1
+	ITEM:A_오나홀 = 1
+	ITEM:A_클리캡 = 1
+	ITEM:A_유두캡 = 1
+	ITEM:A_미약 = 99
+	ITEM:A_배란유발제 = 99
+	;전원의 조교참가플래그를 해제
+	CVARSET CFLAG, 6, 0
+	CFLAG:DIPLOMACY_TRAINING_CHARA:조교참가플래그 = 1
+	CFLAG:DIPLOMACY_TRAINING_CHARA:위안참가자 = 1
+	CFLAG:DIPLOMACY_TRAINING_CHARA:행동완료 = 1
+	CFLAG:GET_COUNTRY_BOSS(CFLAG:MASTER:소속):조교참가플래그 = 1
+	PRINTFORMW %ANAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))%는 외교교섭의 담보로서 %ANAME(DIPLOMACY_TRAINING_CHARA)%의 침실에 향했다……
+	
+	;시간의 처리를 하지 않으면, 「거점 페이즈의 종료시에 여기에 도달, 조교→조교 종료로 SLG 페이즈의 턴 엔드가 불려 차기의 거점 페이즈로 난다」같은 거동이 된다
+	;IF TIME == 0
+	;	DAY --
+	;	SIF ! FLAG:클리어 플래그
+	;		TIME = 1
+	;ELSEIF TIME == 1
+	;	TIME = 0
+	;	SHOP_TIME = CALC_SHOP_TIME()
+	;ENDIF
+	
+	;행동 개시시의 공통 설정
+	CALL START_TRAIN_COMMON
+	REDRAW 1
+	RETURN
+ENDIF
+
+$SKIPPED
+
+;dead 엔딩이라면 BEGIN TITLE
+IF FLAG:강제엔드플래그 == 1
+	BEGIN TITLE
+;턴 엔드 조교가 서 있다면 즉시 조교 모드에 들어간다
+ELSEIF FLAG:턴엔드조교
+	SELECTCASE FLAG:턴엔드조교
+		CASE 1
+			FLAG:조교모드 = 1
+		CASE 2
+			FLAG:조교모드 = 5
+			FLAG:우후후플래그 = 1
+		CASE 3
+			FLAG:조교모드 = 7
+			FLAG:위안모드 = 3
+	ENDSELECT
+	FLAG:턴엔드조교 = 0
+	FLAG:우후후플래그 = 1
+	FLAG:요바이 = 0
+	;시간의 처리를 하지 않으면, 「거점 페이즈의 종료시에 여기에 도달, 조교→조교 종료로 SLG 페이즈의 턴 엔드가 불려 차기의 거점 페이즈로 난다」같은 거동이 된다
+	IF TIME == 0
+		IF !FLAG:클리어플래그
+			TIME = 1
+			DAY --
+		ENDIF
+	ELSEIF TIME == 1
+		TIME = 0
+		SHOP_TIME = CALC_SHOP_TIME()
+	ENDIF
+	FLAG:이벤트발생금지 = 1
+	CALL START_TRAIN_COMMON
+ELSE
+	SIF FLAG:조교요구플래그
+		FLAG:조교요구플래그 = 0
+	FLAG:이벤트발생금지 = 0
+	BEGIN SHOP
+ENDIF
+
+;-------------------------------------------------
+;거점 페이즈 종료시의 처리
+;-------------------------------------------------
+@TURNEND_LIFE
+SHOP_TIME = 0
+SHOP_WORK_COUNT = 0
+
+SIF FLAG:이벤트발생금지
+	GOTO SKIPPED
+
+;밤에 일어나는 이벤트(요바이 따위)
+;CALL EVENT_NIGHT
+
+IF CONFIG:7 == 0
+	;포로의취급을 설정
+	CALL SETSTATE_PRISONER
+ELSE
+	;포로의 인원수를 카운트
+	LOCAL:5 = 0
+	FOR LOCAL:0, 0, CHARANUM
+		IF LOCAL:0 != MASTER && CFLAG:(LOCAL:0):포로처 != 0 && CFLAG:(LOCAL:0):포로처 == CFLAG:MASTER:소속 && CFLAG:(LOCAL:0):연금중 == 0
+			LOCAL:5 ++
+		ENDIF
+	NEXT
+	;포로가 혼자라도 있으면 라인을 긋는다
+	IF LOCAL:5 >= 1
+		CALL SINGLE_DRAWLINE
+	ENDIF
+ENDIF
+
+
+CALL EVENT_PRISONER
+
+;포로는 아니면, FLAG:역조교회수（포로 조교횟수）를 지운다
+IF !CFLAG:MASTER:포로처
+	FLAG:역조교메인조교자 = 0
+	FLAG:역조교회수 = 0
+ENDIF
+
+;구상 호출
+FOR LOCAL:0, 0, CHARANUM
+	;주인공과 동일 세력의 관직에 오름으로, 포로가 아니다
+	IF CFLAG:(LOCAL:0):소속 != 0 && LOCAL:0 != MASTER && CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속 && CFLAG:(LOCAL:0):포로처 == 0
+		CALL KOJO_EVENT(LOCAL:0, 30)
+	ENDIF
+NEXT
+
+;데일리 이벤트
+CALL EVENT_DAILY
+CALL EVENT_KOJO_DAILY
+
+$SKIPPED
+
+;통일 후의 경우
+IF FLAG:클리어플래그
+	;한평생 종료시의 처리
+	SIF !FLAG:턴엔드조교
+		CALL TURNEND_COMMON
+	;쿨 타임의 리셋트
+	CVARSET COOLTIME, 0
+	;턴을 진행시킨다
+	DAY ++
+;포로의 경우
+ELSEIF CFLAG:MASTER:포로처 != 0
+	;강제적으로 자동 행동
+	LOCAL:0 = CONFIG:302
+	CONFIG:302 = 1
+
+	CALL SINGLE_DRAWLINE
+
+	;전략 페이즈의 처리
+	CALL SLG_TURNEND
+
+	;자동 행동의 설정을 원래대로 되돌린다
+	CONFIG:302 = LOCAL:0
+
+	;한평생 종료시의 처리
+	CALL TURNEND_COMMON
+
+	;턴을 진행시킨다
+	DAY ++
+
+ELSE
+	;전략 페이즈에 진행된다
+	TIME = 1
+ENDIF
+
+;-------------------------------------------------
+;전략 페이즈 종료시의 처리
+;-------------------------------------------------
+@TURNEND_POLITICS
+
+SIF FLAG:이벤트발생금지
+	GOTO SKIPPED
+
+; 방위병과 부대병을 보존
+ARRAYCOPY "CITY_SOLDIER", "CITY_SOLDIER_PREV"
+FOR LOCAL:0, 0, MAX_COUNTRY
+	FOR LOCAL:1, 0, MAX_UNIT
+		UNIT_SOLDIER_PREV:(LOCAL:0):(LOCAL:1) = UNIT_SOLDIER:(LOCAL:0):(LOCAL:1)
+	NEXT
+NEXT
+
+;전투 관계의 처리
+CALL SLG_TURNEND
+
+;손해를 계산
+FOR LOCAL:0, 0, MAX_CITY
+	CITY_SOLDIER_PREV:(LOCAL:0) = CITY_SOLDIER_PREV:(LOCAL:0) - CITY_SOLDIER:(LOCAL:0)
+NEXT
+FOR LOCAL:0, 0, MAX_COUNTRY
+	FOR LOCAL:1, 0, MAX_UNIT
+		UNIT_SOLDIER_PREV:(LOCAL:0):(LOCAL:1) = UNIT_SOLDIER_PREV:(LOCAL:0):(LOCAL:1) - UNIT_SOLDIER:(LOCAL:0):(LOCAL:1)
+	NEXT
+NEXT
+
+;dead 엔딩이라면 돌아온다
+IF FLAG:강제엔드플래그 == 1
+	RETURN
+ENDIF
+
+;한평생 종료시의 처리
+SIF !FLAG:턴엔드조교
+	CALL TURNEND_COMMON
+
+$SKIPPED
+
+;시간을 진행시킨다
+DAY ++
+IF FLAG:관전모드
+	TIME = 1
+ELSE
+	TIME = 0
+ENDIF
+
+;-------------------------------------------------
+;한평생 종료시의 처리
+;통일전이라면 전략 페이즈 종료후, 통일 후라면 거점 페이즈 종료후에 불린다
+;-------------------------------------------------
+@TURNEND_COMMON
+VARSET LOCAL, 0
+VARSET PRISONER_TARGET, -1
+
+;노예시장의 상품 리스트를 갱신
+CALL SLAVEMARKET_PREPARE_GOODS
+;스카우트의 대상 리스트를 갱신
+CALL SCOUT_PREPARE_CANDIDATES
+;「만나러간다」의 대상 리스트의 체크
+CALL MEET_CHECK_CANDIDATES
+;특별훈련의 가격을 갱신
+;다음의 턴의 특별훈련 가격이 되므로, 일단 DAY를 1늘렸다（다음의 턴의 값으로）계산해, 되돌린다
+DAY ++
+CALL CALC_SPECIAL_TRAIN_PRICE
+DAY --
+
+;고용 카운터의 조작
+PLAYER_HIRED_COUNTER = MAX(0, PLAYER_HIRED_COUNTER - 1)
+COUNTRY_PLAYER_BELONGED_COUNTER++
+IF COUNTRY_PLAYER_BELONGED_COUNTER == 2 
+	ARRAYSHIFT COUNTRY_PLAYER_BELONGED, 1, 0
+	COUNTRY_PLAYER_BELONGED_COUNTER = 0
+ENDIF
+
+;도둑 출현하지 않는 기간을 1거치고
+BANDIT_POP_SUSPENDED = MAX(BANDIT_POP_SUSPENDED - 1, 0)
+
+;자세력이 아니게 된 동물의 삭제
+FOR LOCAL:0, CHARANUM - 1, -1, -1
+	IF IS_ANIMAL(LOCAL:0) && CFLAG:(LOCAL:0):소속 != CFLAG:MASTER:소속
+		CALL DELETE_CHARA(LOCAL:0)
+	ENDIF
+NEXT
+
+;이 턴의 특별훈련 실시 회수를 리셋트
+SPECIAL_TRAIN_COUNT_THIS_TURN = 0
+
+ARENA_DONE = 0
+APPOINT_DONE = 0
+
+;도시에의 투자를 클리어
+VARSET CITY_INVESTED
+NOW_INVEST = 0
+
+;포로용 변수의 클리어
+CVARSET CFLAG, 30, 0
+CVARSET CFLAG, 31, 0
+CVARSET CFLAG, 32, 0
+
+;각 육아 커맨드의 선택 회수를 클리어
+FOR LOCAL:0, 110, 130
+	CVARSET CFLAG, LOCAL:0, 0
+NEXT
+
+;구상 호출
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속 && LOCAL:0 != MASTER
+		CALL SINGLE_DRAWLINE()
+		CALL KOJO_EVENT(LOCAL:0, 31)
+	ENDIF
+NEXT
+
+;촉수의방의 관리자에게 경험치를 가산
+IF ITEM:촉수의방 && ID_TO_CHARA(FLAG:촉수의방관리자) >= 0 && IS_SYOKUSYU_MANAGE(ID_TO_CHARA(FLAG:촉수의방관리자))
+	EXP:(ID_TO_CHARA(FLAG:촉수의방관리자)):촉수경험치 += 2
+	EXP:(ID_TO_CHARA(FLAG:촉수의방관리자)):요술경험치 += 2
+	CALL TRAIN_AUTO_ABLUP(ID_TO_CHARA(FLAG:촉수의방관리자), 1)
+ENDIF
+
+CUSTOMDRAWLINE =
+PRINTFORML 각종 보고
+CUSTOMDRAWLINE =
+
+;주인공용의 포로 상태로부터의 탈출 이벤트 호출
+CALL MASTER_ESCAPE_FROM_PRISON
+
+IF CFLAG:MASTER:소속 <= 0
+	WAIT
+;급료의 지급(관전중·포로 때는 스킵)◆
+ELSEIF CFLAG:MASTER:포로처 == 0
+	CALL SINGLE_DRAWLINE
+	PRINTFORML 급여/징세 보고
+	CALL COLOR_LINE
+	LOCAL:0 = CALC_SALARY()
+	MONEY += LOCAL:0
+	PRINTFORML %ANAME(MASTER)%에 금기 분의 봉급이 지불되었습니다
+	PRINTFORMW 소지금＋{LOCAL:0}（현재:{MONEY}）
+ENDIF
+
+;각 세력 도시의 경제 규모 변동 및 세수입 처리
+CALL VARY_ECONOMY
+CALL GAIN_COUNTRY_TAX
+
+CALL RESET_CITY_TIRED_COUNT
+
+;경제성장·병수증강의 보정치를 클리어
+FLAG:경제성장추가치 = 0
+FLAG:병수증가추가치 = 0
+
+;외교에 의한 조교 요구 플래그의 해제 판정
+CALL CHECK_DIPLOMACY_TRAIN_FLAG
+
+;아침의 이벤트
+;CALL EVENT_MORNING
+
+; 아이템 개발 이벤트
+CALL ITEM_DEVELOPMENT
+
+;특수한 아침 이벤트
+;CALL EVENT_MORNING_SP
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 특수 세력에 의한 조교 보고
+CALL COLOR_LINE
+
+;특수 세력에 의한 조교
+FOR LOCAL, 0, MAX_COUNTRY
+	CALL SP_TRAIN(LOCAL)
+NEXT
+
+;임신 출산 관련의 처리
+CALL TURNEND_PREGNANT_PHASE
+
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 탈주·해방
+CALL COLOR_LINE
+
+
+;해방카운터에 근거해 해방
+CALL RELEASE_PRISONERS
+
+;포로가 되었을 때의 해방카운터를 가산
+;다만, 특수 세력은 자연 해방하지 않는다
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):포로처 && !IS_SP_COUNTRY(CFLAG:(LOCAL:0):포로처)
+		CFLAG:(LOCAL:0):해방카운터 ++
+	ELSE
+		CFLAG:(LOCAL:0):해방카운터 = 0
+	ENDIF
+NEXT
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 소질 획득 보고
+CALL COLOR_LINE
+
+FOR LOCAL:0, 0, CHARANUM
+	;연모 따위의 소질 변화의 처리(2회째)
+	CALL TALENT_CHECK(LOCAL:0)
+NEXT
+
+;캐릭터의 능력을 이러니 저러니 하는 처리
+CALL TURNEND_CHARA_PROCESS
+
+;-------------------------------------------------
+;오락담당에 의한 회복
+;-------------------------------------------------
+@COOK_HEAL(대상 = 0)
+#DIM 대상
+#DIM 담당자
+#DIM 회복량, 2
+IF GET_COOK() != -1
+	담당자 = GET_COOK()
+	IF 담당자 != 0 && !CFLAG:(담당자):포로처 && CFLAG:(담당자):소속 == CFLAG:MASTER:소속
+		회복량:0 = MAXBASE:대상:체력 * (ABL:담당자:요리 / 2 + ABL:담당자:가창 / 2 ) / 100
+		회복량:1 = MAXBASE:대상:기력 * (ABL:담당자:요리 / 2 + ABL:담당자:가창 / 2 ) / 100
+		IF TALENT:대상:회복빠름
+			TIMES 회복량:0, 1.25
+			TIMES 회복량:1, 1.25
+		ELSEIF TALENT:대상:회복느림
+			TIMES 회복량:0, 1.25
+			TIMES 회복량:1, 0.75
+		ENDIF
+		BASE:대상:체력 = MIN(BASE:대상:체력 + 회복량:0, MAXBASE:대상:체력)
+		BASE:대상:기력 = MIN(BASE:대상:기력 + 회복량:1, MAXBASE:대상:기력)
+		PRINTFORML 오락담당의 %ANAME(담당자)%의 일에 의해, %ANAME(대상)%의 체력과 기력이 회복했습니다
+	ELSE
+		SETCOLOR 칼라_주의
+		PRINTFORML 오락담당이 국내에 없다（포로가 되어 있는, 국외에 추방되었다）모아 두어 그 혜택을 받을 수 있지 않습니다
+		PRINTFORMW ! 오락담당을 해제했습니다!
+		WAIT
+		RESETCOLOR
+		CALL SET_COOK(-1)
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;캐릭터의 능력의 변동
+;-------------------------------------------------
+@TURNEND_CHARA_PROCESS
+FOR LOCAL:0, 0, CHARANUM
+	;전원의 체력·기력을 최대까지 회복
+	BASE:(LOCAL:0):0 = MAXBASE:(LOCAL:0):0
+	BASE:(LOCAL:0):1 = MAXBASE:(LOCAL:0):1
+
+	;털이 성장
+	CALL INMOU_GROW(LOCAL:0)
+	CALL ARMPIT_GROW(LOCAL:0)
+	;조임의 개선
+	CALL TIGHTNESS_GROW(LOCAL:0)
+	
+	
+	IF HAS_TAG(LOCAL, 태그_봉래인) && CFLAG:LOCAL:특수상태 == 특수상태_사망
+		CALL COLOR_PRINTW("리자레크션!", 칼라_주의)
+		CALL COLOR_PRINTW(@"%NAME_FORMAL(LOCAL)%가 소생했습니다", 칼라_주의)
+		CALL CHANGE_COUNTRY(LOCAL, 0, 1)
+	ENDIF
+
+	;이 턴～계 플래그를 꺾는다
+	CFLAG:(LOCAL:0):행동완료 = 0
+
+	;포로가 아니고, 소속이 특수 세력이 아니면, 조교 카운터를 줄여 간다
+	IF !IS_SP_COUNTRY(CFLAG:LOCAL:포로처) && !IS_SP_COUNTRY(CFLAG:LOCAL:소속)
+		FOR LOCAL:1, 0, VARSIZE("SP_TRAIN_COUNT")
+			SP_TRAIN_COUNT:LOCAL:(LOCAL:1) = MAX(SP_TRAIN_COUNT:LOCAL:(LOCAL:1) - 1, 0)
+		NEXT
+	ENDIF
+
+	CFLAG:(LOCAL:0):피임약남은턴 = MAX(CFLAG:(LOCAL:0):피임약남은턴 - 1, 0)
+
+	;약물의존치를 줄이는 약물 중독 있으면 300 이하가 되지 않는다
+	IF GETBIT(TALENT:(LOCAL:0):음란계, 소질_음란_약물중독)
+		CFLAG:(LOCAL:0):약물의존 = MAX(CFLAG:(LOCAL:0):약물의존 * 9 / 10, 300)
+	ELSE
+		CFLAG:(LOCAL:0):약물의존 = MAX(CFLAG:(LOCAL:0):약물의존 - RAND:(MAX(CFLAG:(LOCAL:0):약물의존 * 1 / 10, 1)), 0)
+		
+	ENDIF
+
+	;특정 세력에 소속해 있어 포로가 아니다
+	IF IS_COUNTRY(CFLAG:(LOCAL:0):소속) && !IS_SP_COUNTRY(CFLAG:(LOCAL:0):소속) && CFLAG:(LOCAL:0):포로처 == 0
+		FOR LOCAL:1, 0, CHARANUM
+			;동일 세력에 소속하는 캐릭터의 사이에 호감도를 상승시켜, 적대도를 감소시킨다
+			IF LOCAL:1 != LOCAL:0 && CFLAG:(LOCAL:1):소속 == CFLAG:(LOCAL:0):소속 && CFLAG:(LOCAL:1):포로처 == 0
+				LOCAL:2 = (1500 - REL_LIKE:(LOCAL:0):(LOCAL:1)) / 50 + TALENT:(LOCAL:1):수수께끼의매력 * 5
+				LOCAL:3 = REL_HATE:(LOCAL:0):(LOCAL:1) / 50 + TALENT:(LOCAL:1):수수께끼의매력 * 5
+				;자연스럽게 오르는 호감도는 1000까지
+				IF REL_LIKE:(LOCAL:0):(LOCAL:1) < 1000
+					REL_LIKE:(LOCAL:0):(LOCAL:1) = MIN(REL_LIKE:(LOCAL:0):(LOCAL:1) + LOCAL:2, 1000)
+				ENDIF
+				REL_HATE:(LOCAL:0):(LOCAL:1) = MAX(REL_HATE:(LOCAL:0):(LOCAL:1) - LOCAL:3, 0)
+			ENDIF
+		NEXT
+	;방랑중
+	ELSEIF CFLAG:LOCAL:특수상태 == 특수상태_방랑
+		;특수 세력 이외에의 인상치를 플랫으로 한다
+		FOR LOCAL:1, 0, MAX_COUNTRY
+			IF IS_COUNTRY(LOCAL:1) && !IS_SP_COUNTRY(LOCAL:1)
+				LOCAL:2 = GET_COUNTRY_BOSS(LOCAL:1)
+				CALL CHANGE_RELATION_O_TO_C(LOCAL, LOCAL:1, REL_LIKE:LOCAL:(LOCAL:2) / 50 * -1, REL_HATE:LOCAL:(LOCAL:2) / 10 * -1)
+			ENDIF
+		NEXT
+	ENDIF
+
+	;포로의 경우
+	IF CFLAG:(LOCAL:0):포로처 != 0 && CFLAG:(LOCAL:0):포로처 == CFLAG:MASTER:소속
+		;포로의 기분 변화
+		CALL PRISONER_CHANGE_EMOTION(LOCAL:0)
+
+	;피육아 상태의 아이의 경우
+	ELSEIF CFLAG:(LOCAL:0):행동불능상태 == 행동불능_아이
+		;기분은 변동하지 않는다
+
+	;포로가 아니고, 피육아 상태의 아이도 아닌 경우
+	ELSEIF CFLAG:(LOCAL:0):행동불능상태 != 행동불능_아이
+		;현재의 기분을 감쇠시킨다
+		TIMES PALAM:(LOCAL:0):로외, 0.60
+		TIMES PALAM:(LOCAL:0):액외, 0.60
+		TIMES PALAM:(LOCAL:0):포외, 0.60
+		TIMES PALAM:(LOCAL:0):로주, 0.05
+		TIMES PALAM:(LOCAL:0):액주, 0.05
+		TIMES PALAM:(LOCAL:0):포주, 0.05
+
+		;●외적 요인에 의한 기분에 랜덤치를 더한다
+		;<억압>소유는 기분이 변동하지 않는다
+		IF !TALENT:(LOCAL:0):억압
+			;다치고 있는 경우
+			IF CFLAG:(LOCAL:0):행동불능상태 == 3
+				IF RAND:2 == 0
+					PALAM:(LOCAL:0):로외 += RAND:1001
+				ELSE
+					PALAM:(LOCAL:0):로외 += RAND:301
+				ENDIF
+				IF RAND:2 == 0
+					PALAM:(LOCAL:0):액외 += RAND:1001
+				ELSE
+					PALAM:(LOCAL:0):액외 += RAND:301
+				ENDIF
+
+			ELSE
+				IF RAND:15 == 0
+					PALAM:(LOCAL:0):로외 += RAND:2001 - 1000
+				ELSE
+					PALAM:(LOCAL:0):로외 += RAND:601 - 300
+				ENDIF
+				IF RAND:15 == 0
+					PALAM:(LOCAL:0):액외 += RAND:2001 - 1000
+				ELSE
+					PALAM:(LOCAL:0):액외 += RAND:601 - 300
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+
+	;포로의 수감에 의한 RELATION의 변화
+	SIF CFLAG:(LOCAL:0):포로처 != 0
+		CALL PRISONER_CHANGE_RELATION(LOCAL:0)
+
+	;정신력의 회복
+	BASE:(LOCAL:0):정신력 = MIN(BASE:(LOCAL:0):정신력 + MAXBASE:(LOCAL:0):정신력 / 2, MAXBASE:(LOCAL:0):정신력)
+
+	;붕괴치의 감소
+	SIF !TALENT:(LOCAL:0):붕괴
+		CFLAG:(LOCAL:0):붕괴 -= 600 + (MAXBASE:(LOCAL:0):정신력 / 5)
+
+	CFLAG:(LOCAL:0):붕괴 = LIMIT(CFLAG:(LOCAL:0):붕괴, 0, 10000)
+
+	;초성장력이나 노력가가 있으면 랜덤에 능력 경험치 획득
+	IF FIND_PASSIVE_SKILL(LOCAL:0, "초성장력")|| FIND_PASSIVE_SKILL(LOCAL:0, "노력가")
+		LOCAL:1 = RAND(1, 4)
+		SELECTCASE IFRAND("0TO5", 1, "6", TALENT:LOCAL:요술지식)
+			CASE 0
+				LOCAL:2 = GETNUM(EXP, "무투경험치")
+			CASE 1
+				LOCAL:2 = GETNUM(EXP, "방위경험치")
+			CASE 2
+				LOCAL:2 = GETNUM(EXP, "지략경험치")
+			CASE 3
+				LOCAL:2 = GETNUM(EXP, "정치경험치")
+			CASE 4
+				LOCAL:2 = GETNUM(EXP, "요리경험치")
+			CASE 5
+				LOCAL:2 = GETNUM(EXP, "가창경험치")
+			CASE 6
+				LOCAL:2 = GETNUM(EXP, "요술경험치")
+				LOCAL:1 *= 20
+		ENDSELECT
+		EXP:(LOCAL:0):(LOCAL:2) += LOCAL:1
+		CALL TRAIN_AUTO_ABLUP(LOCAL:0, 1)
+	ENDIF
+
+	;아이의 성장도를 가산
+	SIF TALENT:(LOCAL:0):유아
+		CFLAG:(LOCAL:0):아이의성장도 = MIN(CFLAG:(LOCAL:0):아이의성장도 + 1, 999999)
+
+NEXT
+
+;-------------------------------------------------
+;「만나러간다」에서의 방랑중 캐릭터의 준비
+;-------------------------------------------------
+@MEET_CHECK_CANDIDATES()
+
+MEET_CANDIDATES_REST_TURN --
+
+FOR LOCAL, 0, MEET_MAX_CANDIDATES
+	LOCAL:1 = ID_TO_CHARA(MEET_CANDIDATES:LOCAL)
+	SIF LOCAL:1 == -1
+		CONTINUE
+	IF CFLAG:(LOCAL:1):특수상태 != 특수상태_방랑 || CFLAG:(LOCAL:1):포로처
+		MEET_CANDIDATES:LOCAL = 0
+	ENDIF
+NEXT
+
+SIF !IS_COUNTRY(CFLAG:MASTER:소속)
+	RETURN 0
+
+IF IS_SP_COUNTRY(CFLAG:MASTER:소속)
+	VARSET MEET_CANDIDATES, 0
+	VARSET MEET_CANDIDATES_REST_TURN, 0
+ENDIF
+
+LOCAL:2 = 1
+
+FOR LOCAL, 0, MEET_MAX_CANDIDATES
+	LOCAL:1 = ID_TO_CHARA(MEET_CANDIDATES:LOCAL)
+	IF LOCAL:1 != -1
+		LOCAL:2 = 0
+		BREAK
+	ENDIF
+NEXT
+
+SIF LOCAL:2
+	MEET_CANDIDATES_REST_TURN = 0
+
+SIF MEET_CANDIDATES_REST_TURN > 0
+	RETURN 0
+
+VARSET MEET_CANDIDATES, 0
+VARSET MEET_CANDIDATES_REST_TURN, 0
+
+CALL SELECT_CHARA_RANDOM_MULTI(MEET_MAX_CANDIDATES, "MEET_CHECK_CANDIDATES")
+
+FOR LOCAL, 0, MIN(MEET_MAX_CANDIDATES, SELECTED_CHARA_NUM)
+	MEET_CANDIDATES:LOCAL = GET_ID(SELECTED_CHARA:LOCAL)
+NEXT
+
+SIF SELECTED_CHARA_NUM > 0
+	MEET_CANDIDATES_REST_TURN = 4
+
+@SELECT_CHARA_RANDOM_LOGIC_MEET_CHECK_CANDIDATES(대상)
+#DIM 대상
+RETURN 대상 != MASTER && !CFLAG:대상:포로처 && CFLAG:대상:특수상태 == 특수상태_방랑
+
+;-------------------------------------------------
+;탈출 이벤트
+;-------------------------------------------------
+@MASTER_ESCAPE_FROM_PRISON
+
+SIF !(CFLAG:MASTER:포로처 && RAND:100 < 15)
+	RETURN -1
+
+CALL SINGLE_DRAWLINE
+PRINTFORMW 붙잡히고 있었던 %조사처리(ANAME(MASTER),"이지만")%, 간수의 틈을 찾아냈다
+PRINTFORMW 지금이라면탈출할 수 있을지도 모른다……
+CALL ASK_YN("탈출을 시도한다", "위험한 흉내는 중지하자")
+
+IF RESULT == 1
+	PRINTFORMW 실패하면 어떤 심한 꼴을 당해질지도 모른다
+	PRINTFORMW 지금은 아직 얌전하게 하고 있는 편이 좋을 것 같다……
+	CALL SINGLE_DRAWLINE
+	RETURN
+ENDIF
+
+
+PRINTFORMW 이 기를 놓치는 손은 없다!
+PRINTFORMW %조사처리(ANAME(MASTER),"는")% 탈출을 시도했다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+IF RAND:5 <= 3
+	IF !CFLAG:MASTER:소속
+		PRINTFORMW 탈출에 성공했다!
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 방랑하는 일로 했습니다
+	ELSE
+		PRINTFORMW 탈출에 성공했다!
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 세력에 복귀했습니다
+	ENDIF
+	CALL CAPTURE(MASTER, 0)
+	CALL SINGLE_DRAWLINE
+	RETURN
+ENDIF
+
+IF IS_MALE(MASTER)
+	PRINTFORMW 탈출에 실패해 버렸다……
+	PRINTFORMW 발견된 %조사처리(ANAME(MASTER),"는")% 힘든 고문을 받은 후, 감옥에 되돌려졌다
+	RETURN
+ENDIF
+
+PRINTFORMW 탈출에 실패해 버렸다……
+PRINTFORMW 병사들에게 발견된 %조사처리(ANAME(MASTER),"는")%, 처분이라고 칭해 데리고 가졌다
+PRINTFORML 
+SELECTCASE RAND:5
+	CASE 0
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 병사의 구석에 있는 사육장에 끌려 왔다
+		PRINTFORML 손발을 속박되어 알몸 상태로 돼지의 무리안에 던져 넣어지면
+		PRINTFORMW 금새 발정난 돈들에게 모여져 갑자기 젖지 않은 질에 페니스가 삽입되었다
+		PRINTFORML 아픔과 혐오감으로비명을올리는 %조사처리(ANAME(MASTER),"였")%지만, 발정난 짐승에 신경쓰는 마음 따위 있을 리도 없고
+		PRINTFORMW 눈앞의 암컷을 확실히 임신하게 하려고 하는 돼지의 격렬한 피스톤으로, 질이 유린되어 간다
+		PRINTFORML 필사적으로 피하려고 하는 %ANAME(MASTER)%의 노력도 소용없게, 단단히안쪽 깊게까지 삽입되고 있어 그것도 이길 수 없다
+		PRINTFORMW 이윽고 돼지가 한층 더 큰 울음 소리를 올리면, 와 끈적한 정액이 %ANAME(MASTER)% 안으로 추방해졌다
+		PRINTFORMW 그 무서운 감촉에 %조사처리(ANAME(MASTER),"는")% 눈물을 흘리며 용서를 빌지만, 병사들은 그 모습을 봐 껄껄웃을 뿐이었다
+		PRINTFORMW 그 뒤도 %조사처리(ANAME(MASTER),"는")% 세지 못할정도의 돼지에 씨뿌리기 되어 신체안도 밖도 질척질척으로 되어 버렸다
+	CASE 1
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 남자 죄수용의 감옥에 끌려 왔다
+		PRINTFORML 감옥안에는 대량의 죄수가 있다. 그들은 %조사처리(ANAME(MASTER),"를")% 보면  여자다! 범하게 해라!   와 광기에 가까운 절규를 지른다
+		PRINTFORMW 무엇을 될까 깨달은 %조사처리(ANAME(MASTER),"는")% 얼굴을 경련이 일어나게 한 용서를 빌지만, 병사들은 무시해 감옥에 %조사처리(ANAME(MASTER),"를")% 던져 넣었다
+		PRINTFORML 감옥안은 어슴푸레하고, 무서워하는 %조사처리(ANAME(MASTER),"는")%, 주위의 어둠으로부터 따라지는 무수한 굶은 시선을 느꼈다
+		PRINTFORMW 위기를 느끼고 피하려고 하는 %ANAME(MASTER)%에, 무수한 손이 뻗어 와 마루에 억누르면, 그 옷을 난폭하게 벗겨내 간다
+		PRINTFORML 절규를 올려 저항하는 %조사처리(ANAME(MASTER),"이지만")%, 강인한 남자들에게 둘러싸여 어찌할 바도 없고, 전신을 저 좋은 대로 만지작거려진다
+		PRINTFORMW 이윽고 한층 더 체구의 좋은 남자가 억누를 수 있었던 %ANAME(MASTER)%의 전에 나타나, 그 흉악한 페니스를 드러냈다
+		PRINTFORMW 더 이상은 멈추는 것처럼 떨리는 소리로 설득하는 %조사처리(ANAME(MASTER),"였")%지만, 그것이 오히려 그들의 가학심에 불을 붙여 버렸다
+		PRINTFORMW 남자들은 울며 아우성치는 %조사처리(ANAME(MASTER),"를")% 가차 없이 다 범해, 병사에 회수되는 무렵에는 %조사처리(ANAME(MASTER),"는")% 너덜너덜로 되어 버리고 있었다
+	CASE 2
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 감옥은 아니고 고문 방에 끌려 왔다
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")% 고문 기구의 갖가지에 못박음이 되어 있으면, 근처의 방에서 귀를 가리고 싶어지는 것 같은 비명이 들려 왔다
+		PRINTFORML 사용해 보고 싶었던 도구가 있다고 병사들은 웃어, 그야말로 여성용이라는 기구를 %ANAME(MASTER)%의 전에 늘어놓는다
+		PRINTFORMW 하나하나 정중하게 사용법이 설명되어 무엇을 되는지 상상해 버린 %조사처리(ANAME(MASTER),"는")% 삐걱삐걱 신체를 진동시킨다
+		PRINTFORML 그 모습에 병사들은 히죽히죽 웃어, 우리들에게 봉사한다면 그만두어 주어도 괜찮아와 상냥하게 속삭였다
+		PRINTFORMW 다시 근처의 방으로부터 들려 온 비명에, %ANAME(MASTER)%의 저항심은 접혀 버려, 봉사시켜 주세요 달라붙었다
+		PRINTFORML 간들거리는 병사들이 페니스를 노출해 %ANAME(MASTER)%에 강압하면, %조사처리(ANAME(MASTER),"는")% 무릎 꿇어 입과 손을 사용해 그것을 잡아당기기 시작했다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 필사적으로 병사들에게 봉사해, 그들이 사정하면, 양손과 입으로 받아 들이고 천한 소리를 내면서 다 마셔 간다
+		PRINTFORMW 정액으로 질척질척이 된 %조사처리(ANAME(MASTER),"이지만")%, 그래서 그들이 들어갈 리도 없고, 그 뒤는 암컷구멍과 엉덩이 구멍도 사용해 병사들에게 계속 봉사했다
+	CASE 3
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 알몸에 벗겨지면, 목걸이와 리드를 붙인 모습으로 데리고 돌아다녀졌다
+		PRINTFORMW  다른 병사를 만날 때마다 호기와 욕정이 섞인 시선을 던져지는이, 신체를 숨기는 일도 용서되지 않고 수치로 얼굴을 새빨갛게 한다
+		PRINTFORML 더욱, 목걸이를 입은 것이니까 그것인것 같게 네발로 엎드림으로 걸어라  라고 명령된다
+		PRINTFORML 노려보는 %ANAME(MASTER)%에 대해, 병사들은 검을 내밀어, 탈주의 죄로 처형되고 싶지 않으면 얌전하게 따르도록(듯이) 위협한다
+		PRINTFORMW 여기는 얌전하게 따를 수밖에 없다고 자신에게 타일러 %조사처리(ANAME(MASTER),"는")% 떨리는 신체로 엎드린 자세로 된다
+		PRINTFORML 그 모습인 채, 개의 산책과 같이 병사내를 대열지어 걸어져 굴욕과 수치로 %ANAME(MASTER)%의 머리는 비등할 것 같게 된다
+		PRINTFORMW 깨닫지 않는 동안에 암컷구멍으로부터 애액이 늘어지기 시작하고 있어  를 군사에게 지적되면, 부들부들신체를 진동시키고 변명의 말을 소근소근하며 중얼거린다
+		PRINTFORML 하지만 병사들은 %ANAME(MASTER)%의 말을 무시해, 학수 고대의 물건이다 라며 %ANAME(MASTER)%의 암컷구멍에 페니스를 쳐박았다
+		PRINTFORMW 상상 이상으로 고조되고 있었던 %ANAME(MASTER)%의 신체는 흠칫 튀어, 단정치 못한 신음소리를 주어 버렸다
+		PRINTFORMW 그 뒤도 반복해, 마치 동물의 교미같이 농후한 씨뿌리기를 되어 버렸다
+	CASE 4
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 본보기로서 쬐어 받침대에 구속되었다
+		PRINTFORML 필사적으로 빠져 나가려고 발버둥 치지만, 머리를 양손을 단단히구속되고 있고 빠져 나갈 수 있을 것 같지도 않다
+		PRINTFORMW 그 모습에 병사들은, 마치 스스로 엉덩이를 흔들어 권하고 있는 것 같다면, 비웃음의 소리를 높인다
+		PRINTFORMW 이윽고 한사람의 병사가 %ANAME(MASTER)%의 허리를 잡아, 땀으로 젖기 시작한 비밀스런 장소에 페니스를 칠해 온다
+		PRINTFORML 필사적으로 그만두는 것처럼 설득하는 %ANAME(MASTER)%에, 병사는 벌써 이런 (일)것은 하지 않는다고 맹세한다면 용서해 준다고 고한다
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")%, 여기서 범해지는 것보다는과 맹세의 말을 말하려고 한 순간, 두응! (와)과 강렬한 충격이 하반신에 달렸다
+		PRINTFORML 전격이 달린 것 같은 격렬한 충격에 %조사처리(ANAME(MASTER),"가")%비명을올린다. 눈이 반짝반짝 해 일순간무엇이 일어났는지 몰랐지만
+		PRINTFORMW 질로부터 전낸 열로 곧바로 삽입된 것이라고 알았다. 병사는 %조사처리(ANAME(MASTER),"라")%는 약속 따위 지킬 생각은 없었던 것이다
+		PRINTFORMW 굴욕으로 눈물고인 눈이 된 %조사처리(ANAME(MASTER),"를")% 비웃음 있으면서, 병사들은 심하게 %조사처리(ANAME(MASTER),"를")% 다 범했다
+ENDSELECT
+CALL FUCK_GANGBANG(MASTER, GET_SPERM_ID("병사"), @"누구와도 모르는 병사의 \@ RAND:2 ? 페니스 # 입술\@", "누구와도 모르는 병사들")
+CALL FUCK_GANGBANG(MASTER, GET_SPERM_ID("병사"), @"누구와도 모르는 병사의 \@ RAND:2 ? 페니스 # 입술\@", "누구와도 모르는 병사들")
+
+PRINTFORML 
+PRINTFORMW %조사처리(ANAME(MASTER),"는")% 심하게 능욕 된 후, 감옥에 던져 넣어졌다
+
+RETURN 0
+
+
+;-------------------------------------------------
+;해방카운터에 근거해 포로를 해방하는 처리
+;-------------------------------------------------
+@RELEASE_PRISONERS()
+#DIM 특수포로처
+VARSET LOCAL
+
+;주인공이 포로로 감금 일수가 4일 이상 때만 발생
+IF CFLAG:MASTER:포로처 && CFLAG:MASTER:해방카운터 >= 5 && RAND:100 < (CFLAG:MASTER:해방카운터 - 5) * 15 + 15
+	CALL SINGLE_DRAWLINE
+	PRINTFORMW 병사들이 %ANAME(MASTER)%의 감옥을 열어, %ANAME(MASTER)%에게 밖에 나오도록(듯이) 말했다
+	PRINTFORMW 아무래도 %조사처리(ANAME(MASTER),"는")% 해방되는 일이 된 것 같다…
+	PRINTL 
+	IF CFLAG:MASTER:소속 == 0
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 방랑의 몸이 되었습니다
+		RESETCOLOR
+	ELSE
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 군주의 원래로 돌아왔습니다
+		RESETCOLOR
+	ENDIF
+	CALL CAPTURE(MASTER, 0)
+ENDIF
+
+FOR LOCAL, 1, CHARANUM
+	특수포로처 = IS_SP_COUNTRY(CFLAG:LOCAL:포로처)
+	;만약 그 나라가 어떠한 이유로써 멸망하고 있는데 아직 잡히고 있으면, 강제적으로 해방한다
+	IF CFLAG:LOCAL:포로처 && !IS_COUNTRY(CFLAG:LOCAL:포로처)
+		IF !LOCAL:1
+			CALL SINGLE_DRAWLINE
+			LOCAL:1 = 1
+		ENDIF
+		SETCOLOR 칼라_주의
+		IF IS_COUNTRY(CFLAG:LOCAL:소속)
+			PRINTFORML 붙잡히고 있었던 %조사처리(ANAME(LOCAL),"는")% 해방되어 %ANAME(GET_COUNTRY_BOSS(CFLAG:LOCAL:소속))%에 돌아왔습니다
+		ELSE
+			PRINTFORML 붙잡히고 있었던 %조사처리(ANAME(LOCAL),"는")% 해방되어 방랑했습니다
+			CFLAG:LOCAL:특수상태 = 특수상태_방랑
+		ENDIF
+		RESETCOLOR
+	;통상의 해방 처리
+	ELSEIF LOCAL != MASTER && CFLAG:LOCAL:포로처 && CFLAG:LOCAL:포로처 != CFLAG:MASTER:소속 && MIN((CFLAG:LOCAL:해방카운터 - 5) * 5, 30) > RAND:100 && !특수포로처
+		IF !LOCAL:1
+			CALL SINGLE_DRAWLINE
+			LOCAL:1 = 1
+		ENDIF
+		SETCOLOR 칼라_주의
+		IF IS_COUNTRY(CFLAG:LOCAL:소속)
+			PRINTFORML %ANAME(GET_COUNTRY_BOSS(CFLAG:LOCAL:포로처))%에 붙잡히고 있었던 %조사처리(ANAME(LOCAL),"는")%\@ CFLAG:LOCAL:해방카운터 >= 10 ? 간신히# \@해방되어 %ANAME(GET_COUNTRY_BOSS(CFLAG:LOCAL:소속))%에 돌아왔습니다
+		ELSE
+			PRINTFORML %ANAME(GET_COUNTRY_BOSS(CFLAG:LOCAL:포로처))%에 붙잡히고 있었던 %조사처리(ANAME(LOCAL),"는")% 해방되어 방랑했습니다
+		ENDIF
+		RESETCOLOR
+		CALL CAPTURE(LOCAL:0, 0)
+	;이따금 탈주한다. 특수 세력이라면 비율 높은
+	ELSEIF (LOCAL != MASTER && CFLAG:LOCAL:포로처 && CFLAG:LOCAL:포로처 != CFLAG:MASTER:소속 && 특수포로처 * 12 + 3 > RAND:100)
+		IF !LOCAL:1
+			CALL SINGLE_DRAWLINE
+			LOCAL:1 = 1
+		ENDIF
+		IF CFLAG:LOCAL:포로처 != CFLAG:LOCAL:소속 && (!특수포로처 || CFLAG:LOCAL:소속)
+			SETCOLOR 칼라_주의
+			IF IS_COUNTRY(CFLAG:LOCAL:소속)
+				PRINTFORML %ANAME(GET_COUNTRY_BOSS(CFLAG:LOCAL:포로처))%에 붙잡히고 있었던 %조사처리(ANAME(LOCAL),"는")% 탈주해, %ANAME(GET_COUNTRY_BOSS(CFLAG:LOCAL:소속))%에 돌아왔습니다
+			ELSE
+				PRINTFORML %ANAME(GET_COUNTRY_BOSS(CFLAG:LOCAL:포로처))%에 붙잡히고 있었던 %조사처리(ANAME(LOCAL),"는")% 탈주해, 방랑했습니다
+			ENDIF
+			RESETCOLOR
+			CALL CAPTURE(LOCAL:0, 0)
+		ENDIF
+	ENDIF
+NEXT
+CALL KILL_EMPTY_LINE()

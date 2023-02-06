@@ -1,0 +1,63 @@
+﻿;-------------------------------------------------
+;역조교의 참가자 결정
+;-------------------------------------------------
+@SELECT_REV_TRAINER()
+#DIM LCOUNT, 3
+#DIM 인원수, 1
+#DIM 호감도리스트, 3000
+#DIM 후보자리스트, 10
+#DIM 후보자인원수
+#DIM 조교인원수, 1
+#DIM 메인, 1
+VARSET 인원수, 0
+VARSET 후보자인원수, 0
+VARSET 호감도리스트, __INT_MIN__
+VARSET 후보자리스트, -1
+VARSET 조교인원수, 0
+VARSET 메인, -1
+
+FOR LCOUNT, 0, CHARANUM
+	SIF GET_ID(LCOUNT) == FLAG:역조교메인조교자
+		CONTINUE
+	SIF CFLAG:(LCOUNT):소속 != CFLAG:MASTER:포로처 || CFLAG:(LCOUNT):포로처 || CFLAG:(LCOUNT):특수상태
+		CONTINUE
+	SIF !CFLAG:(LCOUNT):안면 && RAND:3
+		CONTINUE
+	SIF ABL:(LCOUNT):성지식 < 2
+		CONTINUE
+	SIF CONFIG:17 && !CFLAG:(LCOUNT):안면
+		CONTINUE
+	호감도리스트:LCOUNT = CFLAG:LCOUNT:호감도
+	인원수 ++
+NEXT
+
+FOR LCOUNT, 0, 10
+	LOCAL = FINDELEMENT(호감도리스트, MAXARRAY(호감도리스트))
+	SIF 호감도리스트:LOCAL == __INT_MIN__
+		BREAK
+	호감도리스트:LOCAL = __INT_MIN__
+	후보자리스트:후보자인원수 = LOCAL
+	후보자인원수 ++
+NEXT
+
+;후보자 제로라면 되돌린다
+SIF 후보자인원수 == 0
+	RETURN -1, 0
+
+CALL FISHER_YATES_SHAFFLE(후보자인원수)
+
+FOR LCOUNT, 0, 후보자인원수
+	LOCAL = 후보자리스트:(SHAFFLE_ARRAY:LCOUNT)
+	IF LOCAL != -1
+		CFLAG:LOCAL:조교참가플래그 = 1
+		CFLAG:LOCAL:강제우호화 = 1
+		SIF 조교인원수 == 0
+			메인 = LOCAL
+		조교인원수 ++
+	ENDIF
+	SIF 조교인원수 == 5
+		BREAK
+NEXT
+
+RETURN 메인, 조교인원수
+

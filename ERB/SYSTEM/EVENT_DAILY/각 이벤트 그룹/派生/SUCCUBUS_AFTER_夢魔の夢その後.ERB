@@ -1,0 +1,135 @@
+﻿
+;---------------------
+;대응하는 데일리의 DISABLE를 돌려준다. 설정하지 않는 경우, 이벤트는 발생하지 않는다.
+;---------------------
+@EVENT_DAILY_DERIVATION_SUCCUBUS_AFTER_DISABLE()
+RETURN DAILY_GET_DISABLE_CONFIG("SUCCUBUS")
+
+;---------------------
+;발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;대응하는 데일리의 DISABLE 체크를 규약으로서 필수로 한다
+;---------------------
+@EVENT_DAILY_DERIVATION_SUCCUBUS_AFTER_DECISION()
+
+;페니스를 가지고 있지 않으면 안 돼
+SIF !HAS_PENIS(MASTER)
+	RETURN 0
+	
+SIF !(DVAR:몽마의꿈그후_발생플래그 >= 1)
+	RETURN 0
+	
+;20％로 발생
+RETURN RAND:100 < 20
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_DERIVATION_SUCCUBUS_AFTER()
+PRINTFORML 일끝의 심야
+PRINTFORML %조사처리(ANAME(MASTER),"는")% 침실의 앞에서, 다시 또 팬티를 찾아냈다
+PRINTFORMW 시야에 비치는 것만으로 신체가 쑤시기 시작할 정도의 음기. 틀림없이 그녀의 것이다
+PRINTFORML 꿈 속에서의 쾌락을 생각해 내, 사타구니가 기대에 부풀어 오른다
+PRINTFORML …라고 해도 그녀는 서큐버스. 사람의 정기를 빨아 들여 강해지는 마물이다
+PRINTFORMW 과연 더 이상, 이런 짓무른 관계를 계속해도 좋은 것인가…
+PRINTFORML 하지만, 그녀가 꿈 속에서 주는 쾌락을 기대해 버리고 있는 것도 사실……
+PRINTFORMW 어떻게 하지……
+PRINTFORML 
+CALL ASK_YN("줍는다", "방치한다")
+IF RESULT == 1
+	PRINTFORML 이것을 주우면 그녀를 만날 수 있다  이것을 주워 그녀를 만나고 싶다…
+	PRINTFORMW 지금까지 서큐버스에게 주어진 쾌락이, %ANAME(MASTER)%의 있을까 말까한 이성을 침식한다
+	PRINTFORML 속옷이 시각에 들어가는 것만으로, 사타구니는 팡팡 부풀어 올라 버린다
+	PRINTFORML 이대로는 그녀와의 행위에 완전하게 의존해 버릴 것 같다
+	PRINTFORML 서큐버스에게 저항하는 것이 완전하게 불가능하게 되어 버리지 않는 동안에, 이 유혹을 끊지 않으면…
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 유혹을 뿌리쳐, 팬티를 보지 않게, 방에 들어갔다
+	PRINTFORML …이지만, 이대로는 잘 수 없다
+	PRINTFORML 꿈 속에서의 쾌락을 기대해 버린 육봉은 딱딱 격분해, 진정될 것 같지 않다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 육봉을 진정시키기 (위해)때문에, 자위 행위에 힘썼다
+	PRINTFORML 하지만, 서큐버스가 주는 쾌감을 느껴 버린 육봉은, 전혀 진정되지 않았다…
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW 이튿날 아침에는, 팬티는 사라지고 있었다……
+	RETURN 0
+ENDIF
+
+PRINTFORML …벌써 그녀는 몽마로서 상당한 힘을 얻고 있다. 현재는 자신에게 호의를 가져 주고 있지만
+PRINTFORML 서투르게 기분을 해치면, 어떤 일을 일어날까 안 것은 아니다
+PRINTFORML 그녀와의 관계는 자주(잘) 해 두어야 한다. 그러니까 이것은 어쩔 수 없는 것이다
+PRINTFORMW 변명인 듯한 것을 생각하면서 %조사처리(ANAME(MASTER),"는")%, 몽마의 속옷을 꽉 쥐어 방에 들어갔다
+PRINTFORML 꿈 속에서 그녀에게 주어져 온 쾌감의 갖가지에, %ANAME(MASTER)%의 마음과 몸은 완전히“다음”를 요구하고 있었다
+PRINTFORMW 기대에 사타구니를 격분하게 해 침대에 드러누워 눈을 감았다. 곧바로 기분 좋은 졸음이 덮쳐 왔다
+PRINTFORMW 팬티를 잡은 채로, %조사처리(ANAME(MASTER),"는")% 의식을 잃었다……
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+CALL COLOR_PRINTL(@"「우후후♥  안녕하세요, %ANAME(MASTER)%♥  오늘도 와 주어 기뻐요♪」", 칼라_핑크)
+CALL COLOR_PRINTW(@"「오늘도 가득, 사랑스러운 당신의 정액을 줘♥」", 칼라_핑크)
+PRINTFORML 
+PRINTFORMW 
+
+SELECTCASE RAND:4
+	CASE 0
+		CALL COLOR_PRINTW(@"「아하아♥　%ANAME(MASTER)%의 정액, 매우 맛있는♥  응, 츄푸, 츗쥬우우웃」", 칼라_핑크)
+		PRINTFORML %ANAME(MASTER)%의 페니스는 그녀에게 입으로 빨아지고 있다
+		PRINTFORML 게다가 자신도 기분 잘 해♥  와 식스나인의 몸의 자세로 비부를 강압해, 흘러넘치는 몽마의 꿀을 빨고 받게 하고 있다
+		PRINTFORML 몽마의 애액과는 남자에게 있어 극상의 감로다. 한 번 맛보면 신체가 그 맛을 기억해, 그것 없이는 있을 수 없게 쑤시기 시작한다
+		PRINTFORML 이미 빠는 것 같은 움직임은 아니고, 깊게 혀를 고기단지에 넣고 격렬하게 달라 붙으며 꿀을 삼켜 간다
+		CALL COLOR_PRINTW(@"「앙♥  좋아요♥나의 꿀, 가득 맛봐앗♥」", 칼라_핑크)
+		PRINTFORML 몽마의 꿀의 영향인가, %ANAME(MASTER)%의 육봉은 망가진 수도꼭지같이 계속 과 같이 열심히 하고 있다
+		PRINTFORMW 행위는 그녀가 만족할 때까지 계속되었다……
+	CASE 1
+		CALL COLOR_PRINTW(@"「아앗♥  좋은♥　%ANAME(MASTER)%의 피스톤, 매우 좋아요♥♥」", 칼라_핑크)
+		PRINTFORML 응 팡팡, 라고 고기가 서로 치는 소리가 울린다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 엎드린 자세로 된 그녀에게 덮어씌우는 자세로, 격렬하게 허리를 쳐박는다
+		PRINTFORML 그녀는 %ANAME(MASTER)%에 짐승과 같이 범해지는 섹스를 즐기고 있는 것 같다
+		CALL COLOR_PRINTW(@"「아아읏♥  좋아요♥나의 질에 가득 내♥♥」", 칼라_핑크)
+		PRINTFORML 장대에 휘감기는 마성의 음호는, 일발 찌르기 마다 사정할 정도의 쾌감을 주어 정액을 짜내 온다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 그 지나친 쾌락에 넋을 잃어, 단지 계속해서허리를 계속 흔들고 그녀에게 정액을 따른다
+		PRINTFORMW 행위는 그녀가 만족할 때까지 계속되었다……
+	CASE 2
+		CALL COLOR_PRINTW(@"「응응…츄…후후♥　%ANAME(MASTER)%도 참 군침까지 늘어뜨려 버려♥  그렇게 기분 좋았던 것이군요♥」", 칼라_핑크)
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 신체의 자유를 빼앗긴 채로, 그녀와의 슬로우 섹스에 마음을 녹게 되어지고 있다
+		PRINTFORML 그녀는 %ANAME(MASTER)%에 걸쳐 음호로 페니스를 삼키면, 허리를 움직이지 않고 천천히 애무한다
+		PRINTFORMW 질내는 평소의 짜내는 것 같은 격렬한 움직임은 아니고, 서서한 따듯해짐과 부드러움으로 감싸고 있다
+		PRINTFORML 키스도 애무도 똑같이 강한 자극은 아니고, 느긋한 상냥한 쾌감을 주어 온다
+		PRINTFORML 어르는 것 같은 달콤한 쾌락을 받아들여, 육봉은 용이하게 다음의 정액을 흘려 버린다
+		CALL COLOR_PRINTW(@"「아앙, 또 실금 해 버렸군요♥  기분 좋아지면 언제라도 내도 좋고 츄～♥」", 칼라_핑크)
+		PRINTFORML 상냥하게 달콤한 쾌감에 의해, 평소의 같은 사정의 기세는 아니고 흘리도록(듯이) 서서한 정액이 흐른다
+		PRINTFORML 그녀는 %ANAME(MASTER)%의 머리를 어루만지면서 응석부리게 하고 있다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 그 지나친 쾌락에 마음이 녹아, 단지 계속해서 그녀에게 정액을 계속 따른다
+		PRINTFORMW 행위는 그녀가 만족할 때까지 계속되었다……
+	CASE 3
+		CALL COLOR_PRINTW(@"「아읏♥  이봐요, 좀 더 내♪　%ANAME(MASTER)%의 정액, 가득 갖고 싶은 것♥」", 칼라_핑크)
+		PRINTFORML %조사처리(ANAME(MASTER),"와")% 그녀는 기승위로 서로 격렬하게 흐트러지고 있다
+		PRINTFORML 그녀는 %ANAME(MASTER)%허리를 잡아 페니스를 물어, 안짱다리로 격렬하게 허리를 흔드는
+		PRINTFORML 음마의 꿀을 발라진 육봉은 터무니없고 민감하게 되어
+		PRINTFORMW 질육이 쓸어올릴 때 절정 해, 정액을 토해내 버린다
+		PRINTFORML 하지만 내도 내도 자식이 새어나오는 일은 없다. 최안쪽의 자궁입구에서 자꾸자꾸 정액을 빨아 올려 흡수하고 있기 때문이다
+		CALL COLOR_PRINTW(@"「앗♥아앗♥%ANAME(MASTER)%♥자궁에 내♥♥함께♥나와 함께 가앗♥♥♥」", 칼라_핑크)
+		PRINTFORML 정액은 커녕 영혼까지 빨아 올려지는 감각에 일순간 등줄기가 어는 것도, 그것을 웃도는 강렬한 쾌락에 마음을 모두 칠해진다
+		PRINTFORML %ANAME(MASTER)%도 그녀의 허리를 잡아 페니스를 밀어올려, 심상치 않을 기세로 자궁입구의 안쪽 깊이 성대하게 정액을 쏟았다
+		CALL COLOR_PRINTW(@"「앗…♥♥하아……♥♥%ANAME(MASTER)%의 것이 가득♥♥행복♥♥♥♥」", 칼라_핑크)
+		PRINTFORML 그러한 사이도, 그녀는 허리를 계속 흔들고 한층 더 쾌락을 탐낸다
+		PRINTFORML 벌써 이성 따위 사라진 두 명은, 질척질척에 용해되는 것 같은 감각을 맛보면서, 보다 깊은 쾌락을 추구해 섹스에 몰두했다
+		PRINTFORMW 행위는 그녀가 만족할 때까지 계속되었다……
+ENDSELECT
+PRINTFORML 
+CALL COLOR_PRINTW(@"「오늘도 잘 먹었어요♪  역시 %ANAME(MASTER)%의 정액이 제일이예요♥」", 칼라_핑크)
+PRINTFORML 서큐버스는 곁잠을 하도록(듯이), %ANAME(MASTER)%에 상냥하게 다가붙고 있다
+PRINTFORMW 바로 그 %조사처리(ANAME(MASTER),"는")% 가열인 쾌락 지옥에 의식 몽롱 상태였지만, 특별히 신경쓰시지 않는 것 같다…
+PRINTFORML 「이제(이미/벌써/더는/정말) 아침? …서운하지만, 또 이번이군요」", 칼라_핑크)
+CALL COLOR_PRINTW(@"「그러면 또 다시 보자 (방해예요). 다음도 키모치이이 일, 가득 시테 주어요♥」", 칼라_핑크)
+PRINTFORML 서큐버스는 %ANAME(MASTER)%에 입맞춤을 해 헤어진… 
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+PRINTFORML 낮경, %조사처리(ANAME(MASTER),"는")% 어쩐지 나른한 기분으로 눈을 떴다
+PRINTFORMW 마음 탓인지 신체가 여위어 있는 것 같은……
+CALL FUCK(MASTER, "욕망")
+	IF MAXBASE:MASTER:체력 > 100
+		MAXBASE:MASTER:체력 -= 100
+		CALL COLOR_PRINTW(@"체력 최대치가 100내려, {MAXBASE:MASTER:체력}가 되었다", 칼라_주의)
+	ENDIF
+RETURN 1

@@ -1,0 +1,75 @@
+﻿;-----------------------------------
+;기본치 계산에 앞서 처리하는 것
+;-----------------------------------
+@SKILL_0_BASE_12_EXIST
+RETURN 1
+
+@SKILL_0_BASE_12_NAME
+RESULTS = 헛소문 유포
+
+;레벨은 1-5까지
+@SKILL_0_BASE_12_LEVEL
+RETURN 2
+
+;대상 선택
+@SKILL_0_BASE_12_SETTARGET(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+;자부대 대상
+RETURN 1
+
+;발동 판정
+@SKILL_0_BASE_12_CAN_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+대상측 = !발동측
+RETURN 1
+
+;효과를 여기에 기술
+@SKILL_0_BASE_12_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+대상측 = !발동측
+PRINTFORML 적부대의 공격력과 방어력이 저하!
+TIMES BATTLE_ATK:대상측, 0.99
+TIMES BATTLE_DEF:대상측, 0.99
+
+@SKILL_0_BASE_12_EXPLANATION
+RESULTS = 적부대의 공격력·방어력을 저하시킨다.
+
+@SKILL_0_BASE_12_RATE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+RETURN 80

@@ -1,0 +1,525 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_MY_SON_RATE()
+RETURN 50
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_MY_SON_DECISION()
+SIF IS_MALE(MASTER)
+	RETURN 0
+;일행력으로 포로가 아닌 당신의 아들이 있다
+;MASTER가 임월이라도 쿨 타임이라도 발생하는 것은 사양입니다
+FOR LOCAL, 0, CHARANUM
+	SIF IS_MY_SON_DAILY(LOCAL)
+		RETURN 1
+NEXT
+RETURN 0
+
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_MY_SON_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;특정의 조건을 채우는 캐릭터를 랜덤에 선택하는 경우에 이용
+;다른 함수는 필수이지만, 이것만은 없어도 좋다  라고 할까 퍼포먼스에 영향을 주므로 불필요하면 만들어서는 안 된다
+;대상이 존재하지 않고 데일리를 개시 할 수 없는 경우는 0을 돌려주는 것으로 데일리의 발생을 캔슬한다
+;---------------------
+@EVENT_DAILY_MY_SON_SETTARGET()
+
+;일행력으로 포로가 아닌 당신의 아들로부터 랜덤, 대상이 없는 경우는 이벤트 캔슬
+FOR LOCAL, 0, CHARANUM
+	IF IS_MY_SON_DAILY(LOCAL)
+		DAILY_TARGET:DAILY_TARGET_NUM = LOCAL 
+		DAILY_TARGET_NUM ++
+	ENDIF
+NEXT
+
+SIF DAILY_TARGET_NUM == 0
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_MY_SON()
+#DIM 대상
+#DIM 에로지수
+#DIM 에로지수증분
+#DIM 곁잠스타트
+
+LOCAL = 0
+
+CALL FISHER_YATES_SHAFFLE(DAILY_TARGET_NUM)
+
+대상 = DAILY_TARGET:(SHAFFLE_ARRAY:0)
+
+CFLAG:대상:안면 = 1
+
+
+IF TALENT:대상:합의
+	CALL MY_SON_DAILY_AGREE()
+	PRINTFORMW 
+	RETURN 1
+ENDIF
+
+곁잠스타트 = 0
+에로지수 = MAX(EXP:대상:성지식경험치 + ABL:대상:성지식 * 100, EXP:대상:근친상간경험)
+IF CFLAG:대상:호감도 + 에로지수 * 10 < 2500
+	;곁잠 루트. 호감도＋에로 지수가 일정치 이하(연모여도)
+	곁잠스타트 = 1
+	PRINTFORML 밤 늦게, %ANAME(MASTER)%의 방을 누군가가 방문해 왔다…
+	PRINTFORML 문을 열면, %ANAME(MASTER)%의 아들인 %조사처리(ANAME(대상),"가")% 서 있었다. 잠들 수 없기에 곁잠 해 주었으면 하는, 이라고 말하고 있다
+	PRINTFORML 곁잠 해 줍니까?
+	CALL ASK_YN
+	IF RESULT
+		PRINTFORML 혼자서 자세요, 라고 말해 %조사처리(ANAME(대상),"를")% 돌려 보냈다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 뺨을 부풀리면서도, %조사처리(ANAME(MASTER),"가")% 말하는 것을 따랐다
+		PRINTFORMW 
+		RETURN 1
+	ENDIF
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"를")% 방에 불러들였다
+	PRINTFORMW …
+	PRINTFORML 
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% 곁잠 해 주었다
+	; 성지식경험치나 근친상간 경험을 진행도로서 사용해 보는 1회당의 가산량은 최대에서도 10으로 해 본다
+	SELECTCASE RAND:(에로지수+2)
+		CASE 0
+			PRINTFORML %조사처리(ANAME(대상),"는")% 마루에 들어가 머지않아 잠든 것 같다…
+			에로지수증분 = 0
+		CASE 1
+			PRINTFORML %ANAME(대상)%의 손이 %ANAME(MASTER)%의 민감한 부분에 접촉했다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 무심코 반응해 버렸다
+			PRINTFORML %ANAME(대상)%에 눈치채졌을 것인가…
+			에로지수증분 = RAND:2
+		CASE 2 TO 49
+			PRINTFORML %ANAME(대상)%의 손이 %ANAME(MASTER)%의 민감한 부분에 접촉했다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 무심코 반응해 버렸다
+			PRINTFORML %ANAME(대상)%에 눈치채진 것 같다…
+			에로지수증분 = MIN(RAND:에로지수 / 4, 8) + 2
+		CASEELSE
+			PRINTFORML 동작은 단속적이지만, %조사처리(ANAME(대상),"는")% 분명하게 %ANAME(MASTER)%의 몸을 촉감에 와 있다
+			PRINTFORML 의미를 이해하고 있는지는 모르지만, 감촉과 %ANAME(MASTER)%의 반응을 즐기고 있는 것 같다…
+			에로지수증분 = MIN(RAND:에로지수 / 2, 7) + 3
+	ENDSELECT 
+	; 우후후모드에서는 키스도 애무도 근친상간 경험이 들어갈 것이니까, 에로한 보디 터치도 근친상간 경험으로 좋지요……?
+	EXP:MASTER:근친상간경험 += 에로지수증분
+	EXP:대상:근친상간경험 += 에로지수증분
+	CALL PRINT_ADD_EXP(대상, "성지식경험치", 에로지수증분, 1)
+	CALL TRAIN_AUTO_ABLUP(대상)
+	
+	IF IS_LOVER(대상)
+		CFLAG:대상:호감도 += 200
+		CFLAG:대상:의존도 += 100
+	ELSE
+		CFLAG:대상:호감도 += 100
+		CFLAG:대상:의존도 += 50
+	ENDIF
+	PRINTFORML 
+	IF !에로지수증분
+		PRINTFORML 이윽고, %ANAME(대상)%에 이어 %ANAME(MASTER)%도 잠에 올랐다…
+	ELSE
+		PRINTFORML ……어느새인가 %조사처리(ANAME(대상),"는")% 자, 계속되어 %ANAME(MASTER)%도 잠에 올랐다…
+	ENDIF
+	IF CFLAG:대상:호감도 + 에로지수 * 20 + 에로지수증분 * 50 < 2500
+		PRINTFORMW 
+		RETURN 1
+	ENDIF
+	PRINTFORML 
+ENDIF
+
+;여기에 오는 것은 호감도＋에로 지수가 일정 이상 또한 합의 없음
+;통상은 연모 취득이 끝난 상태인 것을 상정한다
+;호감도만 높게 의존도가 낮은 경우는 연모없이도 통과할지도 모르지만 그것도 일단 허용 한다
+
+;전단:루트 결정
+
+IF ABL:대상:성지식 == 0
+	;무지 루트
+	IF !곁잠스타트
+		PRINTFORML 밤 늦게, %ANAME(MASTER)%의 방을 누군가가 방문해 왔다…
+		PRINTFORML 문을 열면, %ANAME(MASTER)%의 아들인 %조사처리(ANAME(대상),"가")% 우두커니 서 있었다
+	ELSE
+		PRINTFORML 자고 있었음이 분명한 %ANAME(대상)%에 일으켜졌다
+	ENDIF
+	PRINTFORML 자주(잘) 보면 그 뺨은 주홍에 물들어, %조사처리(ANAME(MASTER),"를")% 응시하는 눈동자는 물기를 띠고 있다
+	PRINTFORMW 그리고 %조사처리(ANAME(대상),"는")%, 최근어머니인 %조사처리(ANAME(MASTER),"를")% 생각하면 잘 수 없게 되는 것이라고 고백했다
+	PRINTFORML 
+	PRINTFORML %조사처리(ANAME(MASTER),"를")% 생각하는 것만으로 가슴이 안타깝게 되어, 동시에 하복부가 뜨거워지는 것 같은 감각을 기억해,
+	PRINTFORML 그러한 밤을 보낸 이튿날 아침은, 정해져 자지가 딱딱해지는 것이라고 한다…
+	PRINTFORML 성지식이 없는 %조사처리(ANAME(대상),"는")%, 자신에게 일어나고 있는 것을 이해하지 못하고, 병이라도 되었다고 생각하고 있는 것 같아,
+	PRINTFORML 그 얼굴은 당장 울기 시작해 버릴 것 같다…
+	PRINTFORML %조사처리(ANAME(MASTER),"는")%―-
+	CALL ASK_YN("손을 댄다" ,"방에 돌려보낸다")
+	IF RESULT == 0
+		;후단에
+		LOCAL = 1
+	ELSE
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"를")% 상냥하게 껴안아 머리를 어루만져 주어, 병은 아니기 때문에 걱정하는 일은 없는, 이라고 말했다
+		PRINTFORML 오늘 밤은 돌아가도록(듯이) 말하면, %ANAME(MASTER)%에 어루만져진 것으로 %조사처리(ANAME(대상),"는")% 침착성을 되찾았는지, 솔직하게 수긍했다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 어딘가 미련이 남도록(듯이)하면서도 자신의 방에 돌아갔다…
+		PRINTFORMW …
+		PRINTFORML 
+		PRINTFORML 하지만, %ANAME(MASTER)%의 회답에 납득 할 수 없었던 %조사처리(ANAME(대상),"는")%, 스스로 다양하게 조사한 것 같다…
+		ABL:대상:성지식 = 1
+		EXP:대상:성지식경험치 /= 2
+		CFLAG:대상:호감도 += 300
+		CFLAG:대상:의존도 += 600
+		PRINTFORMW 
+		RETURN 1
+	ENDIF
+	
+ELSEIF CFLAG:대상:의존도 >= 3000 && (MAX(CFLAG:대상:호감도, CFLAG:대상:종속도) <= CFLAG:대상:의존도 * 3)
+	;얀데레르트
+	PRINTFORML 심야, %조사처리(ANAME(MASTER),"는")% 잘 수 없음으로부터 눈을 떴다…
+	PRINTFORML 왜일까 배 위가 무겁다, 라고 생각해 수상한 의식인 채 눈을 향하면, 무려 \@ 곁잠스타트 ? 자고 있었음이 분명한 #\@ %조사처리(ANAME(대상),"가")% 자신의 위에 걸치고 있다!
+	PRINTFORML 게다가 눈치채면 %조사처리(ANAME(MASTER),"는")% 양손다리를 속박되어 침대에 책으로 되도록(듯이)해 구속되고 있었다!
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 눈을 뜬 일을 눈치챈 %조사처리(ANAME(대상),"는")%, 장소에 맞지 않는만큼 밝게 미소짓고 있다
+	PRINTFORMW 하지만 그 미소는 육식동물의 그래서 있어, 눈동자에는 미끌한 위험한 빛이 머물고 있었다…
+	PRINTFORML 
+	PRINTFORML 식은 땀을 흘리는 %ANAME(MASTER)%의 앞에서, %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%의 가슴에 뺨을 대어, 얼마나 %조사처리(ANAME(MASTER),"를")% 생각하고 있을까를 말했다…
+	PRINTFORML 속삭여지는 사랑의 말은 진지한 것이긴 했지만, 동시에 걸쭉한 정념이 흘러넘쳐, 귀로부터 뇌를 침범할까와 같다
+	PRINTFORML 육친 따위라는 말은 이미 %ANAME(대상)%의 전에서는 어떤 의미도 가지지 않고, 다만 한마리의 수컷으로서 %조사처리(ANAME(MASTER),"를")% 요구하고 있다
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% 저항하는 일도 용서되지 않고, %ANAME(대상)%의 생각을 받아들일 수밖에 없다…
+	PRINTFORMW …
+	PRINTFORML 
+	;후단에
+	LOCAL = 2
+	
+ELSEIF CFLAG:대상:종속도 < 500
+	;요바이 루트
+	PRINTFORML 심야, %조사처리(ANAME(MASTER),"는")% 잘 수 없음으로부터 눈을 떴다…
+	PRINTFORML 왜일까 배 위가 무겁다, 라고 생각해 수상한 의식인 채 눈을 향하면, 무려 \@ 곁잠스타트 ? 자고 있었음이 분명한 #\@ %조사처리(ANAME(대상),"가")% 자신의 위에 걸치고 있다!
+	PRINTFORML 눈치채진 %조사처리(ANAME(대상),"는")% 난처한 것 같은 표정을 하면서도, %조사처리(ANAME(MASTER),"를")% 억누른 몸의 자세로부터 멀어지려고는 하지 않는다
+	PRINTFORMW 우선, 무슨 생각일까하고 추궁하면, %조사처리(ANAME(대상),"는")% 조용하게, 하지만 강한 어조로 이야기를 시작했다…
+	PRINTFORML 
+	PRINTFORML 언제부터인 것인가는 모르지만, %조사처리(ANAME(대상),"가")% %ANAME(MASTER)%에 향하는 감정은, 부모에게 향하는 애정으로부터,
+	PRINTFORML 어느덧 연애 대상에 향하는 그것으로 변한 것이라고 한다
+	PRINTFORML 용서되지 않는 것이라고 생각해 괴로워해, 자신을 위로해 오기도 했지만, 드디어 견디지 않고,
+	PRINTFORML 이렇게 해 %ANAME(MASTER)%에 요바이를 걸어, 무리하게라도 관계를 묶으려고 깊히 생각해 버린 것 같다
+	PRINTFORML 우리 아들의 일이면서 마음껏이 너무 좋지 않는지, 라고 %조사처리(ANAME(MASTER),"는")% 생각했지만, 하지만 대답은 돌려주지 않으면 안 된다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 여전히 배 위에 걸치고 있어 받아들여 줄 때까지 방 하지는 하지 않다고 시선이 이야기하고 있다
+	PRINTFORML %조사처리(ANAME(MASTER),"는")%―-
+
+	CALL ASK_YN("받아들인다" ,"저항한다")
+	IF RESULT == 0
+		PRINTFORML 여기까지 괴로워하게 해 버렸던 것도, 자신의 애매한 태도가 원인이었을 것이다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 각오를 결정해 생각을 받아들이는 것을 전하면, %조사처리(ANAME(대상),"는")% 얼굴을 파안시키고 기뻐했다
+		PRINTFORML %조사처리(ANAME(대상),"는")% %조사처리(ANAME(MASTER),"로")%부터 일단 내리면, 반신을 일으킨 %ANAME(MASTER)%에 껴안아, 새끼 고양이 같이 응석부려 얼굴을 갖다대 왔다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 쓴웃음 지으면서, 지금부터 %조사처리(ANAME(대상),"를")% 어떻게 취급할까를 생각했다…
+		CALL ASK_YN("상냥하게 상대 한다" ,"짜낸다")
+		IF RESULT == 0
+			PRINTFORML 경위는 어떻든, 자신에게 있어서는 사랑스러운 아들이다. 처음은 상냥하게 해 주지 않으면 안 될 것이다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 일단 %조사처리(ANAME(대상),"를")% 침착하게 하면, 어깨를 안아, 상냥하게 침대로 이끌었다
+			PRINTFORMW …
+			PRINTFORML 
+			;후단에
+			LOCAL = 3
+		ELSE
+			PRINTFORML 어떤 이유든, 부모를 덮치는 것 같은 아들은 제대로 예의범절을 가르쳐 줄 필요가 있을 것이다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(대상)%의 허리를 잡으면, 억지로 위치를 바꿔 넣어, 난폭하게 침대에 쓰러트리기 덮어씌웠다
+			PRINTFORMW …
+			PRINTFORML 
+			;후단에
+			LOCAL = 4
+		ENDIF
+	ELSE
+		PRINTFORML 기분은 기쁘지만, 과연 그렇게 간단하게 금지된 관계에 발을 디딜 수 없다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(대상)%의 구속을 피하려고 몸을 비틀었다…
+		PRINTFORML 
+		IF ABL:MASTER:무투 > (ABL:대상:무투 + 15)
+			PRINTFORML %조사처리(ANAME(대상),"는")% 어이없게 풀어 버려져 돌변해 울 것 같은 얼굴로 올려봐 온다
+			PRINTFORML 그 표정에 죄악감을 기억하면서도, %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"를")% 어디까지나 아들로서 사랑하고 있는 것을 전해,
+			PRINTFORML 일단 오늘은 돌아가, 한 번 더 침착하고 생각하도록(듯이) 설득했다…
+			PRINTFORML %조사처리(ANAME(대상),"는")% 그런데도 매달리도록(듯이) %조사처리(ANAME(MASTER),"를")% 응시하고 있었지만, 이윽고 끄덕 수긍해 방을 나갔다…
+			PRINTFORMW …
+			PRINTFORML 
+			PRINTFORML 하지만, 역시 %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%에의 생각을 끊지 않고, 오히려 강하게 생각을 더해갔다…
+			CFLAG:대상:호감도 += 500
+			CFLAG:대상:의존도 += 1500
+			PRINTFORMW 
+			RETURN 1
+		ELSE
+			PRINTFORML 하지만 생각하고 있던 이상으로 성장하고 있었던 %조사처리(ANAME(대상),"는")%, %ANAME(MASTER)%의 저항을 돌려보내면 반대로보다 강하게 억눌렀다
+			PRINTFORML 생각이 거절되었던 것이 쇼크였었지만, %조사처리(ANAME(대상),"는")% 그 얼굴에 분노마저 띄워,
+			PRINTFORML 유무를 말하게 하지 않는다라는 듯이, 숨겨 가지고 있던 밧줄로 %조사처리(ANAME(MASTER),"를")% 침대에 붙들어매어 버렸다…
+			PRINTFORML 저항할 방법을 잃은 %조사처리(ANAME(MASTER),"를")% 내려다 보는 %조사처리(ANAME(대상),"는")%, 간신히 생각을 이룰 수 있다고 확신해,
+			PRINTFORML 위험한 색을 눈동자에 머물어 %ANAME(MASTER)%에 대해 미소짓고 있다…
+			PRINTFORMW …
+			PRINTFORML 
+			;후단에
+			LOCAL = 2
+		ENDIF
+	ENDIF
+
+ELSE
+	;노멀 루트
+	IF !곁잠스타트
+		PRINTFORML 밤 늦게, %ANAME(MASTER)%의 방을 누군가가 방문해 왔다…
+		PRINTFORML 문을 열면, %ANAME(MASTER)%의 아들인 %조사처리(ANAME(대상),"가")% 우두커니 서 있었다
+		PRINTFORML 그리고 %조사처리(ANAME(MASTER),"를")% 보든지, 갑자기 껴안아 왔다
+	ELSE
+		PRINTFORML 자고 있었음이 분명한 %ANAME(대상)%에 일으켜졌다
+		PRINTFORML 그리고 %조사처리(ANAME(MASTER),"가")% 눈을 뜸을 확인하면, 갑자기 껴안아 왔다
+	ENDIF
+	PRINTFORML 돌연의 일에 놀라면서도 이야기를 들으면, %조사처리(ANAME(대상),"는")% 어딘가 추적할 수 있었던 표정으로,
+	PRINTFORMW 어머니인 %조사처리(ANAME(MASTER),"를")% 안고 싶은, 범하고 싶다고, 절실한 영향을 담은 소리로 애원 했다
+	PRINTFORML 
+	PRINTFORML 언제부터인 것인가는 모르지만, %조사처리(ANAME(대상),"가")% %ANAME(MASTER)%에 향하는 감정은, 부모에게 향하는 애정으로부터,
+	PRINTFORML 어느덧 연애 대상에 향하는 그것으로 변한 것이라고 한다
+	IF !곁잠스타트
+		PRINTFORML 용서되지 않는 것이라고 생각해 괴로워해, 자신을 위로해 오기도 했지만, 드디어 견디지 않고,
+		PRINTFORML 이렇게 (해) 방까지 방문해 버린 것이라고, 애절하게 가득 찬 표정으로 %조사처리(ANAME(대상),"는")% 고백했다…
+	ELSE
+		PRINTFORML 용서되지 않는 것이라고 생각해 괴로워해, 손대는 것만으로 참을려고도 생각하고 있었지만, 역시 
+		PRINTFORML 연결되고 싶은 기분을 억제할 수 없게 된 것이라고, 애절하게 가득 찬 표정으로 %조사처리(ANAME(대상),"는")% 고백했다…
+	ENDIF
+	PRINTFORML %조사처리(ANAME(MASTER),"는")%―-
+	CALL ASK_YN("받아들인다" ,"거부한다")
+	IF RESULT == 0
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"를")% 꼬옥 하고 껴안으면, 얼굴을 올리게 해 받아들인 증거로 삼아 입술을 빼앗았다
+		PRINTFORML 생각을 이룰 수 있었던 %조사처리(ANAME(대상),"는")% 감격한 모습으로 눈물을 흘려, %조사처리(ANAME(MASTER),"를")% 껴안고 돌려주었다
+		PRINTFORML 일선을 넘을 것을 결정한 %조사처리(ANAME(MASTER),"였")%지만, 그렇다면 그걸로 %조사처리(ANAME(대상),"를")% 어떻게 취급할까를 생각했다…
+		CALL ASK_YN("상냥하게 상대 한다" ,"짜낸다")
+		IF RESULT == 0
+			PRINTFORML 어떻게 관계가 변화하려고 자신에게 있어서는 사랑스러운 아들이다. 처음은 상냥하게 해 주지 않으면 안 될 것이다
+			PRINTFORML 그렇게 결정한 %조사처리(ANAME(MASTER),"는")%, 입술을 떼어 놓으면, 상냥하게 %조사처리(ANAME(대상),"를")% 에스코트 해, 침대에 위로 향해 잤다
+			PRINTFORMW …
+			;후단에
+			LOCAL = 3
+		ELSE
+			PRINTFORML 남녀의 관계가 된다면, 이것까지같이 다만 상냥하게 해 주는 것 만으로는 끝내지지 않다
+			PRINTFORML 연상의 이성으로서 실력을 과시해 줄 필요가 있을 것이다
+			PRINTFORML 그렇게 결정한 %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"를")% 껴안아, 반침대에 내던지도록(듯이)해 쓰러트리기, 덮어씌웠다
+			PRINTFORMW …
+			;후단에
+			LOCAL = 4
+		ENDIF
+	ELSE
+		PRINTFORML %조사처리(ANAME(MASTER),"는")%, 생각해 주는 것은 기쁘지만, 부모와 자식인 이상 그 앞을 받아들일 수 없다, 라고 고했다
+		PRINTFORML 그리고 %ANAME(대상)%의 어깨를 안아, 상냥하게 머리를 어루만져, 오늘은 돌아가 조금 침착하고 생각하도록(듯이) 말했다
+		PRINTFORML 설득해진 %조사처리(ANAME(대상),"는")% 보기에도 낙담한 모습이었지만, 일단은 수긍해 주었다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 어딘가 미련이 남도록(듯이)하면서도 자신의 방에 돌아갔다…
+		PRINTFORMW …
+		PRINTFORML 
+		PRINTFORML 하지만, 역시 %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%에의 생각을 끊지 않고, 오히려 강하게 생각을 더해갔다…
+		CFLAG:대상:호감도 += 300
+		CFLAG:대상:의존도 += 1000
+		PRINTFORMW 
+		RETURN 1
+	ENDIF
+ENDIF
+
+;후단:플레이 내용 분기
+SELECTCASE LOCAL
+	CASE 1
+		;성지식 0
+		PRINTFORML 성악녀에 잡히거나 초심자끼리 첫체험이 실패해 씁쓸한 추억이 되는 것보다는 %조사처리(ANAME(MASTER),"가")% 이끌어 주는 편이 좋을 것이다…
+		PRINTFORML 그렇게 자신에게 타이르면서, %조사처리(ANAME(MASTER),"는")% 아들의 초물을 받기로 했다
+		PRINTFORMW …
+		PRINTFORML 
+		PRINTFORML 완전히 %ANAME(MASTER)%에 예의범절을 가르쳐진 %조사처리(ANAME(대상),"는")%, 지금은 녹은 소리를 높이면서 %ANAME(MASTER)% 위에서 스스로 허리를 흔들고 있다…
+		PRINTFORML 부모와 자식이면서, 지금은 단순한 발정한 수컷과 암컷으로서 %조사처리(ANAME(대상),"와")% %조사처리(ANAME(MASTER),"는")% 밤새 계속 교접했다…
+	CASE 2
+		;얀데레
+		PRINTFORML %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%의 옷을 풀어헤치면서, 스스로도 옷을 벗어 던져 갔다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 부끄러워하기는 커녕, %ANAME(MASTER)%에 길러 받은 신체를 자랑하도록(듯이) 모두를 드러내고 있다
+		PRINTFORML %ANAME(MASTER)%에 걸치는 %ANAME(대상)%의 모습은, 젊으면서 확실히 수컷으로서의 분위기를 조성하기 시작하고 있었다
+		PRINTFORML 무심코 꿀꺽 목을 울리면, %조사처리(ANAME(대상),"는")% 기쁜듯이 웃음을 띄워, %ANAME(MASTER)%의 몸에 손가락을, 혀를 기게 해 간다
+		PRINTFORMW 열심히 애무되어 암컷인것 같은 반응을 나타낸 %조사처리(ANAME(MASTER),"를")% 봐, %조사처리(ANAME(대상),"는")% 자신의 귀두를 %ANAME(MASTER)%의 비밀의 틈에 주었다…
+		PRINTFORML 
+		PRINTFORML 이제 몇번 사귀었는지 모를 정도 시간이 지나고 나서, 간신히 %조사처리(ANAME(MASTER),"는")% 해방되었다
+		PRINTFORML 지금, %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%의 가슴에 카시라를 실어, 새근새근 숨소리를 내 자고 있다…
+		PRINTFORML 그 얼굴은 천진난만한 것으로, 조금 전까지 %ANAME(MASTER)% 안에서 탐욕에 자식을 토해내고 있었다고는 도저히 생각되지 않는다
+		PRINTFORML 우리 아들이면서 장래가 염려된 일이라고 생각하면서, 저기까지 존경받고 있던 일에 기분은 나쁘지 않았다
+		PRINTFORML 한사람의 암컷으로서 극상의 온도리로 자라고 있었던 %ANAME(대상)%의 육체에 빠져 버릴 것 같다…
+		PRINTFORML 어쨌건 간에 일선을 넘은 일에 변화는 없다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 향후를 생각하면서, 지금은 사랑스러운 아들의 머리를 계속 상냥하게 어루만지기로 했다…
+	CASE 3
+		;상냥하게 상대 한다
+		PRINTFORML 쪼아먹도록(듯이) 키스를 주고 받으면서, 한 장 한 장 그 옷을 벗겨, 자신도 벗어 갔다
+		PRINTFORML 태어날 때부터의 모습을 쬔 %조사처리(ANAME(대상),"는")%, 부끄러운 듯이 하면서도, %ANAME(MASTER)%에 모두를 맡겼다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(대상)%의 페니스를 입술과 손가락으로 애무하면서, 긴장한 신체를 풀어 갔다
+		PRINTFORML 준비가 갖추어진 것을 확인한 %조사처리(ANAME(MASTER),"는")%, %ANAME(대상)% 아래가 되어, 비밀의 틈에 페니스를 이끌었다
+		PRINTFORMW …
+		PRINTFORML 
+		PRINTFORML 한 차례 사귄 후, %조사처리(ANAME(MASTER),"는")% %ANAME(대상)%의 가랑이에 얼굴을 묻어, 열심히 입술과 혀로 장대를 닦고 있다…
+		PRINTFORML 사랑의 말을 속삭이면서 %조사처리(ANAME(대상),"는")% 이 이상 없는 행복감에 휩싸여, 봉사를 즐기고 있었다
+		PRINTFORML 편한 기분으로 있었지만, 어머니의 열심인 펠라티오에게 인내력이 없는 페니스는 뭉실뭉실 딱딱하게 되어 간다
+		PRINTFORML 그것을 본 %조사처리(ANAME(MASTER),"는")% 넋을 잃은 표정으로, 위로 향해 되어 가랑이를 열어, 스스로 음순을 나누어 열어 유혹했다
+		PRINTFORML 도대체 언제쯤부터 이러했던가, 음탕한 어머니의 모습에 쓴웃음하면서, %조사처리(ANAME(MASTER),"는")% 욕망대로 그 구멍을 관철했다
+		PRINTFORML 스스로 낳은 것을 받아들여 %조사처리(ANAME(MASTER),"는")% 희열에 쳐 흔들리며\@ TALENT:MASTER:임신 ? #, 씨뿌리기를 졸랐다\@
+		PRINTFORML \@ TALENT:MASTER:임신 ? 어머니와 사귀는 # 어머니를 임신하게 하는\@ 쾌감에 %조사처리(ANAME(대상),"는")% 만취하면서, 밤새, 몇 번이나 몇 번이나 %ANAME(MASTER)%의 자궁에 정액을 풀었다…
+	CASE 4
+		;짜낸다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"를")% 침대에 억눌러, 입술을 빼앗아, 옷을 풀어헤치게 하면서 사타구니에 손을 뻗었다
+		PRINTFORML 돌연의 일에 몹시 놀라는 %조사처리(ANAME(대상),"였")%지만, 저항하는 사이도 없게 페니스를 자극 받으며,
+		PRINTFORML 구의 구석으로부터 허덕임을 흘리면서 %ANAME(MASTER)% 아래에서 몸부림 할 수밖에 할 수 없다
+		PRINTFORML 이윽고 페니스가 쫑긋쫑긋 움직여, %조사처리(ANAME(대상),"가")% 기세 좋게 사정한 것을 확인하면, %조사처리(ANAME(MASTER),"는")% 입술을 놓았다
+		PRINTFORML 옷을 난폭하게 벗겨진 %조사처리(ANAME(대상),"는")%, 젊은 피부에 땀을 띄워, 어머니인 %ANAME(MASTER)%의 전에 모두를 노출해지고 있다…
+		PRINTFORML 그리고 %조사처리(ANAME(MASTER),"는")% 절정 한지 얼마 안된 %ANAME(대상)%의 페니스를 격렬하게 쓸어올려 다시 서게 했다…
+		PRINTFORML 일순간 %ANAME(대상)% 쪽을 향해 암컷의 표정을 보인 후, 귀두의 위치를 스스로의 비밀의 틈에 맞추어, 앉아 갔다
+		PRINTFORMW …
+		PRINTFORML 
+		PRINTFORML 한 차례 사귄 후, %조사처리(ANAME(MASTER),"와")% %조사처리(ANAME(대상),"는")% 질척질척이 된 모습으로 구르고 있다…
+		PRINTFORML %조사처리(ANAME(대상),"가")% 한계를 맞이해도 %조사처리(ANAME(MASTER),"는")% 용서하지 않고, 오히려 여기로부터가 실전이라는 듯이 기세를 더해 갔다
+		PRINTFORML %조사처리(ANAME(MASTER),"가")% 만족하는 무렵에는, %조사처리(ANAME(대상),"는")% 자신이 몇번 의식을 잃었는지 기억하지 않았었다…
+ENDSELECT
+
+IF ABL:대상:성지식 == 0
+	ABL:대상:성지식 = 1
+	EXP:대상:성지식경험치 /= 2
+ENDIF
+
+; "짜낸다"는 3회로 한다
+CALL MY_SON_DAILY_FUCK_1TO1(대상, LOCAL == 4 ? 3 # 1)
+
+CFLAG:대상:호감도 += 500
+CFLAG:대상:종속도 += 200
+CFLAG:대상:의존도 += 200
+TALENT:대상:합의 = 1
+PRINTFORMW 
+
+RETURN 1
+
+
+@MY_SON_DAILY_FUCK_1TO1(대상, 회수 = 1)
+#DIM 대상
+#DIM 회수
+
+FOR LOCAL, 0, 회수
+	CALL FUCK_MAKELOVE(MASTER, GET_ID(대상), @"%ANAME(대상)%의 입술", ANAME(대상))
+	CALL FUCK(대상, "욕망, 봉사, 성기술, 성교, 키스, Ｃ, Ｍ, 사정, Ｖ삽입", "키스상실, 동정상실", 0, @"%ANAME(MASTER)%의 입술", "", @"%ANAME(MASTER)%의 질", "화간")
+	CFLAG:대상:호감도 += 300
+	CFLAG:대상:종속도 += 100
+	CFLAG:대상:의존도 += 100
+NEXT
+
+
+@MY_SON_DAILY_AGREE()
+#DIM 대상
+#DIM 합의아들배열, 8
+#DIM 합의아들인원수
+#DIMS 단락문자
+#DIM 플레이내용
+#DIM 공격치카라_어머니
+#DIM 공격치카라_아들
+#DIM 콤보보너스
+
+합의아들인원수 = 0
+FOR LOCAL, 0, DAILY_TARGET_NUM
+	대상 = DAILY_TARGET:(SHAFFLE_ARRAY:LOCAL)
+	IF TALENT:대상:합의
+		SIF 합의아들인원수 < VARSIZE("합의아들배열")
+			합의아들배열:합의아들인원수 = 대상
+		합의아들인원수 ++
+	ENDIF
+NEXT
+
+SIF 합의아들인원수 < 1
+	RETURN ; 이럴 리는 없는 것이지만
+
+합의아들인원수 = MIN(VARSIZE("합의아들배열"), RAND:합의아들인원수 + 1)
+
+대상 = 합의아들배열:0
+
+PRINTFORML 지금부터 「밤의 상대」를 해 주었으면 한다, 라고 %ANAME(MASTER)%의 아들인 %조사처리(ANAME(대상),"가")% %ANAME(MASTER)%의 방을 방문해 왔다
+PRINTFORML %ANAME(대상)%의 사타구니는 벌써 준비만반인 것 같다
+
+IF 합의아들인원수 == 1
+	PRINTFORML 어떻게 하지?
+	CALL ASK_YN("이번은 돌아가 받는다", "상대 한다")
+	플레이내용 = RESULT
+ELSE
+	PRINTFORM 라고 생각하면
+	단락문자 '= " "
+	FOR LOCAL, 1, 합의아들인원수
+		PRINTFORM %단락문자%
+		PRINTFORM %ANAME(합의아들배열:LOCAL)%
+		단락문자 '= "·"
+	NEXT
+	PRINTFORML 도 %ANAME(MASTER)%의 방에 왔다
+	PRINTFORML 아무래도 목적은 같은 것 같다
+	PRINTFORML 
+	PRINTFORML 어떻게 하지?
+	; 8명을 한사람씩 차례로 상대 해, 시간은 어느 정도 걸리는지? → 당신을 상식으로 판단하는 것이 실수인 것은 아닐까?
+	CALL ASK_MULTI("이번은 전원 돌아가 받는다", @"이번은 %ANAME(대상)% 만 상대 한다", "한사람씩 차례로 상대 한다", "정리해 한 번에 상대 한다（자신으로부터 공격한다）", "정리해 한 번에 상대 한다（자신은 수동）")
+	플레이내용 = RESULT
+	IF 플레이내용 == 1
+		PRINTFORM 제일 빨리 온 %ANAME(대상)% 만은 상대를 해, 그 이외에는 돌아가 받기로 했다
+		PRINTFORML 
+		합의아들인원수 = 1
+	ENDIF
+ENDIF
+
+IF 플레이내용 == 0
+	PRINTFORML 오늘은 이제 늦었으니까, 라고 이유를 붙여 돌려 보냈다
+	RETURN
+ENDIF
+
+SIF 플레이내용 >= 3
+	PRINTFORML %조사처리(ANAME(MASTER),"를")% 중심으로 해 {합의아들인원수+1}P에 흥겨워했다…
+FOR LOCAL, 0, 합의아들인원수
+	SIF 플레이내용 < 3
+		PRINTFORML %ANAME(합의아들배열:LOCAL)%와 일대일로 사귀었다…
+	CALL MY_SON_DAILY_FUCK_1TO1(합의아들배열:LOCAL, 1)
+NEXT
+
+SIF 플레이내용 < 3
+	RETURN
+
+; 정리해 한 번에 상대 한다
+; 윤간이 아니야 합의이고 가족이니까 노우 캔이야
+; 여성은 한사람만으로, 남성끼리의 관련은 없기에 난교도 아니야
+공격치카라_어머니 = ABL:MASTER:성기술 + ABL:MASTER:성지식
+공격치카라_아들 = 0
+FOR LOCAL, 0, 합의아들인원수
+	공격치카라_아들 += ABL:(합의아들배열:LOCAL):성기술 + ABL:(합의아들배열:LOCAL):성지식
+NEXT
+공격치카라_어머니 = RAND:(공격치카라_어머니 + 1)
+공격치카라_아들 = RAND:(공격치카라_아들 + 1)
+SIF CFLAG:MASTER:행동불능상태 == 행동불능_임월
+	공격치카라_어머니 /= 2
+공격치카라_어머니 /= MAX(COOLTIME:MASTER:0, 1)
+SIF 플레이내용 == 4
+	공격치카라_어머니 /= 10
+IF 공격치카라_어머니 > 공격치카라_아들
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 힘이 다하기 전에, 아들들을 만족시켜 주어진 것 같다…
+	RETURN
+ENDIF
+
+콤보보너스 = LIMIT(공격치카라_아들 / MAX(공격치카라_어머니, 1), 1, 합의아들인원수)
+PRINTFORML 아들들에 의한 총공격은 공을 세웠다. %조사처리(ANAME(MASTER),"는")% 한계를 넘어 가게 되어 버렸다…%SUBSTRINGU("♥♥♥♥♥♥♥♥", 0, 콤보보너스)%
+FOR LOCAL, 0, 콤보보너스
+	CALL MY_SON_DAILY_FUCK_1TO1(합의아들배열:(RAND:합의아들인원수), 1)
+NEXT
+PRINTFORML 
+
+; GETBIT(TALENT:MASTER:음란계, 소질_음란_음란) || GETBIT(TALENT:MASTER:음란계, 소질_음란_정액변소)가 성립하는 경우만 이하의 메세지로 할까하고도 생각했지만 한정하지 않도록 한다
+; 아들이 상대라고는 말해도, 정리해 한 번에 상대 하는 시점에서 저거네요
+IF RAND:2
+	PRINTFORML 이런 형태의 효도도 가끔씩은 좋은 것이다, 라고 생각하면서 %ANAME(MASTER)%의 의식은 희미해져 갔다…
+ELSE
+	PRINTFORML 연상의 이성으로서 분하다고 생각하는 기분도 있지만, 아들들의 성장을 기쁘다고 생각하는 기분도 %조사처리(ANAME(MASTER),"는")% 느끼고 있었다
+ENDIF
+
+
+@IS_MY_SON_DAILY(대상)
+#FUNCTION
+#DIM 대상
+
+RETURNF CFLAG:대상:소속 == CFLAG:MASTER:소속 && !CFLAG:대상:포로처 && IS_MOTHER(대상, MASTER) && CFLAG:대상:특수상태 == 0 && CFLAG:대상:행동불능상태 == 0 && IS_MALE(대상)
+

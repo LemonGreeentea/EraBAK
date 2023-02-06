@@ -1,0 +1,722 @@
+﻿;맵 관계
+[SKIPSTART]
+DRAWMAP의 내용을 알기 쉽게 제시하기 위한 코멘트 블록
+;-------------------------------------------------
+;맵의 외관(더미 함수)
+;-------------------------------------------------
+
+
+PRINTL ┏개  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;┏━━━━덕 ;;;         1 2
+PRINTL ┃    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;랑;;;  ;;;;;;;;;         3
+PRINTL 한━┓ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;┏하-백┓;;;;;;;;;         4 5 6
+PRINTL     ┃  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;히노키┓   류;;;;;;;;;         7 8
+PRINTL     ┃  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;┏각-불┛;;;;;;;;;　　　   9 10
+PRINTL     ┃ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ┃   사 ;;;;;;;;;;　　　   11
+PRINTL   ┏부━━━━죽━━┓;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;  연어-명┛;;;;;;;;;;;         12 13 14 15
+PRINTL   ┃;;;;;;;;;;;;;;;;┃;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;책-산 ┃; ;;;;;;;;;;;         16 17
+PRINTL ;;┃;;;;;;;;;;;;;;;;┃;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;잡;;신┛ 쌀-환;;;;;;;;;;;;;　　　　 18 19 20 21
+PRINTL ;;┃;;;;;;;;;;;;;;┏갑;;;;;;;;;;;;;;;;;┏7;;;;;;;;;;;;┗흑┛   ┃ ┃;;;;;;;;;;;;;         22 23 24
+PRINTL ;;┃;;;;;;;;;;;;;;┃;;;;;;;;;;;;;;;;;;;┃ ;;;;;;;;;;;;북-◇━회-수-중;;;;;;;;;;;;;　　　   25 121 26 27 28
+PRINTL ;;금;;;;;;;;;;;;;;┃;;;;;;;;;;;;;;;;;; 부━부-어-봄━-◇-판     ┃ ┃;;;;;;;;;;;;;         29 30 31 32 33 122 34
+PRINTL ;;┃;;;;;;;;;;3━월-날개-포━차-활-┐;┏1  벚꽃  ┏덩굴┓    ┃  ┏우━태;;;;;;;;;;;;;         35 36 37 38 39 40 41 42 43 44 45
+PRINTL ;;귀;;;;;;;;지┛  ┃    ┃  ┃ 8 후-좌-┐ ┃ 심 ┏추━━미━결┓  ┃;;;;;;;;;;;;;         46 47 48 49 50 51 52 53 54
+PRINTL 강-◇;;;;;┏축-군-◇-학-지━치-월-장-관-벼-안개-◇-투구┗┓  ┗천━국━◇;;;;;;;;;;;;;         55 123 56 57 124 58 59 60 61 62 63 64 65 125 66 67 68 126
+PRINTL ┃촌━고━훤;;;;;;┃;;;;┃;;┃;안 ┃ ◇-말    ┏반┓ ┗척  ┗┓;;구┛;;;;;;;;;;;;;         69 70 71 72 127 73 74 75 76
+PRINTL ┃┃;;┃ ┗대┓;;탕┓┏10┓주━근-통-목;;┗상-설  ┃부-흥-◇-소;;┃ ;;;;;;;;;;;;;;         77 78 79 80 81 82 83 84 85 86 87 128 88
+PRINTL ;일;┏바위-◇┛┗송┛┗흰색━승┛;;┃  ┏다 ;; └-예━괘┛;;;;구;┃;;관;;;;;;;;;;;;;;;　　     89 90 129 91 92 93 94 95 96 97 98
+PRINTL ;;;;┃   ┃ ;;;;┃ ┏오카┓┃;;;;┗류┛;;;;;;;;;;;;;;;;;;;;;┗이탈리아;;;;;;;;;;;;;;;;;;;;         99 100 101
+PRINTL ;;;;;인  도;;;;;;숙┛;;안┛;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         102 103 104 105
+PRINTL ;;;;◇-고┛;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         130 106
+PRINTL ;;;;;청;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         107
+PRINTL ;;;┏┛;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         
+PRINTL ;;;목;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         108
+
+
+
+
+
+PRINTL ┏01  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;┏━━━━02 ;;;         1 2
+PRINTL ┃    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;03;;;  ;;;;;;;;;         3
+PRINTL 04━┓ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;┏05-06┓;;;;;;;;;         4 5 6
+PRINTL     ┃  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;07┓   08;;;;;;;;;         7 8
+PRINTL     ┃  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;┏09-10┛;;;;;;;;;　　　   9 10
+PRINTL     ┃ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ┃   11 ;;;;;;;;;;　　　   11
+PRINTL   ┏12━━━━12━━┓;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;  14-15┛;;;;;;;;;;;         12 13 14 15
+PRINTL   ┃;;;;;;;;;;;;;;;;┃;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;16-17 ┃; ;;;;;;;;;;;         16 17
+PRINTL ;;┃;;;;;;;;;;;;;;;;┃;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;18;;19┛ 20-21;;;;;;;;;;;;;　　　　 18 19 20 21
+PRINTL ;;┃;;;;;;;;;;;;;;┏22;;;;;;;;;;;;;;;;;┏23;;;;;;;;;;;;┗24┛   ┃ ┃;;;;;;;;;;;;;         22 23 24
+PRINTL ;;┃;;;;;;;;;;;;;;┃;;;;;;;;;;;;;;;;;;;┃ ;;;;;;;;;;;;25121━26-27-28;;;;;;;;;;;;;　　　   25 121 26 27 28
+PRINTL ;;29;;;;;;;;;;;;;;┃;;;;;;;;;;;;;;;;;; 30━31-32-33━122-34     ┃ ┃;;;;;;;;;;;;;         29 30 31 32 33 122 34
+PRINTL ;;┃;;;;;;;;;;35━36-37-38━39-40-┐;┏41  42  ┏43┓    ┃  ┏44━45;;;;;;;;;;;;;         35 36 37 38 39 40 41 42 43 44 45
+PRINTL ;;46;;;;;;;;47┛  ┃    ┃  ┃ 48 49-50-┐ ┃ 51 ┏52━━53━54┓  ┃;;;;;;;;;;;;;         46 47 48 49 50 51 52 53 54
+PRINTL 55-123;;;;┏56-57124-58-59━60-61-62-63-64-65125-66┗┓  ┗67━68━126;;;;;;;;;;;;         55 123 56 57 124 58 59 60 61 62 63 64 65 125 66 67 68 126
+PRINTL ┃69━70━71;;;;;;┃;;;;┃;;┃;72 ┃127-73    ┏74┓ ┗75  ┗┓;;76┛;;;;;;;;;;;;;         69 70 71 72 127 73 74 75 76
+PRINTL ┃┃;;┃ ┗77┓;;78┓┏79┓80━81-82-83;;┗84-85  ┃86-87128-88;;┃ ;;;;;;;;;;;;;;         77 78 79 80 81 82 83 84 85 86 87 128 88
+PRINTL ;89;┏90129┛┗91┛┗92━93┛;;┃  ┏94 ;; └-95━96┛;;;;97;┃;;98;;;;;;;;;;;;;;;　　     89 90 129 91 92 93 94 95 96 97 98
+PRINTL ;;;;┃   ┃ ;;;;┃ ┏99┓┃;;;;┗100┛;;;;;;;;;;;;;;;;;;;;;┗101;;;;;;;;;;;;;;;;;;         99 100 101
+PRINTL ;;;;102  103;;;;104┛;105┛;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         102 103 104 105
+PRINTL ;;;130106┛;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         130 106
+PRINTL ;;;;;107; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         107
+PRINTL ;;;┏┛;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         
+PRINTL ;;;108;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         108
+
+[SKIPEND]
+
+;-------------------------------------------------
+;맵의 묘화 ARG:0에 1을 지정하면 군사 화면용의 버튼을 생성
+;-------------------------------------------------
+@DRAWMAP_Japan(ARG:0 = 0, ARG:1 = 0)
+
+CALL DRAWMAP_INIT(ARG:0, 0)
+
+CALL DRAWMAP_LINE("┏개  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░랑━━━━덕 ░░░",   1,   3,   2)
+CALL DRAWMAP_LINE("한━┓ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░┏하-카┓░░░░░░░░░",   4,   5,   6)
+CALL DRAWMAP_LINE("    ┃  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░전┓   유░░░░░░░░░",   7,   8)
+CALL DRAWMAP_LINE("    ┃  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░┏각-불┛░░░░░░░░░",   9,  10)
+CALL DRAWMAP_LINE("    ┃ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ ┃   사 ░░░░░░░░░░",  11)
+CALL DRAWMAP_LINE("  ┏부━━━━독━━┓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  해-명┛░░░░░░░░░░░",  12,  13,  14,  15)
+CALL DRAWMAP_LINE("  ┃░░░░░░░░░░░░░░░░┃░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░본-산 ┃░ ░░░░░░░░░░░",  16,  17)
+CALL DRAWMAP_LINE("░░┃░░░░░░░░░░░░░░░░┃░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░잡░░신┛ 미-환░░░░░░░░░░░░░",  18,  19,  20,  21)
+CALL DRAWMAP_LINE("░░┃░░░░░░░░░░░░░░┏갑░░░░░░░░░░░░░░░░░┏칠░░░░░░░░░░░░┗흑┛   ┃ ┃░░░░░░░░░░░░░",  22,  23,  24)
+CALL DRAWMAP_LINE("░░┃░░░░░░░░░░░░░░┃░░░░░░░░░░░░░░░░░░░┃ ░░░░░░░░░░░░북-◇━회-스-중░░░░░░░░░░░░░",  25, 121,  26,  27,  28)
+CALL DRAWMAP_LINE("░░금░░░░░░░░░░░삼-월░░░░░░░░┏-궁-┐░░ 토━도-어-춘━-◇-板     ┃ ┃░░░░░░░░░░░░░",  29,  35,  36,  40,  30,  31,  32,  33, 122,  34)
+CALL DRAWMAP_LINE("░░┃░░░░░░░░시┛ ┃┗깃-포━차 ┃ ┃░┏일  앵  ┏갈┓    ┃ 결-우━태░░░░░░░░░░░░░",  47,  37,  38,  39,  41,  42,  43,  54,  44,  45)
+CALL DRAWMAP_LINE("░░귀░░░░░░░░축-군-◇-┓ ┃  ┃ 팔 후-좌-┐ ┃ 심 ┏추━━기┛┗┓  ┃░░░░░░░░░░░░░",  46,  56,  57, 124,  48,  49,  50,  51,  52,  53)
+CALL DRAWMAP_LINE("┏-◇░░░░░┏┛    ┃ ┃ ┃┏치-활-장-관-벼-무-◇ ┃┗┓  ┗천━국┓┃░░░░░░░░░░░░░", 123,  60,  61,  62,  63,  64,  65, 125,  67,  68)
+CALL DRAWMAP_LINE("에░촌━옛━훤░░░░░┃░학-숫┛┃░┃ ┃ ┃ 말    ┗-두  ┗척  ┗━┓┗◇░░░░░░░░░░░░░",  55,  69,  70,  71,  58,  59,  73,  66,  75, 126)
+CALL DRAWMAP_LINE("┃┃░░┃   ┃ ░░░░┃░░░░┃░░┃░키 ┃ ◇┛┗상-설-반┓을-흥-◇┓┃┏┛░░░░░░░░░░░░░",  72, 127,  84,  85,  74,  86,  87, 128)
+CALL DRAWMAP_LINE("┃┃░░┃   대┓░░░┃░░░░┃░주━근-통-목 ░░ └-예━괘-┛░░░니░소┛구░░░░░░░░░░░░░░░",  77,  80,  81,  82,  83,  95,  96,  97,  88,  76)
+CALL DRAWMAP_LINE("░날░┏암-◇┛┃░░░┃░░░░┃░┃░░┃  ┏다 ░░░░░░░░░░░░░░░░░░┗이░░░타░░░░░░░░░░░░░░░",  89,  90, 129,  94, 101,  98)
+CALL DRAWMAP_LINE("░░░░┃   ┃░░┃░░┏탕┏십┓┃░░┗용┛░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░",  78,  79, 100)
+CALL DRAWMAP_LINE("░░░░░인  지░░┗송┛┗백━승┛░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░", 102, 103,  91,  92,  93)
+CALL DRAWMAP_LINE("░░░░◇-고┛░░░░░┃ ┏강┓┃░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░", 130, 106,  99)
+CALL DRAWMAP_LINE("░░░┏청░░ ░░░░░░░숙┛░░안┛░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░", 107, 104, 105)
+CALL DRAWMAP_LINE("░░░수░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░", 108)
+
+CALL DRAWMAP_END()
+
+
+;-------------------------------------------------
+;전도시수를 돌려주는 함수
+;-------------------------------------------------
+@SET_CITY_NUM_Japan()
+CITY_NUM = 108
+;-------------------------------------------------
+;단축 도시명을 설정
+;-------------------------------------------------
+@SET_SHORTCITYNAME_Japan()
+CITY_NAME_SHORT:1 = 개
+CITY_NAME_SHORT:2 = 덕
+CITY_NAME_SHORT:3 = 랑
+CITY_NAME_SHORT:4 = 한
+CITY_NAME_SHORT:5 = 하
+CITY_NAME_SHORT:6 = 카
+CITY_NAME_SHORT:7 = 전
+CITY_NAME_SHORT:8 = 유
+CITY_NAME_SHORT:9 = 각
+CITY_NAME_SHORT:10 = 불
+CITY_NAME_SHORT:11 = 사
+CITY_NAME_SHORT:12 = 부
+CITY_NAME_SHORT:13 = 독
+CITY_NAME_SHORT:14 = 해
+CITY_NAME_SHORT:15 = 명
+CITY_NAME_SHORT:16 = 본
+CITY_NAME_SHORT:17 = 산
+CITY_NAME_SHORT:18 = 잡
+CITY_NAME_SHORT:19 = 신
+CITY_NAME_SHORT:20 = 미
+CITY_NAME_SHORT:21 = 환
+CITY_NAME_SHORT:22 = 갑
+CITY_NAME_SHORT:23 = 칠
+CITY_NAME_SHORT:24 = 흑
+CITY_NAME_SHORT:25 = 북
+CITY_NAME_SHORT:26 = 회
+CITY_NAME_SHORT:27 = 스
+CITY_NAME_SHORT:28 = 중
+CITY_NAME_SHORT:29 = 금
+CITY_NAME_SHORT:30 = 토
+CITY_NAME_SHORT:31 = 도
+CITY_NAME_SHORT:32 = 어
+CITY_NAME_SHORT:33 = 춘
+CITY_NAME_SHORT:34 = 板
+CITY_NAME_SHORT:35 = 삼
+CITY_NAME_SHORT:36 = 월
+CITY_NAME_SHORT:37 = 깃
+CITY_NAME_SHORT:38 = 포
+CITY_NAME_SHORT:39 = 차
+CITY_NAME_SHORT:40 = 궁
+CITY_NAME_SHORT:41 = 일
+CITY_NAME_SHORT:42 = 앵
+CITY_NAME_SHORT:43 = 갈
+CITY_NAME_SHORT:44 = 우
+CITY_NAME_SHORT:45 = 태
+CITY_NAME_SHORT:46 = 귀
+CITY_NAME_SHORT:47 = 시
+CITY_NAME_SHORT:48 = 팔
+CITY_NAME_SHORT:49 = 후
+CITY_NAME_SHORT:50 = 좌
+CITY_NAME_SHORT:51 = 심
+CITY_NAME_SHORT:52 = 추
+CITY_NAME_SHORT:53 = 기
+CITY_NAME_SHORT:54 = 결
+CITY_NAME_SHORT:55 = 에
+CITY_NAME_SHORT:56 = 축
+CITY_NAME_SHORT:57 = 군
+CITY_NAME_SHORT:58 = 학
+CITY_NAME_SHORT:59 = 숫
+CITY_NAME_SHORT:60 = 치
+CITY_NAME_SHORT:61 = 활
+CITY_NAME_SHORT:62 = 장
+CITY_NAME_SHORT:63 = 관
+CITY_NAME_SHORT:64 = 벼
+CITY_NAME_SHORT:65 = 무
+CITY_NAME_SHORT:66 = 두
+CITY_NAME_SHORT:67 = 천
+CITY_NAME_SHORT:68 = 국
+CITY_NAME_SHORT:69 = 촌
+CITY_NAME_SHORT:70 = 옛
+CITY_NAME_SHORT:71 = 훤
+CITY_NAME_SHORT:72 = 키
+CITY_NAME_SHORT:73 = 말
+CITY_NAME_SHORT:74 = 반
+CITY_NAME_SHORT:75 = 척
+CITY_NAME_SHORT:76 = 구
+CITY_NAME_SHORT:77 = 대
+CITY_NAME_SHORT:78 = 탕
+CITY_NAME_SHORT:79 = 십
+CITY_NAME_SHORT:80 = 주
+CITY_NAME_SHORT:81 = 근
+CITY_NAME_SHORT:82 = 통
+CITY_NAME_SHORT:83 = 목
+CITY_NAME_SHORT:84 = 상
+CITY_NAME_SHORT:85 = 설
+CITY_NAME_SHORT:86 = 을
+CITY_NAME_SHORT:87 = 흥
+CITY_NAME_SHORT:88 = 소
+CITY_NAME_SHORT:89 = 날
+CITY_NAME_SHORT:90 = 암
+CITY_NAME_SHORT:91 = 송
+CITY_NAME_SHORT:92 = 백
+CITY_NAME_SHORT:93 = 승
+CITY_NAME_SHORT:94 = 다
+CITY_NAME_SHORT:95 = 예
+CITY_NAME_SHORT:96 = 괘
+CITY_NAME_SHORT:97 = 니
+CITY_NAME_SHORT:98 = 타
+CITY_NAME_SHORT:99 = 강
+CITY_NAME_SHORT:100 = 용
+CITY_NAME_SHORT:101 = 이
+CITY_NAME_SHORT:102 = 인
+CITY_NAME_SHORT:103 = 지
+CITY_NAME_SHORT:104 = 숙
+CITY_NAME_SHORT:105 = 안
+CITY_NAME_SHORT:106 = 고
+CITY_NAME_SHORT:107 = 청
+CITY_NAME_SHORT:108 = 수
+
+CITY_NAME_SHORT:121 = ◇
+CITY_NAME_SHORT:122 = ◇
+CITY_NAME_SHORT:123 = ◇
+CITY_NAME_SHORT:124 = ◇
+CITY_NAME_SHORT:125 = ◇
+CITY_NAME_SHORT:126 = ◇
+CITY_NAME_SHORT:127 = ◇
+CITY_NAME_SHORT:128 = ◇
+CITY_NAME_SHORT:129 = ◇
+CITY_NAME_SHORT:130 = ◇
+
+FOR LOCAL:0, 0, MAX_CITY
+	SIF CITY_TYPE:(LOCAL:0) == 1
+		CITY_NAME_SHORT:(LOCAL:0) = ●
+NEXT
+
+
+;-------------------------------------------------
+;도시명을 설정하는 함수
+;-------------------------------------------------
+@SET_CITYNAME_Japan()
+VARSET CITY_NAME,"무명"
+CITY_NAME:1 = 개성
+CITY_NAME:2 = 토쿠야마관
+CITY_NAME:3 = 나미오카성
+CITY_NAME:4 = 한성
+CITY_NAME:5 = 가타성
+CITY_NAME:6 = 카시와바성
+CITY_NAME:7 = 히야마성
+CITY_NAME:8 = 류기성
+CITY_NAME:9 = 가쿠다테성
+CITY_NAME:10 = 코즈카타관
+CITY_NAME:11 = 시바관
+CITY_NAME:12 = 부산
+CITY_NAME:13 = 독도
+CITY_NAME:14 = 규연성
+CITY_NAME:15 = 명생성
+CITY_NAME:16 = 혼죠성
+CITY_NAME:17 = 야마가타성
+CITY_NAME:18 = 잡태성
+CITY_NAME:19 = 시바타성
+CITY_NAME:20 = 요네자와성
+CITY_NAME:21 = 마루모리성
+CITY_NAME:22 = 갑미성
+CITY_NAME:23 = 나나오성
+CITY_NAME:24 = 쿠로타키성
+CITY_NAME:25 = 호죠성
+CITY_NAME:26 = 아이즈와카마츠성
+CITY_NAME:27 = 스카가와성
+CITY_NAME:28 = 나카무라성
+CITY_NAME:29 = 카나이시성
+CITY_NAME:30 = 토가시관
+CITY_NAME:31 = 토야마성
+CITY_NAME:32 = 우오츠성
+CITY_NAME:33 = 하루히야마시로
+CITY_NAME:34 = 판자문성
+CITY_NAME:35 = 미스미성
+CITY_NAME:36 = 츠키야마토미타성
+CITY_NAME:37 = 날개달린옷이시가키
+CITY_NAME:38 = 아마미야마시로
+CITY_NAME:39 = 차우성
+CITY_NAME:40 = 유미키성
+CITY_NAME:41 = 이치조다니성
+CITY_NAME:42 = 사쿠라보라성
+CITY_NAME:43 = 카츠라오성
+CITY_NAME:44 = 우츠노미야성
+CITY_NAME:45 = 오오타성
+CITY_NAME:46 = 귀구성
+CITY_NAME:47 = 시게츠성
+CITY_NAME:48 = 8카미시로
+CITY_NAME:49 = 후세야마성
+CITY_NAME:50 = 사와산성
+CITY_NAME:51 = 후카시죠우
+CITY_NAME:52 = 스와우에하라성
+CITY_NAME:53 = 미노와성
+CITY_NAME:54 = 유우키성
+CITY_NAME:55 = 에가와성
+CITY_NAME:56 = 석가산성
+CITY_NAME:57 = 코오리야마성
+CITY_NAME:58 = 학수성
+CITY_NAME:59 = 숫돌성
+CITY_NAME:60 = 치옌청
+CITY_NAME:61 = 코시미즈성
+CITY_NAME:62 = 장군야마시로
+CITY_NAME:63 = 관음사성
+CITY_NAME:64 = 이나바산죠우
+CITY_NAME:65 = 안개성
+CITY_NAME:66 = 두야마시로
+CITY_NAME:67 = 카와고에성
+CITY_NAME:68 = 코우노다이성
+CITY_NAME:69 = 마을안성
+CITY_NAME:70 = 고쇼잔성
+CITY_NAME:71 = 훤절성
+CITY_NAME:72 = 키시와다성
+CITY_NAME:73 = 스에노모리성
+CITY_NAME:74 = 이이다성
+CITY_NAME:75 = 츠즈지가사키관
+CITY_NAME:76 = 구루리성
+CITY_NAME:77 = 오오토모관
+CITY_NAME:78 = 탕축성
+CITY_NAME:79 = 토가와성
+CITY_NAME:80 = 스모토성
+CITY_NAME:81 = 네고로사
+CITY_NAME:82 = 츠츠이성
+CITY_NAME:83 = 목조성
+CITY_NAME:84 = 카미노향성
+CITY_NAME:85 = 시타라성
+CITY_NAME:86 = 후츄성
+CITY_NAME:87 = 흥국사성
+CITY_NAME:88 = 오다와라성
+CITY_NAME:89 = 일지강성
+CITY_NAME:90 = 고야성
+CITY_NAME:91 = 솔잎성
+CITY_NAME:92 = 흰바탕성
+CITY_NAME:93 = 쇼즈이성
+CITY_NAME:94 = 타키성
+CITY_NAME:95 = 히쿠마성
+CITY_NAME:96 = 카케가와성
+CITY_NAME:97 = 니라산성
+CITY_NAME:98 = 타테야마성
+CITY_NAME:99 = 언덕토요키
+CITY_NAME:100 = 용마츠야마성
+CITY_NAME:101 = 이즈오오시마
+CITY_NAME:102 = 히토요시성
+CITY_NAME:103 = 도노코오리성
+CITY_NAME:104 = 슈쿠모우성
+CITY_NAME:105 = 가을성
+CITY_NAME:106 = 타카미야성
+CITY_NAME:107 = 시미즈성
+CITY_NAME:108 = 슈리성
+
+CITY_NAME:121 = 키타고에후
+CITY_NAME:122 = 난에쓰후
+CITY_NAME:123 = 겐카이나다
+CITY_NAME:124 = 빈고
+CITY_NAME:125 = 시나노
+CITY_NAME:126 = 시모우사
+CITY_NAME:127 = 이세
+CITY_NAME:128 = 사가미
+CITY_NAME:129 = 분고
+CITY_NAME:130 = 사츠마
+
+
+;-------------------------------------------------
+;도시 타입의 설정
+;-------------------------------------------------
+@SET_CITY_TYPE_Japan
+FOR LOCAL:0, 120, MAX_CITY
+	CITY_TYPE:(LOCAL:0) = 1
+NEXT
+
+;-------------------------------------------------
+;루트의 설정
+;-------------------------------------------------
+@SET_MAP_ROUTE_Japan
+CALL REGISTER_ROUTE(1, 4)
+CALL REGISTER_ROUTE(2, 3)
+CALL REGISTER_ROUTE(3, 2, 5)
+CALL REGISTER_ROUTE(4, 12)
+CALL REGISTER_ROUTE(5, 3, 6, 7)
+CALL REGISTER_ROUTE(6, 5, 8)
+CALL REGISTER_ROUTE(7, 5, 9)
+CALL REGISTER_ROUTE(8, 6, 10)
+CALL REGISTER_ROUTE(9, 7, 10, 14)
+CALL REGISTER_ROUTE(10, 8, 9, 11)
+CALL REGISTER_ROUTE(11, 10, 15)
+CALL REGISTER_ROUTE(12, 4, 13, 29)
+CALL REGISTER_ROUTE(13, 12, 22)
+CALL REGISTER_ROUTE(14, 9, 15, 17)
+CALL REGISTER_ROUTE(15, 11, 14, 21)
+CALL REGISTER_ROUTE(16, 17, 19)
+CALL REGISTER_ROUTE(17, 14, 16, 20)
+CALL REGISTER_ROUTE(18, 24)
+CALL REGISTER_ROUTE(19, 16, 24)
+CALL REGISTER_ROUTE(20, 17, 21, 27)
+CALL REGISTER_ROUTE(21, 15, 20, 28)
+CALL REGISTER_ROUTE(22, 13, 36)
+CALL REGISTER_ROUTE(23, 30)
+CALL REGISTER_ROUTE(24, 18, 19, 121)
+CALL REGISTER_ROUTE(25, 121, 122)
+CALL REGISTER_ROUTE(26, 27, 121)
+CALL REGISTER_ROUTE(27, 20, 26, 28, 44)
+CALL REGISTER_ROUTE(28, 21, 27, 45)
+CALL REGISTER_ROUTE(29, 12, 46)
+CALL REGISTER_ROUTE(30, 23, 31, 41)
+CALL REGISTER_ROUTE(31, 30, 32, 42)
+CALL REGISTER_ROUTE(32, 31, 33)
+CALL REGISTER_ROUTE(33, 32, 43, 122)
+CALL REGISTER_ROUTE(34, 53, 121, 122)
+CALL REGISTER_ROUTE(35, 47, 36)
+CALL REGISTER_ROUTE(36, 22, 35, 37, 124)
+CALL REGISTER_ROUTE(37, 36, 38)
+CALL REGISTER_ROUTE(38, 37, 39, 59)
+CALL REGISTER_ROUTE(39, 38, 40, 60)
+CALL REGISTER_ROUTE(40, 39, 48, 49)
+CALL REGISTER_ROUTE(41, 30, 50)
+CALL REGISTER_ROUTE(42, 31, 65)
+CALL REGISTER_ROUTE(43, 33, 51, 52)
+CALL REGISTER_ROUTE(44, 27, 45, 54)
+CALL REGISTER_ROUTE(45, 28, 44, 126)
+CALL REGISTER_ROUTE(46, 29, 123)
+CALL REGISTER_ROUTE(47, 35, 56)
+CALL REGISTER_ROUTE(48, 40, 61)
+CALL REGISTER_ROUTE(49, 40, 50, 62)
+CALL REGISTER_ROUTE(50, 41, 49, 63, 64)
+CALL REGISTER_ROUTE(51, 43, 125)
+CALL REGISTER_ROUTE(52, 43, 53, 66, 75)
+CALL REGISTER_ROUTE(53, 34, 52, 54, 67)
+CALL REGISTER_ROUTE(54, 44, 53, 68)
+CALL REGISTER_ROUTE(55, 89, 123)
+CALL REGISTER_ROUTE(56, 47, 57, 71)
+CALL REGISTER_ROUTE(57, 56, 124)
+CALL REGISTER_ROUTE(58, 59, 124)
+CALL REGISTER_ROUTE(59, 38, 58, 60, 79)
+CALL REGISTER_ROUTE(60, 39, 59, 61, 80)
+CALL REGISTER_ROUTE(61, 48, 60, 62, 72)
+CALL REGISTER_ROUTE(62, 49, 61, 63, 82)
+CALL REGISTER_ROUTE(63, 50, 62, 64, 127)
+CALL REGISTER_ROUTE(64, 50, 63, 65, 73)
+CALL REGISTER_ROUTE(65, 42, 64, 125)
+CALL REGISTER_ROUTE(66, 52, 74, 125)
+CALL REGISTER_ROUTE(67, 53, 68, 88)
+CALL REGISTER_ROUTE(68, 54, 67, 126)
+CALL REGISTER_ROUTE(69, 70, 89, 123)
+CALL REGISTER_ROUTE(70, 69, 71, 90)
+CALL REGISTER_ROUTE(71, 56, 70, 77)
+CALL REGISTER_ROUTE(72, 61, 81)
+CALL REGISTER_ROUTE(73, 64, 84, 127)
+CALL REGISTER_ROUTE(74, 66, 85, 96)
+CALL REGISTER_ROUTE(75, 52, 87)
+CALL REGISTER_ROUTE(76, 98, 126)
+CALL REGISTER_ROUTE(77, 71, 91, 129)
+CALL REGISTER_ROUTE(78, 91, 92, 124)
+CALL REGISTER_ROUTE(79, 59, 92, 93)
+CALL REGISTER_ROUTE(80, 60, 81, 93)
+CALL REGISTER_ROUTE(81, 72, 80, 82, 100)
+CALL REGISTER_ROUTE(82, 62, 81, 83)
+CALL REGISTER_ROUTE(83, 82, 94, 127)
+CALL REGISTER_ROUTE(84, 73, 85, 95)
+CALL REGISTER_ROUTE(85, 74, 84, 95)
+CALL REGISTER_ROUTE(86, 87, 96)
+CALL REGISTER_ROUTE(87, 75, 86, 128)
+CALL REGISTER_ROUTE(88, 67, 101, 128)
+CALL REGISTER_ROUTE(89, 55, 69)
+CALL REGISTER_ROUTE(90, 70, 102, 129)
+CALL REGISTER_ROUTE(91, 77, 78, 104)
+CALL REGISTER_ROUTE(92, 78, 79, 93, 99)
+CALL REGISTER_ROUTE(93, 79, 80, 92, 105)
+CALL REGISTER_ROUTE(94, 83, 100)
+CALL REGISTER_ROUTE(95, 84, 85, 96)
+CALL REGISTER_ROUTE(96, 74, 86, 95)
+CALL REGISTER_ROUTE(97, 101, 128)
+CALL REGISTER_ROUTE(98, 76)
+CALL REGISTER_ROUTE(99, 92, 104, 105)
+CALL REGISTER_ROUTE(100, 81, 94)
+CALL REGISTER_ROUTE(101, 88, 97)
+CALL REGISTER_ROUTE(102, 90, 130)
+CALL REGISTER_ROUTE(103, 106, 129)
+CALL REGISTER_ROUTE(104, 91, 99)
+CALL REGISTER_ROUTE(105, 93, 99)
+CALL REGISTER_ROUTE(106, 103, 130)
+CALL REGISTER_ROUTE(107, 108, 130)
+CALL REGISTER_ROUTE(108, 107)
+
+
+CALL REGISTER_ROUTE(121, 24, 25, 26, 34)
+CALL REGISTER_ROUTE(122, 25, 33, 34)
+CALL REGISTER_ROUTE(123, 46, 55, 69)
+CALL REGISTER_ROUTE(124, 36, 57, 58, 78)
+CALL REGISTER_ROUTE(125, 51, 65, 66)
+CALL REGISTER_ROUTE(126, 45, 68, 76)
+CALL REGISTER_ROUTE(127, 63, 73, 83)
+CALL REGISTER_ROUTE(128, 87, 88, 97)
+CALL REGISTER_ROUTE(129, 77, 90, 103)
+CALL REGISTER_ROUTE(130, 102, 106, 107)
+
+
+
+@MAP_INIT_Japan
+CITY_ECONOMY:GET_CITYNUMBER("개성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("토쿠야마관") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("나미오카성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("한성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("가타성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("카시와바성") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("히야마성") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("류기성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("가쿠다테성") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("코즈카타관") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("시바관") = 40000
+CITY_ECONOMY:GET_CITYNUMBER("부산") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("독도") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("규연성") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("명생성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("혼죠성") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("야마가타성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("잡태성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("시바타성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("요네자와성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("마루모리성") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("갑미성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("나나오성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("쿠로타키성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("호죠성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("아이즈와카마츠성") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("스카가와성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("나카무라성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("카나이시성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("토가시관") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("토야마성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("우오츠성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("하루히야마시로") = 60000
+CITY_ECONOMY:GET_CITYNUMBER("판자문성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("미스미성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("츠키야마토미타성") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("날개달린옷이시가키") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("아마미야마시로") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("차우성") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("유미키성") = 40000
+CITY_ECONOMY:GET_CITYNUMBER("이치조다니성") = 40000
+CITY_ECONOMY:GET_CITYNUMBER("사쿠라보라성") = 25000
+CITY_ECONOMY:GET_CITYNUMBER("카츠라오성") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("우츠노미야성") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("오오타성") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("귀구성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("시게츠성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("8카미시로") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("후세야마성") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("사와산성") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("후카시죠우") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("스와우에하라성") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("미노와성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("유우키성") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("에가와성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("석가산성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("코오리야마성") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("학수성") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("숫돌성") = 25000
+CITY_ECONOMY:GET_CITYNUMBER("치옌청") = 35000
+CITY_ECONOMY:GET_CITYNUMBER("코시미즈성") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("장군야마시로") = 100000
+CITY_ECONOMY:GET_CITYNUMBER("관음사성") = 50000
+CITY_ECONOMY:GET_CITYNUMBER("이나바산죠우") = 50000
+CITY_ECONOMY:GET_CITYNUMBER("안개성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("두야마시로") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("카와고에성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("코우노다이성") = 50000
+CITY_ECONOMY:GET_CITYNUMBER("마을안성") = 40000
+CITY_ECONOMY:GET_CITYNUMBER("고쇼잔성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("훤절성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("키시와다성") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("스에노모리성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("이이다성") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("츠즈지가사키관") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("구루리성") = 35000
+CITY_ECONOMY:GET_CITYNUMBER("오오토모관") = 50000
+CITY_ECONOMY:GET_CITYNUMBER("탕축성") = 40000
+CITY_ECONOMY:GET_CITYNUMBER("토가와성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("스모토성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("네고로사") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("츠츠이성") = 40000
+CITY_ECONOMY:GET_CITYNUMBER("목조성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("카미노향성") = 50000
+CITY_ECONOMY:GET_CITYNUMBER("시타라성") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("후츄성") = 40000
+CITY_ECONOMY:GET_CITYNUMBER("흥국사성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("오다와라성") = 60000
+CITY_ECONOMY:GET_CITYNUMBER("일지강성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("고야성") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("솔잎성") = 35000
+CITY_ECONOMY:GET_CITYNUMBER("흰바탕성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("쇼즈이성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("타키성") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("히쿠마성") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("카케가와성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("니라산성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("타테야마성") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("언덕토요키") = 40000
+CITY_ECONOMY:GET_CITYNUMBER("용마츠야마성") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("이즈오오시마") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("히토요시성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("도노코오리성") = 10000
+CITY_ECONOMY:GET_CITYNUMBER("슈쿠모우성") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("가을성") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("타카미야성") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("시미즈성") = 50000
+CITY_ECONOMY:GET_CITYNUMBER("슈리성") = 10000
+
+;경제 규모의 상한치의 설정
+FOR LOCAL:0, 1, MAX_CITY
+	CITY_ECONOMY_LIMIT:(LOCAL:0) = MIN(CITY_ECONOMY:(LOCAL:0) * 2, 300000)
+NEXT
+;방위 효율  기본치 200으로서 이러니 저러니
+
+CITY_GUARD:GET_CITYNUMBER("개성")         = 175
+CITY_GUARD:GET_CITYNUMBER("토쿠야마관")       = 250
+CITY_GUARD:GET_CITYNUMBER("나미오카성")       = 200
+CITY_GUARD:GET_CITYNUMBER("한성")         = 175
+CITY_GUARD:GET_CITYNUMBER("가타성")       = 250
+CITY_GUARD:GET_CITYNUMBER("카시와바성")       = 175
+CITY_GUARD:GET_CITYNUMBER("히야마성")       = 250
+CITY_GUARD:GET_CITYNUMBER("류기성")     = 250
+CITY_GUARD:GET_CITYNUMBER("가쿠다테성")       = 250
+CITY_GUARD:GET_CITYNUMBER("코즈카타관")     = 175
+CITY_GUARD:GET_CITYNUMBER("시바관")       = 275
+CITY_GUARD:GET_CITYNUMBER("부산")         = 200
+CITY_GUARD:GET_CITYNUMBER("독도")         = 150
+CITY_GUARD:GET_CITYNUMBER("규연성")       = 200
+CITY_GUARD:GET_CITYNUMBER("명생성")       = 325
+CITY_GUARD:GET_CITYNUMBER("혼죠성")       = 225
+CITY_GUARD:GET_CITYNUMBER("야마가타성")       = 300
+CITY_GUARD:GET_CITYNUMBER("잡태성")       = 175
+CITY_GUARD:GET_CITYNUMBER("시바타성")     = 275
+CITY_GUARD:GET_CITYNUMBER("요네자와성")       = 300
+CITY_GUARD:GET_CITYNUMBER("마루모리성")       = 250
+CITY_GUARD:GET_CITYNUMBER("갑미성")       = 200
+CITY_GUARD:GET_CITYNUMBER("나나오성")       = 325
+CITY_GUARD:GET_CITYNUMBER("쿠로타키성")       = 250
+CITY_GUARD:GET_CITYNUMBER("호죠성")       = 225
+CITY_GUARD:GET_CITYNUMBER("아이즈와카마츠성")   = 300
+CITY_GUARD:GET_CITYNUMBER("스카가와성")     = 275
+CITY_GUARD:GET_CITYNUMBER("나카무라성")       = 275
+CITY_GUARD:GET_CITYNUMBER("카나이시성")       = 225
+CITY_GUARD:GET_CITYNUMBER("토가시관")       = 175
+CITY_GUARD:GET_CITYNUMBER("토야마성")       = 275
+CITY_GUARD:GET_CITYNUMBER("우오츠성")       = 225
+CITY_GUARD:GET_CITYNUMBER("하루히야마시로")     = 400
+CITY_GUARD:GET_CITYNUMBER("판자문성")       = 225
+CITY_GUARD:GET_CITYNUMBER("미스미성")       = 200
+CITY_GUARD:GET_CITYNUMBER("츠키야마토미타성")   = 350
+CITY_GUARD:GET_CITYNUMBER("날개달린옷이시가키")     = 225
+CITY_GUARD:GET_CITYNUMBER("아마미야마시로") = 225
+CITY_GUARD:GET_CITYNUMBER("차우성")       = 275
+CITY_GUARD:GET_CITYNUMBER("유미키성")       = 300
+CITY_GUARD:GET_CITYNUMBER("이치조다니성")     = 275
+CITY_GUARD:GET_CITYNUMBER("사쿠라보라성")       = 250
+CITY_GUARD:GET_CITYNUMBER("카츠라오성")       = 300
+CITY_GUARD:GET_CITYNUMBER("우츠노미야성")     = 300
+CITY_GUARD:GET_CITYNUMBER("오오타성")       = 300
+CITY_GUARD:GET_CITYNUMBER("귀구성")       = 200
+CITY_GUARD:GET_CITYNUMBER("시게츠성")       = 250
+CITY_GUARD:GET_CITYNUMBER("8카미시로")       = 275
+CITY_GUARD:GET_CITYNUMBER("후세야마성")     = 250
+CITY_GUARD:GET_CITYNUMBER("사와산성")     = 275
+CITY_GUARD:GET_CITYNUMBER("후카시죠우")       = 200
+CITY_GUARD:GET_CITYNUMBER("스와우에하라성")   = 250
+CITY_GUARD:GET_CITYNUMBER("미노와성")       = 300
+CITY_GUARD:GET_CITYNUMBER("유우키성")       = 250
+CITY_GUARD:GET_CITYNUMBER("에가와성")       = 225
+CITY_GUARD:GET_CITYNUMBER("석가산성")       = 175
+CITY_GUARD:GET_CITYNUMBER("코오리야마성")       = 325
+CITY_GUARD:GET_CITYNUMBER("학수성")       = 225
+CITY_GUARD:GET_CITYNUMBER("숫돌성")       = 250
+CITY_GUARD:GET_CITYNUMBER("치옌청")       = 225
+CITY_GUARD:GET_CITYNUMBER("코시미즈성")       = 225
+CITY_GUARD:GET_CITYNUMBER("장군야마시로")     = 250
+CITY_GUARD:GET_CITYNUMBER("관음사성")     = 325
+CITY_GUARD:GET_CITYNUMBER("이나바산죠우")     = 325
+CITY_GUARD:GET_CITYNUMBER("안개성")       = 350
+CITY_GUARD:GET_CITYNUMBER("두야마시로")       = 300
+CITY_GUARD:GET_CITYNUMBER("카와고에성")       = 275
+CITY_GUARD:GET_CITYNUMBER("코우노다이성")     = 275
+CITY_GUARD:GET_CITYNUMBER("마을안성")       = 300
+CITY_GUARD:GET_CITYNUMBER("고쇼잔성")     = 250
+CITY_GUARD:GET_CITYNUMBER("훤절성")       = 250
+CITY_GUARD:GET_CITYNUMBER("키시와다성")     = 275
+CITY_GUARD:GET_CITYNUMBER("스에노모리성")       = 225
+CITY_GUARD:GET_CITYNUMBER("이이다성")       = 200
+CITY_GUARD:GET_CITYNUMBER("츠즈지가사키관")   = 275
+CITY_GUARD:GET_CITYNUMBER("구루리성")     = 275
+CITY_GUARD:GET_CITYNUMBER("오오토모관")       = 300
+CITY_GUARD:GET_CITYNUMBER("탕축성")       = 275
+CITY_GUARD:GET_CITYNUMBER("토가와성")       = 250
+CITY_GUARD:GET_CITYNUMBER("스모토성")       = 225
+CITY_GUARD:GET_CITYNUMBER("네고로사")       = 225
+CITY_GUARD:GET_CITYNUMBER("츠츠이성")       = 275
+CITY_GUARD:GET_CITYNUMBER("목조성")       = 200
+CITY_GUARD:GET_CITYNUMBER("카미노향성")     = 250
+CITY_GUARD:GET_CITYNUMBER("시타라성")       = 200
+CITY_GUARD:GET_CITYNUMBER("후츄성")       = 175
+CITY_GUARD:GET_CITYNUMBER("흥국사성")     = 225
+CITY_GUARD:GET_CITYNUMBER("오다와라성")     = 450
+CITY_GUARD:GET_CITYNUMBER("일지강성")     = 225
+CITY_GUARD:GET_CITYNUMBER("고야성")       = 250
+CITY_GUARD:GET_CITYNUMBER("솔잎성")       = 300
+CITY_GUARD:GET_CITYNUMBER("흰바탕성")       = 225
+CITY_GUARD:GET_CITYNUMBER("쇼즈이성")       = 300
+CITY_GUARD:GET_CITYNUMBER("타키성")       = 275
+CITY_GUARD:GET_CITYNUMBER("히쿠마성")       = 275
+CITY_GUARD:GET_CITYNUMBER("카케가와성")       = 225
+CITY_GUARD:GET_CITYNUMBER("니라산성")       = 225
+CITY_GUARD:GET_CITYNUMBER("타테야마성")       = 200
+CITY_GUARD:GET_CITYNUMBER("언덕토요키")       = 300
+CITY_GUARD:GET_CITYNUMBER("용마츠야마성")     = 225
+CITY_GUARD:GET_CITYNUMBER("이즈오오시마")     = 150
+CITY_GUARD:GET_CITYNUMBER("히토요시성")       = 300
+CITY_GUARD:GET_CITYNUMBER("도노코오리성")     = 225
+CITY_GUARD:GET_CITYNUMBER("슈쿠모우성")       = 200
+CITY_GUARD:GET_CITYNUMBER("가을성")       = 225
+CITY_GUARD:GET_CITYNUMBER("타카미야성")       = 275
+CITY_GUARD:GET_CITYNUMBER("시미즈성")       = 275
+CITY_GUARD:GET_CITYNUMBER("슈리성")       = 200
+FOR LOCAL, 1, GET_CITY_NUM() + 1
+	SIF CITY_ECONOMY:LOCAL == 0
+		THROW %GET_CITYNAME(LOCAL)%
+NEXT

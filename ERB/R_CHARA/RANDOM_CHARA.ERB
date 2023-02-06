@@ -1,0 +1,1693 @@
+﻿;란랜덤캐릭터의 처리
+
+;-------------------------
+;범용 무장의 작성
+;ARG:0=케모율, ARG:1=능력 경향, ARG:2=성별
+;생성한 캐릭터의 번호를 돌려주지만, 인원수의 한계에 의해 생성에 실패했을 경우-1을 돌려준다
+;-------------------------
+@CREATE_RANDOM_CHARA(ARG:0 = 1, ARG:1 = -1, ARG:2 = -1, ARG:3 = 0)
+IF !CAN_ADD_RANDOM_CHARA()
+	RETURN -1
+ENDIF
+
+;타겟을 퇴피
+LOCAL:0 = TARGET
+
+;캐릭터를 추가
+ADDVOIDCHARA
+
+;작성한 캐릭터를 타겟으로 한다
+TARGET = CHARANUM - 1
+
+;NO의 설정
+NO = FLAG:범용무장카운트 + MIN_NO_RANDOM_CHARA
+FLAG:범용무장카운트 ++
+
+;소질과 능력의 결정
+CALL RANDOM_CHARA_SETTING(ARG:0, ARG:1, ARG:2)
+
+;이름의 결정(※소질 결정 후에 실시한다)
+CALL RANDOM_CHARA_NAMING(ARG:3)
+
+;초기설정(※소질 결정 후에 실시한다)
+CALL INIT_NEWCHARA(TARGET)
+
+;스킬의 습득
+CALL RANDOM_CHARA_SKILL_SETTING()
+
+;의상의 설정
+CALL RANDOM_CHARA_CLOTH_SETTING()
+
+;태그의 설정
+CALL RANDOM_CHARA_TAG_SETTING()
+
+;타겟의 재설정
+TARGET = LOCAL:0
+
+RETURN CHARANUM - 1
+
+;-------------------------
+;범용 무장의 소질과 능력을 결정한다
+;ARG:0=케모율, ARG:1=능력 경향, ARG:2=성별
+;-------------------------
+@RANDOM_CHARA_SETTING(ARG:0, ARG:1, ARG:2)
+IF ARG:2 > 5
+	THROW @"RANDOM_CHARA_SETTING 함수로 설정된 성별이 부정합니다(ARG:2 = {ARG:2})"
+ENDIF
+
+;성별을 지정대로로 설정, 지정이 없는 경우는 설정된 남성율에 응해 성별을 랜덤으로 결정
+LOCAL:0 = ARG:2
+IF LOCAL:0 <= -1
+	IF RAND:100 < CONFIG:3
+		IF RAND:30 == 0
+			LOCAL:0 = 4
+		ELSEIF RAND:30 == 0
+			LOCAL:0 = 3
+		ELSE
+			LOCAL:0 = 0
+		ENDIF
+	ELSE
+		IF RAND:20 == 0
+			LOCAL:0 = 2
+		ELSE
+			LOCAL:0 = 1
+		ENDIF
+	ENDIF
+ENDIF
+
+SELECTCASE LOCAL:0
+	CASE 0
+		;남성
+		TALENT:성별 = 0
+		;동정인가 어떤가를 랜덤으로 설정
+		TALENT:동정 = (RAND:5 <= 2)
+		TALENT:처녀 = 1
+		TALENT:애널처녀 = 1
+		;키스경험을 랜덤으로 설정
+		IF TALENT:동정
+			TALENT:키스미경험 = (RAND:4 != 0)
+		ELSE
+			TALENT:키스미경험 = (RAND:3 == 0)
+		ENDIF
+	CASE 1
+		;여성
+		TALENT:성별 = 1
+		;처녀·키스경험을 랜덤으로 설정
+		TALENT:동정 = 1
+		TALENT:처녀 = (RAND:4 != 0)
+		TALENT:애널처녀 = (RAND:10 != 0)
+		IF TALENT:처녀
+			TALENT:키스미경험 = (RAND:4 != 0)
+		ELSE
+			TALENT:키스미경험 = (RAND:3 == 0)
+		ENDIF
+	CASE 2
+		;녀 후타
+		TALENT:성별 = 2
+		;동정·처녀인가 어떤가를 랜덤으로 설정
+		TALENT:동정 = (RAND:5 <= 2)
+		TALENT:처녀 = (RAND:4 != 0)
+		TALENT:애널처녀 = (RAND:10 != 0)
+		IF TALENT:처녀
+			TALENT:키스미경험 = (RAND:4 != 0)
+		ELSE
+			TALENT:키스미경험 = (RAND:3 == 0)
+		ENDIF
+	CASE 3
+		;남 후타
+		TALENT:성별 = 3
+		;동정·처녀인가 어떤가를 랜덤으로 설정
+		TALENT:동정 = (RAND:5 <= 2)
+		TALENT:처녀 = (RAND:4 != 0)
+		TALENT:애널처녀 = (RAND:10 != 0)
+		IF TALENT:처녀
+			TALENT:키스미경험 = (RAND:4 != 0)
+		ELSE
+			TALENT:키스미경험 = (RAND:3 == 0)
+		ENDIF
+	CASE 4
+		;오토코노코
+		TALENT:성별 = 4
+		;동정인가 어떤가를 랜덤으로 설정(남성보다 동정율 높은)
+		TALENT:동정 = (RAND:8 <= 6)
+		TALENT:처녀 = 1
+		TALENT:애널처녀 = (RAND:10 != 0)
+		;키스경험을 랜덤으로 설정
+		IF TALENT:동정
+			TALENT:키스미경험 = (RAND:4 != 0)
+		ELSE
+			TALENT:키스미경험 = (RAND:3 == 0)
+		ENDIF
+	CASE 5
+		;오토코노코 후타
+		TALENT:성별 = 5
+		;동정·처녀인가 어떤가를 랜덤으로 설정
+		TALENT:동정 = (RAND:8 <= 6)
+		TALENT:처녀 = (RAND:4 != 0)
+		TALENT:애널처녀 = (RAND:10 != 0)
+		IF TALENT:처녀
+			TALENT:키스미경험 = (RAND:4 != 0)
+		ELSE
+			TALENT:키스미경험 = (RAND:3 == 0)
+		ENDIF
+ENDSELECT
+
+;■BASE치의 결정
+LOCAL:2 = RAND:6 + RAND:5 - 4
+MAXBASE:체력 = 1600 + LOCAL:2 * 100
+
+LOCAL:2 = RAND:8 + RAND:7 - 6
+IF LOCAL:2 < 0
+	MAXBASE:기력 = 1300 - ABS(LOCAL:2) / 2 * 100
+ELSE
+	MAXBASE:기력 = 1300 + LOCAL:2 * 100
+ENDIF
+
+BASE:체력 = MAXBASE:체력
+BASE:기력 = MAXBASE:기력
+
+;■전투계 능력과 성장형의 설정
+;다재능
+IF ARG:1 == 0
+	TALENT:성장형 = RANDOM_ARRAY(1, 2, 3, 4) - 1
+;무관
+ELSEIF ARG:1 == 1
+	TALENT:성장형 = RANDOM_ARRAY(1, 3, 4)
+;군사
+ELSEIF ARG:1 == 2
+	TALENT:성장형 = RANDOM_ARRAY(1, 2, 5)
+;정무관
+ELSEIF ARG:1 == 3
+	TALENT:성장형 = RANDOM_ARRAY(2, 3, 6)
+;아이돌
+ELSEIF ARG:1 == 4
+	TALENT:성장형 = RANDOM_ARRAY(1, 8) - 1
+;요리인
+ELSEIF ARG:1 == 5
+	TALENT:성장형 = RANDOM_ARRAY(1, 9) - 1
+;지정 없음
+ELSE
+	IF RAND:25 == 0
+		TALENT:성장형 = 7
+	ELSE
+		TALENT:성장형 = RANDOM_ARRAY(1, 2, 3, 4, 5, 6, 7, 9) - 1
+	ENDIF
+ENDIF
+
+SELECTCASE TALENT:성장형
+	CASE 0
+		ABL:무투 = RAND:46 + 25
+		ABL:방위 = RAND:46 + 25
+		ABL:지략 = RAND:46 + 25
+		ABL:정치 = RAND:46 + 25
+	CASE 1
+		ABL:무투 = RAND:21 + RAND:10 + 35
+		ABL:방위 = RAND:21 + RAND:10 + 35
+		ABL:지략 = RAND:21 + RAND:10 + 35
+		ABL:정치 = RAND:61 + 5
+	CASE 2
+		ABL:무투 = RAND:51 + 15
+		ABL:방위 = RAND:51 + 15
+		ABL:지략 = RAND:21 + RAND:11 + 40
+		ABL:정치 = RAND:21 + RAND:11 + 40
+	CASE 3
+		ABL:무투 = RAND:21 + RAND:11 + 40
+		ABL:방위 = RAND:21 + RAND:11 + 40
+		ABL:지략 = RAND:51 + 15
+		ABL:정치 = RAND:21 + RAND:11 + 40
+	CASE 4
+		ABL:무투 = RAND:16 + RAND:6 + 55
+		ABL:방위 = RAND:16 + RAND:6 + 55
+		ABL:지략 = RAND:51 + 15
+		ABL:정치 = RAND:51 + 15
+	CASE 5
+		ABL:무투 = RAND:51 + 15
+		ABL:방위 = RAND:51 + 15
+		ABL:지략 = RAND:16 + RAND:6 + 55
+		ABL:정치 = RAND:51 + 15
+	CASE 6
+		ABL:무투 = RAND:51 + 15
+		ABL:방위 = RAND:51 + 15
+		ABL:지략 = RAND:51 + 15
+		ABL:정치 = RAND:16 + RAND:6 + 55
+	CASE 7
+		ABL:무투 = RAND:41 + 20
+		ABL:방위 = RAND:41 + 20
+		ABL:지략 = RAND:41 + 20
+		ABL:정치 = RAND:41 + 20
+	CASE 8
+		ABL:무투 = RAND:41 + 20
+		ABL:방위 = RAND:41 + 20
+		ABL:지략 = RAND:41 + 20
+		ABL:정치 = RAND:41 + 20
+ENDSELECT
+
+IF TALENT:성장형 == 7 || ARG:1 == 4
+	ABL:가창 = RAND:41 + 25
+	IF RAND:4 == 0
+		ABL:가창 += RAND:11
+	ENDIF
+	IF RAND:8 == 0
+		ABL:가창 -= RAND:11
+	ENDIF
+ELSE
+	ABL:가창 = RAND:21
+	IF RAND:4 == 0
+		ABL:가창 += RAND:26
+		IF RAND:4 == 0
+			ABL:가창 += RAND:31
+		ENDIF
+	ENDIF
+ENDIF
+IF TALENT:성장형 == 8 || ARG:1 == 5
+	ABL:요리 = RAND:41 + 25
+	IF RAND:4 == 0
+		ABL:요리 += RAND:11
+	ENDIF
+	IF RAND:8 == 0
+		ABL:요리 -= RAND:11
+	ENDIF
+ELSE
+	ABL:요리 = RAND:21
+	IF RAND:4 == 0
+		ABL:요리 += RAND:26
+		IF RAND:4 == 0
+			ABL:요리 += RAND:31
+		ENDIF
+	ENDIF
+ENDIF
+
+;지정 다재능(모두에 보너스)
+IF ARG:1 == 0
+	ABL:무투 += RAND:4
+	ABL:방위 += RAND:4
+	ABL:지략 += RAND:4
+	ABL:정치 += RAND:4
+	ABL:가창 += RAND:4
+	ABL:요리 += RAND:4
+;지정 무관(무투를 최대에＆보너스)
+ELSEIF ARG:1 == 1
+	SIF ABL:무투 < ABL:정치
+		SWAP ABL:무투, ABL:정치
+	SIF ABL:무투 < ABL:지략
+		SWAP ABL:무투, ABL:지략
+	ABL:무투 += RAND:6
+;지정 군사(지략을 최대에＆보너스)
+ELSEIF ARG:1 == 2
+	SIF ABL:지략 < ABL:무투
+		SWAP ABL:지략, ABL:무투
+	SIF ABL:지략 < ABL:정치
+		SWAP ABL:지략, ABL:정치
+	ABL:지략 += RAND:6
+;지정 정무관(정치를 최대에＆보너스)
+ELSEIF ARG:1 == 3
+	SIF ABL:정치 < ABL:무투
+		SWAP ABL:정치, ABL:무투
+	SIF ABL:정치 < ABL:지략
+		SWAP ABL:정치, ABL:지략
+	ABL:정치 += RAND:6
+;지정 아이돌(가창에 보너스)
+ELSEIF ARG:1 == 4
+	ABL:가창 += RAND:6
+;지정 요리인
+ELSEIF ARG:1 == 5
+	ABL:요리 += RAND:6
+ENDIF
+
+;능력치에 응해 정신력을 설정
+CALL SET_MIND_POWER(TARGET)
+
+;■소질의 결정
+;겁쟁이, 꿋꿋함
+CALL RCHARA_TALENT_OPPOSE, 10, 12, 12, 12
+;반항적, 솔직함
+CALL RCHARA_TALENT_OPPOSE, 11, 13, 20, 20
+;얌전함
+CALL RCHARA_TALENT_SINGLE, 14, 7
+;프라이드높음, 프라이드낮음
+CALL RCHARA_TALENT_OPPOSE, 15, 17, 12, 3
+;거만함(솔직함을 가진다면 확률 저하)
+IF TALENT:솔직함
+	CALL RCHARA_TALENT_SINGLE, 16, 3
+ELSE
+	CALL RCHARA_TALENT_SINGLE, 16, 12
+ENDIF
+;츤데레(반항적을 가지는 캐릭터는 고확률·솔직함과 동거(同居) 하지 않는다)
+IF TALENT:반항적
+	CALL RCHARA_TALENT_SINGLE, 18, 23
+ELSEIF !TALENT:솔직함
+	CALL RCHARA_TALENT_SINGLE, 18, 5
+ENDIF
+;쾌감에솔직, 쾌감을부정
+CALL RCHARA_TALENT_OPPOSE, 70, 71, 9, 5
+;자제심(쾌감에솔직과 동거(同居) 하지 않는다)
+IF !TALENT:쾌감에솔직
+	CALL RCHARA_TALENT_SINGLE, 20, 7
+ENDIF
+;호기심, 보수적
+CALL RCHARA_TALENT_OPPOSE, 23, 24, 13, 6
+;낙관적, 비관적
+CALL RCHARA_TALENT_OPPOSE, 25, 26, 11, 7
+;선을넘지않음
+CALL RCHARA_TALENT_SINGLE, 27, 6
+;주목받기원함
+CALL RCHARA_TALENT_SINGLE, 28, 9
+;정조관념, 정조관념없음
+CALL RCHARA_TALENT_OPPOSE, 30, 31, 10, 6
+;억압(일부 소질과 동거(同居) 하지 않는다)
+IF !TALENT:거만함 && !TALENT:호기심 && !TALENT:낙관적 && !TALENT:주목받기원함 && !TALENT:쾌감에솔직
+	CALL RCHARA_TALENT_SINGLE, 32, 6
+ENDIF
+;고고함(솔직함을 가지지 않는 캐릭터 한정)
+IF !TALENT:솔직함
+	CALL RCHARA_TALENT_SINGLE, 34, 6
+ENDIF
+;수줍음, 수치심옅음(주목받기원함을 가진다면 확률 변동)
+IF TALENT:주목받기원함
+	CALL RCHARA_TALENT_OPPOSE, 35, 36, 3, 13
+ELSE
+	CALL RCHARA_TALENT_OPPOSE, 35, 36, 13, 7
+ENDIF
+;무관심(일부 소질과 동거(同居) 하지 않는다)
+IF !TALENT:호기심 && !TALENT:주목받기원함
+	CALL RCHARA_TALENT_SINGLE, 21, 7
+ENDIF
+;감정결핍(일부 소질과 동거(同居) 하지 않는다)
+IF !TALENT:겁쟁이 && !TALENT:거만함 && !TALENT:호기심 && !TALENT:주목받기원함 && !TALENT:수줍음
+	CALL RCHARA_TALENT_SINGLE, 22, 8
+ENDIF
+;해방(동거(同居) 하지 않는 소질 다수)
+IF !TALENT:겁쟁이 && !TALENT:츤데레 && !TALENT:자제심 && !TALENT:감정결핍 && !TALENT:보수적 && !TALENT:비관적
+	IF !TALENT:선을넘지않음 && !TALENT:정조관념 && !TALENT:억압 && !TALENT:고고함 && !TALENT:수줍음 && !TALENT:쾌감을부정
+		CALL RCHARA_TALENT_SINGLE, 33, 12
+	ENDIF
+ENDIF
+;아픔에강함, 아픔에약함(무투의 초기치에 응해 확률 변동)
+CALL RCHARA_TALENT_OPPOSE, 41, 40, ABL:무투 / 4 - 5, 13 - ABL:무투 / 4
+;젖기쉬움, 젖기어려움
+CALL RCHARA_TALENT_OPPOSE, 42, 43, 8, 5
+;습득빠름, 습득느림(지략의 초기치에 응해 확률 변동)
+CALL RCHARA_TALENT_OPPOSE, 50, 51, ABL:지략 / 4 - 5, 13 - ABL:지략 / 4
+;혀놀림
+CALL RCHARA_TALENT_SINGLE, 52, 5
+;자위하기쉬움
+CALL RCHARA_TALENT_SINGLE, 60, 7
+;악취둔감, 악취민감
+CALL RCHARA_TALENT_OPPOSE, 61, 62, 8, 8
+;헌신적
+CALL RCHARA_TALENT_SINGLE, 63, 9
+;중독하기쉽다
+CALL RCHARA_TALENT_SINGLE, 72, 8
+;도착적
+CALL RCHARA_TALENT_SINGLE, 80, 8
+;바이(여성은 조금 확률 높여, 오토코노코는 극단적으로 확률이 높다)
+IF TALENT:성별 == 0
+	CALL RCHARA_TALENT_SINGLE, 81, 8
+ELSEIF TALENT:성별 == 4
+	CALL RCHARA_TALENT_SINGLE, 81, 30
+ELSE
+	CALL RCHARA_TALENT_SINGLE, 81, 14
+ENDIF
+;남성혐오, 여성혐오(이성 한정)
+IF IS_MALE(TARGET)
+	CALL RCHARA_TALENT_SINGLE, 83, 9
+ELSE
+	CALL RCHARA_TALENT_SINGLE, 82, 9
+ENDIF
+;Ｓ기질, Ｍ기질
+CALL RCHARA_TALENT_OPPOSE, 84, 85, 8, 8
+;소악마(여성·오토코노코는 확률 높은)
+IF TALENT:성별 == 0
+	CALL RCHARA_TALENT_SINGLE, 86, 3
+ELSE
+	CALL RCHARA_TALENT_SINGLE, 86, 10
+ENDIF
+;매혹
+CALL RCHARA_TALENT_SINGLE, 87, 8
+;수수께끼의매력
+CALL RCHARA_TALENT_SINGLE, 88, 2
+;회복빠름, 회복느림(무투의 초기치에 응해 확률 변동)
+CALL RCHARA_TALENT_OPPOSE, 111, 112, ABL:무투 / 7 + 3, 12 - ABL:무투 / 7
+;유치
+CALL RCHARA_TALENT_SINGLE, 132, 6
+
+;폭주가(무투파가 확률 높은)
+CALL RCHARA_TALENT_SINGLE, 134, ABL:무투 / 7 + 3
+
+;술못함(지략파가 확률 높은)
+IF !TALENT:폭주가
+	CALL RCHARA_TALENT_SINGLE, 136, ABL:지략 / 7 + 3
+ENDIF
+
+;지정의 확률에 응해 동물귀, 꼬리
+IF RAND:100 < ARG:0
+	TALENT:동물귀 = 1
+	TALENT:꼬리 = RAND:8 != 0
+ENDIF
+
+;각선미
+SIF !TALENT:성별 == 0
+	CALL RCHARA_TALENT_SINGLE, 113, 12
+;예쁜엉덩이
+SIF !TALENT:성별 == 0
+	CALL RCHARA_TALENT_SINGLE, 114, 12
+
+;더러운아저씨
+SIF TALENT:성별 == 0 && TALENT:체격 != 체격_아이
+	CALL RCHARA_TALENT_SINGLE, 148, 1
+
+;■민둔감 소질의 결정
+CALL RANDOM_CHARA_SENSE
+
+;■성적 능력의 결정
+;처녀·동정의 경우
+IF TALENT:처녀 && TALENT:동정
+	;1/7의 확률로 완전 무구하게(모든 성 경험·성지식이 0)
+	IF RAND:7 != 0
+		LOCAL:0 = RAND:10
+		IF LOCAL:0 < 6
+			LOCAL:0 = -2
+			EXP:절정경험 = 0
+		ELSEIF LOCAL:0 < 9
+			LOCAL:0 = -1
+			EXP:절정경험 = (RAND:10 - 7) * 5
+		ELSE
+			LOCAL:0 = 0
+			EXP:절정경험 = (RAND:6 + 1) * 5
+		ENDIF
+
+		ABL:욕망 = MAX(LOCAL:0 + RAND:2 + RAND:2, 0)
+		ABL:성기술 = MAX(LOCAL:0 + RAND:2 + RAND:2, 0)
+		ABL:봉사 = MAX(LOCAL:0 + RAND:4 - 1, 0)
+		ABL:노출 = MAX(LOCAL:0 + RAND:20 - 17, 0)
+		ABL:자위 = MAX(LOCAL:0 + RAND:7 - 4, 0)
+
+		IF HAS_PENIS(TARGET)
+			ABL:사정 = MAX(LOCAL:0 + RAND:4 - 1, 0)
+		ENDIF
+
+		IF TALENT:바이
+			IF RAND:2
+				IF IS_MALE(TARGET)
+					ABL:ＢＬ = MAX(RAND:3 + 1)
+					ABL:성교 = MAX(ABL:ＢＬ + RAND:6 - 5, 0)
+					ABL:정애 = MAX(ABL:ＢＬ + RAND:6 - 5, 0)
+					ABL:Ａ감 = MAX(ABL:ＢＬ + RAND:6 - 5, 0)
+				ELSE
+					ABL:레즈 = MAX(RAND:3 + 1)
+				ENDIF
+			ENDIF
+		ELSE
+			IF RAND:15 == 0
+				IF IS_MALE(TARGET)
+					ABL:ＢＬ = MAX(RAND:2 + 1)
+					ABL:성교 = MAX(ABL:ＢＬ + RAND:6 - 5, 0)
+					ABL:정애 = MAX(ABL:ＢＬ + RAND:6 - 5, 0)
+					ABL:Ａ감 = MAX(ABL:ＢＬ + RAND:6 - 5, 0)
+				ELSE
+					ABL:레즈 = MAX(RAND:2 + 1)
+				ENDIF
+			ENDIF
+		ENDIF
+
+		LOCAL:1 = 30 - ABL:자위 * 10
+		ABL:Ｃ감 = MAX(TALENT:Ｃ민감 - TALENT:Ｃ둔감 + RAND:(LOCAL:1 + 2) - LOCAL:1, 0)
+		ABL:Ｂ감 = MAX(TALENT:Ｂ민감 - TALENT:Ｂ둔감 + RAND:(LOCAL:1 + 2) - LOCAL:1, 0)
+
+		IF ABL:Ａ감 == 0
+			LOCAL:2 = 60 - ABL:자위 * 15
+			ABL:Ａ감 = MAX(TALENT:Ａ민감 - TALENT:Ａ둔감 + RAND:(LOCAL:2 + 2) - LOCAL:2, 0)
+		ENDIF
+
+		IF !TALENT:키스미경험
+			ABL:Ｍ감 = MAX(TALENT:Ｍ민감 - TALENT:Ｍ둔감 + RAND:30 - 28, 0)
+		ENDIF
+
+		LOCAL:0 = RAND:100
+		IF LOCAL:0 < 50
+			ABL:성지식 = 1
+		ELSEIF LOCAL:0 < 85
+			ABL:성지식 = 2
+		ELSEIF LOCAL:0 < 97
+			ABL:성지식 = 3
+		ELSE
+			ABL:성지식 = 4
+		ENDIF
+
+		SELECTCASE RAND:100
+			CASE IS < 60
+				ABL:새드 = 0
+			CASE IS < 85
+				ABL:새드 = 1
+			CASE IS < 90
+				ABL:새드 = 2
+			CASEELSE
+				ABL:새드 = 3
+		ENDSELECT
+		ABL:새드 += TALENT:Ｓ기질
+
+		SELECTCASE RAND:100
+			CASE IS < 60
+				ABL:마조 = 0
+			CASE IS < 85
+				ABL:마조 = 1
+			CASE IS < 90
+				ABL:마조 = 2
+			CASEELSE
+				ABL:마조 = 3
+		ENDSELECT
+		ABL:새드 += TALENT:Ｍ기질
+
+	ENDIF
+
+;경험 있는 경우
+ELSE
+	LOCAL:0 = RAND:10
+	IF LOCAL:0 < 5
+		LOCAL:0 = -1
+		EXP:절정경험 = (RAND:10 - 7) * 5
+	ELSEIF LOCAL:0 < 9
+		LOCAL:0 = 0
+		EXP:절정경험 = (RAND:6 + 1) * 5
+	ELSE
+		LOCAL:0 = 1
+		EXP:절정경험 = (RAND:9 + 2) * 5
+	ENDIF
+
+	ABL:욕망 = MAX(LOCAL:0 + RAND:2 + RAND:2, 0)
+	ABL:성기술 = MAX(LOCAL:0 + RAND:2 + RAND:2, 0)
+	ABL:봉사 = MAX(LOCAL:0 + RAND:4 - 1, 0)
+	ABL:성교 = MAX(LOCAL:0 + RAND:4 - 1, 0)
+	ABL:노출 = MAX(LOCAL:0 + RAND:7 - 4, 0)
+	ABL:자위 = MAX(LOCAL:0 + RAND:5 - 2, 0)
+
+	IF IS_FEMALE(TARGET)
+		ABL:정애 = MAX(LOCAL:0 + RAND:5 - 2, 0)
+	ENDIF
+
+	IF HAS_PENIS(TARGET)
+		ABL:사정 = MAX(LOCAL:0 + RAND:4 - 1, 0)
+	ENDIF
+
+	IF TALENT:바이
+		IF RAND:3 != 0
+			IF IS_MALE(TARGET)
+				ABL:ＢＬ = MAX(RAND:3 + 1)
+				ABL:정애 = MAX(ABL:ＢＬ + RAND:4 - 3, 0)
+				ABL:Ａ감 = MAX(ABL:ＢＬ + RAND:4 - 3, 0)
+			ELSE
+				ABL:레즈 = MAX(RAND:3 + 1)
+			ENDIF
+		ENDIF
+	ELSE
+		IF RAND:8 == 0
+			IF IS_MALE(TARGET)
+				ABL:ＢＬ = MAX(RAND:2 + 1)
+				ABL:정애 = MAX(ABL:ＢＬ + RAND:4 - 3, 0)
+				ABL:Ａ감 = MAX(ABL:ＢＬ + RAND:4 - 3, 0)
+			ELSE
+				ABL:레즈 = MAX(RAND:2 + 1)
+			ENDIF
+		ENDIF
+	ENDIF
+
+	ABL:Ｃ감 = MAX(TALENT:Ｃ민감 - TALENT:Ｃ둔감 + RAND:5 - 3, 0)
+	ABL:Ｂ감 = MAX(TALENT:Ｂ민감 - TALENT:Ｂ둔감 + RAND:5 - 3, 0)
+	ABL:Ｖ감 = MAX(TALENT:Ｖ민감 - TALENT:Ｖ둔감 + RAND:5 - 3, 0)
+
+	IF ABL:Ａ감 == 0
+		ABL:Ａ감 = MAX(TALENT:Ａ민감 - TALENT:Ａ둔감 + RAND:20 - 18, 0)
+	ENDIF
+
+	ABL:Ｍ감 = MAX(TALENT:Ｍ민감 - TALENT:Ｍ둔감 + RAND:8 - 6, 0)
+
+	LOCAL:0 = RAND:100
+	IF LOCAL:0 < 35
+		ABL:성지식 = 1
+	ELSEIF LOCAL:0 < 75
+		ABL:성지식 = 2
+	ELSEIF LOCAL:0 < 94
+		ABL:성지식 = 3
+	ELSEIF LOCAL:0 < 98
+		ABL:성지식 = 4
+	ELSE
+		ABL:성지식 = 5
+	ENDIF
+
+	SELECTCASE RAND:100
+		CASE IS < 60
+			ABL:마조 = 0
+		CASE IS < 85
+			ABL:마조 = 1
+		CASE IS < 90
+			ABL:마조 = 2
+		CASEELSE
+			ABL:마조 = 3
+	ENDSELECT
+	ABL:새드 += TALENT:Ｍ기질
+
+ENDIF
+
+IF TALENT:술못함
+	ABL:주량 = RAND(0, 3)
+ELSEIF TALENT:폭주가
+	ABL:주량 = RAND(4, 6)
+ELSE
+	ABL:주량 = RAND(2, 4)
+ENDIF
+
+;■가슴크기의 결정
+CALL RANDOM_CHARA_BUSTSIZE
+CALL RANDOM_CHARA_PENISSIZE
+CALL RANDOM_CHARA_HIPSIZE
+
+
+SELECTCASE RAND:100
+	CASE 0 TO 60
+		TALENT:체격 = 체격_보통
+	CASE 61 TO 70
+		TALENT:체격 = 체격_작은체형
+	CASE 71 TO 80
+		TALENT:체격 = 체격_장신
+	CASE 81 TO 87
+		TALENT:체격 = 체격_아이
+	CASE 88 TO 94
+		TALENT:체격 = 체격_큰몸집
+	CASEELSE
+		TALENT:체격 = 체격_거대
+ENDSELECT
+
+SELECTCASE RAND:100
+	CASE 0 TO 60
+		TALENT:체형 = 체형_보통
+	CASE 61 TO 70
+		TALENT:체형 = 체형_슬렌더
+	CASE 71 TO 80
+		TALENT:체형 = 체형_글래머
+	CASE 81 TO 86
+		TALENT:체형 = 체형_풍만
+	CASE 87 TO 93
+		TALENT:체형 = 체형_호리호리한
+	CASE 94 TO 97
+		TALENT:체형 = 체형_비만
+	CASEELSE
+		TALENT:체형 = 체형_빼빼마른
+ENDSELECT
+
+;■성격의 결정
+CALL SET_CHARACTER(TARGET)
+
+;■머리색·머리길이의 결정
+CALL SET_HAIR(TARGET)
+
+;■음모의 길이의 결정
+CALL SET_INMOU_RANDOM(TARGET)
+CALL SET_ARMPIT_RANDOM(TARGET)
+
+TALENT:TARGET:Ｖ조임 = GET_RANDOM_TIGHTNESS()
+TALENT:TARGET:Ａ조임 = GET_RANDOM_TIGHTNESS()
+
+ABL:야심 = RAND(30, 71)
+
+SIF TALENT:반항적
+	ABL:야심 += 5
+SIF TALENT:꿋꿋함
+	ABL:야심 += 5
+SIF TALENT:프라이드높음
+	ABL:야심 += 7
+SIF TALENT:거만함
+	ABL:야심 += 3
+SIF TALENT:호기심
+	ABL:야심 += 3
+SIF TALENT:고고함
+	ABL:야심 += 15
+SIF TALENT:겁쟁이
+	ABL:야심 -= 5
+SIF TALENT:솔직함
+	ABL:야심 -= 5
+SIF TALENT:얌전함
+	ABL:야심 -= 5
+SIF TALENT:자제심
+	ABL:야심 -= 5
+SIF TALENT:무관심
+	ABL:야심 -= 5
+SIF TALENT:프라이드낮음
+	ABL:야심 -= 10
+SIF TALENT:억압
+	ABL:야심 -= 10
+ABL:야심 = MAX(ABL:야심, 0)
+
+;-------------------------
+;범용 무장에 스킬을 설정한다
+;-------------------------
+@RANDOM_CHARA_SKILL_SETTING()
+#DIM 스킬ID군, SKILL_GENRE_NUM, MAX_SKILLS
+#DIM 스킬레벨군, SKILL_GENRE_NUM, MAX_SKILLS
+#DIM 스킬수, SKILL_GENRE_NUM
+#DIM 장르
+#DIM 스킬ID
+#DIM 스킬위치
+#DIM 시행회수
+#DIM 습득확률
+VARSET 스킬ID군
+VARSET 스킬레벨군
+VARSET 스킬수
+
+FOR 장르, 0, SKILL_GENRE_NUM
+	FOR 스킬ID, 0, MAX_SKILLS
+		TRYCCALLFORM SKILL_0_%SKILL_GENRE_ENG:장르%_{스킬ID}_EXIST
+			스킬ID군:장르:(스킬수:장르) = 스킬ID
+			CALLFORM SKILL_0_%SKILL_GENRE_ENG:장르%_{스킬ID}_LEVEL
+			스킬레벨군:장르:(스킬수:장르) = RESULT
+			스킬수:장르 ++
+		CATCH
+		ENDCATCH
+	NEXT
+NEXT
+
+FOR 시행회수, 0, 4
+	장르 = RAND:SKILL_GENRE_NUM
+	;범용 스킬은 지금 응과 개전장르 있으므로 여기는 괜찮아
+	SIF 스킬수:장르 == 0
+		CONTINUE
+	스킬위치 = RAND:(스킬수:장르)
+	SELECTCASE 스킬레벨군:장르:스킬위치
+		CASE 5
+			습득확률 = 3
+		CASE 4
+			습득확률 = 10
+		CASE 3
+			습득확률 = 20
+		CASE 2
+			습득확률 = 30
+		CASE 1
+			습득확률 = 50
+	ENDSELECT
+	SIF 습득확률 <= RAND:100
+		CONTINUE
+	CALL SKILL_LEARN(TARGET, 장르, 0, 스킬ID군:장르:스킬위치)
+NEXT
+
+;-------------------------
+;범용 무장에 태그를 설정한다
+;-------------------------
+@RANDOM_CHARA_TAG_SETTING
+
+;인간인가, 인외인가
+SIF 50 > RAND:100
+	CALL ADD_TAG(TARGET, 태그_인간)
+
+SIF 5 > RAND:100 || (50 > RAND:100 && !HAS_TAG(TARGET, 태그_인간))
+	CALL ADD_TAG(TARGET, 태그_인외)
+
+IF HAS_TAG(TARGET, 태그_인외)
+	SELECTCASE RAND:100
+		CASE IS < 20
+		CASE IS < 45
+			CALL ADD_TAG(TARGET, 태그_요괴)
+		CASE IS < 65
+			CALL ADD_TAG(TARGET, 태그_요정)
+		CASE IS < 75
+			CALL ADD_TAG(TARGET, 태그_유령)
+		CASE IS < 80
+			CALL ADD_TAG(TARGET, 태그_망령)
+		CASE IS < 85
+			CALL ADD_TAG(TARGET, 태그_신)
+		CASE IS < 88
+			CALL ADD_TAG(TARGET, 태그_인형)
+		CASE IS < 91
+			CALL ADD_TAG(TARGET, 태그_사신)
+		CASE IS < 93
+			CALL ADD_TAG(TARGET, 태그_천인)
+		CASE IS < 95
+			CALL ADD_TAG(TARGET, 태그_츠쿠모가미)
+		CASE IS < 97
+			CALL ADD_TAG(TARGET, 태그_월인)
+		CASE IS < 99
+			CALL ADD_TAG(TARGET, 태그_원령)
+		CASEELSE
+			CALL ADD_TAG(TARGET, 태그_마계인)
+	ENDSELECT
+ENDIF
+
+IF HAS_TAG(TARGET, 태그_요괴)
+	SELECTCASE RAND:100
+		CASE IS < 25
+		CASE IS < 45
+			CALL ADD_TAG(TARGET, 태그_요수)
+		CASE IS < 55
+			CALL ADD_TAG(TARGET, 태그_텐구)
+		CASE IS < 65
+			CALL ADD_TAG(TARGET, 태그_갓파)
+		CASE IS < 75
+			CALL ADD_TAG(TARGET, 태그_마법사)
+		CASE IS < 80
+			CALL ADD_TAG(TARGET, 태그_흡혈귀)
+		CASE IS < 85
+			CALL ADD_TAG(TARGET, 태그_소령)
+		CASE IS < 90
+			CALL ADD_TAG(TARGET, 태그_악마)
+		CASE IS < 95
+			CALL ADD_TAG(TARGET, 태그_달토끼)
+		CASEELSE
+			CALL ADD_TAG(TARGET, 태그_아마노자쿠)
+	ENDSELECT
+ENDIF
+
+;-------------------------
+;가슴크기를 랜덤으로 설정하는 함수
+;-------------------------
+@RANDOM_CHARA_BUSTSIZE
+LOCAL:2 = RAND:100
+LOCAL = 0
+IF TALENT:체격 == 체격_아이
+	;보통(40%)
+	IF LOCAL:2 < 40
+	;빈(48%)
+	ELSEIF LOCAL:2 < 88
+		LOCAL = -1
+	;거(5%)
+	ELSEIF LOCAL:2 < 93
+		LOCAL = 1
+	;절(7%)
+	ELSE
+		LOCAL = -2
+	ENDIF
+ELSEIF TALENT:체격 == 체격_작은체형
+	;보통(40%)
+	IF LOCAL:2 < 40
+	;빈(36%)
+	ELSEIF LOCAL:2 < 76
+		LOCAL = -1
+	;거(16%)
+	ELSEIF LOCAL:2 < 92
+		LOCAL = 1
+	;폭(4%)
+	ELSEIF LOCAL:2 < 96
+		LOCAL = 2
+	;절(4%)
+	ELSE
+		LOCAL = -2
+	ENDIF
+ELSE
+	;보통(40%)
+	IF LOCAL:2 < 40
+	;빈(26%)
+	ELSEIF LOCAL:2 < 66
+		LOCAL = -1
+	;거(26%)
+	ELSEIF LOCAL:2 < 92
+		LOCAL = 1
+	;폭(6%)
+	ELSEIF LOCAL:2 < 98
+		LOCAL = 2
+	;절(2%)
+	ELSE
+		LOCAL = -2
+	ENDIF
+ENDIF
+CALL SET_BUSTSIZE(TARGET, LOCAL)
+
+;-------------------------
+;페니스사이즈를 랜덤으로 설정하는 함수
+;-------------------------
+@RANDOM_CHARA_PENISSIZE
+LOCAL:2 = RAND:100
+LOCAL = 0
+IF TALENT:체격 == 체격_아이
+	;보통(40%)
+	IF LOCAL:2 < 40
+	;빈(48%)
+	ELSEIF LOCAL:2 < 88
+		LOCAL = -1
+	;거(5%)
+	ELSEIF LOCAL:2 < 93
+		LOCAL = 1
+	;절(7%)
+	ELSE
+		LOCAL = -2
+	ENDIF
+ELSEIF TALENT:체격 == 체격_작은체형
+	;보통(40%)
+	IF LOCAL:2 < 40
+	;빈(36%)
+	ELSEIF LOCAL:2 < 76
+		LOCAL = -1
+	;거(16%)
+	ELSEIF LOCAL:2 < 92
+		LOCAL = 1
+	;폭(4%)
+	ELSEIF LOCAL:2 < 96
+		LOCAL = 2
+	;절(4%)
+	ELSE
+		LOCAL = -2
+	ENDIF
+ELSE
+	;보통(40%)
+	IF LOCAL:2 < 40
+	;빈(26%)
+	ELSEIF LOCAL:2 < 66
+		LOCAL = -1
+	;거(26%)
+	ELSEIF LOCAL:2 < 92
+		LOCAL = 1
+	;폭(6%)
+	ELSEIF LOCAL:2 < 98
+		LOCAL = 2
+	;절(2%)
+	ELSE
+		LOCAL = -2
+	ENDIF
+ENDIF
+
+CALL SET_PENISSIZE(TARGET, LOCAL)
+
+;-------------------------
+;가슴크기를 랜덤으로 설정하는 함수
+;-------------------------
+@RANDOM_CHARA_HIPSIZE
+LOCAL:2 = RAND:100
+LOCAL = 0
+IF TALENT:체격 == 체격_아이
+	;보통(40%)
+	IF LOCAL:2 < 40
+	;빈(48%)
+	ELSEIF LOCAL:2 < 88
+		LOCAL = -1
+	;거(5%)
+	ELSEIF LOCAL:2 < 93
+		LOCAL = 1
+	;절(7%)
+	ELSE
+		LOCAL = -2
+	ENDIF
+ELSEIF TALENT:체격 == 체격_작은체형
+	;보통(40%)
+	IF LOCAL:2 < 40
+	;빈(36%)
+	ELSEIF LOCAL:2 < 76
+		LOCAL = -1
+	;거(16%)
+	ELSEIF LOCAL:2 < 92
+		LOCAL = 1
+	;폭(4%)
+	ELSEIF LOCAL:2 < 96
+		LOCAL = 2
+	;절(4%)
+	ELSE
+		LOCAL = -2
+	ENDIF
+ELSE
+	;보통(40%)
+	IF LOCAL:2 < 40
+	;빈(26%)
+	ELSEIF LOCAL:2 < 66
+		LOCAL = -1
+	;거(26%)
+	ELSEIF LOCAL:2 < 92
+		LOCAL = 1
+	;폭(6%)
+	ELSEIF LOCAL:2 < 98
+		LOCAL = 2
+	;절(2%)
+	ELSE
+		LOCAL = -2
+	ENDIF
+ENDIF
+CALL SET_HIPSIZE(TARGET, LOCAL)
+
+
+;-------------------------
+;민둔감 소질을 랜덤으로 설정하는 함수
+;-------------------------
+@RANDOM_CHARA_SENSE
+;Ｍ는 독립으로 결정한다
+LOCAL:0 = RAND:100
+IF LOCAL:0 < 5
+	TALENT:Ｍ민감 = 1
+ELSEIF LOCAL:0 < 8
+	TALENT:Ｍ둔감 = 1
+ENDIF
+
+LOCAL:0 = RAND:1000
+
+;1개소 민감형(10%)
+IF LOCAL:0 < 100
+	CALL SET_SENSE_RANDOM(0)
+;1개소 둔감형(5%)
+ELSEIF LOCAL:0 < 150
+	CALL SET_SENSE_RANDOM(1)
+;민감＋둔감형(3%)
+ELSEIF LOCAL:0 < 180
+	CALL SET_SENSE_RANDOM(0)
+	CALL SET_SENSE_RANDOM(1)
+;늦됨(1%)
+ELSEIF LOCAL:0 < 190
+	TALENT:Ｃ둔감 = 1
+	TALENT:Ｂ둔감 = RAND:2 == 0
+	TALENT:Ｖ민감 = RAND:6 == 0
+	TALENT:Ａ민감 = RAND:6 == 0
+;표면(1%)
+ELSEIF LOCAL:0 < 200
+	TALENT:Ｃ민감 = 1
+	TALENT:Ｂ민감 = RAND:2 == 0
+	TALENT:Ｖ둔감 = RAND:6 == 0
+	TALENT:Ａ둔감 = RAND:6 == 0
+;전신 민감(0.4%)
+ELSEIF LOCAL:0 < 204
+	TALENT:Ｃ민감 = 1
+	TALENT:Ｂ민감 = 1
+	TALENT:Ｖ민감 = 1
+	TALENT:Ａ민감 = 1
+;전신 둔감(0.4%)
+ELSEIF LOCAL:0 < 208
+	TALENT:Ｃ둔감 = 1
+	TALENT:Ｂ둔감 = 1
+	TALENT:Ｖ둔감 = 1
+	TALENT:Ａ둔감 = 1
+;Ｖ민＋둔감형(0.6%)
+ELSEIF LOCAL:0 < 214
+	TALENT:Ｖ민감 = 1
+	CALL SET_SENSE_RANDOM(1)
+	CALL SET_SENSE_RANDOM(1)
+	IF RAND:3 == 0
+		CALL SET_SENSE_RANDOM(1)
+	ENDIF
+;Ａ민＋둔감형(0.6%)
+ELSEIF LOCAL:0 < 220
+	TALENT:Ａ민감 = 1
+	CALL SET_SENSE_RANDOM(1)
+	CALL SET_SENSE_RANDOM(1)
+	IF RAND:3 == 0
+		CALL SET_SENSE_RANDOM(1)
+	ENDIF
+ENDIF
+
+;-------------------------
+;동일 부위에게 동시에 민감·둔감이 설정되었을 경우에 상쇄하는 처리
+;-------------------------
+@KILL_INCOMPATIBLE_SENSE()
+IF TALENT:Ｖ민감 && TALENT:Ｖ둔감
+	TALENT:Ｖ민감 = 0
+	TALENT:Ｖ둔감 = 0
+ENDIF
+
+IF TALENT:Ａ민감 && TALENT:Ａ둔감
+	TALENT:Ａ민감 = 0
+	TALENT:Ａ둔감 = 0
+ENDIF
+
+IF TALENT:Ｃ민감 && TALENT:Ｃ둔감
+	TALENT:Ｃ민감 = 0
+	TALENT:Ｃ둔감 = 0
+ENDIF
+
+IF TALENT:Ｂ민감 && TALENT:Ｂ둔감
+	TALENT:Ｂ민감 = 0
+	TALENT:Ｂ둔감 = 0
+ENDIF
+
+IF TALENT:Ｍ민감 && TALENT:Ｍ둔감
+	TALENT:Ｍ민감 = 0
+	TALENT:Ｍ둔감 = 0
+ENDIF
+
+;-------------------------
+;ＣＶＡＢ로 미설정의 랜덤인 개소를 민감(ARG:0=0)·둔감(ARG:0=1)으로 하는 함수
+;-------------------------
+@SET_SENSE_RANDOM(ARG:0)
+LOCAL:5 = 4
+FOR LOCAL:0, 0, 4
+	IF TALENT:(101 + LOCAL:0 * 2) || TALENT:(102 + LOCAL:0 * 2)
+		LOCAL:5 --
+	ENDIF
+NEXT
+
+IF LOCAL:5 <= 0
+	RETURN
+ENDIF
+
+LOCAL:6 = RAND:(LOCAL:5)
+
+FOR LOCAL:0, 0, 4
+	IF !TALENT:(101 + LOCAL:0 * 2) && !TALENT:(102 + LOCAL:0 * 2)
+		LOCAL:6 --
+		IF LOCAL:6 < 0
+			LOCAL:7 = LOCAL:0
+			BREAK
+		ENDIF
+	ENDIF
+NEXT
+
+IF ARG:0 == 0
+	TALENT:(102 + LOCAL:7 * 2) = 1
+ELSE
+	TALENT:(101 + LOCAL:7 * 2) = 1
+ENDIF
+
+;-------------------------
+;랜덤 캐릭터에게 특정의 소질을 지정의 확률로 갖게하는 함수
+;ARG:0=소질의 번호, ARG:1=소질의 취득 확률(백분율)
+;-------------------------
+@RCHARA_TALENT_SINGLE, ARG:0, ARG:1
+LOCAL:0 = RAND:100
+IF LOCAL:0 < ARG:1
+	TALENT:(ARG:0) = 1
+ENDIF
+
+;-------------------------
+;랜덤 캐릭터에게 상반되는 2개의 소질을 지정의 확률로 갖게하는 함수
+;ARG:0=소질 1의 번호, ARG:1=소질 2의 번호, ARG:2=소질 1의 취득 확률(백분율), ARG:3=소질 2의 취득 확률(백분율)
+;-------------------------
+@RCHARA_TALENT_OPPOSE, ARG:0, ARG:1, ARG:2, ARG:3
+LOCAL:0 = RAND:100
+IF LOCAL:0 < ARG:2
+	TALENT:(ARG:0) = 1
+ELSEIF 99 - LOCAL:0 < ARG:3
+	TALENT:(ARG:1) = 1
+ENDIF
+
+;-------------------------
+;범용 무장의 이름을 결정한다
+;-------------------------
+@RANDOM_CHARA_NAMING(ARG:0)
+;동물계 캐릭터는 카타카나명
+IF TALENT:동물귀 || TALENT:꼬리
+	TALENT:성명역전 = 1
+	CALL SET_RANDOM_NAME_K(TARGET)
+	;명으로부터 NAME와 CALLNAME를 설정
+	NAME = %CSTR:1%
+	CALLNAME = %CSTR:1%
+ELSE
+	SELECTCASE ARG:0
+		CASE 0
+			CALL SET_RANDOM_NAME_J(TARGET)
+			NAME = %CSTR:1%
+			CALLNAME = %CSTR:1%
+			CSTR:3 = %CSTR:6%
+		CASE 1
+			TALENT:성명역전 = 1
+			CALL SET_RANDOM_NAME_K(TARGET)
+			NAME = %CSTR:1%
+			CALLNAME = %CSTR:1%
+		CASE 2
+;			CALL SET_RANDOM_NAME
+			CALL SET_RANDOM_NAME_KR(TARGET)
+			CALL SET_MIDDLE_NAME
+			;성명을 맞추어 NAME를 설정
+			NAME = %CSTR:0%%CSTR:1%
+			CALLNAME = %CSTR:0%%CSTR:1%
+			CSTR:3 = %CSTR:5%%CSTR:6%
+	ENDSELECT
+
+ENDIF
+
+;-------------------------
+;능력치에 응해 캐릭터 ARG:0의 최대 정신력을 설정하는 함수
+;-------------------------
+@SET_MIND_POWER(ARG:0)
+LOCAL:0 = ABL:(ARG:0):무투 + ABL:(ARG:0):지략 + ABL:(ARG:0):정치 + ABL:(ARG:0):가창 + ABL:(ARG:0):요리
+MAXBASE:(ARG:0):정신력 = 500 + LOCAL:0 * 6 * (RAND:101 + 50) / 10000 * 100
+BASE:(ARG:0):정신력 = MAXBASE:(ARG:0):정신력
+
+;-------------------------
+;소질을 고려해 캐릭터 ARG:0의 성격 타입을 설정하는 함수
+;-------------------------
+@SET_CHARACTER(ARG:0)
+;■성격 타입의 결정
+;성장형에 응한 확률의 설정
+SELECTCASE TALENT:(ARG:0):성장형
+	CASE 1
+		LOCAL:0 = 70
+		LOCAL:1 = 60
+	CASE 2
+		LOCAL:0 = 90
+		LOCAL:1 = 60
+	CASE 3
+		LOCAL:0 = 25
+		LOCAL:1 = 70
+	CASE 4
+		LOCAL:0 = 10
+		LOCAL:1 = 40
+	CASE 5
+		LOCAL:0 = 80
+		LOCAL:1 = 60
+	CASE 6
+		LOCAL:0 = 80
+		LOCAL:1 = 60
+	CASE 7
+		LOCAL:0 = 40
+		LOCAL:1 = 40
+	CASEELSE
+		LOCAL:0 = 50
+		LOCAL:1 = 60
+ENDSELECT
+
+;소질에 의한 보정
+LOCAL:2 = 100
+IF TALENT:(ARG:0):얌전함
+	TIMES LOCAL:2, 4.00
+ENDIF
+IF TALENT:(ARG:0):감정결핍
+	TIMES LOCAL:2, 4.00
+ENDIF
+IF TALENT:(ARG:0):반항적
+	TIMES LOCAL:2, 0.25
+ENDIF
+IF LOCAL:2 > 100
+	LOCAL:0 = LOCAL:0 + (100 - LOCAL:0) * (LOCAL:2 - 1) / LOCAL:2
+ELSEIF LOCAL:2 < 100
+	LOCAL:0 = LOCAL:0 * LOCAL:2 / (LOCAL:2 + 1)
+ENDIF
+
+TALENT:(ARG:0):성격 = 1
+IF RAND:100 >= LOCAL:0
+	TALENT:(ARG:0):성격 += 1
+ENDIF
+IF RAND:100 >= LOCAL:1
+	TALENT:(ARG:0):성격 += 2
+ENDIF
+
+;-------------------------
+;머리 모양·머리길이를 랜덤으로 설정하는 함수
+;-------------------------
+@SET_HAIR(ARG:0)
+LOCAL:5 = ID_TO_CHARA(CFLAG:(ARG:0):부친)
+LOCAL:6 = ID_TO_CHARA(CFLAG:(ARG:0):모친)
+LOCAL:7 = (LOCAL:5 >= 0 && TALENT:(LOCAL:5):머리색 != 0)
+LOCAL:8 = (LOCAL:6 >= 0 && TALENT:(LOCAL:6):머리색 != 0)
+
+;부모님이 설정되어 있다면 그것과 가까운 색이 된다
+IF LOCAL:7 && (!LOCAL:8 || RAND:2)
+	LOCAL:10 = RGB_TO_H(TALENT:(LOCAL:5):머리색) + ((RAND:61 + RAND:61 + RAND:61) / (RAND:12 + 1)) * (RAND:2 * 2 - 1)
+	LOCAL:11 = RGB_TO_S(TALENT:(LOCAL:5):머리색) + RAND:21 - RAND:21
+	LOCAL:12 = RGB_TO_V(TALENT:(LOCAL:5):머리색) + RAND:51 - RAND:51
+	TALENT:(ARG:0):머리색 = HSV_TO_RGB((LOCAL:10 + 720) % 360, LIMIT(LOCAL:11, 0, 92), LIMIT(LOCAL:12, 30, 97))
+ELSEIF LOCAL:8
+	LOCAL:10 = RGB_TO_H(TALENT:(LOCAL:6):머리색) + ((RAND:61 + RAND:61 + RAND:61) / (RAND:12 + 1)) * (RAND:2 * 2 - 1)
+	LOCAL:11 = RGB_TO_S(TALENT:(LOCAL:6):머리색) + RAND:21 - RAND:21
+	LOCAL:12 = RGB_TO_V(TALENT:(LOCAL:6):머리색) + RAND:51 - RAND:51
+	TALENT:(ARG:0):머리색 = HSV_TO_RGB((LOCAL:10 + 720) % 360, LIMIT(LOCAL:11, 0, 92), LIMIT(LOCAL:12, 30, 97))
+ELSE
+	;부모님 불명하면 HSV 기준으로 랜덤값을 받는다
+	TALENT:(ARG:0):머리색 = HSV_TO_RGB(RAND:360, RAND:93, RAND:68 + 30)
+ENDIF
+
+;남성·남자 후타나리의 경우
+IF GROUPMATCH(TALENT:(ARG:0):성별, 0, 3)
+	;저확률로 장발·대머리
+	IF RAND:20 == 0
+		TALENT:(ARG:0):머리길이 = 1
+	ELSEIF RAND:12 == 0
+		TALENT:(ARG:0):머리길이 = 5 + RAND:2
+	ELSE
+		TALENT:(ARG:0):머리길이 = 2 + RAND:3
+	ENDIF
+;여성·여자 후타나리·오토코노코의 경우
+ELSE
+	;베리쇼트·베리롱은 확률 낮은
+	IF RAND:30 == 0
+		TALENT:(ARG:0):머리길이 = 2 + RAND:2
+	ELSEIF RAND:12 == 0
+		TALENT:(ARG:0):머리길이 = 6
+	ELSE
+		TALENT:(ARG:0):머리길이 = 3 + RAND:3
+	ENDIF
+ENDIF
+
+
+;-------------------------
+;음모의 길이를 랜덤으로 설정하는 함수
+;-------------------------
+@SET_INMOU_RANDOM(ARG:0)
+LOCAL:13 = RAND:100
+
+IF TALENT:(ARG:0):체격 == 체격_아이
+	IF RAND:4 == 0
+		TALENT:(ARG:0):음모목표치 = 음모_백보지
+		TALENT:(ARG:0):음모현재치 = 음모_백보지
+	ELSEIF RAND:300 == 0
+		TALENT:(ARG:0):음모목표치 = 음모_하트형
+		TALENT:(ARG:0):음모현재치 = 음모_하트형
+	ELSEIF LOCAL:13 < 90
+		IF TALENT:(ARG:0):동물귀
+			TALENT:(ARG:0):음모목표치 = RAND:8
+			TALENT:(ARG:0):음모현재치 = TALENT:(ARG:0):음모목표치
+		ELSE
+			TALENT:(ARG:0):음모목표치 = RAND:5
+			TALENT:(ARG:0):음모현재치 = TALENT:(ARG:0):음모목표치
+		ENDIF
+	ELSE
+		TALENT:(ARG:0):음모목표치 = RAND:10
+		TALENT:(ARG:0):음모현재치 = TALENT:(ARG:0):음모목표치
+	ENDIF
+;남성·남자 후타나리의 경우
+ELSEIF GROUPMATCH(TALENT:(ARG:0):성별, 0, 3)
+	IF RAND:30 == 0
+		TALENT:(ARG:0):음모목표치 = 음모_백보지
+		TALENT:(ARG:0):음모현재치 = 음모_백보지
+	ELSEIF RAND:500 == 0
+		TALENT:(ARG:0):음모목표치 = 음모_하트형
+		TALENT:(ARG:0):음모현재치 = 음모_하트형
+	ELSEIF LOCAL:13 < 80
+		IF TALENT:(ARG:0):동물귀
+			TALENT:(ARG:0):음모목표치 = RAND(2, 10)
+			TALENT:(ARG:0):음모현재치 = TALENT:(ARG:0):음모목표치
+		ELSE
+			TALENT:(ARG:0):음모목표치 = RAND(2, 9)
+			TALENT:(ARG:0):음모현재치 = TALENT:(ARG:0):음모목표치
+		ENDIF
+	ELSE
+		TALENT:(ARG:0):음모목표치 = RAND:10
+		TALENT:(ARG:0):음모현재치 = TALENT:(ARG:0):음모목표치
+	ENDIF
+;여성·여자 후타나리·오토코노코의 경우
+ELSE
+	IF RAND:10 == 0
+		TALENT:(ARG:0):음모목표치 = 음모_백보지
+		TALENT:(ARG:0):음모현재치 = 음모_백보지
+	ELSEIF RAND:200 == 0
+		TALENT:(ARG:0):음모목표치 = 음모_하트형
+		TALENT:(ARG:0):음모현재치 = 음모_하트형
+	ELSEIF LOCAL:13 < 90 && !TALENT:(ARG:0):동물귀
+		TALENT:(ARG:0):음모목표치 = RAND:9
+		TALENT:(ARG:0):음모현재치 = TALENT:(ARG:0):음모목표치
+	ELSE
+		TALENT:(ARG:0):음모목표치 = RAND:10
+		TALENT:(ARG:0):음모현재치 = TALENT:(ARG:0):음모목표치
+	ENDIF
+ENDIF
+
+;-------------------------
+;음모의 길이를 랜덤으로 설정하는 함수
+;-------------------------
+@SET_ARMPIT_RANDOM(ARG:0)
+LOCAL:13 = RAND:100
+
+IF TALENT:(ARG:0):체격 == 체격_아이
+	IF RAND:4 == 0
+		TALENT:(ARG:0):겨드랑이털목표치 = 겨드랑이털_깔끔
+		TALENT:(ARG:0):겨드랑이털현재치 = 겨드랑이털_깔끔
+	ELSEIF LOCAL:13 < 90
+		IF TALENT:(ARG:0):동물귀
+			TALENT:(ARG:0):겨드랑이털목표치 = RAND:8
+			TALENT:(ARG:0):겨드랑이털현재치 = TALENT:(ARG:0):겨드랑이털목표치
+		ELSE
+			TALENT:(ARG:0):겨드랑이털목표치 = RAND:5
+			TALENT:(ARG:0):겨드랑이털현재치 = TALENT:(ARG:0):겨드랑이털목표치
+		ENDIF
+	ELSE
+		TALENT:(ARG:0):겨드랑이털목표치 = RAND:10
+		TALENT:(ARG:0):겨드랑이털현재치 = TALENT:(ARG:0):겨드랑이털목표치
+	ENDIF
+;남성·남자 후타나리의 경우
+ELSEIF GROUPMATCH(TALENT:(ARG:0):성별, 0, 3)
+	IF RAND:30 == 0
+		TALENT:(ARG:0):겨드랑이털목표치 = 겨드랑이털_제모완료
+		TALENT:(ARG:0):겨드랑이털현재치 = 겨드랑이털_제모완료
+	ELSEIF LOCAL:13 < 80
+		IF TALENT:(ARG:0):동물귀
+			TALENT:(ARG:0):겨드랑이털목표치 = RAND(2, 10)
+			TALENT:(ARG:0):겨드랑이털현재치 = TALENT:(ARG:0):겨드랑이털목표치
+		ELSE
+			TALENT:(ARG:0):겨드랑이털목표치 = RAND(2, 9)
+			TALENT:(ARG:0):겨드랑이털현재치 = TALENT:(ARG:0):겨드랑이털목표치
+		ENDIF
+	ELSE
+		TALENT:(ARG:0):겨드랑이털목표치 = RAND:10
+		TALENT:(ARG:0):겨드랑이털현재치 = TALENT:(ARG:0):겨드랑이털목표치
+	ENDIF
+;여성·여자 후타나리·오토코노코의 경우
+ELSE
+	IF RAND:10 == 0
+		TALENT:(ARG:0):겨드랑이털목표치 = 겨드랑이털_깔끔
+		TALENT:(ARG:0):겨드랑이털현재치 = 겨드랑이털_깔끔
+	ELSEIF LOCAL:13 < 90 && !TALENT:(ARG:0):동물귀
+		TALENT:(ARG:0):겨드랑이털목표치 = RAND:9
+		TALENT:(ARG:0):겨드랑이털현재치 = TALENT:(ARG:0):겨드랑이털목표치
+	ELSE
+		TALENT:(ARG:0):겨드랑이털목표치 = RAND:10
+		TALENT:(ARG:0):겨드랑이털현재치 = TALENT:(ARG:0):겨드랑이털목표치
+	ENDIF
+ENDIF
+
+
+;-------------------------
+;ARG:0 세력이 사관을모집 AI처리
+;-------------------------
+@RECRUIT_AI(ARG:0)
+LOCAL:9 = GET_COMMANDER_NUM(ARG:0)
+
+;사관이 8명 이하라면 모집을 건다
+IF LOCAL:9 < 8
+	;성공 여부 판정
+	IF RAND:100 < 2500 / (LOCAL:9 + 20) - 10
+		;군주가[동물귀]or[꼬리]를 가진다면 케모율 높은
+		LOCAL:5 = GET_COUNTRY_BOSS(ARG:0)
+		IF LOCAL:5 >= 0 && (TALENT:(LOCAL:5):동물귀 || TALENT:(LOCAL:5):꼬리)
+			LOCAL:6 = 75
+		ELSE
+			LOCAL:6 = 1
+		ENDIF
+
+		;●자군의 상황에 맞추어 모집하는 타입을 선택
+		VARSET LOCAL, -1, 20, 50
+		FOR LOCAL:0, 0, CHARANUM
+			IF CFLAG:(LOCAL:0):소속 == ARG:0
+				FOR LOCAL:1, 0, 3
+					LOCAL:10 = LOCAL:1 + 50
+					LOCAL:11 = LOCAL:1 * 10 + 20
+					FOR LOCAL:2, 0, 3
+						IF ABL:(LOCAL:0):(LOCAL:10) > LOCAL:(LOCAL:2 + LOCAL:11)
+							FOR LOCAL:3, 0, 2 - LOCAL:2
+								LOCAL:(2 - LOCAL:3 + LOCAL:11) = LOCAL:(1 - LOCAL:3 + LOCAL:11)
+							NEXT
+							LOCAL:(LOCAL:2 + LOCAL:11) = ABL:(LOCAL:0):(LOCAL:10)
+							BREAK
+						ENDIF
+					NEXT
+				NEXT
+			ENDIF
+		NEXT
+
+		;각 능력의 3위가 가장 빈약한 개소를 보충한다
+		LOCAL:7 = MIN(LOCAL:22, LOCAL:32, LOCAL:42)
+		IF LOCAL:7 >= 60
+			;모든 능력이 충분하면 다재능인 사관 or아이돌 or요리사를 모집
+			IF RAND:4 == 0
+				LOCAL:8 = 4
+			ELSEIF RAND:4 == 0
+				LOCAL:8 = 5
+			ELSE
+				LOCAL:8 = 0
+			ENDIF
+		ELSEIF LOCAL:7 == LOCAL:22
+			LOCAL:8 = 1
+		ELSEIF LOCAL:7 == LOCAL:32
+			LOCAL:8 = 2
+		ELSE
+			LOCAL:8 = 3
+		ENDIF
+		;이름은 랜덤
+		SELECTCASE RAND:100
+			CASE 0 TO 80
+				LOCAL:9 = 0
+			CASE 81 TO 95
+				LOCAL:9 = 1
+			CASE 96 TO 99
+				LOCAL:9 = 2
+			CASEELSE
+				LOCAL:9 = 0
+		ENDSELECT
+		
+		;지정의 조건으로 랜덤 캐릭터를 작성
+		CALL CREATE_RANDOM_CHARA(LOCAL:6, LOCAL:8, -1, LOCAL:9)
+		IF RESULT >= 0
+			SETCOLOR 칼라_주의
+			PRINTFORML %ANAME(RESULT)%가 %ANAME(GET_COUNTRY_BOSS(ARG:0))%에 등용되었다
+			RESETCOLOR
+			CALL CHANGE_COUNTRY(RESULT, ARG:0)
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------
+;사관을모집
+;-------------------------
+@RECRUIT_RANDOM_CHARA
+#DIM hold = -1
+#DIM showingHold = 0
+#DIM FIRST_LINE
+LOCAL:10 = 0
+LOCAL:11 = 0
+hold = -1
+showingHold = 0
+
+CALL SINGLE_DRAWLINE
+PRINTL 새로운 사관을 모집합니다
+PRINTL 요구하는 인재를 설정해 주세요
+CALL SINGLE_DRAWLINE
+PRINTL ～모집요항～
+
+FIRST_LINE = LINECOUNT
+$SHOW_LOOP
+
+PRINTL ◆요구하는 인재는
+PRINT    
+CALL PRINT_SELECT_BUTTON(" 10{다    능}", 10, LOCAL:10 == 0)
+CALL PRINT_SELECT_BUTTON(" 11{무    관}", 11, LOCAL:10 == 1)
+CALL PRINT_SELECT_BUTTON(" 12{군    사}", 12, LOCAL:10 == 2)
+CALL PRINT_SELECT_BUTTON(" 13{정 무 관}", 13, LOCAL:10 == 3)
+CALL PRINT_SELECT_BUTTON(" 14{아 이 돌}", 14, LOCAL:10 == 4)
+CALL PRINT_SELECT_BUTTON(" 15{요 리 인}", 15, LOCAL:10 == 5)
+PRINTL 
+PRINTL 
+
+PRINTL ◆성별은
+PRINT    
+CALL PRINT_SELECT_BUTTON(" 20{묻지않는다}", 20, LOCAL:11 == 0)
+CALL PRINT_SELECT_BUTTON(" 21{남    성}", 21, LOCAL:11 == 1)
+CALL PRINT_SELECT_BUTTON(" 22{여    성}", 22, LOCAL:11 == 2)
+CALL PRINT_SELECT_BUTTON(" 23{여 후 타}", 23, LOCAL:11 == 3)
+CALL PRINT_SELECT_BUTTON(" 23{남 후 타}", 24, LOCAL:11 == 4)
+CALL PRINT_SELECT_BUTTON(" 24{오토코노코}", 25, LOCAL:11 == 5)
+CALL PRINT_SELECT_BUTTON(" 24{남낭 후타}", 26, LOCAL:11 == 6)
+
+PRINTL 
+PRINTL
+PRINTL ◆이름은
+PRINT    
+CALL PRINT_SELECT_BUTTON(" 30{일 본 식}", 30, LOCAL:13 == 0)
+CALL PRINT_SELECT_BUTTON(" 31{서 양 식}", 31, LOCAL:13 == 1)
+;CALL PRINT_SELECT_BUTTON(" 32{중 화 식}", 32, LOCAL:13 == 2)
+CALL PRINT_SELECT_BUTTON(" 32{한 국 식}", 32, LOCAL:13 == 2)
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "  0[이 조건으로 모집]", 0
+PRINTL 
+PRINTBUTTON "  1[캔슬]", 1
+PRINTL 
+
+REDRAW 0
+
+$INPUT_LOOP
+INPUT
+
+IF RESULT == 1
+	REDRAW 1
+	RETURN 0
+ELSEIF RESULT >= 10 && RESULT <= 15 && LOCAL:10 != RESULT - 10
+	LOCAL:10 = RESULT - 10
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT >= 20 && RESULT <= 26 && LOCAL:11 != RESULT - 20
+	LOCAL:11 = RESULT - 20
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT >= 30 && RESULT <= 32 && LOCAL:13 != RESULT - 30
+	LOCAL:13 = RESULT - 30
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT != 0
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+
+REDRAW 1
+
+LOCAL:0 = GET_COMMANDER_NUM(CFLAG:MASTER:소속)
+
+;군주가[동물귀]or[꼬리]를 가진다면 케모율 높은
+LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+IF LOCAL:4 >= 0 && (TALENT:(LOCAL:4):동물귀 || TALENT:(LOCAL:4):꼬리)
+	LOCAL:5 = 75
+ELSE
+	LOCAL:5 = 1
+ENDIF
+
+$INPUT_LOOP_NEWCHARA
+
+;지정의 조건으로 랜덤 캐릭터를 작성
+CALL CREATE_RANDOM_CHARA(LOCAL:5, LOCAL:10, LOCAL:11 - 1, LOCAL:13)
+LOCAL:2 = RESULT
+
+;사관의 작성에 실패했을 경우
+IF LOCAL:2 < 0
+	PRINTW 유감스럽지만 눈주위 사관은 발견되지 않았습니다…
+
+;성공
+ELSE
+	CALL SINGLE_DRAWLINE
+	PRINTFORML %조사처리(ANAME(LOCAL:2),"가")% 관직에 오름을 요구해 왔습니다
+
+	$INPUT_LOOP_SELECT
+
+	;SHOW_INFO의 초기 화면을 기본 정보로 한다
+	FLAG:능력표시모드 = 0
+
+	;캐릭터의 정보를 표시
+	CALL SINGLE_DRAWLINE
+	CALL SHOW_INFO(LOCAL:2)
+	CALL SINGLE_DRAWLINE
+
+	PRINTBUTTON "[이 캐릭터를 등용]", 0
+	PRINT    
+	PRINTBUTTON "[다른 캐릭터를 찾는다]", 1
+	PRINT    
+	IF hold == -1
+	ELSEIF showingHold
+		PRINTBUTTON "[진행된다]", 2
+	ELSE
+		PRINTBUTTON "[돌아온다]", 2
+	ENDIF
+	
+	PRINT    
+	PRINTBUTTON "[중지]", 9
+	PRINTL 
+
+	$INPUT_LOOP_TREAT
+	INPUT
+
+	IF RESULT == 0
+		CALL CHANGE_COUNTRY(LOCAL:2, CFLAG:MASTER:소속)
+		PRINTFORMW %조사처리(ANAME(LOCAL:2),"가")% 우리 나라의 사관이 되었습니다
+		IF hold != -1
+			CALL DELETE_CHARA(hold)
+		ENDIF
+		;이 턴에 있어서의 등용이 끝난 플래그를 ON
+		SHOP_TIME = CALC_SHOP_TIME()
+		BEGIN TURNEND
+		RETURN 1
+	ELSEIF RESULT == 1
+		IF hold != -1
+			;필요없는 캐릭터를 삭제
+			CALL DELETE_CHARA(hold)
+		ENDIF
+		hold = CHARANUM - 1
+		showingHold = 0
+		GOTO INPUT_LOOP_NEWCHARA
+	ELSEIF RESULT == 2
+		IF showingHold
+			showingHold = 0
+		ELSE
+			showingHold = 1
+		ENDIF
+			;스왑
+			LOCAL:21 = hold
+			hold    = LOCAL:2
+			LOCAL:2 = LOCAL:21
+		GOTO INPUT_LOOP_SELECT
+	ELSEIF RESULT == 9
+		;PRINTW 이번은 등용을 보류하기로 했습니다
+		;작성한 캐릭터를 삭제
+		CALL DELETE_CHARA(CHARANUM - 1)
+		IF hold != -1
+			CALL DELETE_CHARA(CHARANUM - 1)
+		ENDIF
+	ELSE
+		GOTO INPUT_LOOP_TREAT
+	ENDIF
+ENDIF
+
+RETURN 0

@@ -1,0 +1,294 @@
+﻿@PIERCE_MENU(대상, 편집모드 = 0)
+#DIM 대상
+#DIM 편집모드
+#DIM FIRST_LINE
+
+FIRST_LINE = LINECOUNT
+
+FOR LOCAL, 0, 피어스_최대비트 + 1
+	IF IS_PIERCED(대상, LOCAL)
+		PRINTFORML [{LOCAL:0, 3}] %GET_PIERCE_NAME(LOCAL:0)%의 피어스를 제외한다
+	ELSEIF IS_HOLED(대상, LOCAL) && CAN_PIERCE(대상, LOCAL) && (편집모드 || ITEM:피어스)
+		PRINTFORML [{LOCAL:0, 3}] %GET_PIERCE_NAME(LOCAL:0)%에 피어스를 붙인다
+	ENDIF
+
+	IF IS_HOLED(대상, LOCAL) && 편집모드
+		PRINTFORML [{LOCAL:0 + 100, 3}] %GET_PIERCE_NAME(LOCAL:0)%의 피어스구멍을 막는다
+	ENDIF
+	SIF CAN_PIERCE(대상, LOCAL) && (편집모드 || ITEM:피어스)
+		PRINTFORML [{LOCAL:0, 3}] %GET_PIERCE_NAME(LOCAL:0)%에 피어스 구멍을 뚫어, 피어스를 붙인다
+NEXT
+
+PRINTFORML [99] 돌아온다
+
+INPUT
+
+IF RESULT == 99
+	PRINTFORML 역시 그만두었다
+	RETURN 0
+ELSEIF RESULT < 100 && IS_PIERCED(대상, RESULT) && 편집모드
+	CALL REMOVE_PIERCE(대상, RESULT)
+	IF 편집모드
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RESTART
+	ELSE
+		ITEM:피어스 ++
+		RETURN 1
+	ENDIF
+ELSEIF RESULT < 100 && CAN_PIERCE(대상, RESULT) && (편집모드 || ITEM:피어스)
+	CALL SET_PIERCE(대상, RESULT)
+	IF 편집모드
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RESTART
+	ELSE
+		ITEM:피어스 --
+		RETURN 1
+	ENDIF
+ELSEIF IS_HOLED(대상, RESULT - 100) && 편집모드
+	LOCAL = RESULT - 100
+	PRINTFORML %ANAME(대상)%의 %GET_PIERCE_NAME(LOCAL)%의 피어스구멍을 막았다
+	CALL CLEAR_PIERCE_HOLE(대상, LOCAL)
+	CLEARLINE LINECOUNT - FIRST_LINE
+	RESTART
+ENDIF
+
+CLEARLINE LINECOUNT - FIRST_LINE
+RESTART
+
+;---------------------------
+;ARG:0의 ARG:1 비트에 피어스를 통하는 함수
+;구멍이 나 있지 않으면 연다
+;구멍을 뚫어 통하면 2, 통했을 뿐이라면 1, 무리이면 0이 돌아간다
+;ARG:2는 메세지를 표시하는 플래그
+;---------------------------
+@SET_PIERCE(ARG:0, ARG:1, ARG:2 = 1)
+LOCAL:0 = 0
+LOCALS:0 = %GET_PIERCE_NAME(ARG:1)%
+SIF !CAN_PIERCE(ARG:0, ARG:1)
+	RETURN LOCAL:0
+IF !IS_HOLED(ARG:0, ARG:1)
+	SIF ARG:2
+		CALL COLOR_PRINTW(@"%ANAME(ARG:0)%의 %LOCALS:0%에 구멍이 열렸다……", 칼라_주의)
+	LOCAL:0 ++
+	SETBIT TALENT:(ARG:0):피어스구멍, ARG:1
+ENDIF
+SIF ARG:2
+	CALL COLOR_PRINTW(@"%ANAME(ARG:0)%의 %LOCALS:0%에 피어스가 장착되었다……", 칼라_주의)
+SETBIT TALENT:(ARG:0):피어스, ARG:1
+LOCAL:0 ++
+RETURN LOCAL:0
+
+;---------------------------
+;ARG:0의 ARG:1 비트의 피어스를 제외하는 함수
+;물론 구멍은 사라지지 않는다
+;제외하면 1, 원래 붙지 않았으면 0이 돌아간다
+;ARG:2는 메세지를 표시하는 플래그
+;---------------------------
+@REMOVE_PIERCE(ARG:0, ARG:1, ARG:2 = 1)
+IF IS_PIERCED(ARG:0, ARG:1)
+	SIF ARG:2
+		CALL COLOR_PRINTW(@"%ANAME(ARG:0)%의 %GET_PIERCE_NAME(ARG:1)%로부터 피어스를 제외했다……", 칼라_주의)
+	CLEARBIT TALENT:(ARG:0):피어스, ARG:1
+	RETURN 1
+ENDIF
+RETURN 0
+
+;---------------------------
+;ARG:0 비트에 대응하는 장착 부위의 문자열을 돌려주는 함수
+;---------------------------
+@GET_PIERCE_NAME(ARG:0)
+#FUNCTIONS
+SELECTCASE ARG:0
+	CASE 피어스_코
+		RETURNF "코"
+	CASE 피어스_귀
+		RETURNF "귀"
+	CASE 피어스_혀
+		RETURNF "혀"
+	CASE 피어스_유두
+		RETURNF "유두"
+	CASE 피어스_배꼽
+		RETURNF "배꼽"
+	CASE 피어스_클리토리스
+		RETURNF "클리토리스"
+	CASE 피어스_음순
+		RETURNF "음순"
+	CASE 피어스_페니스
+		RETURNF "페니스"
+	CASEELSE
+		RETURNF "불명"
+ENDSELECT
+
+;---------------------------
+;ARG:0에, ARG:2 ~ ARG:8번의 우선순서로 피어스를 통하는 함수
+;ARG:1을 1으로 한다고 메세지를 표시.
+;일부만 설정한다든가 말하는 것도 할 수 있다
+;달았을 경우는, 단 피어스구멍의 부위 비트가 돌아간다
+;---------------------------
+@SET_PIERCE_RANKED(ARG:0, ARG:1, ARG:2 = 99, ARG:3 = 99, ARG:4 = 99, ARG:5 = 99, ARG:6 = 99, ARG:7 = 99, ARG:8 = 99, ARG:9 = 99)
+FOR LOCAL:0, 2, 피어스_최대비트 + 3
+	CALL SET_PIERCE(ARG:0, ARG:(LOCAL:0), ARG:1)
+	SIF RESULT
+		RETURN ARG:(LOCAL:0)
+NEXT
+RETURN -1
+
+;---------------------------
+;ARG:0번의 캐릭터의, 랜덤인 부위에 피어스를 단다
+;ARG:1은 메세지 표시 플래그. 0이라면 비표시.
+;반환값은 단 부위 비트
+;어디도 비어있지 않았으면-1이 돌아오므로, 그근처 생각하지 않고 단순하게 GET_PIERCE_NAME 하지 않는 것
+;---------------------------
+@SET_PIERCE_RANDOM(ARG:0, ARG:1  = 1)
+#DIM 빈자리, 피어스_최대비트 + 1
+#DIM 빈수
+VARSET 빈자리, -1
+VARSET 빈수
+FOR LOCAL, 0, 피어스_최대비트 + 1
+	IF CAN_PIERCE(ARG:0, LOCAL:0)
+		빈자리:빈수 = LOCAL:0
+		빈수 ++
+	ENDIF
+NEXT
+
+;어디도 비어있지 않았으면-1
+SIF 빈수 == 0
+	RETURN -1
+
+LOCAL = 빈자리:(RAND:빈수)
+CALL SET_PIERCE(ARG:0, LOCAL, ARG:1)
+SIF RESULT
+	RETURN LOCAL
+;아마 오지 않을 것
+RETURN -1
+
+;---------------------------
+;ARG:0번의 캐릭터가, ARG:1번의 비트에 피어스 할 수 있을까
+;---------------------------
+@CAN_PIERCE(ARG:0, ARG:1)
+#FUNCTION
+;범위외라면 불가
+SIF ARG:1 < 0 || 피어스_최대비트 < ARG:1
+	RETURNF 0
+;장착이 끝난 상태라면 불가
+SIF IS_PIERCED(ARG:0, ARG:1)
+	RETURNF 0
+;음순피어스는 보지가 필요
+SIF ARG:1 == 피어스_음순
+	RETURNF HAS_VAGINA(ARG:0)
+;클리토리스는 페니스가 있어서는 안 된다
+SIF ARG:1 == 피어스_클리토리스
+	RETURNF !HAS_PENIS(ARG:0)
+;페니스는 자지가 없으면 안 된다
+SIF ARG:1 == 피어스_페니스
+	RETURNF HAS_PENIS(ARG:0)
+;그 이외는 통한다
+RETURNF 1
+
+;---------------------------
+;ARG:0번의 캐릭터가, 어디에서라도 좋으니까 피어스 할 수 있을까
+;---------------------------
+@CAN_PIERCE_ANYWHERE(ARG:0)
+#FUNCTION
+FOR LOCAL, 0, 피어스_최대비트 + 1
+	SIF CAN_PIERCE(ARG:0, LOCAL)
+		RETURNF 1
+NEXT
+RETURNF 0
+
+
+;---------------------------
+;ARG:0번의 캐릭터가, ARG:1번의 비트에 피어스를 하고 있을까
+;대고 있으면 1이 돌아온다
+;---------------------------
+@IS_PIERCED(ARG:0, ARG:1)
+#FUNCTION
+LOCAL:0 = 0
+;범위외라면 불가
+SIF ARG:1 < 0 || 피어스_최대비트 < ARG:1
+	RETURNF 0
+SIF GETBIT(TALENT:(ARG:0):피어스, ARG:1)
+	LOCAL:0 ++
+RETURNF LOCAL:0
+
+;---------------------------
+;ARG:0번의 캐릭터가, ARG:1번의 비트에 피어스구멍을 하고 있을까
+;대고 있으면 1이 돌아온다
+;---------------------------
+@IS_HOLED(ARG:0, ARG:1)
+#FUNCTION
+LOCAL:0 = 0
+;범위외라면 불가
+SIF ARG:1 < 0 || 피어스_최대비트 < ARG:1
+	RETURNF 0
+SIF GETBIT(TALENT:(ARG:0):피어스구멍, ARG:1)
+	LOCAL:0 ++
+RETURNF LOCAL:0
+
+;---------------------------
+;ARG:0번의 캐릭터가 붙이고 있는 피어스와 구멍에 대해서, 문자열으로 돌려준다
+;---------------------------
+@TOSTR_PIERCE(ARG:0)
+#FUNCTIONS
+LOCALS:0 = 
+FOR LOCAL:0, 0, 피어스_최대비트 + 1
+	SELECTCASE IS_PIERCED(ARG:0, LOCAL:0)
+		CASE 2
+			LOCALS:0 = %LOCALS:0%%GET_PIERCE_NAME(LOCAL:0)% 
+		CASE 1
+			LOCALS:0 = %LOCALS:0%%GET_PIERCE_NAME(LOCAL:0)%(구멍만) 
+	ENDSELECT
+NEXT
+RETURNF LOCALS:0
+
+;---------------------------
+;ARG:0번의 캐릭터가 붙이고 있는 피어스와 구멍에 대해서, PRINT 한다
+;---------------------------
+@PRINT_PIERCE(ARG:0)
+LOCAL:1 = 0
+FOR LOCAL:0, 0, 피어스_최대비트 + 1
+	IF IS_PIERCED(ARG:0, LOCAL:0)
+		LOCAL:1 = 1
+		BREAK
+	ENDIF
+NEXT
+
+IF !LOCAL:1
+	PRINTFORM 없음
+	RETURN
+ENDIF
+
+FOR LOCAL:0, 0, 피어스_최대비트 + 1
+	IF IS_PIERCED(ARG:0, LOCAL:0)
+		CALL COLOR_PRINT(@"%GET_PIERCE_NAME(LOCAL:0)%", GROUPMATCH(GET_PIERCE_NAME(LOCAL:0), "유두", "음순", "클리토리스", "페니스") ? 칼라_핑크 # GETDEFCOLOR())
+		PRINT  
+	ELSEIF IS_HOLED(ARG:0, LOCAL:0)
+		CALL COLOR_PRINT(@"%GET_PIERCE_NAME(LOCAL:0)%(구멍만)", 칼라_선택불가)
+		PRINT  
+	ENDIF
+NEXT
+
+;---------------------------
+;대상 캐릭터의 피어스구멍을 막는다
+;---------------------------
+@CLEAR_PIERCE_HOLE(ARG:0, ARG:1)
+IF GETBIT(TALENT:(ARG:0):피어스구멍, ARG:1)
+	CALL REMOVE_PIERCE(ARG:0, ARG:1, 0)
+	CLEARBIT TALENT:(ARG:0):피어스구멍, ARG:1
+	RETURN 1
+ENDIF
+RETURN 0
+
+;---------------------------
+;대상 캐릭터의 페니스와 클리토리스와 음순의 피어스구멍을 막는다
+;성전환 한 직후에 부른다
+;---------------------------
+@CLEAR_PIERCE_HOLE_SEX_CHANGE(ARG:0)
+IF HAS_PENIS(ARG:0)
+	CALL CLEAR_PIERCE_HOLE(ARG:0, 피어스_클리토리스)
+ELSE
+	CALL CLEAR_PIERCE_HOLE(ARG:0, 피어스_페니스)
+ENDIF
+IF !HAS_VAGINA(ARG:0)
+	CALL CLEAR_PIERCE_HOLE(ARG:0, 피어스_음순)
+ENDIF

@@ -1,0 +1,64 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_ENCOUNT_ROBBERY_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_ENCOUNT_ROBBERY_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_ENCOUNT_ROBBERY(대상)
+#DIM 대상
+
+PRINTFORML 탐색중, 강도에 조우했다
+PRINTFORML 남은 마을 아가씨를 인질로 해 도망치려고 하고 있다
+PRINTL
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "지략"))
+
+CALL ASK_MULTI("설득한다", "자신이 인질이 된다", "병사에 맡긴다")
+
+SELECTCASE RESULT
+	CASE 0
+		IF LIMIT(ABL:대상:지략, 30, 100) > RAND:100
+			PRINTFORML 설득에 성공했다!
+			PRINTFORML 남은 인질을 해방해, 점잖게 포박에 붙었다
+			CALL PRINT_ADD_EXP(대상, "지략경험치", RAND:10 + 5)
+		ELSE
+			PRINTFORML 설득에 실패해 버렸다……
+			PRINTFORML 남은 인질을 동반해 어딘가에 도망치기 시작해 버렸다
+		ENDIF
+	CASE 1
+		PRINTFORML 자신이 대신에 인질이 된다고 전했다……
+		IF IS_MALE(대상)
+			PRINTFORML ……가, 여자 쪽이 인질에게 적당하면 거절당했다
+			PRINTFORML 남은 인질을 동반해 어딘가에 도망치기 시작해 버렸다
+		ELSE
+			PRINTFORML 남은 품평 하는 것 같은 눈으로 %조사처리(ANAME(대상),"를")% 보고, 승낙했다
+			PRINTFORML 
+			PRINTFORML 남은 %조사처리(ANAME(대상),"를")% 따라 마을의 뒤쪽에게 있는 산속으로 도망쳤다
+			PRINTFORML %조사처리(ANAME(대상),"는")% 반격 할 수 없게, 양팔을 밧줄로 속박되어 버린다
+			PRINTFORML 저항하는 %조사처리(ANAME(대상),"를")% 안아, 그는 한층 더 산속에 있는 동굴에 %PRONOUN(대상)%를 데리고 들어갔다
+			PRINTFORML 
+			PRINTFORML 산속에 있는 동굴 중(안)에서, %조사처리(ANAME(대상),"는")% 지면에 억눌려지고 있다
+			PRINTFORML 어차피 잡힌다면과 자포자기가 된 남자에게, 이미 몇 발도 질 내 되고 있었다
+			PRINTFORML %조사처리(ANAME(대상),"는")% 몇 번이나 쾌락이 주어지는 동안에 굴복 해, 솔직하게 쾌락을 받아들이고 그의 자식을 삼키려고 하고 있다
+			PRINTFORMW 남이 허리를 흔들 때마다 %STR_BODY("질:처녀 확인:감도", 대상)%로부터 정액을 흘러넘치게 해 %조사처리(ANAME(대상),"는")% 허덕여 경련을 반복했다
+			CALL FUCK(대상, "욕망, 욕망, 성교, 성교, Ｖ, Ｖ성교", "처녀상실, 질내사정", GET_SPERM_ID("불량배"), @"불량배의 \@RAND:2 ? 페니스 # 입술\@", "불량배", "", "대역으로 된 강간")
+			PRINTFORML 
+			PRINTFORMW 그 후 달려 든 병사에 의해 남자는 붙잡혀 너덜너덜의 %ANAME(대상)%도 구해 내졌다
+		ENDIF
+	CASE 2
+		PRINTFORML 서투르게 주제넘게 참견하지 않는 편이 좋을 것이다
+		PRINTFORML 병사에 맡기기로 했다
+ENDSELECT
+
+RETURN 1

@@ -1,0 +1,45 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_PICK_A_FLOWER_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_PICK_A_FLOWER_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_PICK_A_FLOWER(대상)
+#DIM 대상
+PRINTFORML 길가에 예쁜 꽃이 피어 있다
+PRINTFORML 정신을 빼앗기는 광경이다, 모처럼이니까 이치린 타 가기로 했다
+
+PRINTL
+CALL ASK_MULTI("붉은 꽃", "푸른 꽃", "노란 꽃")
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 붉은 꽃을 꺾어, 향기를 냄새 맡았다
+		PRINTFORMW ……희미하게 신체가 달아오르는 것 같은 감각에 빠졌다
+		CALL PRINT_ADD_EXP(대상, "성기술경험치", RAND:8 + 1, 1)
+	CASE 1
+		PRINTFORML 푸른 꽃을 꺾어, 향기를 냄새 맡았다
+		PRINTFORMW ……하면 돌연 졸음에 습격당해 저항하는 사이도 없게 그 자리에 붕괴되어 버렸다
+		PRINTFORML …깨달으면 황혼이 되어 있었다
+		PRINTFORML 무거운 머리를 갈면서 몸을 조사했지만 이상은 없었다
+		PRINTFORMW 하지만 지갑이 스라고 끝내고 있었다
+		LOCAL = MIN(MONEY, 3000)
+		MONEY -= LOCAL
+		CALL ICPRINT(@"금{LOCAL}를 잃었다", "L", 칼라_주의)
+	CASE 2
+		PRINTFORML 노란 꽃을 꺾어, 향기를 냄새 맡았다
+		PRINTFORMW ……머리가 시원해져도 좋은 기분이 되었다
+		CALL PRINT_ADD_EXP(대상, "지략경험치", RAND:8 + 1, 1)
+ENDSELECT
+RETURN 1

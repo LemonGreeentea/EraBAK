@@ -1,0 +1,104 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_HITOU_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_HITOU_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_HITOU(대상)
+#DIM 대상
+
+PRINTFORMW 탐색중, 영지민으로부터 산속에 있는 비탕의 소문을 (들)물었다
+PRINTFORML 어떻게 하지?
+PRINTL
+CALL ASK_YN("찾아 본다" ,"잊는다")
+IF RESULT == 1
+	PRINTFORML 소문이 너무 애매해 어쩐지 수상함
+	PRINTFORMW 잊는 일로 했다
+	RETURN
+ENDIF
+PRINTFORMW 흥미가 끓었던 %조사처리(ANAME(대상),"는")% 찾아 보는 일로 했다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+SELECTCASE RAND:3
+	CASE 0
+		PRINTFORML 하지만 찾아낼 수 없었다
+		PRINTFORMW 헛수고인 채 산을 물러났다
+		RETURN
+	CASE 1
+		PRINTFORML 비탕은 발견되지 않았지만, 보통 온천을 찾아냈다
+		PRINTFORMW 유감이었지만 모처럼인 것으로 잠겨 가는 일로 했다
+		MAXBASE:대상:체력 += 100
+		CALL ICPRINT(@"체력 최대치가<100>올라,<{MAXBASE:대상:체력}>가 되었다", "W", 칼라_주의)
+		RETURN
+	CASE 2
+		PRINTFORML 했다!
+		PRINTFORML 인의 밟아 들어가지 않는 산속에서 목적의 비탕을 찾아냈다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 조속히 뜨거운 물에 잠겼다
+ENDSELECT
+IF IS_MALE(대상) || (HAS_PENIS(대상) && RAND:2)
+	PRINTFORML 천천히 만끽하고 있으면, 김의 저 편에 요괴의 소녀를 보기 시작했다
+	PRINTFORMW 저쪽은 이쪽을 눈치채지 않는 것 같지만
+	PRINTFORML 어떻게 하지?
+	CALL ASK_YN("덤벼 든다" ,"살그머니 떨어진다")
+	IF RESULT == 1
+		PRINTFORMW 발견되기 전에 살그머니 거리를 취했다
+		MAXBASE:대상:체력 += 200
+		CALL ICPRINT(@"체력 최대치가<200>올라,<{MAXBASE:대상:체력}>가 되었다", "W", 칼라_주의)
+		RETURN
+	ENDIF
+	PRINTFORML 여기에서도 아는, 극상의 여체다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 하나의 물건을 부풀리면서 살그머니 소리없이 다가오면 그녀에게 덤벼 들었다
+	PRINTFORML 
+	PRINTFORML 산속에 요염한 소녀의 신음소리가 영향을 주고 있다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 그녀를 잡으면 그 깨끗한 비밀스런 장소에 하나의 물건을 쑤셔 넣어 격렬하게 범했다
+	PRINTFORMW 저항해날뛴다소녀를 확실히 잡아, 그 깨끗한 비밀스런 장소 목표로 해 격렬하게 허리를 쳐박는다
+	PRINTFORML 조금 전까지 순결했던 암컷구멍도 알맞게 불어 있어 고기 주름이 꿈틀거려 큐우큐우 단단히 조여 왔다
+	PRINTFORML 쫄깃쫄깃의 피부의 감촉과 눈물 섞임의 사랑스러운 신음소리가 한층 더%조사처리(ANAME(대상),"를")% 흥분시킨다
+	PRINTFORMW 울부짖는 그녀를 무시해 마음껏 정액을 발하면, 그녀는 경련하면서 크게 몸을 뒤로 젖히게 했다……
+	CALL FUCK(대상, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "요괴 소녀의 입술", "", "요괴 소녀의 질", "강간")
+	PRINTFORML 
+	PRINTFORMW 온천과 강간을 즐긴 후, %조사처리(ANAME(대상),"는")% 그녀를 방치해 그 자리를 떠났다
+	MAXBASE:대상:체력 += 200
+	CALL ICPRINT(@"체력 최대치가<200>올라,<{MAXBASE:대상:체력}>가 되었다", "W", 칼라_주의)
+	RETURN
+ENDIF 
+PRINTFORML 한가로이 뜨거운 물에 잠기고 있으면 갑자기 말을 걸 수 있어 놀라 버렸다
+PRINTFORML 되돌아 보면, 거기에는 하나의 물건을 발기시킨 씩씩한 요괴가 서 있었다
+PRINTFORMW 생각하지 않는 먼저 온 손님의 등장으로 해 진흙도 진흙이 된 %ANAME(대상)%에 대해 그는 섹스 하지 않을까 권해 왔다
+PRINTFORMW 어떻게 하지?
+CALL ASK_YN("그를 본다" ,"도망친다")
+IF RESULT == 1
+	PRINTFORML %조사처리(ANAME(대상),"는")% 비명을 올려 도망치기 시작했다
+	PRINTFORMW 다행스럽게도 그는 뒤쫓아서는 오지 않았다
+	RETURN
+ENDIF
+PRINTFORML 도망치려고 한 %조사처리(ANAME(대상),"이지만")% 눈앞의 하나의 물건에 무심코 정신을 빼앗겨 버렸다
+PRINTFORML 인의 그것과는 비교가 되지 않는 폭력적인 검붉은 남근이 끙끙 우뚝 솟아 있다
+PRINTFORMW %ANAME(대상)%의 시선을 눈치챈 그는 히죽히죽 웃으면서 천천히 임박해 왔다
+PRINTFORML 
+PRINTFORML 억지로 요괴의 매우 굵은 자지를 근원까지 쑤셔 넣어진 %조사처리(ANAME(대상),"는")% 일순간 의식이 날아 흰색 눈을 벗겼다
+PRINTFORML 그 강렬한 충격에 신체는 시비레, 목으로부터 무너진 개구리와 같은 신음소리를 흘리는 것이 힘껏이다
+PRINTFORMW 하지만 그는 %ANAME(대상)%에 상관하는 일 없이 허리를 잡으면 격렬하게 허리를 그라인드 시키고 안쪽 깊게까지 쳐박아 왔다
+PRINTFORML 고류고류와 질육을 후벼파져 내장을 압박받아 문자 그대로 암컷구멍이 유린되어 %조사처리(ANAME(대상),"는")% 보기 흉한 소리를 높인다
+PRINTFORML 상태의 좋은 점을 마음에 든 그는 더욱 허리의 움직임을 가속시키고 %조사처리(ANAME(대상),"는")% 확실히 고기 오나홀과 같이 다루어져 버린다
+PRINTFORMW 망가지는 것 같은 흉악한 행위에, 하지만 생존 본능이 자극된 육체는 자궁을 열어 애액을 흘러넘치게 하고 있었다
+PRINTFORMW 우아하게 2자리수 이상의 질내사정을 받고 망가지는 직전까지 희롱해지고 계속된 %조사처리(ANAME(대상),"는")% 야무지지 못한 아헤얼굴을 쬐고 있었다……
+CALL FUCK(대상, "욕망, 봉사, 정애, 성교, Ｍ, Ｃ, Ｖ, Ｂ, Ｖ성교, Ｖ확장", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("들요괴"), @"들요괴의 \@RAND:2 ? 페니스 # 입술\@", "들요괴", "", "화간")
+PRINTFORML 
+PRINTFORML 올린 %조사처리(ANAME(대상),"는")% 그에게 간호되고 나서 온천을 뒤로 했다
+PRINTFORMW 하지만 속옷을 훔쳐져 버려, 노 팬츠로 하산 하지 않을 수 없었다
+
+RETURN 1

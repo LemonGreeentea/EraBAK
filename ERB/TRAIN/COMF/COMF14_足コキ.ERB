@@ -1,0 +1,416 @@
+﻿;풋잡
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME14
+IF MTAR_NUM == 2
+	LOCALS:0 = 동시 풋잡
+ELSEIF MPLY_NUM == 3
+	LOCALS:0 = Ｔ풋잡
+ELSEIF MPLY_NUM == 2
+	LOCALS:0 = Ｗ풋잡
+ELSE
+	LOCALS:0 = 풋잡
+ENDIF
+
+RESULTS:0 = %LOCALS:0%한다
+RESULTS:1 = %LOCALS:0%당한다
+RESULTS:2 = %LOCALS:0%시킨다
+RESULTS:3 = %LOCALS:0%된다
+RESULTS:4 = %LOCALS:0%시킨다
+RESULTS:5 = %LOCALS:0%과시하고
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE14
+;공통 부분
+CALL COM_ABLE_COMMON(14)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 3명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 3
+	RETURN 0
+;타겟은 최대로 2명까지
+SIF MTAR_NUM <= 0 || MTAR_NUM > 2
+	RETURN 0
+;복수-복수는 불가
+SIF MPLY_NUM >= 2 && MTAR_NUM >= 2
+	RETURN 0
+;전플레이어에 대해 판정
+FOR LOCAL:0, 0, MPLY_NUM
+	;행동불능이라면 불가
+	SIF !IS_PLAYABLE(MPLY:(LOCAL:0))
+		RETURN 0
+	;구속중이라면 불가
+	SIF IS_BIND(MPLY:(LOCAL:0))
+		RETURN 0
+	;삽입중은 불가
+	SIF IS_INSERT_SINGLE(MPLY:(LOCAL:0), "전")
+		RETURN 0
+	;안면승마중의 경우
+	IF IS_RIDE(MPLY:(LOCAL:0))
+		;플레이어가 복수 or 타겟이 복수 or 승마하고 있는 상대가 타겟 이외라면 불가
+		SIF MPLY_NUM >= 2 || MTAR_NUM >= 2 || !IS_RIDE(MPLY:0, MTAR:0)
+			RETURN 0
+		;엉덩이로 안면승마중이라면 불가
+		LOCAL:2 = SEARCH_EQUIP(102, MPLY:0, MTAR:0)
+		SIF LOCAL:2 >= 0 && MEQUIP_PLAYER_NUM:(LOCAL:2) >= 2
+			RETURN 0
+	ENDIF
+	;안면승마 되고 있다면 불가
+	SIF IS_RIDDEN(MPLY:(LOCAL:0))
+		RETURN 0
+	;플레이어가 바닥에 엎드리며 있다면 불가
+	SIF IS_EQUIP_PLAYER(MPLY:(LOCAL:0), 110)
+		RETURN 0
+	;타겟으로부터 플레이어에 다리 빨고 안이라면 불가
+	SIF SEARCH_EQUIP(104, MTAR:0, MPLY:(LOCAL:0)) >= 0
+		RETURN 0
+NEXT
+;전 타겟으로 붙어 판정
+FOR LOCAL:0, 0, MTAR_NUM
+	;장대가 필요
+	SIF !HAS_PENIS(MTAR:(LOCAL:0))
+		RETURN 0
+	;타겟의 자지가 메워지고 있으면 안 돼
+	SIF IS_P_HOLD(MTAR:LOCAL)
+		RETURN 0
+	;타겟이 삽입중이라면 안 돼
+	SIF IS_INSERT_SINGLE(MTAR:(LOCAL:0), "Ｐ")
+		RETURN 0
+	;타겟의Ｖ가 다른 캐릭터의 장대로 메워지고 있어, 체위가 후배위·배면좌위·기승위·배면기승위 이외라면 불가
+	SIF IS_INSERT_SINGLE(MTAR:0, "Ｖ") && LOCAL:0 != 2 && !GROUPMATCH(GET_SEX_POSITION_SINGLE(MTAR:0, "Ｖ"), 2, 4, 5, 6)
+		RETURN 0
+	;타겟의Ａ가 다른 캐릭터의 장대로 메워지고 있어, 체위가Ａ후배위·Ａ배면좌위·Ａ기승위·Ａ배면기승위 이외라면 불가
+	SIF IS_INSERT_SINGLE(MTAR:0, "Ａ") && LOCAL:0 != 2 && !GROUPMATCH(GET_SEX_POSITION_SINGLE(MTAR:0, "Ａ"), 2, 4, 5, 6)
+		RETURN 0
+	;안면승마중이라면 불가
+	SIF IS_RIDE(MTAR:(LOCAL:0))
+		RETURN 0
+	;바닥에 엎드리며 있다면 불가
+	SIF IS_EQUIP_PLAYER(MTAR:(LOCAL:0), 110)
+		RETURN 0
+NEXT
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM14
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;대Ｐ봉사계 커맨드의 계속 플래그를 해제
+CALL RELEASE_SERVE_P
+
+;●인원수 보정의 설정
+LOCAL:10 = 100
+
+SELECTCASE MPLY_NUM
+	CASE 2
+		TIMES LOCAL:10, 0.75
+	CASE 3
+		TIMES LOCAL:10, 0.60
+ENDSELECT
+
+SELECTCASE MTAR_NUM
+	CASE 2
+		TIMES LOCAL:10, 0.75
+ENDSELECT
+
+;●전플레이어에 대해 판정
+FOR LOCAL:0, 0, MPLY_NUM
+	LOCAL:2 = MPLY:(LOCAL:0)
+
+	DOWNBASE:(LOCAL:2):체력 += 100
+
+	EXP:(LOCAL:2):성기술경험치 += MAX(MTAR_NUM / 2 + 1, 1)
+
+	SOURCE:(LOCAL:2):봉사 = SERVE_HOUSHI(LOCAL:2, 200)
+	SOURCE:(LOCAL:2):접촉 = 50
+	SOURCE:(LOCAL:2):일탈 = 30
+	SOURCE:(LOCAL:2):성행동 = 210
+
+	;플레이어 주도의 경우
+	IF GET_COM_INITIATIVE() == 0
+		SOURCE:(LOCAL:2):기학 = 80
+	ENDIF
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:2, 170, 90)
+
+	;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+	TCVAR:(LOCAL:2):4 = 1
+
+	;전 타겟으로 주는 쾌감계 소스를 계산
+	FOR LOCAL:1, 0, MTAR_NUM
+		LOCAL:3 = MTAR:(LOCAL:1)
+		SOURCE:(LOCAL:3):쾌Ｐ += SENSE_HOUSHI_P(LOCAL:2, LOCAL:3, 1100 + TALENT:(LOCAL:2):각선미 * 300) * LOCAL:10 / 100
+
+		;사정 개소와 대상을 세트
+		CALL STACK_SPERM(LOCAL:3, LOCAL:2, 사정부위_다리)
+	NEXT
+NEXT
+
+;●전 타겟으로 붙어 판정
+FOR LOCAL:0, 0, MTAR_NUM
+	LOCAL:1 = MTAR:(LOCAL:0)
+
+	DOWNBASE:(LOCAL:1):체력 += 60
+
+	SOURCE:(LOCAL:1):접촉 = 50
+	SOURCE:(LOCAL:1):일탈 = 30
+	SOURCE:(LOCAL:1):고통 = 20
+	SOURCE:(LOCAL:1):성행동 = 180
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:1, 100, 120)
+NEXT
+
+;주도도 변화 기준치
+TFLAG:49 = 3
+
+;도착도 변화 기준치
+TFLAG:50 = 2
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 3
+
+RETURN 1
+
+;-------------------------------------------------
+;계속 커맨드인가 어떤가를 설정
+;-------------------------------------------------
+@COM_IS_EQUIP14
+RETURN 1
+
+;-------------------------------------------------
+;계속 상태의 처리
+;-------------------------------------------------
+@COM_EQUIP14(ARG:0)
+;●인원수 보정의 설정
+LOCAL:10 = 100
+
+SELECTCASE MEQUIP_PLAYER_NUM:(ARG:0)
+	CASE 2
+		TIMES LOCAL:10, 0.75
+	CASE 3
+		TIMES LOCAL:10, 0.60
+ENDSELECT
+
+SELECTCASE MEQUIP_TARGET_NUM:(ARG:0)
+	CASE 2
+		TIMES LOCAL:10, 0.75
+ENDSELECT
+
+;●전플레이어에 대해 판정
+FOR LOCAL:0, 0, MEQUIP_PLAYER_NUM:(ARG:0)
+	LOCAL:2 = MEQUIP_PLAYER:(ARG:0):(LOCAL:0)
+
+	DOWNBASE:(LOCAL:2):체력 += 20
+
+	EXP:(LOCAL:2):성기술경험치 += MAX(MEQUIP_TARGET_NUM:(ARG:0) / 2 + 1, 1)
+
+	SOURCE:(LOCAL:2):봉사 += SERVE_HOUSHI(LOCAL:2, 60)
+	SOURCE:(LOCAL:2):접촉 += 25
+	SOURCE:(LOCAL:2):일탈 += 15
+	SOURCE:(LOCAL:2):성행동 += 70
+
+	;플레이어 주도의 경우
+	IF IS_INITIATIVE(LOCAL:2)
+		SOURCE:(LOCAL:2):기학 = 80
+	ENDIF
+
+	;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+	TCVAR:(LOCAL:2):4 = 1
+
+	;도착도 변화 기준치
+	TCVAR:(LOCAL:2):50 += 1
+
+	;전 타겟으로 주는 쾌감계 소스를 계산
+	FOR LOCAL:1, 0, MEQUIP_TARGET_NUM:(ARG:0)
+		LOCAL:3 = MEQUIP_TARGET:(ARG:0):(LOCAL:1)
+		SOURCE:(LOCAL:3):쾌Ｐ += SENSE_HOUSHI_P(LOCAL:2, LOCAL:3, 370 + TALENT:(LOCAL:2):각선미 * 100) * LOCAL:10 / 100
+
+		;사정 개소와 대상을 세트
+		CALL STACK_SPERM(LOCAL:3, LOCAL:2, 사정부위_다리)
+	NEXT
+NEXT
+
+;●전 타겟으로 붙어 판정
+FOR LOCAL:0, 0, MEQUIP_TARGET_NUM:(ARG:0)
+	LOCAL:1 = MEQUIP_TARGET:(ARG:0):(LOCAL:0)
+
+	DOWNBASE:(LOCAL:1):체력 += 10
+
+	SOURCE:(LOCAL:1):접촉 += 25
+	SOURCE:(LOCAL:1):일탈 += 15
+	SOURCE:(LOCAL:1):고통 += 10
+	SOURCE:(LOCAL:1):성행동 += 60
+
+	;도착도 변화 기준치
+	TCVAR:(LOCAL:1):50 += 1
+NEXT
+
+;-------------------------------------------------
+;계속중의 표시
+;-------------------------------------------------
+@EQUIP_MESSAGE14(ARG:0)
+RESULTS = %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"가")% %EQUIP_TARGET_ANAME(ARG:0)%에 풋잡중
+
+;-------------------------------------------------
+;계속중의 지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE_EQUIP14(ARG:0)
+PRINTFORML %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"가")% %EQUIP_TARGET_ANAME(ARG:0)%의 페니스를 다리로 흔들어 올리고 있다…
+
+;-------------------------------------------------
+;계속을 해제했을 때의 지문
+;-------------------------------------------------
+@COM_TEXT_RELEASE_EQUIP14(ARG:0)
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER14(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 80
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 4)
+CALL COM_ORDER_ELEMENT(ARG:0, @"정애Lv{ABL:(ARG:0):정애}", ABL:(ARG:0):정애 * 1)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 2, 20))
+
+IF TCVAR:(ARG:0):60
+	CALL COM_ORDER_ELEMENT(ARG:0, "미약", 6)
+ENDIF
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -2)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 6)
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -1)
+ENDIF
+IF TALENT:(ARG:0):남성혐오
+	CALL COM_ORDER_ELEMENT(ARG:0, "남성혐오", -7)
+ENDIF
+
+;합의
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -10)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE14
+;타겟이 2명
+IF TALENT:(MPLY:0):각선미
+	LOCALS:1 = 날씬한 아름다운 다리를 과시하면서,
+ELSE
+	LOCALS:1 =
+ENDIF
+IF MTAR_NUM == 2
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			PRINTFORM %조사처리(ANAME(MPLY:0),"는")%
+			IF MPLY:0 != MASTER && ABL:(MPLY:0):새드 >= 3
+				PRINT 가학적인 미소를 띄우면서,
+			ELSE
+				PRINT 당황하도록(듯이)하면서,
+			ENDIF
+			PRINTFORML %LOCALS:1%
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"와")% %ANAME(MTAR:1)%의 페니스를 좌우의 다리로 짓밟고 쓸어올%TARGET_STR("렸다", "려 왔다")%…
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 다리를 열어, %LOCALS:1% %조사처리(ANAME(MTAR:0),"와")% %ANAME(MTAR:1)%의 페니스를 좌우의 다리로 쓸어올려 봉사했다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에, %조사처리(ANAME(MTAR:0),"와")% %ANAME(MTAR:1)%의 페니스를 다리로 훑도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 다리를 열어, %LOCALS:1% %조사처리(ANAME(MTAR:0),"와")% %ANAME(MTAR:1)%의 페니스를 좌우의 다리로 쓸어올렸다…
+	ENDSELECT
+
+;플레이어가 3명
+ELSEIF MPLY_NUM == 3
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			PRINTFORMW %ANAME(MPLY:0)%、%ANAME(MPLY:1)%、%ANAME(MPLY:2)%의 세 명은, %LOCALS:1%일제히 %ANAME(MTAR:0)%의 페니스를 짓밟고 쓸어올%TARGET_STR("렸다", "려 왔다")%…
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORMW %ANAME(MPLY:0)%、%ANAME(MPLY:1)%、%ANAME(MPLY:2)%의 세 명은, %LOCALS:1%협력하면서 %ANAME(MTAR:0)%의 페니스를 다리로 쓸어올려 봉사했다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%、%ANAME(MPLY:1)%、%ANAME(MPLY:2)%의 세 명에게, %ANAME(MTAR:0)%의 페니스를 다리로 훑도록(듯이) 명령했다
+			PRINTFORMW 세 명은 (들)물은 대로, %LOCALS:1%일제히 %ANAME(MTAR:0)%의 페니스를 다리로 쓸어올렸다…
+	ENDSELECT
+
+;플레이어가 2명
+ELSEIF MPLY_NUM == 2
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"와")% %ANAME(MPLY:1)%는, %LOCALS:1%둘이서 %ANAME(MTAR:0)%의 페니스를 짓밟고 쓸어올%TARGET_STR("렸다", "려 왔다")%…
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"와")% %ANAME(MPLY:1)%는, %LOCALS:1%둘이서 협력하면서 %ANAME(MTAR:0)%의 페니스를 다리로 쓸어올려 봉사했다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %조사처리(ANAME(MPLY:0),"와")% %ANAME(MPLY:1)%에, %ANAME(MTAR:0)%의 페니스를 다리로 훑도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"와")% %ANAME(MPLY:1)%는, %LOCALS:1%둘이서 %ANAME(MTAR:0)%의 페니스를 다리로 쓸어올렸다…
+	ENDSELECT
+
+;플레이어가 1명
+ELSE
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			PRINTFORM %조사처리(ANAME(MPLY:0),"는")%
+			PRINTFORM %LOCALS:1%
+			IF MPLY:0 != MASTER && ABL:(MPLY:0):새드 >= 3
+				PRINT 가학적인 미소를 띄우면서, 양 다리로 격렬하게
+			ELSE
+				PRINT 조심스럽게, 양 다리로
+			ENDIF
+			PRINTFORMW %ANAME(MTAR:0)%의 페니스를 흔들%TARGET_STR("었다", "어 왔다")%…
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 앞에서 다리를 열어, %LOCALS:1%페니스를 양 다리로 쓸어올려 봉사했다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에, %ANAME(MTAR:0)%의 페니스를 다리로 훑도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 앞에서 다리를 열어, %LOCALS:1%페니스를 양 다리로 쓸어올렸다…
+	ENDSELECT
+ENDIF
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN14
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_14()
+RETURN POWER(2, 성적기호_봉사하고싶다)
+
+@COM_PREFERENCE_TARGET_14()
+RETURN POWER(2, 성적기호_봉사되고싶다)
+

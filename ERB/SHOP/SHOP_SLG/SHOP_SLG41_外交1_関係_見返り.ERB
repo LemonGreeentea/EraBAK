@@ -1,0 +1,168 @@
+﻿;외교로 상대로부터 담보가 요구되었을 경우의 처리
+
+;-------------------------------------------------
+;ARG:0 세력이 주인공 세력에 요구를 실시했을 경우의 처리
+;ARG:1은 요구의 무게 0=경도 1=중도 2=중증
+;요구를 마시면 1, 거절하면 0, 요구할 수 있는 내용이 없는 경우는-1을 돌려준다
+;-------------------------------------------------
+@DIPLOMACY_REQUESTED(ARG:0, ARG:1)
+;요구 종별의 최대수
+#DIM CONST MAX_REQUEST_TYPE = 20
+
+;각 요구를 실시하는 확률
+#DIM REQUEST_RATE, 20
+
+VARSET REQUEST_RATE, 0
+
+;자국의 군주의 캐릭터 번호를 취득
+LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+
+;상대 세력의 군주의 캐릭터 번호를 취득
+LOCAL:5 = GET_COUNTRY_BOSS(ARG:0)
+
+;요구 가능한 사관의 인원수를 확인
+LOCAL:30 = 0
+LOCAL:31 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속 && LOCAL:0 != MASTER && LOCAL:0 != LOCAL:4
+		LOCAL:2 = MAX(ABL:(LOCAL:0):무투, ABL:(LOCAL:0):방위, ABL:(LOCAL:0):지략, ABL:(LOCAL:0):정치, ABL:(LOCAL:0):가창, ABL:(LOCAL:0):요리)
+		IF LOCAL:2 >= 80
+			LOCAL:30 ++
+			LOCAL:31 ++
+		ELSEIF LOCAL:2 >= 65
+			LOCAL:30 ++
+		ENDIF
+	ENDIF
+NEXT
+
+;●각 요구의 확률을 변수 REQUEST_RATE 로 설정
+;0=군사를 요구
+;1=경제력을 요구
+;2=사관을 요구
+;10=성적 행위를 요구
+;11=수기간의 조교를 요구
+
+IF GET_SUM_SOLDIER(CFLAG:MASTER:소속) >= GET_SUM_ECONOMY(ARG:0) * 30 / 1000
+	REQUEST_RATE:0 = 60
+ENDIF
+IF GET_SUM_ECONOMY(ARG:0) - GET_OWN_CITY(ARG:0) * 50 >= 300
+	REQUEST_RATE:1 = 30
+ENDIF
+IF ABL:(LOCAL:5):욕망 >= 3 && ABL:(LOCAL:5):성지식 >= 3
+	REQUEST_RATE:10 = 50 + ABL:(LOCAL:5):욕망 * 10
+ENDIF
+
+;요구 강도:경
+IF ARG:1 == 0
+	IF LOCAL:30
+		REQUEST_RATE:2 = 15
+	ENDIF
+
+;요구 강도:중
+ELSEIF ARG:1 == 1
+	IF LOCAL:31
+		REQUEST_RATE:2 = 25
+	ENDIF
+
+;요구 강도:겹
+ELSE
+	IF LOCAL:31
+		REQUEST_RATE:2 = 60
+	ENDIF
+	IF ABL:(LOCAL:5):욕망 >= 3 && ABL:(LOCAL:5):성지식 >= 3
+		;REQUEST_RATE:11 = 50 + ABL:(LOCAL:5):욕망 * 10
+	ENDIF
+ENDIF
+
+;요구 내용이 지정된 확률에 근거해 결정
+LOCAL:1 = 0
+FOR LOCAL:0, 0, MAX_REQUEST_TYPE
+	LOCAL:1 += REQUEST_RATE:(LOCAL:0)
+NEXT
+;요구할 수 있는 내용이 없는 경우는-1을 돌려준다
+IF LOCAL:1 <= 0
+	RETURN -1
+ENDIF
+LOCAL:1 = RAND:(LOCAL:1)
+LOCAL:10 = -1
+FOR LOCAL:0, 0, MAX_REQUEST_TYPE
+	LOCAL:1 -= REQUEST_RATE:(LOCAL:0)
+	IF LOCAL:1 < 0
+		LOCAL:10 = LOCAL:0
+		BREAK
+	ENDIF
+NEXT
+
+;설정:성적인 요구는 조건을 채우면 상시
+IF CONFIG:308 == 0
+	IF ABL:(LOCAL:5):욕망 >= 3 && ABL:(LOCAL:5):성지식 >= 3
+		IF DIPLOMACY_TRAINED_DAY == 0 && RAND:2
+			LOCAL:10 = 11
+		ELSE
+			LOCAL:10 = 10
+		ENDIF
+	ENDIF
+;설정:성적인 요구는 조건을 채우면 상시＆욕망 조건 무시
+ELSEIF CONFIG:308 == 2
+	IF ABL:(LOCAL:5):성지식 >= 3
+		IF DIPLOMACY_TRAINED_DAY == 0 && RAND:2
+			LOCAL:10 = 11
+		ELSE
+			LOCAL:10 = 10
+		ENDIF
+	ENDIF
+;설정:조건 무시로 100％성적인 요구
+ELSEIF CONFIG:308 == 3
+	IF DIPLOMACY_TRAINED_DAY == 0 && RAND:2
+		LOCAL:10 = 11
+	ELSE
+		LOCAL:10 = 10
+	ENDIF
+ENDIF
+
+;요구의 구체적인 내용을 설정
+LOCAL:20 = 0
+SELECTCASE LOCAL:10
+	;병을 요구
+	CASE 0
+		CALL DIPLOMACTY_REQUESTED_SOLDIER(ARG:0, ARG:1)
+		LOCAL:20 = RESULT
+
+	;경제력을 요구
+	CASE 1
+		CALL DIPLOMACTY_REQUESTED_ECONOMY(ARG:0, ARG:1)
+		LOCAL:20 = RESULT
+
+	;사관을 요구
+	CASE 2
+		CALL DIPLOMACTY_REQUESTED_CHARA(ARG:0, ARG:1)
+		LOCAL:20 = RESULT
+
+	;성적 행위를 요구
+	CASE 10
+		CALL DIPLOMACY_REQUESTED_SEX(ARG:0, ARG:1)
+		LOCAL:20 = RESULT
+
+	;수기간의 조교를 요구
+	CASE 11
+		CALL DIPLOMACY_REQUESTED_TRAIN(ARG:0, ARG:1)
+		LOCAL:20 = RESULT
+
+	;에러 체크
+	CASEELSE
+		;에러 메세지를 출력
+		THROW 외교의 요구 종별이 부정합니다(종별 번호 LOCAL:10={LOCAL:10})
+ENDSELECT
+
+IF LOCAL:20
+	PRINTFORMW %조사처리(ANAME(LOCAL:4),"가")% 요구를 마시면, %조사처리(ANAME(LOCAL:5),"는")% 간신히 이쪽의 제안을 승낙했다…
+	IF LOCAL:10 == 10 || LOCAL:10 == 11
+		RETURN 2
+	ENDIF
+	RETURN 1
+ENDIF
+
+PRINTFORMW 교섭은 성립하지 않았다…
+
+RETURN 0
+

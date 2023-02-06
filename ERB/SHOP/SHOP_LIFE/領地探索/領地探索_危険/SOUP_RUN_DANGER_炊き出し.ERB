@@ -1,0 +1,107 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_SOUP_RUN_DANGER_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_SOUP_RUN_DANGER_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_SOUP_RUN_DANGER(대상)
+#DIM 대상
+
+PRINTFORML 빈민굴에서, 식사제공의 현장을 당했다
+PRINTFORML 
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "요리"))
+CALL ASK_YN("돕는다", "그만둔다")
+
+IF RESULT == 1
+	PRINTFORMW 봉사 활동에 흥미는 없다
+	PRINTFORML 방치했다
+	RETURN 1
+ENDIF
+
+IF LIMIT(ABL:대상:요리, 50, 80) >= RAND:100
+	PRINTFORMW 솜씨 좋게 도울 수 있었다
+	PRINTFORML 줄지어 있던 부랑자들에게 답례를 말해졌다
+	CALL PRINT_ADD_EXP(대상, "요리경험치", RAND:10 + 5)
+ELSE
+	PRINTFORMW 조금 얽혀들어 버렸다
+	PRINTFORML 줄지어 있던 부랑자들에게 답례를 말해졌다
+	CALL PRINT_ADD_EXP(대상, "요리경험치", RAND:5 + 1)
+ENDIF    
+
+SIF IS_MALE(대상)
+	RETURN 1
+
+PRINTFORMW 정리하고 있으면, 부랑자의 한사람이 말을 걸려졌다
+PRINTFORML 여자 가뭄으로 곤란해 하고 있으므로, 그 밖에도 「도와줘」가지고 싶은 말이 있다고 들었다
+PRINTFORML 그런 일이 요구되고 있는 것 같지만……
+
+CALL ASK_MULTI("손으로 상대 한다", "입으로 상대 한다", "섹스한다", "애널섹스한다", "거절한다")
+
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 손으로 상대 한다고 전하면, 부랑자는 %조사처리(ANAME(대상),"를")% 스스로의 보금자리에 안내했다
+		PRINTFORMW 그는 조속히, 당신의 발기한 것을 노출시킨다
+		PRINTFORML 여섯에 목욕탕에도 넣지 않은 물건은 때 투성이가 되어 있었다
+		PRINTFORMW 코가 구부러지는 것 같은 냄새였지만, 손으로 다루고 있는 동안에, 점점 열중해 버린다
+		PRINTFORMW 어느덧%조사처리(ANAME(대상),"는")% 성적 흥분을 억제 당하지 않고, 스스로의 신체를 위로하기 시작하고 있었다
+		PRINTFORMW 남이 낮고 신음소리 사정하면, %조사처리(ANAME(대상),"는")% 스스로의 안면에서 백탁을 받아 들였다……
+		CALL FUCK(대상, "봉사, 성기술, 정애, Ｃ, Ｂ, 자위")
+	CASE 1
+		PRINTFORML 입으로 상대 한다고 전하면, 부랑자는 %조사처리(ANAME(대상),"를")% 스스로의 보금자리에 안내했다
+		PRINTFORMW 그는 조속히, 당신의 발기한 것을 노출시킨다
+		PRINTFORML 여섯에 목욕탕에도 넣지 않은 물건은 때 투성이가 되어 있었다
+		PRINTFORMW 코가 구부러지는 것 같은 냄새였지만, 달라 붙으며 맑게 하고 있는 동안에, 점점 열중해 버린다
+		PRINTFORMW 어느덧%조사처리(ANAME(대상),"는")% 성적 흥분을 억제 당하지 않고, 스스로의 신체를 위로하기 시작하고 있었다
+		PRINTFORMW 남이 낮고 신음소리 사정하면, %조사처리(ANAME(대상),"는")% 스스로 목을 울려 백탁을 다 마셨다……
+		CALL FUCK(대상, "봉사, 성기술, 정애, Ｃ, Ｂ, Ｍ, 자위, 펠라티오", "키스상실, 구강사정", 0, "부랑자의 페니스", "", "", "보금자리에서의 매춘")
+	CASE 2
+		IF RAND:2
+			PRINTFORML %조사처리(ANAME(대상),"가")% 수긍하면, 부랑자는 뛰어 오를듯이 기뻐한다
+			PRINTFORMW %ANAME(대상)%의 허리를 안아 엉덩이를 더듬으면서, 스스로의 보금자리에 안내했다
+			PRINTFORML 
+			PRINTFORMW 당장 무너질 것 같은 보금자리로부터, %ANAME(대상)%의 짐승 같아 보인 교성이 새고 있다
+			PRINTFORMW 개의 자세로, %조사처리(ANAME(대상),"는")% 남자와 사귀고 있었다
+			PRINTFORMW 밀어올릴 수 있을 때, %STR_BODY("질:감도", 대상)%로부터 이미 몇 발도 나온 정액과 애액이 섞인 국물이 넘쳐 나온다
+			PRINTFORMW %STR_BODY("가슴:성교:후배위", 대상)%를 난폭하게 주물러져 %STR_BODY("엉덩이:감촉", 대상)%를 얻어맞아 %조사처리(ANAME(대상),"는")% 쾌감에 몸부림친다
+			PRINTFORMW 남이 질내에 정액을 발하면, %조사처리(ANAME(대상),"는")% 한층 높은 소리를 질러 절정 했다……
+			CALL FUCK(대상, "욕망, 정애, 성기술, 성교, Ｖ, Ｂ, Ｃ, Ｖ성교", "처녀상실, 질내사정", GET_SPERM_ID("부랑자"), "", "부랑자", "", "보금자리에서의 매춘")
+		ELSE
+			PRINTFORML %조사처리(ANAME(대상),"가")% 수긍하면, 부랑자는 히죽히죽 추잡한 미소를 띄웠다
+			PRINTFORMW %ANAME(대상)%의 허리를 안아 엉덩이를 더듬으면서, 스스로의 보금자리에 안내했다
+			PRINTFORML 
+			PRINTFORMW 단단히 묶어진 %조사처리(ANAME(대상),"는")%, 양구멍에 입을 범해지고 있다
+			PRINTFORMW 보금자리에는 부랑자의 집단이 기다리고 있어 %조사처리(ANAME(대상),"는")% 그 전원을 상대 당하고 있었다
+			PRINTFORMW 노출의 성욕을 내던지는 것 같은 난폭한 섹스에, %조사처리(ANAME(대상),"는")% 이미 몇 번이나 절정 당하고 있다
+			PRINTFORMW 그런데도 그들은 만족하지 않고, %STR_BODY("가슴:성교:기승위", 대상)%나 %STR_BODY("엉덩이", 대상)%까지 사용해 봉사를 강요한다
+			PRINTFORMW %조사처리(ANAME(대상),"가")% 해방된 것은, 온갖 구멍에 몇십발과 정액을 따라진 후였다……
+			CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, 긴박, 고통쾌락, Ｃ, Ｖ, Ｂ, Ｍ, Ａ, 키스, 펠라티오, Ｖ성교, Ａ성교", "처녀상실, 질내사정, 키스상실, 구강사정, Ａ처녀상실, 장내사정", GET_SPERM_ID("부랑자"), "부랑자의 페니스", "부랑자", "", "보금자리에서의 윤간")
+		ENDIF
+	CASE 3
+		PRINTFORML 전은 안 되지만, 뒤로 상대 한다고 전하면, 부랑자는 뛰어 오를듯이 기뻐한다
+		PRINTFORMW %ANAME(대상)%의 허리를 안아 엉덩이를 더듬으면서, 스스로의 보금자리에 안내했다
+		PRINTFORML 
+		PRINTFORMW 당장 무너질 것 같은 보금자리로부터, %ANAME(대상)%의 짐승 같아 보인 교성이 새고 있다
+		PRINTFORMW 개의 자세로, %조사처리(ANAME(대상),"는")% 엉덩이 구멍으로 남자와 사귀고 있었다
+		PRINTFORMW %STR_BODY("애널:감도", 대상)%가 벗겨질 정도의 기세로, 남자는 허리를 흔들어 빼앗는다
+		PRINTFORMW 페니스가 항문을 밀어올릴 때, 이미 몇 발도 나온 정액과 장액이 섞인 국물이 넘쳐 나온다
+		PRINTFORMW 한층 더%STR_BODY("질", 대상)%를 손가락으로 후비어져 %조사처리(ANAME(대상),"는")% 몹시 놀라 좋아할 수밖에 할 수 없다
+		PRINTFORMW 남이 장내에 정액을 발하면, %조사처리(ANAME(대상),"는")% 한층 높은 소리를 질러 절정 했다……
+		CALL FUCK(대상, "욕망, 정애, 성기술, 성교, Ｂ, Ｃ, Ｖ, Ａ, Ａ성교", "Ａ처녀상실, 장내사정", GET_SPERM_ID("부랑자"), "", "부랑자", "", "보금자리에서의 매춘")
+	CASE 4
+		PRINTFORML 과연 그것은 할 수 없다
+		PRINTFORML 단호히 거절했다
+		RETURN 1
+ENDSELECT
+RETURN 1

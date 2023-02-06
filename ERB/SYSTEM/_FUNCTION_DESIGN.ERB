@@ -1,0 +1,554 @@
+﻿;■함수 디자인 회전
+
+;============================================================================== 
+;◆RGB 칼라를 색의 이름 단어로 지정하는 함수（사용 빈도의 높은 것 같은 색만）
+;  사용법:  SETCOLOR COLOR("레드")
+;  tohoK 참고로 했습니다. 감사.
+;============================================================================== 
+@COLOR(ARGS:0)
+	#FUNCTION
+
+	;기본 디자인 칼라
+	;  선택중 메뉴의 착색등
+	IF ARGS:0 == "메인칼라"
+		RETURNF 0x47B0A0
+	;  카테고리 타이틀색등
+	ELSEIF ARGS:0 == "서브칼라"
+		RETURNF 0x888E7E
+	;  선택 불가색등, 사용 불가인 것을 나타낸다
+	ELSEIF ARGS:0 == "다크그레이"
+		RETURNF 0x303030
+	;  시간이나 무드의 Default색등, 불가는 아니지만 오프를 나타낸다
+	ELSEIF ARGS:0 == "회색"
+		RETURNF 0x505050
+	;  주석등, 주목해 주었으면 한 부분이 그 밖에 있을 때의 뺄셈색
+	ELSEIF ARGS:0 == "실버"
+		RETURNF 0x808992
+	;  기본적인 강조색
+	ELSEIF ARGS:0 == "오렌지"
+		RETURNF 0xCE7A19
+	;  기본적인 강조색과 대립하는 색（현재의 메인 칼라에 가깝기 때문에 주의）
+	ELSEIF ARGS:0 == "시안"
+		RETURNF 0x47B3A5
+	;  주의 환기·가장 눈에 띄는 색
+	ELSEIF ARGS:0 == "옐로"
+		RETURNF 0xCFBF30
+	;  강조색이 부족할 시용
+	ELSEIF ARGS:0 == "올리브"
+		RETURNF 0x8B9E53
+	;보좌색
+	ELSEIF ARGS:0 == "다크 오렌지"
+		RETURNF 0xC66630
+	ELSEIF ARGS:0 == "다크 옐로"
+		RETURNF 0x999939
+	ELSEIF ARGS:0 == "다크 레드"
+		RETURNF 0x942C2C
+	;심함락 칼라
+	ELSEIF ARGS:0 == "레드"
+		RETURNF 0xD04040
+	ELSEIF ARGS:0 == "그린"
+		RETURNF 0x609040
+	ELSEIF ARGS:0 == "퍼플"
+		RETURNF 0x8970DF
+	;천함락 칼라
+	ELSEIF ARGS:0 == "핑크"
+		RETURNF 0xD97980
+	ELSEIF ARGS:0 == "옐로그린"
+		RETURNF 0x809940
+	ELSEIF ARGS:0 == "블루"
+		RETURNF 0x6070DC
+	;기성 사실 Lv2 맹세 칼라
+	ELSEIF ARGS:0 == "라이트 핑크"
+		RETURNF 0xF09CA3
+	ELSEIF ARGS:0 == "라이트 그린"
+		RETURNF 0x90A060
+	ELSEIF ARGS:0 == "라이트 블루"
+		RETURNF 0x7090D0
+	;기성 사실 Lv3 관계 칼라
+	ELSEIF ARGS:0 == "파스텔 핑크"
+		RETURNF 0xE5ABBE
+	ELSEIF ARGS:0 == "파스텔 그린"
+		RETURNF 0xA0A966
+	ELSEIF ARGS:0 == "파스텔 블루"
+		RETURNF 0x87A8DB
+	;폭군에게 복종（복종 루트는 블루～퍼플, 조금 비켜 놓아 시안계）
+	ELSEIF ARGS:0 == "폭군 칼라"
+		RETURNF 0x50A0A0
+	;호적수에 연모（연모 루트는 핑크～레드, 조금 비켜 놓아 오렌지계）
+	ELSEIF ARGS:0 == "호적수 칼라"
+		RETURNF 0xCC9930
+	;코마치를 애완（애완 루트는 그린～옐로그린, 조금 비켜 놓아 민트 그린계）
+	ELSEIF ARGS:0 == "코마치 칼라"
+		RETURNF 0x70BB90
+	;실버의 바리에이션
+	ELSEIF ARGS:0 == "실버 블루"
+		RETURNF 0x90A9BF
+	;계절
+	ELSEIF ARGS:0 == "봄"
+		RETURNF 0xE597B2
+	ELSEIF ARGS:0 == "여름"
+		RETURNF 0x72AE66
+	ELSEIF ARGS:0 == "가을"
+		RETURNF 0xC53D43
+	ELSEIF ARGS:0 == "동"
+		RETURNF 0x99B3DB
+	;기후
+	ELSEIF ARGS:0 == "강설"
+		RETURNF 0x98AAAB
+	ELSEIF ARGS:0 == "구름"
+		RETURNF 0x708E94
+	ELSEIF ARGS:0 == "강우"
+		RETURNF 0x5383C3
+	ELSEIF ARGS:0 == "맑음"
+		RETURNF 0xD9D09F
+	;맵용
+	ELSEIF ARGS:0 == "흙"
+		RETURNF 0x302010
+	ELSEIF ARGS:0 == "수"
+		RETURNF 0x555555
+	ELSEIF ARGS:0 == "다다미 마루"
+		RETURNF 0x363910
+	ELSEIF ARGS:0 == "판자 벽"
+		RETURNF 0x736950
+	ELSEIF ARGS:0 == "널판지를 깐 일본식 방"
+		RETURNF 0x332C16
+	ELSEIF ARGS:0 == "석 벽"
+		RETURNF 0x606066
+	ELSEIF ARGS:0 == "돌바닥"
+		RETURNF 0x202029
+	ELSEIF ARGS:0 == "물 마시는 장소"
+		RETURNF 0x105060
+	ELSEIF ARGS:0 == "봄의 수"
+		RETURNF 0xB38699
+	ELSEIF ARGS:0 == "여름의 수"
+		RETURNF 0x0e6953
+	ELSEIF ARGS:0 == "가을의 수"
+		RETURNF 0x652D30
+	ELSEIF ARGS:0 == "동의수"
+		RETURNF 0x39435B
+	ELSEIF ARGS:0 == "봄의 흙"
+		RETURNF 0x283020
+	ELSEIF ARGS:0 == "여름의 흙"
+		RETURNF 0x0e3129
+	ELSEIF ARGS:0 == "가을의 흙"
+		RETURNF 0x403029
+	ELSEIF ARGS:0 == "동의흙"
+		RETURNF 0x262C39
+	ELSEIF ARGS:0 == "봄의 밤의 수"
+		RETURNF 0x3f212d
+	ELSEIF ARGS:0 == "여름의 밤의 수"
+		RETURNF 0x031611
+	ELSEIF ARGS:0 == "가을의 밤의 수"
+		RETURNF 0x2b0508
+	ELSEIF ARGS:0 == "동의밤의 수"
+		RETURNF 0x1e2330
+	ELSEIF ARGS:0 == "봄의 밤의 흙"
+		RETURNF 0x101c0a
+	ELSEIF ARGS:0 == "여름의 밤의 흙"
+		RETURNF 0x051c1a
+	ELSEIF ARGS:0 == "가을의 밤의 흙"
+		RETURNF 0x0f0b09
+	ELSEIF ARGS:0 == "동의밤의 흙"
+		RETURNF 0x0d0f14
+
+	;Default 칼라
+	ELSEIF ARGS:0 == "Default"
+		RETURNF GETDEFCOLOR()
+	;에러 회피
+	ELSE
+		RETURNF GETDEFCOLOR()
+	ENDIF
+
+;============================================================================== 
+;◆다색 사용의 텍스트를 일행으로 쓰는 함수
+;  Default 칼라는 지정 불요
+;  CALL COLOR_PRINTFORML("오렌지로 표시", COLOR("오렌지"))
+;  CALL COLOR_PRINTFORML("여기는 언제나 대로", , "여기는 오렌지색", COLOR("오렌지"), "여기도 언제나 대로", , "여기는 블루", COLOR("블루"))
+;============================================================================== 
+@COLOR_PRINT(텍스트1, 칼라1, 텍스트2, 칼라2, 텍스트3, 칼라3, 텍스트4, 칼라4, 텍스트5, 칼라5, 텍스트6, 칼라6, 텍스트7, 칼라7, 텍스트8, 칼라8, 텍스트9, 칼라9, 텍스트10, 칼라10)
+	#DIMS 텍스트1
+	#DIM 칼라1
+	#DIMS 텍스트2
+	#DIM 칼라2
+	#DIMS 텍스트3
+	#DIM 칼라3
+	#DIMS 텍스트4
+	#DIM 칼라4
+	#DIMS 텍스트5
+	#DIM 칼라5
+	#DIMS 텍스트6
+	#DIM 칼라6
+	#DIMS 텍스트7
+	#DIM 칼라7
+	#DIMS 텍스트8
+	#DIM 칼라8
+	#DIMS 텍스트9
+	#DIM 칼라9
+	#DIMS 텍스트10
+	#DIM 칼라10
+	IF 텍스트1 != ""
+		IF 칼라1
+			SETCOLOR 칼라1
+		ELSE
+			SETCOLOR GETDEFCOLOR()
+		ENDIF
+		PRINTFORM %텍스트1%
+	ENDIF
+	IF 텍스트2 != ""
+		IF 칼라2
+			SETCOLOR 칼라2
+		ELSE
+			SETCOLOR GETDEFCOLOR()
+		ENDIF
+		PRINTFORM %텍스트2%
+	ENDIF
+	IF 텍스트3 != ""
+		IF 칼라3
+			SETCOLOR 칼라3
+		ELSE
+			SETCOLOR GETDEFCOLOR()
+		ENDIF
+		PRINTFORM %텍스트3%
+	ENDIF
+	IF 텍스트4 != ""
+		IF 칼라4
+			SETCOLOR 칼라4
+		ELSE
+			SETCOLOR GETDEFCOLOR()
+		ENDIF
+		PRINTFORM %텍스트4%
+	ENDIF
+	IF 텍스트5 != ""
+		IF 칼라5
+			SETCOLOR 칼라5
+		ELSE
+			SETCOLOR GETDEFCOLOR()
+		ENDIF
+		PRINTFORM %텍스트5%
+	ENDIF
+	IF 텍스트6 != ""
+		IF 칼라6
+			SETCOLOR 칼라6
+		ELSE
+			SETCOLOR GETDEFCOLOR()
+		ENDIF
+		PRINTFORM %텍스트6%
+	ENDIF
+	IF 텍스트7 != ""
+		IF 칼라7
+			SETCOLOR 칼라7
+		ELSE
+			SETCOLOR GETDEFCOLOR()
+		ENDIF
+		PRINTFORM %텍스트7%
+	ENDIF
+	IF 텍스트8 != ""
+		IF 칼라8
+			SETCOLOR 칼라8
+		ELSE
+			SETCOLOR GETDEFCOLOR()
+		ENDIF
+		PRINTFORM %텍스트8%
+	ENDIF
+	IF 텍스트9 != ""
+		IF 칼라9
+			SETCOLOR 칼라9
+		ELSE
+			SETCOLOR GETDEFCOLOR()
+		ENDIF
+		PRINTFORM %텍스트9%
+	ENDIF
+	IF 텍스트10 != ""
+		IF 칼라10
+			SETCOLOR 칼라10
+		ELSE
+			SETCOLOR GETDEFCOLOR()
+		ENDIF
+		PRINTFORM %텍스트10%
+	ENDIF
+	SETCOLOR GETDEFCOLOR()
+
+;============================================================================== 
+;◆다색 사용의 텍스트를 일행으로 쓰는 함수
+;  Default 칼라는 지정 불요
+;  CALL COLOR_PRINTFORML("오렌지로 표시", COLOR("오렌지"))
+;  CALL COLOR_PRINTFORML("여기는 언제나 대로", , "여기는 오렌지색", COLOR("오렌지"), "여기도 언제나 대로", , "여기는 블루", COLOR("블루"))
+;============================================================================== 
+@COLOR_PRINTL(텍스트1, 칼라1, 텍스트2, 칼라2, 텍스트3, 칼라3, 텍스트4, 칼라4, 텍스트5, 칼라5, 텍스트6, 칼라6, 텍스트7, 칼라7, 텍스트8, 칼라8, 텍스트9, 칼라9, 텍스트10, 칼라10)
+#DIMS 텍스트1
+#DIM 칼라1
+#DIMS 텍스트2
+#DIM 칼라2
+#DIMS 텍스트3
+#DIM 칼라3
+#DIMS 텍스트4
+#DIM 칼라4
+#DIMS 텍스트5
+#DIM 칼라5
+#DIMS 텍스트6
+#DIM 칼라6
+#DIMS 텍스트7
+#DIM 칼라7
+#DIMS 텍스트8
+#DIM 칼라8
+#DIMS 텍스트9
+#DIM 칼라9
+#DIMS 텍스트10
+#DIM 칼라10
+CALL COLOR_PRINT(텍스트1, 칼라1, 텍스트2, 칼라2, 텍스트3, 칼라3, 텍스트4, 칼라4, 텍스트5, 칼라5, 텍스트6, 칼라6, 텍스트7, 칼라7, 텍스트8, 칼라8, 텍스트9, 칼라9, 텍스트10, 칼라10)
+PRINTL
+
+@COLOR_PRINTW(텍스트1, 칼라1, 텍스트2, 칼라2, 텍스트3, 칼라3, 텍스트4, 칼라4, 텍스트5, 칼라5, 텍스트6, 칼라6, 텍스트7, 칼라7, 텍스트8, 칼라8, 텍스트9, 칼라9, 텍스트10, 칼라10)
+#DIMS 텍스트1
+#DIM 칼라1
+#DIMS 텍스트2
+#DIM 칼라2
+#DIMS 텍스트3
+#DIM 칼라3
+#DIMS 텍스트4
+#DIM 칼라4
+#DIMS 텍스트5
+#DIM 칼라5
+#DIMS 텍스트6
+#DIM 칼라6
+#DIMS 텍스트7
+#DIM 칼라7
+#DIMS 텍스트8
+#DIM 칼라8
+#DIMS 텍스트9
+#DIM 칼라9
+#DIMS 텍스트10
+#DIM 칼라10
+CALL COLOR_PRINT(텍스트1, 칼라1, 텍스트2, 칼라2, 텍스트3, 칼라3, 텍스트4, 칼라4, 텍스트5, 칼라5, 텍스트6, 칼라6, 텍스트7, 칼라7, 텍스트8, 칼라8, 텍스트9, 칼라9, 텍스트10, 칼라10)
+PRINTW
+
+;============================================================================== 
+;◆바로서 수치를 표시하는 함수（Kh）
+;최소치는 0으로 한다
+;ARG:0=최소치 ARG:1=바의 표시상의 최대치, ARG:2=바의 값, ARG:3=바의 폭, ARG:4=바의 색(온), ARG:5=바의 색(오프)
+;============================================================================== 
+@PRINT_KANNRAKU_BAR(ARG:0 = 0, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5)
+	#DIM Ｈ = 0
+	#DIM Ｓ = 0
+	#DIM Ｖ = 0
+	#DIM 하나의매스 = 0
+	#DIM 바의폭 = 0
+	#DIM 바의값 = 0
+	#DIM 치매스 = 0
+	#DIM 최대치 = 0
+
+	;칼라 초기치 조정
+	Ｈ = RGB_TO_H(ARG:4) - 15
+	Ｓ = RGB_TO_S(ARG:4) - 5
+	Ｖ = RGB_TO_V(ARG:4) - 20
+	IF Ｈ <= 0
+		Ｈ = 359 + Ｈ
+	ENDIF
+	IF Ｓ <= 0
+		Ｓ = 0
+	ENDIF
+	IF Ｖ <= 0
+		Ｖ = 0
+	ENDIF
+
+	;바의 초기치 조정
+	최대치 = ARG:1
+	바의값 = ARG:2
+	바의폭 = ARG:3
+	하나의매스 = 0
+	치매스 = 0
+
+	;만약 바의 표시상의 최대치가 바폭보다 작으면
+	IF 최대치 < 바의폭
+		최대치 = 바의폭
+	ENDIF
+
+	;바의 값이 하나의 매스보다 작으면
+	IF 바의값 < 하나의매스
+		바의값 = 하나의매스
+	ENDIF
+
+	;바 하나의 매스의 값을 요구하는 최대치 ÷ 바의 폭
+	하나의매스 = 최대치 / 바의폭
+
+	;치는 무엇 매스분인지를 요구한다
+	;（치-최소치）÷ 바 하나의 매스의 값
+	치매스 = 바의값 / 하나의매스
+	;0매스 이하라면 0 매스에
+	IF 치매스 < 0
+		치매스 = 0
+	ENDIF
+
+	;색상 변화의 리듬 카운트용
+	LOCAL:3 = 0
+
+	;바의 폭까지 반복해
+	FOR LOCAL:0, 0, 바의폭
+		;치 매스의 수이하라면 물이 들어라
+		IF LOCAL:0 <= 치매스
+			SETCOLOR HSV_TO_RGB(Ｈ, Ｓ, Ｖ)
+			PRINT_RECT 0, 30, 30, 45
+			LOCAL:3 += 4
+			;3회에 1 색상 변화
+			IF LOCAL:3 % 2 == 0
+				Ｈ += 1
+				IF Ｈ >= 360
+					Ｈ = 1
+				ENDIF
+				Ｖ += 1
+				IF Ｖ >= 100
+					Ｖ = 100
+				ENDIF
+			ENDIF
+		;지정된 매스의 수이상이라면 회색
+		ELSE
+			SETCOLOR ARG:5
+			PRINT_RECT 0, 40, 30, 20
+		ENDIF
+	NEXT
+
+	RESETCOLOR
+
+	RETURN 0
+
+;============================================================================== 
+;◆색포함의 라인을 지정하는 CALL COLOR_LINE(0, "회색")
+;ARG:1은 선의굵기, 0살, 1 안팎, 2태
+;============================================================================== 
+@COLOR_LINE(ARG:0, 지정칼라 = 칼라_다크그레이)
+	#DIM 지정칼라 = GETDEFCOLOR()
+	#DIM Ｈ = 0
+	#DIM Ｓ = 0
+	#DIM Ｖ = 0
+	#DIM 그라데이션개시 = 0
+	#DIM 선의굵기 = 0
+
+	;폰트의 리셋트
+;	CALL SETFONT_MEYRYOKE
+	;카운터
+	LOCAL:0 = 0
+	;색의 밝음을 최대치로서 지정하는 용
+	LOCAL:1 = 0
+	;카운터 2
+	LOCAL:3 = 0
+
+
+	IF ARG:0 == 2
+		선의굵기 = 30
+	ELSEIF ARG:0 == 1
+		선의굵기 = 20
+	ELSE
+		선의굵기 = 10
+	ENDIF
+
+	;칼라 조정
+	Ｈ = RGB_TO_H(지정칼라)
+	Ｓ = RGB_TO_S(지정칼라)
+	Ｖ = RGB_TO_V(지정칼라)
+
+	;일행에 들어가는 아야 자수는 49문자분 rect는 전각 1문자가 100
+	그라데이션개시 = 4800 - Ｖ / 5 * 100
+
+	IF 그라데이션개시 <= 0
+		그라데이션개시 = 100
+	ENDIF
+
+	;그라데이션개시하는 위치까지 같은 색
+	SETCOLOR HSV_TO_RGB(Ｈ, Ｓ, Ｖ)
+	PRINT_RECT 0, 50-(선의굵기/2), 그라데이션개시, 선의굵기
+
+	;최대치
+	LOCAL:1 = Ｖ / 5
+	FOR LOCAL:0, 0, LOCAL:1
+		SETCOLOR HSV_TO_RGB(Ｈ, Ｓ, Ｖ)
+		PRINT_RECT 0, 50-(선의굵기/2), 100, 선의굵기
+		LOCAL:3 += 1
+		;3회에 1 색상 변화
+		IF LOCAL:3 % 3 == 0
+			Ｈ += 1
+			IF Ｈ >= 360
+				Ｈ = 1
+			ENDIF
+		ENDIF
+		Ｖ -= 5
+	NEXT
+
+	PRINTL 
+
+	RESETCOLOR
+
+	RETURN 0
+
+;============================================================================== 
+;◆폰트·emuera.config의 지정이 MS Gothic（Default의 지정）의 경우
+;  MeiryoKe_Console가 인스톨 되고 있으면 세트 하는 CALL SETFONT_MEYRYOKE
+;============================================================================== 
+;@SETFONT_MEYRYOKE
+;	;Default 지정의 폰트를 체크
+;	GETFONT
+;	;플레이어에 의해 변경되어 있지 않으면 
+;	IF RESULTS == "MS Gothic"
+;		;인스톨 확인
+;		CHKFONT "MeiryoKe_Console"
+;		;존재하면
+;		IF RESULT
+;			SETFONT "MeiryoKe_Console"
+;		ENDIF
+;	ENDIF
+;
+;	RETURN 0
+
+;============================================================================== 
+;◆타이틀 라벨 CALL TITLE_LABEL_START("타이틀", 1, "화상명", "설명문 간이 표시")
+;ARGS:0 타이틀
+; ARG:1 개행＆말미의 라인 표시하고 싶지 않을 때는 ARG:1을 1으로 해
+;       개행과 라인은 따로 표시한다（타이틀의 옆에 버튼을 둘 때나 폰트의 색 바꾸고 싶을 때의 지정）
+; ARG:2 화상 패턴（생략 하면 Default·화상을 바꾸고 싶은 경우로 지정하는·현상 없음）
+;============================================================================== 
+@TITLE_LABEL_START(ARGS:0, ARG:1, ARGS:2, ARGS:3)
+	CALL COLOR_LINE(0, GETDEFCOLOR())
+	PRINT_SPACE 20
+	IF ARG:1
+		PRINTFORM %ARGS:0%
+	ELSE
+		PRINTFORM %ARGS:0%
+		IF ARGS:3 != ""
+			SETCOLOR COLOR("실버")
+			PRINTFORML  %ARGS:3%
+			RESETCOLOR
+		ENDIF
+		CALL COLOR_LINE
+	ENDIF
+
+	RETURN 0
+
+;============================================================================== 
+;◆타이틀 라벨·범용 카테고리 타이틀 표시   CALL TITLE_CATEGORY_GENERAL("친교", 4)
+;============================================================================== 
+@TITLE_CATEGORY_GENERAL(ARGS:0, ARG:1)
+	PRINT_SPACE 20
+	SETCOLOR COLOR("서브칼라")
+	LOCALS:0 = ◇%ARGS:0%◇
+	PRINTFORM %LOCALS:0, ARG:1, LEFT%
+	RESETCOLOR
+	PRINT_SPACE 80
+
+;============================================================================== 
+;◆타이틀 라벨·지정된 텍스트(ARGS:0)가 지정된 아야 자수(ARG:1)가 될 때까지 스페이스에서 묻어-를 붙인다
+;  콘피그라든지 헬프의 디자인 정리용
+;  %FILL_SPACE("텍스트", 24)%
+;============================================================================== 
+@FILL_SPACE(ARGS:0, ARG:1)
+	#FUNCTIONS
+	;지정된 텍스트의 아야 자수를 체크
+	LOCALS:0 = %ARGS:0%
+	STRLENFORM %LOCALS:0%
+	LOCAL:1 = RESULT:0
+
+	FOR LOCAL:0, 0, ARG:1 - LOCAL:1
+		LOCALS:0 += " "
+	NEXT
+	LOCALS:0 = %LOCALS:0%-
+
+	RETURNF LOCALS:0
+

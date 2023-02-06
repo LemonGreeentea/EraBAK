@@ -1,0 +1,153 @@
+﻿;-----------------------
+;커스텀 캐릭터의 초기화 처리
+;-----------------------
+@INIT_CUSTOM_DATA()
+#DIM 대상
+CALL ADD_VOID_CHARA()
+대상 = RESULT
+CFLAG:대상:캐릭터ＩＤ = 0
+FLAG:998 --
+NAME:대상 = 커스텀캐릭터
+CALLNAME:대상 = 커스텀캐릭터
+CSTR:대상:1 = 커스텀캐릭터
+CSTR:대상:3 = 커스텀캐릭터
+CSTR:대상:4 = 커스텀캐릭터
+CSTR:대상:6 = 커스텀캐릭터
+MAXBASE:대상:체력 = 1500
+MAXBASE:대상:기력 = 1500
+MAXBASE:대상:정신력 = 1500
+BASE:대상:체력 = MAXBASE:대상:체력
+BASE:대상:기력 = MAXBASE:대상:기력
+BASE:대상:정신력 = MAXBASE:대상:정신력
+TALENT:대상:머리길이 = 0
+TALENT:대상:머리색 = 1
+TALENT:대상:Ｖ조임 = 조임_보통 + 50
+TALENT:대상:Ａ조임 = 조임_보통 + 50
+RETURN 대상
+
+;-----------------------
+;커스텀 캐릭터의 세이브 처리
+;ID가 존재하지 않는 캐릭터는 INIT_CUSTOM_DATA로 작성한 것과 생각 보존해 삭제한다
+;ID가 존재하는 캐릭터는 기존의 캐릭터를 돌진한 것과 생각 카피를 만들어 보존, 그 카피를 삭제
+;-----------------------
+@SAVE_CUSTOM_DATA(번호, 대상)
+#DIM 번호
+#DIM 대상
+
+LOCAL = NO:대상
+NO:대상 = __INT_MIN__
+TALENT:대상:커스텀캐릭터버젼 = GAMEBASE_VERSION
+SAVECHARA TOSTR_CUSTOM_FILENAME(번호, ANAME(대상)), ANAME(대상), 대상
+TALENT:대상:커스텀캐릭터버젼 = 0
+NO:대상 = LOCAL
+
+;-----------------------
+;커스텀 캐릭터의 로드 처리
+;-----------------------
+@LOAD_CUSTOM_DATA(번호)
+#DIM 번호
+#DIM 대상
+FIND_CHARADATA TOSTR(번호)
+SIF RESULT == 0
+	THROW 지정한 번호의 캐릭터 데이터는 존재하지 않습니다
+LOADCHARA RESULTS
+대상 = CHARANUM - 1
+NO:대상 = GET_EMPTY_NO()
+FLAG:998 ++
+CFLAG:대상:캐릭터ＩＤ = FLAG:998
+FOR LOCAL, 0, PREGNANT_RECORD_MAX
+	PREGNANT_RECORD_FATHER:대상:LOCAL = 0
+	PREGNANT_RECORD_TIMES:대상:LOCAL = 0
+NEXT
+
+TALENT:대상:임신 = 0
+CSTR:대상:99 = 
+FOR LOCAL, 0, VARSIZE("CFLAG")
+	SIF GROUPMATCH(LOCAL, GETNUM(CFLAG, "캐릭터ＩＤ"), GETNUM(CFLAG, "안면"), GETNUM(CFLAG, "호감도"), GETNUM(CFLAG, "종속도"), GETNUM(CFLAG, "의존도"))
+		CONTINUE
+	CFLAG:대상:LOCAL = 0
+NEXT
+
+CALL CUSTOM_DATA_VERSIONUP(대상)
+
+TALENT:대상:커스텀캐릭터 = 1
+TALENT:대상:커스텀캐릭터버젼 = 0
+
+RETURN 대상
+
+;-----------------------
+;커스텀 캐릭터 편집의 나팔
+;-----------------------
+@EDIT_CUSTOM_DATA(번호, 대상)
+#DIM 번호
+#DIM 대상
+#DIM FIRST_LINE
+
+FIRST_LINE = LINECOUNT
+
+$EDIT_LOOP
+
+CALL CHARACTER_EDIT(대상)
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 편집을 확정합니까?
+CALL ASK_MULTI("확정한다", "변경을 파기한다", "아직 만지작거린다")
+
+IF RESULT == 1
+	CALL DELETE_CHARA(대상)
+	RETURN
+ELSEIF RESULT == 2
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO EDIT_LOOP
+ENDIF
+
+CALL SAVE_CUSTOM_DATA(번호, 대상)
+
+;-----------------------
+;커스텀 캐릭터용의 파일명을 취득（세이브시 용）
+;-----------------------
+@TOSTR_CUSTOM_FILENAME(번호, 캐릭터명)
+#FUNCTIONS
+#DIM 번호
+#DIMS 캐릭터명
+
+RETURNF TOSTR(번호);
+
+;-----------------------
+;낡은 커스텀 캐릭터의 데이터 파일을 읽어들였을 경우의 처리
+;-----------------------
+@CUSTOM_DATA_VERSIONUP(대상)
+#DIM 대상
+IF TALENT:대상:커스텀캐릭터버젼 < GET_VERSION_VALUE("1.7.0")
+	CALL SET_BODYSIZE(대상)
+	SELECTCASE TALENT:대상:머리길이
+		CASE IS < 2
+			TALENT:대상:머리길이 = 0
+		CASE IS < 25
+			TALENT:대상:머리길이 = 1
+		CASE IS < 175
+			TALENT:대상:머리길이 = 2
+		CASE IS < 275
+			TALENT:대상:머리길이 = 3
+		CASE IS < 475
+			TALENT:대상:머리길이 = 4
+		CASE IS < 675
+			TALENT:대상:머리길이 = 5
+		CASEELSE
+			TALENT:대상:머리길이 = 6
+	ENDSELECT
+ENDIF
+
+IF TALENT:대상:커스텀캐릭터버젼 < GET_VERSION_VALUE("1.20.0")
+	CALL COLOR_PRINTL("1.20. 0보다 낡은 버젼으로 세이브된 커스텀 캐릭터를 위해서(때문에), 스킬의 리셋트를 실시했습니다", 칼라_주의)
+	FOR LOCAL, 0, SKILL_GENRE_NUM
+		FOR LOCAL:1, 0, MAX_SKILL_SLOT
+			SKILL_NO_SLOT:대상:(LOCAL):(LOCAL:1) = -1
+			SKILL_ID_SLOT:대상:(LOCAL):(LOCAL:1) = -1
+		NEXT
+	NEXT
+ENDIF
+
+
+
+RETURN

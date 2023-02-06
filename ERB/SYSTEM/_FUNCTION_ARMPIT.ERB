@@ -1,0 +1,134 @@
+﻿;---------------------------
+;ARG:0의 겨드랑이털목표치를 ARG:1으로 설정하는 함수
+;---------------------------
+@SET_ARMPIT_DEFAULT(ARG:0, ARG:1)
+SIF !INRANGE_ARMPIT(ARG:1)
+	RETURN 0
+TALENT:(ARG:0):겨드랑이털목표치 = ARG:1
+RETURN 1
+
+;---------------------------
+;ARG:0의 겨드랑이털현재치를 취득한다
+;---------------------------
+@GET_ARMPIT(ARG:0)
+#FUNCTION
+;SIF TALENT:(ARG:0):겨드랑이털현재치 ==겨드랑이털_하트형
+;	RETURNF 겨드랑이털_표준
+RETURNF TALENT:(ARG:0):겨드랑이털현재치
+
+;---------------------------
+;ARG:0의 겨드랑이털현재치가 목표치에 향하여 변화하는 함수
+;---------------------------
+@ARMPIT_GROW(ARG:0)
+#DIM 현재
+#DIM 목표
+
+;백보지라면 자라지 않는다
+SIF !IS_GROW_ARMPIT(ARG:0)
+	RETURN 0
+
+현재 = TALENT:(ARG:0):겨드랑이털현재치
+목표 = TALENT:(ARG:0):겨드랑이털목표치
+
+LOCAL:1 = 0
+
+;하트형은 표준 상당
+;IF 현재 ==겨드랑이털_하트형
+;	현재 =겨드랑이털_표준
+;ENDIF
+;IF 목표 ==겨드랑이털_하트형
+;	목표 =겨드랑이털_표준
+;	LOCAL:1 = 1
+;ENDIF
+
+;목표보다 적은 경우는 1자란다
+IF 목표 - 현재 > 0 
+	현재 ++
+;목표보다 자라고 있는 경우는 벤다
+ELSEIF 목표 - 현재 < 0
+	현재 = 목표
+ENDIF
+
+;하트형의 경우, 표준 상당히 되어 있으면 베어 가지런히 한다
+;IF 목표 ==현재 && LOCAL:1 == 1
+;	현재 =겨드랑이털_하트형
+;ENDIF
+
+TALENT:(ARG:0):겨드랑이털현재치 = 현재
+RETURN 1
+
+;---------------------------
+;ARG:0의 겨드랑이털이 성장할까
+;---------------------------
+@IS_GROW_ARMPIT(ARG:0)
+#FUNCTION
+RETURNF TALENT:(ARG:0):겨드랑이털현재치 != -1
+
+
+;---------------------------
+;ARG:0에 대응하는 겨드랑이털의 성장 정도를 돌려준다
+;---------------------------
+@GET_ARMPIT_NAME(ARG:0)
+#FUNCTIONS
+
+
+SELECTCASE ARG:0
+	CASE 겨드랑이털_제모완료 
+		RETURNF "제모완료"
+	CASE 겨드랑이털_깔끔
+		RETURNF "깔끔"
+	CASE 겨드랑이털_손질됨
+		RETURNF "손질됨"
+	CASE 겨드랑이털_솜털
+		RETURNF "솜털"
+	CASE 겨드랑이털_살짝
+		RETURNF "살짝"
+	CASE 겨드랑이털_보통
+		RETURNF "보통"
+	CASE 겨드랑이털_많은
+		RETURNF "많은"
+	CASE 겨드랑이털_주렁주렁
+		RETURNF "주렁주렁"
+	CASE 겨드랑이털_무식하게
+		RETURNF "무식하게"
+	CASE 겨드랑이털_강모
+		RETURNF "강모"
+	CASE 겨드랑이털_밀림
+		RETURNF "밀림"
+	CASEELSE
+		RETURNF "불명"
+ENDSELECT
+
+;---------------------------
+;주어진 인수의 성장 정도가 존재할까
+;---------------------------
+@INRANGE_ARMPIT(ARG:0)
+#FUNCTION
+RETURNF GET_ARMPIT_NAME(ARG:0) != "불명"
+
+
+;---------------------------
+;주어진 캐릭터의 겨드랑이털 상태가 어떤 것인가 돌려준다
+;-2 무모 -1얇은 0 표준 1많은 2 강모 3 하트
+;---------------------------
+@GET_ARMPIT_LEVEL(ARG:0)
+#FUNCTION
+SELECTCASE TALENT:(ARG:0):겨드랑이털현재치
+	CASE 겨드랑이털_제모완료, 겨드랑이털_깔끔
+		RETURNF -2
+	CASE 겨드랑이털_손질됨, 겨드랑이털_솜털, 겨드랑이털_살짝
+		RETURNF -1
+	CASE 겨드랑이털_보통
+		RETURNF 0
+	CASE 겨드랑이털_많은, 겨드랑이털_주렁주렁, 겨드랑이털_무식하게
+		RETURNF 1
+	CASE 겨드랑이털_강모, 겨드랑이털_밀림
+		RETURNF 2
+ENDSELECT
+
+;---------------------------
+;겨드랑이털 상태를 화면에 출력한다
+;---------------------------
+@PRINT_ARMPIT(ARG:0)
+LOCALS:0 = %GET_ARMPIT_NAME(TALENT:(ARG:0):겨드랑이털현재치)%
+PRINTFORM %LOCALS:0%

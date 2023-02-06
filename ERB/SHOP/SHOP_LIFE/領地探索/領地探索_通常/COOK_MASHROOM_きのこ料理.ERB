@@ -1,0 +1,51 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_COOK_MASHROOM_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_COOK_MASHROOM_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_COOK_MASHROOM(대상)
+#DIM 대상
+
+PRINTFORML 숲속에서 이상한 형태를 한 버섯을 찾아냈다
+PRINTFORML 본 느낌, 먹혀질 것 같기는 하지만……
+PRINTL
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "요리"))
+CALL ASK_YN("조리를 시도한다", "그만둔다")
+
+IF RESULT == 1
+	PRINTFORML 아마추어가 서투르게 손을 대어야 할 것은 아니다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 거점으로 돌아갔다
+	RETURN 1
+ENDIF
+
+PRINTFORML 위험할지도 모르지만 식욕에는 이길 수 없었다
+PRINTFORMW %조사처리(ANAME(대상),"는")% 버섯을 가지고 돌아가 조리했다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF LIMIT(ABL:대상:요리 * 2, 50, 100) < RAND:100
+	PRINTFORML 맛있다!
+	PRINTFORML 극상의 맛에 무심코 뺨이 느슨해졌다
+	CALL PRINT_ADD_EXP(대상, "요리경험치", RAND:8 + 1, 1)
+	RETURN 1
+ENDIF
+
+PRINTFORML 끝냈다!
+PRINTFORML 독이 있었는지 조리에 실패했는지, 배를 부수어 버렸다
+PRINTFORMW 교훈으로 하자…배를 눌러 식은 땀을 흘리면서, %조사처리(ANAME(대상),"는")% 강하다고 생각했다
+CALL ADD_COOLTIME(대상, 2)
+
+RETURN 1

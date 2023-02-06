@@ -1,0 +1,233 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_YAKUZA_RATE()
+RETURN (DVAR:야쿠자_연결 > 0 ? 200 # 30)
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_YAKUZA_DECISION()
+SIF DAY < 10
+	RETURN 0
+
+SIF DVAR:야쿠자_발생플래그 > 0
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_YAKUZA_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_YAKUZA()
+#DIM 대상
+#DIM 대상국군주
+
+IF GETBIT(TALENT:MASTER:데일리계, 소질_데일리_소프양)
+	PRINTFORML 야쿠자가 직장으로 왔다
+	PRINTFORML 돌연의 방문에 무심코 동요해 버려 부하에게 걱정되었다
+	PRINTFORML 하지만 그와의 관계를 발각될 수도 없는 어떻게든 손질했다
+	PRINTFORMW 방문의 이유는 여전히같이, 거래를 위해서(때문에)일 것이다…
+ELSEIF DVAR:야쿠자_만남 >= 1
+	PRINTFORML 예의 야쿠자가 다시 왔다
+	PRINTFORMW 부디 면회하고 싶하고 있는 것 같지만…
+ELSE 
+	PRINTFORML 어느 날, 집무를 하고 있으면 손님을 전해들었다
+	PRINTFORML 부하에 의하면 최근 영내에서 활발하게 활동하고 있는 너절한 것 같다
+	PRINTFORMW 서로의 도움이 되는 이야기를 가져온 것 같겠지만…
+	DVAR:야쿠자_만남 = 1
+ENDIF
+PRINTFORML 어떻게 하지?
+CALL ASK_YN("면회한다" ,"되돌려 보낸다")
+IF RESULT == 1
+	IF DVAR:야쿠자_만남 == 2
+		PRINTFORML 저런 무리와 더 이상 관련되고 싶지 않다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 되돌려 보내도록(듯이) 명했다
+		PRINTFORML 
+		PRINTFORMW …보복을 무서워하고 있었지만 아무것도 일어나지 않았다
+	ELSE
+		PRINTFORML 그런 무리와 이야기하는 일 따위 아무것도 없다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 되돌려 보내도록(듯이) 명했다
+	ENDIF
+	RETURN 1
+ELSEIF RESULT == 0
+	IF DVAR:야쿠자_만남 == 2
+		PRINTFORML 저런 무리와 더 이상 관련되고 싶지 않다
+		PRINTFORML 하지만 일은 확실하고 서투르게 되돌려 보내면 보복될지도 모른다
+		PRINTFORMW 고민한 결과, 다시 면회하는 일로 했다
+	ELSE
+		PRINTFORMW 면회할 만큼 해 보는 일로 했다
+	ENDIF
+	PRINTFORML 누구에게 맡길까?
+	CALL SELECT_CHARA_LIST_ONLY_LOGIC_SLG("YAKUZA", "NONE")
+	대상 = RESULT
+	IF 대상 == -1
+		PRINTFORML …아니, 역시 그런 무리와 이야기하는 것 따위 아무것도 없다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 되돌려 보내도록(듯이) 명했다
+		DVAR:야쿠자_연결 = 0
+		RETURN 1
+	ELSEIF 대상 == MASTER
+		PRINTFORML 위험할지도 모른다
+		PRINTFORMW %ANAME(대상)%자신이 면회하는 일로 했다
+	ELSE
+		PRINTFORML %ANAME(대상)%에 맡기는 일로 했다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 마지못해서 그렇게 면회에 향했다
+	ENDIF
+ENDIF
+
+PRINTFORML 
+IF DVAR:야쿠자_만남 == 2
+	PRINTFORML 면회실에 향하면 야쿠자는 히죽히죽 웃으면서 기다리고 있었다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 불쾌감과 희미한 불안감을 느끼면서도 눈치채이지 않게 대응했다
+	PRINTFORML 면회의 내용은 여전히같이, 타국에의 방해 활동의 제안이다
+	PRINTFORML 확실히 효과가 높은 것은 증명이 끝난 상태이지만…
+	PRINTFORMW %조사처리(ANAME(대상),"가")% 그를 흘깃 응시하면 히죽히죽 웃음을 띄운 채다
+ELSEIF DVAR:야쿠자_면회 == 1
+	PRINTFORML 이번도 슈트 모습의 오니가 왔다
+	PRINTFORML 변함 없이 야쿠자를 흉내낸 것 같은 어조와 행동을 하고 있다
+	PRINTFORMW 이야기의 내용도 전회와 같다
+ELSE
+	PRINTFORML 면회 상대는 큰 몸집의 오니였다
+	PRINTFORML 과연, 요괴가 야쿠자의 흉내를 하고 있는 것 같다
+	PRINTFORML 하지만 무리는 모습 만이 아니고 제대로 한 조직이라고 (듣)묻고 있다
+	PRINTFORMW 방심하지 않고 그의 이야기를 듣는 일로 했다
+	PRINTFORML 
+	PRINTFORMW 녀석의 이야기를 모으면 이하와 같았다
+	PRINTFORML 「자신들은 보잘것없어 구 자리자로서 뒤에서 고요하게 활동하고 있었다」
+	PRINTFORML 「어느 나라에도 조 하고 있지 않았지만 하지만 최근의 전란에 의해 그렇게도 말하고 있을 수 없게 되었다」
+	PRINTFORMW 「도와주기 때문에 부디 너의 나라의 영내에 있게 해 받을 수 없을까」
+	PRINTFORML 「우리는 상대의 약점을 잡거나 흩뿌리는 것을 특기라고 하고 있다」
+	PRINTFORMW 「너가 바라는 나라의 악평을 흘려 주자」
+	PRINTFORML 뭐라고도 제멋대로여 구역질이 나오는 것 같은 내용이었다
+	PRINTFORMW 하지만 무리를 능숙하게 사용할 수 있으면 확실히 유리하게 될지도 모른다……
+	DVAR:야쿠자_면회 = 1
+ENDIF
+PRINTFORML 어떻게 하지?
+CALL ASK_YN("부탁한다" ,"거절한다")
+IF RESULT == 1
+	PRINTFORML 역시 이상한 무리와 거래 따위 할 수 없다
+	PRINTFORMW 거절하면 그는 혀를 차 돌아갔다
+	DVAR:야쿠자_연결 = 0
+	RETURN 1
+ELSEIF RESULT == 0
+	PRINTFORML 지금은 이런 무리의 손에서도 빌리고 싶다
+	PRINTFORMW 무리의 태생에는 눈을 감아 거래하는 일로 했다
+	PRINTFORML 어느 나라에 공작하자?
+	CALL SELECT_CHARA_LIST_ONLY_LOGIC_SLG("YAKUZA_TARGET", "NONE")
+	대상국군주 = RESULT
+	IF 대상국군주 == -1
+		PRINTFORML …아니, 역시 야쿠자자와 이야기하는 일 따위 아무것도 없다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 되돌려 보내도록(듯이) 명했다
+		DVAR:야쿠자_연결 = 0
+		RETURN 1
+	ENDIF
+	PRINTFORML 「양해 했다구, 조속히 일에 걸리자」
+	PRINTFORMW 그는 히죽 웃으면 떠나 갔다
+	PRINTFORML …
+	PRINTFORML ……
+	PRINTFORMW ………
+	FOR LOCAL, 0 ,MAX_COUNTRY
+		SIF !IS_COUNTRY(LOCAL)
+			CONTINUE
+		SIF LOCAL != CFLAG:MASTER:소속
+			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:대상국군주:소속, -(RAND(50 ,150)), RAND(50 ,150))
+	NEXT
+	PRINTFORMW 일은 성공한 것 같다
+	CALL ICPRINT(@"야쿠자모두의 공작에 의해, %ANAME(대상국군주)% 세력의 추문이 흘렀다……", "W", 칼라_주의)
+	IF RAND:10 + 1 + DVAR:야쿠자_일회수 <= 8
+		PRINTFORML 일을 끝낸 그에게 잠시동안, 영내에서의 활동을 인정했다
+		PRINTFORML 「헷헤, 앞으로도 좋은 관계로 부탁하겠어(한다고)」
+		PRINTFORMW 그렇게 말해 웃은 그에게 %조사처리(ANAME(대상),"는")% 싫은 것을 느꼈지만 아무것도 말하지 않았다
+		DVAR:야쿠자_일회수 ++
+		DVAR:야쿠자_연결 = 1
+	ELSE
+		DVAR:야쿠자_일회수 = 0
+		DVAR:야쿠자_연결 = 0
+		DVAR:야쿠자_만남 = 2
+		PRINTFORML 일을 마친 뒤, 야쿠자가 %ANAME(대상)% 앞으로 왔다
+		PRINTFORMW 하지만 단순한 일의 보고라는 분위기는 아니었다
+		PRINTFORML 「헷헷헤, 최초로 나는 말했지? 사람의 약점을 잡는 것이 자신있다고」
+		PRINTFORML 「그대로 되었군? 너가 우리들에게 의뢰한 일의 증거가 있는거야」
+		PRINTFORMW 그의 말에 %조사처리(ANAME(대상),"는")% 등줄기가 추워지는 것을 느꼈다
+		PRINTFORMW 「분해해지고 싶고…말하고 싶은 것은 알겠지? 헤헤헷」
+		SIF IS_FEMALE(대상)
+			PRINTFORMW 그의 싫은 것 같은 시선에 핥아대 오는 것을 느꼈다
+		PRINTFORML 어떻게 하지?
+		CALL ASK_YN("베어 붙인다" ,"따른다")
+		IF RESULT == 0
+			PRINTFORML 야쿠자자의 하라는 대로 등 되고도 참을까!
+			PRINTFORML %조사처리(ANAME(대상),"는")% 검을 뽑으면 단칼의 바탕으로 베어 버렸다
+			PRINTFORMW 녀석은 경악의 표정으로비명을올린다 머지않아 붕괴되었다
+			PRINTFORML 그 장난친 미소를 이제 보지 않고 끝나게 되어 시원해졌다
+			PRINTFORMW 하지만 망해를 찾아도 증거는 일절 발견되지 않았다……
+			PRINTFORML 
+			FOR LOCAL, 0 ,MAX_COUNTRY
+				SIF !IS_COUNTRY(LOCAL)
+					CONTINUE
+				SIF LOCAL != CFLAG:MASTER:소속
+					CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -1000, 1000)
+			NEXT
+			CALL COLOR_PRINTW(@"그 후, 야쿠자와의 거래가 타국에 분해해지고 평판이 크게 내려 버렸다……", 칼라_주의)
+		ELSEIF RESULT == 1
+			PRINTFORML 이 장소에서 이 녀석을 베어 버리는 것은 용이함
+			PRINTFORML 하지만 그러면 모두를 분해해져 버릴 가능성이 높다
+			PRINTFORMW …고민한 %조사처리(ANAME(대상),"이지만")% 결국 녀석의 하라는 대로 되지 않을 수 없었다
+			IF IS_MALE(대상)
+				CALL ICPRINT(@"그는 가차 없이 %ANAME(대상)%의 소지금을 모두 빼앗아 갔다……", "W", 칼라_주의)
+				MONEY -= MONEY
+			ELSE
+				PRINTFORML %조사처리(ANAME(대상),"가")% 수긍하면 그는 히죽 웃어, 입맛을 다심을 했다
+				PRINTFORMW 그리고 허물없게 어깨를 안기고 그의 자택으로 데리고 가졌다…
+				PRINTFORML 
+				PRINTFORML 자택에 데리고 들어가진 %조사처리(ANAME(대상),"는")% 그의 눈앞에서 스트립을 강요받았다
+				PRINTFORML 주저하면서 한 장씩 벗어 가는 것을 천하게 보인 시선으로 끈적 볼 수 있어 수치와 굴욕으로 떨려 버린다
+				PRINTFORMW %조사처리(ANAME(대상),"가")% 알몸이 되는 무렵에는 그의 사타구니는 옷의 위로부터도 알 정도로 크게 부풀어 오르고 있었다
+				PRINTFORML 그는 입맛을 다시며 %ANAME(대상)%의 팔을 붙잡기 난폭하게 입술을 빼앗으면 그대로 침대에 쓰러트렸다
+				PRINTFORML 본능적으로 저항하지만 실현되지 않고 그대로 손가락이나 혀로 전신을 추잡하게 더듬어지고비명을올린다
+				PRINTFORML 눈치채지 않는 동안에 %ANAME(대상)%의 신체는 불 비쳐 땀흘려 버려 있어그의 애무에 민감하게 반응해 버렸다
+				PRINTFORMW %ANAME(대상)%의 반응을 본 그는 다시 그 추잡한 미소를 띄우면 드디어 그 하나의 물건을 꺼냈다
+				PRINTFORML 확실히 오니의 페니스에 적당한 그 그로테스크와 용감함에 %조사처리(ANAME(대상),"는")% 무심코 못박음이 되어 버린다
+				PRINTFORML 그리고 저항하는 사이도 없게 양 다리를 잡아지고 다리를 크게 벌림으로 되면 균열에 끝 쪽을 주어졌다
+				PRINTFORML 눈물고인 눈으로 떨리는 %조사처리(ANAME(대상),"가")% 용서를 빌어도 그는 히죽 웃는 것만으로 그대로 단번에 근원까지 쑤셔 넣어졌다
+				PRINTFORMW 드틀! (와)과 정수리까지 영향을 줄 정도의 충격에 %조사처리(ANAME(대상),"는")% 일순간 시야가 새하얗게 되어 크게 뒤로 젖혔다
+				PRINTFORML 떨리는 목으로부터 희미한 신음소리를 올리면서 경련하는 %ANAME(대상)%에 대해 그는 가차 없이 피스톤을 시작한다
+				PRINTFORML 질육을 후벼파지고 빼앗기고 내장을 끌어내지는 것 같은 충격을 받아 %조사처리(ANAME(대상),"는")% 눈을 뒤집어 몸부림친다
+				PRINTFORML 잠깐의 사이 침실에 팡팡 빵! (와)과 리드미컬하게 고기가 서로 치는 소리와 %ANAME(대상)%의 비명이 울려 퍼졌다
+				PRINTFORMW 난폭하지만 이 이상 없고 용감한 강간은 %ANAME(대상)%의 신체를 무리하게 암컷으로서 각성 시키고 느끼게 되어진다
+				PRINTFORML 즈읏! (와)과 한층 더 깊은 일발 찌르기로 자궁입구를 찔러지면 무심코 머리가 튀어 보기 흉하게 조수를 뿜어 버렸다
+				PRINTFORML 그는 %ANAME(대상)%의 반응을 즐기는것같이 여러가지 체위로 암컷구멍의 구석구석까지 그 하나의 물건으로 유린해 온다
+				PRINTFORML 벌써 이성이 붕괴한 %조사처리(ANAME(대상),"는")% 그 공격에 혀를 늘어뜨리면서 아히아히와 야무지지 못하게 허리를 맞추고 있었다
+				PRINTFORMW 손가락끝으로 돌기를 만지작거려지면 단정치 못하게 허덕여 몸을 구불거리게 해, 혀를 내밀어지면 스스로 얽히게 할 수 있다
+				PRINTFORML 그렇게 완전히 그의 페니스의 포로로 되어 좋아하고 있으면 점차 그의 허리의 움직임이 가속 하기 시작한다
+				PRINTFORML %조사처리(ANAME(대상),"는")% 본능적으로 일순간 임신의 공포를 느꼈지만, 다음의 순간에는 꾸욱 그에게 매달리고 있었다
+				PRINTFORML 그리고 자궁입구에 요도구멍을 밀착시키면서 힘차게 %ANAME(대상)%의 체내로 그의 정액이 대량으로 발해졌다
+				PRINTFORMW 브뷰르룰! (와)과 힘차게 발해지는 작열에 %조사처리(ANAME(대상),"는")% 오슬오슬 등줄기를 진동시키면서 보기 흉하게 절정 했다
+				PRINTFORMW 몸도 마음도 씨뿌리기 된 %조사처리(ANAME(대상),"는")% 이미 그에게 반항하지 못하고 하룻밤을 걸쳐 한껏 귀여워해지는 일이 되었다……
+				CALL FUCK(대상, "Ｃ, Ｂ, Ｖ, Ｍ, Ａ, Ｖ성교, Ａ성교, 성교, 성기술, 봉사, 정애, 펠라티오, 욕망", "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("야쿠자"), "야쿠자의 입술", "야쿠자", "", "강간")
+				PRINTFORML 
+				PRINTFORML 너덜너덜로 되어 버린 %조사처리(ANAME(대상),"이지만")% 그의 요구가 한 번의 강간으로 끝날 리가 없었다
+				PRINTFORMW 어느새인가 찍히고 있던 섹스 촬영 영상으로 향후도 그의 하라는 대로 되도록(듯이) 위협해져 버렸다……
+				CALL COLOR_PRINTW(@"%ANAME(대상)%빠르게 자리의 애인겸육변기로 되어 버렸다……", 칼라_핑크)
+				DVAR:야쿠자_육변기대상ID = GET_ID(대상)
+				DVAR:야쿠자_발생플래그 = 1
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+RETURN 1
+
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_YAKUZA(대상)
+#DIM 대상
+RETURN CFLAG:대상:행동불능상태 != 행동불능_아이 && CFLAG:대상:소속 == CFLAG:MASTER:소속 && !IS_ANIMAL(대상) && CFLAG:대상:포로처 == 0 && !GETBIT(TALENT:대상:데일리계, 소질_데일리_소프양) && !(CFLAG:(대상):행동불능상태 == 행동불능_임월)
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_YAKUZA_TARGET(대상)
+#DIM 대상
+RETURN GET_COUNTRY_BOSS(CFLAG:대상:소속) == 대상 && CFLAG:대상:소속 != CFLAG:MASTER:소속

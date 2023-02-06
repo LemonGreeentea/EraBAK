@@ -1,0 +1,29 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_GET_LOST_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_GET_LOST_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_GET_LOST(대상)
+#DIM 대상
+
+PRINTFORML …여기는 어디일까?
+PRINTFORML 보아서 익숙하지 않는 길로 너무 나아가 미아가 되어 버린 것 같다
+PRINTFORMW 심하게 걸어 다녀 완전히 지쳐 버려, 결국 지나간 인력거를 부탁해 궁전에 돌아왔다
+LOCAL = MIN(MONEY, 2000)
+MONEY -= LOCAL
+CALL ADD_COOLTIME(대상, 1)
+CALL COLOR_PRINTL(@"금{LOCAL}를 지불했다", 칼라_주의)
+RETURN 1

@@ -1,0 +1,42 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_NIGHT_IN_TEMPLE_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_NIGHT_IN_TEMPLE_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_NIGHT_IN_TEMPLE(대상)
+#DIM 대상
+
+PRINTFORML 탐색의 도중에 해가 져, 절에 묵게 해 받는 일로 했다
+PRINTFORMW 주지는 친절하게 대접해 주었지만, 절인데 술이나 고기를 권유받았다
+PRINTFORML 어떻게 하지?
+CALL ASK_YN("후의를 받는다" ,"비린내를 비난한다")
+IF RESULT == 1
+	PRINTFORML 비린내를 비난하면 그는 퇴색한 같은 표정이 되었지만 그 이상은 아무것도 말해 오지 않았다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 일박하면 새벽전에 빨리 절을 뒤로 했다
+	RETURN
+ENDIF
+
+PRINTFORML 후의는 하찮게 할 수 없는 %조사처리(ANAME(대상),"는")% 권유받기 전에 말했다
+PRINTFORMW 그것을 본 주지는 만족기분에 웃어, 점점 술을 권유받아 마치 연회같이 되었다
+PRINTFORML 
+PRINTFORMW 이튿날 아침, 침실에서 눈을 뜬 %조사처리(ANAME(대상),"는")% 주지에 예를 말해 절을 빠져 나갔다
+IF ABL:대상:주량 <= 3
+	PRINTFORML ……숙취가 되었다
+	CALL ADD_COOLTIME(대상, 2)
+ENDIF
+CALL PRINT_ADD_EXP(대상, "주량경험치", RAND(50, 100), 1)
+
+RETURN 1

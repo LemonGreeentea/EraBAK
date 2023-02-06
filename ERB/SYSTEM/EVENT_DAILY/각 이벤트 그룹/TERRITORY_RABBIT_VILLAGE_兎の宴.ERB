@@ -1,0 +1,186 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_TERRITORY_RABBIT_VILLAGE_RATE()
+RETURN 50
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_TERRITORY_RABBIT_VILLAGE_DECISION()
+#DIM 토끼촌
+토끼촌 = GET_CITYNUMBER("흰 토끼의 취락")
+
+SIF 토끼촌 == -1
+	RETURN 0
+SIF CITY_OWNER:토끼촌 != CFLAG:MASTER:소속
+	RETURN 0
+SIF DVAR:토끼의연회_발생플래그 == 2
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_TERRITORY_RABBIT_VILLAGE_GENRE()
+RETURN 데일리_장르_에로
+
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_TERRITORY_RABBIT_VILLAGE
+#DIM 대상
+#DIM 금액
+
+;대상 = NAME_TO_CHARA("테위")
+
+LOCAL:0 = 0
+
+IF DVAR:토끼의연회_발생플래그 == 0
+	DVAR:토끼의연회_발생플래그 = 1
+	PRINTFORML 부하로부터 어느 소문을 (들)물었다
+	PRINTFORML 이 시기, 대나무숲의 어딘가에 있는 토끼의 취락에서 축제가 열리고 있는 것 같다
+	PRINTFORMW 요괴토끼 뿐만이 아니라, 누구라도 참가해도 좋다는 일이지만…
+ELSE
+	PRINTFORML 다시 토끼의 연회가 열리고 있다라는 이야기를 들었다
+	PRINTFORMW 전회는 참가 할 수 없었지만
+ENDIF
+PRINTFORML 어떻게 하지?
+CALL ASK_MULTI_JUDGE("가 본다", 1,"무시한다", 1)
+IF RESULT == 1
+	PRINTFORML 흥미는 있지만 지금은 바쁘다
+	PRINTFORMW 참가를 단념하는 일로 했다
+	RETURN
+ELSEIF RESULT == 0
+	PRINTFORML 토끼의 축제와는 재미있을 것 같다
+	PRINTFORMW 흥미가 끓었던 %조사처리(ANAME(MASTER),"는")% 취락을 목표로 했다
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+	SIF ABL:MASTER:지략 >= 70
+		LOCAL:0 = 1
+	IF LOCAL:0 + RAND:6 < 3
+		PRINTFORML 하지만 헤매어 버렸다
+		PRINTFORMW 하루종일 대나무숲을 헤맨 후 간신히 궁전에 돌아올 수 있었다
+		RETURN
+	ENDIF
+;ELSEIF RESULT == 2
+;	금액 = MAX(MONEY / 8, 500)
+;	SIF IS_SLAVE(대상)
+;		금액 = 금액 / 100
+;	PRINTFORML 안내를 부탁하면 그녀는 작은 새전함을 내몄다
+;	PRINTFORMW 안내료라는 것인가
+;	PRINTFORML 어떻게 하지?
+;	CALL ASK_MULTI_JUDGE(@"안내료{금액}를 지불한다", 금액 <= MONEY,"그만둔다", 1,"주종을 철저히 가르친다", HAS_PENIS(MASTER))
+;	IF RESULT == 1
+;		PRINTFORML 거기까지 하고 가고 싶지는 않다
+;		PRINTFORMW %조사처리(ANAME(MASTER),"가")% 거절하면 그녀는 유감스러운 듯이 떠나 갔다
+;		RETURN
+;	ELSEIF RESULT == 0
+;		PRINTFORML 그녀다운 요구다
+;		PRINTFORMW %조사처리(ANAME(MASTER),"가")% 안내료를 지불하면 그녀는 싱긋 웃는 얼굴이 되었다
+;		MONEY -= 금액
+;		PRINTFORMW …테위에 안내되어 토끼의 취락에 향했다
+;	ELSEIF RESULT == 2
+;		PRINTFORML 이 수전노에게는 주종을 철저히 가르칠 필요가 있다
+;		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 방에 지갑이 있다고 거짓말해 그녀를 침실에 데리고 들어갔다
+;		PRINTFORML 
+;		IF (ABL:MASTER:성기술 + ABL:MASTER:성교 + RAND:5 > ABL:대상:성기술 + ABL:대상:성교 + RAND:5) || IS_SLAVE(대상)
+;			PRINTFORML 힘이 약한 그녀를쓰러트린다의 것은 간단했다
+;			PRINTFORML %조사처리(ANAME(MASTER),"는")% 작으면서 과실과 같이 달콤하고 부드러운 신체를 마음껏 예의범절을 가르쳤다
+;			PRINTFORML 처음은 저항하고 있었던 그녀도 점차 신체를 구불거리게 할 수 있는 달콤한 한숨을 흘림이고
+;			PRINTFORMW 마지막에는 스스로 필사적으로 %ANAME(MASTER)%에 매달려 단정치 못하게 졸라댔다
+;			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, @"%ANAME(대상)%의 입술", "", @"%ANAME(대상)%의 질", "강간")
+;			CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_ID(MASTER), @"%ANAME(MASTER)%의 입술", @"%ANAME(MASTER)%", "", "강간")
+;			PRINTFORML 
+;			PRINTFORML 상쾌했으므로 그녀에게 안내시켰다
+;			PRINTFORMW 그녀는 아직 열 가시지 않은 모습으로 도중 힐끔힐끔 이쪽을 엿봐 왔다
+;		ELSE
+;			PRINTFORML 하지만 그녀 쪽이 능숙했다
+;			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 프라이드를 너덜너덜로 되어 버렸다…
+;			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, @"%ANAME(대상)%의 입술", "", @"%ANAME(대상)%의 질", "강간")
+;			CALL FUCK(대상, "욕망, 성기술, 성교, Ｃ, Ｖ, Ｖ성교", "처녀상실, 질내사정", GET_ID(MASTER), "", @"%ANAME(MASTER)%", "", "강간")
+;			RETURN
+;		ENDIF
+;	ENDIF
+ENDIF
+PRINTFORML 토끼의 마을에 가까스로 도착한 %조사처리(ANAME(MASTER),"는")% 그 광경에 놀랐다
+PRINTFORML 여기저기에서 요괴토끼가 교미를 하고 있는 것이 아닌가
+PRINTFORML 아무래도 축제와는 이 일이었던 것 같다
+PRINTFORMW 여기저기의 그늘이나 집안으로부터 요염한 신음소리가 영향을 주어 온다…
+IF IS_MALE(MASTER) || (HAS_PENIS(MASTER) && RAND:2)
+	PRINTFORML 문득 한마리의 요괴토끼와 시선이 마주쳤다
+	PRINTFORML 그녀는 뺨을 붉히고숨을 거칠게 해, 분명하게 발정하고 있는 모습이다
+	PRINTFORML %조사처리(ANAME(MASTER),"를")% 본 그녀는 눈을 빛내고 스커트를 걷어올려 보였다
+	PRINTFORML 그 아래에는 속옷도 신지 않고, 균열은 끄는 붙어 있는밀을 흘러넘치게 하고 있었다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그 음미로운 모습에 참지 못하고 그녀를 잡으면 가까이의 빈집에 데리고 들어갔다
+	PRINTFORML 
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% 조속히 그녀를 쓰러트리고 흠뻑 젖은 비밀스런 장소를 넓히고 혀를 기게 했다
+	PRINTFORML 예쁜 균열을 가볍게 훑으면 그녀는 약간 수치가 섞인 같은 달콤한 교성을 올린다
+	PRINTFORMW 흘러넘치는 밀은 매우 달콤하게 열중해 빨면 그때마다 그녀는 신체를 진동시키고 허덕인다
+	PRINTFORML 드디어 %조사처리(ANAME(MASTER),"가")% 격분한 하나의 물건을위안할당 와 그녀는 꾹 매달려 왔다
+	PRINTFORML 그 작은 몸을 껴안으면서 단번에 찔러 넣으면 그녀는 흠칫 크게 몸을 뒤로 젖히게 한다
+	PRINTFORMW 아무래도 처녀였던 것 같게 막이 다치는 감촉이 전해져 왔다
+	PRINTFORML 하지만 토끼의 특성인 것이나 그녀는 고통도 그다지 느끼지 않은 같아 몽롱하게 한 표정으로 응시해 왔다
+	PRINTFORML 그러면 하고 %조사처리(ANAME(MASTER),"가")% 바둥바둥의 질을 격렬하게 밀어올려 주면 그녀는 히익히익 거리며 자지러지는 신음소리를 낸다
+	PRINTFORML 질은 좁지만 자주(잘) 수축해, 장대 전체를 감싸도록(듯이)하면서 기분 좋은 억압이 전해져 온다
+	PRINTFORMW 한층 더 깊게 쑤셔 넣으면 요도구가 자궁입구에 해당되어, 그 충격으로 그녀는 크게 교성을 올려 조수를 뿜었다
+	PRINTFORML 딱 딱하고 연속으로 찔러 주면 그녀는 짐승과 같은 교성을 미치게 하고 전신을 경련계속 시켰다
+	PRINTFORML 사랑스러운 반응을 좀 더 만끽하고 싶었지만 이미 인내도 한계에 시달이고 참지 못하고 허리를 가속시켜 버린다
+	PRINTFORML 그녀를 껴안고 키스를 하면서 격렬하게 허리를 쳐박으면, 그녀의 질의 수축도 격렬하게 되어 간다
+	PRINTFORMW %ANAME(MASTER)%들 두 명은 단지 계속해서 서로를 요구해 높은 곳에 올라 가고 그리고 동시에 절정에 이르렀다
+	PRINTFORMW …그 뒤도 흥분 가시지 않은 %ANAME(MASTER)%들은 해가 질 때까지 몇 번이나 몇 번이나 교미를 반복했다
+	CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "요괴토끼의 입술", "", "요괴토끼의 질", "화간")
+	CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "요괴토끼의 입술", "", "요괴토끼의 질", "화간")
+	PRINTFORML 
+ELSE
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 어안이 벙벙히 하고 있으면 꾸욱 옷자락을 끌려갔다
+	PRINTFORML 무슨 일일까하고 뒤돌아 보면 한마리의 요괴토끼가 %ANAME(MASTER)%의 옷의 옷자락을 잡고 있었다
+	PRINTFORML 눈을 빛내고 사타구니를 부풀리고 있어 보기에도 발정하고 있다고 안다
+	PRINTFORML 그는 %ANAME(MASTER)%에 껴안아 사타구니를 문지르면서 교미로 이끌어 왔다
+	PRINTFORMW 그 권유에 %조사처리(ANAME(MASTER),"는")% 도망치는 것에 도망쳐지는 두 그의 집에 데리고 들어가져 버렸다
+	PRINTFORML 
+	PRINTFORML 그는 몸집이 작은 외관으로부터는 상상 할 수 없을 정도 씩씩한 페니스를 가지고 있었다
+	PRINTFORML 붕소와 내밀어진 그 흉기에 %조사처리(ANAME(MASTER),"는")% 뒷걸음질치면서도 못박음이 되어 버린다
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% 기가 죽은 틈에 그는 숨을 거칠게 하면서 쓰러트려 와, 난폭하게 옷을 벗겨내졌다
+	PRINTFORML 마을에 오고서 충만하고 있던 섹스의 냄새로 부지불식간에 %ANAME(MASTER)%의 사타구니는 젖고 있었다
+	PRINTFORML 그는 %ANAME(MASTER)%도 내켜하는 마음이라면 기쁨 양 다리의 사이에 비집고 들어가 오면 페니스의 앞을 균열에 주었다
+	PRINTFORML 그리고 %조사처리(ANAME(MASTER),"가")% 제지하는 사이도 없고 퍽! (와)과 그 흉악한 하나의 물건을 근원까지 마음껏 쑤셔 넣어 왔다
+	PRINTFORMW 그 강렬한 충격에 %조사처리(ANAME(MASTER),"는")% 일순간 의식을 날려, 크게 몸을 뒤로 젖히게 해 버렸다
+	IF TALENT:MASTER:처녀
+		PRINTFORML 그는 %ANAME(MASTER)%의 사타구니로부터 흐르는 피를 봐 처녀와 교미할 수 있는 것을 기쁨의 소리를 높이고 키스했다
+		PRINTFORML 하지만 %조사처리(ANAME(MASTER),"는")% 그럴 때은 아니고, 쇼크로 새하얗게 되면서 움찔움찔 경련하고 있다
+		PRINTFORMW 페니스는 %ANAME(MASTER)%의 질의 안쪽 깊게까지 꽂혀, 격렬한 고통과 미지의 감각을 가져오고 있었다
+	ELSE
+		PRINTFORML 프식과 조수를 뿜어 경련하는 %ANAME(MASTER)%에 그는 근원까지 삽입할 수 있던 아이는 처음이라고 키스했다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 개처럼 혀를 늘어뜨리면서 격렬하게 숨을 거칠게 하고 쑤셔 넣어진 흉악한 충격으로 몹시 놀라고 있다
+		PRINTFORMW 페니스는 %ANAME(MASTER)%의 질의 안쪽 깊게까지 찌르기회 다투어, 강렬한 압박감과 자궁의 욱신거림을 가져오고 있었다
+	ENDIF
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 충격으로 신음하고 있는데도 관계없이, 그는 조속히 허리를 흔들기 시작했다
+	PRINTFORML 흉악한 페니스가 격렬하게 체내를 출입할 때에 %조사처리(ANAME(MASTER),"는")% 아히아히와 보기 흉하게 허덕여진다
+	PRINTFORMW 페니스가 뽑아 내지면 내장마다 질척질척 뽑아 내지는 것 같은 충격으로 전신에 시비레가 달려
+	PRINTFORML 그리고 반환의 강렬한 찔러 넣음으로 자궁으로부터의 운수까지 관철해지는 것 같은 충격으로 시야가 날 것 같게 된다
+	PRINTFORML 츄! 츄! (와)과 허리를 쳐박을 수 있을 때에 결합부로부터는 애액이 흩날려 양 다리가 크게 흔들린다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 이미 저항하지 못하고 그저 주어지는 자극에 반응해 허덕여, 떨려, 미친듯이 자지러지는 신음소리를 낼 수밖에 없었다
+	PRINTFORML 점차 그의 허리의 움직임은 가속해 나가, %조사처리(ANAME(MASTER),"는")% 암컷의 본능으로 그의 사정이 가까운 일을 감지했다
+	PRINTFORML 신체는 이미 그를 받아들이고 있어 씨뿌리기를 기대해 질육 전체가 흔들림 자궁강소까지 내리고 있다
+	PRINTFORML 그리고 그가 외침과 함께 한층 더 깊게 페니스를 쑤셔 넣는 것과 동시에 %ANAME(MASTER)%들은 함께 절정에 이르렀다
+	PRINTFORMW 그의 정액은 페니스의 크기에 적당한 양으로 열을 가져 있어 일발로 태내가 채워질 정도였다
+	PRINTFORMW …그는 처음으로 마음껏 범할 수 있는 %조사처리(ANAME(MASTER),"를")% 마음에 든 것 같아, 해가 져도 아직 끝없이 범해져 버렸다
+	CALL FUCK(MASTER, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 키스, 펠라티오, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 질내사정, 키스상실, 장내사정, 구강사정", GET_SPERM_ID("들요괴"), @"요괴토끼의 \@RAND:2 ? 페니스 # 입술\@", "요괴토끼", "",  "강간")
+	CALL FUCK(MASTER, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 키스, 펠라티오, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 질내사정, 키스상실, 장내사정, 구강사정", GET_SPERM_ID("들요괴"), @"요괴토끼의 \@RAND:2 ? 페니스 # 입술\@", "요괴토끼", "",  "강간")
+ENDIF
+PRINTFORML 
+PRINTFORMW 충분히 즐긴 %조사처리(ANAME(MASTER),"는")% 다음날 요괴토끼와 헤어져 마을을 떠났다
+DVAR:토끼의연회_발생플래그 = 2
+
+RETURN 1

@@ -1,0 +1,50 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_LUNATIC_FULLMOON_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_LUNATIC_FULLMOON_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_LUNATIC_FULLMOON(대상)
+#DIM 대상
+
+PRINTFORML 산책에 열중해, 완전히 밤이 되어 버렸다
+PRINTFORML 귀가 도중, 문득 하늘을 올려보면 만월이 떠올라 있었다
+PRINTFORML …평소보다 큰 생각이 든다
+PRINTFORML 한동안 주시하고 있는 동안에, %조사처리(ANAME(대상),"는")% 스스로의 충동을 억제할 수 없게 되어 버렸다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+IF IS_MALE(대상) || (HAS_PENIS(대상) && RAND:2)
+	PRINTFORML %조사처리(ANAME(대상),"는")% 밤길을 혼자서 걷고 있던 아가씨를 그늘에 데리고 들어갔다
+	PRINTFORML 난폭하게 옷을 벗겨내, 격분하는 페니스를 쑤셔 넣는다
+	PRINTFORML 최초야말로 저항하고 있던 아가씨였지만, 몇 번이나 범해지는 동안에 스스로 허리를 흔드는야 게 되어 있었다
+	PRINTFORML 참지 않고 %조사처리(ANAME(대상),"가")% 정액을 발하면, 아가씨도 높은 소리를 질러 절정 했다
+	PRINTFORML 
+	CALL FUCK(대상, "Ｃ, 욕망, 성교, 성기술, 사정, 키스, Ｖ삽입" + (IS_FEMALE(대상) ? ", Ｂ, Ｖ, 레즈" # ""), "키스상실, 동정상실", 0, "마을 아가씨의 입술", "마을 아가씨의 질", "", "강간")
+	PRINTFORML 
+	PRINTFORML %조사처리(ANAME(대상),"는")% 심혈 다한 아가씨를 방치해 떠났다
+ELSE
+	PRINTFORML %조사처리(ANAME(대상),"는")% 밤길을 혼자서 걷고 있던 남자를 유혹한다
+	PRINTFORML 남은 %ANAME(대상)%의 유혹에 흥분한 것 같아, 즉시 그늘에 데리고 들어갔다
+	PRINTFORML 난폭하게 옷을 벗겨내져 격분하는 페니스를 쑤셔 넣어진다
+	PRINTFORML 범해지고 있다는데, %ANAME(대상)%의 %STR_BODY("질:처녀 확인:시간 경과:감도", 대상)%는 젖어, 스스로 허리를 흔들고 있다
+	PRINTFORML 남이 참지 않고 정액을 발하면, %ANAME(대상)%도 높은 소리를 질러 절정 했다
+	CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("지나가는 남자"), @"지나가는 남자의 \@RAND:2 ? 페니스 # 입술\@", "지나가는 남자", "", "최면중의 화간")
+	PRINTFORML 
+	PRINTFORML 남은 지쳐 쓰러진 %조사처리(ANAME(대상),"를")% 방치해 떠났다
+ENDIF
+
+RETURN 1

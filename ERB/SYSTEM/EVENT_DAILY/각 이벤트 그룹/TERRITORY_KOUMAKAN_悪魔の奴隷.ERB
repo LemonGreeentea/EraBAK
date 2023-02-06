@@ -1,0 +1,174 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_TERRITORY_KOUMAKAN_RATE()
+RETURN 50
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_TERRITORY_KOUMAKAN_DECISION()
+#DIM 홍마관
+#DIM 홉고블린
+홍마관 = GET_CITYNUMBER("홍마관")
+홉고블린 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_홉고블린)
+
+SIF 홍마관 == -1
+	RETURN 0
+SIF CITY_OWNER:홍마관 != CFLAG:MASTER:소속
+	RETURN 0
+SIF GET_COUNTRY_BOSS(CFLAG:MASTER:소속) == MASTER
+	RETURN 0
+SIF CFLAG:MASTER:소속 == 홉고블린
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_TERRITORY_KOUMAKAN_GENRE()
+RETURN 데일리_장르_에로
+
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_TERRITORY_KOUMAKAN
+#DIM 홍마관
+홍마관 = GET_CITYNUMBER("홍마관")
+
+IF IS_MALE(MASTER) || (HAS_PENIS(MASTER) && RAND:2)
+	PRINTFORML 홍마관에서 일하는 메이드 요정들의 감독 지도를 명령받았다
+	PRINTFORML …지도중, 한마리의 요정이 미스했다
+	SELECTCASE RAND:3
+		CASE 0
+			PRINTFORMW 홍차를 흘려 카페트를 더럽혀 버린 것 같다
+		CASE 1
+			PRINTFORMW 탄막을 부딪쳐 유리창을 깨어 버린 것 같다
+		CASE 2
+			PRINTFORMW 수도꼭지를 닫고 잊고 방을 침수로 해 버린 것 같다
+	ENDSELECT
+	PRINTFORML 어떻게 하지?
+	CALL ASK_MULTI("상냥하게 지도한다" ,"어렵게 지도한다" ,"벌 한다")
+	IF RESULT == 0
+		PRINTFORML 누구에게라도 미스는 있다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 낙담하는 그녀를 위로하면서 지도했다
+		FOR LOCAL, 0, CHARANUM
+			IF CFLAG:(LOCAL):소속 == CFLAG:MASTER:소속 && !CFLAG:(LOCAL):포로처 && !IS_ANIMAL(LOCAL)
+				CFLAG:(LOCAL):호감도 += 20 + RAND:20 
+			ENDIF
+		NEXT
+		CALL COLOR_PRINTW("부하를 배려하는 태도가 널리 알려져 동료의 평가가 올랐다", 칼라_주의)
+	ELSEIF RESULT == 1
+		PRINTFORML 이런 미스를 반복하게 해서는 안 된다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 떨리는 그녀를 몹시 꾸짖으면서 지도했다
+		CALL MODIFY_CITY_ECONOMY(홍마관, RAND(10000, 30000))
+	ELSEIF RESULT == 2
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 한숨을 쉬면서 쓸쓸히 하는 그녀를 본다
+		PRINTFORML 요정으로 해서는 건방지게도 옷의 위로부터도 요철의 뚜렷한 몸의 라인이 눈에 띄었다
+		PRINTFORMW 므흣 온 %조사처리(ANAME(MASTER),"는")% 그녀에게 벌을 하는 일로 해 자기 방에 데리고 들어갔다
+		PRINTFORML 
+		SELECTCASE RAND:5
+			CASE 0
+				PRINTFORML 요정 메이드가 %ANAME(MASTER)% 위에서 작은 몸을 크게 흔들어 허덕이고 있다
+				PRINTFORML 그녀는 쾌락에 솔직해 조금 가르쳐 주는 것만으로 지금은 자신으로부터 허리를 흔들고 있다
+				PRINTFORML 질육은 가볍게 경련하면서 장대 전체를 단단히 조여, 추잡하게 정자를 졸라댔다
+				PRINTFORMW 생각하지 않는 극상의 여체에게 %조사처리(ANAME(MASTER),"는")% 무책임 씨뿌리기 섹스를 마음껏 즐겁게 해 받았다
+			CASE 1
+				PRINTFORML 그녀는 %ANAME(MASTER)%에 격렬하게 프레스 되면서 전신을 진동시키고 좋아하고 있다
+				PRINTFORML 조금 전까지 처녀였는데 지금은 완전히 암컷에 눈을 뜬 그녀는 눈동자에♥를 띄우고 허덕인다
+				PRINTFORML 쾌락에 몸부림치는 사랑스러운 표정을 즐기면서, 그녀의 안을 안쪽 깊게까지 유린해 갔다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀에게 졸라대지는 대로 질릴 때까지 몇 번이나 정액을 발해 주었다
+			CASE 2
+				PRINTFORML 벌을 끝낸 그녀가 %ANAME(MASTER)%의 팔에 안기면서 숨을 거칠게 하고 있다
+				PRINTFORML 요정 이유나 그녀는 곧바로 쾌락에 드감해, 마지막에는 화려하게 질내사정 하고 있었다
+				PRINTFORML 두를 어루만져 주면 넋을 잃은 표정이 되어 %ANAME(MASTER)%에 응석부리는 것처럼 다가서 왔다
+				PRINTFORMW %조사처리(ANAME(MASTER),"가")% 벌의 재개를 고한다고 그녀는 기대에 뺨을 물들여 엉덩이를 내밀었다
+			CASE 3
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 벽 옆에서 그녀에게 엉덩이를 내밀게 해 배후로부터 격렬하게 범하고 있다
+				PRINTFORML 전희도 없음의 삽입과 난폭한 밀어올림에 그녀는 신음소리를 올리면서 눈물을 흘린다
+				PRINTFORML 용서를 비는 그녀의 표정에 기학심을 부추겨진 %조사처리(ANAME(MASTER),"는")% 보다 격렬하게 벌을 계속했다
+				PRINTFORMW 한껏 벌을 준 %조사처리(ANAME(MASTER),"는")% 붕괴된 그녀를 방치해 방을 나왔다
+			CASE 4
+				PRINTFORML 그녀를 덮어누른 %조사처리(ANAME(MASTER),"는")% 옷을 입힌 채로 난폭하게 페니스를 쑤셔 넣었다
+				PRINTFORML 울며 아우성치는 그녀를 무시해 거슬거슬 하는 질의 감촉에 열중해 허리를 쳐박는다
+				PRINTFORML 피하려고 몸을 구불거리게 할 수 있는 그녀이지만 그것이 오히려 페니스에 마음 좋게 휘감겼다
+				PRINTFORMW 시간을 잊어 몇 번이나 사귀고 있으면 점차 그녀의 목으로부터 달콤한 한숨이 새고 있었다
+		ENDSELECT
+		CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "요정 메이드의 입술", "", "요정 메이드의 질", "조교")
+		PRINTFORML 
+		PRINTFORML %ANAME(MASTER)%의 벌에 의해 그녀는 완전히 1인분의 메이드 요정이 되었다
+		PRINTFORMW 하지만 때때로 실수를 해서는 기대를 숨긴 눈동자로 %조사처리(ANAME(MASTER),"를")% 응시해 오게 되었다
+	ENDIF
+ELSE
+	PRINTFORML 홍마관에서 일하는 홉고블린들의 감독 지도를 명령받았다
+	PRINTFORML …업무중, 한마리의 고블린이 게으름 피우고 있는 것을 찾아냈다
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% 몹시 꾸짖으면 그는 포상을 요구해 왔다
+	PRINTFORML 어떻게 하지?
+	CALL ASK_MULTI_JUDGE("급료를 준다", MONEY >= 1000,"벌을 준다", 1,"바라는 것을 얘기한다", 1)
+	IF RESULT == 0
+		PRINTFORML 소망 대로 급료를 줄 약속을 했다
+		PRINTFORML 하면 그는 다른 고블린과 같이 열심히 일하기 시작했다
+		MONEY -= 1000
+		CALL COLOR_PRINTL("금 1000을 지불했다", 칼라_주의)
+		CALL MODIFY_CITY_ECONOMY(홍마관, RAND(10000, 30000))
+	ELSEIF RESULT == 1
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 어려운 벌을 주는 일로 했다
+		CALL COLOR_PRINTW("간식 빼기!", 칼라_경고)
+		PRINTFORMW 하면 그는 물론, 다른 고블린들도 떨려 일을 한층 노력했다
+		LOCAL:1 = 3 + 3 * RAND:5
+		CITY_GUARD:홍마관 = MAX(CITY_GUARD:홍마관 + LOCAL:1, 1)
+		CALL COLOR_PRINTW(@"%CITY_NAME:홍마관%의 방위율이 {LOCAL:1} 상승했다", 칼라_주의)
+	ELSEIF RESULT == 2
+		PRINTFORML 바라는 것을 (들)물었던 %ANAME(MASTER)%에 대해 그는 힐쭉 웃었다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 의심스러워 했지만 그는 입이 능숙하게, 홍마관의 구석에 있는 한 방에 데리고 들어가졌다
+		PRINTFORML 
+		PRINTFORML 방에 데리고 들어가진 %조사처리(ANAME(MASTER),"는")% 갑자기 그에게 밀어 쓰러트려져 버렸다!
+		PRINTFORML 놀라움 저항하는 %조사처리(ANAME(MASTER),"였")%지만 그의 격분한 페니스를 내밀어져 오싹 했다
+		PRINTFORML 페니스로부터 감도는 코에 찡 오는 수컷 수상함에 무심코 자궁이 뜨끔 쑤셔 버렸다
+		PRINTFORMW 그리고 저항을 잊은 틈에 옷을 벗겨내져 그대로 페니스를 쑤셔 넣어지고 비명을 올렸다
+		PRINTFORML 
+		SELECTCASE RAND:5
+			CASE 0
+				PRINTFORML 체격에 어울리지 않는 흉포한 하나의 물건으로 가차 없이 질육을 후벼파져 %조사처리(ANAME(MASTER),"는")% 눈을 뒤집어 짐승과 같이 허덕인다
+				PRINTFORML 여자의 약점을 다 안 그의 공격은 계속 참을 수 있는 것은 아니게 단정치 못하게 몸부림쳐 버린다
+				PRINTFORML 그가허리를 흔드는 동안에 퍼억퍼억하고 자궁을 격렬하게 찔러지고 정수리까지 영향을 줄 정도의 쾌락에 사고가 튄다
+				PRINTFORMW 자지님이 굴복한 %조사처리(ANAME(MASTER),"는")% 압도적인 쾌락의 물결에 빠져 서서히 바보가 되면서 이키 미쳤다
+			CASE 1
+				PRINTFORML 자궁까지 망치는 것 같은 용감한 피스톤은 일발 찌르기마다 %ANAME(MASTER)%의 마음도 몸도 천한 암컷으로 바꾸어 간다
+				PRINTFORML 전신이 저려 저항도할 수 없는 채 몇 번째인가의 절정과 함께 농후한 고블린국물이 힘차게 발해진다
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 뱃속에 쏟아지는 작열의 정액을 느끼면서 아헤아헤와 야무지지 못하게 혀를 늘어뜨렸다
+				PRINTFORMW 진정한 여자의 기쁨을 느껴 버린 %조사처리(ANAME(MASTER),"는")% 뒤는 이제(이미/벌써/더는/정말) 범해지는 대로 단지 계속해서 마구 갔다
+			CASE 2
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 그의 강렬한 공격에 양 다리를 움찔움찔 뛰게 하면서 보기 흉하게 미친듯이 자지러지는 신음소리를 내고 있다
+				PRINTFORML 츄♥밧츄♥(와)과 페니스를 쳐박아질 때에 %조사처리(ANAME(MASTER),"는")% 돼지같이 허덕이면서 절정얼굴을 쬔다
+				PRINTFORML 작은 로리오니에 자기 마음대로 신체를 희롱해져 버리는 굴욕감이 관능을 자극해 오슬오슬 등줄기를 진동시켰다
+				PRINTFORMW 도푸도푸 그의 정액이 태내에 따라지면 %조사처리(ANAME(MASTER),"는")% 교성을 미치게 해 최고의 기쁨에 달했다
+			CASE 3
+				PRINTFORML 목걸이를 붙여진 %조사처리(ANAME(MASTER),"는")% 암캐같은 네발로 엎드림으로 격렬하게 범해지면서 몸부림치고 있다
+				PRINTFORML 엉덩이를 얻어맞으면서 자궁까지 암 찔러 계속 되고 %ANAME(MASTER)%의 저항심은 이미 쾌락으로 덧쓰기되고 있었다
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% "주인님"의 씩씩한 육봉으로 빠득빠득 천한 질 구멍을 후벼파지면서 감사의 소리를 미치게 했다
+				PRINTFORMW 완전히 입장이 거꾸로 되어 버린 %조사처리(ANAME(MASTER),"는")% 그의 자지로 훌륭한 암캐가 되는 것처럼 조교되었다
+			CASE 4
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 용서 없는 씨뿌리기 프레스를 받으면서 몇 번째인가의 질방편으로 단정치 못하게 허덕이고 있다
+				PRINTFORML 농후한 정액이 태내의 구석구석까지 스며들어 오는 감각에 %조사처리(ANAME(MASTER),"는")% 의식을 날리면서 절정 한다
+				PRINTFORML 그는 사정하면서도 허리를 계속 흔들고 절정안으로 민감한 질육을 후벼파진 %조사처리(ANAME(MASTER),"는")% 보기 흉하게 이키 미쳤다
+				PRINTFORMW 그 뒤도 절륜자지로 한껏 예의범절을 가르쳐진 %조사처리(ANAME(MASTER),"는")% 완전히 그에게 헤롱헤롱으로 되어 버렸다
+		ENDSELECT
+		CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, Ｖ성교, 펠라티오", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("홉고블린"), @"홉고블린의 \@RAND:2 ? 페니스 # 입술\@", "홉고블린", "", "조교")
+		PRINTFORML 
+		PRINTFORML 그는 만족할 때까지 %ANAME(MASTER)%에 씨뿌리기 마구 한 후, 냉큼 떠나 갔다
+		PRINTFORML 정액의 냄새가 충만한 방에는 경련하고 있을 뿐으로 늘어진 %조사처리(ANAME(MASTER),"가")% 한사람 남겨졌다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 전신이 질척질척 더럽혀지고 있었음에도 불구하고 그 표정은 기쁨으로 가득 차 있었다
+	ENDIF
+ENDIF
+
+RETURN 1

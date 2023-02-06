@@ -1,0 +1,86 @@
+﻿@SP_COUNTRY_REV_TRAIN()
+#DIM 아는사람참가자, 4
+#DIM 아는사람참가수
+#DIM 특수세력정수
+#DIMS 특수세력영명
+VARSET 아는사람참가자
+VARSET 아는사람참가수
+;전원의 조교참가플래그를 해제
+CVARSET CFLAG, 6, 0
+
+
+특수세력정수 = SP_COUNTRY_TO_CONST(CFLAG:MASTER:포로처)
+특수세력영명 = %SP_COUNTRY_NAME_ENG:특수세력정수%
+
+;세력마다의 특수한 이벤트
+;발생하고 싶은들 1을 되돌린다  그 후의 조교는 발생하지 않는다
+TRYCCALLFORM %특수세력영명%_REV_TRAIN_SP_EVENT(CFLAG:MASTER:포로처)
+	SIF RESULT
+		RETURN 0
+CATCH
+ENDCATCH
+
+;세력마다의 정기적 이벤트로서 사용한다
+;그 후의 조교를 캔슬한다면 1을 돌려준다
+TRYCCALLFORM %특수세력영명%_REV_TRAIN_REGULAR_EVENT(CFLAG:MASTER:포로처)
+	SIF RESULT
+		RETURN 0
+CATCH
+ENDCATCH
+
+;아는 사람의 참가수를 결정하는 4명까지
+CALL FISHER_YATES_SHAFFLE(CHARANUM)
+FOR LOCAL:0, 0, CHARANUM
+	LOCAL:1 = SHAFFLE_ARRAY:(LOCAL:0)
+	IF CFLAG:(LOCAL:1):안면 && !IS_SP_CHARA(LOCAL:1) && CFLAG:(LOCAL:1):소속 == CFLAG:MASTER:포로처 && GETBIT(TALENT:(LOCAL:1):특수세력함락계, 특수세력정수) && RAND:2
+		아는사람참가자:아는사람참가수 = LOCAL:1
+		아는사람참가수 ++
+		CFLAG:(LOCAL:1):조교참가플래그 = 1
+		SIF 아는사람참가수 == 4
+			BREAK
+	ENDIF
+NEXT
+
+;특수 세력에 떨어진 캐릭터가 참가하는 이벤트
+;제 2 인수는 #DIM REF 하는 것
+SIF 아는사람참가수 > 0
+	TRYCALLFORM %특수세력영명%_REV_TRAIN_MSG(CFLAG:MASTER:포로처, 아는사람참가자, 아는사람참가수)
+
+
+;참가자 결정 알고리즘(견돈을 참가시키기 위한 처치)
+TRYCCALLFORM %특수세력영명%_REV_TRAIN_CHOOSE_PARTICIPANT(CFLAG:MASTER:포로처)
+CATCH
+	FOR LOCAL, 0, 4
+		FOR LOCAL:1, 0, CHARANUM
+			IF TALENT:(LOCAL:1):특수세력소질 == 특수세력정수 && !CFLAG:(LOCAL:1):조교참가플래그 && CFLAG:(LOCAL:1):소속 == CFLAG:MASTER:포로처
+				CFLAG:(LOCAL:1):조교참가플래그 = 1
+				CFLAG:(LOCAL:1):TEXT_LAST비표시 = 1
+				BREAK
+			ENDIF
+		NEXT
+	NEXT
+ENDCATCH
+
+;역조교개시전의 이것저것
+FLAG:조교모드 = 조교_역조교특수
+FLAG:우후후플래그 = 1
+FLAG:역조교회수 ++
+ITEM:A_로터 = 1
+ITEM:A_바이브 = 1
+ITEM:A_애널바이브 = 1
+ITEM:A_페니스밴드 = 1
+ITEM:A_오나홀 = 1
+ITEM:A_클리캡 = 1
+ITEM:A_유두캡 = 1
+ITEM:A_착유기 = 1
+ITEM:A_바늘 = 1
+ITEM:A_채찍 = 1
+ITEM:A_미약 = 99
+ITEM:A_배란유발제 = 99
+ITEM:A_로션 = 99
+ITEM:A_페니스밴드 = 1
+
+CFLAG:MASTER:해방카운터 = 0
+
+RETURN 1
+

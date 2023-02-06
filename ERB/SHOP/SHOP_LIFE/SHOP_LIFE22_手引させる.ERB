@@ -1,0 +1,327 @@
+﻿;-------------------------------------------------
+;「안내시킨다」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE_NAME22
+RESULTS:0 '= "안내시킨다"
+
+;-------------------------------------------------
+;「안내시킨다」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE_CHECK22
+FOR LOCAL, 0, MAX_COUNTRY
+	SIF !IS_COUNTRY(LOCAL) || LOCAL == CFLAG:MASTER:소속
+		CONTINUE
+	SIF !CFLAG:MASTER:소속 || TMP_COUNTRY_IS_NEIBORING:(CFLAG:MASTER:소속):LOCAL
+		GOTO FOUND
+NEXT
+
+RETURN 0
+
+$FOUND
+
+SIF CFLAG:MASTER:포로처
+	RETURN 0
+SIF CFLAG:MASTER:행동불능상태 == 행동불능_임월 || COOLTIME:MASTER:0 > 1
+	RETURN 0
+
+;통상은 CHECK진CHECKCHARA진이라면 통하지만
+;안내는 CHECKCHARA_SUB가 필수이기 때문에 여기서 체크
+;내통자의 선택 가능 캐릭터 존재 체크
+LOCAL:1 = 0
+FOR LOCAL:0, 1, CHARANUM
+	CALL SHOP_LIFE_CHECKCHARA_SUB_NAITSUU(LOCAL:0)
+	IF RESULT
+		LOCAL:1 = 1
+		BREAK
+	ENDIF
+NEXT
+
+;내통자가 될 수 있는 캐릭터가 존재하지 않는다
+SIF LOCAL:1 == 0
+	RETURN 0
+
+RETURN 1
+
+;-------------------------------------------------
+;「안내시킨다」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA22(ARG:0)
+;인접하고 있는 도시가 없다
+SIF CFLAG:MASTER:소속 && !TMP_COUNTRY_IS_NEIBORING:(CFLAG:MASTER:소속):(CFLAG:(ARG:0):소속)
+	RETURN 0
+
+;비주인공, 포로는 아닌, 별세력, 어딘가의 세력에 소속해 있다（방랑, 미등장, 사망이 끝난 상태는 아니다）
+IF ARG:0 != MASTER && !CFLAG:(ARG:0):포로처 && CFLAG:MASTER:소속 != CFLAG:(ARG:0):소속 && CFLAG:(ARG:0):소속 && !IS_SP_CHARA(ARG:0) && CFLAG:(ARG:0):행동불능상태 != 행동불능_아이
+	;내통자로서 선택한 캐릭터 자신은 불가
+	SIF CFLAG:(ARG:0):덮치는건조수
+		RETURN 2
+	IF TEBIKI_ABLE(ARG:0)
+		RETURN CHECK91(ARG:0, 2, 1)
+	ENDIF
+	RETURN 2
+ENDIF
+RETURN 0
+
+;-------------------------------------------------
+;「안내시킨다」의 내통자의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA_SUB22(ARG:0)
+CALL SHOP_LIFE_CHECKCHARA_SUB_NAITSUU(ARG:0)
+RETURN RESULT
+
+;-------------------------------------------------
+;「요바이한다」의 추가 체크
+;-------------------------------------------------
+@SHOP_LIFE_CHECK_ADDITIONAL_CHECK22()
+RETURN !FLAG:클리어플래그
+
+;-------------------------------------------------
+;「안내시킨다」의 함락/능력 판정
+;-------------------------------------------------
+@TEBIKI_ABLE(ARG:0)
+#FUNCTION
+LOCAL:1 = TEBIKI_ZYOSYU_CALC_POINT(MASTER)
+LOCAL:2 = 0
+FOR LOCAL,1, CHARANUM
+	IF CFLAG:LOCAL:덮치는건조수
+		LOCAL:1 += TEBIKI_ZYOSYU_CALC_POINT(LOCAL)
+		LOCAL:2 = 1
+		SIF CFLAG:LOCAL:소속 != CFLAG:ARG:소속
+			RETURNF 0
+	ENDIF
+NEXT
+
+SIF LOCAL:2 == 0
+	RETURNF 0
+
+RETURNF LOCAL:1 > TEBIKI_TARGET_CALC_POINT(ARG)
+
+;-------------------------------------------------
+;「요바이한다」의 능력 판정용 함수
+;-------------------------------------------------
+@TEBIKI_ZYOSYU_CALC_POINT(ARG)
+#FUNCTION
+RETURNF ABL:ARG:무투 + ABL:ARG:지략
+
+;-------------------------------------------------
+;「요바이한다」의 능력 판정용 함수
+;-------------------------------------------------
+@TEBIKI_TARGET_CALC_POINT(ARG)
+#FUNCTION
+SIF GROUPMATCH(1, TALENT:ARG:친애, TALENT:ARG:연모, TALENT:ARG:예속, TALENT:ARG:복종, TALENT:ARG:주인, TALENT:ARG:소유자)
+	RETURNF 0
+
+LOCAL = (ABL:ARG:무투 + ABL:ARG:지략)
+
+SIF TALENT:(ARG:0):낙인
+	RETURNF LOCAL
+SIF GET_COUNTRY_BOSS(CFLAG:(ARG:0):소속) == ARG:0
+	RETURNF LOCAL * 2
+RETURNF LOCAL * 3 / 2
+
+;-------------------------------------------------
+;「안내시킨다의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY22
+FLAG:거점페이즈페이지 = 1
+FLAG:요바이 = 1
+FOR LOCAL:0, 1, CHARANUM
+	CFLAG:(LOCAL:0):덮치는건조수 = 0
+NEXT
+RETURN 0
+
+;-------------------------------------------------
+;「안내시킨다」의 오른쪽 컬럼 캐릭터 리스트 1의 버튼（함수미지정이라면 선택중색없음 표시）
+;-------------------------------------------------
+@SHOP_LIFE_LIST1_BUTTON22(ARG:0, ARG:1)
+;내통자의 존재 체크
+LOCAL:1 = 0
+FOR LOCAL:0, 1, CHARANUM
+	IF CFLAG:(LOCAL:0):덮치는건조수
+		LOCAL:1 = 1
+		BREAK
+	ENDIF
+NEXT
+;내통자가 지정되어 있지 않다
+IF LOCAL:1 == 0
+	;캐릭터, 선택중 칼라 표시 플래그 없음, 버튼 번호에 추가하는 수치, 강제적으로 선택 불가색표시
+	CALL COLUMN_RIGHT_CHARALIST_BUTTON(ARG:0, 0, SHOP_LIFE_LIST1_ADD_INPUT, 2, 0, "TOP")
+ELSE
+	;캐릭터, 선택중 칼라 표시 플래그 없음, 버튼 번호에 추가하는 수치, CHECKCHARA의 반환값
+	CALL COLUMN_RIGHT_CHARALIST_BUTTON(ARG:0, 0, SHOP_LIFE_LIST1_ADD_INPUT, ARG:1, 0, "TOP")
+ENDIF
+RETURN
+
+;-------------------------------------------------
+;「안내시킨다」의 오른쪽 컬럼 캐릭터 리스트 2의 버튼（함수미지정이라면 선택중색없음 표시）
+;-------------------------------------------------
+@SHOP_LIFE_LIST2_BUTTON22(ARG:0, ARG:1)
+;캐릭터, 선택중 칼라 표시 플래그, 버튼 번호에 추가하는 수치, CHECKCHARA의 반환값
+CALL COLUMN_RIGHT_CHARALIST_BUTTON(ARG:0, CFLAG:(ARG:0):덮치는건조수, SHOP_LIFE_LIST2_ADD_INPUT, ARG:1, 0, "BOTTOM")
+RETURN 0
+
+;-------------------------------------------------
+;「요바이」의 오른쪽 컬럼 캐릭터 리스트 버튼（상）표시에 추적 시키는 정보
+;  Default의 정보를 표시하지 않는 경우는 RETURN 1
+;-------------------------------------------------
+@SHOP_LIFE_BUTTON_ADD_TOP22(ARG:0)
+PRINTFORM P:{TEBIKI_TARGET_CALC_POINT(ARG:0), 3, RIGHT}
+CALL SHOP_LIFE_BUTTON_ADD_TOP_PRISONER(ARG:0)
+RETURN RESULT
+
+;-------------------------------------------------
+;「요바이」의 오른쪽 컬럼 캐릭터 리스트 버튼（상）표시에 추적 시키는 정보
+;  Default의 정보를 표시하지 않는 경우는 RETURN 1
+;-------------------------------------------------
+@SHOP_LIFE_BUTTON_ADD_BOTTOM22(ARG:0)
+PRINTFORM P:{TEBIKI_ZYOSYU_CALC_POINT(ARG:0), 3, RIGHT}
+CALL SHOP_LIFE_BUTTON_ADD_BOTTOM_PRISONER(ARG:0)
+RETURN RESULT
+
+;-------------------------------------------------
+;「안내시킨다」의 오른쪽 컬럼 표시 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SHOW22
+CALL COLUMN_RIGHT_TITLE("대상자 선택", "0", "1", "1", "0", "외 세력에 내통자가 필요")
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+;2단조캐릭터 리스트상과 페이지 이동
+CALL COLUMN_RIGHT_CHARALIST_TOP(1)
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+;조수를 센다
+LOCAL:1 = 0
+LOCAL:2 = TEBIKI_ZYOSYU_CALC_POINT(MASTER)
+FOR LOCAL:0, 0, CHARANUM
+	;선택 가능한 조건을 채우고 있는지 어떤지를 판정
+	TRYCALLFORM SHOP_LIFE_CHECKCHARA_SUB{FLAG:거점페이즈선택커맨드}(LOCAL:0)
+	IF RESULT == 1
+		;선택중의 인원수를 센다
+		IF CFLAG:(LOCAL:0):덮치는건조수
+			LOCAL:1 ++
+			LOCAL:2 += TEBIKI_ZYOSYU_CALC_POINT(LOCAL:0)
+		ENDIF
+	ELSE
+		;조건을 채우지 않으면 강제적으로ＯＦＦ
+		CFLAG:(LOCAL:0):덮치는건조수 = 0
+	ENDIF
+NEXT
+
+PRINT 누구에게 안내 시킵니까?
+PRINTFORM  포인트:{LOCAL:2}
+PRINTPLAIN  
+PRINTBUTTON @"[%ZYOSYU_MODE()%]", 1
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+;2단조캐릭터 리스트하와 페이지 이동
+소트키보존 = 소트키
+소트순서보존 = 내림차순소트
+소트키 = 소트_안내조수
+내림차순소트 = 1
+CALL CREATE_SELECTOR_SORT_LIST
+CALL COLUMN_RIGHT_CHARALIST_BOTTOM(1)
+소트키 = 소트키보존
+내림차순소트 = 소트순서보존
+CALL CREATE_SELECTOR_SORT_LIST
+RETURN 0
+
+;-------------------------------------------------
+;「요바이한다」의 오른쪽 컬럼 버튼의 입력 처리 보좌
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SUB22(ARG:0)
+SIF ARG:0 != 1
+	RETURN 0
+
+FLAG:조수필터 = ROUND_INCREMENT(FLAG:조수필터, 0, 3)
+
+
+;-------------------------------------------------
+;「안내시킨다」의 리스트 1 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP22(ARG:0)
+#DIM 호감도외감소
+
+;SHOW_INFO의 초기 화면을 기본 정보로 한다
+FLAG:능력표시모드 = 0
+
+$SHOW_LOOP_INFO_T
+
+;대상 캐릭터의 정보를 표시
+CALL SINGLE_DRAWLINE
+CALL SHOW_INFO(ARG:0)
+CALL SINGLE_DRAWLINE
+
+PRINTFORML 내통자의 안내로 %조사처리(ANAME(ARG:0),"를")% 함정에 걸칩니다
+PRINTFORML 좋습니까?
+CALL ASK_YN
+IF RESULT == 0
+	CVARSET CFLAG, 6, 0
+	FOR LOCAL:0, 0, CHARANUM
+		IF LOCAL:0 != MASTER && CFLAG:(LOCAL:0):덮치는건조수
+			CFLAG:(LOCAL:0):조교참가플래그 = 1
+		ENDIF
+	NEXT
+	;요바이경험
+	EXP:ARG:59 ++
+	;조교 초기설정
+	CALL TRAIN_TARGET_SETTING(ARG:0)
+	;메인 타겟을 조교 대상으로 설정
+	VARSET PRISONER_TARGET, -1
+	PRISONER_TARGET:0 = ARG:0
+	;초기의 우후후플래그를ＯＮ로 한다
+	FLAG:우후후플래그 = 1
+	;포로 조교 모드
+	FLAG:조교모드 = 2
+	;요바이 플래그
+	FLAG:요바이 = 1
+
+	;행동 개시시의 공통 설정
+	CALL START_TRAIN_COMMON
+	IF !GROUPMATCH(1, TALENT:ARG:친애, TALENT:ARG:연모, TALENT:ARG:예속, TALENT:ARG:복종, TALENT:ARG:주인, TALENT:ARG:소유자)
+		호감도외감소 = LIMIT(RAND(100, 200) - ABL:ARG:욕망 * 20 - ABL:ARG:봉사 * 20 ,0, 100)
+		SIF TALENT:ARG:낙인
+			호감도외감소 /= 2
+		SIF CFLAG:(ARG:0):호감도 > 0
+			CFLAG:(ARG:0):호감도 -= 호감도외감소
+		SIF CFLAG:(ARG:0):종속도 > 0
+			CFLAG:(ARG:0):종속도 -= 호감도외감소
+		SIF CFLAG:(ARG:0):의존도 > 0
+			CFLAG:(ARG:0):의존도 -= 호감도외감소
+		SIF CFLAG:(ARG:0):지배도 > 0
+			CFLAG:(ARG:0):지배도 -= 호감도외감소 / 2
+
+		;상대국과의 관계 악화（적당）
+		CALL CHANGE_RELATION_C_TO_C(CFLAG:ARG:소속, CFLAG:MASTER:소속, RAND(50, 100) * -1, RAND(50, 100))
+		;대상이 군주라면 한 그릇 더
+		SIF GET_COUNTRY_BOSS(CFLAG:(ARG:0):소속) == ARG:0
+			CALL CHANGE_RELATION_C_TO_C(CFLAG:ARG:소속, CFLAG:MASTER:소속, RAND(100, 150) * -1, RAND(100, 150))
+	ENDIF
+	REDRAW 1
+	RETURN 1
+ENDIF
+REDRAW 1
+RETURN 0
+
+;-------------------------------------------------
+;「안내시킨다」의 리스트 2 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP_SUB22(ARG:0)
+;참가 캐릭터의 수를 센다
+LOCAL:5 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):덮치는건조수
+		LOCAL:5 ++
+	ENDIF
+NEXT
+;1인까지
+IF CFLAG:(ARG:0):덮치는건조수 || LOCAL:5 < 1
+	;내통 참가 플래그를 반전
+	CFLAG:(ARG:0):덮치는건조수 = !CFLAG:(ARG:0):덮치는건조수
+ENDIF
+

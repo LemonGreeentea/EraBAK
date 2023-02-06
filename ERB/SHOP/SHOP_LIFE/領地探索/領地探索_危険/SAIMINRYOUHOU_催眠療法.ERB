@@ -1,0 +1,90 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_SAIMINRYOUHOU_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_SAIMINRYOUHOU_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_SAIMINRYOUHOU(대상)
+#DIM 대상
+
+PRINTFORML 최면 요법사를 자칭하는 남자를 만났다
+PRINTFORMW 체험 치료로 몸도 마음도 릴렉스 하지 않겠습니까와 권해졌다
+PRINTFORML 어떻게 하지?
+PRINTL
+CALL ASK_YN("해 본다" ,"거절한다")
+IF RESULT == 1
+	PRINTFORMW 너무 이상하므로 거절했다
+	RETURN
+ENDIF
+PRINTFORML 시험삼아 받아 보는 일로 했다
+PRINTFORMW 그에게 촉구받아 가까이의 여인숙으로 향했다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+SELECTCASE RAND:3
+	CASE 0
+		PRINTFORML 그의 치료의 덕분으로 시원해졌다!
+		PRINTFORMW 답례를 고해, 가벼운 발걸음으로 귀가했다
+		MAXBASE:대상:정신력 += 100
+		CALL ICPRINT(@"정신력 최대치가<100>올라,<{MAXBASE:대상:정신력}>가 되었다", "W", 칼라_주의)
+		RETURN
+	CASE 1
+		PRINTFORML 어쩐지 머리가 좋아진 것 같았다!
+		PRINTFORMW 답례를 고해, 가벼운 발걸음으로 귀가했다
+		CALL PRINT_ADD_EXP(대상, "지략경험치", RAND:30 + 6, 1)
+		RETURN
+	CASE 2
+		IF IS_MALE(대상) || (HAS_PENIS(대상) && RAND:2)
+			PRINTFORML 그의 치료를 받은 %조사처리(ANAME(대상),"는")% 성욕이 끙끙이 되었다
+			PRINTFORMW 이성에서는 저항할 수 없을 만큼의 충동에 참지 못하고 근처를 우연히 지나간 여성을 잡았다
+			PRINTFORML 
+			PRINTFORML %조사처리(ANAME(대상),"는")% 그녀를 억지로 뒷골목에 데리고 들어가면 격렬하게 범했다
+			PRINTFORML 저항하고 있던 그녀도, 최면 요법사가 한마디 속삭인 순간 온순하게 되어 엉덩이를 흔들기 시작했다
+			PRINTFORML 억제하지 못할 충동대로 허리를 쳐박아, 탐내도록(듯이) 그 신체를 맛봐, 정액을 발한다
+			PRINTFORML 단지 계속해서짐승과 같이 교%ANAME(대상)%들을 두어 그는 어딘가로 떠나 갔다
+			PRINTFORMW 남겨진 %ANAME(대상)%들은 호텔에 향해, 밤이 끝날 때까지 연결되고 있을 뿐으로 사귀었다……
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", "스침의 여자의 질", "최면을 걸친 강간")
+			PRINTFORML 
+			PRINTFORML 이튿날 아침, %ANAME(대상)%들은 얼싸안으면서 침대 중(안)에서 눈을 떴다
+			PRINTFORMW 그리고 어젯밤의 정열적인 섹스를 잊을 수 있지 못하고, 또 만날 약속을 했다
+			RETURN
+		ENDIF
+ENDSELECT
+SELECTCASE RAND:3
+	CASE 0
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 그의 손에 의해 기억을 조종되어 새댁으로 되었다
+		PRINTFORML 알몸 에이프런에 몸을 감싼 %조사처리(ANAME(대상),"가")% 침대를 삐걱거리게 하면서 그의 위에서 허리를 흔들고 있다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 사랑스러운 서방님의 이름을 부르면서, 허리를 구불거리게 할 수 있어 열심히 봉사한다
+		PRINTFORML 밀어올릴 수 있을 때에 기쁨의 소리를 높여, 눈에♥를 띄우면서 좀더 좀더와 졸라댄다
+		PRINTFORMW 그리고 대망의 자식을 따라지면, 자궁으로 자지에 달라붙게 해 한 방울 남김없이 정액을 다 마셨다……
+	CASE 1
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 그의 손에 의해 인식을 조종되어 완구로 되었다
+		PRINTFORML 가까지 따라 온 그에게 난폭하게 옷을 벗겨지고 격렬하게 범해져도 저항하지 않고 하는 대로다
+		PRINTFORML 응! 팡! 팡! (와)과 고기가 교전할 때에 %조사처리(ANAME(대상),"는")% 무표정인 채 신체를 진동시키고 절정 한다
+		PRINTFORML 씨뿌리기 선언을 되어도 %조사처리(ANAME(대상),"는")% 이해 할 수 없는 모습으로, 무방비에 자궁에 정액을 발해진다
+		PRINTFORMW 그는 인식되지 않는 것을 구실로 하루종일%ANAME(대상)%의 신체를 저 좋은 대로 희롱해, 더럽혀 갔다……
+	CASE 2
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 그의 손에 의해 정신을 조종되어 애완동물로 되었다
+		PRINTFORML 암캐가 된 %조사처리(ANAME(대상),"는")% 준거의 모습으로 주인님의 페니스에 걸쳐 허리를 흔들고 있다
+		PRINTFORML 야무지지 못한 아헤얼굴로 군침을 늘어뜨려, 허리를 떨어뜨릴 때 정원응왕과 울면서 절정에 이른다
+		PRINTFORML 주위의 시선에도 아랑곳 없고, 다만 본능대로 야비하게 육욕을 탐내는 그 모습은 확실히 짐승과 다름없었다
+		PRINTFORMW 그렇게 심하게 범해지고 몇 번이나 씨뿌리기 되면서, %조사처리(ANAME(대상),"는")% 속마음으로부터의 기쁨의 소리를 미치게 했다……
+ENDSELECT
+CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ａ, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교, 노출", "처녀상실, 질내사정, 키스상실, 구강사정, Ａ처녀상실, 장내사정", GET_SPERM_ID("최면술사"), @"최면술사의 \@RAND:2 ? 페니스 # 입술\@", "최면술사", "", "최면중의 조교")
+PRINTFORML 
+PRINTFORML 이튿날 아침, %조사처리(ANAME(대상),"는")% 눈치채면 호텔에 한사람이었다
+PRINTFORMW 하지만 무엇이 있었는지 생각해 낼 수 없는 채, 호텔을 뒤로 했다
+
+RETURN 1

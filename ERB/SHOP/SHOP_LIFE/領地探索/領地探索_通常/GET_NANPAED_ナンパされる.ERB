@@ -1,0 +1,52 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_GET_NANPAED_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_GET_NANPAED_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_GET_NANPAED(대상)
+#DIM 대상
+
+PRINTFORMW 거리를 산책중, 말을 걸려졌다
+IF IS_MALE(대상)
+	PRINTFORML %ANAME(대상)%기호의 여성이다
+ELSE
+	PRINTFORML 훌륭한 체격의 남성이다
+ENDIF
+PRINTFORMW \@ (IS_MALE(대상)) ? 요염하게 몸을 구불거리게 해라 # 허물없게 어깨에 손을 써 \@、%조사처리(ANAME(대상),"를")% 권해 온다
+PRINTFORMW 어떻게 하지?
+
+PRINTL
+CALL ASK_YN("유혹에 넘어간다", "권유를 거절한다")
+IF RESULT == 1
+	PRINTFORML 공교롭게도 그런 기분은 아니다
+	PRINTFORMW 끈질긴 상대를 다루어 거점에 돌아갔다
+ELSE
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 상대의 유혹에 넘어가, 팔짱을 껴 가까이의 여인숙으로 들어갔다
+	PRINTFORML 
+	IF IS_MALE(대상)
+		PRINTFORMW 상대와의 신체의 궁합은 발군으로, 서로 몇 번이나 절정 하면서 밤새 섹스를 즐겼다
+		CALL FUCK(대상, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "화간")
+	ELSE
+		PRINTFORML 방 안에 고기가 부딪치는 소리와 %ANAME(대상)%의 기쁨의 소리가 리드미컬하게 영향을 주고 있다
+		PRINTFORML 서로를 필사적으로 서로 껴안으면서 교접하는 두 명의 결합부로부터는, 대량의 정액과 애액이 흘러넘치고 있다
+		PRINTFORML %조사처리(ANAME(대상),"와")% 그의 궁합은 발군으로, 숙소에 들어가고 나서 휴식도 사이에 두지 않고 오로지 짐승과 같이 교미를 계속하고 있다
+		PRINTFORMW 결국 밤이 희어질 때까지 두 명은 연결되고 있을 뿐으로 몇 번이나 몇 번이나 절정을 반복했다
+		CALL FUCK(대상, "욕망, 성교, 봉사, 성기술, Ｖ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("지나가는 남자"), @"지나가는 남자의 \@RAND:2 ? 페니스 # 입술\@", "지나가는 남자", "", "화간")
+	ENDIF
+	PRINTFORML 
+	PRINTFORMW 상대와 연락처를 서로 가르쳐, 말 대신에 농후한 키스를 주고 받아 헤어졌다
+ENDIF
+RETURN 1

@@ -1,0 +1,81 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_NICE_SWORD_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_NICE_SWORD_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_NICE_SWORD(대상)
+#DIM 대상
+
+PRINTFORML 골동품 가게로 잘 드는 칼의 칼을 찾아냈다
+CALL ICPRINT("금<10000>도 하지만, 손에 넣을 수 있으면 반드시 도움이 될 것이다", "L", 칼라_주의)
+PRINTFORML 점주일문매운 실 말하고 있지만……
+PRINTFORML 
+PRINTFORML 현재의 돈:{MONEY}
+CALL ASK_MULTI_JUDGE("금 10000지불한다", MONEY >= 10000, "손으로 봉사한다", IS_FEMALE(대상), "입으로 봉사한다", IS_FEMALE(대상), "신체로 지불한다", IS_FEMALE(대상), "단념한다", 1)
+
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 큰돈이었지만, 지불하기로 했다
+		CALL PRINT_ADD_EXP(대상, "무투경험치", SPECIAL_TRAIN_CALC_EFFECT(대상, GETNUM(ABL, "무투")) / 2)
+	CASE 1
+		PRINTFORML 금대신에손으로 봉사한다고 전하면, 점주는 히죽히죽한 미소를 띄우고 수긍했다
+		PRINTFORML 
+		PRINTFORMW 점의 안쪽에서 %조사처리(ANAME(대상),"는")% 점주에게 무릎 꿇어, 봉사하고 있다
+		PRINTFORMW 점주의 것은 강하게 뒤로 젖히고 있어 여자를 후벼파기 위해서(때문에) 있는 것이라는 느낌이 든다
+		PRINTFORMW 이런 것을 넣을 수 있으면……와 잡아당기면서 상상하지 않고는 있을 수 없었다
+		PRINTFORMW 차츰 그의 페니스의 발하는 페로몬에게 충당되어 %조사처리(ANAME(대상),"는")% 숨을 거칠게 하고 있었다
+		PRINTFORMW 그가 사정하면, %조사처리(ANAME(대상),"는")% 그것을 손으로 받아 들이면서, 뜨거운 한숨을 쉬었다
+		CALL FUCK(대상, "욕망, 성기술, 봉사")
+		IF ABL:대상:성기술 + ABL:대상:봉사 + ABL:대상:정애 > RAND:15
+			PRINTFORML 
+			PRINTFORML 점주는 만족해, 칼을 양보해 주었다
+			CALL PRINT_ADD_EXP(대상, "무투경험치", SPECIAL_TRAIN_CALC_EFFECT(대상, GETNUM(ABL, "무투")) / 2)
+		ELSE
+			PRINTFORML 
+			PRINTFORML 점주를 만족 시킬 수 없었다……
+		ENDIF
+	CASE 2
+		PRINTFORML 금대신에 입으로 봉사한다고 전하면, 점주는 히죽히죽한 미소를 띄우고 수긍했다
+		PRINTFORML 
+		PRINTFORMW 점의 안쪽에서 %조사처리(ANAME(대상),"는")% 점주에게 무릎 꿇어, 그의 것을 빨고 있다
+		PRINTFORMW 강하게 뒤로 젖힌 페니스를 입술로 잡아당길 때, 입의 안에 수컷의 맛이 퍼진다
+		PRINTFORMW 이런 것을 넣을 수 있으면……와 잡아당기면서 상상하지 않고는 있을 수 없었다
+		PRINTFORMW 차츰 그의 페니스의 발하는 페로몬에게 충당되어 %ANAME(대상)%의 봉사는 열심인 것이 되어 있었다
+		PRINTFORMW 그가 사정하면, %조사처리(ANAME(대상),"는")% 그것을 구강으로 받아 들여, 한 방울 남기지 않고 다 마셨다
+		CALL FUCK(대상, "욕망, 성기술, 봉사, 펠라티오", "키스상실", 0, "점주의 페니스", "", "", "매춘")
+		IF ABL:대상:성기술 + ABL:대상:봉사 + ABL:대상:정애 > RAND:8
+			PRINTFORML 
+			PRINTFORML 점주는 만족해, 칼을 양보해 주었다
+			CALL PRINT_ADD_EXP(대상, "무투경험치", SPECIAL_TRAIN_CALC_EFFECT(대상, GETNUM(ABL, "무투")) / 2)
+		ELSE
+			PRINTFORML 
+			PRINTFORML 점주를 만족 시킬 수 없었다……
+		ENDIF
+	CASE 3
+		PRINTFORML 금대신에 신체로 지불한다고 전하면, 점주는 히죽히죽한 미소를 띄우고 수긍했다
+		PRINTFORML 
+		PRINTFORMW 점안에 %ANAME(대상)%의 교성이 영향을 주고 있다
+		PRINTFORMW 양구멍을 집요하게 후비어져 %조사처리(ANAME(대상),"는")% 목적도 잊어 성교에 빠지고 있었다
+		PRINTFORMW 완전히 그의 형태를 기억해 버린 %STR_BODY("질:처녀 확인:시간 경과", 대상)%를 찔릴 때, 달콤한 소리가 넘쳐 나온다
+		PRINTFORMW 이윽고 그가 질내에서 사정하면, %조사처리(ANAME(대상),"는")% 한층 높은 소리를 지르고 절정 한다
+		PRINTFORMW 뽑아 내진 페니스를 입술로 맑게 하면, 다시 사귀기 시작했다……
+		CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("점주"), @"점주의 \@RAND:2 ? 페니스 # 입술\@", "점주", "", "매춘")
+		PRINTFORML 
+		PRINTFORML 점주는 만족해, 칼을 양보해 주었다
+		CALL PRINT_ADD_EXP(대상, "무투경험치", SPECIAL_TRAIN_CALC_EFFECT(대상, GETNUM(ABL, "무투")) / 2)
+ENDSELECT
+
+RETURN 1

@@ -1,0 +1,173 @@
+﻿;-------------------------------------------------
+;「침실호출」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE_NAME12
+RESULTS:0 '= "침실호출 "
+
+;-------------------------------------------------
+;「침실호출」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE_CHECK12
+SIF CFLAG:MASTER:행동불능상태 == 행동불능_임월 || COOLTIME:MASTER:0 > 1
+	RETURN 0
+SIF CFLAG:MASTER:포로처
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「침실호출」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA12(ARG:0)
+CALL SHOP_LIFE_CHECKCHARA_NEYA(ARG:0)
+RETURN RESULT
+
+;-------------------------------------------------
+;「침실호출의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY12
+FLAG:거점페이즈페이지 = 1
+FLAG:요바이 = 0
+RETURN 0
+
+;-------------------------------------------------
+;「침실호출」의 오른쪽 컬럼 캐릭터 리스트 1의 버튼（함수미지정이라면 선택중색없음 표시）
+;-------------------------------------------------
+@SHOP_LIFE_LIST1_BUTTON12(ARG:0, ARG:1)
+;캐릭터, 선택중 칼라 표시 플래그, 버튼 번호에 추가하는 수치, CHECKCHARA의 반환값, 행동이 끝난 마크를 오프로 하는 플래그
+CALL COLUMN_RIGHT_CHARALIST_BUTTON(ARG:0, CFLAG:(ARG:0):침실호출선택중, SHOP_LIFE_LIST1_ADD_INPUT, ARG:1)
+RETURN 0
+
+;-------------------------------------------------
+;「침실호출」의 오른쪽 컬럼 표시 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SHOW12
+#DIM 선택인원수
+
+선택인원수 = 0
+
+FOR LOCAL:0, 0, CHARANUM
+	;선택 가능한 조건을 채우고 있는지 어떤지 판정
+	RESULT = 0
+	TRYCALLFORM SHOP_LIFE_CHECKCHARA{FLAG:거점페이즈선택커맨드}(LOCAL:0)
+	IF RESULT == 1
+		;선택중의 인원수를 센다
+		IF CFLAG:(LOCAL:0):침실호출선택중
+			선택인원수 ++
+		ENDIF
+	ELSE
+		;조건을 채우지 않으면 강제적으로ＯＦＦ
+		CFLAG:(LOCAL:0):침실호출선택중 = 0
+	ENDIF
+NEXT
+
+;타이틀 표시
+CALL COLUMN_RIGHT_TITLE("대상자 선택", TOSTR(선택인원수), "8", "1", "0")
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+IF 선택인원수 >= 1
+	PRINTBUTTON "[이 멤버로 결정]", 1
+	PRINTPLAIN   
+	PRINTBUTTON "[이 멤버에게 역조교]", 2
+	PRINTPLAIN   
+	PRINTBUTTON "[리셋트]", 3
+ELSE
+	SETCOLOR 칼라_선택불가
+	PRINTPLAINFORM [이 멤버로 결정]
+	PRINTPLAIN   
+	PRINTPLAINFORM [이 멤버에게 역조교]
+	PRINTPLAIN   
+	PRINTPLAINFORM [리셋트]
+	RESETCOLOR
+ENDIF
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+;표준적인 캐릭터 리스트와 페이지 이동을 부른다
+CALL COLUMN_RIGHT_CHARALIST
+
+RETURN 0
+
+;-------------------------------------------------
+;「침실호출」의 오른쪽 컬럼 버튼의 입력 처리 보좌
+;  RETURN 0:CLEARLINE LINECOUNT - LINES_SHOP 한다
+;  RETURN 1:CLEARLINE LINECOUNT - LINES_SHOP 하지 않는다
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SUB12(ARG:0)
+;이 멤버로 결정
+IF ARG:0 == 1
+	CALL DECIDE_YOTOGI_MEMBER(0)
+	IF !RESULT
+		RETURN 0
+	ENDIF
+;이 멤버에게 역조교
+ELSEIF ARG:0 == 2
+	CALL DECIDE_YOTOGI_MEMBER(1)
+	IF !RESULT
+		RETURN 2
+	ENDIF
+;멤버를 리셋트
+ELSEIF ARG:0 == 3
+	CALL RESET_YOTOGI_MEMBER
+ENDIF
+RETURN 0
+
+;-------------------------------------------------
+;「침실호출」의 리스트 1 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP12(ARG:0)
+;참가 캐릭터의 수를 센다
+LOCAL:5 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):침실호출선택중
+		LOCAL:5 ++
+	ENDIF
+NEXT
+IF CFLAG:(ARG:0):침실호출선택중 || LOCAL:5 < 8
+	;조교참가플래그를 반전
+	CFLAG:(ARG:0):침실호출선택중 = !CFLAG:(ARG:0):침실호출선택중
+ENDIF
+RETURN 0
+
+;-------------------------------------------------
+;「침실호출」의 처리(ARG:0 = 1이라면 역조교）
+;-------------------------------------------------
+@DECIDE_YOTOGI_MEMBER(ARG:0)
+LOCAL:1 = 1
+FOR LOCAL:0, 0, CHARANUM
+	IF LOCAL:0 != MASTER && CFLAG:(LOCAL:0):침실호출선택중
+		CFLAG:(LOCAL:0):조교참가플래그  = 1
+		LOCAL:1 = 0
+	ENDIF
+NEXT
+IF LOCAL:1
+	;참가 캐릭터가 없으면 처리하지 않고 0을 돌려준다
+	RETURN 0
+ENDIF
+
+IF ARG:0
+	FLAG:조교모드 = 5
+	FLAG:침실역조교 = 1
+ELSE
+	FLAG:조교모드 = 1
+ENDIF
+
+;우후후플래그를 ON에
+FLAG:우후후플래그 = 1
+
+;행동 개시시의 공통 처리
+CALL START_TRAIN_COMMON
+RETURN 1
+
+;-------------------------------------------------
+;「침실호출」의 선택 멤버의 리셋트
+;-------------------------------------------------
+@RESET_YOTOGI_MEMBER
+FOR LOCAL:0, 0, CHARANUM
+	IF LOCAL:0 != MASTER && CFLAG:(LOCAL:0):침실호출선택중
+		CFLAG:(LOCAL:0):침실호출선택중 = 0
+	ENDIF
+NEXT
+RETURN 0

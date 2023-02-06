@@ -1,0 +1,43 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_SWIMMING_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_SWIMMING_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_SWIMMING(대상)
+#DIM 대상
+PRINTFORML 탐색중, 숲속에서 수영에 꼭 좋은 물 마시는 장소를 찾아냈다
+PRINTFORMW 어떻게 하지?
+PRINTL
+CALL ASK_MULTI("수영을 한다", "물을 마신다")
+
+IF RESULT == 1
+	PRINTFORML 수는 매우 차갑고, 마시면 힘이 솟아 올라 왔다
+	PRINTFORMW 목을 적신 %조사처리(ANAME(대상),"는")% 충족 해 거점에 돌아왔다
+	RETURN 1
+ENDIF
+PRINTFORML 모처럼이니까 수영을 해 나가기로 했다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF IS_MALE(대상)
+	PRINTFORML 기분이 좋았다
+	PRINTFORMW 산뜻해진 %조사처리(ANAME(대상),"는")% 거점으로 돌아갔다
+	CALL PRINT_ADD_EXP(대상, "무투경험치", 1)
+ELSE
+	PRINTFORML ……아무래도 들여다 봐지고 있던 것 같다
+	PRINTFORML 눈치챘을 때에는 도망쳐져 버리고 있었다
+	CALL PRINT_ADD_EXP(대상, "노출경험치", 3)
+ENDIF

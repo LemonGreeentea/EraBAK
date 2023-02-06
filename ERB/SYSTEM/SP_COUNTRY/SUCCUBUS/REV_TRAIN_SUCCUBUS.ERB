@@ -1,0 +1,51 @@
+﻿;-------------------------------------------------
+;정기 이벤트
+;-------------------------------------------------
+@SUCCUBUS_REV_TRAIN_REGULAR_EVENT(세력)
+#DIM 세력
+
+SIF FLAG:역조교회수 == 0 || FLAG:역조교회수 % 4 != 0
+	RETURN 0
+
+PRINTFORML 조교의 시간이 가까워지면, %조사처리(ANAME(MASTER),"는")% 여느 때처럼 꿈의 세계에서 구속되어
+PRINTFORMW 후는 서큐버스들에게 희롱해지는 것을 기다릴 뿐되었다
+PRINTFORML 온 서큐버스는, 슬슬 솔직해져 주었는지 해들과 방문해 왔다
+PRINTFORMW 우리 동료가 되면, 이런 일도 해 마음껏이야, 라고……
+PRINTFORML 이대로 거부해 계속해도, 이 녀석들은 자신을 계속 희롱할 것이다
+PRINTFORML 목을 세로에 흔들면, 얼마 정도는 편해질 수 있을지도 모른다
+PRINTFORMW 어떻게 해야 할 것일까……
+CALL ASK_YN("단념해 받아들인다（몽마화)", "이런 녀석들 동료는 미안이다")
+IF RESULT == 0
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 수긍하면, 서큐버스들은 환영해 주었다
+	CALL COLOR_PRINTW(@"그리고 %조사처리(ANAME(MASTER),"를")%, 몽마로서 다시 태어나게 했다……", 칼라_핑크)
+	TALENT:MASTER:음모목표치 = 음모_하트형
+	TALENT:MASTER:음모현재치 = 음모_하트형
+	SETCOLOR 칼라_주의
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 몽마가 되었습니다
+	RESETCOLOR
+	SETBIT TALENT:MASTER:특수세력함락계, 특수세력_서큐버스
+	CALL CHANGE_COUNTRY(MASTER, 세력, 1)
+	CALL PLAYER_FALLEN_TO_SP_COUNTRY(세력)
+	RETURN 1
+ELSE
+	PRINTFORML 그렇게, %ANAME(MASTER)%의 거부를 특별히 신경쓴 바람도 아니게 서큐버스는 받아 들인다
+	PRINTFORML 라면 좀 더 기분이 좋은 것을 가르쳐 주지 않으면와 그 얼굴은 음탕한 미소를 띄웠다……
+	PRINTFORMW 그녀들은 그대로, %ANAME(MASTER)%에 모여 간다……
+ENDIF
+
+;-------------------------------------------------
+;아는 사람이 왔을 때의 이벤트
+;-------------------------------------------------
+@SUCCUBUS_REV_TRAIN_MSG(세력, 아는사람참가자, 아는사람참가수)
+#DIM 세력
+#DIM REF 아는사람참가자
+#DIM 아는사람참가수
+CALL SINGLE_DRAWLINE
+PRINTFORML 조교의 시간이 가까워지면, %조사처리(ANAME(MASTER),"는")% 여느 때처럼 꿈의 세계에서 구속되어
+PRINTFORMW 후는 그녀들에게, 희롱해지는 것을 기다릴 뿐되었다
+PRINTFORMW 온 서큐버스는, %조사처리(ANAME(MASTER),"가")% 자주(잘) 면식이 있던 상대를 데리고 와서 있었다
+PRINTFORMW %ANAME(아는사람참가자:0, 아는사람참가수)%…
+PRINTFORMW 한 때의 %ANAME(아는사람참가자:0, 아는사람참가수)%는 아니다. 아무래도 몽마가 되어 끝나 버린 것 같다
+PRINTFORMW 음탕한 시선은, %ANAME(MASTER)%의 것인지등이다에 따라지고 있다……
+PRINTFORMW 서큐버스는 싱글벙글 웃으면서, 아는 사람과 시 한편을 기분 좋게 될 수 있어요, 라고 말해 왔다
+PRINTFORMW 자 즐깁시다. 서큐버스가 그처럼 말하면, %ANAME(아는사람참가자:0, 아는사람참가수)%는 %ANAME(MASTER)%에 모였다……

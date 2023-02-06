@@ -1,0 +1,110 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_DROP_WEAPON_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_DROP_WEAPON_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_DROP_WEAPON(대상)
+#DIM 대상
+PRINTFORML 험한 산길을 걷고 있는 한중간, 절벽 밑에 무기를 떨어뜨려 버렸다
+PRINTFORML 당황해 벼랑을 내리면, 부랑자의 남자와 만났다
+PRINTFORML 남의 손에는 떨어뜨린 무기가 잡아지고 있다
+PRINTFORML 아무래도 이 남자가 주운 것 같은, 사정을 설명해 반환 해 줄 수 없을까 부탁한다
+SIF IS_FEMALE(대상)
+	PRINTFORML 남은 끈적한 시선을 %ANAME(대상)%에 향하면서
+PRINTFORML 이것은 이제(이미/벌써/더는/정말) 자신의 것이니까, 돌려주기를 원하면 금 3000을 보내라고 요구했다
+
+PRINTL
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "무투"))
+CALL ASK_MULTI_JUDGE("힘으로 탈환한다", 1, "돈을 지불한다", MONEY >= 3000, "단념한다", 1, "입으로 봉사한다", IS_FEMALE(대상), "신체로 지불한다", IS_FEMALE(대상))
+
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 원래 자신의 것인데, 왜 금 따위 지불할 필요가 있자
+		PRINTFORML %조사처리(ANAME(대상),"는")% 남자에게 달려들었다!
+		IF LIMIT(ABL:대상:무투, 30, 70) > RAND:100
+			PRINTFORML 했다!
+			PRINTFORML 비무장인 것으로 다소 고전했지만 남자로부터 무기를 탈환하는 것을 성공했다
+			PRINTFORMW 뻗어 있는 남자의 모습을 살짝 확인하고 나서 그 자리를 뒤로 했다
+			CALL PRINT_ADD_EXP(대상, "무투경험치", RAND:5 + 3)
+		ELSEIF IS_MALE(대상)
+			PRINTFORML 끝냈다!
+			PRINTFORML 무기가 없기에 평소의 같은 힘을 낼 수 없었다…
+			PRINTFORMW 남에 역관광으로 되고 무기도 빼앗겨 버렸다
+			CALL ADD_COOLTIME(대상, 2)
+		ELSE
+			PRINTFORML 끝냈다!
+			PRINTFORML 무기가 없기에 평소의 같은 힘을 낼 수 없었다…
+			PRINTFORMW 남에 역관광으로 되고 무기도 빼앗겨 버렸다
+			PRINTFORMW 남은 녹초가 된 %조사처리(ANAME(대상),"를")% 가까이의 수풀에 데리고 들어갔다……
+			PRINTFORML 
+			$RAPE_SCENE
+			PRINTFORML 수풀의 안쪽으로부터 남녀의 사귀는 소리가 들려 온다
+			PRINTFORMW 옷을 빼앗긴 %조사처리(ANAME(대상),"가")%, 부랑자의 남자에게 범해지고 있다
+			PRINTFORML 여자 가뭄의 남자의 용서 없는 피스톤에, %조사처리(ANAME(대상),"는")% 이미 심혈 다하고 있다
+			PRINTFORMW %STR_BODY("질:처녀 확인:시간 경과:Ｖ삽입:질내사정", 대상)%를 뒤로부터 집요하게 찔려 %조사처리(ANAME(대상),"는")% 허덕일 수밖에 할 수 없다
+			PRINTFORMW %STR_BODY("가슴:성교", 대상)%를 주물러져 %STR_BODY("엉덩이:성교:후배위", 대상)%를 얻어맞아 강제적으로 굴복 당한다
+			PRINTFORMW 남이 추접스러운 노래진 정액을 질내에 쏟으면, %조사처리(ANAME(대상),"는")% 크게 등을 뒤로 젖혀 절정 했다……
+			CALL FUCK(대상, "욕망, 정애, 성교, Ｖ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("부랑자"), @"부랑자의 \@RAND:2 ? 페니스 # 입술\@", "부랑자", "", "패배한 끝의 강간")
+			PRINTFORML 
+			PRINTFORMW %조사처리(ANAME(대상),"가")% 해방된 것은 밤도 완전히 깊어졌을 무렵이었다
+			PRINTFORMW 남에 또 오는 것을 약속 당해 무기도 의복도 빼앗겨 버렸다……
+			CALL ADD_COOLTIME(대상, 3)
+		ENDIF
+	CASE 1
+		PRINTFORML 등이 배는 대신할 수 없다……
+		PRINTFORML 입다물고 돈을 지불하기로 했다
+		CALL ICPRINT("금<3000>을 지불했다", "L", 칼라_주의)
+		MONEY -= 3000
+	CASE 2
+		PRINTFORML 한 번 더 없지만, 돈을 지불할 정도의 가치는 없다
+		PRINTFORMW 단념해 떠났다
+	CASE 3
+		PRINTFORML 입으로 봉사하기 때문에, 돌려주어 주지 않겠는가……
+		PRINTFORML 그렇게 고하면, 남자는 히죽히죽 웃으면서 가까이의 수풀에 %조사처리(ANAME(대상),"를")% 데리고 들어갔다
+		PRINTFORML
+		PRINTFORML 타액이 소리를 내면서, %조사처리(ANAME(대상),"는")% 남자의 것을 빨고 있다
+		PRINTFORMW 치구 투성이의 페니스는 악취도 심하지만, %ANAME(대상)%의 본능은 쑤셔 버리고 있다
+		PRINTFORMW %ANAME(대상)%의 손가락은 부지불식간에중에 하반신에 뻗어 드디어 자위를 처음으로 끝냈다
+		PRINTFORMW 남은 %PRONOUN(대상)%의 치태에 흥분한 것 같아, 좀 더 하도록(듯이) 명해 온다
+		PRINTFORMW 그 중 남자가 정액을 발하면, %조사처리(ANAME(대상),"는")% 명령 받고도 없는데, 목을 울려 정액을 삼켜 간…… 
+		CALL FUCK(대상, "욕망, 정애, 봉사, 성기술, Ｍ, 펠라티오", "키스상실, 구강사정", 0, @"부랑자의 \@RAND:2 ? 페니스 # 입술\@", "", "", "매춘")
+		PRINTFORML 
+		IF ABL:대상:성기술 + ABL:대상:봉사 < RAND:10
+			PRINTFORMW 남은 %ANAME(대상)%의 봉사에서는 만족 할 수 없었던 것 같다
+			PRINTFORMW 그는 그대로, %조사처리(ANAME(대상),"를")% 범하기 시작했다……
+			GOTO RAPE_SCENE
+		ELSE
+			PRINTFORMW 남은 무사하게 무기를 돌려주었다
+			PRINTFORMW 또 기회가 있으면 부탁하겠어(한다고), 라고 히죽히죽 웃으면서 말해 왔다……
+		ENDIF
+	CASE 4
+		PRINTFORML 신체로 지불하기 때문에, 돌려주어 주지 않겠는가……
+		PRINTFORML 그렇게 고하면, 남자는 히죽히죽 웃으면서 가까이의 수풀에 %조사처리(ANAME(대상),"를")% 데리고 들어갔다
+		PRINTFORMW 
+		PRINTFORML 조용한 수풀의 안쪽으로부터 남녀가 격렬하게 사귀는 소리가 울려 온다
+		PRINTFORML 전라의 %조사처리(ANAME(대상),"는")% 남자에게 위로 향해 밀어 쓰러트려져 페니스로 꼬치로 되고 있다
+		PRINTFORML 성욕에 맡긴 남자의 용서 없는 피스톤으로 %STR_BODY("질:처녀 확인:시간 경과:감도", 대상)%를 빠득빠득 후벼파질 때마다, %조사처리(ANAME(대상),"는")% 경련하면서 신음한다
+		PRINTFORML 남이 얼굴을 양손으로 억눌러 무리하게 입술을 빼앗아 오면, %조사처리(ANAME(대상),"는")% 흐려진 소리를 높여 발버둥 친다
+		PRINTFORML 남은 혀를 얽히게 되어지면서 더욱 허리를 격렬하게 쳐박고이고, %조사처리(ANAME(대상),"는")% 하반신의 충격에 무심코 흠칫 흔들림 양 다리를 핑 늘린다
+		PRINTFORML 유린되는 것 같은 격렬한 섹스에, %조사처리(ANAME(대상),"는")% 범해지고 있는 것에도 불구하고 무의식 안에 그에게 매달려 질을 단단히 조이고 있었다
+		PRINTFORMW 남이 페니스로부터 추접스러운 노래진 정액이 질내에 쏟으면, %조사처리(ANAME(대상),"는")% 크게 등을 뒤로 젖혀 교성을 올렸다
+		CALL FUCK(대상, "욕망, 정애, 성교, Ｖ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("부랑자"), @"부랑자의 \@RAND:2 ? 페니스 # 입술\@", "부랑자", "", "매춘")
+		PRINTFORML 
+		PRINTFORML 남은 지면에 가로놓여 방심하는 %ANAME(대상)%에 향하여 무기를 내던지면
+		PRINTFORMW 이것은 받아 가겠어, 라고 속옷을 손에 넣어 떠나 갔다
+ENDSELECT
+
+RETURN 1

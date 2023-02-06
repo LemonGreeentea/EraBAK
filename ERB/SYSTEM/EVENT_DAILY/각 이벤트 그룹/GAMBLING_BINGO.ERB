@@ -1,0 +1,175 @@
+﻿;빙고
+;10/25끌어 빙고 하면 이겨 다만 25 개중 3개범이 된다
+;34% 정도의 확률로 범에 걸리게 된다
+@GAMBLING_BINGO
+#DIM 오픈, 5, 5
+#DIM 필드, 5, 5
+#DIM 풀, 25
+#DIM 옥수
+#DIM 게임중
+#DIM START_LINE
+#DIM PLAY_AREA_LINE
+VARSET LOCAL, 0
+VARSET 게임중
+VARSET 풀
+VARSET 필드
+VARSET 오픈
+VARSET 옥수
+
+오픈:2:2 = 1
+필드:2:2 = 0
+
+;필드에 수치를 늘어놓는다
+CALL FISHER_YATES_SHAFFLE(VARSIZE("필드") * VARSIZE("필드", 1))
+LOCAL:2 = 0
+FOR LOCAL, 0, VARSIZE("필드")
+	FOR LOCAL:1, 0, VARSIZE("필드", 1)
+		IF 필드:LOCAL:(LOCAL:1) == 0
+			필드:LOCAL:(LOCAL:1) = SHAFFLE_ARRAY:(LOCAL:2) + 1
+			LOCAL:2 ++
+		ENDIF
+	NEXT
+NEXT
+
+;풀의 숫자를 준비
+;먼저 「범」을 묻는다
+LOCAL:1 = 0
+WHILE LOCAL:1 < 3
+	LOCAL = RAND(VARSIZE("풀"))
+	IF 풀:LOCAL == 0
+		풀:LOCAL = -1
+		LOCAL:1 ++
+	ENDIF
+WEND
+
+
+;풀을 숫자로 묻어 간다
+;「범」이 메워지고 있는 곳에 들어가야 했던 숫자는 제외된다
+CALL FISHER_YATES_SHAFFLE(VARSIZE("풀"))
+
+FOR LOCAL, 0, VARSIZE("풀")
+	SIF 풀:LOCAL == 0
+		풀:LOCAL = SHAFFLE_ARRAY:LOCAL + 1
+NEXT
+
+
+START_LINE = LINECOUNT
+
+$MAIN
+
+CALL PRINT_CASINO_BINGO_README()
+CALL PRINTBUTTON_EXL("[플레이 개시]", 999, !게임중)
+CALL SINGLE_DRAWLINE
+
+PLAY_AREA_LINE = LINECOUNT
+
+$PLAY_AREA
+PRINTFORML 현재의 옥수:{옥수}
+
+PRINTL
+FOR LOCAL, 0, VARSIZE("필드")
+	FOR LOCAL:1, 0, VARSIZE("필드", 1)
+		IF 오픈:LOCAL:(LOCAL:1)
+			LOCALS = ○
+		ELSE
+			IF 필드:LOCAL:(LOCAL:1) < 10
+				LOCALS = %TOFULL(TOSTR(필드:LOCAL:(LOCAL:1)))%
+			ELSE
+				LOCALS = %TOSTR(필드:LOCAL:(LOCAL:1))%
+			ENDIF
+		ENDIF
+		CALL COLORPRINT(LOCALS, (오픈:LOCAL:(LOCAL:1) ? 칼라_주의 # 칼라_선택불가))
+		PRINTFORM 　
+	NEXT
+	PRINTL
+	PRINTL
+NEXT
+CALL SINGLE_DRAWLINE
+CALL PRINTBUTTON_EX("[다음의 구슬]", 997, 게임중)
+INPUT
+
+IF !게임중
+	SELECTCASE RESULT
+		CASE 999
+			PRINTFORMW 「그럼, 게임을 시작합시다」
+			게임중 = 1
+			CLEARLINE LINECOUNT - START_LINE
+			GOTO MAIN
+	ENDSELECT
+ELSE
+	SELECTCASE RESULT
+		CASE 997
+			PRINTFORMW 「그럼……」
+			PRINTFORMW 「다음의 구슬은……\@풀:옥수 == -1 ? 『범』 # %TOSTR(풀:옥수)%\@!」
+			IF 풀:옥수 == -1
+				PRINTFORMW 「이런……『범』입니까……」
+				RETURN 2
+			ENDIF
+			FOR LOCAL, 0, VARSIZE("필드")
+				FOR LOCAL:1, 0, VARSIZE("필드", 1)
+					IF 필드:LOCAL:(LOCAL:1) == 풀:옥수
+						오픈:LOCAL:(LOCAL:1) = 1
+						BREAK
+					ENDIF
+				NEXT
+			NEXT
+			옥수++
+			;빙고 판정
+			;우선은 행
+			FOR LOCAL, 0, VARSIZE("오픈")
+				FOR LOCAL:1, 0, VARSIZE("오픈", 1)
+					SIF !오픈:LOCAL:(LOCAL:1)
+						GOTO ROW_END
+				NEXT
+				PRINTFORMW 「축하합니다!   빙고입니다」
+				RETURN 1
+				$ROW_END
+			NEXT
+			;열
+			FOR LOCAL, 0, VARSIZE("오픈", 1)
+				FOR LOCAL:1, 0, VARSIZE("오픈")
+					SIF !오픈:(LOCAL:1):LOCAL
+						GOTO COLUMN_END
+				NEXT
+				PRINTFORMW 「축하합니다!   빙고입니다」
+				RETURN 1
+				$COLUMN_END
+			NEXT
+			;나나메
+			FOR LOCAL, 0, VARSIZE("오픈")
+				SIF !오픈:LOCAL:LOCAL
+					GOTO NANAME_END1
+			NEXT
+			PRINTFORMW 「축하합니다!   빙고입니다」
+			RETURN 1
+			$NANAME_END1
+			FOR LOCAL, VARSIZE("오픈") - 1, -1, -1
+				FOR LOCAL:1, 0, VARSIZE("오픈", 1)
+					SIF !오픈:LOCAL:(LOCAL:1)
+						GOTO NANAME_END2
+				NEXT
+			NEXT
+			PRINTFORMW 「축하합니다!   빙고입니다」
+			RETURN 1
+			$NANAME_END2
+			IF 옥수 == 10
+				PRINTFORMW 「모든 구슬이 모두 나왔습니다……」
+				PRINTFORMW 「게임 종료입니다」
+				PRINTFORMW 「빙고는 없었으므로, 우리 승리군요」
+				RETURN 0
+			ENDIF
+			CLEARLINE LINECOUNT - PLAY_AREA_LINE
+			GOTO PLAY_AREA
+	ENDSELECT
+ENDIF
+
+
+
+@PRINT_CASINO_BINGO_README()
+CALL SINGLE_DRAWLINE
+PRINTFORML 「전통적인 빙고 게임입니다」
+PRINTFORML 「10개의 구슬이 나오기까지, 세로, 가로, 기울기를 가지런히 하면 %ANAME(MASTER)%님 승리입니다」
+PRINTFORML 「갖추어지지 않으면, 우리 승리가 됩니다」
+PRINTFORML 「다만, 도중에 『범』의 구슬이 나왔을 경우, 강제적으로 우리 승리입니다」
+PRINTFORML 「또 그 경우는, 자그만 『패널티』를 받아 받는 일이 됩니다」
+CALL SINGLE_DRAWLINE

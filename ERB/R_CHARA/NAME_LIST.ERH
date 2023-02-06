@@ -1,0 +1,91 @@
+﻿;-------------------------------------------------
+;■랜덤 캐릭터의 이름에 관한 변수
+;-------------------------------------------------
+;;성의 후보 리스트
+;#DIMS FAMILY_NAME_LIST, 200
+;;요미가나
+;#DIMS FAMILY_NAME_RUBY, 200
+;;다음에 기록하는 배열 번호
+;#DIM FAMILY_NAME_ADDRESS
+;
+;;명의 후보 리스트
+;#DIMS FIRST_NAME_LIST, 200
+;;요미가나
+;#DIMS FIRST_NAME_RUBY, 200
+;;다음에 기록하는 배열 번호
+;#DIM FIRST_NAME_ADDRESS
+
+;한글성의 후보 리스트
+#DIMS FAMILY_NAME_KR_LIST, 200
+;요미가나
+#DIMS FAMILY_NAME_KR_RUBY, 200
+;다음에 기록하는 배열 번호
+#DIM FAMILY_NAME_KR_ADDRESS
+
+;한글명(남자)의 후보 리스트
+#DIMS FIRST_NAME_KRM_LIST, 200
+;요미가나
+#DIMS FIRST_NAME_KRM_RUBY, 200
+;다음에 기록하는 배열 번호
+#DIM FIRST_NAME_KRM_ADDRESS
+
+;한글명(여자)의 후보 리스트
+#DIMS FIRST_NAME_KRF_LIST, 200
+;요미가나
+#DIMS FIRST_NAME_KRF_RUBY, 200
+;다음에 기록하는 배열 번호
+#DIM FIRST_NAME_KRF_ADDRESS
+
+;카나성의 후보 리스트
+#DIMS FAMILY_NAME_K_LIST, 200
+#DIM FAMILY_NAME_K_ADDRESS
+
+;카나명(남자)의 후보 리스트
+#DIMS FIRST_NAME_KM_LIST, 200
+;다음에 기록하는 배열 번호
+#DIM FIRST_NAME_KM_ADDRESS
+
+;카나명(여자)의 후보 리스트
+#DIMS FIRST_NAME_KF_LIST, 200
+;다음에 기록하는 배열 번호
+#DIM FIRST_NAME_KF_ADDRESS
+
+;일본성의 후보 리스트
+#DIMS FAMILY_NAME_J_LIST, 1000
+#DIMS FAMILY_NAME_J_RUBY, 1000
+#DIM FAMILY_NAME_J_ADDRESS
+
+;일본명(남자)의 후보 리스트
+#DIMS FIRST_NAME_JM_LIST, 1000
+;요미가나
+#DIMS FIRST_NAME_JM_RUBY, 1000
+;다음에 기록하는 배열 번호
+#DIM FIRST_NAME_JM_ADDRESS
+
+;일본명(여자)의 후보 리스트
+#DIMS FIRST_NAME_JF_LIST, 1000
+;요미가나
+#DIMS FIRST_NAME_JF_RUBY, 1000
+;다음에 기록하는 배열 번호
+#DIM FIRST_NAME_JF_ADDRESS
+
+;자의 후보 리스트
+#DIMS MIDDLE_NAME_LIST, 200
+;요미가나
+#DIMS MIDDLE_NAME_RUBY, 200
+;다음에 기록하는 배열 번호
+#DIM MIDDLE_NAME_ADDRESS
+
+;남성의 본명의 후보 리스트
+#DIMS TRUE_NAME_M_LIST, 200
+;요미가나
+#DIMS TRUE_NAME_M_RUBY, 200
+;다음에 기록하는 배열 번호
+#DIM TRUE_NAME_M_ADDRESS
+
+;여성의 본명의 후보 리스트
+#DIMS TRUE_NAME_F_LIST, 200
+;요미가나
+#DIMS TRUE_NAME_F_RUBY, 200
+;다음에 기록하는 배열 번호
+#DIM TRUE_NAME_F_ADDRESS

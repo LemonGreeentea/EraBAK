@@ -1,0 +1,90 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_GIRL_ESCAPING_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_GIRL_ESCAPING_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_GIRL_ESCAPING(대상)
+#DIM 대상
+
+PRINTFORML 온 마을을 걷고 있으면, 모퉁이로부터 뛰쳐나온 소녀와 부딪쳤다
+PRINTFORML 뭔가 보통이 아닌 모습의 소녀에게 %조사처리(ANAME(대상),"는")% 사정을 (들)물으려고 한다
+PRINTFORMW 하면 저쪽에서 남자들의 노성이 들려 왔다
+PRINTFORML
+CALL ASK_MULTI("소녀를 숨겨둔다", "소녀를 잡는다", "방치한다")
+
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 아무래도 쫓기고 있는 것 같다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 그녀를 숨겨두기로 했다
+		PRINTFORML 뒤쫓아 온 남자들이 소녀의 행방을 찾았기 때문에, 터무니없는 방위를 가르친다
+		IF !RAND:3 && MONEY > 0
+			PRINTFORML 그들은 그것을 믿어 달려갔다
+			PRINTFORML 이제 괜찮다면 소녀에게 말을 걸었지만, 없다
+			PRINTFORML 먼저 도망쳤는지와 의아스럽게 생각하고 있으면, 지갑이 없는 것에 눈치챘다
+			PRINTFORML 방금전의 소녀에게 스같다……
+			LOCAL = MIN(MONEY, 3000)
+			MONEY -= LOCAL
+			CALL ICPRINT(@"금<{LOCAL}>를 잃었습니다", "L", 칼라_주의)
+			RETURN 1
+		ELSEIF IS_MALE(대상) || (HAS_PENIS(대상) && RAND:2)
+			PRINTFORML 그들은 그것을 믿어 달려갔다
+			PRINTFORML 이제 괜찮다면 소녀에게 말을 건다
+			PRINTFORML 도와 받은 답례에 뭔가 하고 싶다고 말하기 시작했다
+			PRINTFORML 
+			CALL ASK_MULTI("금을 요구한다", "신체를 요구한다", "거절한다")
+			SELECTCASE RESULT
+				CASE 0
+					PRINTFORML 금을 보내라고 전했다
+					PRINTFORML 그런 일일거라고 생각했다고, 소녀는 얼마인가 싸 보냈다
+					CALL ICPRINT("금<3000>을 손에 넣었다", "L", 칼라_주의)
+					MONEY += 3000
+				CASE 1
+					PRINTFORML 안게 해라라고 전했다
+					PRINTFORML 그런 일일거라고 생각했다고, 소녀는 점잖게 %ANAME(대상)%에 이끌렸다
+					PRINTFORML 
+					PRINTFORMW 그녀의 가녀린 신체가, %ANAME(대상)% 위에서 뛴다
+					PRINTFORMW 소질이 있었는지, 소녀는 조금의 애무로 곧 녹아, %조사처리(ANAME(대상),"를")% 받아들인다
+					PRINTFORMW 점차 그 표정은 암컷의 것이 되어 가 스스로 %ANAME(대상)%에 달라붙게 되어 있었다
+					PRINTFORMW 완전히 온순하게 된 소녀를 몇 번이나 귀여워해 주었다……
+					CALL FUCK(대상, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "화간")
+				CASE 2
+					PRINTFORML 필요없다고 전했다
+					PRINTFORML 소녀는 놀라고 있었지만, %조사처리(ANAME(대상),"가")% 사양하는 것을 봐 떠났다
+			ENDSELECT
+		ELSE
+			PRINTFORML ……가, 소녀가 소리를 세워 버려, 눈치채져 버렸다
+			PRINTFORML 격앙한 남자들이 덤벼 들어 온다
+			PRINTFORML %조사처리(ANAME(대상),"는")% 소녀를 놓치려고 했지만, 두 명 모여 잡혀 버렸다……
+			PRINTFORML 
+			PRINTFORMW 어딘가의 지하실에서, %조사처리(ANAME(대상),"가")% 범해지고 있다
+			PRINTFORMW 상등품인 %조사처리(ANAME(대상),"는")% 그들의 성노예로 되어 끝없이 노리겟감으로 되고 있다
+			PRINTFORML 지금도 확실히 한사람의 남자에게 질내사정 되어 %조사처리(ANAME(대상),"는")% 신체를 진동시키고 절정에 이르러 버린다
+			PRINTFORMW %STR_BODY("음순:Ｖ삽입:질내사정", 대상)%는 빠끔빠끔 수축해, 정액을 늘어뜨리면서 다음의 삽입을 조르고 있었다
+			CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 키스, 펠라티오, 긴박, 마조, Ｖ성교, Ａ성교, 윤간", "처녀상실, Ａ처녀상실, 질내사정, 키스상실, 장내사정, 구강사정", GET_SPERM_ID("건달"), @"건달의 \@RAND:2 ? 페니스 # 입술\@", "건달", "", "보금자리에서의 윤간")
+			PRINTFORML 
+			PRINTFORML 심하게 더럽혀진 후, %조사처리(ANAME(대상),"는")% 틈을 찔러 소녀와 함께 어떻게든 도망치기 시작했다            
+		ENDIF
+	CASE 1
+		PRINTFORML 도둑이라도 했을 것이다
+		PRINTFORML 순간에 소녀를 잡아, 남자들에게 내밀었다
+		CALL ICPRINT("소녀를 잡은 답례에 금<3000>을 받았다", "L", 칼라_주의)
+		MONEY += 3000
+	CASE 2
+		PRINTFORML 자신에게는 관계없다
+		PRINTFORML 달려가는 소녀를, 약간 늦어 질 나쁜 남자들이 뒤쫓아 갔다
+ENDSELECT
+
+RETURN 1

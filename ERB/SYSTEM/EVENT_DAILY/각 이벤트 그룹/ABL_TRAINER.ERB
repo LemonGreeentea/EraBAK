@@ -1,0 +1,125 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_SABORI_TRAINER_RATE()
+RETURN 25
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_SABORI_TRAINER_DECISION()
+;RETURN DAY >= 15
+FOR LOCAL, 0, CHARANUM
+	SIF CFLAG:MASTER:소속 == CFLAG:LOCAL:소속 && TALENT:LOCAL:농땡이마왕
+		RETURN 1
+NEXT
+RETURN 0
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_SABORI_TRAINER_GENRE()
+RETURN 데일리_장르_트래이너
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_SABORI_TRAINER()
+#DIM 대상
+#DIM 훈련번호 = GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창")
+#DIM 훈련대상
+#DIM 대상경험치
+#DIM 효과량
+#DIM 대금
+
+대금 = 20000
+
+IF DVAR:소질트래이너_발생플래그 == 0
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 일을 하고 있으면, 시종이 손님을 고했다
+	PRINTFORML 뭐든지 「매우 시끄러운 남자가 왔다」의라고 한다
+	PRINTFORMW 어느 정도 시끄러운 것인지라고 생각한 %조사처리(ANAME(MASTER),"는")%, 만나기로 해 보았다
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORML 「워!!!!   군이 %ANAME(MASTER)%인가!!!!!   만날 수 있어 영광이다!!!!!!!!」
+	PRINTFORMW 「나는 『무킴키맛쵸☆근육 머슬학원』숙장!!!   오토코산  류타로다!!!!!!!!」
+	PRINTFORML 「실은 오늘은!!   군에게 좋은 이야기를 가져왔다!!!   아무튼 (들)물어 줘!!!!!!!!!」
+	PRINTFORML 「【농땡이마왕】그리고 곤란하고 있는 녀석이 없을까!?   나는 그러한 사람의 근성을 근육으로 다시 두드리는 일을 하고 있다!!!!!!」
+	PRINTFORML 「농땡이마왕의 녀석은 좀처럼 성장하지 않아서 말썽이다!!!!!   자꾸자꾸 단련하지 않으면!!!!!!」
+ELSE
+	PRINTFORML 「야아!!!!!!!!!   또 만났군!!!!!!!!!!!!!!!!」
+	PRINTFORML 「기억하고 있을까!!!!?!?   불끈불끈 근육♥머슬 하트학원의 오토코산이다!!!!!!」
+	PRINTFORMW 「훈련을 청구서에 가르치러 왔어!!!!!!!!!!!!!!!!!!!!!!!!!!!」
+ENDIF
+CALL ICPRINT(@"「뭐 정직 싸지는 않다!!!!   대금은 돈<{대금}>다!!!!!!!!!", "W", 칼라_주의)
+PRINTFORMW 「어때!!!?   좋은 이야기라고 생각하지 않는가!!!!!!?!!!?!?!!!????」
+PRINTFORML 남은 시종 시끄러웠지만, 가져온 이야기 자체는 나쁜 것으로는 없었다
+PRINTFORML 확실히 싸지는 않지만, 효과가 있다면 생각하는 가치는 있을지도 모른다
+PRINTFORMW 그런데, 어떻게 할까……
+PRINTFORML
+
+CALL ASK_MULTI_JUDGE("가르쳐 받는다!!!!!!!!!!!!!!", MONEY >= 대금, "숨막힐 듯이 덥기 때문에 그만둔다", 1)
+
+IF RESULT == 1
+	$CANCEL
+	PRINTFORMW 「뭄묵!!!!!!?   그런가!!!!!!   그런 일도 있구나!!!!!」
+	PRINTFORMW 「그러면 어쩔 수 없을 것이다!!!!!   나는 떠난다고 한다!!!!!!!!!!!」
+	RETURN 0
+ENDIF
+
+$TRAIN_LOOP
+PRINTFORML 「만나 알았다!!!!!!!!!   에서는 누구를 훈련한다인가 결정해 시르브프레!!!!!!!!!!!」
+CALL SINGLE_DRAWLINE
+
+;대상을 결정한다
+CALL SELECT_CHARA_LIST_ONLY_LOGIC_SLG("SABORI_TRAINER", "SABORI_TRAINER")
+
+SIF RESULT == -1
+	GOTO CANCEL
+
+대상 = RESULT
+
+PRINTFORMW 「%ANAME(대상)%씨인가!!!!!!!   만나 알았다!!!!!!!!!!!! 1!!!!!」
+PRINTFORMW 「자 조금%ANAME(대상)%씨를 빌린다!!!!!!!!!!!!!   조금 기다리고 있어!!!!!!!!!!!!! 1」
+PRINTFORMW ·
+PRINTFORMW ·
+PRINTFORMW ·
+SELECTCASE RAND:3
+	CASE 0	
+		PRINTFORMW 「좋은가!!!!!!!!!!!!!   근육이다!!!!!!!!!!!!! 1  근육이 모두야!!!!!!!」
+		PRINTFORMW 「근육에 모두를 바쳐라!!!!!!!!! 1  워!!!!!   머슬 머슬!!!!!!!!!!!!!」
+	CASE 1
+		PRINTFORMW 「좋은가!!!!!!!!!!!   근육이 요령이다!!!!!!!!!!   힘내라!!!!!!! 1」
+		PRINTFORMW 「가진 근육을 모두 사용해라!!!!!!!!!!!!!!!   !!!!!!!!!」
+	CASE 2
+		PRINTFORMW 「근육!!!!!!!! 1  육!!!!!!!!   머슬!!!!!!!!   우우!!!!!」
+		PRINTFORMW 「어떻게 했다!!!!   소리가 작아!!!!!!!!   이봐요!!!!   부끄러워하지 말라고!!!!!!!」
+		PRINTFORMW 「근육!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 11」
+ENDSELECT
+PRINTFORMW ·
+PRINTFORMW ·
+PRINTFORMW ·
+PRINTFORMW 「후우!!!!!!!!!!   좋은 땀 흘렸다!!!!!!!!!」
+PRINTFORMW 「결과!?   확실히였다!!!!!!!!!   삼킴이 빠르고 훌륭하다!!!!!!!!!!」
+PRINTFORMW 「그러면 나는 실례한다!!!!!!!!!!!!   또 만날 수 있으면 좋겠다!!!!!!!!! 1」
+PRINTFORMW 남은 떠나 갔다!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+CALL COLOR_PRINTW(@"%ANAME(대상)%의【농땡이마왕】하지만 나았다!!!!!!!!!!!!!!!!!!!!!!", 칼라_주의)
+TALENT:대상:농땡이마왕 = 0
+MONEY -= 대금
+DVAR:소질트래이너_발생플래그 = 1
+RETURN 1
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_SABORI_TRAINER(대상)
+#DIM 대상
+CALL SELECT_CHARA_LIST_SHOW_LOGIC_DEFAULT(대상)
+RETURN RESULT && TALENT:대상:농땡이마왕
+
+@SELECT_CHARA_LIST_SELECT_LOGIC_SABORI_TRAINER(대상)
+#DIM 대상
+RETURN CFLAG:대상:포로처 == 0

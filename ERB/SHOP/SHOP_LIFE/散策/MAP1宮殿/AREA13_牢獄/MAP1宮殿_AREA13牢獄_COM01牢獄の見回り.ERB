@@ -1,0 +1,100 @@
+﻿;-------------------------------------------------
+; 「감옥의 순찰」의 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA13_COM1_EXIST
+RETURN 1
+
+;-------------------------------------------------
+; 「감옥의 순찰」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA13_COM1_NAME
+RESULTS:0 '= "감옥의 순찰"
+RETURN 1
+
+;-------------------------------------------------
+; 「감옥의 순찰」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA13_COM1_CHECK(ARG:0)
+RETURN 1
+
+;-------------------------------------------------
+; 「감옥의 순찰」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA13_COM1_CHECKCHARA(ARG:0)
+
+SIF MASTER == ARG:0
+	RETURN 0
+SIF !TALENT:(ARG:0):낙인
+	RETURN 0
+SIF CFLAG:(ARG:0):행동완료
+	RETURN 0
+SIF CFLAG:(ARG:0):포로처
+	RETURN 0
+SIF CFLAG:(ARG:0):소속 != CFLAG:MASTER:소속
+	RETURN 0
+SIF COOLTIME:(ARG:0):0
+	RETURN 0
+SIF IS_ANIMAL(ARG:0)
+	RETURN 0
+SIF CFLAG:(ARG:0):종속도 <= 0
+	RETURN 0
+
+RETURN 1
+
+;-------------------------------------------------
+; 「감옥의 순찰」의 메인 처리
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA13_COM1_MAIN
+#DIM L_COUNTER
+#DIM 대상
+
+;리셋트
+CALL COM_AUTO_RANDOMIZED_WEIGHTED_START
+
+;후보 추가
+FOR L_COUNTER, 0, CHARANUM
+	RESULT = 0
+	CALL SHOP_LIFE67_MAP1_AREA13_COM1_CHECKCHARA(L_COUNTER)
+	SIF !RESULT
+		CONTINUE
+	CALL COM_AUTO_RANDOMIZED_WEIGHTED_VALUE(L_COUNTER, CFLAG:L_COUNTER:종속도)
+NEXT
+
+;결과 취득
+대상 = COM_AUTO_RANDOMIZED_WEIGHTED_RESULT()
+
+CALL TRAIN_TARGET_SETTING(대상)
+VARSET PRISONER_TARGET, -1
+PRISONER_TARGET:0 = 대상
+
+FLAG:조교모드 = 조교_포로조교
+FLAG:우후후플래그 = 1
+
+CALL START_TRAIN_COMMON
+
+CALL SHOP_LIFE67_MAP1_AREA13_COM1_TEXT(대상)
+WAIT
+
+LINES_SHOP = LINECOUNT
+
+RETURN 1
+
+;-------------------------------------------------
+; 묘사 1
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA13_COM1_TEXT(대상)
+#DIM 대상
+
+PRINTFORML  %조사처리(ANAME(MASTER),"가")% 감옥의 돌아보러 가면, %조사처리(ANAME(대상),"가")% 감옥 중(안)에서 웅크리고 앉고 있었다
+WAIT
+PRINTL 
+PRINTFORML  놀라 말을 걸어, 누군가에게 투옥되었는지 묻는다
+PRINTFORML  %조사처리(ANAME(대상),"는")% 고개를 저어 열쇠를 보여 왔다
+PRINTFORML  쇠창살에 둘러싸여 침착하고 있던 『것』같다
+WAIT
+PRINTL 
+PRINTFORML  모르는 동안에 퇴보 할 수 없는 곳까지 저속해지고 있던 것 같다
+PRINTFORML  이것은 예의 범절의 필요가 있을 것이다…
+
+RETURN 0
+

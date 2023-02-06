@@ -1,0 +1,30 @@
+﻿;-------------------------------------------------
+;전략 메뉴의 선택 가부와 메뉴의 선택 가능 캐릭터 존재 판정을
+;SHOP_AVAIL에 보존한다
+;-------------------------------------------------
+@CHECK_SAVE_SLG
+#DIM CHECK_SAVE_COUNTER_SLG
+
+VARSET SHOP_AVAIL, 0
+
+FOR CHECK_SAVE_COUNTER_SLG, 0, 99
+	IF CHECK_SAVE_COUNTER_SLG <= 10 || CHECK_SAVE_COUNTER_SLG >= 90
+		SHOP_AVAIL:(CHECK_SAVE_COUNTER_SLG) = 1
+	ELSE
+		RESULTS:0 '= ""
+		TRYCALLFORM SHOP_SLG_NAME{CHECK_SAVE_COUNTER_SLG}
+		;메뉴 명칭이 존재한다면
+		IF RESULTS:0 != ""
+			;메뉴의 선택 가부 판정
+			RESULT = 0
+			TRYCCALLFORM SHOP_SLG_CHECK{CHECK_SAVE_COUNTER_SLG}
+				;선택 가부 판정이 존재해, 가능의 경우
+				IF RESULT
+					SHOP_AVAIL:(CHECK_SAVE_COUNTER_SLG) = 1
+				ENDIF
+			CATCH
+			ENDCATCH
+		ENDIF
+	ENDIF
+NEXT
+

@@ -1,0 +1,54 @@
+﻿;-------------------------------------------------
+;「정책 경제 징병 방위」의 명칭
+;-------------------------------------------------
+@SHOP_SLG_NAME21
+SELECTCASE COUNTRY_POLICY:(CFLAG:MASTER:소속)
+	CASE 정책_경제
+		RESULTS:0 '= "경제성장"
+	CASE 정책_징병
+		RESULTS:0 '= "징병효율"
+	CASE 정책_방위
+		RESULTS:0 '= "방위배율"
+	CASEELSE
+		RESULTS:0 '= "정책 미정"
+ENDSELECT
+
+;-------------------------------------------------
+;「정책 경제 징병 방위」의 버튼 칼라 지정
+;-------------------------------------------------
+@SHOP_SLG_NAME_COLOR21
+SELECTCASE COUNTRY_POLICY:(CFLAG:MASTER:소속)
+	CASE 정책_경제
+		SETCOLOR 칼라_파초록
+	CASE 정책_징병
+		SETCOLOR 칼라_크림
+	CASE 정책_방위
+		SETCOLOR 칼라_파파랑
+	CASEELSE
+		SETCOLOR 칼라_명회색
+ENDSELECT
+
+;-------------------------------------------------
+;「정책 경제 징병 방위」의 선택 가부
+;-------------------------------------------------
+@SHOP_SLG_CHECK21
+SIF FLAG:클리어플래그
+	RETURN 0
+SIF FLAG:관전모드
+	RETURN 0
+SIF CFLAG:MASTER:소속 == 0
+	RETURN 0
+SIF CONFIG:302 != 0
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「정책 경제 징병 방위」의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_SLG_EVENTBUY21
+COUNTRY_POLICY:(CFLAG:MASTER:소속) ++
+IF COUNTRY_POLICY:(CFLAG:MASTER:소속) >= 3
+	COUNTRY_POLICY:(CFLAG:MASTER:소속) = 0
+ENDIF
+RETURN 0
+

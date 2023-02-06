@@ -1,0 +1,59 @@
+﻿@SLG_AI_INVEST(세력)
+#DIM 세력
+#DIM 도시
+#DIM 스코아, MAX_CITY
+#DIM 투자도시, 5
+#DIM 투자도시수
+#DIM 투자액
+#DIM 정치력
+#DIM 효과
+#DIMS 도시명
+VARSET 스코아, __INT_MIN__
+VARSET 투자도시
+VARSET 투자도시수
+
+투자액 = MIN(MONEY:세력 * AI_INVEST_PROPERTY:(COUNTRY_AI_TYPE:세력):1 / 100, AI_INVEST_PROPERTY:(COUNTRY_AI_TYPE:세력):2)
+정치력 = TMP_SUM_POLITICS_POWER:세력
+
+FOR LOCAL, 0, MAX_CITY
+	SIF CITY_OWNER:LOCAL != 세력
+		CONTINUE
+	SIF TMP_CITY_RISK:세력:LOCAL == 6
+		CONTINUE
+	스코아:LOCAL = TMP_DEFFENSIVE_IMPORTANCE:세력:LOCAL
+NEXT
+
+FOR LOCAL, 0, VARSIZE("투자도시")
+	도시 = FINDELEMENT(스코아, MAXARRAY(스코아))
+	SIF 도시 == -1
+		BREAK
+	SIF 스코아:도시 == __INT_MIN__
+		BREAK
+	투자도시:투자도시수 = 도시
+	투자도시수 ++
+	스코아:도시 = __INT_MIN__
+
+	SIF 투자도시수 == AI_INVEST_PROPERTY:(COUNTRY_AI_TYPE:세력):0
+		BREAK
+NEXT
+
+SIF 투자도시수 <= 0
+	RETURN
+
+도시명 '= ""
+FOR LOCAL, 0, 투자도시수
+
+	도시 = 투자도시:LOCAL
+
+	효과 = CALC_CITY_INVEST_EFFECT(도시, 투자액 / 투자도시수, 정치력)
+	MONEY:세력 -= 투자액 / 투자도시수
+
+	CITY_ECONOMY:도시 += 효과
+	CITY_ECONOMY_LIMIT:도시 = MAX(CITY_ECONOMY_LIMIT:도시, CITY_ECONOMY:도시)
+
+	도시명 '= 도시명 + CITY_NAME:도시
+	SIF LOCAL != 투자도시수 - 1
+		도시명 '= 도시명 + "·"
+NEXT
+
+;PRINTFORML %ANAME(GET_COUNTRY_BOSS(세력))%가 %도시명%에 투자를 실시했습니다

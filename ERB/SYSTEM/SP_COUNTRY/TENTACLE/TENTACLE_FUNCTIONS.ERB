@@ -1,0 +1,197 @@
+﻿;--------------------------------------
+;턴 엔드시의 촉수의 처리
+;--------------------------------------
+@TURNEND_TENTACLE
+;2턴에 1번, 무리하게 임신
+CALL TENTACLE_FORCE_PREGNATE(DAY % 2 == 0)
+
+;--------------------------------------
+;멸망시의 처리
+;--------------------------------------
+@TENTACLE_DESTROY_MSG
+CALL SINGLE_DRAWLINE
+SETCOLOR 칼라_주의
+PRINTFORML
+PRINTFORML
+PRINTFORML
+PRINTFORMW 각 세력의 노력 있어, 촉수를 섬멸하는 것을 성공했습니다
+PRINTFORMW 환상향에 평온이 돌아왔습니다……
+PRINTFORML
+PRINTFORML
+PRINTFORML
+RESETCOLOR
+
+;--------------------------------------
+;촉수의 초기화 처리
+;--------------------------------------
+@TENTACLE_INIT(ARG:0)
+#DIM LCOUNT
+VARSET LOCAL
+
+SIF GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_촉수) != -1
+	RETURN 0
+
+SIF SP_COUNTRY_RANK:특수세력_촉수 == 0
+	RETURN 0
+
+SIF GET_NEW_COUNTRY() == -1
+	RETURN 0
+
+CALL CREATE_SP_COUNTRY(특수세력_촉수)
+
+RETURN RESULT
+
+;--------------------------------------
+;촉수 세력용의 정기 이벤트.
+;--------------------------------------
+@TENTACLE_FORCE_PREGNATE(조건 = 0)
+#DIM 촉수
+#DIM 조건
+#DIM 후보, 3000
+#DIM 후보수
+#DIM 대상
+
+VARSET 후보, -1
+VARSET 후보수
+
+SIF !조건
+	RETURN 0
+
+촉수 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_촉수))
+
+SIF 촉수 == -1
+	RETURN 0
+
+SIF CONFIG:200
+	RETURN 0
+
+FOR LOCAL, 0, CHARANUM
+	;촉수 소속으로 포로가 아닌 또는 촉수의 포로
+	IF ((CFLAG:LOCAL:소속 == 촉수 && CFLAG:LOCAL:포로처 == 0) || CFLAG:LOCAL:포로처 == 촉수) && IS_FEMALE(LOCAL) && GETBIT(TALENT:LOCAL:특수세력함락계, 특수세력_촉수) && !TALENT:LOCAL:임신
+		후보:후보수 = LOCAL
+		후보수 ++
+	ENDIF
+NEXT
+
+SIF 후보수 < 1
+	RETURN 0
+
+대상 = 후보:(RAND:후보수)
+
+SIF 대상 == -1
+	RETURN 0
+	
+CALL SINGLE_DRAWLINE
+SETCOLOR 칼라_핑크
+PRINTFORML 촉수는 %조사처리(ANAME(대상),"를")% 번식을 위해 이용한 것 같다……
+PRINTFORML 
+IF GETBIT(TALENT:대상:특수세력함락계, 특수세력_촉수)
+	PRINTFORMW 그들에게 기생되어 온순한 모판화하고 있었던 %조사처리(ANAME(대상),"는")%, 희희낙락 해 그들에게 신체를 제공했다
+	PRINTFORMW 그 고기구멍에 촉수들은 차례차례로 당신을 넣어서는, 알을 낳아 간다
+	PRINTFORMW 한층 더 촉수는, 특수한 액체를 그녀에게 쳐박아, 그녀의 체질을 보다 알을 기르기 (위해)때문에 적당한 것으로 해 간다
+	PRINTFORMW 자궁의 안쪽의 강렬한 욱신거림에 좋아하면서, %조사처리(ANAME(대상),"는")% 몇 번이나 절정 했다……
+ELSE
+	PRINTFORMW 그들에게 잡혀 범해지고 계속하고 있었던 %조사처리(ANAME(대상),"를")%, 촉수는 본격적으로 모판으로서 사용할 생각 같다
+	PRINTFORMW 그 고기구멍에 촉수들은 차례차례로 당신을 넣어서는, 알을 낳아 간다
+	PRINTFORMW 한층 더 촉수는, 특수한 액체를 그녀에게 쳐박아, 그녀의 체질을 보다 알을 기르기 (위해)때문에 적당한 것으로 해 간다
+	PRINTFORMW 당신이 정체의 모르는 것이 되어 가는 %조사처리(ANAME(대상),"는")% 비명을 지르지만, 아무도 도와 주지 않는다……
+ENDIF
+PRINTFORML
+PRINTFORMW 해방되었을 무렵에는, 그 자궁을 임산부같이 부루퉁한 %조사처리(ANAME(대상),"가")% 남겨질 뿐이었다……
+RESETCOLOR
+FOR LOCAL, 0, 3
+	CALL FUCK_GANGBANG_SP(대상, GET_SPERM_ID("촉수"), @"촉수", @"촉수", 촉수)
+NEXT
+
+CFLAG:대상:촉수산란실행자 = GET_SPERM_ID("촉수")
+CFLAG:대상:촉수Ａ산란실행자 = GET_SPERM_ID("촉수")
+TALENT:(대상):촉수임신 = 1
+TALENT:(대상):Ａ촉수임신 = 1
+
+;------------------------------
+;촉수에 잡혔을 때의 이벤트
+;------------------------------
+@MASTER_CAPTURED_TENTACLE(ARG:0)
+PRINTFORMW 잡힌 %조사처리(ANAME(MASTER),"는")% 촉수 니토리 둘러싸였다…
+IF IS_MALE(MASTER)
+	PRINTFORMW 촉수는 %조사처리(ANAME(MASTER),"를")% 보고, 병사에 딱 좋다고 판단한 것 같다
+	PRINTFORMW 촉수병이, 그 입을 억지로 열게 했다
+	PRINTFORMW 기생되는 것을 이쪽이 마시면, 심한 것은 하지 않을 생각과 같지만……
+	PRINTFORMW 받아들입니까?
+	CALL ASK_YN("받아들인다", "거부한다")
+	IF RESULT == 0
+		PRINTFORMW 투옥되는 것보다는 좋을 것이다. %조사처리(ANAME(MASTER),"가")% 수긍하면, 촉수는 조속히, 입안에 비집고 들어갔다
+		PRINTFORMW 그리고 그 위에, 기생체를 흘려 넣었다……
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 촉수에 기생되었다
+		RESETCOLOR
+	ELSE
+		PRINTFORMW 너희들 따위에 손을 빌려 줄까. %조사처리(ANAME(MASTER),"는")% 의연히 해 단언한다	
+		PRINTFORMW 하면 촉수병들이 어디에서랄 것도 없게 나타나, %조사처리(ANAME(MASTER),"를")% 투옥했다……
+	ENDIF
+ELSEIF GETBIT(TALENT:MASTER:특수세력함락계, 특수세력_촉수)
+	PRINTFORMW 촉수는 일찍이 모판이었던 %조사처리(ANAME(MASTER),"를")% 둘러싼다
+	PRINTFORMW 눈앞에 촉수를 내밀어져 %ANAME(MASTER)%의 신체는, 모판이었던 무렵의 쾌락을 생각해 내 간다
+	PRINTFORMW %ANAME(MASTER)%의 소리가 달콤하게 녹기 시작했을 무렵, 촉수는 기생하려고 했다……
+	PRINTFORMW 받아들입니까?
+	CALL ASK_YN("받아들인다", "거부한다")
+	IF RESULT == 0
+		PRINTFORMW 그들에 의해 길러내진 암컷의 본성이, %조사처리(ANAME(MASTER),"를")% 수긍하게 했다
+		PRINTFORMW 촉수는 즉시 %ANAME(MASTER)%에 모여, 기생했다……
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")%, 다시 촉수에 육체를 명도했다
+		RESETCOLOR
+	ELSE
+		PRINTFORMW 너희들 따위에 손을 빌려 줄까. %조사처리(ANAME(MASTER),"는")% 의연히 해 단언한다
+		PRINTFORMW 하면 촉수병들이 어디에서랄 것도 없게 나타나, %조사처리(ANAME(MASTER),"를")% 투옥했다……
+	ENDIF
+ELSE
+	PRINTFORMW 촉수는 %조사처리(ANAME(MASTER),"를")% 보고, 병사에 딱 좋다고 판단한 것 같다
+	PRINTFORMW 촉수병이, 그 입을 억지로 열게 한다
+	PRINTFORMW 기생되는 것을 이쪽이 마시면, 심한 것은 하지 않을 생각과 같지만……
+	PRINTFORMW 받아들입니까?
+	CALL ASK_YN("받아들인다", "거부한다")
+	IF RESULT == 0
+		PRINTFORMW 받아들이지 않아도, 어차피 되는 것은 변함없다
+		PRINTFORMW 라면, 온순한 자세를 보인 (분)편이, 아직 좋다……%조사처리(ANAME(MASTER),"는")% 힘 없게 수긍한다
+		PRINTFORMW 하면, 촉수는 %ANAME(MASTER)%에 쇄도해 갔다
+		PRINTFORMW 그들은 %ANAME(MASTER)%의 체내에 비집고 들어가, 그 육체를 서가와하기 시작했다……
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 촉수에 기생되었다
+		RESETCOLOR
+	ELSE
+		PRINTFORMW 너희들 따위에 손을 빌려 줄까. %조사처리(ANAME(MASTER),"는")% 의연히 해 단언한다	
+		PRINTFORMW 하면 촉수병들이 어디에서랄 것도 없게 나타나, %조사처리(ANAME(MASTER),"를")% 투옥했다……
+	ENDIF
+ENDIF
+IF RESULT == 0
+	CALL CHANGE_COUNTRY(MASTER, ARG:0, 1)
+	SETBIT TALENT:MASTER:특수세력함락계, 특수세력_촉수
+	CALL PLAYER_FALLEN_TO_SP_COUNTRY(ARG:0)
+	RETURN 0
+ELSE
+	CALL CAPTURE(MASTER, ARG:0)
+	RETURN 2
+ENDIF
+
+;--------------------------------------
+;엔딩
+;--------------------------------------
+@TENTACLE_ENDING
+
+PRINTFORML 갑자기 나타난 촉수들에게, 환상향의 소녀들은 어찌할 바도 없게 당해 버렸다
+PRINTFORML 무릎을 굽힌 것으로부터 받아들여져 그들을 위한 모판으로 다시 만들어져 갔다
+PRINTFORMW ……그리고 드디어, 그들이 환상향 전 국토를 지배할 때가 왔다
+PRINTFORMW 왼쪽을 봐도 오른쪽을 봐도, 촉수가 눈에 들어오지 않는 곳은 없다
+PRINTFORMW 소녀들은 그로테스크한 고깃덩이에 온갖 구멍을 범해져 그들의 번식을 위한 도구로 되고 있다……
+PRINTFORML 
+IF CFLAG:MASTER:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_촉수) && IS_FEMALE(MASTER)
+	PRINTFORMW 
+	PRINTFORML ……그 중에, %ANAME(MASTER)%의 모습도 있었다
+	PRINTFORMW 다른 소녀 같이, 촉수에 뇌 골수까지 침식 당한 %조사처리(ANAME(MASTER),"는")%, 스스로 그 태를 촉수에 명도하고 있다
+	PRINTFORMW 볼록 부풀어 오른 뱃속에서는, 그로테스크한 고깃덩이가, 쑥쑥 자라고 있을 것이다……
+	PRINTFORMW 촉수는 그런 %PRONOUN(MASTER)%의 입을 능욕하면서, 타카에양가의 정액을 흘려 넣어 간다
+	PRINTFORMW 그렇게 죽을 때까지, 그들을 위한 모판으로서 길러지고 계속한다……
+ENDIF
+PRINTFORML 
+PRINTFORMW 거대한 번식장이 된 환상향에, 모판들의 교성이 울려 퍼진다……

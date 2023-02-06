@@ -1,0 +1,583 @@
+﻿;SOURCE_CHECK로 사용하는 함수(TALENT계)
+
+;-------------------------------------------------
+;소질 따위에 의한 파라미터 상승의 보정(쾌락계)
+;-------------------------------------------------
+@UP_TALENT_CHECK1(ARG:0)
+IF TALENT:(ARG:0):자제심 && !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음란)
+	IF !IS_LOVER(ARG:0) && !IS_SLAVE(ARG:0) && !IS_SLAVED_BY(ARG:0)
+		TIMES CUP:(ARG:0):쾌Ｃ, 0.75
+		TIMES CUP:(ARG:0):쾌Ｖ, 0.70
+		TIMES CUP:(ARG:0):쾌Ａ, 0.80
+		TIMES CUP:(ARG:0):쾌Ｂ, 0.60
+		TIMES CUP:(ARG:0):쾌Ｍ, 0.80
+	ENDIF
+ENDIF
+
+;기분의 영향
+SELECTCASE TOSTR_EMOTION(ARG:0)
+	CASE "행복"
+		TIMES CUP:(ARG:0):쾌Ｃ, 1.30
+		TIMES CUP:(ARG:0):쾌Ｖ, 1.30
+		TIMES CUP:(ARG:0):쾌Ａ, 1.30
+		TIMES CUP:(ARG:0):쾌Ｂ, 1.30
+		TIMES CUP:(ARG:0):쾌Ｍ, 1.30
+	CASE "기쁨"
+		TIMES CUP:(ARG:0):쾌Ｃ, 1.20
+		TIMES CUP:(ARG:0):쾌Ｖ, 1.20
+		TIMES CUP:(ARG:0):쾌Ａ, 1.20
+		TIMES CUP:(ARG:0):쾌Ｂ, 1.20
+		TIMES CUP:(ARG:0):쾌Ｍ, 1.20
+	CASE "양호"
+		TIMES CUP:(ARG:0):쾌Ｃ, 1.10
+		TIMES CUP:(ARG:0):쾌Ｖ, 1.10
+		TIMES CUP:(ARG:0):쾌Ａ, 1.10
+		TIMES CUP:(ARG:0):쾌Ｂ, 1.10
+		TIMES CUP:(ARG:0):쾌Ｍ, 1.10
+	CASE "원한"
+	CASE "분노"
+	CASE "분개"
+	CASE "암울"
+		TIMES CUP:(ARG:0):쾌Ｃ, 0.60
+		TIMES CUP:(ARG:0):쾌Ｖ, 0.60
+		TIMES CUP:(ARG:0):쾌Ａ, 0.60
+		TIMES CUP:(ARG:0):쾌Ｂ, 0.60
+		TIMES CUP:(ARG:0):쾌Ｍ, 0.60
+	CASE "슬픔"
+		TIMES CUP:(ARG:0):쾌Ｃ, 0.75
+		TIMES CUP:(ARG:0):쾌Ｖ, 0.75
+		TIMES CUP:(ARG:0):쾌Ａ, 0.75
+		TIMES CUP:(ARG:0):쾌Ｂ, 0.75
+		TIMES CUP:(ARG:0):쾌Ｍ, 0.75
+	CASE "우울"
+		TIMES CUP:(ARG:0):쾌Ｃ, 0.80
+		TIMES CUP:(ARG:0):쾌Ｖ, 0.80
+		TIMES CUP:(ARG:0):쾌Ａ, 0.80
+		TIMES CUP:(ARG:0):쾌Ｂ, 0.80
+		TIMES CUP:(ARG:0):쾌Ｍ, 0.80
+	CASE "광기"
+	CASE "공포"
+	CASE "겁냄"
+	CASE "붕괴"
+		TIMES CUP:(ARG:0):쾌Ｃ, 0.50
+		TIMES CUP:(ARG:0):쾌Ｖ, 0.50
+		TIMES CUP:(ARG:0):쾌Ａ, 0.50
+		TIMES CUP:(ARG:0):쾌Ｂ, 0.50
+		TIMES CUP:(ARG:0):쾌Ｍ, 0.50
+	CASE "공허"
+		TIMES CUP:(ARG:0):쾌Ｃ, 0.85
+		TIMES CUP:(ARG:0):쾌Ｖ, 0.85
+		TIMES CUP:(ARG:0):쾌Ａ, 0.85
+		TIMES CUP:(ARG:0):쾌Ｂ, 0.85
+		TIMES CUP:(ARG:0):쾌Ｍ, 0.85
+ENDSELECT
+
+;남성·오토코노코
+IF !HAS_VAGINA(ARG:0)
+	TIMES CUP:(ARG:0):쾌Ａ, 1.20
+ENDIF
+
+;눈가리개
+IF IS_EQUIP_TARGET(ARG:0, 84)
+	TIMES CUP:(ARG:0):쾌Ｃ, 1.10
+	TIMES CUP:(ARG:0):쾌Ｖ, 1.10
+	TIMES CUP:(ARG:0):쾌Ａ, 1.10
+	TIMES CUP:(ARG:0):쾌Ｂ, 1.10
+	TIMES CUP:(ARG:0):쾌Ｍ, 1.10
+ENDIF
+
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_바람기버릇)
+	IF ((IS_MPLY(MASTER) && IS_MTAR(ARG:0)) || (IS_MPLY(ARG:0) && IS_MTAR(MASTER)))
+		TIMES CUP:(ARG:0):쾌Ｃ, 0.7
+		TIMES CUP:(ARG:0):쾌Ｖ, 0.7
+		TIMES CUP:(ARG:0):쾌Ａ, 0.7
+		TIMES CUP:(ARG:0):쾌Ｂ, 0.7
+		TIMES CUP:(ARG:0):쾌Ｍ, 0.7
+	ELSE
+		TIMES CUP:(ARG:0):쾌Ｃ, 1.15
+		TIMES CUP:(ARG:0):쾌Ｖ, 1.15
+		TIMES CUP:(ARG:0):쾌Ａ, 1.15
+		TIMES CUP:(ARG:0):쾌Ｂ, 1.15
+		TIMES CUP:(ARG:0):쾌Ｍ, 1.15
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;소질 따위에 의한 파라미터 상승의 보정(쾌락계 이외)
+;-------------------------------------------------
+@UP_TALENT_CHECK2(ARG:0)
+;TRAIN의 밖에서 욕정이 리셋트 되지 않는 채 이 함수가 불려 간 것으로 오버플로우의 가능성이 있었다
+;기분계를 별함수에 잘라 내쪽부터 호출한다
+
+IF TALENT:(ARG:0):반항적
+	TIMES CUP:(ARG:0):욕정, 0.70
+ENDIF
+
+IF TALENT:(ARG:0):꿋꿋함
+	TIMES CUP:(ARG:0):욕정, 0.8
+ENDIF
+
+IF TALENT:(ARG:0):얌전함
+	TIMES CUP:(ARG:0):욕정, 0.8
+ENDIF
+
+IF TALENT:(ARG:0):무관심
+	TIMES CUP:(ARG:0):욕정, 0.7
+ENDIF
+
+IF TALENT:(ARG:0):감정결핍
+	TIMES CUP:(ARG:0):욕정, 0.7
+ENDIF
+
+IF TALENT:(ARG:0):억압
+	CUP:(ARG:0):욕정 = CUP:(ARG:0):욕정 * (125 - YOKUATSU_RATE(ARG:0)) / 125
+ENDIF
+
+IF TALENT:(ARG:0):해방
+	TIMES CUP:(ARG:0):욕정, 1.5
+ENDIF
+
+IF TALENT:(ARG:0):고고함
+	TIMES CUP:(ARG:0):욕정, 0.80
+ENDIF
+
+SIF TALENT:(ARG:0):쾌감에솔직
+	TIMES CUP:(ARG:0):욕정, 1.8
+SIF TALENT:(ARG:0):쾌감을부정
+	TIMES CUP:(ARG:0):욕정, 0.7
+
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_바람기버릇)
+	IF ((IS_MPLY(MASTER) && IS_MTAR(ARG:0)) || (IS_MPLY(ARG:0) && IS_MTAR(MASTER)))
+		TIMES CUP:(ARG:0):욕정, 0.8
+	ELSE
+		TIMES CUP:(ARG:0):욕정, 1.5
+	ENDIF
+ENDIF
+
+
+;기분의 영향
+SELECTCASE TOSTR_EMOTION(ARG:0)
+	CASE "행복"
+		TIMES CUP:(ARG:0):욕정, 1.15
+	CASE "기쁨"
+		TIMES CUP:(ARG:0):욕정, 1.10
+	CASE "양호"
+		TIMES CUP:(ARG:0):욕정, 1.05
+	CASE "원한"
+	CASE "분노"
+	CASE "분개"
+	CASE "암울"
+		TIMES CUP:(ARG:0):욕정, 0.30
+	CASE "슬픔"
+		TIMES CUP:(ARG:0):욕정, 0.60
+	CASE "우울"
+		TIMES CUP:(ARG:0):욕정, 0.80
+	CASE "광기"
+	CASE "공포"
+	CASE "겁냄"
+	CASE "붕괴"
+		TIMES CUP:(ARG:0):욕정, 0.20
+	CASE "공허"
+		TIMES CUP:(ARG:0):욕정, 0.60
+ENDSELECT
+
+;기분계를 나중에 호출한다
+CALL UP_TALENT_CHECK3(ARG:0)
+
+
+;소질 따위에 의한 파라미터 상승의 보정(기분계)
+;TRAIN의 밖에서 CUP를 안전하게 취급하기 위해서(때문에) 기분을 격리
+@UP_TALENT_CHECK3(ARG:0)
+;눈가리개
+IF IS_EQUIP_TARGET(ARG:0, 84)
+	TIMES CUP:(ARG:0):포주, 1.20
+ENDIF	
+
+IF TALENT:(ARG:0):겁쟁이
+	IF CUP:(ARG:0):로주 > 0
+		TIMES CUP:(ARG:0):로주, 0.75
+	ENDIF
+	IF CUP:(ARG:0):액주 > 0
+		TIMES CUP:(ARG:0):액주, 1.2
+	ENDIF
+	IF CUP:(ARG:0):포주 > 0
+		TIMES CUP:(ARG:0):포주, 1.3
+	ENDIF
+ENDIF
+
+IF TALENT:(ARG:0):반항적
+	IF CUP:(ARG:0):로주 > 0
+		IF TALENT:(ARG:0):아이인질
+			TIMES CUP:(ARG:0):로주, 1.2
+		ELSE
+			TIMES CUP:(ARG:0):로주, 1.4
+		ENDIF
+	ENDIF
+ENDIF
+
+IF TALENT:(ARG:0):꿋꿋함
+	IF CUP:(ARG:0):로주 > 0
+		IF TALENT:(ARG:0):아이인질
+			TIMES CUP:(ARG:0):로주, 1.1
+		ELSE
+			TIMES CUP:(ARG:0):로주, 1.2
+		ENDIF
+	ENDIF
+	IF CUP:(ARG:0):액주 > 0
+		TIMES CUP:(ARG:0):액주, 0.7
+	ENDIF
+	IF CUP:(ARG:0):포주 > 0
+		TIMES CUP:(ARG:0):포주, 0.7
+	ENDIF
+ENDIF
+
+IF TALENT:(ARG:0):솔직함
+	IF CUP:(ARG:0):로주 > 0
+		TIMES CUP:(ARG:0):로주, 0.8
+	ENDIF
+ENDIF
+
+IF TALENT:(ARG:0):얌전함
+	IF CUP:(ARG:0):로주 > 0
+		TIMES CUP:(ARG:0):로주, 0.6
+	ENDIF
+	IF CUP:(ARG:0):액주 > 0
+		TIMES CUP:(ARG:0):액주, 1.5
+	ENDIF
+ENDIF
+
+IF TALENT:(ARG:0):프라이드높음
+	IF CUP:(ARG:0):로주 > 0
+		IF TALENT:(ARG:0):아이인질
+			TIMES CUP:(ARG:0):로주, 1.2
+		ELSE
+			TIMES CUP:(ARG:0):로주, 1.4
+		ENDIF
+	ENDIF
+	IF CUP:(ARG:0):포주 > 0
+		TIMES CUP:(ARG:0):포주, 0.8
+	ENDIF
+ENDIF
+
+IF TALENT:(ARG:0):프라이드낮음
+	IF CUP:(ARG:0):로주 > 0
+		TIMES CUP:(ARG:0):로주, 0.8
+	ENDIF
+	IF CUP:(ARG:0):포주 > 0
+		TIMES CUP:(ARG:0):포주, 1.2
+	ENDIF
+ENDIF
+
+IF TALENT:(ARG:0):무관심
+	TIMES CUP:(ARG:0):로주, 0.7
+	TIMES CUP:(ARG:0):액주, 0.7
+	TIMES CUP:(ARG:0):포주, 0.7
+ENDIF
+
+IF TALENT:(ARG:0):감정결핍
+	TIMES CUP:(ARG:0):로주, 0.5
+	TIMES CUP:(ARG:0):액주, 0.5
+	TIMES CUP:(ARG:0):포주, 0.5
+ENDIF
+
+IF TALENT:(ARG:0):호기심
+	IF CUP:(ARG:0):로주 > 0
+		TIMES CUP:(ARG:0):로주, 0.9
+	ENDIF
+	IF CUP:(ARG:0):포주 > 0
+		TIMES CUP:(ARG:0):포주, 0.9
+	ENDIF
+ENDIF
+
+IF TALENT:(ARG:0):보수적
+	IF CUP:(ARG:0):로주 > 0
+		IF TALENT:(ARG:0):아이인질
+			TIMES CUP:(ARG:0):로주, 1.1
+		ELSE
+			TIMES CUP:(ARG:0):로주, 1.2
+		ENDIF
+	ENDIF
+	IF CUP:(ARG:0):포주 > 0
+		TIMES CUP:(ARG:0):포주, 1.20
+	ENDIF
+ENDIF
+
+IF TALENT:(ARG:0):낙관적
+	IF CUP:(ARG:0):액주 > 0
+		TIMES CUP:(ARG:0):액주, 0.6
+	ENDIF
+	IF CUP:(ARG:0):포주 > 0
+		TIMES CUP:(ARG:0):포주, 0.80
+	ENDIF
+ENDIF
+
+IF TALENT:(ARG:0):비관적
+	IF CUP:(ARG:0):액주 > 0
+		TIMES CUP:(ARG:0):액주, 1.5
+	ENDIF
+	IF CUP:(ARG:0):포주 > 0
+		TIMES CUP:(ARG:0):포주, 1.1
+	ENDIF
+ENDIF
+
+IF TALENT:(ARG:0):억압
+	CUP:(ARG:0):로주 = CUP:(ARG:0):로주 * (150 - YOKUATSU_RATE(ARG:0)) / 150
+	CUP:(ARG:0):액주 = CUP:(ARG:0):액주 * (150 - YOKUATSU_RATE(ARG:0)) / 150
+	CUP:(ARG:0):포주 = CUP:(ARG:0):포주 * (150 - YOKUATSU_RATE(ARG:0)) / 150
+ENDIF
+
+IF TALENT:(ARG:0):해방
+	TIMES CUP:(ARG:0):로주, 1.15
+	TIMES CUP:(ARG:0):액주, 1.15
+	TIMES CUP:(ARG:0):포주, 0.9
+ENDIF
+
+IF TALENT:(ARG:0):고고함
+	TIMES CUP:(ARG:0):액주, 0.75
+	TIMES CUP:(ARG:0):포주, 0.5
+	IF CUP:(ARG:0):로주 > 0
+		IF TALENT:(ARG:0):아이인질
+			TIMES CUP:(ARG:0):로주, 1.15
+		ELSE
+			TIMES CUP:(ARG:0):로주, 1.2
+		ENDIF
+	ENDIF
+ENDIF
+
+IF TALENT:(ARG:0):Ｓ기질
+	IF CUP:(ARG:0):로주 > 0
+		IF TALENT:(ARG:0):아이인질
+			TIMES CUP:(ARG:0):로주, 1.1
+		ELSE
+			TIMES CUP:(ARG:0):로주, 1.15
+		ENDIF
+	ENDIF
+	IF CUP:(ARG:0):포주 > 0
+		TIMES CUP:(ARG:0):포주, 0.80
+	ENDIF
+ENDIF
+
+IF TALENT:(ARG:0):소악마
+	IF CUP:(ARG:0):로주 > 0
+		TIMES CUP:(ARG:0):로주, 0.90
+	ENDIF
+	IF CUP:(ARG:0):액주 > 0
+		TIMES CUP:(ARG:0):액주, 0.60
+	ENDIF
+	IF CUP:(ARG:0):포주 > 0
+		TIMES CUP:(ARG:0):포주, 0.60
+	ENDIF
+ENDIF
+
+IF (IS_MPLY(ARG:0) && IS_MTAR(MASTER)) || (IS_MTAR(ARG:0) && IS_MPLY(MASTER))
+	IF TALENT:(ARG:0):친애
+		CUP:(ARG:0):로주 = SET_RATE_EMOTION(CUP:(ARG:0):로주,  60, 200)
+		CUP:(ARG:0):액주 = SET_RATE_EMOTION(CUP:(ARG:0):액주,  60, 200)
+		CUP:(ARG:0):포주 = SET_RATE_EMOTION(CUP:(ARG:0):포주,  60, 200)
+	ELSEIF TALENT:(ARG:0):연모 || TALENT:(ARG:0):친구
+		CUP:(ARG:0):로주 = SET_RATE_EMOTION(CUP:(ARG:0):로주,  80, 150)
+		CUP:(ARG:0):액주 = SET_RATE_EMOTION(CUP:(ARG:0):액주,  80, 150)
+		CUP:(ARG:0):포주 = SET_RATE_EMOTION(CUP:(ARG:0):포주,  80, 150)
+	ELSEIF TALENT:(ARG:0):연인
+		CUP:(ARG:0):로주 = SET_RATE_EMOTION(CUP:(ARG:0):로주,  80, 120)
+		CUP:(ARG:0):액주 = SET_RATE_EMOTION(CUP:(ARG:0):액주,  80, 120)
+		CUP:(ARG:0):포주 = SET_RATE_EMOTION(CUP:(ARG:0):포주,  80, 120)
+	ENDIF
+
+	IF TALENT:(ARG:0):예속
+		CUP:(ARG:0):로주 = SET_RATE_EMOTION(CUP:(ARG:0):로주,  10, 300)
+		CUP:(ARG:0):액주 = SET_RATE_EMOTION(CUP:(ARG:0):액주,  20, 250)
+		CUP:(ARG:0):포주 = SET_RATE_EMOTION(CUP:(ARG:0):포주, 150,  50)
+	ELSEIF TALENT:(ARG:0):복종
+		CUP:(ARG:0):로주 = SET_RATE_EMOTION(CUP:(ARG:0):로주,  50, 200)
+		CUP:(ARG:0):액주 = SET_RATE_EMOTION(CUP:(ARG:0):액주,  50, 200)
+		CUP:(ARG:0):포주 = SET_RATE_EMOTION(CUP:(ARG:0):포주, 125,  75)
+	ENDIF
+
+	IF TALENT:(ARG:0):소유자
+		CUP:(ARG:0):로주 = SET_RATE_EMOTION(CUP:(ARG:0):로주,  60, 200)
+		CUP:(ARG:0):액주 = SET_RATE_EMOTION(CUP:(ARG:0):액주,  60, 200)
+		CUP:(ARG:0):포주 = SET_RATE_EMOTION(CUP:(ARG:0):포주,  60, 200)
+	ELSEIF TALENT:(ARG:0):주인
+		CUP:(ARG:0):로주 = SET_RATE_EMOTION(CUP:(ARG:0):로주,  80, 150)
+		CUP:(ARG:0):액주 = SET_RATE_EMOTION(CUP:(ARG:0):액주,  80, 150)
+		CUP:(ARG:0):포주 = SET_RATE_EMOTION(CUP:(ARG:0):포주,  80, 150)
+	ENDIF
+	
+	IF TALENT:(ARG:0):낙인
+		CUP:(ARG:0):로주 = SET_RATE_EMOTION(CUP:(ARG:0):로주,  75, 125)
+		CUP:(ARG:0):포주 = SET_RATE_EMOTION(CUP:(ARG:0):포주, 110,  75)
+	ENDIF
+ENDIF
+
+;Ａ쾌락에 의한 보정
+LOCAL:0 = CUP:(ARG:0):쾌Ａ
+IF LOCAL:0 >= 12000
+	IF CUP:(ARG:0):로주 > 0
+		TIMES CUP:(ARG:0):로주, 0.70
+	ENDIF
+ELSEIF LOCAL:0 >= 8000
+	IF CUP:(ARG:0):로주 > 0
+		TIMES CUP:(ARG:0):로주, 0.75
+	ENDIF
+ELSEIF LOCAL:0 >= 5000
+	IF CUP:(ARG:0):로주 > 0
+		TIMES CUP:(ARG:0):로주, 0.80
+	ENDIF
+ELSEIF LOCAL:0 >= 3000
+	IF CUP:(ARG:0):로주 > 0
+		TIMES CUP:(ARG:0):로주, 0.85
+	ENDIF
+ELSEIF LOCAL:0 >= 2000
+	IF CUP:(ARG:0):로주 > 0
+		TIMES CUP:(ARG:0):로주, 0.90
+	ENDIF
+ELSEIF LOCAL:0 >= 1000
+	IF CUP:(ARG:0):로주 > 0
+		TIMES CUP:(ARG:0):로주, 0.95
+	ENDIF
+ENDIF
+
+;기분의 영향
+SELECTCASE TOSTR_EMOTION(ARG:0)
+	CASE "행복"
+	CASE "기쁨"
+	CASE "양호"
+	CASE "원한"
+	CASE "분노"
+	CASE "분개"
+	CASE "암울"
+	CASE "슬픔"
+	CASE "우울"
+	CASE "광기"
+	CASE "공포"
+	CASE "겁냄"
+	CASE "붕괴"
+		CUP:(ARG:0):로주 = 0
+		CUP:(ARG:0):액주 = 0
+		CUP:(ARG:0):포주 = 0
+	CASE "공허"
+ENDSELECT
+
+;정신력의 영향
+IF MAXBASE:(ARG:0):정신력 > 0
+	LOCAL:0 = BASE:(ARG:0):정신력 * 100 / MAXBASE:(ARG:0):정신력
+ELSE
+	LOCAL:0 = 100
+ENDIF
+IF LOCAL:0 < 50
+	TIMES CUP:(ARG:0):로주, 0.10
+	TIMES CUP:(ARG:0):액주, 0.10
+	TIMES CUP:(ARG:0):포주, 1.7
+ELSEIF LOCAL:0 < 75
+	TIMES CUP:(ARG:0):로주, 0.50
+	TIMES CUP:(ARG:0):액주, 0.50
+	TIMES CUP:(ARG:0):포주, 1.25
+ENDIF
+
+;취기의 영향
+IF PALAM:(ARG:0):취기 >= 150
+	CUP:(ARG:0):로주 = MIN(CUP:(ARG:0):로주 * (15000 - PALAM:(ARG:0):취기) / 15000, CUP:(ARG:0):로주) - PALAM:(ARG:0):취기 / 150
+	CUP:(ARG:0):액주 = MIN(CUP:(ARG:0):액주 * (15000 - PALAM:(ARG:0):취기) / 15000, CUP:(ARG:0):액주) - PALAM:(ARG:0):취기 / 150
+	CUP:(ARG:0):포주 = MIN(CUP:(ARG:0):포주 * (15000 - PALAM:(ARG:0):취기) / 15000, CUP:(ARG:0):포주) - PALAM:(ARG:0):취기 / 150
+ENDIF
+
+IF TALENT:(ARG:0):억압
+	;모든 감정이 자동적으로 0에가까워짐
+	CUP:(ARG:0):로주 -= SIGN(PALAM:(ARG:0):로주 + CUP:(ARG:0):로주) * MIN(100, ABS(PALAM:(ARG:0):로주 + CUP:(ARG:0):로주))
+	CUP:(ARG:0):액주 -= SIGN(PALAM:(ARG:0):액주 + CUP:(ARG:0):액주) * MIN(100, ABS(PALAM:(ARG:0):액주 + CUP:(ARG:0):액주))
+	CUP:(ARG:0):포주 -= SIGN(PALAM:(ARG:0):포주 + CUP:(ARG:0):포주) * MIN(100, ABS(PALAM:(ARG:0):포주 + CUP:(ARG:0):포주))
+	CUP:(ARG:0):로외 -= SIGN(PALAM:(ARG:0):로외 + CUP:(ARG:0):로외) * MIN(100, ABS(PALAM:(ARG:0):로외 + CUP:(ARG:0):로외))
+	CUP:(ARG:0):액외 -= SIGN(PALAM:(ARG:0):액외 + CUP:(ARG:0):액외) * MIN(100, ABS(PALAM:(ARG:0):액외 + CUP:(ARG:0):액외))
+	CUP:(ARG:0):포외 -= SIGN(PALAM:(ARG:0):포외 + CUP:(ARG:0):포외) * MIN(100, ABS(PALAM:(ARG:0):포외 + CUP:(ARG:0):포외))
+ENDIF
+
+;츤데레＆연모＆비연인＆「만나러간다」＆비우후후
+IF TALENT:(ARG:0):츤데레 && !IS_LOVER(ARG:0) && !IS_SLAVE(ARG:0) && FLAG:조교모드 == 0 && !FLAG:우후후플래그
+	;로·액의 감정이 내리지 않는다
+	CUP:(ARG:0):로주 = MAX(CUP:(ARG:0):로주, 0)
+	CUP:(ARG:0):액주 = MAX(CUP:(ARG:0):액주, 0)
+ENDIF
+;-------------------------------------------------
+;소질<억압>에 의한 여러 가지의 보정율을 돌려주는 함수 ARG:0은 대상의 캐릭터 번호
+;-------------------------------------------------
+@YOKUATSU_RATE(ARG:0)
+#FUNCTION
+IF CFLAG:(ARG:0):3 < 10
+	RETURNF 70
+ELSEIF CFLAG:(ARG:0):3 < 50
+	RETURNF 60
+ELSEIF CFLAG:(ARG:0):3 < 100
+	RETURNF 50
+ELSEIF CFLAG:(ARG:0):3 < 200
+	RETURNF 40
+ELSEIF CFLAG:(ARG:0):3 < 300
+	RETURNF 30
+ELSEIF CFLAG:(ARG:0):3 < 500
+	RETURNF 20
+ELSEIF CFLAG:(ARG:0):3 < 800
+	RETURNF 10
+ELSEIF CFLAG:(ARG:0):3 < 1500
+	RETURNF 5
+ELSEIF CFLAG:(ARG:0):3 < 3000
+	RETURNF 1
+ENDIF
+RETURNF 1
+
+;-------------------------------------------------
+;소질<고고함>에 의한 여러 가지의 보정율을 돌려주는 함수 ARG:0은 대상의 캐릭터 번호
+;-------------------------------------------------
+@KOKOU_RATE(ARG:0)
+#FUNCTION
+IF TALENT:(ARG:0):아이인질
+	IF CFLAG:(ARG:0):3 < 10
+		RETURNF 49
+	ELSEIF CFLAG:(ARG:0):3 < 50
+		RETURNF 42
+	ELSEIF CFLAG:(ARG:0):3 < 100
+		RETURNF 35
+	ELSEIF CFLAG:(ARG:0):3 < 200
+		RETURNF 28
+	ELSEIF CFLAG:(ARG:0):3 < 300
+		RETURNF 21
+	ELSEIF CFLAG:(ARG:0):3 < 500
+		RETURNF 14
+	ELSEIF CFLAG:(ARG:0):3 < 800
+		RETURNF 7
+	ELSEIF CFLAG:(ARG:0):3 < 1500
+		RETURNF 4
+	ELSEIF CFLAG:(ARG:0):3 < 3000
+		RETURNF 1
+	ENDIF
+ELSE
+	IF CFLAG:(ARG:0):3 < 10
+		RETURNF 70
+	ELSEIF CFLAG:(ARG:0):3 < 50
+		RETURNF 60
+	ELSEIF CFLAG:(ARG:0):3 < 100
+		RETURNF 50
+	ELSEIF CFLAG:(ARG:0):3 < 200
+		RETURNF 40
+	ELSEIF CFLAG:(ARG:0):3 < 300
+		RETURNF 30
+	ELSEIF CFLAG:(ARG:0):3 < 500
+		RETURNF 20
+	ELSEIF CFLAG:(ARG:0):3 < 800
+		RETURNF 10
+	ELSEIF CFLAG:(ARG:0):3 < 1500
+		RETURNF 5
+	ELSEIF CFLAG:(ARG:0):3 < 3000
+		RETURNF 1
+	ENDIF
+ENDIF
+RETURNF 1
+
+;-------------------------------------------------
+;치 ARG:0에, 정이라면(ARG:1)/100을, 부라면(ARG:2)/100을 거는 함수
+;-------------------------------------------------
+@SET_RATE_EMOTION(ARG:0, ARG:1, ARG:2)
+#FUNCTION
+IF ARG:0 >= 0
+	RETURNF ARG:0 * ARG:1 / 100
+ENDIF
+RETURNF -(ABS(ARG:0) * ARG:2 / 100)

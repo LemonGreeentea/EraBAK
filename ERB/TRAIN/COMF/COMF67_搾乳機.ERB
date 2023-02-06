@@ -1,0 +1,257 @@
+﻿;착유기
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME67
+LOCALS:0 = 착유기
+
+RESULTS:0 = %LOCALS:0%로 꾸짖는다
+RESULTS:1 = %LOCALS:0%로 봉사한다
+RESULTS:2 = %LOCALS:0%로 봉사시킨다
+RESULTS:3 = %LOCALS:0%로 꾸짖을 수 있다
+RESULTS:4 = %LOCALS:0%로 꾸짖게 한다
+RESULTS:5 = %LOCALS:0%과시하고
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE67
+;공통 부분
+CALL COM_ABLE_COMMON(67)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 1명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 1
+	RETURN 0
+;타겟은 1명 이상
+SIF MTAR_NUM <= 0
+	RETURN 0
+;플레이어가 행동불능이라면 불가
+SIF !IS_PLAYABLE(MPLY:0)
+	RETURN 0
+;착유기가 필요
+SIF !ITEM:착유기 && !ITEM:A_착유기
+	RETURN 0
+
+;플레이어가 안면승마 되고 있다면 불가
+SIF IS_RIDDEN(MPLY:0)
+	RETURN 0
+;플레이어가 구속중이라면 불가
+SIF IS_BIND(MPLY:0)
+	RETURN 0
+FOR LOCAL, 0, MTAR_NUM
+	;모유체질이 필요
+	SIF !TALENT:(MTAR:LOCAL):모유체질
+		RETURN 0
+	;타겟으로부터 플레이어에 삽입중에서 체위가 후배위·배면좌위라면 불가
+	SIF GROUPMATCH(GET_SEX_POSITION(MTAR:LOCAL, MPLY:0), 2, 4)
+		RETURN 0
+	;에 프르캐프 포함하고 이미 장착중이라면 불가
+	SIF IS_EQUIP_TARGET(MTAR:LOCAL, 64, 67)
+		RETURN 0
+	;플레이어로부터 타겟으로 엉덩이코키중이라면 불가
+	SIF SEARCH_EQUIP(15, MPLY:0, MTAR:LOCAL) >= 0
+		RETURN 0
+NEXT
+;플레이어가 쿤닐링구스·대딸·페라·파이즈리·전기안마중이라면 불가
+SIF IS_EQUIP_PLAYER(MPLY:0, 2, 10, 11, 12, 103)
+	RETURN 0
+
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM67
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;●플레이어에 대해 처리
+DOWNBASE:(MPLY:0):체력 += 60
+
+EXP:(MPLY:0):성기술경험치 += MTAR_NUM / 2 + 1
+
+SOURCE:(MPLY:0):봉사 = SERVE_HOUSHI(MPLY:0, 200)
+SOURCE:(MPLY:0):접촉 = 10
+SOURCE:(MPLY:0):성행동 = 90
+
+;주도권에 응한 우월·굴종의 소스 추가
+CALL ADD_SOURCE_INITIATIVE_U(MPLY:0, 150, 20)
+
+;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+TCVAR:(MPLY:0):4 = 1
+
+FOR LOCAL, 0, MTAR_NUM
+	LOCAL:2 = MTAR:LOCAL
+	;●타겟으로 붙어 처리
+	DOWNBASE:(LOCAL:2):체력 += 60
+
+	SOURCE:(LOCAL:2):노출 = 50
+	SOURCE:(LOCAL:2):일탈 = 120
+	SOURCE:(LOCAL:2):접촉 = 10
+	SOURCE:(LOCAL:2):성행동 = 180
+	IF TALENT:(MPLY:0):기사
+		SOURCE:(LOCAL:2):쾌Ｂ = SENSE_HOUSHI(MPLY:0, LOCAL:2, 900)
+		SOURCE:(LOCAL:2):착유 = SENSE_HOUSHI(MPLY:0, LOCAL:2, 1000)
+	ELSE
+		SOURCE:(LOCAL:2):쾌Ｂ = SENSE_HOUSHI(MPLY:0, LOCAL:2, 600)
+		SOURCE:(LOCAL:2):착유 = SENSE_HOUSHI(MPLY:0, LOCAL:2, 700)
+	ENDIF
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:2, 50, 20)
+
+NEXT
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = 1
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 2
+
+RETURN 1
+
+;-------------------------------------------------
+;계속 커맨드인가 어떤가를 설정
+;-------------------------------------------------
+@COM_IS_EQUIP67
+RETURN 1
+
+;-------------------------------------------------
+;계속 상태의 처리
+;-------------------------------------------------
+@COM_EQUIP67(ARG:0)
+LOCAL:2 = MEQUIP_PLAYER:(ARG:0):0
+SOURCE:(LOCAL:2):성행동 += 30
+
+FOR LOCAL:0, 0, MEQUIP_TARGET_NUM:(ARG:0)
+	LOCAL:3 = MEQUIP_TARGET:(ARG:0):(LOCAL:0)
+	IF TALENT:(LOCAL:2):기사
+		SOURCE:(LOCAL:3):쾌Ｂ += SENSE_HOUSHI(LOCAL:2, LOCAL:3, 600)
+		SOURCE:(LOCAL:3):착유 += SENSE_HOUSHI(LOCAL:2, LOCAL:3, 600)
+	ELSE
+		SOURCE:(LOCAL:3):쾌Ｂ += SENSE_HOUSHI(LOCAL:2, LOCAL:3, 400)
+		SOURCE:(LOCAL:3):착유 += SENSE_HOUSHI(LOCAL:2, LOCAL:3, 400)
+	ENDIF
+	SOURCE:(LOCAL:3):노출 += 20
+	SOURCE:(LOCAL:3):일탈 += 50
+	SOURCE:(LOCAL:3):성행동 += 60
+NEXT
+
+;-------------------------------------------------
+;계속중의 표시
+;-------------------------------------------------
+@EQUIP_MESSAGE67(ARG:0)
+RESULTS = %EQUIP_TARGET_ANAME(ARG:0)%에 착유기를 장착중
+
+;-------------------------------------------------
+;계속중의 지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE_EQUIP67(ARG:0)
+PRINTFORML 착유기가 %조사처리(EQUIP_TARGET_ANAME(ARG:0),"로")%부터 모유를 빨아 올리고 있다…
+
+;-------------------------------------------------
+;계속을 해제했을 때의 지문
+;-------------------------------------------------
+@COM_TEXT_RELEASE_EQUIP67(ARG:0)
+PRINTFORMW %EQUIP_TARGET_ANAME(ARG:0)%의 모유를 짜내는 착유기를 제외했다
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER67(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 65
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 4)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 1, 10))
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -1)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 6)
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -1)
+ENDIF
+
+;합의
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -10)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE67
+IF IS_PIERCED(MTAR:0, 피어스_유두)
+	LOCALS:0 = 피어스가 장착된
+ELSE
+	LOCALS:0 = 
+ENDIF
+
+SELECTCASE GET_BUSTSIZE(MTAR:0)
+	CASE -2, -1
+		LOCALS:0 = 좀 작으면서도 밀크를 저축한 유방
+	CASE 0
+		LOCALS:0 = 적당한 사이즈의 밀크를 저축한 유방
+	CASE 1
+		LOCALS:0 = 휘어지게 여무는 밀크를 저축한 유방
+	CASE 2
+		LOCALS:0 = 터질듯한 밀크를 저축한 유방
+ENDSELECT
+
+IF MTAR_NUM >= 2
+	LOCALS:1 = %ANAME(MTAR:0)%들
+ELSE
+	LOCALS:1 = %ANAME(MTAR:0)%
+ENDIF
+
+SELECTCASE GET_COM_INITIATIVE()
+	;플레이어에 주도권
+	CASE 0
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 %LOCALS:0%에 착유기를 매달%TARGET_STR("았다", "아 왔다")%…
+	;타겟으로 주도권
+	CASE 1
+		PRINTFORMW %조사처리(LOCALS:1,"는")% %ANAME(MPLY:0)%에 착유기를 잡게 해 자신의 %LOCALS:0%에 달게 했다…
+	;제삼자에게 주도권
+	CASEELSE
+		PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에게, %LOCALS:1%에 착유기를 달도록(듯이) 명령했다
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 %LOCALS:0%에 착유기를 달았다…
+ENDSELECT
+
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST67
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN67
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_67()
+RETURN POWER(2, 성적기호_도구를사용하고싶다) + POWER(2, 성적기호_학대하고싶다)
+
+@COM_PREFERENCE_TARGET_67()
+RETURN POWER(2, 성적기호_도구를사용되고싶다) + POWER(2, 성적기호_시달리고싶다)
+

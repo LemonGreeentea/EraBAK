@@ -1,0 +1,199 @@
+﻿;-------------------------------------------------
+;사관의 요구의 처리
+;ARG:0은 상대의 세력 번호, ARG:1은 요구의 무게. 요구를 마시면 1, 거절하면 0을 돌려준다
+;-------------------------------------------------
+@DIPLOMACTY_REQUESTED_CHARA(ARG:0, ARG:1)
+;자국·상대 세력의 군주의 캐릭터 번호를 취득
+LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+LOCAL:5 = GET_COUNTRY_BOSS(ARG:0)
+
+;경도·중도의 경우, 일정 능력 이상의 사관으로부터 선택
+IF ARG:1 == 0 || ARG:1 == 1
+	PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")%, 이쪽의 제안을 마시는 대신에 유능한 사관을 한사람 인도하라고 요구했다
+	IF ARG:1 == 0
+		CALL DIPLOMACY_REQUESTED_CHARA_SELECT(ARG:0, 65)
+	ELSE
+		CALL DIPLOMACY_REQUESTED_CHARA_SELECT(ARG:0, 80)
+	ENDIF
+
+	IF RESULT
+		RETURN 1
+	ENDIF
+
+;중증의 경우, 사관을 지정
+ELSE
+	LOCAL:10 = -1
+	LOCAL:11 = 0
+
+	;1/4의 확률로 가장 주인공에게로의 호감도가 높은 캐릭터를 지정
+	IF RAND:4 == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속 && LOCAL:0 != MASTER && LOCAL:0 != LOCAL:4
+				LOCAL:12 = CFLAG:(LOCAL:0):2
+				IF LOCAL:12 >= LOCAL:11
+					LOCAL:10 = LOCAL:0
+					LOCAL:11 = LOCAL:12
+				ENDIF
+			ENDIF
+		NEXT
+	;3/4의 확률로 가장 능력이 높은 캐릭터를 지정
+	ELSE
+		FOR LOCAL:0, 0, CHARANUM
+			IF CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속 && LOCAL:0 != MASTER && LOCAL:0 != LOCAL:4
+				LOCAL:12 = ABL_POWER(ABL:(LOCAL:0):무투, -1) + ABL_POWER(ABL:(LOCAL:0):방위, -1) + ABL_POWER(ABL:(LOCAL:0):지략, -1) + ABL_POWER(ABL:(LOCAL:0):정치, -1)
+				LOCAL:12 += ABL_POWER(ABL:(LOCAL:0):가창, -1) + ABL_POWER(ABL:(LOCAL:0):요리, -1)
+				IF LOCAL:12 >= LOCAL:11
+					LOCAL:10 = LOCAL:0
+					LOCAL:11 = LOCAL:12
+				ENDIF
+			ENDIF
+		NEXT
+	ENDIF
+
+	IF LOCAL:10 < 0
+		PRINTW 에러:대상이 되는 사관이 존재하지 않습니다 @DIPLOMACTY_REQUESTED_CHARA 요구(겹)
+	ELSE
+		PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")%, 이쪽의 제안을 마시는 대신에 %조사처리(ANAME(LOCAL:10),"를")% 인도하라고 요구했다
+		CALL ASK_YN("받아들인다", "거절한다")
+		IF RESULT == 0
+			PRINTFORML %조사처리(ANAME(LOCAL:10),"는")% %ANAME(LOCAL:5)% 세력의 사관이 되었습니다…
+			CALL CHANGE_COUNTRY(LOCAL:10, ARG:0, 1)
+			RETURN 1
+		ENDIF
+	ENDIF
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;ARG:0 세력에 인도하는 사관을 선택하는 함수 ARG:1은 능력치의 하한
+;-------------------------------------------------
+@DIPLOMACY_REQUESTED_CHARA_SELECT(ARG:0, ARG:1)
+#DIM FIRST_LINE
+LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+LOCAL:5 = GET_COUNTRY_BOSS(ARG:0)
+
+;대상이 되는 사관의 수를 센다
+LOCAL:6 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속 && LOCAL:0 != MASTER && LOCAL:0 != LOCAL:4 && !CFLAG:(LOCAL:0):포로처
+		IF ABL:(LOCAL:0):무투 >= ARG:1 || ABL:(LOCAL:0):방위 >= ARG:1 || ABL:(LOCAL:0):지략 >= ARG:1 || ABL:(LOCAL:0):정치 >= ARG:1 || ABL:(LOCAL:0):가창 >= ARG:1 || ABL:(LOCAL:0):요리 >= ARG:1
+			LOCAL:6 ++
+		ENDIF
+	ENDIF
+NEXT
+
+LOCAL:20 = 1
+
+;1페이지에 표시하는 최대 캐릭터수의 설정
+LOCAL:7 = 44
+
+;페이지수를 계산
+LOCAL:8 = (LOCAL:6 - 1) / LOCAL:7 + 1
+
+$SHOW_LOOP1
+
+CALL SINGLE_DRAWLINE
+PRINTFORML ★★인도하는 사관을 선택해 주세요★★
+PRINTFORML (최대 능력이 {ARG:1} 이상의 사관으로부터 선택)
+CALL SINGLE_DRAWLINE
+FIRST_LINE = LINECOUNT
+$SHOW_LOOP2
+
+LOCAL:10 = LOCAL:7 * (LOCAL:20 - 1)
+LOCAL:11 = LOCAL:7 * LOCAL:20
+LOCAL:12 = 0
+LOCAL:13 = 0
+
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속 && LOCAL:0 != MASTER && LOCAL:0 != LOCAL:4 && !CFLAG:(LOCAL:0):포로처
+		IF ABL:(LOCAL:0):무투 >= ARG:1 || ABL:(LOCAL:0):방위 >= ARG:1 || ABL:(LOCAL:0):지략 >= ARG:1 || ABL:(LOCAL:0):정치 >= ARG:1 || ABL:(LOCAL:0):가창 >= ARG:1 || ABL:(LOCAL:0):요리 >= ARG:1
+			IF LOCAL:13 >= LOCAL:10 && LOCAL:13 < LOCAL:11
+				IF LOCAL:12 % 2 != 0
+					PRINTPLAIN   
+				ELSE
+					IF LOCAL:12 >= 1
+						PRINTL 
+					ENDIF
+					PRINTPLAIN   
+				ENDIF
+				CALL PRINT_PARTNER_DATA(LOCAL:0)
+				LOCAL:12 ++
+			ENDIF
+			LOCAL:13 ++
+		ENDIF
+	ENDIF
+NEXT
+IF LOCAL:12 >= 1
+	PRINTL 
+ENDIF
+
+IF LOCAL:8 >= 2
+	CALL SINGLE_DRAWLINE
+	PRINTPLAIN   
+	IF LOCAL:20 >= 2
+		PRINTBUTTON "  54[이전페이지    ]", 54
+	ELSE
+		SETCOLOR 칼라_선택불가
+		PRINTPLAINFORM   54[이전페이지    ]
+		RESETCOLOR
+	ENDIF
+
+	PRINTPLAINFORM         page{LOCAL:20, 2, RIGHT}/{LOCAL:8, 2, LEFT}     
+	IF LOCAL:20 < LOCAL:8
+		PRINTBUTTON "  56[다음페이지    ]", 56
+	ELSE
+		SETCOLOR 칼라_선택불가
+		PRINTPLAINFORM   56[다음페이지    ]
+		RESETCOLOR
+	ENDIF
+	PRINTL 
+ENDIF
+
+CALL SINGLE_DRAWLINE
+PRINTPLAIN   
+PRINTBUTTON "   0[거절한다          ]", 0
+
+REDRAW 0
+
+$INPUT_LOOP
+INPUT
+
+IF RESULT == 0
+	REDRAW 1
+	RETURN 0
+ELSEIF RESULT == 54 && LOCAL:20 >= 2
+	LOCAL:20 --
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP2
+ELSEIF RESULT == 56 && LOCAL:20 < LOCAL:8
+	LOCAL:20 ++
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP2
+ENDIF
+
+LOCAL:15 = NO_TO_CHARA(RESULT - 100)
+
+IF LOCAL:15 >= 0 && CFLAG:(LOCAL:15):소속 == CFLAG:MASTER:소속 && LOCAL:15 != MASTER && LOCAL:15 != LOCAL:4 && !CFLAG:(LOCAL:15):포로처
+	IF ABL:(LOCAL:15):무투 >= ARG:1 || ABL:(LOCAL:15):방위 >= ARG:1 || ABL:(LOCAL:15):지략 >= ARG:1 || ABL:(LOCAL:15):정치 >= ARG:1 || ABL:(LOCAL:15):가창 >= ARG:1 || ABL:(LOCAL:15):요리 >= ARG:1
+		REDRAW 1
+
+		;대상 캐릭터의 정보를 표시
+		CALL SINGLE_DRAWLINE
+		CALL SHOW_INFO(LOCAL:15)
+		CALL SINGLE_DRAWLINE
+		PRINTFORML 이 캐릭터를 이적시킵니까?
+
+		;네／아니오 입력 처리
+		CALL ASK_YN()
+		IF RESULT == 0
+			PRINTFORML %ANAME(LOCAL:15)%는 %ANAME(LOCAL:5)% 세력의 사관이 되었습니다…
+			CALL CHANGE_COUNTRY(LOCAL:15, ARG:0, 1)
+			RETURN 1
+		ENDIF
+	ENDIF
+	GOTO SHOW_LOOP1
+ENDIF
+CLEARLINE 1
+GOTO INPUT_LOOP
+

@@ -1,0 +1,365 @@
+﻿
+;이 파일의 SAMPLE의 곳을 각각의 맵의 MAPID에 옮겨놓자
+@DRAWMAP_SAMPLE(ARG:0 = 0)
+
+;맵을 쓰기 위한 초기설정을 하는 함수  자세한 것은 함수의 코멘트를 보면 좋지만 주술로도 사용할 수 있다
+CALL DRAWMAP_INIT(ARG:0, , 1)
+
+;여기에 맵을 쓴다
+;도시명은 각각 입지 않는 단축명을 결정해 기입하자 CITY_NAME_SHORT와 일치시킨다
+;옆에 연속으로 도시명을 늘어놓으면 경계선을 인식 할 수 없기에 사이에 뭔가 기호를 사이에 두자
+;도시명 세로 쓰기는 용서되지 않습니다
+;지도 전부 세로 27행 이하가 아니면 에러가 나온다
+;가로폭은 Default의 화면폭이 없기에 불명하지만 전각 47문자 이상은 화면으로부터 넘쳐 나올 가능성에 주의  Default 맵은 폭 44
+;굵은 선으로 도시와 도시의 연결을 표현하는 것이 일반적
+;중계지점은◇으로 기술하자 todo:중계지점에 사용하는 기호를 초기설정 할 수 있도록(듯이)한다
+;맵상에 도시의 단축명으로 일치하지 않는 문자열을 기입해도 괜찮다
+;가는 선으로 지역을 나타낸다는 일도 있다
+;지도를 쓰면 나머지의 인수에 그 행에 존재하는 중계지점의 이름을 등록한다  CITY_NAME로 등록하는 것과 일치시킨다
+;                    01　　　　　　　　　　　　　　　　　　　　222324　　　　　　　　　　　　　　　　　　　44　　47
+
+CALL DRAWMAP_LINE_S("　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　홋카이도　　　")
+CALL DRAWMAP_LINE_S("　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　┃　　　　")
+CALL DRAWMAP_LINE_S("　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　◇　　　　", "세이칸터널")
+CALL DRAWMAP_LINE_S("　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　┌토호쿠──╂───┐")
+CALL DRAWMAP_LINE_S("　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　｜　　┏━아오모리━┓｜")
+CALL DRAWMAP_LINE_S("　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　｜　　┃　　　　┃｜")
+CALL DRAWMAP_LINE_S("　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　｜　　아키타━━이와테｜")
+CALL DRAWMAP_LINE_S("　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　｜　　┃┃　　　┃｜")
+CALL DRAWMAP_LINE_S("　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　｜　　┃┗━━┓┃｜")
+CALL DRAWMAP_LINE_S("　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　｜　　야마가타━━미야기｜")
+CALL DRAWMAP_LINE_S("　　　　　　　　　　　　　　　　　　　　　　　　┌중부───────┤┏━┛┃　　　┃｜")
+CALL DRAWMAP_LINE_S("　　　　　　　　　　　　　　　　　　　　　　　　｜　　　　　　　┏━┿┛　　┃┏━━┛｜")
+CALL DRAWMAP_LINE_S("　　　　　　　　　　　　　　　　　　　　　　　　｜이시카와┓  ┏━니이가타━┿━━━후쿠시마━━┓｜")
+CALL DRAWMAP_LINE_S("　　　　　　　　　　　　　　　　　　　　　　　　｜┃┃┗토야마┓┃┗┓├─┏━┛╂──╂┤")
+CALL DRAWMAP_LINE_S("　　　　　　　　┌중국─────┬킨키─────┤┃┗━┓┃┃┃  ┗┿┓┃┏토치기━이바라키｜")
+CALL DRAWMAP_LINE_S("　　　　　　　　│  ┏시마네━톳토리┿┓　　　　　┏┿후쿠이┓┃┃┃┃┏━┿군마┛┃┏━┛┃｜")
+CALL DRAWMAP_LINE_S("　　　　　　　　│야마구치┃┏━┛┃┏효고━━┓┏┛└╂┐┃┃┃┗나가노┓└─┗━사이타마━┓┃｜")
+CALL DRAWMAP_LINE_S("　　┌큐슈───┤┃┗히로시마━오카야마┛┃┗┓┏쿄토━시가┿기후┛┏┛┃┃  ┏┿━┛┃  ┃┃｜")
+CALL DRAWMAP_LINE_S("　　│사가━후쿠오카┿◇┌╂──╂─┤┃  오사카┃┗━┓┃｜┃┃┏┛  ┃┗야마나시┿━도쿄━치바｜", "간문교")
+CALL DRAWMAP_LINE_S("　　│┃  ┏┛┃└─┤◇　　◇  ｜◇  ┃┗나라━삼중┿┛┃┃　　┃┏┛┗┿┓  ┃  ┃  ｜", "해마나미해도", "사토대교", "아와지섬")
+CALL DRAWMAP_LINE_S("　　│나가사키┃┏대단히  │┃　　┃  └╂┐┃  ┃　　┃┗┿━아이치━━시즈오카━━┿카나가와━◇  ｜", "아쿠아라인")
+CALL DRAWMAP_LINE_S("　　│　　쿠마모토  ┃  │┃┏━카가와┓┃｜와카야마━━┛  ├─────────┴───관동─┘")
+CALL DRAWMAP_LINE_S("　　│　　┃┗미야자키  │에히메━━━토쿠시마├───────┘　　　　　　　　　　　　　　　　　")
+CALL DRAWMAP_LINE_S("　　│  카고시마┛　　│┗━코우치━┛  │　　　　　　　　　　　　　　　　　　　　　　　　　")
+CALL DRAWMAP_LINE_S("　　└──╂────┴시코쿠─────┘　　　　　　　　　　　　　　　　　　　　　　　　　")
+CALL DRAWMAP_LINE_S("　　오키나와━◇　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　", "아마미오시마")
+CALL DRAWMAP_LINE_S("　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　")
+
+CALL DRAWMAP_END()
+
+;도시의 수를 설정하는 함수다  중계지점은 셀 필요가 없어
+@SET_CITY_NUM_SAMPLE()
+CITY_NUM = 47
+
+;지도에 표시하는 이름을 등록하는 함수  지도에서 실제로 사용하고 있는 표시와 번호를 묶기 위해서(때문에) 사용한다
+;CITY_NAME_SHORT:도시의 번호 =맵으로 표시하는 문자열
+@SET_SHORTCITYNAME_SAMPLE()
+CITY_NAME_SHORT:1 = 홋카이도
+CITY_NAME_SHORT:2 = 아오모리
+CITY_NAME_SHORT:3 = 이와테
+CITY_NAME_SHORT:4 = 아키타
+CITY_NAME_SHORT:5 = 미야기
+CITY_NAME_SHORT:6 = 야마가타
+CITY_NAME_SHORT:7 = 후쿠시마
+CITY_NAME_SHORT:8 = 니이가타
+CITY_NAME_SHORT:9 = 이바라키
+CITY_NAME_SHORT:10 = 토치기
+CITY_NAME_SHORT:11 = 군마
+CITY_NAME_SHORT:12 = 나가노
+CITY_NAME_SHORT:13 = 토야마
+CITY_NAME_SHORT:14 = 치바
+CITY_NAME_SHORT:15 = 사이타마
+CITY_NAME_SHORT:16 = 야마나시
+CITY_NAME_SHORT:17 = 시즈오카
+CITY_NAME_SHORT:18 = 아이치
+CITY_NAME_SHORT:19 = 기후
+CITY_NAME_SHORT:20 = 이시카와
+CITY_NAME_SHORT:21 = 도쿄
+CITY_NAME_SHORT:22 = 카나가와
+CITY_NAME_SHORT:23 = 삼중
+CITY_NAME_SHORT:24 = 시가
+CITY_NAME_SHORT:25 = 후쿠이
+CITY_NAME_SHORT:26 = 와카야마
+CITY_NAME_SHORT:27 = 나라
+CITY_NAME_SHORT:28 = 쿄토
+CITY_NAME_SHORT:29 = 오사카
+CITY_NAME_SHORT:30 = 효고
+CITY_NAME_SHORT:31 = 토쿠시마
+CITY_NAME_SHORT:32 = 오카야마
+CITY_NAME_SHORT:33 = 톳토리
+CITY_NAME_SHORT:34 = 코우치
+CITY_NAME_SHORT:35 = 에히메
+CITY_NAME_SHORT:36 = 카가와
+CITY_NAME_SHORT:37 = 히로시마
+CITY_NAME_SHORT:38 = 시마네
+CITY_NAME_SHORT:39 = 야마구치
+CITY_NAME_SHORT:40 = 후쿠오카
+CITY_NAME_SHORT:41 = 대단히
+CITY_NAME_SHORT:42 = 쿠마모토
+CITY_NAME_SHORT:43 = 사가
+CITY_NAME_SHORT:44 = 미야자키
+CITY_NAME_SHORT:45 = 카고시마
+CITY_NAME_SHORT:46 = 나가사키
+CITY_NAME_SHORT:47 = 오키나와
+
+;중계지점은 특별한 표시가 된다
+;todo:CITY_TYPE를 CONST로 취급하도록(듯이)한다
+FOR LOCAL:0, 0, MAX_CITY
+	SIF CITY_TYPE:(LOCAL:0) == 1
+		CITY_NAME_SHORT:(LOCAL:0) = ●
+NEXT
+
+;도시의 정식명칭과 중계지점의 명칭
+@SET_CITYNAME_SAMPLE()
+;에러 방지를 위해서(때문에) 한 번 초기화해 둔다
+;todo:여기서 하는 의미는 있어? 적절한 장소에 이동
+VARSET CITY_NAME, "무명"
+
+CITY_NAME:1 = 홋카이도
+CITY_NAME:2 = 아오모리현
+CITY_NAME:3 = 이와테현
+CITY_NAME:4 = 아키타현
+CITY_NAME:5 = 미야기현
+CITY_NAME:6 = 야마가타현
+CITY_NAME:7 = 후쿠시마현
+CITY_NAME:8 = 니가타현
+CITY_NAME:9 = 이바라키현
+CITY_NAME:10 = 토치기현
+CITY_NAME:11 = 군마현
+CITY_NAME:12 = 나가노현
+CITY_NAME:13 = 토야마현
+CITY_NAME:14 = 치바현
+CITY_NAME:15 = 사이타마현
+CITY_NAME:16 = 야마나시현
+CITY_NAME:17 = 시즈오카현
+CITY_NAME:18 = 아이치현
+CITY_NAME:19 = 기후현
+CITY_NAME:20 = 이시카와현
+CITY_NAME:21 = 도쿄도
+CITY_NAME:22 = 카나가와현
+CITY_NAME:23 = 미에현
+CITY_NAME:24 = 시가현
+CITY_NAME:25 = 후쿠이현
+CITY_NAME:26 = 와카야마현
+CITY_NAME:27 = 나라현
+CITY_NAME:28 = 쿄토부
+CITY_NAME:29 = 오사카부
+CITY_NAME:30 = 효고현
+CITY_NAME:31 = 토쿠시마현
+CITY_NAME:32 = 오카야마현
+CITY_NAME:33 = 톳토리현
+CITY_NAME:34 = 코우치현
+CITY_NAME:35 = 에히메현
+CITY_NAME:36 = 카가와현
+CITY_NAME:37 = 히로시마현
+CITY_NAME:38 = 시마네현
+CITY_NAME:39 = 야마구치현
+CITY_NAME:40 = 후쿠오카현
+CITY_NAME:41 = 오이타현
+CITY_NAME:42 = 쿠마모토현
+CITY_NAME:43 = 사가현
+CITY_NAME:44 = 미야자키현
+CITY_NAME:45 = 카고시마현
+CITY_NAME:46 = 나가사키현
+CITY_NAME:47 = 오키나와현
+
+;여기는 중계지점도 등록한다  지도에서 호출할 때 사용하는 이름인 것으로 잘못하지 않는 것
+CITY_NAME:50 = 세이칸터널
+CITY_NAME:51 = 아쿠아라인
+CITY_NAME:52 = 아와지섬
+CITY_NAME:53 = 사토대교
+CITY_NAME:54 = 해마나미해도
+CITY_NAME:55 = 간문교
+CITY_NAME:56 = 아마미오시마
+
+;CITY_TYPE를 설정하는 함수
+;todo:중계지점을 등록할 뿐(만큼)의 함수가 되어 있다  CITY_TYPE에 대한 확장이 되지 않으면 필요없는 것은 아닌지?   혹은 확장된다고 하면 어떻게?
+;todo:CITY_TYPE를 정수화한다
+@SET_CITY_TYPE_SAMPLE
+FOR LOCAL:0, 50, MAX_CITY
+	CITY_TYPE:(LOCAL:0) = 1
+NEXT
+
+;거점으로부터 연결되어있는 길을 등록한다
+@SET_MAP_ROUTE_SAMPLE
+;여기서 사용하는 이름은 CITY_NAME의 (분)편인 일에 주의
+CALL REGISTER_ROUTE_S(  "홋카이도",   "세이칸터널")
+CALL REGISTER_ROUTE_S(  "아오모리현", "이와테현",   "아키타현", "세이칸터널")
+CALL REGISTER_ROUTE_S(  "이와테현",   "아오모리현",   "아키타현",       "미야기현")
+CALL REGISTER_ROUTE_S(  "아키타현",   "아오모리현",   "이와테현",       "미야기현",       "야마가타현")
+CALL REGISTER_ROUTE_S(  "미야기현",   "이와테현",   "아키타현",       "야마가타현",       "후쿠시마현")
+CALL REGISTER_ROUTE_S(  "야마가타현", "아키타현",   "미야기현",       "후쿠시마현",       "니가타현")
+CALL REGISTER_ROUTE_S(  "후쿠시마현", "미야기현",   "야마가타현",       "니가타현",       "이바라키현",       "토치기현", "군마현")
+CALL REGISTER_ROUTE_S(  "니가타현",   "야마가타현",   "후쿠시마현",       "군마현",       "나가노현",       "토야마현")
+CALL REGISTER_ROUTE_S(  "이바라키현", "후쿠시마현",   "군마현",       "치바현",       "사이타마현")
+CALL REGISTER_ROUTE_S(  "토치기현",   "후쿠시마현",   "이바라키현",       "군마현",       "사이타마현")
+CALL REGISTER_ROUTE_S(  "군마현",     "후쿠시마현",   "니가타현",       "토치기현",       "나가노현",       "사이타마현")
+CALL REGISTER_ROUTE_S(  "나가노현",   "니가타현",   "군마현",       "토야마현",       "야마나시현",       "시즈오카현", "아이치현")
+CALL REGISTER_ROUTE_S(  "토야마현",   "니가타현",   "나가노현",       "기후현",       "이시카와현")
+CALL REGISTER_ROUTE_S(  "치바현",     "이바라키현",   "사이타마현",       "도쿄도", "아쿠아라인")
+CALL REGISTER_ROUTE_S(  "사이타마현",  "이바라키현",   "토치기현",       "군마현",       "치바현",       "야마나시현", "도쿄도")
+CALL REGISTER_ROUTE_S(  "야마나시현",  "나가노현",   "사이타마현",       "시즈오카현",       "도쿄도",     "카나가와현")
+CALL REGISTER_ROUTE_S(  "시즈오카현",  "나가노현",   "야마나시현",       "아이치현",     "카나가와현")
+CALL REGISTER_ROUTE_S(  "아이치현",    "나가노현",   "야마나시현",       "시즈오카현",       "기후현",       "미에현")
+CALL REGISTER_ROUTE_S(  "기후현",      "토야마현",   "아이치현",       "이시카와현",       "미에현",       "시가현", "후쿠이현")
+CALL REGISTER_ROUTE_S(  "이시카와현",  "토야마현",   "기후현",       "후쿠이현")
+CALL REGISTER_ROUTE_S(  "도쿄도",      "치바현",   "사이타마현",       "야마나시현",     "카나가와현")
+CALL REGISTER_ROUTE_S(  "카나가와현",  "야마나시현",   "도쿄도",       "시즈오카현", "아쿠아라인")
+CALL REGISTER_ROUTE_S(  "미에현",      "아이치현",   "기후현",       "시가현",     "와카야마현",       "나라현", "쿄토부")
+CALL REGISTER_ROUTE_S(  "시가현",      "기후현",   "미에현",       "후쿠이현",       "쿄토부")
+CALL REGISTER_ROUTE_S(  "후쿠이현",    "기후현",   "이시카와현",       "시가현",       "쿄토부")
+CALL REGISTER_ROUTE_S(  "와카야마현",  "미에현",   "나라현",       "오사카부")
+CALL REGISTER_ROUTE_S(  "나라현",      "미에현", "와카야마현",       "쿄토부",       "오사카부")
+CALL REGISTER_ROUTE_S(  "쿄토부",      "미에현",   "시가현",       "후쿠이현",       "나라현",       "오사카부", "효고현")
+CALL REGISTER_ROUTE_S(  "오사카부",    "와카야마현",   "나라현",       "쿄토부",       "효고현")
+CALL REGISTER_ROUTE_S(  "효고현",      "쿄토부",   "오사카부",       "오카야마현",       "톳토리현",       "아와지섬")
+CALL REGISTER_ROUTE_S(  "토쿠시마현",  "코우치현",   "에히메현",       "카가와현",       "아와지섬")
+CALL REGISTER_ROUTE_S(  "오카야마현",  "효고현",   "톳토리현",       "히로시마현",     "사토대교")
+CALL REGISTER_ROUTE_S(  "톳토리현",    "효고현",   "오카야마현",       "히로시마현",       "시마네현")
+CALL REGISTER_ROUTE_S(  "코우치현",    "토쿠시마현",   "에히메현")
+CALL REGISTER_ROUTE_S(  "에히메현",    "토쿠시마현",   "코우치현",       "카가와현", "해마나미해도")
+CALL REGISTER_ROUTE_S(  "카가와현",    "토쿠시마현",   "에히메현",     "사토대교")
+CALL REGISTER_ROUTE_S(  "히로시마현",  "오카야마현",   "톳토리현",       "시마네현",       "야마구치현", "해마나미해도")
+CALL REGISTER_ROUTE_S(  "시마네현",    "톳토리현",   "히로시마현",       "야마구치현")
+CALL REGISTER_ROUTE_S(  "야마구치현",  "히로시마현",   "시마네현",       "간문교")
+CALL REGISTER_ROUTE_S(  "후쿠오카현",  "오이타현",   "쿠마모토현",       "사가현",       "간문교")
+CALL REGISTER_ROUTE_S(  "오이타현",    "후쿠오카현",   "쿠마모토현",       "미야자키현")
+CALL REGISTER_ROUTE_S(  "쿠마모토현",  "후쿠오카현",   "오이타현",       "미야자키현",     "카고시마현")
+CALL REGISTER_ROUTE_S(  "사가현",      "후쿠오카현",   "나가사키현")
+CALL REGISTER_ROUTE_S(  "미야자키현",  "오이타현",   "쿠마모토현",     "카고시마현")
+CALL REGISTER_ROUTE_S(  "카고시마현",  "쿠마모토현",   "미야자키현",     "아마미오시마")
+CALL REGISTER_ROUTE_S(  "나가사키현",  "사가현")
+CALL REGISTER_ROUTE_S(  "오키나와현",  "아마미오시마")
+
+CALL REGISTER_ROUTE_S("세이칸터널", "홋카이도", "아오모리현")
+CALL REGISTER_ROUTE_S("아쿠아라인", "치바현", "카나가와현")
+CALL REGISTER_ROUTE_S("아와지섬", "효고현", "토쿠시마현")
+CALL REGISTER_ROUTE_S("사토대교", "오카야마현", "카가와현")
+CALL REGISTER_ROUTE_S("해마나미해도", "히로시마현", "에히메현")
+CALL REGISTER_ROUTE_S("간문교", "야마구치현", "후쿠오카현")
+CALL REGISTER_ROUTE_S("아마미오시마", "카고시마현", "오키나와현")
+
+
+;도시의 세세한 설정
+@MAP_INIT_SAMPLE
+
+;경제 규모의 초기화
+;여기에서는 적당하게 할당해지고 있지만 실제의 맵에서는 어느 정도 게임적으로 하기 위해서 지역 마다 경제 규모를 분산시키자
+;이런 관동 제일극히 집중의 맵이라든지 게임이 되지 않으니까
+CALL CITY_ECONOMY_S(  "홋카이도", 60000)
+CALL CITY_ECONOMY_S(  "아오모리현", 15000)
+CALL CITY_ECONOMY_S(  "이와테현", 15000)
+CALL CITY_ECONOMY_S(  "아키타현", 15000)
+CALL CITY_ECONOMY_S(  "미야기현", 30000)
+CALL CITY_ECONOMY_S(  "야마가타현", 15000)
+CALL CITY_ECONOMY_S(  "후쿠시마현", 30000)
+CALL CITY_ECONOMY_S(  "니가타현", 30000)
+CALL CITY_ECONOMY_S(  "이바라키현", 60000)
+CALL CITY_ECONOMY_S(  "토치기현", 30000)
+CALL CITY_ECONOMY_S(  "군마현", 30000)
+CALL CITY_ECONOMY_S(  "나가노현", 30000)
+CALL CITY_ECONOMY_S(  "토야마현", 15000)
+CALL CITY_ECONOMY_S(  "치바현", 60000)
+CALL CITY_ECONOMY_S(  "사이타마현", 60000)
+CALL CITY_ECONOMY_S(  "야마나시현", 15000)
+CALL CITY_ECONOMY_S(  "시즈오카현", 60000)
+CALL CITY_ECONOMY_S(  "아이치현", 100000)
+CALL CITY_ECONOMY_S(  "기후현", 30000)
+CALL CITY_ECONOMY_S(  "이시카와현", 15000)
+CALL CITY_ECONOMY_S(  "도쿄도", 125000)
+CALL CITY_ECONOMY_S(  "카나가와현", 100000)
+CALL CITY_ECONOMY_S(  "미에현", 30000)
+CALL CITY_ECONOMY_S(  "시가현", 30000)
+CALL CITY_ECONOMY_S(  "후쿠이현", 15000)
+CALL CITY_ECONOMY_S(  "와카야마현", 15000)
+CALL CITY_ECONOMY_S(  "나라현", 15000)
+CALL CITY_ECONOMY_S(  "쿄토부", 30000)
+CALL CITY_ECONOMY_S(  "오사카부", 100000)
+CALL CITY_ECONOMY_S(  "효고현", 60000)
+CALL CITY_ECONOMY_S(  "토쿠시마현", 15000)
+CALL CITY_ECONOMY_S(  "오카야마현", 30000)
+CALL CITY_ECONOMY_S(  "톳토리현", 15000)
+CALL CITY_ECONOMY_S(  "코우치현", 15000)
+CALL CITY_ECONOMY_S(  "에히메현", 30000)
+CALL CITY_ECONOMY_S(  "카가와현", 15000)
+CALL CITY_ECONOMY_S(  "히로시마현", 60000)
+CALL CITY_ECONOMY_S(  "시마네현", 15000)
+CALL CITY_ECONOMY_S(  "야마구치현", 30000)
+CALL CITY_ECONOMY_S(  "후쿠오카현", 60000)
+CALL CITY_ECONOMY_S(  "오이타현", 15000)
+CALL CITY_ECONOMY_S(  "쿠마모토현", 30000)
+CALL CITY_ECONOMY_S(  "사가현", 15000)
+CALL CITY_ECONOMY_S(  "미야자키현", 15000)
+CALL CITY_ECONOMY_S(  "카고시마현", 30000)
+CALL CITY_ECONOMY_S(  "나가사키현", 15000)
+CALL CITY_ECONOMY_S(  "오키나와현", 15000)
+
+;경제 규모의 상한치의 설정
+;여기도 좋을대로 하자
+FOR LOCAL:0, 1, MAX_CITY
+	CITY_ECONOMY_LIMIT:(LOCAL:0) = MIN(CITY_ECONOMY:(LOCAL:0) * 2, 300000)
+NEXT
+
+;방위배율의 기본 설정
+;수치%의 방어력 상승을 얻는다
+;이하는 원래로부터 붙여 있던 기준적인 것  지도 마다 어느 정도 기준을 결정하자
+;todo:정직 큰 차이가 나거나 하는 것은 아니기 때문에 좀 더 대담하게 숫자를 움직여도 괜찮은 것은 아닌지?
+;todo:기준은 원래 타고 있던 것을 사용하고 있으므로 게임 밸런스에 맞추어 어느 정도 숫자를 만지작거린다
+;방어 보정+25%
+	;잘 모르지만 방어력을 보다 높이고 싶은 장소에 옵션으로
+;방위 목적 거점+25%
+	;방위를 생각해 거점이 정비되고 있는 경우는 플러스
+;요새 도시 보정+25%
+	;그 중에서도 특히 방위를 중점에 두고 있는 것은 한층 더 플러스
+;지형 보정+25%
+;방어에 적합하지 않는 지형-15%
+	;그 외 주위의 지형으로 차이
+
+CALL CITY_GUARD_S(  "홋카이도", 150)
+CALL CITY_GUARD_S(  "아오모리현", 150)
+CALL CITY_GUARD_S(  "이와테현", 150)
+CALL CITY_GUARD_S(  "아키타현", 150)
+CALL CITY_GUARD_S(  "미야기현", 125)
+CALL CITY_GUARD_S(  "야마가타현", 150)
+CALL CITY_GUARD_S(  "후쿠시마현", 150)
+CALL CITY_GUARD_S(  "니가타현", 150)
+CALL CITY_GUARD_S(  "이바라키현", 85)
+CALL CITY_GUARD_S(  "토치기현", 125)
+CALL CITY_GUARD_S(  "군마현", 150)
+CALL CITY_GUARD_S(  "나가노현", 150)
+CALL CITY_GUARD_S(  "토야마현", 125)
+CALL CITY_GUARD_S(  "치바현", 85)
+CALL CITY_GUARD_S(  "사이타마현", 85)
+CALL CITY_GUARD_S(  "야마나시현", 175)
+CALL CITY_GUARD_S(  "시즈오카현", 150)
+CALL CITY_GUARD_S(  "아이치현", 100)
+CALL CITY_GUARD_S(  "기후현", 175)
+CALL CITY_GUARD_S(  "이시카와현", 150)
+CALL CITY_GUARD_S(  "도쿄도", 100)
+CALL CITY_GUARD_S(  "카나가와현", 100)
+CALL CITY_GUARD_S(  "미에현", 150)
+CALL CITY_GUARD_S(  "시가현", 125)
+CALL CITY_GUARD_S(  "후쿠이현", 150)
+CALL CITY_GUARD_S(  "와카야마현", 175)
+CALL CITY_GUARD_S(  "나라현", 175)
+CALL CITY_GUARD_S(  "쿄토부", 150)
+CALL CITY_GUARD_S(  "오사카부", 85)
+CALL CITY_GUARD_S(  "효고현", 150)
+CALL CITY_GUARD_S(  "토쿠시마현", 150)
+CALL CITY_GUARD_S(  "오카야마현", 150)
+CALL CITY_GUARD_S(  "톳토리현", 150)
+CALL CITY_GUARD_S(  "코우치현", 200)
+CALL CITY_GUARD_S(  "에히메현", 150)
+CALL CITY_GUARD_S(  "카가와현", 100)
+CALL CITY_GUARD_S(  "히로시마현", 150)
+CALL CITY_GUARD_S(  "시마네현", 175)
+CALL CITY_GUARD_S(  "야마구치현", 150)
+CALL CITY_GUARD_S(  "후쿠오카현", 100)
+CALL CITY_GUARD_S(  "오이타현", 150)
+CALL CITY_GUARD_S(  "쿠마모토현", 125)
+CALL CITY_GUARD_S(  "사가현", 100)
+CALL CITY_GUARD_S(  "미야자키현", 150)
+CALL CITY_GUARD_S(  "카고시마현", 150)
+CALL CITY_GUARD_S(  "나가사키현", 125)
+CALL CITY_GUARD_S(  "오키나와현", 100)

@@ -1,0 +1,739 @@
+﻿;-------------------------------------------------
+;소스의 처리 따위
+;-------------------------------------------------
+@SOURCE_CHECK
+CALL COLOR_LINE
+;커맨드 실행시의 지문
+CALL COM_TEXT_BEFORE
+
+;그 커맨드에 대응하는 계속 상태의 처리를 중단
+FOR LOCAL:0, 0, MPLY_NUM
+	FOR LOCAL:1, 0, MTAR_NUM
+		CALL RELEASE_EQUIP_EX(SELECTCOM, MPLY:(LOCAL:0), MTAR:(LOCAL:1))
+	NEXT
+NEXT
+
+;장착계 아이템이나 계속 상태의 처리
+FOR LOCAL:0, 0, MAX_MEQUIP
+	IF MEQUIP:(LOCAL:0) >= 0
+		TRYCALLFORM COM_EQUIP{MEQUIP:(LOCAL:0)}(LOCAL:0)
+	ENDIF
+	;이번 커맨드의 성 기호경험치를 가산
+	TRYCCALLFORM COM_PREFERENCE_PLAYER_{MEQUIP:(LOCAL:0)}()
+		FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+			FOR LOCAL:2, 0, VARSIZE("SEXUAL_PREFERENCE_EXP")
+				SIF GETBIT(RESULT, LOCAL:2)
+					SEXUAL_PREFERENCE_EXP:(MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1)):(LOCAL:2) ++
+			NEXT
+		NEXT
+	CATCH
+	ENDCATCH
+	TRYCCALLFORM COM_PREFERENCE_TARGET_{MEQUIP:(LOCAL:0)}()
+		FOR LOCAL:1, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+			FOR LOCAL:2, 0, VARSIZE("SEXUAL_PREFERENCE_EXP")
+				SIF GETBIT(RESULT, LOCAL:2)
+					SEXUAL_PREFERENCE_EXP:(MEQUIP_TARGET:(LOCAL:0):(LOCAL:1)):(LOCAL:2) ++
+			NEXT
+		NEXT
+	CATCH
+	ENDCATCH
+NEXT
+
+;이번 커맨드의 성 기호경험치를 가산
+TRYCCALLFORM COM_PREFERENCE_PLAYER_{SELECTCOM}()
+	FOR LOCAL, 0, MPLY_NUM
+		FOR LOCAL:1, 0, VARSIZE("SEXUAL_PREFERENCE_EXP")
+			SIF GETBIT(RESULT, LOCAL:1)
+				SEXUAL_PREFERENCE_EXP:(MPLY:LOCAL):(LOCAL:1) ++
+		NEXT
+	NEXT
+CATCH
+ENDCATCH
+TRYCCALLFORM COM_PREFERENCE_TARGET_{SELECTCOM}()
+	FOR LOCAL, 0, MTAR_NUM
+		FOR LOCAL:1, 0, VARSIZE("SEXUAL_PREFERENCE_EXP")
+			SIF GETBIT(RESULT, LOCAL:1)
+				SEXUAL_PREFERENCE_EXP:(MTAR:LOCAL):(LOCAL:1) ++
+		NEXT
+	NEXT
+CATCH
+ENDCATCH
+
+;동성의 경우의 소스 보정
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0)
+		CALL SOURCE_SEX_CHECK(LOCAL:0)
+	ENDIF
+NEXT
+
+;EQUIP에 대응하는 지문
+CALL COM_TEXT_BEFORE_EQUIP
+
+;커맨드 실행시의 구상
+CALL KOJO_COM
+
+;★커맨드에 의한 체력의 소비를 0으로 하는 잠정 조치
+;CVARSET DOWNBASE, 0, 0
+
+;●노출 소스의 보존
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0)
+		SOURCE:(LOCAL:0):노출보존 = SOURCE:(LOCAL:0):노출
+	ENDIF
+NEXT
+
+;●페니스밴드장착시의 쾌Ｐ소스를 쾌Ｃ소스에 변환
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0) && !HAS_PENIS(LOCAL:0)
+		SOURCE:(LOCAL:0):쾌Ｃ += SOURCE:(LOCAL:0):쾌Ｐ / 6
+		SOURCE:(LOCAL:0):쾌Ｐ = 0
+	ENDIF
+NEXT
+
+;●주인의 소스 처리
+;CALL SOURCE_CHECK_MASTER
+IF IS_PARTICIPATE_TRAIN(MASTER)
+	CALL SOURCE_CHECK_1(MASTER)
+	CALL SOURCE_CHECK_2(MASTER)
+ENDIF
+
+;이하, MASTER는 처리필 보고 때문에 연주한다
+
+;●타겟의 소스 처리
+;쾌락계 소스와 절정의 처리
+FOR LOCAL:0, 0, MTAR_NUM
+	SIF MTAR:(LOCAL:0) != MASTER
+		CALL SOURCE_CHECK_1(MTAR:(LOCAL:0))
+NEXT
+
+;쾌락계 이외의 소스의 처리
+FOR LOCAL:0, 0, MTAR_NUM
+	SIF MTAR:(LOCAL:0) != MASTER
+		CALL SOURCE_CHECK_2(MTAR:(LOCAL:0))
+NEXT
+
+;●타겟 이외의 소스 처리
+FOR LOCAL:0, 0, CHARANUM
+	IF LOCAL != MASTER && IS_PARTICIPATE_TRAIN(LOCAL:0) && !IS_MTAR(LOCAL:0)
+		;쾌락계 소스와 절정의 처리
+		CALL SOURCE_CHECK_1(LOCAL:0)
+	ENDIF
+NEXT
+
+FOR LOCAL:0, 0, CHARANUM
+	IF LOCAL != MASTER && IS_PARTICIPATE_TRAIN(LOCAL:0) && !IS_MTAR(LOCAL:0)
+		;쾌락계 이외의 소스의 처리
+		CALL SOURCE_CHECK_2(LOCAL:0)
+	ENDIF
+NEXT
+
+;여기까지 MASTER를 연주한다
+
+;절정 표시를 실시했을 경우는 개행
+IF TFLAG:3
+	PRINTL 
+ENDIF
+
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0)
+		;소스 이외의 변동 처리
+		CALL SOURCE_CHANGE_OTHER_STATUS(LOCAL:0)
+	ENDIF
+NEXT
+
+LOCAL:10 = 0
+;메세지 표시
+CALL COM_TEXT_AFTER
+
+LOCAL:10 |= RESULT
+
+;파라미터 변동 후의 구상
+CALL KOJO_COM_AFTER
+
+LOCAL:10 |= RESULT
+
+IF LOCAL:10
+	PRINTL 
+ENDIF
+
+;각종 경험의 취득
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0)
+		CALL EXP_GOT_CHECK(LOCAL:0)
+	ENDIF
+NEXT
+
+;텍스트의 표시
+CALL COM_TEXT_LAST
+
+CALL COLOR_LINE
+
+;호감도·의존도·종속도의 변동 처리와 그 표시
+SETCOLOR COLOR("실버")
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0) && LOCAL != MASTER
+		CALL LOVE_UP_CHECK(LOCAL:0)
+	ENDIF
+NEXT
+PRINTL 
+
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0)
+		CALL PRINT_BASE_LOSE(LOCAL:0)
+	ENDIF
+NEXT
+
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0)
+		CALL PRINT_EXP_UP(LOCAL:0)
+	ENDIF
+NEXT
+
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0)
+		CALL TRAIN_AUTO_ABLUP(LOCAL:0)
+		CALL TALENT_CHECK(LOCAL:0)
+		CALL CHECK_SEXUAL_PREFERENCE(LOCAL:0)
+	ENDIF
+NEXT
+PRINTL 
+
+;조교 소스의 표시
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0)
+		CALL SHOW_SOURCE(LOCAL:0)
+	ENDIF
+NEXT
+RESETCOLOR
+
+IF !TFLAG:1
+	;MEQUIP세트
+	CALL SET_EQUIP(SELECTCOM)
+ENDIF
+
+;역조교중이라면 기분을 항상 리셋트
+IF FLAG:조교모드 == 4
+	FOR LOCAL:0, 0, CHARANUM
+		IF IS_PARTICIPATE_TRAIN(LOCAL:0)
+			FOR LOCAL:1, 10, 16
+				PALAM:(LOCAL:0):(LOCAL:1) = 0
+			NEXT
+		ENDIF
+	NEXT
+ENDIF
+
+;MASTER는 기분을 0에
+FOR LOCAL:0, 10, 16
+	PALAM:MASTER:LOCAL = 0
+NEXT
+
+;피로 회복 판정
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0) && TCVAR:(LOCAL:0):51
+		;마다 턴의 자연 회복
+		TCVAR:(LOCAL:0):26 -= 100 + TALENT:(LOCAL:0):회복빠름 * 50 - TALENT:(LOCAL:0):회복느림 * 50
+
+		;피로 회복의 소스에 의한 회복
+		TCVAR:(LOCAL:0):26 -= SOURCE:(LOCAL:0):피로회복
+
+		;피로 심도가 0 이하라면 복귀
+		IF TCVAR:(LOCAL:0):26 <= 0
+			TCVAR:(LOCAL:0):51 = 0
+			BASE:(LOCAL:0):체력 = MIN(MAX(BASE:(LOCAL:0):체력, 100) + MAX(MAXBASE:(LOCAL:0):체력 * MAX(RAND:10 + 25 - TCVAR:(LOCAL:0):21 * 2, 5) / 100, 100), MAXBASE:(LOCAL:0):체력)
+			CALL KOJO_EVENT(LOCAL:0, 19)
+			SETCOLOR 칼라_주의
+			PRINTFORML %ANAME(LOCAL:0)%의 피로 상태는 침착했다!
+			RESETCOLOR
+		ENDIF
+	ENDIF
+NEXT
+
+
+
+
+;기절 회복 판정
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0) && TCVAR:(LOCAL:0):52
+		;마다 턴의 자연 회복
+		TCVAR:(LOCAL:0):23 -= 100 + TALENT:(LOCAL:0):회복빠름 * 50 - TALENT:(LOCAL:0):회복느림 * 50
+
+		;절정에 의한 회복
+		TCVAR:(LOCAL:0):23 -= SUM_NOWEX(LOCAL:0) * 50
+
+		;고통의 소스에 의한 회복
+		TCVAR:(LOCAL:0):23 -= SOURCE:(LOCAL:0):고통 / 2
+
+		;기절 회복의 소스에 의한 회복
+		TCVAR:(LOCAL:0):23 -= SOURCE:(LOCAL:0):기절회복
+
+		;기절 심도가 0 이하라면 복귀
+		IF TCVAR:(LOCAL:0):23 <= 0
+			TCVAR:(LOCAL:0):52 = 0
+			BASE:(LOCAL:0):기력 = MIN(MAX(BASE:(LOCAL:0):기력, 100) + MAX(MAXBASE:(LOCAL:0):기력 * MAX(RAND:10 + 25 - TCVAR:(LOCAL:0):22 * 2, 5) / 100, 100), MAXBASE:(LOCAL:0):기력)
+			CALL KOJO_EVENT(LOCAL:0, 19)
+			SETCOLOR 칼라_주의
+			IF SUM_NOWEX(LOCAL:0) >= 1
+				IF SOURCE:(LOCAL:0):고통 >= 50
+					PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 아픔과 쾌감으로 억지로 의식을 되돌려졌다!
+				ELSE
+					PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 격렬한 쾌감으로 의식을 되돌려졌다!
+				ENDIF
+			ELSEIF SOURCE:(LOCAL:0):고통 >= 50
+				PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 고통인 나머지 의식을 되돌려졌다!
+			ELSEIF SOURCE:(LOCAL:0):기절회복 >= 50
+				PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 억지로 의식을 되돌려졌다!
+			ELSE
+				PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 의식을 되찾았다!
+			ENDIF
+			RESETCOLOR
+		ENDIF
+	ENDIF
+NEXT
+
+;체력 조각에 의한 행동불능 판정
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0) && !TCVAR:(LOCAL:0):51 && !TCVAR:(LOCAL:0):53 && BASE:(LOCAL:0):체력 <= 0
+		WAIT
+		PRINTL 
+		;포로 조교 또한 타겟 경우
+		IF FLAG:조교모드 == 2 && LOCAL:0 != MASTER
+			CALL KOJO_EVENT(LOCAL:0, 17)
+			PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 완전히 지쳐 버려 녹초가 되어 있다…
+			;체력 0에 의한 행동불능
+			TCVAR:(LOCAL:0):51 = 1
+		;역조교로 주인공의 경우
+		ELSEIF FLAG:조교모드 == 4 && LOCAL:0 == MASTER
+			PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 이미 체력의 한계다…
+			;체력 0에 의한 행동불능
+			TCVAR:(LOCAL:0):51 = 1
+		;포로 조교가 아닌, 혹은 포로 조교로 타겟이 아닌 경우
+		ELSE
+			IF FLAG:조교모드 == 2
+				PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 지치게 되어, 더 이상 조교를 계속될 것 같지 않다…
+				;체력 0에 의한 행동불능
+				TCVAR:(LOCAL:0):51 = 1
+			ELSE
+				CALL KOJO_EVENT(LOCAL:0, 11)
+				PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 완전히 지쳐 버려 녹초가 되어 있다…
+				;체력 0에 의한 행동불능
+				TCVAR:(LOCAL:0):51 = 1
+			ENDIF
+		ENDIF
+		;행동불능 회수를 가산
+		TCVAR:(LOCAL:0):21 ++
+		;행동불능 심도
+		TCVAR:(LOCAL:0):26 = RAND:301 + 150 + TCVAR:(LOCAL:0):21 * 100
+		;행동불능이 되었을 때의 EQUIP 해제
+		CALL DOWN_RELEASE_EQUIP(LOCAL:0)
+	ENDIF
+NEXT
+
+;기력 조각에 의한 실신 판정
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0) && !TCVAR:(LOCAL:0):52 && !TCVAR:(LOCAL:0):53 && BASE:(LOCAL:0):기력 <= 0
+		WAIT
+		PRINTL 
+		;포로 조교 또한 타겟 경우
+		IF FLAG:조교모드 == 2 && LOCAL:0 != MASTER
+			CALL KOJO_EVENT(LOCAL:0, 18)
+			PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 쾌감인 나머지 정신을 잃어 버렸다…
+		;역조교로 주인공의 경우
+		ELSEIF FLAG:조교모드 == 4 && LOCAL:0 == MASTER
+			PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 쾌감인 나머지 정신을 잃어 버렸다…
+		;포로 조교가 아닌, 혹은 포로 조교로 타겟이 아닌 경우
+		ELSE
+			CALL KOJO_EVENT(LOCAL:0, 12)
+			PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 쾌감인 나머지 정신을 잃어 버렸다…
+			;조교 참가 캐릭터가 1명의 경우
+			IF TFLAG:44 == 1
+				;행동불능이 되었던 것이 플레이어라면 행동측 반전
+				IF IS_MPLY(LOCAL:0)
+					LOCAL:5 = MPLY:0
+					LOCAL:6 = MTAR:0
+					CALL CLEAR_MPLY
+					CALL CLEAR_MTAR
+					CALL ADD_MPLY(LOCAL:6)
+					CALL ADD_MTAR(LOCAL:5)
+				ENDIF
+			;조교 참가 캐릭터가 복수의 경우
+			ELSE
+				;행동불능이 된 캐릭터를 플레이어로부터 제외한다
+				CALL DEL_MPLY(LOCAL:0)
+			ENDIF
+		ENDIF
+		;기력 0에 의한 실신
+		TCVAR:(LOCAL:0):52 = 1
+		;기절 심도
+		TCVAR:(LOCAL:0):23 = RAND:301 + 150 + TCVAR:(LOCAL:0):22 * 100
+		;기절 회수를 가산
+		TCVAR:(LOCAL:0):22 ++
+		;행동불능이 되었을 때의 EQUIP 해제
+		CALL DOWN_RELEASE_EQUIP(LOCAL:0)
+	ENDIF
+NEXT
+
+;최면의 경우의 최면 해제 판정
+FOR LOCAL:0, 0, CHARANUM
+	SIF !IS_PARTICIPATE_TRAIN(LOCAL) || TCVAR:LOCAL:최면중 <= 0
+		CONTINUE
+	IF RAND:100 >= (TCVAR:LOCAL:최면중 * 3) - MAX(ABL:MASTER:최면 * 5 + ABL:LOCAL:최면 * 5 + SQRT(EXP:LOCAL:피최면경험)) + (SUM_NOWEX(LOCAL) / 5) - GETBIT(TALENT:LOCAL:음란계, 소질_음란_꼭두각시) * 30
+		TCVAR:LOCAL:최면중 ++
+	ELSE
+		CALL COLOR_PRINTL(@"%ANAME(LOCAL)%의 최면이 풀려 버렸다!", 칼라_주의)
+		LOCAL:1 = MAX(TCVAR:LOCAL:최면중 * 50 - MAX(ABL:MASTER:최면 + ABL:LOCAL:최면 / 2, 0) * 10, 0)
+		CFLAG:LOCAL:호감도 -= LOCAL:1
+		CFLAG:LOCAL:종속도 -= LOCAL:1
+		CFLAG:LOCAL:의존도 -= LOCAL:1
+		CFLAG:LOCAL:지배도 -= LOCAL:1
+		TCVAR:LOCAL:최면중 = -1
+	ENDIF
+NEXT
+
+
+;이탈 판정
+FOR LOCAL:0, 0, CHARANUM
+	;피로중, 기절중은 판정하지 않는다
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0) && !TCVAR:(LOCAL:0):51 && !TCVAR:(LOCAL:0):52 && !TCVAR:(LOCAL:0):53 && !IS_ANIMAL(LOCAL:0)
+		LOCALS:0 = %TOSTR_EMOTION(LOCAL:0)%
+
+		;취기 한계
+		IF PALAM:(LOCAL:0):취기 >= 10000 + MAX((ABL:(LOCAL:0):주량 - 5) * 1000, 0)
+			WAIT
+			PRINTL 
+			CALL KOJO_EVENT(LOCAL:0, 32)
+			TCVAR:(LOCAL:0):53 = 1
+
+		;감정이 「로」 「한」으로 주인공에게 분노를 느꼈을 경우(만나러간다·침실호출 ·포로 회화 때, 또는 포로 조교로 메인 타겟이 아니다（조수이다）때)
+		ELSEIF (LOCALS:0 == "분노" || LOCALS:0 == "원한") && CUP:(LOCAL:0):로주 > 0 && (GROUPMATCH(FLAG:조교모드, 0, 1, 6) || (FLAG:조교모드 == 2 && FINDELEMENT(PRISONER_TARGET, LOCAL:0) == -1))
+			SIF CFLAG:(LOCAL:0):조교중돌아가지않는다
+				CONTINUE
+			SIF TALENT:(LOCAL:0):특수세력소질
+				CONTINUE
+			SIF IS_SP_COUNTRY(CFLAG:MASTER:소속) && CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속 && GETBIT(TALENT:(LOCAL:0):특수세력함락계, SP_COUNTRY_TO_CONST(CFLAG:MASTER:소속))
+				CONTINUE
+			IF IS_BIND(LOCAL:0)
+				WAIT
+				PRINTL
+				;우선 50이상의 무투로 랜덤에서 빠져 나가지기로 했지만, 좀 더 랜덤의 비중을 줄이고 싶다（한층 더 체력과 기력도 더해 계산할까）
+				;밧줄을 사용하고 있었던 경우 아이템으로서의 밧줄이 소멸하는 패널티가 있어도 좋을지도 모른다
+				IF ABL:(LOCAL:0):무투 > RAND(50, 200)
+					SETCOLOR 칼라_경고
+					PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 구속을 찢었다
+					RESETCOLOR
+				;밧줄 누락 판정 실패에 대해, 이탈 캔슬
+				ELSE
+					SETCOLOR 칼라_주의
+					PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 구속을 풀려고 발버둥치고 있는
+					RESETCOLOR
+					CONTINUE
+				ENDIF
+			ENDIF
+			WAIT
+			PRINTL 
+			SIF FLAG:화상설정
+				CALL PRINT_STATE_IMAGE(LOCAL:0, "분노")
+			PRINTFORMW %ANAME(LOCAL:0)%의 분노가 한계에 이른 것 같다
+			IF FLAG:조교모드 == 1 || TFLAG:54 > 0
+				CALL KOJO_EVENT(LOCAL:0, 15)
+				TCVAR:(LOCAL:0):53 = 5
+			ELSE
+				CALL KOJO_EVENT(LOCAL:0, 13)
+				TCVAR:(LOCAL:0):53 = 3
+			ENDIF
+			CALL DEL_MPLY(LOCAL:0)
+			CALL DEL_MTAR(LOCAL:0)
+			;EQUIP 해제
+			CALL RELEASE_ALL_EQUIP(LOCAL:0)
+
+		;감정이 「비」 「울적함」으로 주인공에게 슬픔을 느꼈을 경우(만나러간다·침실호출 ·포로 회화 때, 또는 포로 조교로 메인 타겟이 아니다（조수이다）때)
+		ELSEIF (LOCALS:0 == "슬픔" || LOCALS:0 == "암울") && CUP:(LOCAL:0):액주 > 0 && (GROUPMATCH(FLAG:조교모드, 0, 1, 6) || (FLAG:조교모드 == 2 && FINDELEMENT(PRISONER_TARGET, LOCAL:0) == -1))
+			SIF CFLAG:(LOCAL:0):조교중돌아가지않는다
+				CONTINUE
+			SIF TALENT:(LOCAL:0):특수세력소질
+				CONTINUE
+			SIF IS_SP_COUNTRY(CFLAG:MASTER:소속) && CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속 && GETBIT(TALENT:(LOCAL:0):특수세력함락계, SP_COUNTRY_TO_CONST(CFLAG:MASTER:소속))
+				CONTINUE
+			SIF IS_BIND(LOCAL:0)
+				CONTINUE
+			WAIT
+			PRINTL 
+			PRINTFORMW %ANAME(LOCAL:0)%의 슬픔이 한계에 이른 것 같다
+			IF FLAG:조교모드 == 1 || TFLAG:54 > 0
+				CALL KOJO_EVENT(LOCAL:0, 16)
+				TCVAR:(LOCAL:0):53 = 6
+			ELSE
+				CALL KOJO_EVENT(LOCAL:0, 14)
+				TCVAR:(LOCAL:0):53 = 4
+			ENDIF
+			CALL DEL_MPLY(LOCAL:0)
+			CALL DEL_MTAR(LOCAL:0)
+			;EQUIP 해제
+			CALL RELEASE_ALL_EQUIP(LOCAL:0)
+		ENDIF
+	ENDIF
+NEXT
+
+
+;-------------------------------------------------
+;주인공의 쾌락계 소스와 사정·절정의 처리를 실시한다
+;-------------------------------------------------
+@SOURCE_CHECK_MASTER
+;●소스가 상한치를 넘었을 경우, 상한치에 수정
+FOR LOCAL:0, 0, 100
+	SOURCE:MASTER:(LOCAL:0) = LIMIT(SOURCE:MASTER:(LOCAL:0), 0, 100000000)
+NEXT
+
+;●소스의 계산(MASTER 전용)
+FOR LOCAL:0, 0, 100
+	TRYCALLFORM CALC_SOURCE_MASTER{LOCAL:0}(MASTER)
+NEXT
+
+;●절정의 처리
+CALL SOURCE_ORGASM(MASTER)
+
+;●PALAM에 CUP의 값을 더한다
+;CUPCHECK라고 표시면에서 부적당이 있기 때문에, 독자적으로 처리
+FOR LOCAL:0, 0, 100
+	IF GROUPMATCH(LOCAL:0, 40)
+		;윤활은 Lv9까지
+		LOCAL:1 = PALAMLV:9
+	ENDIF
+
+	;쾌감 파라미터는 독자 처리(절정에 의해 저하)
+	IF LOCAL:0 >= 0 && LOCAL:0 <= 9
+		LOCAL:2 = PALAM:MASTER:(LOCAL:0)
+		PALAM:MASTER:(LOCAL:0) = LIMIT(PALAM:MASTER:(LOCAL:0) + CUP:MASTER:(LOCAL:0) - 10000 * NOWEX:MASTER:(LOCAL:0), 0, 9999)
+
+		IF LOCAL:0 <= 4
+			;쾌감계경험 취득
+			CALL ADD_EXP_SENSE(MASTER, LOCAL:0, LOCAL:2)
+		ENDIF
+	;파라미터 상승량에 캡을 건다
+	ELSEIF PALAM:MASTER:(LOCAL:0) + CUP:MASTER:(LOCAL:0) > LOCAL:1
+		PALAM:MASTER:(LOCAL:0) = LOCAL:1
+	ELSE
+		PALAM:MASTER:(LOCAL:0) += CUP:MASTER:(LOCAL:0)
+	ENDIF
+NEXT
+
+IF NOWEX:MASTER:사정 >= 1
+	;사정했을 경우 분수의 PALAM를 0에
+	PALAM:MASTER:분수 = 0
+ENDIF
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터에 대해, 쾌락계 소스와 절정의 처리를 실시한다
+;-------------------------------------------------
+@SOURCE_CHECK_1(ARG:0)
+;●소스가 상한치를 넘었을 경우, 상한치에 수정
+FOR LOCAL:0, 0, 100
+	SOURCE:(ARG:0):(LOCAL:0) = LIMIT(SOURCE:(ARG:0):(LOCAL:0), 0, 100000000)
+NEXT
+
+;●쾌락계 소스의 계산
+;쾌락계(0～9)만을 계산
+FOR LOCAL:0, 0, 10
+	TRYCALLFORM CALC_SOURCE{LOCAL:0}(ARG:0)
+NEXT
+
+;●상황에 따른 파라미터 상승의 보정
+;FOR LOCAL:0, 0, 5
+;	;이상경험에 의한 효과 증가(이상경험 1000으로 약 1.5배, 10000으로 약 6배)
+;	IF EXP:(ARG:0):50 >= 1000000
+;		CUP:(ARG:0):(LOCAL:0) = CUP:(ARG:0):(LOCAL:0) * (12 + (EXP:(ARG:0):50/1000000 * 5 + 95)/100)
+;	ELSEIF EXP:(ARG:0):50 >= 10000
+;		CUP:(ARG:0):(LOCAL:0) = CUP:(ARG:0):(LOCAL:0) * (6 + (EXP:(ARG:0):50/10000 * 5 + 95)/100)
+;	ELSEIF EXP:(ARG:0):50 >= 100
+;		CUP:(ARG:0):(LOCAL:0) = CUP:(ARG:0):(LOCAL:0) * (EXP:(ARG:0):50/100 * 5 + 95)/100
+;	ENDIF
+;NEXT
+
+;●소질 따위에 의한 파라미터 상승의 보정(쾌감계)
+CALL UP_TALENT_CHECK1(ARG:0)
+
+;●데이트 장소에 의한 파라미터 상승의 보정(쾌감계)
+CALL UP_DATE_CHECK1(ARG:0)
+
+;●절정의 처리
+CALL SOURCE_ORGASM(ARG:0)
+
+;●타겟 이외의 캐릭터에게 감응의 소스를 추가한다
+;플레이어 또는 타겟이라면 욕정 상승량을 기록
+IF IS_MPLY(ARG:0) || IS_MTAR(ARG:0)
+	TFLAG:52 += CUP:(ARG:0):욕정
+	TFLAG:58 = MAX(SOURCE:(ARG:0):일탈, TFLAG:58)
+
+	;타겟이 절정 하고 있었을 경우
+	FOR LOCAL:0, 0, 5
+		IF NOWEX:(ARG:0):(LOCAL:0) > 0
+			TFLAG:53 += NOWEX:(ARG:0):(LOCAL:0)
+		ENDIF
+	NEXT
+
+;플레이어·타겟이 아니면 기록한 욕정 상승량에 응해 감응·일탈의 소스를 추가한다(행동불능이라면 제외함)
+ELSEIF !(TCVAR:(ARG:0):51 || TCVAR:(ARG:0):52 || TCVAR:(ARG:0):53)
+	IF TFLAG:52 >= 30000
+		SOURCE:(ARG:0):감응 += 3000
+	ELSEIF TFLAG:52 >= 10000
+		SOURCE:(ARG:0):감응 += 1500
+	ELSEIF TFLAG:52 >= 3000
+		SOURCE:(ARG:0):감응 += 500
+	ELSEIF TFLAG:52 >= 500
+		SOURCE:(ARG:0):감응 += 150
+	ELSEIF TFLAG:52 >= 100
+		SOURCE:(ARG:0):감응 += 50
+	ENDIF
+
+	SOURCE:(ARG:0):감응 += TFLAG:53 * 100
+	SOURCE:(ARG:0):일탈 += TFLAG:58 / 3
+ENDIF
+
+;마약 먹고 있으면 환희가 들어간다
+SIF TCVAR:(ARG:0):마약
+	SOURCE:(ARG:0):환희 += 500
+
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터에 대해, 쾌락계 이외의 소스의 처리를 실시한다
+;-------------------------------------------------
+@SOURCE_CHECK_2(ARG:0)
+;기절·수면중·최면중은 감정에 관련되는 소스를 모두 제로로 한다
+IF TCVAR:(ARG:0):52 || TCVAR:(ARG:0):53 == 1 || TCVAR:(ARG:0):최면중 > 0
+	FOR LOCAL:0, 10, 40
+		IF SOURCENAME:(LOCAL:0) != "고통"
+			SOURCE:(ARG:0):(LOCAL:0) = 0
+		ENDIF
+	NEXT
+	SOURCE:(ARG:0):욕정추가 = 0
+ENDIF
+
+;각 소스에 의한 파라미터의 변동량을 계산(쾌락계(0～9)는 날린다)
+FOR LOCAL:0, 10, 100
+	TRYCALLFORM CALC_SOURCE{LOCAL:0}(ARG:0)
+NEXT
+
+;●성벽 설정에 응한 소스의 추가
+CALL ADD_SOURCE_TENDENCY(ARG:0)
+
+;●소질 따위에 의한 파라미터 상승의 보정(쾌감계 이외)
+CALL UP_TALENT_CHECK2(ARG:0)
+
+;●데이트 장소에 의한 파라미터 상승의 보정(쾌감계 이외)
+CALL UP_DATE_CHECK2(ARG:0)
+
+;●욕망경험치의 취득
+;이번 욕정 파라미터의 증가량과 절정 회수가 영향을 준다
+LOCAL:0 = MIN(CUP:(ARG:0):욕정 / ((ABL:(ARG:0):욕망 + 1) * (ABL:(ARG:0):욕망 + 1) * 100), 30)
+EXP:(ARG:0):욕망경험치 += LOCAL:0
+
+;●윤활 증가의 처리
+IF !IS_MALE(ARG:0)
+	;쾌감에 의한 윤활 증가
+	LOCAL:0 = (CUP:(ARG:0):0 + CUP:(ARG:0):1 + CUP:(ARG:0):2 + CUP:(ARG:0):3 + CUP:(ARG:0):4) / 5
+	;쾌감 파라미터의 상승이 합계 100 이하라면 윤활은 증가하지 않는다
+	IF LOCAL:0 < 20
+		LOCAL:0 = 0
+	ENDIF
+
+	;욕정 상승에 의한 윤활의 증가
+	IF FLAG:우후후플래그
+		;우후후중
+		LOCAL:0 += CUP:(ARG:0):욕정 / 2
+	ELSE
+		;비우후후
+		LOCAL:0 += CUP:(ARG:0):욕정 / 10
+	ENDIF
+
+	IF TALENT:(ARG:0):젖기쉬움
+		TIMES LOCAL:0, 2.50
+	ENDIF
+	IF TALENT:(ARG:0):젖기어려움
+		TIMES LOCAL:0, 0.40
+	ENDIF
+	;남성·오토코노코는 조금 젖기 힘들다
+	IF GROUPMATCH(TALENT:(ARG:0):성별, 0, 4)
+		TIMES LOCAL:0, 0.60
+	ENDIF
+
+	CUP:(ARG:0):윤활 += LOCAL:0
+ENDIF
+
+;●실신 or수면 상태라면 기분의 변동량을 제로로 한다
+IF TCVAR:(ARG:0):52 || TCVAR:(ARG:0):53 == 1
+	FOR LOCAL:0, 10, 16
+		CUP:(ARG:0):(LOCAL:0) = 0
+	NEXT
+ENDIF
+
+;●PALAM에 CUP의 값을 더한다
+;CUPCHECK라고 표시면에서 부적당이 있기 때문에, 독자적으로 처리
+FOR LOCAL:0, 0, 100
+	IF GROUPMATCH(LOCAL:0, 40)
+		;윤활은 Lv9까지
+		LOCAL:1 = PALAMLV:9
+	ELSEIF GROUPMATCH(LOCAL:0, 10, 11, 12, 13, 14, 15)
+		;기분은 1000000까지
+		LOCAL:1 = 1000000
+	ELSE
+		;그 이외는 Lv25까지
+		LOCAL:1 = PALAMLV:25
+	ENDIF
+	
+	;강제 우호화 있어라면 보정
+	IF CFLAG:(ARG:0):강제우호화 && GROUPMATCH(LOCAL, GETNUM(CUP, "로주"), GETNUM(CUP, "액주"), GETNUM(CUP, "포주"), GETNUM(CUP, "로외"), GETNUM(CUP, "액외"), GETNUM(CUP, "포외"))
+		IF CUP:(ARG:0):(LOCAL:0) > 0
+			CUP:(ARG:0):(LOCAL:0) = 0
+		ELSEIF CUP:(ARG:0):(LOCAL:0) > -100
+			CUP:(ARG:0):(LOCAL:0) += RAND(-20, 0)
+		ENDIF
+	ENDIF
+
+	;강제 우호화 있어라면 보정
+;	SIF GROUPMATCH(LOCAL, GETNUM(CUP, "로주"), GETNUM(CUP, "액주"), GETNUM(CUP, "포주"), GETNUM(CUP, "로외"), GETNUM(CUP, "액외"), GETNUM(CUP, "포외"))
+;		PRINTFORML PALAM %PALAMNAME:(LOCAL)% : {CUP:(ARG:0):LOCAL}
+
+	;쾌감 파라미터는 독자 처리(절정에 의해 저하)
+	IF LOCAL:0 >= 0 && LOCAL:0 <= 9
+		LOCAL:2 = PALAM:(ARG:0):(LOCAL:0)
+		PALAM:(ARG:0):(LOCAL:0) = LIMIT(PALAM:(ARG:0):(LOCAL:0) + CUP:(ARG:0):(LOCAL:0) - 10000 * NOWEX:(ARG:0):(LOCAL:0), 0, 9999)
+
+		IF LOCAL:0 <= 4
+			;쾌감계경험 취득
+			CALL ADD_EXP_SENSE(ARG:0, LOCAL:0, LOCAL:2)
+		ENDIF
+	;파라미터 상승량에 캡을 건다
+	ELSEIF PALAM:(ARG:0):(LOCAL:0) + CUP:(ARG:0):(LOCAL:0) > LOCAL:1
+		PALAM:(ARG:0):(LOCAL:0) = LOCAL:1
+	ELSE
+		PALAM:(ARG:0):(LOCAL:0) += CUP:(ARG:0):(LOCAL:0)
+	ENDIF
+NEXT
+
+IF NOWEX:(ARG:0):사정 >= 1
+	;사정했을 경우 분수의 PALAM를 0에
+	PALAM:(ARG:0):분수 = 0
+ENDIF
+
+
+;-------------------------------------------------
+;조교 소스의 표시
+;-------------------------------------------------
+@SHOW_SOURCE(ARG:0)
+LOCAL:2 = 0
+
+SETCOLOR COLOR("실버")
+FOR LOCAL:0, 0, 100
+	;SOURCE의 줄설정을 취득
+	LOCAL:1 = GET_SORTED_SOURCE(LOCAL:0)
+	IF LOCAL:1 >= 0 && SOURCE:(ARG:0):(LOCAL:1) > 0
+		IF !LOCAL:2
+			LOCAL:2 = 1
+			PRINTFORM %ANAME(ARG:0), 8%:
+		ENDIF
+		PRINTFORM %SOURCENAME:(LOCAL:1)%({SOURCE:(ARG:0):(LOCAL:1)})
+	ENDIF
+NEXT
+IF LOCAL:2
+	PRINTL 
+ENDIF
+RESETCOLOR

@@ -1,0 +1,53 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_FLOWER_GARDEN_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_FLOWER_GARDEN_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_FLOWER_GARDEN(대상)
+#DIM 대상
+
+PRINTFORML 탐색중, 멋진 꽃밭을 보기 시작했다
+PRINTFORML 요정들이 즐거운 듯이 춤추고 있다
+PRINTFORML 
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "가창"))
+CALL ASK_MULTI("드러눕는다", "꽃을 꺾는다", "노래한다")
+
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 그 자리에 데구르르 드러누웠다
+		PRINTFORMW 양기와 꽃의 향기에, 졸음에 이끌렸다
+		PRINTFORML
+		PRINTFORML 문득 눈치채면, 요정들에게 모여지고 있었다
+		PRINTFORMW %ANAME(대상)%에 끌려 낮잠을 자고 있던 것 같다
+		PRINTFORML 하늘은 완전히 황혼이 되어 있었다
+		PRINTFORMW 순진하게 손을 흔드는 그녀들과 이별 귀로에 들었다
+	CASE 1
+		PRINTFORML 모처럼인 것으로 꽃을 꺾어 가기로 했다
+		PRINTFORML 거점에 장식해 두자……
+	CASE 2
+		PRINTFORMW 기분이 좋아진 %조사처리(ANAME(대상),"는")% 한 곡 노래하기 시작했다
+		PRINTFORML 
+		IF LIMIT(ABL:대상:가창 * 2, 30, 80) > RAND:100
+			PRINTFORML 어느새인가 요정에 둘러싸여 있었다
+			PRINTFORML 노래해 끝내면 박수를 받았다
+			CALL PRINT_ADD_EXP(대상, "가창경험치", RAND:10 + 6)
+		ELSE
+			PRINTFORML ……요정들로부터 야유하는 소리를 받았다
+			PRINTFORML 쇼크를 받으면서 돌아갔다
+		ENDIF
+ENDSELECT
+
+RETURN 1

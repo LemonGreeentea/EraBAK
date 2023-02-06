@@ -1,0 +1,1216 @@
+﻿;SLG 함수 중(안)에서도, 특히 고속화용의 특수 변수
+;상황 나름으로 의도한 결과를 얻을 수 없는 것도 많기 때문에, 취급은 삼가하는 것이 무난
+
+;-------------------------------------------------
+;현재의 국가 관계 맵을 작성하는 함수
+;-------------------------------------------------
+@TMP_CREATE_RELATION_MAP
+VARSET TMP_COUNTRY_RELATION, 0
+VARSET COUNTRY_TREATY_NO
+FOR LOCAL:0, 1, MAX_COUNTRY
+	IF IS_COUNTRY(LOCAL:0)
+		TMP_COUNTRY_RELATION:(LOCAL:0):(LOCAL:0) = 5
+		FOR LOCAL:1, LOCAL:0 + 1, MAX_COUNTRY
+			IF IS_COUNTRY(LOCAL:1)
+				CALL CHECK_COUNTRY_RELATION(LOCAL:0, LOCAL:1)
+				TMP_COUNTRY_RELATION:(LOCAL:0):(LOCAL:1) = RESULT:0
+				TMP_COUNTRY_RELATION:(LOCAL:1):(LOCAL:0) = RESULT:0
+				TMP_COUNTRY_RELATION_TERM:(LOCAL:0):(LOCAL:1) = RESULT:1
+				TMP_COUNTRY_RELATION_TERM:(LOCAL:1):(LOCAL:0) = RESULT:1
+				SELECTCASE RESULT:0
+				CASE 1
+					COUNTRY_TREATY_NO:(LOCAL:0):1 ++
+					COUNTRY_TREATY_NO:(LOCAL:1):1 ++
+				CASE 3, 4
+					COUNTRY_TREATY_NO:(LOCAL:0):0 ++
+					COUNTRY_TREATY_NO:(LOCAL:1):0 ++
+				ENDSELECT
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;현재의 부대 맵을 작성하는 함수
+;-------------------------------------------------
+@TMP_CREATE_UNIT_MAP
+VARSET TMP_UNIT_ONCITY_CNT, 0
+VARSET TMP_UNIT_ONCITY_NUM, 0
+
+FOR LOCAL:0, 1, MAX_COUNTRY
+	IF IS_COUNTRY(LOCAL:0)
+		FOR LOCAL:1, 0, 10
+			IF UNIT_SOLDIER:(LOCAL:0):(LOCAL:1) > 0
+				LOCAL:3 = UNIT_POSITION:(LOCAL:0):(LOCAL:1)
+				FOR LOCAL:2, 0, 20
+					IF TMP_UNIT_ONCITY_CNT:(LOCAL:3):(LOCAL:2) == 0
+						TMP_UNIT_ONCITY_CNT:(LOCAL:3):(LOCAL:2) = LOCAL:0
+						TMP_UNIT_ONCITY_NUM:(LOCAL:3):(LOCAL:2) = LOCAL:1
+						BREAK
+					ENDIF
+				NEXT
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;부대 맵을 하는 함수
+;-------------------------------------------------
+@TMP_MODIFY_UNIT_MAP(세력, 부대, 이동원, 이동처 = 0)
+#DIM 세력
+#DIM 부대
+#DIM 이동원
+#DIM 이동처
+#DIM 삽입위치
+#DIM 삭제위치
+#DIM 쉬프트
+
+SIF 이동원 == 0
+	GOTO DELETE_SKIPPED
+
+FOR 삭제위치, 0, VARSIZE("TMP_UNIT_ONCITY_CNT", 1)
+	SIF TMP_UNIT_ONCITY_CNT:이동원:삭제위치 != 세력
+		CONTINUE
+	SIF TMP_UNIT_ONCITY_NUM:이동원:삭제위치 != 부대
+		CONTINUE
+	;ARRAY계 명령이 다차원 배열에 대응하고 있지 않는 것 진짜 젠장
+	;덕분에 이런 쓰레기 같은 코드가 태어난다
+	FOR 쉬프트, 삭제위치, VARSIZE("TMP_UNIT_ONCITY_CNT", 1) - 1
+		TMP_UNIT_ONCITY_CNT:이동원:쉬프트 = TMP_UNIT_ONCITY_CNT:이동원:(쉬프트 + 1)
+		TMP_UNIT_ONCITY_NUM:이동원:쉬프트 = TMP_UNIT_ONCITY_NUM:이동원:(쉬프트 + 1)
+	NEXT
+	BREAK
+NEXT
+
+SIF 삭제위치 == VARSIZE("TMP_UNIT_ONCITY_CNT")
+	THROW TMP_MODIFY_UNIT_MAP에서, 해당 도시에 존재하지 않는 세력/부대를 지정했습니다
+
+TMP_UNIT_ONCITY_CNT:이동원:(VARSIZE("TMP_UNIT_ONCITY_CNT", 1) - 1) = 0
+TMP_UNIT_ONCITY_NUM:이동원:(VARSIZE("TMP_UNIT_ONCITY_NUM", 1) - 1) = 0
+
+$DELETE_SKIPPED
+
+SIF 이동원 == 0
+	RETURN
+
+FOR 삽입위치, 0, VARSIZE("TMP_UNIT_ONCITY_CNT", 1)
+	SIF TMP_UNIT_ONCITY_CNT:이동처:삽입위치
+		CONTINUE
+	TMP_UNIT_ONCITY_CNT:이동처:삽입위치 = 세력
+	TMP_UNIT_ONCITY_NUM:이동처:삽입위치 = 부대
+	BREAK
+NEXT
+
+
+;-------------------------------------------------
+;군주의 캐릭터 번호와 략명 맵을 작성하는 함수
+;ARG:0략명을 1문자로 하는 플래그
+;-------------------------------------------------
+@TMP_CREATE_COUNTRY_BOSS_MAP
+VARSET TMP_COUNTRY_BOSS_NUMBER, -1
+VARSET TMP_COUNTRY_BOSS_NAME_SHORT, ""
+FOR LOCAL:0, 0, MAX_COUNTRY
+	IF COUNTRY_BOSS:(LOCAL:0) >= 1
+		TMP_COUNTRY_BOSS_NUMBER:(LOCAL:0) = ID_TO_CHARA(COUNTRY_BOSS:(LOCAL:0))
+		SUBSTRING NAME:(TMP_COUNTRY_BOSS_NUMBER:(LOCAL:0)), 0, 2
+		TMP_COUNTRY_BOSS_NAME_SHORT:(LOCAL:0) = %RESULTS:0%
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;국가끼리의 인접 관계 맵을 작성하는 함수
+;LOCAL 0:기점이 되는 도시, 1:기점 도시측의 CITY_ROUTE 참조용 카운터
+;      2:기점 도시에 인접하는 중계점의 CITY_ROUTE 참조용 카운터
+;      5:참조처의 도시 번호, 6:기점 도시에 인접하는 중계점에 인접하는 도시의 번호
+;-------------------------------------------------
+@TMP_CREATE_COUNTRY_NEIBORING_MAP
+VARSET TMP_COUNTRY_IS_NEIBORING, 0
+;FOR LOCAL:0, 1, MAX_CITY
+;	SIF CITY_TYPE:(LOCAL:0) != 0 || CITY_OWNER:(LOCAL:0) == 0
+;		CONTINUE
+;	;중계점은 아니고 무소속 도시도 아니다
+;	FOR LOCAL:1, 0, 10
+;		;CITY_ROUTE로부터 인접하고 있는 도시를 참조
+;		LOCAL:5 = CITY_ROUTE:(LOCAL:0):(LOCAL:1)
+;		;중계점은 아니고 중립 도시도 아니다
+;		IF CITY_TYPE:(LOCAL:5) == 0 && CITY_OWNER:(LOCAL:5)
+;		;양도시의 지배 세력이 다르다
+;			IF CITY_OWNER:(LOCAL:0) != CITY_OWNER:(LOCAL:5)
+;				;기점측의 세력으로부터 봐 대상 도시의 지배 세력과의 인접 플래그만을 세운다
+;				TMP_COUNTRY_IS_NEIBORING:(CITY_OWNER:(LOCAL:0)):(CITY_OWNER:(LOCAL:5)) = 1
+;;					DEBUGPRINTFORML 접속 {LOCAL:0} , {LOCAL:5}
+;			ENDIF
+;		;중계점이면 더욱 루프를 전개
+;		ELSEIF CITY_TYPE:(LOCAL:5) == 1
+;			FOR LOCAL:2, 0, 10
+;				;CITY_ROUTE로부터 인접하고 있는 도시를 참조
+;				LOCAL:6 = CITY_ROUTE:(LOCAL:5):(LOCAL:2)
+;				;중계점은 아니고 중립 도시도 아니다
+;				IF CITY_TYPE:(LOCAL:6) == 0 && CITY_OWNER:(LOCAL:6)
+;				;양도시의 지배 세력이 다르다
+;					IF CITY_OWNER:(LOCAL:0) != CITY_OWNER:(LOCAL:6)
+;						;기점측의 세력으로부터 봐 대상 도시의 지배 세력과의 인접 플래그만을 세운다
+;						TMP_COUNTRY_IS_NEIBORING:(CITY_OWNER:(LOCAL:0)):(CITY_OWNER:(LOCAL:6)) = 1
+;;							DEBUGPRINTFORML 중계 {LOCAL:0} , {LOCAL:6}
+;					ENDIF
+;				ENDIF
+;			NEXT
+;		ENDIF
+;	NEXT
+;NEXT
+
+;환상향봄의 도시총당 방식. IS_ROUTE가 복수의 중계점에 대응 하기 시작하면 이쪽이 안전하게 운용할 수 있습니다
+;변경점은 최초로 세력 별개로 돌리는 것은 아니고, 별세력으로 연결되어 있는 도시가 있으면 양도시의 지배 세력을 봐 처리를 하는 느낌입니다
+;기점이 되는 도시
+FOR LOCAL:0 , 1 , MAX_CITY
+	;중계점은 아니고 중립 도시도 아니다
+	IF CITY_TYPE:(LOCAL:0) == 0 && CITY_OWNER:(LOCAL:0)
+		;인접을 확인하는 도시
+		FOR LOCAL:1 , 1 , MAX_CITY
+			;중계점은 아니고 중립 도시도 아니다
+			IF CITY_TYPE:(LOCAL:0) == 0 && CITY_OWNER:(LOCAL:1)
+			;양도시의 지배 세력이 달라, 한편 2 도시가 접속하고 있다
+				IF CITY_OWNER:(LOCAL:0) != CITY_OWNER:(LOCAL:1) && IS_ROUTE(LOCAL:0, LOCAL:1)
+					;기점측의 세력으로부터 봐 대상 도시의 지배 세력과의 인접 플래그만을 세운다
+					TMP_COUNTRY_IS_NEIBORING:(CITY_OWNER:(LOCAL:0)):(CITY_OWNER:(LOCAL:1)) = 1
+				ENDIF
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;연합에 의한 토벌대상의 맵을 작성하는 함수
+;-------------------------------------------------
+@TMP_CREATE_UNION_TARGET_MAP
+VARSET TMP_COUNTRY_UNION_TARGET, -1
+FOR LOCAL:0, 0, MAX_COUNTRY
+	IF COUNTRY_BOSS:(LOCAL:0) >= 1
+		TMP_COUNTRY_UNION_TARGET:(LOCAL:0) = GET_UNION_TARGET(LOCAL:0)
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;ARG:0번의 도시상에 적세력 부대가 존재할지 어떨지를 판정하는 함수
+;-------------------------------------------------
+@TMP_IS_STAY_ENEMY_UNIT(ARG:0, ARG:1)
+#FUNCTION
+IF ARG:0 < 0 || ARG:0 >= GET_CITY_NUM() + 1
+	RETURNF 0
+ENDIF
+
+FOR LOCAL:0, 0, 20
+	IF TMP_UNIT_ONCITY_CNT:(ARG:0):(LOCAL:0) > 0 && TMP_COUNTRY_RELATION:(ARG:1):(TMP_UNIT_ONCITY_CNT:(ARG:0):(LOCAL:0)) == 0
+		RETURNF 1
+	ENDIF
+NEXT
+RETURNF 0
+
+;-------------------------------------------------
+;사관의 부대 소속 맵을 작성하는 함수(0=프리, 1=유격, 2=방위, -1=그 외 특수상태)
+;이쪽에 조건을 추가했을 경우는, @IS_FREE에도 추가하는 것
+;-------------------------------------------------
+@TMP_CREATE_IS_FREE_MAP
+CVARSET TMP_IS_FREE, 0, 0
+
+FOR LOCAL:0, 0, CHARANUM
+	;CFLAG의 체크
+	IF CFLAG:(LOCAL:0):포로처 || CFLAG:(LOCAL:0):특수상태 || CFLAG:(LOCAL:0):행동불능상태 == 행동불능_아이
+		TMP_IS_FREE:(LOCAL:0):0 = -1
+		CONTINUE
+	;소질 체크
+	ELSEIF TALENT:(LOCAL:0):촉수임신 || TALENT:(LOCAL:0):Ａ촉수임신 || IS_ANIMAL(LOCAL:0)
+		TMP_IS_FREE:(LOCAL:0):0 = -1
+		CONTINUE
+	;그 외의 체크
+	ELSEIF COOLTIME:(LOCAL:0):0 || (LOCAL:0 == GET_COOK())
+		TMP_IS_FREE:(LOCAL:0):0 = -1
+		CONTINUE
+	ENDIF
+NEXT
+
+FOR LOCAL:0, 0, MAX_CITY
+	FOR LOCAL:1, 0, 2
+		LOCAL:2 = GET_CITY_COMMANDER(LOCAL:0, LOCAL:1)
+		IF LOCAL:2 >= 0
+			TMP_IS_FREE:(LOCAL:2):0 = 2
+		ENDIF
+	NEXT
+NEXT
+FOR LOCAL:0, 0, MAX_COUNTRY
+	IF IS_COUNTRY(LOCAL:0)
+		FOR LOCAL:1, 0, 10
+			IF UNIT_SOLDIER:(LOCAL:0):(LOCAL:1) > 0
+				FOR LOCAL:2, 0, 3
+					LOCAL:3 = GET_UNIT_COMMANDER(LOCAL:0, LOCAL:1, LOCAL:2)
+					IF LOCAL:3 >= 0
+						TMP_IS_FREE:(LOCAL:3):0 = 1
+					ENDIF
+				NEXT
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;ARG:0번의 세력에 대해서, 프리인 무장의 수를 취득하는 함수
+;직전에 TMP_CREATE_IS_FREE_MAP 함수의 호출이 필요
+;-------------------------------------------------
+@TMP_GET_IS_FREE_NUM(ARG:0)
+#FUNCTION
+#DIM 인원수
+VARSET 인원수
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):소속 == ARG:0 && TMP_IS_FREE:(LOCAL:0):0 == 0
+		인원수 ++
+	ENDIF
+NEXT
+RETURNF 인원수
+;-------------------------------------------------
+;ARG:0번의 세력에 대해서, 정치 파워의 합계치를 돌려주는 함수
+;직전에 TMP_CREATE_IS_FREE_MAP 함수의 호출이 필요
+;-------------------------------------------------
+@TMP_GET_POLITICS_POWER(ARG:0)
+#FUNCTION
+LOCAL:1 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):소속 == ARG:0 && TMP_IS_FREE:(LOCAL:0):0 == 0
+		LOCAL:1 += ABL_POWER(ABL:(LOCAL:0):정치, LOCAL:0)
+	ENDIF
+NEXT
+RETURNF LOCAL:1
+
+;-------------------------------------------------
+;ARG:0번의 세력에 대해서, 요리 파워의 합계치를 돌려주는 함수
+;직전에 TMP_CREATE_IS_FREE_MAP 함수의 호출이 필요
+;-------------------------------------------------
+@TMP_GET_COOKING_POWER(ARG:0)
+#FUNCTION
+LOCAL:1 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):소속 == ARG:0 && TMP_IS_FREE:(LOCAL:0):0 == 0
+		LOCAL:1 += ABL_POWER(ABL:(LOCAL:0):요리, LOCAL:0)
+	ENDIF
+NEXT
+RETURNF LOCAL:1
+
+@TMP_CREATE_POLITICS_POWER_MAP
+VARSET TMP_SUM_POLITICS_POWER
+FOR LOCAL:0, 0, CHARANUM
+	SIF TMP_IS_FREE:(LOCAL:0):0 == 0
+		TMP_SUM_POLITICS_POWER:(CFLAG:(LOCAL:0):소속) += ABL_POWER(ABL:(LOCAL:0):정치, LOCAL:0)
+NEXT
+
+@TMP_CREATE_COOKING_POWER_MAP
+VARSET TMP_SUM_COOKING_POWER
+FOR LOCAL:0, 0, CHARANUM
+	SIF TMP_IS_FREE:(LOCAL:0):0 == 0
+		TMP_SUM_COOKING_POWER:(CFLAG:(LOCAL:0):소속) += ABL_POWER(ABL:(LOCAL:0):요리, LOCAL:0)
+NEXT
+
+
+
+
+;-------------------------------------------------
+;●전선의 계산에 대한 메모
+;-------------------------------------------------
+;	새롭게 도시Ａ를 공략했을 경우
+;		Ａ가 적도시와 인접하고 있으면 전선＋1
+;	Ａ가 인접하는 자군의 도시에 대해서
+;		적도시와 인접하고 있지 않으면 전선-1
+
+;	도시Ａ를 빼앗겼을 경우
+;		Ａ가 적도시와 인접하고 있으면 전선-1
+;	Ａ가 인접하는 자군의 도시에 대해서
+;		적도시와 인접하고 있지 않으면 전선＋1
+
+;	※적도시……자군·무소속·Ａ이외의 도시
+
+;-------------------------------------------------
+;ARG:0번의 세력이 ARG:1번의 도시를 획득했을 경우에 증감하는 전선의 수를 돌려준다
+;-------------------------------------------------
+@TMP_CHANGE_LINE_ONGET(ARG:0, ARG:1)
+#FUNCTION
+LOCAL:10 = 0
+
+;인접 도시의 리스트를 작성
+LOCAL:9 = 0
+FOR LOCAL:0, 0, 10
+	LOCAL:3 = CITY_ROUTE:(ARG:1):(LOCAL:0)
+	IF LOCAL:3 > 0
+		;도시의 경우
+		IF CITY_TYPE:(LOCAL:3) == 0
+			LOCAL:(LOCAL:9 + 20) = LOCAL:3
+			LOCAL:9 ++
+		;중계지점의 경우
+		ELSE
+			;이제(이미/벌써/더는/정말) 1단계 루트 탐색
+			FOR LOCAL:1, 0, 10
+				LOCAL:4 = CITY_ROUTE:(LOCAL:3):(LOCAL:1)
+				IF LOCAL:4 > 0 && LOCAL:4 != ARG:1
+					LOCAL:(LOCAL:9 + 20) = LOCAL:4
+					LOCAL:9 ++
+				ENDIF
+			NEXT
+		ENDIF
+	ENDIF
+NEXT
+
+;●도시 ARG:1이 적도시와 인접하고 있으면 전선＋1
+FOR LOCAL:0, 0, LOCAL:9
+	LOCAL:3 = CITY_OWNER:(LOCAL:(LOCAL:0 + 20))
+	;무소속 도시는 무해한 것으로 간주해, 기한부 동맹 이하의 관계의 세력은 적으로 간주해 판정
+	IF LOCAL:3 != 0 && TMP_COUNTRY_RELATION:(ARG:0):(LOCAL:3) <= 3
+		;전선을＋1
+		LOCAL:10 ++
+		BREAK
+	ENDIF
+NEXT
+
+;●인접하는 자군의 도시에 대해서, 다른 적도시와 인접하고 있지 않으면 전선-1
+FOR LOCAL:0, 0, LOCAL:9
+	LOCAL:3 = LOCAL:(LOCAL:0 + 20)
+	LOCAL:4 = CITY_OWNER:(LOCAL:3)
+	IF LOCAL:4 == ARG:0
+		;인접하는 자군의 도시 1개에 대해, 전선을- 1한다
+		LOCAL:10 --
+		FOR LOCAL:1, 0, 10
+			LOCAL:5 = CITY_ROUTE:(LOCAL:3):(LOCAL:1)
+			IF LOCAL:5 > 0 && LOCAL:5 != ARG:1
+				;도시의 경우
+				IF CITY_TYPE:(LOCAL:5) == 0
+					LOCAL:6 = CITY_OWNER:(LOCAL:5)
+					IF LOCAL:6 != 0 && TMP_COUNTRY_RELATION:(ARG:0):(LOCAL:6) <= 3
+						;다른 적도시와 인접하고 있으면, 사전으로 줄인 만큼을 캔슬하기 위해서 전선을＋1
+						LOCAL:10 ++
+						BREAK
+					ENDIF
+				;중계지점의 경우
+				ELSE
+					LOCAL:11 = 0
+					;이제(이미/벌써/더는/정말) 1단계 루트 탐색
+					FOR LOCAL:2, 0, 10
+						LOCAL:6 = CITY_ROUTE:(LOCAL:5):(LOCAL:2)
+						IF LOCAL:6 > 0 && LOCAL:6 != LOCAL:3 && LOCAL:6 != ARG:1
+							LOCAL:7 = CITY_OWNER:(LOCAL:6)
+							IF LOCAL:7 != 0 && TMP_COUNTRY_RELATION:(ARG:0):(LOCAL:7) <= 3
+								;다른 적도시와 인접하고 있으면, 사전으로 줄인 만큼을 캔슬하기 위해서 전선을＋1
+								LOCAL:10 ++
+								LOCAL:11 = 1
+								BREAK
+							ENDIF
+						ENDIF
+					NEXT
+					;이중 루프로부터 빠지기 위한 플래그 관리
+					IF LOCAL:11
+						BREAK
+					ENDIF
+				ENDIF
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+
+RETURNF LOCAL:10
+
+;-------------------------------------------------
+;ARG:0번의 세력이 ARG:1번의 도시를 잃었을 경우에 증감하는 전선의 수를 돌려준다
+;-------------------------------------------------
+@TMP_CHANGE_LINE_ONLOSE(ARG:0, ARG:1)
+#FUNCTION
+LOCAL:10 = 0
+
+;인접 도시의 리스트를 작성
+LOCAL:9 = 0
+FOR LOCAL:0, 0, 10
+	LOCAL:3 = CITY_ROUTE:(ARG:1):(LOCAL:0)
+	IF LOCAL:3 > 0
+		;도시의 경우
+		IF CITY_TYPE:(LOCAL:3) == 0
+			LOCAL:(LOCAL:9 + 20) = LOCAL:3
+			LOCAL:9 ++
+		;중계지점의 경우
+		ELSE
+			;이제(이미/벌써/더는/정말) 1단계 루트 탐색
+			FOR LOCAL:1, 0, 10
+				LOCAL:4 = CITY_ROUTE:(LOCAL:3):(LOCAL:1)
+				IF LOCAL:4 > 0 && LOCAL:4 != ARG:1
+					LOCAL:(LOCAL:9 + 20) = LOCAL:4
+					LOCAL:9 ++
+				ENDIF
+			NEXT
+		ENDIF
+	ENDIF
+NEXT
+
+;●도시 ARG:1이 적도시와 인접하고 있으면 전선-1
+FOR LOCAL:0, 0, LOCAL:9
+	LOCAL:3 = CITY_OWNER:(LOCAL:(LOCAL:0 + 20))
+	;무소속 도시는 무해한 것으로 간주해, 기한부 동맹 이하의 관계의 세력은 적으로 간주해 판정
+	IF LOCAL:3 != 0 && TMP_COUNTRY_RELATION:(ARG:0):(LOCAL:3) <= 3
+		;전선을-1
+		LOCAL:10 --
+		BREAK
+	ENDIF
+NEXT
+
+;●인접하는 자군의 도시에 대해서, 다른 적도시와 인접하고 있지 않으면 전선＋1
+FOR LOCAL:0, 0, LOCAL:9
+	LOCAL:3 = LOCAL:(LOCAL:0 + 20)
+	LOCAL:4 = CITY_OWNER:(LOCAL:3)
+	IF LOCAL:4 == ARG:0
+		;인접하는 자군의 도시 1개에 대해, 전선을＋1한다
+		LOCAL:10 ++
+		FOR LOCAL:1, 0, 10
+			LOCAL:5 = CITY_ROUTE:(LOCAL:3):(LOCAL:1)
+			IF LOCAL:5 > 0 && LOCAL:5 != ARG:1
+				;도시의 경우
+				IF CITY_TYPE:(LOCAL:5) == 0
+					LOCAL:6 = CITY_OWNER:(LOCAL:5)
+					IF LOCAL:6 != 0 && TMP_COUNTRY_RELATION:(ARG:0):(LOCAL:6) <= 3
+						;다른 적도시와 인접하고 있으면, 사전으로 줄인 만큼을 캔슬하기 위해서 전선을-1
+						LOCAL:10 --
+						BREAK
+					ENDIF
+				;중계지점의 경우
+				ELSE
+					LOCAL:11 = 0
+					;이제(이미/벌써/더는/정말) 1단계 루트 탐색
+					FOR LOCAL:2, 0, 10
+						LOCAL:6 = CITY_ROUTE:(LOCAL:5):(LOCAL:2)
+						IF LOCAL:6 > 0 && LOCAL:6 != LOCAL:3 && LOCAL:6 != ARG:1
+							LOCAL:7 = CITY_OWNER:(LOCAL:6)
+							IF LOCAL:7 != 0 && TMP_COUNTRY_RELATION:(ARG:0):(LOCAL:7) <= 3
+								;다른 적도시와 인접하고 있으면, 사전으로 줄인 만큼을 캔슬하기 위해서 전선을-1
+								LOCAL:10 --
+								LOCAL:11 = 1
+								BREAK
+							ENDIF
+						ENDIF
+					NEXT
+					;이중 루프로부터 빠지기 위한 플래그 관리
+					IF LOCAL:11
+						BREAK
+					ENDIF
+				ENDIF
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+
+RETURNF LOCAL:10
+
+;-----------------------------
+;세력의 쇼우 평가를 준비
+;-----------------------------
+@TMP_PREPARE_COUNTRY_STARS()
+#DIM 사관수, MAX_COUNTRY
+#DIM 도시수, MAX_COUNTRY
+#DIM 능력치, MAX_COUNTRY
+#DIM 경제치, MAX_COUNTRY
+#DIM 방위치, MAX_COUNTRY
+#DIM 합계포인트, MAX_COUNTRY
+#DIM 세력수
+VARSET 사관수, __INT_MIN__
+VARSET 도시수, __INT_MIN__
+VARSET 능력치, __INT_MIN__
+VARSET 경제치, __INT_MIN__
+VARSET 방위치, __INT_MIN__
+VARSET 합계포인트, __INT_MAX__
+VARSET 세력수, 0
+VARSET TMP_COUNTRY_STARS, 0
+;---란 킹용 TMP_COUNTRY_STARS수준비 시퀀스---
+;치 합계 준비
+FOR LOCAL, 0, MAX_COUNTRY
+	IF IS_COUNTRY(LOCAL)
+		사관수:LOCAL = GET_COMMANDER_NUM(LOCAL)
+		도시수:LOCAL = GET_OWN_CITY(LOCAL)
+		경제치:LOCAL = GET_SUM_ECONOMY(LOCAL)
+		방위치:LOCAL = GET_SUM_GUARD(LOCAL)
+		세력수 ++
+		능력치:LOCAL = 0
+		합계포인트:LOCAL = 0
+		FOR LOCAL:1, 0, CHARANUM
+			SIF LOCAL == CFLAG:(LOCAL:1):소속
+				능력치:LOCAL += (TMP_CHARA_STARS:(LOCAL:1) >= 7)
+		NEXT
+	ENDIF
+NEXT
+
+;포인트 준비  각 분야의 순위의 값의 합계인 것으로, 작은 것이 좋다
+;배율이 1보다 작으면 여럿에게 영향을 주지 않는 분야, 크면 주는 분야
+FOR LOCAL, 0, 세력수
+	LOCAL:1 = FINDELEMENT(사관수, MAXARRAY(사관수))
+	사관수:(LOCAL:1) = __INT_MIN__
+	합계포인트:(LOCAL:1) += LOCAL / 2
+
+	LOCAL:1 = FINDELEMENT(도시수, MAXARRAY(도시수))
+	도시수:(LOCAL:1) = __INT_MIN__
+	합계포인트:(LOCAL:1) += LOCAL * 3 / 2
+
+	LOCAL:1 = FINDELEMENT(능력치, MAXARRAY(능력치))
+	능력치:(LOCAL:1) = __INT_MIN__
+	합계포인트:(LOCAL:1) += LOCAL
+
+	LOCAL:1 = FINDELEMENT(경제치, MAXARRAY(경제치))
+	경제치:(LOCAL:1) = __INT_MIN__
+	합계포인트:(LOCAL:1) += LOCAL * 2
+
+	LOCAL:1 = FINDELEMENT(방위치, MAXARRAY(방위치))
+	방위치:(LOCAL:1) = __INT_MIN__
+	합계포인트:(LOCAL:1) += LOCAL / 4
+NEXT
+
+;TMP_COUNTRY_STARS의 수
+LOCAL:2 = 5
+;이 TMP_COUNTRY_STARS수에서의 TMP_COUNTRY_STARS 부여 회수
+LOCAL:3 = 0
+
+;TMP_COUNTRY_STARS를 부여
+FOR LOCAL, 0, 세력수
+	LOCAL:1 = FINDELEMENT(합계포인트, MINARRAY(합계포인트))
+	합계포인트:(LOCAL:1) = __INT_MAX__
+	TMP_COUNTRY_STARS:(LOCAL:1) = LOCAL:2
+	LOCAL:3 ++
+	IF LOCAL:2 <= 세력수 % 5
+		IF 세력수 / 5 + 1 <= LOCAL:3
+			LOCAL:3 = 0
+			LOCAL:2 --
+		ENDIF
+	ELSE
+		IF 세력수 / 5 <= LOCAL:3
+			LOCAL:3 = 0
+			LOCAL:2 --
+		ENDIF
+	ENDIF
+	;그 TMP_COUNTRY_STARS수로 TMP_COUNTRY_STARS를 준 회수가 세력수의 것 1/5보다 큰, 없고 그 TMP_COUNTRY_STARS수가 총수의 5로 나눈 너무라면 계속
+NEXT
+
+
+
+;-----------------------------
+;쇼우 평가를 표시
+;TMP_CREATE_STARS_MAP와 세트
+;-----------------------------
+@TMP_PRINT_COUNTRY_STARS(세력번호)
+#DIM 세력번호
+SELECTCASE TMP_COUNTRY_STARS:세력번호
+	CASE 5
+		LOCAL:1 = 칼라_핑크
+	CASE 4
+		LOCAL:1 = 칼라_오렌지
+	CASE 3
+		LOCAL:1 = 칼라_초록
+	CASE 2
+		LOCAL:1 = 칼라_시안
+	CASE 1
+		LOCAL:1 = 칼라_회색
+	CASEELSE
+		LOCAL:1 = 0X000000
+ENDSELECT
+FOR LOCAL, 0, 5
+	IF LOCAL < TMP_COUNTRY_STARS:세력번호
+		CALL COLOR_PRINT("★", LOCAL:1)
+	ELSE
+		PRINT ☆
+	ENDIF
+NEXT
+
+;-----------------------------
+;캐릭터의 쇼우 평가를 준비
+;-----------------------------
+@TMP_PREPARE_CHARA_STARS()
+#DIM 합계포인트, 3000
+#DIM 캐릭터수
+#DIM 능력 = GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "요술"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창")
+VARSET 합계포인트, __INT_MAX__
+
+;치 합계 준비
+FOR LOCAL, 0, CHARANUM
+	합계포인트:LOCAL = 0
+	SIF CFLAG:LOCAL:특수상태 == 특수상태_사망
+		CONTINUE
+	합계포인트:LOCAL += ABL:LOCAL:무투
+	합계포인트:LOCAL += ABL:LOCAL:방위
+	합계포인트:LOCAL += ABL:LOCAL:지략
+	합계포인트:LOCAL += ABL:LOCAL:정치
+	합계포인트:LOCAL += ABL:LOCAL:요술 * 3 / 2
+	합계포인트:LOCAL += MAX(ABL:LOCAL:요리 - 50, 0)
+	합계포인트:LOCAL += MAX(ABL:LOCAL:가창 - 50, 0)
+	FOR LOCAL:1, 0, VARSIZE("능력")
+		SELECTCASE 능력:(LOCAL:1)
+			CASE GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치")
+				SELECTCASE ALPHABET_RANK(ABL:LOCAL:(능력:(LOCAL:1)), 0)
+					CASE "S"
+						합계포인트:LOCAL += 15
+					CASE "A"
+						합계포인트:LOCAL += 10
+					CASE "B"
+						합계포인트:LOCAL += 5
+				ENDSELECT
+			CASE GETNUM(ABL, "요술")
+				SELECTCASE ALPHABET_RANK(ABL:LOCAL:(능력:(LOCAL:1)), 1)
+					CASE "S"
+						합계포인트:LOCAL += 30
+					CASE "A"
+						합계포인트:LOCAL += 25
+					CASE "B"
+						합계포인트:LOCAL += 20
+					CASE "C"
+						합계포인트:LOCAL += 15
+					CASE "D"
+						합계포인트:LOCAL += 10
+					CASE "E"
+						합계포인트:LOCAL += 5
+				ENDSELECT
+			CASE GETNUM(ABL, "요리"), GETNUM(ABL, "가창")
+				SELECTCASE ALPHABET_RANK(ABL:LOCAL:(능력:(LOCAL:1)), 2)
+					CASE "S"
+						합계포인트:LOCAL += 20
+					CASE "A"
+						합계포인트:LOCAL += 15
+					CASE "B"
+						합계포인트:LOCAL += 10
+					CASE "C"
+						합계포인트:LOCAL += 5
+				ENDSELECT
+		ENDSELECT
+	NEXT
+	FOR LOCAL:1, 0, SKILL_GENRE_NUM
+		FOR LOCAL:2, 0, MAX_SKILL_SLOT
+			LOCALS = SKILL_{SKILL_NO_SLOT:(LOCAL):(LOCAL:1):(LOCAL:2)}_%SKILL_GENRE_ENG:(LOCAL:1)%_{SKILL_ID_SLOT:(LOCAL):(LOCAL:1):(LOCAL:2)}
+			TRYCCALLFORM %LOCALS%_EXIST
+				CALLFORM %LOCALS%_LEVEL
+				SELECTCASE RESULT
+					CASE 2
+						합계포인트:LOCAL += 3
+					CASE 3
+						합계포인트:LOCAL += 7
+					CASE 4
+						합계포인트:LOCAL += 10
+					CASE 5
+						합계포인트:LOCAL += 15
+				ENDSELECT
+			CATCH
+			ENDCATCH
+		NEXT
+	NEXT
+NEXT
+
+
+
+;TMP_CHARA_STARS의 수
+LOCAL:2 = 1
+;이 TMP_CHARA_STARS수에서의 TMP_CHARA_STARS 부여 회수
+LOCAL:3 = 0
+
+;TMP_CHARA_STARS를 작은 순서에 부여
+FOR LOCAL, 0, CHARANUM
+	LOCAL:1 = FINDELEMENT(합계포인트, MINARRAY(합계포인트))
+	합계포인트:(LOCAL:1) = __INT_MAX__
+	TMP_CHARA_STARS:(LOCAL:1) = LOCAL:2
+	LOCAL:3 ++
+	IF LOCAL:2 <= CHARANUM % 10
+		IF CHARANUM / 10 + 1 <= LOCAL:3
+			LOCAL:3 = 0
+			LOCAL:2 ++
+		ENDIF
+	ELSEIF CHARANUM / 10 <= LOCAL:3
+		LOCAL:3 = 0
+		LOCAL:2 ++
+	ENDIF
+	;그 TMP_CHARA_STARS수로 TMP_CHARA_STARS를 준 회수가 세력수의 것 1/10보다 큰, 없고 그 TMP_CHARA_STARS수가 총수의 10으로 나눈 너무라면 계속
+NEXT
+
+;-----------------------------
+;캐릭터의 쇼우 평가를 표시
+;TMP_CREATE_STARS_MAP와 세트
+;-----------------------------
+@TMP_PRINT_CHARA_STARS(대상)
+#DIM 대상
+FOR LOCAL, 0, 10
+	IF LOCAL < TMP_CHARA_STARS:대상
+		CALL COLOR_PRINT("★", GET_CHARA_STARS_COLOR(대상))
+	ELSE
+		PRINT ☆
+	ENDIF
+NEXT
+;-----------------------------
+;캐릭터의 쇼우 평가를 심플하게 표시
+;-----------------------------
+@TMP_PRINT_CHARA_STARS_NUM(대상)
+#DIM 대상
+CALL COLOR_PRINT(@"★{TMP_CHARA_STARS:대상, 2, RIGHT}", GET_CHARA_STARS_COLOR(대상))
+
+;-----------------------------
+;캐릭터의 쇼우 평가용의 색을 취득
+;-----------------------------
+@GET_CHARA_STARS_COLOR(대상)
+#FUNCTION
+#DIM 대상
+SELECTCASE TMP_CHARA_STARS:대상
+	CASE 1
+		RETURNF 칼라_회색
+	CASE 2
+		RETURNF 칼라_명회색
+	CASE 3
+		RETURNF 칼라_파랑
+	CASE 4
+		RETURNF 칼라_시안
+	CASE 5
+		RETURNF 칼라_초록
+	CASE 6
+		RETURNF 칼라_노랑
+	CASE 7
+		RETURNF 칼라_오렌지
+	CASE 8
+		RETURNF 칼라_빨강
+	CASE 9
+		RETURNF 칼라_핑크
+	CASE 10
+		RETURNF 칼라_파보라
+ENDSELECT
+RETURNF 0x000000
+
+;-----------------------------
+;있는 도시가 각 세력의 도시와 접속하고 있을까의 맵을 작성
+;-----------------------------
+@TMP_CREATE_CONNECTION_MAP
+VARSET TMP_CONNECTED_TO_US, 0
+VARSET TMP_CONNECTED_TO_US_ONLY, 0
+VARSET TMP_CONNECTED_TO_ENEMY, 0
+
+FOR LOCAL, 0, MAX_COUNTRY
+	;자세력과의 접속을 확인
+	FOR LOCAL:1, 0, MAX_CITY
+		IF CITY_OWNER:(LOCAL:1) == LOCAL
+			TMP_CONNECTED_TO_US:(LOCAL):(LOCAL:1) = 1
+			CONTINUE
+		ENDIF
+		FOR LOCAL:2, 0, 10
+			SIF CITY_ROUTE:(LOCAL:1):(LOCAL:2) < 1
+				BREAK
+			IF CITY_TYPE:(CITY_ROUTE:(LOCAL:1):(LOCAL:2)) == 1
+				FOR LOCAL:3, 0, 10
+					SIF CITY_ROUTE:(CITY_ROUTE:(LOCAL:1):(LOCAL:2)):(LOCAL:3) < 1
+						BREAK
+					SIF CITY_ROUTE:(CITY_ROUTE:(LOCAL:1):(LOCAL:2)):(LOCAL:3) == CITY_ROUTE:(LOCAL:1):(LOCAL:2)
+						CONTINUE
+					IF CITY_OWNER:(CITY_ROUTE:(CITY_ROUTE:(LOCAL:1):(LOCAL:2)):(LOCAL:3)) == LOCAL
+						TMP_CONNECTED_TO_US:(LOCAL):(LOCAL:1) = 1
+						BREAK
+					ENDIF
+				NEXT
+			ENDIF
+			SIF CITY_OWNER:(CITY_ROUTE:(LOCAL:1):(LOCAL:2)) == LOCAL
+				TMP_CONNECTED_TO_US:(LOCAL):(LOCAL:1) = 1
+			SIF TMP_CONNECTED_TO_US:(LOCAL):(LOCAL:1)
+				BREAK
+		NEXT
+	NEXT
+
+	;적과의 접속을 확인
+	FOR LOCAL:1, 0, MAX_CITY
+		SIF CITY_OWNER:(LOCAL:1) != LOCAL
+			CONTINUE
+		FOR LOCAL:2, 0, 10
+			SIF CITY_ROUTE:(LOCAL:1):(LOCAL:2) < 1
+				BREAK
+			IF CITY_TYPE:(CITY_ROUTE:(LOCAL:1):(LOCAL:2)) == 1
+				FOR LOCAL:3, 0, 10
+					SIF CITY_ROUTE:(CITY_ROUTE:(LOCAL:1):(LOCAL:2)):(LOCAL:3) < 1
+						BREAK
+					SIF CITY_ROUTE:(CITY_ROUTE:(LOCAL:1):(LOCAL:2)):(LOCAL:3) == CITY_ROUTE:(LOCAL:1):(LOCAL:2)
+						CONTINUE
+					IF TMP_COUNTRY_RELATION:LOCAL:(CITY_OWNER:(CITY_ROUTE:(CITY_ROUTE:(LOCAL:1):(LOCAL:2)):(LOCAL:3))) == 0 && IS_COUNTRY(CITY_OWNER:(CITY_ROUTE:(CITY_ROUTE:(LOCAL:1):(LOCAL:2)):(LOCAL:3)))
+						TMP_CONNECTED_TO_ENEMY:(LOCAL):(LOCAL:1) = 1
+						BREAK
+					ENDIF
+				NEXT
+			ELSE
+				TMP_CONNECTED_TO_ENEMY:LOCAL:(LOCAL:1) = (TMP_COUNTRY_RELATION:LOCAL:(CITY_OWNER:(LOCAL:1)) == 0 && IS_COUNTRY(CITY_OWNER:(LOCAL:1)))
+			ENDIF
+		NEXT
+	NEXT
+
+	;자세력이라는 보고 연결되어 있는지를 확인
+	FOR LOCAL:1, 0, MAX_CITY
+		;원래자세력 도시와 연결되지 않은 경우, 및 도시 소유자가 스스로 없는 경우는 안 돼
+		SIF !TMP_CONNECTED_TO_US:(LOCAL):(LOCAL:1)
+			CONTINUE
+		SIF CITY_OWNER:(LOCAL:1) != LOCAL
+			CONTINUE
+		FOR LOCAL:2, 0, 10
+			LOCAL:4 = 0
+			SIF CITY_ROUTE:(LOCAL:1):(LOCAL:2) < 1
+				BREAK
+			IF CITY_TYPE:(CITY_ROUTE:(LOCAL:1):(LOCAL:2)) == 1
+				FOR LOCAL:3, 0, 10
+					SIF CITY_ROUTE:(CITY_ROUTE:(LOCAL:1):(LOCAL:2)):(LOCAL:3) < 1
+						CONTINUE
+					SIF CITY_ROUTE:(CITY_ROUTE:(LOCAL:1):(LOCAL:2)):(LOCAL:3) == CITY_ROUTE:(LOCAL:1):(LOCAL:2)
+						CONTINUE
+					IF CITY_OWNER:(CITY_ROUTE:(CITY_ROUTE:(LOCAL:1):(LOCAL:2)):(LOCAL:3)) != LOCAL
+						LOCAL:4 = 1
+						BREAK
+					ENDIF
+				NEXT
+			ENDIF
+			SIF CITY_TYPE:(CITY_ROUTE:(LOCAL:1):(LOCAL:2)) != 1 && CITY_OWNER:(CITY_ROUTE:(LOCAL:1):(LOCAL:2)) != LOCAL
+				LOCAL:4 = 1
+			SIF LOCAL:4
+				BREAK
+		NEXT
+		SIF !LOCAL:4
+			TMP_CONNECTED_TO_US_ONLY:(LOCAL):(LOCAL:1) = 1
+	NEXT
+NEXT
+
+;-----------------------------
+;각 세력이 어떻게 뚝 떨어진 영토가 되어 있을까의 맵을 작성
+;-----------------------------
+@TMP_CREATE_ENCLAVE_MAP
+#DIM CURRENT_NODE
+#DIM CURRENT_LOOP
+#DIM WORK_NODE
+#DIM NODE_STACK, MAX_CITY
+#DIM LOOP_STACK, MAX_CITY
+#DIM CHECKED, MAX_CITY
+#DIM PASSED, MAX_CITY
+#DIM PASSED_NUM
+#DIM ENCLAVE_SIZE
+#DIM POINTER
+VARSET TMP_ENCLAVE_NUM
+VARSET TMP_ENCLAVE_SIZE
+VARSET TMP_MAX_ENCLAVE_SIZE
+
+FOR LOCAL, 0, MAX_COUNTRY
+	SIF !IS_COUNTRY(LOCAL)
+		CONTINUE
+	VARSET NODE_STACK
+	VARSET LOOP_STACK
+	VARSET CHECKED
+	VARSET POINTER
+	VARSET PASSED
+	VARSET PASSED_NUM
+	CURRENT_NODE = 1
+	CURRENT_LOOP = 0
+	FOR LOCAL:1, 1, GET_CITY_NUM() + 1
+		CURRENT_NODE = LOCAL:1
+		;대상세력의 도시는 아니면 스르
+		SIF CITY_OWNER:CURRENT_NODE != LOCAL:0
+			CONTINUE
+		;체크가 끝난 상태라면 날린다
+			SIF CHECKED:CURRENT_NODE
+				CONTINUE
+		;새로운 뚝 떨어진 영토인 것으로 뚝 떨어진 영토의 수를 늘린다
+		TMP_ENCLAVE_NUM:LOCAL ++
+		ENCLAVE_SIZE ++
+		;통과 도시에 기록
+		PASSED:0 = CURRENT_NODE
+		PASSED_NUM ++
+		;------여기로부터 재귀 처리（적인 것）-----
+		$RECURSION
+		;경향 노드를 체크한다
+		CHECKED:CURRENT_NODE = 1
+		;경향 노드의 접속 도시를 조사한다
+		FOR LOCAL:2, CURRENT_LOOP, 10
+			WORK_NODE = CITY_ROUTE:CURRENT_NODE:(LOCAL:2)
+			;체크가 끝난 상태라면 날린다
+			SIF CHECKED:WORK_NODE
+				CONTINUE
+			SIF WORK_NODE == 0
+				BREAK
+			;접속처가 중계점이 아니고, 대상세력의 도시가 아니면 날린다
+			SIF CITY_TYPE:(WORK_NODE) == 0 && CITY_OWNER:WORK_NODE != LOCAL
+				CONTINUE
+			;-------------재귀 처리---------------
+			;중계지점이 아니면, 뚝 떨어진 영토 사이즈를 늘린다
+			SIF CITY_TYPE:WORK_NODE == 0
+				ENCLAVE_SIZE ++
+			;통과 도시에 기록
+			PASSED:PASSED_NUM = WORK_NODE
+			PASSED_NUM ++
+			;스택에 CURRENT_NODE와 현재의 루프 모양황을 퇴피
+			NODE_STACK:POINTER = CURRENT_NODE
+			LOOP_STACK:POINTER = CURRENT_LOOP
+			POINTER ++
+			;CURRENT_NODE에 접속처를 들어갈 수 있다
+			CURRENT_NODE = WORK_NODE
+			CURRENT_LOOP = 0
+			GOTO RECURSION
+		NEXT
+		;GOTO RECURSION(재귀 호출에 상당) 하지 않고 끝까지 갈 수 있으면,
+		;재귀로 말하는 RETURN의 처리에 들어간다
+		POINTER --
+		;포인터가 0이상（아직 재귀 할 수 있다）라면 재귀
+		IF POINTER >= 0
+			CURRENT_NODE = NODE_STACK:POINTER
+			CURRENT_LOOP = LOOP_STACK:POINTER
+			GOTO RECURSION
+		ENDIF
+		;재귀 다 하면 통과 도시 모두에게 ENCLAVE_SIZE를 기록한다
+		FOR LOCAL:2, 0, PASSED_NUM
+			SIF CITY_TYPE:(PASSED:(LOCAL:2)) == 1
+				CONTINUE
+			TMP_ENCLAVE_SIZE:LOCAL:(PASSED:(LOCAL:2)) = ENCLAVE_SIZE
+		NEXT
+		;다음의 도시를 보기 전에, 초기화가 필요한 변수를 초기화
+		POINTER = 0
+		ENCLAVE_SIZE = 0
+		PASSED_NUM = 0
+	NEXT
+	LOCAL:2 = 0
+	FOR LOCAL:1, 0, GET_CITY_NUM() + 1
+		TMP_MAX_ENCLAVE_SIZE:(LOCAL) = MAX(TMP_MAX_ENCLAVE_SIZE:LOCAL, TMP_ENCLAVE_SIZE:(LOCAL):(LOCAL:1))
+	NEXT
+NEXT
+
+
+;-----------------------------
+;있는 세력으로부터 봐, 자세력의 도시가 어느 정도 중요한가의 맵을 작성한다
+;-----------------------------
+@TMP_CREATE_DEFENSIVE_IMPORTANCE_MAP
+#DIM 세력
+#DIM 도시
+VARSET TMP_DEFFENSIVE_IMPORTANCE
+
+FOR 세력, 0, MAX_COUNTRY
+	SIF !IS_COUNTRY(세력)
+		CONTINUE
+	FOR 도시, 1, GET_CITY_NUM() + 1
+		SIF CITY_OWNER:도시 != 세력
+			CONTINUE
+		TMP_DEFFENSIVE_IMPORTANCE:세력:도시 += CITY_ECONOMY:도시 * CITY_GUARD:도시 * MAX(TMP_CHANGE_LINE_ONLOSE(세력, 도시) + 1, 1)
+		;DEBUGPRINTFORML 세력{세력} 도시{도시} 방어 중요 {TMP_DEFFENSIVE_IMPORTANCE:세력:도시}
+	NEXT
+NEXT
+
+;-----------------------------
+;있는 세력으로부터 봐, 적세력의 도시가 어느 정도 가치가 있는 곳인가의 맵을 작성한다
+;-----------------------------
+@TMP_CREATE_OFFENSIVE_IMPORTANCE_MAP
+#DIM 세력
+#DIM 도시
+VARSET TMP_OFFENSIVE_IMPORTANCE
+
+FOR 세력, 0, MAX_COUNTRY
+	SIF !IS_COUNTRY(세력)
+		CONTINUE
+	FOR 도시, 1, GET_CITY_NUM() + 1
+		TMP_OFFENSIVE_IMPORTANCE:세력:도시 += CITY_ECONOMY:도시 / CITY_GUARD:도시 / MAX(TMP_CHANGE_LINE_ONGET(세력, 도시) + 1, 1)
+		;DEBUGPRINTFORML 세력{세력} 도시{도시} 경제{CITY_ECONOMY:도시/100} 방어{CITY_GUARD:도시} 전선{TMP_CHANGE_LINE_ONGET(세력, 도시)} 중요 {TMP_OFFENSIVE_IMPORTANCE:세력:도시}
+	NEXT
+NEXT
+
+;-----------------------------
+;있는 세력이 있는 도시에 쳐들어갈 수 있을까의 맵을 생성
+;-----------------------------
+@TMP_CREATE_IS_INVADABLE_MAP()
+#DIM 세력
+#DIM 도시
+
+VARSET TMP_IS_INVADABLE
+VARSET TMP_IS_BYPASS
+
+FOR 세력, 0, MAX_COUNTRY
+	SIF !IS_COUNTRY(세력)
+		CONTINUE
+	FOR 도시, 0, MAX_CITY
+		;그 도시와 적대하고 있지 않으면 안 돼
+		SIF TMP_COUNTRY_RELATION:세력:(CITY_OWNER:도시) != 0
+			CONTINUE
+		;중계점없음의 접속처를 우선한다
+		FOR LOCAL, 0, VARSIZE("CITY_ROUTE", 1)
+			SIF CITY_ROUTE:도시:LOCAL == 0
+				BREAK
+			;접속처가 도시에서, 한편 쳐들어가는 기점으로 할 수 있는 관계성이라면 그 도시의 번호를 넣는다
+			IF CITY_TYPE:(CITY_ROUTE:도시:LOCAL) == 0 && TMP_COUNTRY_RELATION:세력:(CITY_OWNER:(CITY_ROUTE:도시:LOCAL)) >= 2
+				TMP_IS_INVADABLE:세력:도시 = CITY_ROUTE:도시:LOCAL
+				BREAK
+			ENDIF
+		NEXT
+		;이제 결정하고 있으면 이 뒤에는 가지 않고, 다음의 도시의 조사에 옮긴다
+		SIF TMP_IS_INVADABLE:세력:도시
+			CONTINUE
+		;아직 결정하지 않으면, 중계점으로부터 얻는다
+		FOR LOCAL, 0, VARSIZE("CITY_ROUTE", 1)
+			SIF CITY_ROUTE:도시:LOCAL == 0
+				BREAK
+			;접속처가 중계지점이라면 접속처를 본다
+			IF CITY_TYPE:(CITY_ROUTE:도시:LOCAL) == 1
+				LOCAL:1 = CITY_ROUTE:도시:LOCAL
+				FOR LOCAL:2, 0, VARSIZE("CITY_ROUTE", 1)
+					SIF GROUPMATCH(CITY_ROUTE:(LOCAL:1):(LOCAL:2), 0, 도시)
+						CONTINUE
+					IF TMP_COUNTRY_RELATION:세력:(CITY_OWNER:(CITY_ROUTE:(LOCAL:1):(LOCAL:2))) >= 2
+						TMP_IS_INVADABLE:세력:도시 = CITY_ROUTE:(LOCAL:1):(LOCAL:2)
+						TMP_IS_BYPASS:세력:도시 = 1
+						GOTO END
+					ENDIF
+				NEXT
+			ENDIF
+		NEXT
+		$END
+	NEXT
+NEXT
+
+;FOR 세력, 0, MAX_COUNTRY
+;	SIF ! IS_COUNTRY(세력)
+;		CONTINUE
+;	DEBUGPRINTFORML ------%ANAME(GET_COUNTRY_BOSS(세력))%------
+;	FOR 도시, 1, GET_CITY_NUM() + 1
+;		DEBUGPRINTFORML %GET_CITYNAME(도시)% 공격원:%GET_CITYNAME(TMP_IS_INVADABLE:세력:도시)%
+;	NEXT
+;NEXT
+
+
+;--------------------------------------------------------
+;ARG:0번의 도시의 리스크를 체크
+; 6 현재적부대가 존재한다
+; 5 인접하는 중계지에 적부대를 확인
+; 4 이웃나라가 적대（중계지 없음）
+; 3 그 외
+; 2 이웃나라는 정전내지 동맹중이지만, 이웃나라와 동맹하고 있는 나라가 때려 올 가능성이 있다
+; 1 이웃나라는 정전내지 동맹중이지만, 이웃나라와 동맹하고 있는 나라가 때려 올 가능성이 없다
+; 0 안전
+;--------------------------------------------------------
+@TMP_CREATE_CITY_RISK_MAP()
+#DIM 세력
+#DIM 도시
+#DIM 도시보유세력
+#DIM 도시인접세력
+#DIM 중계점접속처
+
+VARSET TMP_CITY_RISK
+
+FOR 세력, 0, MAX_COUNTRY
+	SIF !IS_COUNTRY(세력)
+		CONTINUE
+	FOR 도시, 0, MAX_CITY
+		SIF CITY_OWNER:도시 != 세력
+			CONTINUE
+		;적부대가 있으면 6더 이상은 없기에 다음의 도시에
+		IF TMP_IS_STAY_ENEMY_UNIT(도시, 세력)
+			TMP_CITY_RISK:세력:도시 = 6
+			CONTINUE
+		ENDIF
+		;인접 도시를 주사
+		FOR LOCAL:0, 0, VARSIZE("CITY_ROUTE", 1)
+			SIF CITY_ROUTE:도시:(LOCAL:0) == 0
+				BREAK
+			;리스크 5이상이 되고 있으면 더 이상은 없기에 빠진다
+			SIF TMP_CITY_RISK:세력:도시 >= 5
+				BREAK
+			;접속처가 도시
+			IF CITY_TYPE:(CITY_ROUTE:도시:(LOCAL:0)) == 0
+				도시인접세력 = CITY_OWNER:(CITY_ROUTE:도시:(LOCAL:0))
+				;접속처의 소유자와의 관계로 정해진다
+				SELECTCASE TMP_COUNTRY_RELATION:세력:도시인접세력
+					CASE 0
+						;무소속이 아닌 적이라면 4
+						SIF IS_COUNTRY(도시인접세력)
+							TMP_CITY_RISK:세력:도시 = MAX(TMP_CITY_RISK:세력:도시, 4)
+					CASE IS != 5
+						IF TMP_CITY_RISK:세력:도시 < 2
+							;인접 세력이 정전～동맹이지만, 그 동맹 세력이 때려 올 가능성이 있다면 2
+							FOR LOCAL:1, 0, MAX_COUNTRY
+								IF IS_COUNTRY(LOCAL:1) && !GROUPMATCH(LOCAL:1, 세력, 도시인접세력) && GROUPMATCH(TMP_COUNTRY_RELATION:도시인접세력:(LOCAL:1), 3, 4) && TMP_COUNTRY_RELATION:세력:(LOCAL:1) == 0
+									TMP_CITY_RISK:세력:도시 = MAX(TMP_CITY_RISK:세력:도시, 2)
+									BREAK
+								ENDIF
+							NEXT
+						ENDIF
+				ENDSELECT
+			;중계점
+			ELSE
+				;중계점상에 적이 있다면 5
+				IF IS_STAY_ENEMY_UNIT(CITY_ROUTE:도시:(LOCAL:0), 세력)
+					TMP_CITY_RISK:세력:도시 = 5
+					BREAK
+				ENDIF
+				;여기에서 그리고, 4이상의 리스크는 나오지 않기 때문에, 이제(이미/벌써/더는/정말) 그 값 되고 있다면 다음에
+				SIF TMP_CITY_RISK:세력:도시 >= 4
+					CONTINUE
+				;중계점의 접속처를 취득
+				FOR LOCAL:1, 0, 10
+					SIF GROUPMATCH(CITY_ROUTE:(CITY_ROUTE:도시:(LOCAL:0)):(LOCAL:1), 0, 도시)
+						CONTINUE
+					중계점접속처 = CITY_ROUTE:(CITY_ROUTE:도시:(LOCAL:0)):(LOCAL:1)
+					도시인접세력 = CITY_OWNER:중계점접속처
+					;무소속이라면 노우 리스크와 동의
+					SIF !IS_COUNTRY(도시인접세력)
+						CONTINUE
+					;인접처가 적이라면 3
+					IF TMP_COUNTRY_RELATION:세력:도시인접세력 == 0
+						TMP_CITY_RISK:세력:도시 = MAX(TMP_CITY_RISK:세력:도시, 3)
+						BREAK
+					;인접처가 동맹국이지만, 그 동맹국이 때려 올 수 있는이라면 1
+					ELSEIF GROUPMATCH(TMP_COUNTRY_RELATION:세력:도시인접세력, 2, 3, 4) && TMP_CITY_RISK:세력:도시 < 1
+						FOR LOCAL:2, 0, MAX_COUNTRY
+							SIF IS_COUNTRY(LOCAL:2) && !GROUPMATCH(LOCAL:2, 세력, 도시인접세력) && GROUPMATCH(TMP_COUNTRY_RELATION:도시인접세력:(LOCAL:2), 3, 4) && TMP_COUNTRY_RELATION:세력:(LOCAL:2) == 0
+								TMP_CITY_RISK:세력:도시 = MAX(TMP_CITY_RISK:세력:도시, 1)
+						NEXT
+					ENDIF
+				NEXT
+			ENDIF
+		NEXT
+	NEXT
+NEXT
+
+;FOR 세력, 0, MAX_COUNTRY
+;	SIF ! IS_COUNTRY(세력)
+;		CONTINUE
+;	DEBUGPRINTFORML ------%ANAME(GET_COUNTRY_BOSS(세력))%------
+;	FOR 도시, 1, GET_CITY_NUM() + 1
+;		DEBUGPRINTFORML %GET_CITYNAME(도시)% 리스크:{TMP_CITY_RISK:세력:도시}
+;	NEXT
+;NEXT
+
+
+;--------------------------------------------------------
+;소지 도시수의 맵을 작성
+;--------------------------------------------------------
+@TMP_CREATE_OWN_CITY_MAP
+#DIM 세력
+#DIM 도시
+VARSET TMP_OWN_CITY
+FOR 세력, 0, MAX_COUNTRY
+	FOR 도시, 1, GET_CITY_NUM() + 1
+		SIF CITY_OWNER:도시 == 세력
+			TMP_OWN_CITY:세력 ++
+	NEXT
+NEXT
+
+;--------------------------------------------------------
+;경제력 합계의 맵을 작성
+;--------------------------------------------------------
+@TMP_CREATE_SUM_ECONOMY_MAP
+#DIM 도시
+VARSET TMP_SUM_ECONOMY
+VARSET TMP_SUM_ECONOMY_LIMIT
+FOR 도시, 0, MAX_CITY
+	TMP_SUM_ECONOMY:(CITY_OWNER:도시) += CITY_ECONOMY:도시
+	TMP_SUM_ECONOMY_LIMIT:(CITY_OWNER:도시) += CITY_ECONOMY_LIMIT:도시
+NEXT
+
+;--------------------------------------------------------
+;병력 합계의 맵을 작성
+;--------------------------------------------------------
+@TMP_CREATE_SUM_SOLDIER_MAP
+#DIM 세력
+#DIM 도시
+#DIM 부대
+VARSET TMP_SUM_SOLDIER
+FOR 세력, 0, MAX_COUNTRY
+	SIF !IS_COUNTRY(세력)
+		CONTINUE
+	TMP_SUM_SOLDIER:세력 = COUNTRY_SOLDIER:세력
+	FOR 부대, 0, MAX_UNIT
+		TMP_SUM_SOLDIER:세력 += MAX(0, UNIT_SOLDIER:세력:부대)
+	NEXT
+NEXT
+FOR 도시, 0, MAX_CITY
+	TMP_SUM_SOLDIER:(CITY_OWNER:도시) += CITY_SOLDIER:도시
+NEXT

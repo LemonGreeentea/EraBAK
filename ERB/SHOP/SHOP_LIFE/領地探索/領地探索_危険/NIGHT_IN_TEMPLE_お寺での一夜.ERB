@@ -1,0 +1,44 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_NIGHT_IN_TEMPLE_DANGER_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_NIGHT_IN_TEMPLE_DANGER_DECISION(대상)
+#DIM 대상
+RETURN IS_FEMALE(대상)
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_NIGHT_IN_TEMPLE_DANGER(대상)
+#DIM 대상
+
+PRINTFORML 탐색의 도중에 해가 져, 절에 묵게 해 받는 일로 했다
+PRINTFORMW 주지는 친절하게 대접해 주었지만, 절인데 술이나 고기를 권유받았다
+PRINTFORML 어떻게 하지?
+CALL ASK_YN("후의를 받는다" ,"비린내를 비난한다")
+IF RESULT == 1
+	PRINTFORML 비린내를 비난하면 그는 퇴색한 같은 표정이 되었지만 그 이상은 아무것도 말해 오지 않았다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 일박하면 새벽전에 빨리 절을 뒤로 했다
+	RETURN
+ENDIF
+
+PRINTFORML 후의는 하찮게 할 수 없는 %조사처리(ANAME(대상),"는")% 권유받기 전에 말했다
+PRINTFORMW 그것을 본 주지는 만족기분에 웃어, 점점 술을 권유받아 마치 연회같이 되었다
+PRINTFORML 
+PRINTFORML 그렇게 몹시 취하는 동안에 그는 %ANAME(대상)%에 신체를 대어, 신체에 닿아 왔다
+PRINTFORML 기분탓일까하고 생각했지만, 서서히 그 손은 사양말고 신체를 겨 돌리기옷안까지 만지작거려 왔다
+PRINTFORML 완전히 완성되고 있었던 %조사처리(ANAME(대상),"는")% 그의 교묘한 애무에 몸을 구불거리게 할 수 있는 달콤한 한숨을 흘려 버린다
+PRINTFORMW %ANAME(대상)%의 희미한 저항의 말도 무시되고 그대로 침상에 옮겨져 밤새 자기 마음대로되어 버렸다
+CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 키스, 펠라티오, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 질내사정, 키스상실, 장내사정, 구강사정", GET_SPERM_ID("주지"), @"주지의 \@RAND:2 ? 페니스 # 입술\@", "주지", "", "제정신을 잃은 끝의 조교")
+PRINTFORML 
+PRINTFORMW 이튿날 아침, 주지의 팔 중(안)에서 눈을 뜬 %조사처리(ANAME(대상),"는")% 그가 일어나기 전에 절을 빠져 나갔다
+CALL PRINT_ADD_EXP(대상, "주량경험치", RAND(50, 100), 1)
+
+RETURN 1

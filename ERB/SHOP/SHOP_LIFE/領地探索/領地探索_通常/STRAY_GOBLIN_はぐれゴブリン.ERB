@@ -1,0 +1,56 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_STRAY_GOBLIN_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_STRAY_GOBLIN_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_STRAY_GOBLIN(대상)
+#DIM 대상
+
+
+PRINTFORML 탐색중, 를 휘감은 홉고블린을 당했다
+PRINTFORML 아무래도 일을 쫓긴 것 같아, 고용해 주지 않을까 부탁해 왔다
+PRINTL
+CALL ASK_YN("고용한다", "쫓아버린다")
+
+IF RESULT == 1
+	PRINTFORML 그런 여유는 없다
+	PRINTFORMW 쉿 해와 쫓아버렸다
+	RETURN 1
+ENDIF
+
+PRINTFORMW 불쌍하다, 고용해 주기로 하자
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF !IS_COUNTRY(CFLAG:대상:소속)
+	PRINTFORML 사용할 수 없는 녀석이었다……
+	RETURN 1
+ENDIF
+
+SELECTCASE RAND:3
+	CASE 0
+		PRINTFORML 홉고블린은 열심히 일했다
+		PRINTFORMW 인사를 맡겨 보면 입대 희망자가 증가했다
+		COUNTRY_SOLDIER:(CFLAG:대상:소속) += 3000
+		CALL ICPRINT(@"병 수가<3000>증가해,<{COUNTRY_SOLDIER:(CFLAG:대상:소속)}>가 되었다", "W", 칼라_주의)
+	CASE 1
+		PRINTFORMW 사용할 수 없는 녀석이었다……
+	CASE 2
+		PRINTFORML 홉고블린은 병사로서 부대에 참가했다
+		PRINTFORMW 열심히 훈련한다와 평판이 되었다
+ENDSELECT
+
+

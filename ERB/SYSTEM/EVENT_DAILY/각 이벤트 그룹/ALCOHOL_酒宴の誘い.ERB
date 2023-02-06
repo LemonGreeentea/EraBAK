@@ -1,0 +1,166 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_ALCOHOL_RATE()
+RETURN 30
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_ALCOHOL_DECISION()
+RETURN 1
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_ALCOHOL_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_ALCOHOL()
+#DIM 대상
+
+PRINTFORML 조금 시간이 생겼다
+PRINTFORMW 수중에는 술이 있지만…어떻게 하지?
+CALL ASK_MULTI("부하와 마신다" ,"병사들과 연회를 연다" ,"동료를 유혹한다" ,"혼자서 한가로이 마신다")
+IF RESULT == 3
+	PRINTFORMW 혼자서 한가롭게 마시기로 했다
+ELSEIF RESULT == 1
+	PRINTFORMW 병사들의 평소의 노를 위로하기 위해서(때문에) 연회를 열었다
+	PRINTFORMW …연회는 많이 분위기를 살려, 그들도 기뻐해 준 것 같다
+	IF MASTER != GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+		PRINTFORMW 연회에 대해 군주의 귀에 들려와, 평가를 올렸다
+		CFLAG:GET_COUNTRY_BOSS(CFLAG:MASTER:소속):호감도 += 100 + RAND:100
+	ENDIF
+ELSEIF RESULT == 0
+	PRINTFORMW 부하와 서로 마시기로 했다
+	PRINTFORMW …술의 덕분인가, 본심을 털어놓는 서로 이야기할 수 있었다
+	SELECTCASE RAND:4
+		CASE 0
+			CALL PRINT_ADD_EXP(MASTER, "무투경험치", RAND(5, 10), 1)
+		CASE 1
+			CALL PRINT_ADD_EXP(MASTER, "방위경험치", RAND(5, 10), 1)
+		CASE 2
+			CALL PRINT_ADD_EXP(MASTER, "지략경험치", RAND(5, 10), 1)
+		CASE 3
+			CALL PRINT_ADD_EXP(MASTER, "정치경험치", RAND(5, 10), 1)
+	ENDSELECT
+	PRINTFORMW 
+	IF IS_FEMALE(MASTER)
+		PRINTFORMW 
+		PRINTFORML 정도 좋게 취해 왔을 무렵, 그가 자연스럽게 신체에 닿아 왔다
+		PRINTFORMW 그를 올려보면, 얼굴을 대어 응시하고 돌려주었다
+		CALL ASK_YN("저항한다", "저항하지 않는다")
+		IF RESULT == 0
+			PRINTFORMW 간언하기 위해서(때문에) 가볍게 핑거펀치를 하면 그는 유감스러운 듯이 어깨를 움츠렸다
+		ELSE
+			PRINTFORML 적당한 기분의 %조사처리(ANAME(MASTER),"는")% 저항하지 않고 그에게 의지했다
+			PRINTFORMW 그는 %ANAME(MASTER)%의 어깨를 안아 입술을 차지해, 천천히 쓰러트렸다
+			PRINTFORML ·
+			PRINTFORML ·
+			PRINTFORMW ·
+			PRINTFORMW 밤새, 그의 정열적인 섹스로 한껏 귀여워해졌다
+			CALL FUCK(MASTER, "욕망, 봉사, 성교, 성기술, 사랑, Ｖ, Ｂ, Ｃ, Ｍ, 키스, 펠라티오, Ｖ성교", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("병사"), @"부하의 입술", @"부하", "", "화간")
+		ENDIF
+	ENDIF
+ELSE
+	PRINTFORML 동료와 친목이 깊어지기로 했다
+	PRINTFORMW 누구를 유혹하자?
+	CALL SELECT_CHARA_LIST_ONLY_LOGIC_SEX("DAILY_ALCOHOL", "DAILY_ALCOHOL")
+	IF RESULT == -1
+		PRINTFORMW 역시 혼자서 마시기로 했다
+		RETURN 1
+	ENDIF
+	대상 = RESULT
+	PRINTFORML %조사처리(ANAME(대상),"를")% 권하기로 했다
+	IF IS_FEMALE(대상)
+		PRINTFORMW 그녀는 기꺼이 교제해 주었다
+	ELSE
+		PRINTFORMW 그는 기꺼이 교제해 주었다
+	ENDIF
+	PRINTFORML 
+	PRINTFORMW 맛있는 술을 술안주에 둘이서 서로 즐겁게 마셨다
+	CFLAG:대상:안면 = 1
+	CFLAG:대상:호감도 += 50 + RAND:50
+	IF HAS_PENIS(MASTER) && IS_FEMALE(대상)
+		PRINTFORMW …취기도 돌아, 좋은 분위기가 되기 시작했다
+		PRINTFORML 어떻게 하지?
+		CALL ASK_YN("살그머니 몸을 댄다", "계속 이대로 마신다")
+		IF RESULT == 1
+			PRINTFORMW 이 분위기를 기다리거나와 즐기기로 했다
+			CFLAG:대상:호감도 += 50 + RAND:50
+		ELSE
+			PRINTFORMW 당신은 살그머니 %ANAME(대상)%에 몸을 대었다
+			IF !(CFLAG:대상:호감도 >= 1200 + RAND:300 + (DAY * 10) || TALENT:대상:합의 == 1)
+				PRINTFORML 하지만 그녀는 당신의 손을 뿌리쳤다
+				PRINTFORMW 어색한 분위기가 되어 버렸다
+				FOR LOCAL, 0, CHARANUM
+					SIF CFLAG:(LOCAL):소속 == CFLAG:MASTER:소속 && !CFLAG:(LOCAL):포로처 && IS_FEMALE(LOCAL) && !IS_ANIMAL(LOCAL)
+						CFLAG:(LOCAL):호감도 -= 200
+				NEXT
+				CALL COLOR_PRINT(@"이야기가 퍼져, 여성진의 평가가 내렸다…", 칼라_주의)
+				PRINTFORMW 
+			ELSE
+				PRINTFORML 그녀는 뺨을 붉히면서도 저항하지 않고 의지해 왔다
+				PRINTFORMW 당신은 %ANAME(대상)%의 어깨에 손을 쓰면, 천천히 쓰러트렸다
+				PRINTFORML ·
+				PRINTFORML ·
+				PRINTFORMW ·
+				IF TALENT:대상:처녀 == 1
+					PRINTFORML 당신은 처음의 아픔으로 꼬옥 하고 껴안아 오는 그녀를 상냥하게 어르도록(듯이) 허리를 흔드는
+					PRINTFORML 신음할 뿐이었던 %ANAME(대상)%도, 신체가 풀려 오는 것에 따라 점차 목으로부터 달콤한 한숨을 루등 하기 시작한다
+					PRINTFORMW 조금씩 허리의 움직임을 빨리 해 가고 안쪽을 찔러 주면, 그녀는 흠칫 신체를 뛰게 했다
+					PRINTFORML 힘든 질의 조임에 인내의 한계에 이르러, 마음껏 사정하면, %조사처리(ANAME(대상),"는")% 크게 뒤로 젖히면서 교성을 올렸다
+					PRINTFORML …잠깐 절정의 여운에 잠기도록(듯이) 서로 껴안은 후, 페니스를 뽑아 내면 걸죽 빨강과 흰색의 체액이 넘쳐 나왔다
+					PRINTFORMW 처음을 끝낸 그녀는 숨을 거칠게 해, 눈물을 흘리면서도 황홀로 한 표정으로 넘치는 체액을 바라보고 있었다
+					PRINTFORMW 당신과 %조사처리(ANAME(대상),"는")% 그 뒤도 열에 들뜬 것처럼 밤새 한껏 서로 사랑했다
+				ELSE
+					SELECTCASE RAND:10
+						CASE 0
+							PRINTFORMW 사랑스럽게 교성을 올리는 그녀를 한껏 예의범절을 가르쳤다
+						CASE 1
+							PRINTFORMW 고조되는 육욕인 채 짐승과 같이 격렬하게 계속 교접했다
+						CASE 2
+							PRINTFORMW 정열적으로 요구해 오는 그녀에게 한껏 짜졌다
+						CASE 3
+							PRINTFORMW 그녀에게 요구되는 대로 달굴 수 있는 것 같은 육욕에 빠졌다
+						CASE 4
+							PRINTFORMW 격렬하게 흐트러지는 그녀와 땀투성이가 되어 서로 사랑했다
+						CASE 5
+							PRINTFORMW 도발적인 표정을 보이는 그녀를 마음껏 괴롭히고 다했다
+						CASE 6
+							PRINTFORMW 달콤한 한숨을 흘리는 그녀를 한껏 귀여워했다
+						CASE 7
+							PRINTFORMW 휘감겨 오는 그녀로 되는 대로 즐겼다
+						CASE 8
+							PRINTFORMW 녹진녹진이 되어 있던 그녀를 마음껏 귀여워했다
+						CASE 9
+							PRINTFORMW 녹고 자른 그녀의 신체를 한껏 귀여워했다
+					ENDSELECT
+				ENDIF
+				CALL FUCK(대상, "Ｃ, Ｂ, Ｖ, Ｍ, 욕망, 성교, 봉사, 정애, 펠라티오, 키스, Ｖ성교", "처녀상실, 키스상실, 질내사정", GET_ID(MASTER), @"%ANAME(MASTER)%의 \@RAND:2 ? 페니스 # 입술\@", ANAME(MASTER), "", "화간")
+				CALL FUCK(MASTER, "Ｃ, 사정", "동정상실", 0, "", "", @"%ANAME(대상)%의 질", "화간")
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+CALL PRINT_ADD_EXP(MASTER, "주량경험치", RAND(50, 100), 1)
+CALL TRAIN_AUTO_ABLUP(MASTER)
+RETURN 1
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_DAILY_ALCOHOL(대상)
+#DIM 대상
+RETURN 대상 != MASTER && CFLAG:대상:소속 == CFLAG:MASTER:소속 && CFLAG:대상:행동불능상태 != 행동불능_아이 && !IS_ANIMAL(대상) && !IS_MALE(대상)
+
+@SELECT_CHARA_LIST_SELECT_LOGIC_DAILY_ALCOHOL(대상)
+#DIM 대상
+RETURN CFLAG:대상:포로처 == 0

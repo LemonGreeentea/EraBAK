@@ -1,0 +1,223 @@
+﻿;-------------------------------------------------
+;「특별훈련」의 명칭
+;-------------------------------------------------
+@SHOP_SLG_NAME65
+RESULTS:0 '= "특별훈련"
+
+;-------------------------------------------------
+;「특별훈련」의 다음 행 설명 지정 유무
+;-------------------------------------------------
+@SHOP_SLG_NEXT_LINE_ADD65
+
+;-------------------------------------------------
+;「특별훈련」의 다음 행 설명 지정 내용
+;-------------------------------------------------
+@SHOP_SLG_NEXT_LINE_ADD_TEXT65
+IF SPECIAL_TRAIN_IS_BARGAIN()
+	SETCOLOR 칼라_주의
+	PRINTFORM %"현재할인요금", 12%
+	RESETCOLOR
+ELSE
+	SIF MONEY < SPECIAL_TRAIN_PRICE
+		SETCOLOR 칼라_선택불가
+	LOCALS = %NUM_FORMAT(SPECIAL_TRAIN_PRICE)%
+	SIF STRLENS(LOCALS) > 7
+		LOCALS = "많다"
+
+	PRINTFORM %"요금:" + LOCALS, 12%
+	RESETCOLOR
+ENDIF
+
+;-------------------------------------------------
+;「특별훈련」의 선택 가부
+;-------------------------------------------------
+@SHOP_SLG_CHECK65
+SIF MONEY < SPECIAL_TRAIN_PRICE
+	RETURN 0
+SIF CFLAG:MASTER:소속 == 0
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「특별훈련」의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_SLG_EVENTBUY65
+CALL SLG_SPECIAL_TRAIN
+RETURN RESULT
+
+;-------------------------------------------------
+;「특별훈련」본체
+;-------------------------------------------------
+@SLG_SPECIAL_TRAIN()
+#DIM 대상, 1
+#DIM 대상항목, 1
+#DIM 취득경험치, 1
+$SHOW_LOOP
+CALL SINGLE_DRAWLINE
+PRINTFORM 금
+SETCOLOR 칼라_주의
+PRINTFORM %NUM_FORMAT(SPECIAL_TRAIN_PRICE)%
+RESETCOLOR
+PRINTFORML 를 소비해, 부하에게 훈련을 받게 할 수가 있습니다
+SIF SPECIAL_TRAIN_IS_BARGAIN()
+	CALL COLOR_PRINTL("지금 대폭 할인중!", 칼라_주의)
+PRINTFORML 누구를 훈련합니까?
+PRINTFORML 현재의 돈:%NUM_FORMAT(MONEY)%
+CALL SINGLE_DRAWLINE
+CALL SELECT_CHARA_LIST_SLG()
+IF RESULT == -1
+	RETURN 0
+ELSE
+	대상 = RESULT
+	CALL SINGLE_DRAWLINE
+	PRINTFORML %ANAME(대상)%목의 능력을 훈련합니까?
+	CALL SINGLE_DRAWLINE
+	PRINTFORM [{GETNUM(ABL, "무투")}] 무투 
+	CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:(대상):무투)
+	PRINTFORML {ABL:(대상):무투, 3, RIGHT}
+	PRINTFORM [{GETNUM(ABL, "방위")}] 방위 
+	CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:(대상):방위)
+	PRINTFORML {ABL:(대상):방위, 3, RIGHT}
+	PRINTFORM [{GETNUM(ABL, "지략")}] 지략 
+	CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:(대상):지략)
+	PRINTFORML {ABL:(대상):지략, 3, RIGHT}
+	PRINTFORM [{GETNUM(ABL, "정치")}] 정치 
+	CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:(대상):정치)
+	PRINTFORML {ABL:(대상):정치, 3, RIGHT}
+	IF TALENT:대상:요술지식
+		PRINTFORM [{GETNUM(ABL, "요술")}] 요술 
+		CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:(대상):요술)
+		PRINTFORML {ABL:(대상):요술, 3, RIGHT}
+	ENDIF
+	PRINTFORM [{GETNUM(ABL, "가창")}] 가창 
+	CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:(대상):가창)
+	PRINTFORML {ABL:(대상):가창, 3, RIGHT}
+	PRINTFORM [{GETNUM(ABL, "요리")}] 요리 
+	CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:(대상):요리)
+	PRINTFORML {ABL:(대상):요리, 3, RIGHT}
+	PRINTL 
+	CALL SINGLE_DRAWLINE
+	PRINTFORML [0] 돌아온다
+	PRINTL 
+	$INPUT_LOOP2
+	INPUT
+	IF RESULT == 0
+		GOTO SHOW_LOOP
+	ELSEIF !GROUPMATCH(RESULT, GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창"), GETNUM(ABL, "요술"))
+		GOTO INPUT_LOOP2
+	ELSEIF RESULT == GETNUM(ABL, "요술") && !TALENT:(대상):요술지식
+		GOTO INPUT_LOOP2
+	ELSE
+		대상항목 = RESULT
+		;바겐시는 싸다
+		취득경험치 = SPECIAL_TRAIN_CALC_EFFECT(대상, 대상항목)
+		PRINTFORML 훈련을 실시했다!
+		CALL PRINT_ADD_EXP(대상, EXPNAME:GET_EXP(대상항목), 취득경험치, 1)
+		CALL TRAIN_AUTO_ABLUP(대상)
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 좋은 땀을 흘린 것 같다……
+		MONEY -= SPECIAL_TRAIN_PRICE
+		SPECIAL_TRAIN_COUNT ++
+		SPECIAL_TRAIN_COUNT_THIS_TURN ++
+		;재계산
+		CALL CALC_SPECIAL_TRAIN_PRICE()
+		IF MONEY >= SPECIAL_TRAIN_PRICE
+			RESTART
+		ELSE
+			PRINTFORML 특별훈련을 받을 뿐(만큼)의 돈이 없어졌습니다
+			PRINTFORMW 메뉴 화면으로 돌아갑니다
+		ENDIF
+	ENDIF
+	PRINTFORML
+	RETURN 1
+ENDIF
+
+
+@CALC_SPECIAL_TRAIN_PRICE()
+;경제치의 3배
+LOCAL = GET_SUM_ECONOMY(CFLAG:MASTER:소속) / 100 * 3
+
+;그 주회의 실시 회수 및 그 턴의 실시 회수로 보정
+;SELECTCASE SPECIAL_TRAIN_COUNT
+;	CASE IS < 5
+;		LOCAL += SPECIAL_TRAIN_COUNT * 500
+;	CASE IS < 15
+;		LOCAL += SPECIAL_TRAIN_COUNT * 1000
+;	CASE IS < 50
+;		LOCAL += SPECIAL_TRAIN_COUNT * 1500
+;	CASEELSE
+;		LOCAL += SPECIAL_TRAIN_COUNT * 3000
+;ENDSELECT
+
+;그 턴에 간 회수를 싣는다
+IF SPECIAL_TRAIN_COUNT_THIS_TURN > 5
+	LOCAL += SPECIAL_TRAIN_COUNT_THIS_TURN * 5000
+ELSE
+	LOCAL += SPECIAL_TRAIN_COUNT_THIS_TURN * 3000
+ENDIF
+
+;세력의 도시수를 싣는다(6 도시 이상으로부터)
+LOCAL += MAX((GET_OWN_CITY(CFLAG:MASTER:소속) - 6) * 700, 0)
+
+;세력의★수로 보정★3을 보정 0으로서±20%까지
+LOCAL = LOCAL * (100 + (TMP_COUNTRY_STARS:(CFLAG:MASTER:소속) - 3) * 10) / 100
+
+;난수를 싣는다
+LOCAL = LOCAL * RAND(90, 110) / 100
+
+;일수로 보정
+;LOCAL = LOCAL * (100 + MIN(DAY - 20, 100))/100
+
+;봉급이 비싸면, 봉급의 것 1/2을 보내라
+SIF LOCAL < CALC_SALARY()
+	LOCAL += CALC_SALARY() / 2
+
+;그 주회로 최초의 특별훈련, 또는 5기에 1회,1/10그리고 특훈할 수 있다
+SIF SPECIAL_TRAIN_IS_BARGAIN()
+	LOCAL /= 10
+;1턴째의 최초의 1회는 500 고정
+SIF DAY == 1 && SPECIAL_TRAIN_COUNT == 0
+	LOCAL = 500
+
+SPECIAL_TRAIN_PRICE = LOCAL
+
+
+@SPECIAL_TRAIN_IS_BARGAIN()
+#FUNCTION
+RETURNF (SPECIAL_TRAIN_COUNT == 0 || (DAY % 5 == 0 && SPECIAL_TRAIN_COUNT_THIS_TURN == 0)) && CFLAG:MASTER:소속
+
+
+
+@SPECIAL_TRAIN_CALC_EFFECT(대상, 대상항목)
+#FUNCTION
+#DIM 대상
+#DIM 대상항목
+#DIM 대상능력치
+#DIM 능력합계
+#DIM 취득경험기초치
+#DIM 취득경험치
+#DIM 성장필요치
+#DIM 반환치
+대상능력치 = ABL:대상:대상항목
+성장필요치 = ABLUP_NEED_EXP_SLG(대상능력치) / 100
+능력합계 = ABL:대상:무투 + ABL:대상:지략 + ABL:대상:정치 + ABL:대상:방위 + ABL:대상:가창 + ABL:대상:요리
+취득경험기초치 = (600 - 능력합계)
+
+SIF 대상항목 != GETNUM(ABL, "요술")
+	취득경험기초치 /= 6
+;가창과 요리는 한층 더 반
+SIF GROUPMATCH(대상항목, GETNUM(ABL, "가창"), GETNUM(ABL, "요리"))
+	취득경험기초치 /= 2
+
+;선택한 항목이 높으면 취득 경험치는 내린다
+SELECTCASE 대상능력치
+	CASE IS < 랭크역치:랭크_ＳＬＧ:랭크_D
+		취득경험치 = 취득경험기초치 * 120 / 100
+	CASE IS < 랭크역치:랭크_ＳＬＧ:랭크_A
+		취득경험치 = 취득경험기초치 * 75 / 100
+	CASEELSE
+		취득경험치 = 취득경험기초치 * 50 / 100
+ENDSELECT
+
+;1도에 20까지 성장
+반환치 = LIMIT(취득경험치, 5, 성장필요치 * 20)
+RETURNF 반환치

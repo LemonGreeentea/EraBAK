@@ -1,0 +1,38 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_GET_JUERY_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_GET_JUERY_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_GET_JUERY(대상)
+#DIM 대상
+
+PRINTFORML 탐색중, 유실물을 주웠다
+PRINTFORML 반짝 빛나는 멋진 악세사리-이다
+PRINTFORML 
+CALL ASK_YN("점에 판다", "위병에 보낸다")
+
+IF RESULT == 0
+	PRINTFORML 팔아치워 용돈으로 하려고, 가까이의 귀금속점에 향했다
+	PRINTFORML 가, 점주에게 굉장한 험악한 얼굴로 고함쳐졌다
+	PRINTFORML 확실히 이 가게로부터 며칠 앞에 도둑맞은 물건이었던 것 같다
+	PRINTFORML 어떻게든 오해를 풀었지만, 지치게 되었다
+	CALL ADD_COOLTIME(대상, 1)
+ELSEIF RESULT == 1
+	PRINTFORML 도둑질은 좋지 않다
+	PRINTFORML 위병에 보냈다
+ENDIF
+
+RETURN 1

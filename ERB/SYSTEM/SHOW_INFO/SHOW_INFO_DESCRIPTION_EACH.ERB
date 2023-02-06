@@ -1,0 +1,458 @@
+﻿;-------------------------------------------------
+;감각용 범용
+;-------------------------------------------------
+@SHOW_INFO_DESCRIPTION_SENSE(문자열, 수치)
+#DIMS 문자열
+#DIM 수치
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_B
+		PRINTFORML 개발 된 %문자열%는 꽤 민감하게 되어 있어 분명한 약점이 되어 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_C
+		PRINTFORML %문자열%는 꽤 개발 되어 대단히 민감하게 되어 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_D
+		PRINTFORML %문자열%로 명확하게 느끼게 된 것 같다
+	CASE IS >= 랭크역치:랭크_그외:랭크_E
+		PRINTFORML %문자열%로 남들 수준에 느끼는 것 같다
+	CASE IS >= 랭크역치:랭크_그외:랭크_F
+		PRINTFORML %문자열%로 느끼기 시작한 것 같다
+	CASE IS >= 랭크역치:랭크_그외:랭크_G
+		PRINTFORML %문자열%에서는 그다지 느끼지 않는 것 같다
+	CASEELSE
+ENDSELECT
+
+;-------------------------------------------------
+;Ｃ감각
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_0(대상, 수치)
+#DIM 대상
+#DIM 수치
+LOCALS = \@ IS_MALE(대상) ? 페니스 # 비핵 \@
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML %조사처리(LOCALS,"는")% 바람이 분 것 뿐으로 절정 해 버릴 만큼 민감하게 되어 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 개발 된 %조사처리(LOCALS,"는")%, 손가락으로 가볍게 접한 것 뿐으로 달할 만큼 민감함
+	CASEELSE
+		CALL SHOW_INFO_DESCRIPTION_SENSE(LOCALS, 수치)
+ENDSELECT
+
+;-------------------------------------------------
+;Ｖ감각
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_1(대상, 수치)
+#DIM 대상
+#DIM 수치
+SIF !HAS_VAGINA(대상)
+	RETURN 0
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML 여자구멍은 항상 쾌감을 추구해 쑤셔, 군침을 흘려 보내고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 개발 된 여자구멍은, 손가락으로 가볍게 접한 것 뿐으로 달할 만큼 민감함
+	CASEELSE
+		CALL SHOW_INFO_DESCRIPTION_SENSE("여자구멍", 수치)
+ENDSELECT
+
+;-------------------------------------------------
+;Ａ감각
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_2(대상, 수치)
+#DIM 대상
+#DIM 수치
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML 엉덩이구멍은 항상 쾌감을 추구해 쑤시는, 탐욕인 성기에 다시 만들어지고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 개발 된 엉덩이구멍은, 손가락으로 가볍게 뚫은 것 뿐으로 달할 만큼 민감함
+	CASEELSE
+		CALL SHOW_INFO_DESCRIPTION_SENSE("엉덩이구멍", 수치)
+ENDSELECT
+
+;-------------------------------------------------
+;Ｂ감각
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_3(대상, 수치)
+#DIM 대상
+#DIM 수치
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML 유방은 바람이 분 것 뿐으로 절정 해 버릴 만큼 민감하게 되어 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 개발 된 유방의 첨단은, 언제라도 쾌락을 기대해 날카로워지고 있다
+	CASEELSE
+		CALL SHOW_INFO_DESCRIPTION_SENSE("유방", 수치)
+ENDSELECT
+
+;-------------------------------------------------
+;Ｍ감각
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_4(대상, 수치)
+#DIM 대상
+#DIM 수치
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML 입은 성기로서 다시 태어나, 그 감도는 식사가 곤란할 정도다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 개발 된 입술은, 버드 키스로조차 절정 할 만큼 민감함
+	CASEELSE
+		CALL SHOW_INFO_DESCRIPTION_SENSE("입술", 수치)
+ENDSELECT
+
+;-------------------------------------------------
+;욕망
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_12(대상, 수치)
+#DIM 대상
+#DIM 수치
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML 추잡한 욕망이 머리를 지배해, 언제라도 쾌락을 추구하고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 음란이라는 것에 충분한 만큼 욕구 깊고, 쾌락을 바라고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_B
+		PRINTFORML 추잡한 행위에 완전히 저항이 없어져 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_C
+		PRINTFORML 추잡한 행위에도 많이 익숙해진 것 같다
+ENDSELECT
+
+;-------------------------------------------------
+;성기술
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_13(대상, 수치)
+#DIM 대상
+#DIM 수치
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML 그 기교는 신이라고 불러도 괜찮을 만큼의 것이다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 교묘한 기술은, 누가 상대라도 뼈 없음으로 해 버릴 정도다
+	CASE IS >= 랭크역치:랭크_그외:랭크_B
+		PRINTFORML 그 정도의 창녀에도 뒤떨어지지 않는 기술을 몸에 걸치고 있는
+	CASE IS >= 랭크역치:랭크_그외:랭크_C
+		PRINTFORML 성기술이 많이 몸에 따라 온 것 같다
+ENDSELECT
+
+;-------------------------------------------------
+;성지식
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_14(대상, 수치)
+#DIM 대상
+#DIM 수치
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_성지식:랭크_S
+		PRINTFORML 성의 세계의 지식을 지극히 있다
+	CASE IS >= 랭크역치:랭크_성지식:랭크_A
+		PRINTFORML 성의 일에 대해, 니치인 기술까지 알고 있다
+	CASE IS >= 랭크역치:랭크_성지식:랭크_B
+		PRINTFORML 성의 일에 대해 자세함
+	CASE IS >= 랭크역치:랭크_성지식:랭크_C
+		PRINTFORML 남들 수준의 성지식을 몸에 걸치고 있는
+	CASE IS >= 랭크역치:랭크_성지식:랭크_D
+		PRINTFORML 성지식은 약간 얇다
+	CASEELSE
+		PRINTFORML 성 따위 아무것도 모르고 있다
+ENDSELECT
+
+;-------------------------------------------------
+;봉사
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_20(대상, 수치)
+#DIM 대상
+#DIM 수치
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML 당신은 다른 사람에게 봉사하기 위해서 있다고 생각하고 있을 정도다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 타인에게로의 봉사를 아무것도 대신하기 어려운 기쁨이라고 생각하고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_B
+		PRINTFORML 타인에게로의 봉사가 마음에 든다
+	CASE IS >= 랭크역치:랭크_그외:랭크_C
+		PRINTFORML 타인에게로의 봉사에 쾌감을 느끼고 있다
+ENDSELECT
+
+;-------------------------------------------------
+;성교
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_21(대상, 수치)
+#DIM 대상
+#DIM 수치
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML 성교없이는 살고 있을 수 없다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 온종일, 성교를 생각하고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_B
+		PRINTFORML 성교의 쾌락에 빠지고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_C
+		PRINTFORML 성교의 쾌감을 받아들이고 있다
+ENDSELECT
+
+;-------------------------------------------------
+;레즈
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_22(대상, 수치)
+#DIM 대상
+#DIM 수치
+SIF IS_MALE(대상)
+	RETURN 0
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML 여체의 맛을 다 알고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 동성과 사귀고 싶다고 적극적으로 생각하고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_B
+		PRINTFORML 동성과의 교제에 빠지고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_C
+		PRINTFORML 동성과의 행위를 받아들이고 있다
+ENDSELECT
+
+;-------------------------------------------------
+;ＢＬ
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_23(대상, 수치)
+#DIM 대상
+#DIM 수치
+SIF IS_FEMALE(대상)
+	RETURN 0
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML 남체의 맛을 다 알고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 동성과 사귀고 싶다고 적극적으로 생각하고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_B
+		PRINTFORML 동성과의 교제에 빠지고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_C
+		PRINTFORML 동성과의 행위를 받아들이고 있다
+ENDSELECT
+
+;-------------------------------------------------
+;노출
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_24(대상, 수치)
+#DIM 대상
+#DIM 수치
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML 치태를 볼 수 있는 것을 지상의 기쁨으로 하고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 타인에게당신의 치태를 보여 주고 싶다고 적극적으로 생각하고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_B
+		PRINTFORML 당신의 치태를 드러내는 기쁨에 빠지고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_C
+		PRINTFORML 노출의 쾌감을 받아들이고 있다
+ENDSELECT
+
+;-------------------------------------------------
+;자위
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_25(대상, 수치)
+#DIM 대상
+#DIM 수치
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML 항상 스스로의 몸을 만지작거리지 않았다고 살고 있을 수 없다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 자위를 하고 있지 않으면 침착하지 않을 정도다
+	CASE IS >= 랭크역치:랭크_그외:랭크_B
+		PRINTFORML 자위의 쾌감에 빠지고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_C
+		PRINTFORML 자위의 쾌감을 받아들이고 있다
+ENDSELECT
+
+
+;-------------------------------------------------
+;정애
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_26(대상, 수치)
+#DIM 대상
+#DIM 수치
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML 정액없이는 살고 있을 수 없다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 훌륭한 정액중독이다
+	CASE IS >= 랭크역치:랭크_그외:랭크_B
+		PRINTFORML 정액이 가져오는 쾌감에 빠지고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_C
+		PRINTFORML 정액에 저항이 없어져 있다
+ENDSELECT
+
+;-------------------------------------------------
+;사정
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_27(대상, 수치)
+#DIM 대상
+#DIM 수치
+SIF !HAS_PENIS(대상)
+	RETURN 
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML 사정의 쾌감에 머리를 당해 사정욕구가 사고를 다 메우고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 사정하는 것을 지상의 기쁨으로 하고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_B
+		PRINTFORML 사정의 쾌감에 빠지고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_C
+		PRINTFORML 사정의 쾌감을 받아들이고 있다
+ENDSELECT
+
+;-------------------------------------------------
+;분유
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_28(대상, 수치)
+#DIM 대상
+#DIM 수치
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML 유방은 망가진 수도꼭지같이 모유를 흘려 보내고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 한껏 밀크를 가득 채운 유방은, 얼마 안 되는 자극으로 모유를 흘린다
+	CASE IS >= 랭크역치:랭크_그외:랭크_B
+		PRINTFORML 모유를 분비할 때의 쾌감에 빠지고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_C
+		PRINTFORML 모유를 분비하는 쾌감을 받아들이고 있다
+ENDSELECT
+
+;-------------------------------------------------
+;배설
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_29(대상, 수치)
+#DIM 대상
+#DIM 수치
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML 배설 행위가 성행위와 동의가 되어 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 배설 행위를 하고 싶으면 적극적으로 생각하고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_B
+		PRINTFORML 배설이 가져오는 쾌감에 빠지고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_C
+		PRINTFORML 배설 행위를 받아들이고 있다
+ENDSELECT
+
+;-------------------------------------------------
+;촉수
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_30(대상, 수치)
+#DIM 대상
+#DIM 수치
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML 촉수없이는 살고 있을 수 없다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 인보다 촉수와 사귀고 싶다고 생각해조차 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_B
+		PRINTFORML 촉수가 가져오는 쾌감에 빠지고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_C
+		PRINTFORML 촉수를 받아들이고 있다
+ENDSELECT
+
+;-------------------------------------------------
+;출산
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_31(대상, 수치)
+#DIM 대상
+#DIM 수치
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML 당신은 아이를 잉태하고 낳기 위해서(때문에) 존재한다고 진심으로 생각하고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 배에 아이가 없으면 침착하지 않을 정도다
+	CASE IS >= 랭크역치:랭크_그외:랭크_B
+		PRINTFORML 출산이 가져오는 기쁨에 빠지고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_C
+		PRINTFORML 자를 잉태하고 낳는 것을 받아들이고 있다
+ENDSELECT
+
+;-------------------------------------------------
+;마조
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_33(대상, 수치)
+#DIM 대상
+#DIM 수치
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML 아픔이나 괴로워해 없이는 살고 있을 수 없다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 벌 되고 싶은, 벌을 받고 싶다고 적극적으로 생각하고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_B
+		PRINTFORML 아픔을 쾌감이라고 분명히들 네라고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_C
+		PRINTFORML 아픔을 받아들이고 있다
+ENDSELECT
+
+;-------------------------------------------------
+;새드
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_34(대상, 수치)
+#DIM 대상
+#DIM 수치
+SELECTCASE 수치
+	CASE IS >= 랭크역치:랭크_그외:랭크_S
+		PRINTFORML 누군가를 학대하는 일이 사는 기쁨이 되어 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_A
+		PRINTFORML 학대하고 싶은, 벌을 주고 싶다고 적극적으로 생각하고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_B
+		PRINTFORML 인을 요학대하는 것을 쾌감을 찾아내고 있다
+	CASE IS >= 랭크역치:랭크_그외:랭크_C
+		PRINTFORML 인을 학대하는 것을 받아들이고 있다
+ENDSELECT
+
+;-------------------------------------------------
+;성적 기호
+;-------------------------------------------------
+@SHOW_INFO_SEXUAL_PREFERENCE_DESCRIPTION(대상)
+#DIM 대상
+
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_애무하고싶다)
+	PRINTFORML 누군가에게 애무하고 싶다고 생각하고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_봉사하고싶다)
+	PRINTFORML 누군가에게 봉사하고 싶다고 생각하고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_성교하고싶다)
+	PRINTFORML 누군가와 성교하고 싶다고 생각하고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_도구를사용하고싶다)
+	PRINTFORML 누군가를 성구로 공격하고 싶다고 생각하고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_학대하고싶다)
+	PRINTFORML 누군가를 학대하고 싶다고 생각하고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_욕보이고싶다)
+	PRINTFORML 누군가를 욕보이고 싶다고 생각하고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_촉수로범하고싶다)
+	PRINTFORML 누군가를 촉수로 범하고 싶다고 생각하고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_애무되고싶다)
+	PRINTFORML 누군가에게 애무되고 싶다고 생각하고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_봉사되고싶다)
+	PRINTFORML 누군가에게 봉사되고 싶다고 생각하고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_성교되고싶다)
+	PRINTFORML 누군가에게 성교되고 싶다고 생각하고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_도구를사용되고싶다)
+	PRINTFORML 누군가에게 성구로 공격받고 싶다고 생각하고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_시달리고싶다)
+	PRINTFORML 누군가에게 시달리고 싶다고 생각하고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_욕보여지고싶다)
+	PRINTFORML 누군가에게 욕보여지고 싶다고 생각하고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_촉수로범해지고싶다)
+	PRINTFORML 누군가에게 촉수로 범해지고 싶다고 생각하고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_속박되고싶다)
+	PRINTFORML 단단히 묶어져 범해지고 싶은 소망을 숨기고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_짐승과사귀고싶다)
+	PRINTFORML 짐승과 사귀고 싶은 소망을 숨기고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_노출하고싶다)
+	PRINTFORML 스스로의 육체를 이목에 쬐고 싶은 소망을 숨기고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_최면을걸쳐지고싶다)
+	PRINTFORML 최면을 걸칠 수 있어 인형과 같이 되고 싶은 소망을 숨기고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_매춘하고싶다)
+	PRINTFORML 낯선 상대에게 매춘하고싶은 소망을 숨기고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_촬영되고싶다)
+	PRINTFORML 당신의 치태가 촬영되고 싶은 소망을 숨기고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_더럽혀지고싶다)
+	PRINTFORML 배설물로 더럽혀지고 싶은 소망을 숨기고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_조교되고싶다)
+	PRINTFORML 성적 조교를 받고 싶은 소망을 숨기고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_윤간되고싶다)
+	PRINTFORML 몇 사람이나 되는 상대에게 윤간되고 싶은 소망을 숨기고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_임신하고싶다)
+	PRINTFORML 누군가의 종으로 임신해지고 싶은 소망을 숨기고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_근친상간하고싶다)
+	PRINTFORML 혈연자와 사귀고 싶은 소망을 숨기고 있다
+SIF GETBIT(SEXUAL_PREFERENCE:대상:0, 성적기호_동성과사귀고싶다)
+	PRINTFORML 동성과 사귀고 싶은 소망을 숨기고 있다

@@ -1,0 +1,75 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_PART_TIME_JOB_IN_TAVERN_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_PART_TIME_JOB_IN_TAVERN_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_PART_TIME_JOB_IN_TAVERN(대상)
+#DIM 대상
+
+PRINTFORMW 탐색중, 곤란한 모습의 사람을 만났다
+PRINTFORMW 뭐든지, 가게의 일손이 부족한 것이라고 한다
+PRINTFORML 그는 %ANAME(대상)%에, 아르바이트를 하지 않을까 꺼내 왔다
+PRINTFORML
+CALL ASK_MULTI("받는다", "거절한다")
+
+IF RESULT == 1
+	PRINTFORML 그런 시간은 없다
+	PRINTFORML 거절하기로 했다
+	RETURN 1
+ENDIF
+
+PRINTFORML 시간도 있고 좋을 것이다
+PRINTFORMW 맡으면, 약간 어덜트인 분위기의 지하 술집에 안내되었다
+PRINTFORML 점장에게 일내용의 설명을 받아, 제복이 지급되었다
+
+IF IS_MALE(대상)
+	PRINTFORMW 어른스러운 슈트다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 조속히 일니토리 걸렸다
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+	PRINTFORMW 무사하게 일을 해낼 수 있었다
+	CALL ICPRINT("아르바이트대로서 금<3000>을 받았다", "L", 칼라_주의)
+	MONEY += 3000
+	RETURN 1
+ENDIF
+
+PRINTFORMW 지급된 것은 무려 바니슈트였다
+PRINTFORMW 예상외의 의상이지만, 맡은 이상 어쩔 수 없다
+PRINTFORMW 수치를 견디면서도 일니토리 걸렸다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+SELECTCASE RAND:2
+	CASE 0
+		PRINTFORML 업무중, 취한 손님으로부터 춤이 요구되었다
+		PRINTFORML 거절하려고 했지만, 손님으로부터의 뜨거운 콜로 받지 않을 수 없게 된다
+		PRINTFORML 준비된 마이대로 음악에 맞추고 어색하게 신체를 흔들면, 그들은 열광한다
+		PRINTFORML 그들에게 삼킬 듯이 응시할 수 있어 점차 %조사처리(ANAME(대상),"는")% 뺨을 상기 시키고 숨을 거칠게 하기 시작한다
+		PRINTFORMW %조사처리(ANAME(대상),"가")% 보다 적극적으로 추잡하게 신체를 구불거리게 할 수 있는 내면, 관객으로부터 갈채가 올랐다
+		CALL FUCK(대상, "노출")
+	CASE 1
+		PRINTFORML %ANAME(대상)%의 모습을 봐, 객들은 끈적 한 시선을 퍼부어 온다
+		PRINTFORMW 때때로 %STR_BODY("가슴:감촉",　대상)%나 %조사처리(STR_BODY("엉덩이", 대상),"를")% 접할 수 있다
+		PRINTFORMW 몹시 취한 손님의 성희롱이라고 참으면서, %조사처리(ANAME(대상),"는")% 어떻게든 일을 끝냈다……
+		CALL FUCK(대상, "노출, Ｂ, Ｃ, Ａ, Ｖ")
+ENDSELECT
+
+PRINTFORMW 점장으로부터 아르바이트대를 받으면 %조사처리(ANAME(대상),"는")% 숙이면서 빠른 걸음에 가게를 나왔다
+CALL ICPRINT("아르바이트대로서 금<3000>을 받았다", "L", 칼라_주의)
+MONEY += 3000
+RETURN 1

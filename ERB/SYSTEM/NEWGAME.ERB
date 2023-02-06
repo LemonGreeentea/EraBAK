@@ -1,0 +1,275 @@
+﻿;게임 개시시나 로드시의 처리
+
+;-------------------------
+;타이틀 화면
+;-------------------------
+@SYSTEM_TITLE
+RESETDATA
+CALL SINGLE_DRAWLINE
+ALIGNMENT CENTER
+PRINTFORML EraBlueArchive
+PRINTFORML
+PRINTFORML 　　　　　　　　　　　　　　　　　　　　　　 ,ll'''''''ll　　,.|''''''''ll　　　　　　　　　　　　　　
+PRINTFORML 　　　　　　　　　　　　　　　　　　　　　　,ll'　　　lll,l'''　　　,,,l''　　　　　　　　　　　　　　
+PRINTFORML 　　　　　　　　　　　　　　　　　　　　 　,ll'　　　ll''　　　,,,ll''　　　　　　　　　　　　　　　　
+PRINTFORML 　　　　　　　　　　　　　　　　　　　　　,ll'　　　　　　,,,ll''　　　　　　　　 　　　　　　　　　　
+PRINTFORML 　　　　　　　　　　　　　　　　　　　　　ll　　　　　 ,,ll'''　　　　　　　　　　　　　　　　　　　　
+PRINTFORML 　　　　　　　　　　　　　　　　　　　 　l'　　　　　　ll,　　　　　　　　　　　　　　　　　　　　　　
+PRINTFORML 　　　　　　　　　　　　　　　　　　　　l'　　　, 　　　ll　　　　　　　　　　　　　　　　　　　　　　
+PRINTFORML 　　　　　　　　　　　　　　　　　　　 ll 　　　lll,　　　ll　　　　　　　　　　　　　　　　　　　　　
+PRINTFORML 　　　　　　　　　　　　　　　　　　　ll 　　　ll' l, 　 　'll　　　　　　　　　　　　　　　　　　　　
+PRINTFORML 　　　　　　　　　　　　　　　　　　 ll　　　 ,l'　　ll　　 　ll　　　　　　　　　　　　　　　　　　　
+PRINTFORML 　　　　　　　　　　　　　　　　　 ,ll　　 　,l' 　　'll　　　　ll　　　　　　　　　　　　　　　　　　
+PRINTFORML 　　　　　　　　　　　　　　　　　 '''''''''　　　　　　'''''''''''　　　　　　　　　　　　　　　　　 
+PRINTFORML 
+PRINTFORML %GAMEBASE_AUTHOR%
+PRINTFORML Ver%GET_VERSION_STRING(GAMEBASE_VERSION)%
+PRINTFORML %GAMEBASE_INFO%
+CALL SINGLE_DRAWLINE
+PRINTBUTTON " 0[  최초부터  ]", 0
+PRINTL 
+PRINTBUTTON " 1[계속으로부터]", 1
+PRINTL 
+PRINTBUTTON " 2[커스텀캐릭터]", 2
+PRINTL
+PRINTBUTTON " 3[    헬프    ]", 3
+PRINTL
+[IF_DEBUG]
+PRINTBUTTON "99[   DEBUG]", 99
+PRINTL 
+[ENDIF]
+ALIGNMENT LEFT
+$INPUT_LOOP
+INPUT
+
+IF RESULT == 0
+	BEGIN FIRST
+ELSEIF RESULT == 1
+	CALL LOAD_GAME
+	RESTART
+ELSEIF RESULT == 2
+	CALL CUSTOM_CHARA_MENU
+	RESTART
+ELSEIF RESULT == 3
+	CALL CREATE_HELP_MAP
+	CALL CONFIG_HELPMENU
+	RESTART
+ELSEIF RESULT == 99
+	[IF_DEBUG]
+	CALL DEBUGMENU()
+	RESTART
+	[ENDIF]
+ENDIF
+GOTO INPUT_LOOP
+
+;-------------------------------------------------
+;뉴 게임
+;-------------------------------------------------
+@EVENTFIRST
+;초기화 처리
+CALL INIT_NEWGAME
+
+CALL NEWLOOP
+
+SIF RESULT
+	BEGIN SHOP
+BEGIN TITLE
+
+
+;-------------------------------------------------
+;로드시와 뉴 게임시의 공통 초기화 처리
+;-------------------------------------------------
+@INIT_COMMON
+;글로벌 변수의 read
+LOADGLOBAL
+
+;난수 초기화
+INITRAND
+
+;타겟의 초기화
+CALL CLEAR_MTAR
+
+;PALAMLV의 설정
+PALAMLV:0 = 0
+PALAMLV:1 = 100
+PALAMLV:2 = 300
+PALAMLV:3 = 500
+PALAMLV:4 = 1500
+PALAMLV:5 = 3000
+PALAMLV:6 = 6000
+PALAMLV:7 = 10000
+PALAMLV:8 = 30000
+PALAMLV:9 = 50000
+PALAMLV:10 = 100000
+PALAMLV:11 = 250000
+PALAMLV:12 = 500000
+PALAMLV:13 = 1000000
+PALAMLV:14 = 2500000
+PALAMLV:15 = 5000000
+PALAMLV:16 = 10000000
+PALAMLV:17 = 25000000
+PALAMLV:18 = 50000000
+PALAMLV:19 = 100000000
+PALAMLV:20 = 250000000
+PALAMLV:21 = 500000000
+PALAMLV:22 = 1000000000
+PALAMLV:23 = 2500000000
+PALAMLV:24 = 5000000000
+PALAMLV:25 = 9999999999
+
+;COS의 값을 사전에 계산해 리스트에 기록한다
+FOR LOCAL:0, 0, 360
+	COS_LIST:(LOCAL:0) = CALC_COS(LOCAL:0)
+NEXT
+
+; 아이템의 개발 기간을 설정
+CALL SET_ITEMTERM
+
+;도시의 문자색리셋트
+CALL RESET_CITY_COLOR
+
+;랜덤 캐릭터의 이름 후보 리스트를 작성
+CALL CREATE_NAME_LIST
+
+;문신의 랜덤 입력 내용 리스트를 작성
+CALL CREATE_TATTOO_LIST
+
+;정액 맵을 작성
+CALL CREATE_SPERM_MAP
+
+;데일리 맵을 제작
+CALL CREATE_DAILY_MAP
+
+;구상 데일리 맵을 제작
+CALL CREATE_KOJO_DAILY_MAP
+
+;영지탐색 맵을 작성
+CALL CREATE_TERRITORY_EVENT_MAP()
+
+;헬프 맵을 제작
+CALL CREATE_HELP_MAP
+
+;랭크 역치의 생성
+CALL INIT_RANK
+
+CALL SET_ABL_MIN_MAX
+
+;AI용의 각종 변수를 설정
+CALL AI_BASE_SETTING
+
+CALL TMP_CREATE_OWN_CITY_MAP
+CALL TMP_CREATE_SUM_ECONOMY_MAP
+CALL TMP_CREATE_UNIT_MAP
+
+;-------------------------------------------------
+;랭크 역치의 초기화
+;-------------------------------------------------
+@INIT_RANK
+랭크역치:랭크_ＳＬＧ:랭크_S = 100
+랭크역치:랭크_ＳＬＧ:랭크_A = 80
+랭크역치:랭크_ＳＬＧ:랭크_B = 70
+랭크역치:랭크_ＳＬＧ:랭크_C = 60
+랭크역치:랭크_ＳＬＧ:랭크_D = 50
+랭크역치:랭크_ＳＬＧ:랭크_E = 40
+랭크역치:랭크_ＳＬＧ:랭크_F = 30
+랭크역치:랭크_ＳＬＧ:랭크_G = 0
+랭크역치:랭크_ＳＬＧ:랭크_무 = 0
+
+랭크역치:랭크_그외:랭크_S = 10
+랭크역치:랭크_그외:랭크_A = 8
+랭크역치:랭크_그외:랭크_B = 6
+랭크역치:랭크_그외:랭크_C = 4
+랭크역치:랭크_그외:랭크_D = 3
+랭크역치:랭크_그외:랭크_E = 2
+랭크역치:랭크_그외:랭크_F = 1
+랭크역치:랭크_그외:랭크_G = 0
+랭크역치:랭크_그외:랭크_무 = 0
+
+랭크역치:랭크_부대:랭크_S = 150000
+랭크역치:랭크_부대:랭크_A = 100000
+랭크역치:랭크_부대:랭크_B = 70000
+랭크역치:랭크_부대:랭크_C = 50000
+랭크역치:랭크_부대:랭크_D = 35000
+랭크역치:랭크_부대:랭크_E = 20000
+랭크역치:랭크_부대:랭크_F = 10000
+랭크역치:랭크_부대:랭크_G = 0
+랭크역치:랭크_부대:랭크_무 = 0
+
+랭크역치:랭크_성지식:랭크_S = 5
+랭크역치:랭크_성지식:랭크_A = 4
+랭크역치:랭크_성지식:랭크_B = 3
+랭크역치:랭크_성지식:랭크_C = 2
+랭크역치:랭크_성지식:랭크_D = 1
+랭크역치:랭크_성지식:랭크_E = 0
+랭크역치:랭크_성지식:랭크_F = -1
+랭크역치:랭크_성지식:랭크_G = -1
+랭크역치:랭크_성지식:랭크_무 = -1
+
+;능력치의 최소·최대를 설정
+@SET_ABL_MIN_MAX()
+FOR LOCAL:0, 0, 50
+	ABL_MIN:(LOCAL:0) = 0
+	ABL_MAX:(LOCAL:0) = 9999
+NEXT
+FOR LOCAL:0, 50, 70
+	ABL_MIN:(LOCAL:0) = 0
+	ABL_MAX:(LOCAL:0) = 300
+NEXT
+ABL_MAX:14 = 5
+ABL_MIN:60 = -99
+ABL_MIN:61 = -99
+ABL_MIN:90 = -1000
+ABL_MAX:90 = 1000
+ABL_MIN:91 = -1000
+ABL_MAX:91 = 1000
+ABL_MIN:92 = 0
+ABL_MAX:92 = 1000
+
+ABL_MIN:99 = 0
+ABL_MAX:99 = 100
+
+;-------------------------------------------------
+;뉴 게임시의 초기화 처리
+;-------------------------------------------------
+@INIT_NEWGAME
+;만약을 위해 전데이터 초기화
+RESETDATA
+;난수 덤프
+DUMPRAND
+;콘피그의 초기설정
+CALL INIT_CONFIG
+
+;모든 고정 캐릭터와 「당신」를 작성한다
+FOR LOCAL:0, 0, MAX_FIXED_CHARA
+	;CSV 파일의 존재 판정
+	SIF EXISTCSV(LOCAL:0)
+		CALL ADD_CHARA_FROM_CSV(LOCAL:0)
+NEXT
+
+;CSV에서는 설정 할 수 없는 캐릭터 데이터의 초기설정
+CALL ADDITIONAL_CHARA_SETTING
+
+;로드시와 뉴 게임시의 공통 초기화 처리
+CALL INIT_COMMON
+
+;INIT_COMMON의 후에 부르지 않으면 CREATE_SPERM_MAP가 불리지 않기 때문에 난처함
+CALL INIT_CHARA_SIBLING_RELATION()
+
+;0～199번의 아이템을 매도에 낸다
+VARSET ITEMSALES, 1, 0, 200
+
+CALL DAILY_SET_DISABLE("DRUG_SEX", 1)
+CALL DAILY_SET_DISABLE("YOU_SEXHARA", 1)
+CALL DAILY_SET_DISABLE("YOU_WANDERING", 1)
+
+;주회를 0으로 설정
+FLAG:주회수 = 0
+
+;그림표시인원수 초기화
+FLAG:그림표시 = 1
+
+;-------------------------------------------------
+;CSV에서는 설정 할 수 없는 캐릭터 데이터의 초기설정
+;-------------------------------------------------
+@ADDITIONAL_CHARA_SETTING
+;CFLAG:(NAME_TO_CHARA("앨리스")):모친 = GET_ID(NAME_TO_CHARA("신키"))

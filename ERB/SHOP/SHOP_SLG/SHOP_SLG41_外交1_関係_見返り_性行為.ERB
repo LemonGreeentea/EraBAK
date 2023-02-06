@@ -1,0 +1,431 @@
+﻿;-------------------------------------------------
+;성적 행위의 요구의 처리
+;ARG:0은 상대의 세력 번호, ARG:1은 요구의 무게. 요구를 마시면 1, 거절하면 0을 돌려준다
+;-------------------------------------------------
+@DIPLOMACY_REQUESTED_SEX(ARG:0, ARG:1)
+;자국·상대 세력의 군주의 캐릭터 번호를 각각 취득
+LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+LOCAL:5 = GET_COUNTRY_BOSS(ARG:0)
+
+;항상 주인공이 대상
+IF CONFIG:307 == 1
+	LOCAL:6 = MASTER
+;항상 군주가 대상
+ELSEIF CONFIG:307 == 2
+	LOCAL:6 = LOCAL:4
+;대상이 상황에 의해 변화
+ELSE
+	;대상 캐릭터 판정치. 정이라면 군주, 부라면 주인공이 요구의 대상이 된다
+	LOCAL:10 = 0
+
+	;●대상 캐릭터의 결정(군주 or 주인공)
+	;군주에 대한 이미지가 나쁠 정도 군주를 욕보일 방향으로 기운다
+	IF REL_LIKE:(LOCAL:5):(LOCAL:4) >= 800
+		LOCAL:10 -= 20
+	ELSEIF REL_LIKE:(LOCAL:5):(LOCAL:4) >= 300
+		LOCAL:10 -= 10
+	ENDIF
+	IF REL_HATE:(LOCAL:5):(LOCAL:4) >= 800
+		LOCAL:10 += 30
+	ELSEIF REL_HATE:(LOCAL:5):(LOCAL:4) >= 300
+		LOCAL:10 += 15
+	ENDIF
+
+	;주인공과의 관계의 깊이에 응해 주인공의 봉사를 요구하는 (분)편에 기운다
+	IF TALENT:(LOCAL:5):친애
+		LOCAL:10 -= 40
+	ELSEIF TALENT:(LOCAL:5):연모
+		LOCAL:10 -= 20
+	ELSEIF TALENT:(LOCAL:5):연인
+		LOCAL:10 -= 10
+	ELSEIF TALENT:(LOCAL:5):친구
+		LOCAL:10 += 20
+	ELSEIF CFLAG:(LOCAL:5):2 >= 500
+		LOCAL:10 -= 5
+	ENDIF
+
+	;성별에 의한 판정
+	IF IS_MALE(LOCAL:5)
+		SIF IS_FEMALE(MASTER)
+			LOCAL:10 -= 10
+		SIF IS_FEMALE(LOCAL:4)
+			LOCAL:10 += 10
+	ENDIF
+	
+	IF IS_FEMALE(LOCAL:5)
+		SIF IS_MALE(MASTER)
+			LOCAL:10 -= 10
+		SIF IS_MALE(LOCAL:4)
+			LOCAL:10 += 10
+	ENDIF
+
+	IF LOCAL:10 >= 0
+		LOCAL:6 = LOCAL:4
+	ELSE
+		LOCAL:6 = MASTER
+	ENDIF
+ENDIF
+
+;●내용의 결정(키스, 다리 빨아, 페라·파이즈리·쿤닐링구스)
+LOCAL:11 = 0
+LOCAL:12 = 0
+
+SIF TALENT:(LOCAL:5):솔직함
+	LOCAL:12 += 10
+SIF TALENT:(LOCAL:5):겁쟁이
+	LOCAL:12 += 10
+SIF TALENT:(LOCAL:5):정조관념
+	LOCAL:12 += 10
+SIF TALENT:(LOCAL:5):정조관념없음
+	LOCAL:12 -= 10
+SIF TALENT:(LOCAL:5):거만함
+	LOCAL:11 += 10
+SIF TALENT:(LOCAL:5):프라이드높음
+	LOCAL:11 += 10
+
+IF GETBIT(TALENT:(LOCAL:5):음란계, 소질_음란_새드)
+	LOCAL:11 += 20
+ELSEIF GETBIT(TALENT:(LOCAL:5):음란계, 소질_음란_마조)
+	LOCAL:11 -= 20
+ELSEIF ABL:(LOCAL:5):주도도Ｕ >= 500
+	LOCAL:11 += 15
+ELSEIF ABL:(LOCAL:5):주도도Ｕ >= 300
+	LOCAL:11 += 10
+ELSEIF ABL:(LOCAL:5):주도도Ｕ >= 100
+	LOCAL:11 += 5
+ELSEIF ABL:(LOCAL:5):주도도Ｕ > -100
+	LOCAL:11 += 0
+ELSEIF ABL:(LOCAL:5):주도도Ｕ > -300
+	LOCAL:11 -= 5
+ELSEIF ABL:(LOCAL:5):주도도Ｕ > -500
+	LOCAL:11 -= 10
+ELSE
+	LOCAL:11 -= 15
+ENDIF
+
+IF ABL:(LOCAL:5):도착도 >= 800
+	LOCAL:12 -= 15
+ELSEIF ABL:(LOCAL:5):도착도 >= 500
+	LOCAL:12 -= 10
+ELSEIF ABL:(LOCAL:5):도착도 >= 300
+	LOCAL:12 -= 5
+ENDIF
+
+IF ARG:1 == 1
+	LOCAL:12 -= 10
+ELSEIF ARG:1 == 2
+	LOCAL:12 -= 20
+ENDIF
+
+IF LOCAL:12 >= 5 && LOCAL:6 == MASTER
+	LOCAL:15 = 0
+ELSEIF LOCAL:11 >= 15 && RAND:2
+	LOCAL:15 = 1
+ELSEIF LOCAL:12 <= -15 && RAND:2
+	LOCAL:15 = 2
+ELSEIF !RAND:3
+	IF RAND:2 && (HAS_PENIS(LOCAL:6) && HAS_VAGINA(LOCAL:5)) || (HAS_VAGINA(LOCAL:6) && HAS_PENIS(LOCAL:5))
+		LOCAL:15 = 30
+	ELSE
+		LOCAL:15 = 50
+	ENDIF
+ELSEIF HAS_PENIS(LOCAL:5)
+	LOCAL:15 = 10
+	IF RAND:3 >= 1
+		LOCAL:15 = 11
+	ENDIF
+ELSE
+	LOCAL:15 = 20
+ENDIF
+
+SELECTCASE LOCAL:15
+	CASE 0
+		PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% %ANAME(LOCAL:6)%에게, 이쪽의 제안을 마시는 대신에 이 장소에서 키스를 하라고 요구했다
+	CASE 1
+		PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% %ANAME(LOCAL:6)%에게, 이쪽의 제안을 마시는 대신에 이 장소에서 다리를 빨라고 요구했다
+	CASE 2
+		PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% %ANAME(LOCAL:6)%에게, 이쪽의 제안을 마시는 대신에 이 장소에서 자위 하라고 요구했다
+	CASE 10
+		PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% %ANAME(LOCAL:6)%에게, 이쪽의 제안을 마시는 대신에 페라로 봉사하라고 요구했다
+	CASE 11
+		PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% %ANAME(LOCAL:6)%에게, 이쪽의 제안을 마시는 대신에 파이즈리로 봉사하라고 요구했다
+	CASE 20
+		PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% %ANAME(LOCAL:6)%에게, 이쪽의 제안을 마시는 대신에 쿤닐링구스로 봉사하라고 요구했다
+	CASE 30
+		PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% %ANAME(LOCAL:6)%에게, 이쪽의 제안을 마시는 대신에 하룻밤%ANAME(LOCAL:5)%의 노리겟감이 되도록(듯이) 요구했다
+	CASE 50
+		PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% %ANAME(LOCAL:6)%에게, 이쪽의 제안을 마시는 대신에 병들의 상대를 하라고 요구했다
+ENDSELECT
+
+CALL ASK_YN("받아들인다", "거절한다")
+IF RESULT == 1
+	RETURN 0
+ENDIF
+
+IF LOCAL:6 != MASTER
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:6)%에게, 요구를 마시도록(듯이) 설득했다…
+	PRINTL 
+ENDIF
+
+SELECTCASE LOCAL:15
+	CASE 0
+		IF LOCAL:11 >= 20
+			PRINTFORML %조사처리(ANAME(LOCAL:6),"가")% 요구 대로 %ANAME(LOCAL:5)%에 입맞추면, %조사처리(ANAME(LOCAL:5),"는")% %ANAME(LOCAL:6)%의 머리의 뒤로 손을 돌리고,
+			PRINTFORMW 혀를 넣어 탐내도록(듯이)%ANAME(LOCAL:6)%의 입안을 핥아댔다
+			PRINTFORMW %조사처리(ANAME(LOCAL:6),"는")% 가슴이 답답함에 입을 떼어 놓으려고 했지만, %ANAME(LOCAL:5)%에 머리를 제대로 안아져 도망치는 것이 할 수 없다
+			PRINTFORMW 이윽고 %조사처리(ANAME(LOCAL:5),"가")% 만족할 때까지, %조사처리(ANAME(LOCAL:6),"는")% 끝없이 %ANAME(LOCAL:5)%에 껴안을 수 있어 키스를 계속 되었다
+		ELSE
+			PRINTFORML %조사처리(ANAME(LOCAL:6),"가")% 요구 대로 %ANAME(LOCAL:5)%에 입맞추면, %조사처리(ANAME(LOCAL:5),"는")% %ANAME(LOCAL:6)%의 입안에 혀를 꽂아 넣어,
+			PRINTFORMW 권하도록(듯이)%ANAME(LOCAL:6)%의 혀를 얽어맸다
+			PRINTFORMW %조사처리(ANAME(LOCAL:6),"는")% %ANAME(LOCAL:5)%에 촉구받는 대로, 스스로도 혀를 걸어 깊은 입맞춤을 주고 받았다
+			PRINTFORMW 한동안 해 %조사처리(ANAME(LOCAL:6),"가")% 입을 떼어 놓으면, %조사처리(ANAME(LOCAL:5),"는")% 어딘지 부족하다고 한 표정으로 새로운 키스를 졸라 왔다
+			PRINTFORMW 이윽고 %조사처리(ANAME(LOCAL:5),"가")% 만족할 때까지, %조사처리(ANAME(LOCAL:6),"는")% 끝없이 %ANAME(LOCAL:5)%에 키스를 계속 강요받았다
+		ENDIF
+		IF LOCAL:6 == MASTER && (TALENT:(LOCAL:4):연모 || TALENT:(LOCAL:4):연인)
+			PRINTL 
+			PRINTFORMW 문득 등줄기에게 한기를 느껴 뒤돌아 보면, %조사처리(ANAME(LOCAL:4),"가")% %조사처리(ANAME(LOCAL:6),"를")% 원망스러운 듯이 노려보고 있었다
+			PRINTFORMW 식은 땀을 흘리는 %조사처리(ANAME(LOCAL:6),"를")% 뒷전으로, %조사처리(ANAME(LOCAL:5),"는")% 쿡쿡 즐거운 듯이 미소짓고 있었다
+			PALAM:(LOCAL:4):로주 += 5000
+		ENDIF
+		PRINTL 
+
+		PRINTFORML <%ANAME(LOCAL:6)%>
+		CALL PRINT_ADD_EXP(LOCAL:6, "키스경험", 3)
+		CALL TRAIN_AUTO_ABLUP(LOCAL:6)
+		PRINTL 
+
+		PRINTFORML <%ANAME(LOCAL:5)%>
+		CALL PRINT_ADD_EXP(LOCAL:5, "키스경험", 3)
+		CALL TRAIN_AUTO_ABLUP(LOCAL:5)
+		PRINTL 
+
+		PRINTFORMW ………………
+
+	CASE 1
+		PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 그 자리에서 %조사처리(ANAME(LOCAL:6),"를")% 자신의 앞에 무릎 꿇게 하면, 구두를 벗어 무레라고 냄새나는 서는 다리를 %ANAME(LOCAL:6)%의 코에 꽉 눌러 왔다
+		PRINTFORMW 지나친 악취에 얼굴을 돌리는 %ANAME(LOCAL:6)%에 대해, %조사처리(ANAME(LOCAL:5),"는")% 빨아 봉사하도록(듯이) 명령했다
+		PRINTFORMW %조사처리(ANAME(LOCAL:6),"는")% 어쩔 수 없이, 입을 열어 %ANAME(LOCAL:5)%의 다리를 빨기 시작했다
+		PRINTFORMW 기초가 되면서도 필사적으로 봉사하는 %ANAME(LOCAL:6)%의 모습을 보면서, %조사처리(ANAME(LOCAL:5),"는")% 만족할 것 같은 미소를 띄웠다
+		PRINTFORMW ………………
+
+	CASE 2
+		IF HAS_PENIS(LOCAL:6)
+			PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")%, 우선%ANAME(LOCAL:6)%에게 옷을 벗어 알몸이 되도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(LOCAL:6),"는")% 어쩔 수 없이, %조사처리(ANAME(LOCAL:5),"나")% 그 부하들에게 보여지면서 옷을 벗어 나체를 쬐었다
+			IF LOCAL:6 != MASTER && ABL:(LOCAL:6):욕망 < 3
+				PRINTFORMW %조사처리(ANAME(LOCAL:6),"는")% 부끄러움에 참으면서, 자신의 육봉을 잡아, 천천히 전후에 훑기 시작했다
+				PRINTFORML %조사처리(ANAME(LOCAL:5),"나")% 그 부하들의 쿡쿡 말하는 웃음소리를 들으면서,
+				PRINTFORMW %조사처리(ANAME(LOCAL:6),"는")% 눈을 숙이고 오로지 스스로의 페니스를 계속 훑는다…
+				PRINTFORMW 이윽고, 절정에 이르른 %ANAME(LOCAL:6)%의 페니스로부터, 대량의 정액이 날아올라 마루로 흩날렸다
+				PRINTFORMW 숨을 거칠게 하면서, 쾌감과 굴욕에 떨리는 %조사처리(ANAME(LOCAL:6),"를")% 봐, %조사처리(ANAME(LOCAL:5),"는")% 만족할 것 같은 미소를 띄웠다
+				PALAM:(LOCAL:6):로외 += 5000
+			ELSE
+				IF ABL:(LOCAL:6):노출 >= 3
+					PRINTFORMW %조사처리(ANAME(LOCAL:6),"는")% 부끄러움에 흥분하면서, 자신의 육봉을 잡아, 격렬하게 전후에 훑기 시작했다
+				ELSE
+					PRINTFORMW %조사처리(ANAME(LOCAL:6),"는")% 자신의 육봉을 잡으면, 천천히 전후에 훑기 시작했다
+				ENDIF
+				PRINTFORMW %조사처리(ANAME(LOCAL:6),"가")% 페니스를 쓸어올릴 때, 주위로부터 %조사처리(ANAME(LOCAL:5),"나")% 그 부하들의 쿡쿡 말하는 웃음소리가 영향을 준다…
+				PRINTFORMW 이윽고, %조사처리(ANAME(LOCAL:6),"가")% 절정에 이르면, 페니스로부터 대량의 정액이 날아올라 마루로 흩날렸다
+				PRINTFORMW 숨을 거칠게 하면서 쾌감에 떨리는 %조사처리(ANAME(LOCAL:6),"를")% 봐, %조사처리(ANAME(LOCAL:5),"는")% 만족할 것 같은 미소를 띄웠다
+			ENDIF
+			PRINTL 
+			CALL FUCK(LOCAL:6, "노출, 자위, 사정, 성기술, 욕망")
+		ELSE
+			PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")%, 우선%ANAME(LOCAL:6)%에게 옷을 벗어 알몸이 되도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(LOCAL:6),"는")% 어쩔 수 없이, %조사처리(ANAME(LOCAL:5),"나")% 그 부하들에게 보여지면서 옷을 벗어 나체를 쬐었다
+			IF LOCAL:6 != MASTER && ABL:(LOCAL:6):욕망 < 3
+				PRINTFORMW %조사처리(ANAME(LOCAL:6),"는")% 부끄러움에 참으면서, 자신의 비부를 손가락으로 만지작거리기 시작했다
+				PRINTFORMW %조사처리(ANAME(LOCAL:5),"나")% 그 부하들의 쿡쿡 말하는 웃음소리를 들리면서,
+				PRINTFORMW %조사처리(ANAME(LOCAL:6),"는")% 눈물고인 눈이 되어 필사적으로 자신의 몸을 계속 위로한다…
+				PRINTFORMW 이윽고, %조사처리(ANAME(LOCAL:6),"는")% 달콤한 소리를 흘리면서, 작게 떨려 절정 했다
+				PRINTFORMW 숨을 거칠게 하면서, 공허한 눈으로 쾌감의 여운에 떨리는 %조사처리(ANAME(LOCAL:6),"를")% 봐, %조사처리(ANAME(LOCAL:5),"는")% 만족할 것 같은 미소를 띄웠다
+				PALAM:(LOCAL:6):로외 += 5000
+			ELSE
+				IF ABL:(LOCAL:6):노출 >= 3
+					PRINTFORMW %조사처리(ANAME(LOCAL:6),"는")% 부끄러움에 흥분하면서, 자신의 비부를 손가락으로 만지작거리기 시작했다
+				ELSE
+					PRINTFORMW %조사처리(ANAME(LOCAL:6),"는")% 부끄러움에 참으면서, 자신의 비부를 손가락으로 만지작거리기 시작했다
+				ENDIF
+				PRINTFORMW %조사처리(ANAME(LOCAL:5),"나")% 그 부하들의 쿡쿡 말하는 웃음소리를 들으면,
+				PRINTFORMW 수치인 나머지 %ANAME(LOCAL:6)%의 몸이 자연히(과) 뜨거워져 버린다…
+				PRINTFORMW 이윽고, %조사처리(ANAME(LOCAL:6),"는")% 달콤한 소리를 흘리면서, 이목의 앞에서 움찔움찔 떨려 절정 했다
+				PRINTFORMW 숨을 거칠게 하면서 쾌감의 여운에 떨리는 %조사처리(ANAME(LOCAL:6),"를")% 봐, %조사처리(ANAME(LOCAL:5),"는")% 만족할 것 같은 미소를 띄웠다
+			ENDIF
+			CALL FUCK(LOCAL:6, "욕망, 자위, Ｃ, Ｂ, 노출, 성기술")
+		ENDIF
+		PRINTL 
+		PRINTFORMW ………………
+
+	CASE 10
+		PRINTFORMW %조사처리(ANAME(LOCAL:6),"는")% %ANAME(LOCAL:5)%의 사실에 데리고 들어가졌다…
+		PRINTFORMW ………………
+		PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 침대의 구석에 앉으면, %조사처리(ANAME(LOCAL:6),"를")% 자신의 앞에 무릎 꿇게 했다
+		PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 옷중에서 자지를 꺼내면, %ANAME(LOCAL:6)%에 빨아 기분 좋게 하도록(듯이) 명령했다
+		IF LOCAL:6 != MASTER && ABL:(LOCAL:6):욕망 < 3
+			PRINTFORMW %조사처리(ANAME(LOCAL:6),"가")% 당황하고 있으면, %조사처리(ANAME(LOCAL:5),"는")% %ANAME(LOCAL:6)%의 머리를 잡아, 입의 안에 억지로 장대를 쑤셔 넣었다
+			PRINTFORMW 괴로운 듯이 신음하는 %조사처리(ANAME(LOCAL:6),"를")% 반성하는 일 없이, %조사처리(ANAME(LOCAL:5),"는")% 몇 번이나 목 안까지 페니스를 돌진해 간다
+			PRINTFORMW 이윽고 %조사처리(ANAME(LOCAL:5),"가")% 페니스를 목 안에 찔러 넣은 채로 사정하면, %ANAME(LOCAL:6)% 격렬하게 숨이 막혀, 웅크리고 앉았다
+			PALAM:(LOCAL:6):로외 += 5000
+		ELSE
+			PRINTFORMW %조사처리(ANAME(LOCAL:6),"가")% %ANAME(LOCAL:5)%의 페니스에 혀를 얽히게 할 수 있으면, %조사처리(ANAME(LOCAL:5),"는")% 만족할 것 같은 표정을 띄우고 %ANAME(LOCAL:6)%의 머리를 어루만졌다
+			PRINTFORMW 이윽고 감격한 %조사처리(ANAME(LOCAL:5),"는")% %ANAME(LOCAL:6)%의 머리를 억지로 잡아, 장대를 %ANAME(LOCAL:6)%의 입의 안에 찔러 넣어 사정했다
+			IF ABL:(LOCAL:6):정애 >= 2
+				PRINTFORMW 한 방울도 흘리지 않고 마시도록(듯이)라고 명령된 %조사처리(ANAME(LOCAL:6),"는")%, 숨이 막히는 것 같은 정액의 냄새에 황홀해 하면서 %ANAME(LOCAL:5)%의 정액을 삼켰다
+			ELSE
+				PRINTFORMW 한 방울도 흘리지 않고 마시도록(듯이)라고 명령된 %조사처리(ANAME(LOCAL:6),"는")%, 숨이 막히는 것 같은 정액의 냄새에 참으면서 %ANAME(LOCAL:5)%의 정액을 삼켰다
+			ENDIF
+		ENDIF
+		PRINTL 
+		CALL FUCK(LOCAL:5, "Ｃ, 욕망, 사정")
+		CALL FUCK(LOCAL:6, "욕망, 봉사, 성기술, 정애, 펠라티오", "키스상실, 구강사정", 0, @"%ANAME(LOCAL:5)%의 페니스", "", "", "외교 관계 유지를 위한 화간")
+		PRINTFORMW ………………
+
+	CASE 11
+		PRINTFORMW %조사처리(ANAME(LOCAL:6),"는")% %ANAME(LOCAL:5)%의 사실에 데리고 들어가졌다…
+		PRINTFORMW ………………
+		PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 침대의 구석에 앉으면, %조사처리(ANAME(LOCAL:6),"를")% 자신의 앞에 무릎 꿇게 했다
+		PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 옷중에서 자지를 꺼내면, %ANAME(LOCAL:6)%에 가슴으로 기분 좋게 하도록(듯이) 명령했다
+		IF LOCAL:6 != MASTER && ABL:(LOCAL:6):욕망 < 3
+			;가슴이 보통 사이즈 이상
+			IF GET_BUSTSIZE(LOCAL:6) >= 0
+				PRINTFORMW %조사처리(ANAME(LOCAL:6),"가")% 당황하고 있으면, %조사처리(ANAME(LOCAL:5),"는")% %조사처리(ANAME(LOCAL:6),"를")% 쓰러트리고, 가슴의 사이에 억지로 페니스를 찔러 넣었다
+				PRINTFORMW 강하게 가슴을 잡아져 아픔에 신음하는 %조사처리(ANAME(LOCAL:6),"였")%지만, %조사처리(ANAME(LOCAL:5),"는")% 상관없이 %ANAME(LOCAL:6)%의 가슴으로 자위를 계속 한다
+				PRINTFORMW 이윽고 감격한 %ANAME(LOCAL:5)%의 대량의 백탁액을 안면으로 털어 놓을 수 있어 %조사처리(ANAME(LOCAL:6),"는")% 혐오감과 굴욕인 나머지 눈물을 머금었다
+			;미유 이하
+			ELSE
+				PRINTFORMW %조사처리(ANAME(LOCAL:6),"가")% 당황하고 있으면, %조사처리(ANAME(LOCAL:5),"는")% %조사처리(ANAME(LOCAL:6),"를")% 쓰러트리고, 가슴에 억지로 페니스를 문지르기 시작했다
+				PRINTFORMW 가슴에 동글동글 자지를 강압할 수 있는 아픔에 신음하는 %조사처리(ANAME(LOCAL:6),"였")%지만, %조사처리(ANAME(LOCAL:5),"는")% 상관없이 %ANAME(LOCAL:6)%의 가슴으로 자위를 계속 한다
+				PRINTFORMW 이윽고 감격한 %ANAME(LOCAL:5)%의 대량의 백탁액을 안면으로 털어 놓을 수 있어 %조사처리(ANAME(LOCAL:6),"는")% 혐오감과 굴욕인 나머지 눈물을 머금었다
+			ENDIF
+			PALAM:(LOCAL:6):로외 += 5000
+			PRINTL 
+		ELSE
+			;가슴이 보통 사이즈 이상
+			IF GET_BUSTSIZE(LOCAL:6) >= 0
+				PRINTFORML %조사처리(ANAME(LOCAL:6),"가")% (듣)묻는 대로 가슴의 골짜기에서 %ANAME(LOCAL:5)%의 페니스를 사이에 두면,
+				PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 고집이 나쁜 미소를 띄우면서 %ANAME(LOCAL:6)%의 유두를 집어올려 왔다
+				PRINTFORMW %조사처리(ANAME(LOCAL:6),"는")% 거역할 수도 있지 않고, 유두에의 쾌감에 참으면서 필사적으로 가슴을 동요시켜 %ANAME(LOCAL:5)%의 자지에 계속 봉사했다
+			;미유 이하
+			ELSE
+				PRINTFORML %조사처리(ANAME(LOCAL:6),"가")% (듣)묻는 대로 얇은 가슴을 %ANAME(LOCAL:5)%의 페니스에 문지르면,
+				PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 고집이 나쁜 미소를 띄우면서 %ANAME(LOCAL:6)%의 유두를 동글동글 만지작거려 돌렸다
+				PRINTFORMW %조사처리(ANAME(LOCAL:6),"는")% 거역할 수도 있지 않고, 유두에의 쾌감에 참으면서 필사적으로 가슴을 문질러 %ANAME(LOCAL:5)%의 자지에 계속 봉사했다
+			ENDIF
+			PRINTFORML 이윽고 감격한 %ANAME(LOCAL:5)%에 백탁을 안면으로 털어 놓여지면서,
+			IF TALENT:(LOCAL:6):모유체질
+				PRINTFORMW %ANAME(LOCAL:6)%도 유두로 달하게 되어, 대량의 모유를 분출하면서 움찔움찔 몸을 진동시켰다
+			ELSE
+				PRINTFORMW %ANAME(LOCAL:6)%도 유두로 달하게 되어 움찔움찔 몸을 진동시켰다
+			ENDIF
+			PRINTL 
+		ENDIF
+		CALL FUCK(LOCAL:5, "Ｃ, 욕망, 사정")
+		CALL FUCK(LOCAL:6, "욕망, 봉사, 성기술, 정애, Ｂ")
+		PRINTL 
+		PRINTFORMW ………………
+
+	CASE 20
+		PRINTFORMW %조사처리(ANAME(LOCAL:6),"는")% %ANAME(LOCAL:5)%의 사실에 데리고 들어가졌다…
+		PRINTFORMW ………………
+		PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 침대의 구석에 앉으면, %조사처리(ANAME(LOCAL:6),"를")% 자신의 앞에 무릎 꿇게 했다
+		PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 가랑이를 열어, %ANAME(LOCAL:6)%에 빨아 기분 좋게 하도록(듯이) 명령했다
+		IF LOCAL:6 != MASTER && ABL:(LOCAL:6):욕망 < 3
+			PRINTFORMW %조사처리(ANAME(LOCAL:6),"가")% 당황하고 있으면, %조사처리(ANAME(LOCAL:5),"는")% %ANAME(LOCAL:6)%의 머리를 잡아, 억지로 균열에 입을 꽉 누르게 했다
+			PRINTFORMW 마치 얼굴로 자위 하는것같이 균열을 문지를 수 있어 %조사처리(ANAME(LOCAL:6),"는")% 괴로운 듯이 신음했다
+			PALAM:(LOCAL:6):로외 += 5000
+		ELSE
+			PRINTFORMW %조사처리(ANAME(LOCAL:6),"가")% 혀를 내밀어 봉사를 시작하면, %조사처리(ANAME(LOCAL:5),"는")% 흥분한 모습으로 %ANAME(LOCAL:6)%의 머리를 잡아, 사타구니에 강하게 꽉 눌러 왔다
+			PRINTFORMW %조사처리(ANAME(LOCAL:6),"는")% %ANAME(LOCAL:5)%의 애액 투성이가 되면서, %조사처리(ANAME(LOCAL:5),"가")% 만족할 때까지 오로지 봉사를 계속했다
+		ENDIF
+		PRINTL 
+
+		CALL FUCK(LOCAL:5, "Ｃ, 욕망")
+		CALL FUCK(LOCAL:6, "욕망, 봉사, 성기술, 정애, 펠라티오", "키스상실", 0, @"%ANAME(LOCAL:5)%의 음부", "", "", "외교 관계 유지를 위한 화간")
+
+		PRINTFORMW ………………
+	CASE 30
+		IF HAS_PENIS(LOCAL:5) && HAS_VAGINA(LOCAL:6)
+			PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% 즉시, %ANAME(LOCAL:6)%의 옷을 벗게 해 스스로도 옷을 벗었다
+			PRINTFORML %ANAME(LOCAL:5)%의 가랑이에 있는 일물은, 쾌락에의 기대로 이미 격분하고 있다……
+			SELECTCASE RAND:7
+				CASE 0
+					PRINTFORML %조사처리(ANAME(LOCAL:5),"는")%, %조사처리(ANAME(LOCAL:6),"를")% 엎드린 자세로시켜, 뒤로부터 그 암컷구멍을 관철했다
+				CASE 1
+					PRINTFORML %조사처리(ANAME(LOCAL:5),"는")%, %조사처리(ANAME(LOCAL:6),"를")% 위로 향해시켜, 덮어씌워 위로부터 몇 번이나 암컷구멍을 찔렀다
+				CASE 2
+					PRINTFORML %조사처리(ANAME(LOCAL:5),"는")%, %ANAME(LOCAL:6)%에 벽에 손을 붙어 엉덩이를 향하게 해 뒤로부터 그 암컷구멍을 관철했다
+				CASE 3
+					PRINTFORML %조사처리(ANAME(LOCAL:5),"는")%, %조사처리(ANAME(LOCAL:6),"와")% 서로 마주 봐, 선 채로 암컷구멍을 관철했다
+				CASE 4
+					PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% 앉아, %조사처리(ANAME(LOCAL:6),"를")% 서로 마주 본 몸의 자세로 걸치게 해 아래로부터 몇 번이나 밀어올렸다
+				CASE 5
+					PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% 앉아, %조사처리(ANAME(LOCAL:6),"를")% 퇴행적인 몸의 자세로 걸치게 해 아래로부터 몇 번이나 밀어올렸다
+				CASE 6
+					PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% 위로 향해 자면, %조사처리(ANAME(LOCAL:6),"를")% 당신 위에 걸치게 해 스스로 허리를 흔들게 했다
+			ENDSELECT
+			PRINTFORML 이윽고 %조사처리(ANAME(LOCAL:5),"는")%, %ANAME(LOCAL:6)%의 질내에 한껏 사정했다
+			PRINTFORML 페니스를 뽑아 내진 음렬으로부터는, 흰 것이 걸죽 흘러 떨어지고 있다……
+			
+			PRINTL 
+			CALL FUCK(LOCAL:5, "Ｃ, 욕망, 성교, 사정, Ｖ삽입", "동정상실", 0, "", "", @"%ANAME(LOCAL:6)%의 질", "외교 관계 유지를 위한 화간")
+			CALL FUCK(LOCAL:6, "욕망, 봉사, 성교, 정애, Ｖ, 고통쾌락, 마조, Ｖ성교", "처녀상실, 질내사정", GET_ID(LOCAL:5), "", ANAME(LOCAL:5), "", "외교 관계 유지를 위한 화간")
+
+			PRINTFORMW ………………
+		ELSEIF HAS_PENIS(LOCAL:6) && HAS_VAGINA(LOCAL:5)
+			PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% 즉시, %ANAME(LOCAL:6)%의 옷을 벗게 해 스스로도 옷을 벗었다
+			PRINTFORML %ANAME(LOCAL:6)%의 가랑이에 있는 일물은, 쾌락에의 기대로 이미 격분하고 있다……
+			PRINTFORML 이것은 기대할 수 있을 것 같다면, %조사처리(ANAME(LOCAL:5),"는")% 입맛을 다심 했다
+			SELECTCASE RAND:7
+				CASE 0
+					PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% 스스로 %ANAME(LOCAL:6)%에 엉덩이를 향해, 허리를 구불거리게 할 수 있어 성교를 졸랐다
+				CASE 1
+					PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% 스스로 위로 향해 가로놓여, 가랑이를 열어 비밀의 틈을 손가락으로 열려 성교를 졸랐다
+				CASE 2
+					PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% 스스로 벽에 손을 붙어 %ANAME(LOCAL:6)%에 엉덩이를 향해, 뒤로부터 암컷구멍을 관철하도록(듯이) 졸랐다
+				CASE 3
+					PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% %조사처리(ANAME(LOCAL:6),"와")% 서로 마주 봐, 선 채로의 자세로 범하도록(듯이) 명했다
+				CASE 4
+					PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% %조사처리(ANAME(LOCAL:6),"를")% 앉게 해 서로 마주 본 몸의 자세로 걸치면, 아래로부터 밀어올리도록(듯이) 졸랐다
+				CASE 5
+					PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% %조사처리(ANAME(LOCAL:6),"를")% 앉게 해 퇴행적인 몸의 자세로 걸치면, 아래로부터 몇 번이나 밀어올리도록(듯이) 졸랐다
+				CASE 6
+					PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% %조사처리(ANAME(LOCAL:6),"를")% 위로 향해 재워, 그 위에 걸치면, 귀두에 당신의 암컷구멍의 입구를 문지른다
+			ENDSELECT
+			PRINTFORML %조사처리(ANAME(LOCAL:6),"는")% 명해지는 대로, %ANAME(LOCAL:5)%에 삽입했다……
+			PRINTFORML 이윽고 %조사처리(ANAME(LOCAL:6),"가")% 한계를 맞이하면, %조사처리(ANAME(LOCAL:5),"는")% 그대로질내에서 사정시켰다……
+			PRINTFORML 페니스를 뽑아 내진 음렬으로부터는, 흰 것이 걸죽 흘러 떨어지고 있다……
+			
+			PRINTL 
+			CALL FUCK(LOCAL:5, "욕망, 봉사, 성교, 정애, Ａ, 고통쾌락, 마조, Ａ성교", "Ａ처녀상실, 장내사정", GET_ID(LOCAL:6), "", ANAME(LOCAL:6), "", "외교 관계 유지를 위한 화간")
+			CALL FUCK(LOCAL:6, "Ｃ, 욕망, 성교, 사정, Ａ삽입", "동정상실", 0, "", "", @"%ANAME(LOCAL:5)%의 애널", "외교 관계 유지를 위한 화간")
+			PRINTFORMW ………………
+		ENDIF
+	CASE 50
+		IF IS_MALE(LOCAL:6)
+			PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% 즉시, %ANAME(LOCAL:6)%의 옷을 벗게 해 스스로도 옷을 벗었다
+			PRINTFORML %ANAME(LOCAL:5)%의 비밀스런 장소는, 쾌락에의 기대로 이미 젖기 시작하고 있다……
+			PRINTFORML 갑자기, %조사처리(ANAME(LOCAL:5),"는")% 팡팡 손뼉을 쳤다
+			PRINTFORML 하면, 요염한 여병사들이 줄줄(질질)하고 몰려닥쳐 왔다
+			PRINTFORML 그대로, %조사처리(ANAME(LOCAL:6),"는")%, 위안으로서 병사들에게 제공되어 버렸다……
+			CALL FUCK(LOCAL:5, "욕망, Ｃ, Ｂ, 자위", "")
+			CALL FUCK(LOCAL:6, "욕망, 봉사, 성기술, Ｃ, Ｂ, Ｍ, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, 윤간, Ｖ삽입, Ａ삽입", "키스상실, 동정상실", GET_SPERM_ID("병사"), @"%ANAME(LOCAL:5)%의 사병의 음부", "", @"%ANAME(LOCAL:5)%의 사병의 질", "외교 관계 유지를 위한 윤간")
+			PRINTFORML 이윽고 것이 끝나면, 거기에는 기력 다하고 음경으로부터 종을 허약하게 흘리는 %조사처리(ANAME(LOCAL:6),"와")%
+			PRINTFORML %ANAME(LOCAL:6)%의 치태를 술안주에 몇 번이나 자위를 해, 축쳐친 %조사처리(ANAME(LOCAL:5),"가")% 남아 있었다
+			PRINTL 
+		ELSEIF HAS_VAGINA(LOCAL:6)
+			PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% 즉시, %ANAME(LOCAL:6)%의 옷을 벗게 해 스스로도 옷을 벗었다
+			PRINTFORML %ANAME(LOCAL:5)%의 가랑이에 있는 일물은, 쾌락에의 기대로 이미 격분하고 있다……
+			PRINTFORML 갑자기, %조사처리(ANAME(LOCAL:5),"는")% 팡팡 손뼉을 쳤다
+			PRINTFORML 하면, 강인한 병사들이 줄줄(질질)하고 몰려닥쳐 왔다
+			PRINTFORML 그대로, %조사처리(ANAME(LOCAL:6),"는")%, 위안으로서 병사들에게 제공되어 버렸다……
+			CALL FUCK(LOCAL:5, "욕망, Ｃ, Ｂ, 자위", "")
+			CALL FUCK(LOCAL:6, "욕망, 봉사, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, Ｖ확장, Ａ확장, 성교, 자위, 정애, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("병사"), @"%ANAME(LOCAL:5)%의 사병의 페니스", @"%ANAME(LOCAL:5)%의 사병", "", "외교 관계 유지를 위한 윤간")
+			PRINTFORML 이윽고 것이 끝나면, 거기에는 전신 모든 구멍에서 종을 흘리는 %조사처리(ANAME(LOCAL:6),"와")%
+			PRINTFORML %ANAME(LOCAL:6)%의 치태를 술안주에 몇 번이나 자위를 해, 축쳐친 %조사처리(ANAME(LOCAL:5),"가")% 남아 있었다
+			PRINTL 
+		ENDIF
+ENDSELECT
+
+RETURN 1
+

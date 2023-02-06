@@ -1,0 +1,876 @@
+﻿;---------------------------
+;대상 캐릭터가 대상세력에 의한 조교로 FORCE_FUCK 되었을 때에, CFLAG가 감소할까
+;---------------------------
+@SP_TRAIN_IS_DECREASE_CFLAG(대상, 세력번호)
+#FUNCTION
+#DIM 대상
+#DIM 세력번호
+SIF !IS_SP_COUNTRY(세력번호)
+	RETURNF 0
+LOCAL = SP_COUNTRY_TO_CONST(세력번호)
+
+SIF 대상 == MASTER || FLAG:관전모드
+	RETURNF 0
+;사관이나 노예로서 스타트 해, 대상이 저속해지고 있다
+SIF GROUPMATCH(SP_COUNTRY_START:LOCAL, 특수세력스타트_사관, 특수세력스타트_노예) && GETBIT(TALENT:대상:특수세력함락계, LOCAL)
+	RETURNF 0
+;MASTER가 대상세력에 소속해 있다, 또는 포로로 대상이 저속해지고 있다
+SIF CFLAG:MASTER:소속 == 세력번호 || (CFLAG:MASTER:포로처 == 세력번호 && GETBIT(TALENT:대상:특수세력함락계, LOCAL))
+	RETURNF 0
+
+RETURNF 1
+
+@SP_COUNTRY_ABL_MODIFIER(세력정수)
+#FUNCTION
+#DIM 세력정수
+SELECTCASE SP_COUNTRY_RANK:세력정수
+	CASE 5
+		RETURNF 10
+	CASE 4
+		RETURNF 7
+	CASE 3
+		RETURNF 5
+	CASE 2
+		RETURNF 3
+	CASE 1
+		RETURNF 2
+ENDSELECT
+
+;-------------------------------------------------
+;건네받은 ID의 캐릭터의 특수 세력 소질에 대응하는 특수 정액을 돌려준다
+;-------------------------------------------------	
+@SP_CHARA_TO_SPERM_ID(ID)
+#FUNCTION
+#DIM ID
+;SP_COUNTRY_NAME의 각 인덱스와 각 특수 세력 소질의 값이, 같은 특수 세력을 나타내고 있는 것을 이용한다
+RETURNF GET_SPERM_ID(SP_COUNTRY_NAME:(TALENT:ID_TO_CHARA(ID):특수세력소질))
+
+;-------------------------------------------------
+;건네받은 세력 번호가 특수 세력일까를 판단한다
+;-------------------------------------------------	
+@IS_SP_COUNTRY(세력)
+#FUNCTION
+#DIM 세력
+SIF 세력 < 0 || 세력 >= MAX_COUNTRY
+	RETURNF 0
+RETURNF (FINDELEMENT(SP_COUNTRY_ID, COUNTRY_EVENT_ID:세력) != -1 ? 1 # 0)
+
+;-------------------------------------------------
+;대상이 건네받은 세력에 조교될 수 있는인지를 판단한다
+;-------------------------------------------------	
+@IS_TRAIN_BY_SP_COUNTRY(대상, 세력번호)
+#FUNCTION
+#DIM 대상
+#DIM 세력번호
+;그 세력 소속에서도, 그 세력의 포로도 아닌 캐릭터는 안 돼（당연）
+SIF CFLAG:대상:소속 != 세력번호 && CFLAG:대상:포로처 != 세력번호
+	RETURNF 0
+;그 세력에 소속은 하고 있지만, 그 세력 이외에 포로로 되고 있다면 안 돼
+SIF CFLAG:대상:소속 == 세력번호 && !GROUPMATCH(CFLAG:대상:포로처, 세력번호, 0)
+	RETURNF 0
+;특수 세력의 캐릭터는 안 돼
+SIF TALENT:대상:특수세력소질
+	RETURNF 0
+SIF IS_ANIMAL(대상)
+	RETURNF 0
+SIF CFLAG:대상:행동불능상태 == 행동불능_아이
+	RETURNF 0
+;MASTER는 사관 스타트라면 빠진다
+SIF 대상 == MASTER && GROUPMATCH(SP_COUNTRY_START:SP_COUNTRY_TO_CONST(세력번호), 특수세력스타트_사관, 특수세력스타트_군주)
+	RETURNF 0
+;연금중은 스킵
+SIF CFLAG:대상:포로처 == 세력번호 && CFLAG:대상:연금중
+	RETURNF 0
+;자세력 이외를 튕기는 설정
+SIF CONFIG:81 == 1 && CFLAG:MASTER:소속 != 세력번호
+	RETURNF 0
+;자세력을 튕기는 설정
+SIF CONFIG:81 == 2 && CFLAG:MASTER:소속 == 세력번호
+	RETURNF 0
+;텍스트비표시인 설정이라면 스킵
+SIF	!SP_COUNTRY_IS_TRAINED(대상)
+	RETURNF 0
+;그 세력에 소속하는 MASTER 이외가 저속해지지 않은 캐릭터는 스킵
+;예쁜 그대로 잡아 두고 싶은 사람용
+;	SIF ! GETBIT(TALENT:대상:특수 세력 함락계, COUNTRY_TO_CONST(세력 번호)) && CFLAG:대상:소속 ==세력 번호 && 대상 != MASTER
+;		RETURNF 0
+;대상세력에 소속해, 게다가 저속해지고 있는 캐릭터는 2/3으로 컷（하나 하나 나오면 음울하기 때문에）
+SIF CFLAG:대상:소속 == 세력번호 && GETBIT(TALENT:대상:특수세력함락계, SP_COUNTRY_TO_CONST(세력번호)) && RAND:3
+	RETURNF 0
+RETURNF 1
+
+;-------------------------------------------------
+;대상이 건네받은 세력에 돌아누을지 어떨지 판단한다
+;-------------------------------------------------	
+@IS_BETRAY_TO_SP_COUNTRY(대상, 세력번호)
+#FUNCTION
+#DIM 대상
+#DIM 세력번호
+#DIM 세력정수
+세력정수 = SP_COUNTRY_TO_CONST(세력번호)
+;저속해지지 않으면, 턴수 부족하면 안 돼
+SIF !GETBIT(TALENT:대상:특수세력함락계, 세력정수) && SP_TRAIN_COUNT:대상:세력정수 < TRAIN_FALLEN_TERM:3
+	RETURNF 0
+;저속해지고 있어, 그 세력에 사관 하고 있다면 스킵（이미 돌아눕고 있으므로. 사관이 아닌 경우, 한 번 남에 등용될까 뭔가 하고 있으므로 예외）
+SIF CFLAG:대상:소속 == 세력번호 && GETBIT(TALENT:대상:특수세력함락계, 세력정수)
+	RETURNF 0
+RETURNF 1
+
+;-------------------------------------------------
+;건네받은 캐릭터가 특수 세력의 함락계 소질을 가지고 있을까를 판단한다
+;-------------------------------------------------	
+@IS_FALLEN_TO_SP_COUNTRY(대상)
+#FUNCTION
+#DIM 대상
+RETURNF (TALENT:대상:특수세력함락계 != 0)
+
+;-------------------------------------------------
+;주인공이 특수 세력에 함락 했을 경우의 처리
+;-------------------------------------------------	
+@PLAYER_FALLEN_TO_SP_COUNTRY(세력)
+#DIM 세력
+FOR LOCAL, 1, CHARANUM
+	IF CFLAG:LOCAL:소속 == 세력
+		TALENT:LOCAL:합의 = 1
+		CFLAG:LOCAL:호감도 = MAX(CFLAG:LOCAL:호감도, 500)
+		CFLAG:LOCAL:종속도 = MAX(CFLAG:LOCAL:종속도, 500)
+		CFLAG:LOCAL:의존도 = MAX(CFLAG:LOCAL:의존도, 500)
+		CFLAG:LOCAL:지배도 = MAX(CFLAG:LOCAL:지배도, 1000)
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;건네받은 캐릭터가 특수 세력의 캐릭터일지 어떨지를 판단한다
+;-------------------------------------------------	
+@IS_SP_COUNTRY_CHARA(대상)
+#FUNCTION
+#DIM 대상
+RETURNF TALENT:대상:특수세력소질
+
+
+;---------------------------------------------------
+;주어진 세력 번호를, 대응하는 정수 할당에 변환한다
+;세력 번호만 아는 상태로 정수 할당을 줍고 싶을 때에
+;---------------------------------------------------
+@SP_COUNTRY_TO_CONST(세력번호)
+#FUNCTION
+#DIM 세력번호
+SIF 세력번호 < 0 || 세력번호 >= MAX_COUNTRY
+	RETURNF 0
+RETURNF (FINDELEMENT(SP_COUNTRY_ID, COUNTRY_EVENT_ID:세력번호) != -1 ? FINDELEMENT(SP_COUNTRY_ID, COUNTRY_EVENT_ID:세력번호) # 0)
+
+;---------------------------------------------------
+;주어진 EVENTID를, 대응하는 정수 할당에 변환한다
+;아마 사용하지 않는다
+;---------------------------------------------------
+@SP_COUNTRY_ID_TO_COSNT(EVENTID)
+#FUNCTION
+#DIM EVENTID
+SIF GET_COUNTRY_FROM_ID(EVENTID) != -1
+	RETURNF SP_COUNTRY_TO_CONST(GET_COUNTRY_FROM_ID(EVENTID))
+RETURNF 0
+
+
+;---------------------------------------------------
+;봉기 하는지 판정하는 범용 함수
+;---------------------------------------------------
+@CHECK_SP_COUNTRY_RISE()
+#FUNCTION
+#DIM 세력수
+#DIM 기초확률
+
+기초확률 = 50
+세력수 = 0
+
+SIF DAY < SLG_PP:1
+	RETURNF 0
+
+기초확률 += (DAY - SLG_PP:1) * 10
+
+FOR LOCAL, 0, MAX_COUNTRY
+	SIF IS_SP_COUNTRY(LOCAL) && COUNTRY_EVENT_ID:LOCAL != SP_COUNTRY_ID:특수세력_도둑
+		세력수 ++
+NEXT
+
+기초확률 /= (세력수 + 1)
+
+RETURNF 기초확률 > RAND:1000
+
+
+;-------------------------------------------------
+;desc  :지정한 ID의 특수 세력을 생성한다
+;param :세력 ID:COUNTRY_EVENT_ID
+;return:0:생성 실패
+;return:세력 번호
+;-------------------------------------------------
+@CREATE_SP_COUNTRY(세력정수)
+#DIM 세력정수
+#DIM 세력
+
+세력 = GET_NEW_COUNTRY()
+
+SIF 세력 == -1
+	RETURN 0
+
+SELECTCASE 세력정수
+	CASE 특수세력_도둑
+		COUNTRY_COLOR:세력 = 0x800000
+	CASE 특수세력_홉고블린
+		COUNTRY_COLOR:세력 = 0x2B5C1B
+	CASE 특수세력_외래인
+		COUNTRY_COLOR:세력 = 0x483D8B
+	CASE 특수세력_촉수
+		COUNTRY_COLOR:세력 = 0xFF1493
+	CASE 특수세력_자경단
+		COUNTRY_COLOR:세력 = 0x33CC66
+	CASE 특수세력_서큐버스
+		COUNTRY_COLOR:세력 = 0x8B008B
+	CASE 특수세력_광신도
+		COUNTRY_COLOR:세력 = 0xB43104
+ENDSELECT
+
+COUNTRY_SOLDIER:세력 = 2000 * POWER(2, SP_COUNTRY_RANK:세력정수) + MIN(DAY / 2 * 1000, 10000)
+COUNTRY_EVENT_ID:세력 = SP_COUNTRY_ID:세력정수
+MONEY:세력 = SUMARRAY(CITY_ECONOMY) / 500
+
+;보스 생성
+CALL ADD_SP_CHARA(세력, 1)
+
+COUNTRY_BOSS:세력 = GET_ID(RESULT)
+
+FOR LOCAL, 0, SP_COUNTRY_RANK:세력정수 * 2
+	CALL ADD_SP_CHARA(세력, 0, LOCAL)
+NEXT
+
+RETURN 세력
+
+
+;-------------------------------------------------
+;desc  :특수 세력 캐릭터의 모형을 추가한다. ADD_VOID_CHARA의 래퍼.
+;param :세력:세력 번호
+;param :보스:보스를 생성한다
+;param :루프:통상 캐릭터 생성시, FOR 루프의 루프 변수를 건네준다（도둑 A, B의 A라든지 B라든지의 부분의 처리용）
+;return:생성한 캐릭터 번호
+;-------------------------------------------------
+@ADD_SP_CHARA(세력, 보스, 루프)
+#DIM 세력
+#DIM 세력ID
+#DIM 세력정수
+#DIM 보스
+#DIM 루프
+#DIM 대상
+
+세력ID = COUNTRY_EVENT_ID:세력
+세력정수 = SP_COUNTRY_TO_CONST(세력)
+
+CALL ADD_VOID_CHARA()
+대상 = RESULT
+
+IF 보스
+	SIF GROUPMATCH(세력정수, 특수세력_서큐버스)
+		TALENT:대상:성별 = 2
+ELSE
+	IF 세력정수 == 특수세력_서큐버스
+		SELECTCASE RAND:100
+			CASE IS < 40
+				TALENT:대상:성별 = 1
+			CASE IS < 80
+				TALENT:대상:성별 = 2
+			CASE IS < 90
+				TALENT:대상:성별 = 4
+			CASE IS < 100
+				TALENT:대상:성별 = 5
+		ENDSELECT
+	ELSEIF GROUPMATCH(세력정수, 특수세력_외래인, 특수세력_자경단, 특수세력_촉수, 특수세력_광신도)
+		SELECTCASE RAND:100
+			CASE IS < 60
+				TALENT:대상:성별 = 0
+			CASE IS < 90
+				TALENT:대상:성별 = 1
+			CASE IS < 100
+				TALENT:대상:성별 = 2
+		ENDSELECT
+	ENDIF
+ENDIF
+
+;이름 설정
+IF 보스
+	SELECTCASE SP_COUNTRY_BOSSNAME:세력정수
+		CASE 0
+			SELECTCASE 세력정수
+				CASE 특수세력_도둑
+					NAME:대상     = 도둑
+					CALLNAME:대상 = 도둑
+					CSTR:대상:1   = 도둑
+					CSTR:대상:3   = 도둑
+					CSTR:대상:4   = 도둑
+					CSTR:대상:6   = 도둑
+				CASE 특수세력_홉고블린
+					NAME:대상     = 홉고블린
+					CALLNAME:대상 = 홉고블린
+					CSTR:대상:1   = 홉고블린
+					CSTR:대상:3   = 홉고블린
+					CSTR:대상:4   = 홉고블린
+					CSTR:대상:6   = 홉고블린
+				CASE 특수세력_외래인
+					NAME:대상     = 외래인
+					CALLNAME:대상 = 외래인
+					CSTR:대상:1   = 외래인
+					CSTR:대상:3   = 외래인
+					CSTR:대상:4   = 외래인
+					CSTR:대상:6   = 외래인
+				CASE 특수세력_촉수
+					NAME:대상     = 촉수병
+					CALLNAME:대상 = 촉수병
+					CSTR:대상:1   = 촉수병
+					CSTR:대상:3   = 촉수병
+					CSTR:대상:4   = 촉수병
+					CSTR:대상:6   = 촉수병
+				CASE 특수세력_자경단
+					NAME:대상     = 자경단원
+					CALLNAME:대상 = 자경단원
+					CSTR:대상:1   = 자경단원
+					CSTR:대상:3   = 자경단원
+					CSTR:대상:4   = 자경단원
+					CSTR:대상:6   = 자경단원
+				CASE 특수세력_서큐버스
+					NAME:대상     = 서큐버스
+					CALLNAME:대상 = 서큐버스
+					CSTR:대상:1   = 서큐버스
+					CSTR:대상:3   = 서큐버스
+					CSTR:대상:4   = 서큐버스
+					CSTR:대상:6   = 서큐버스
+				CASE 특수세력_광신도
+					NAME:대상     = 광신도
+					CALLNAME:대상 = 광신도
+					CSTR:대상:1   = 광신도
+					CSTR:대상:3   = 광신도
+					CSTR:대상:4   = 광신도
+					CSTR:대상:6   = 광신도
+			ENDSELECT
+		CASE 1
+			SELECTCASE 세력정수
+				CASE 특수세력_도둑
+					NAME:대상     = 도둑수령
+					CALLNAME:대상 = 도둑수령
+					CSTR:대상:1   = 도둑수령
+					CSTR:대상:3   = 도둑수령
+					CSTR:대상:4   = 도둑수령
+					CSTR:대상:6   = 도둑수령
+				CASE 특수세력_홉고블린
+					NAME:대상     = 고블린킹
+					CALLNAME:대상 = 고블린킹
+					CSTR:대상:1   = 고블린킹
+					CSTR:대상:3   = 고블린킹
+					CSTR:대상:4   = 고블린킹
+					CSTR:대상:6   = 고블린킹
+				CASE 특수세력_외래인
+					NAME:대상     = 연구실장
+					CALLNAME:대상 = 연구실장
+					CSTR:대상:1   = 연구실장
+					CSTR:대상:3   = 연구실장
+					CSTR:대상:4   = 연구실장
+					CSTR:대상:6   = 연구실장
+				CASE 특수세력_촉수
+					NAME:대상     = 촉수병장
+					CALLNAME:대상 = 촉수병장
+					CSTR:대상:1   = 촉수병장
+					CSTR:대상:3   = 촉수병장
+					CSTR:대상:4   = 촉수병장
+					CSTR:대상:6   = 촉수병장
+				CASE 특수세력_자경단
+					NAME:대상     = 자경단장
+					CALLNAME:대상 = 자경단장
+					CSTR:대상:1   = 자경단장
+					CSTR:대상:3   = 자경단장
+					CSTR:대상:4   = 자경단장
+					CSTR:대상:6   = 자경단장
+				CASE 특수세력_서큐버스
+					NAME:대상     = 서큐버스퀸
+					CALLNAME:대상 = 서큐버스퀸
+					CSTR:대상:1   = 서큐버스퀸
+					CSTR:대상:3   = 서큐버스퀸
+					CSTR:대상:4   = 서큐버스퀸
+					CSTR:대상:6   = 서큐버스퀸
+				CASE 특수세력_광신도
+					NAME:대상     = 교주
+					CALLNAME:대상 = 교주
+					CSTR:대상:1   = 교주
+					CSTR:대상:3   = 교주
+					CSTR:대상:4   = 교주
+					CSTR:대상:6   = 교주
+			ENDSELECT
+		CASE 2
+			TARGET = 대상
+			IF 세력정수 == 특수세력_서큐버스
+				CALL SET_RANDOM_NAME_K(대상)
+			ELSE
+				CALL SET_RANDOM_NAME_J(대상)
+			ENDIF
+			NAME:대상 = %CSTR:대상:1%
+			CALLNAME:대상 = %CSTR:대상:1%
+		CASE 3
+			NAME:대상 = %SP_COUNTRY_BOSSNAME_FIRST_NAME:세력정수%
+			CALLNAME:대상 = %SP_COUNTRY_BOSSNAME_FIRST_NAME:세력정수%
+			CSTR:대상:0 = %SP_COUNTRY_BOSSNAME_LAST_NAME:세력정수%
+			CSTR:대상:1 = %SP_COUNTRY_BOSSNAME_FIRST_NAME:세력정수%
+	ENDSELECT
+ELSE
+	SELECTCASE 세력정수
+		CASE 특수세력_도둑
+			NAME:대상     = 도둑
+			CALLNAME:대상 = 도둑
+			CSTR:대상:1   = 도둑
+			CSTR:대상:3   = 도둑
+			CSTR:대상:4   = 도둑
+			CSTR:대상:6   = 도둑
+		CASE 특수세력_홉고블린
+			NAME:대상     = 홉고블린
+			CALLNAME:대상 = 홉고블린
+			CSTR:대상:1   = 홉고블린
+			CSTR:대상:3   = 홉고블린
+			CSTR:대상:4   = 홉고블린
+			CSTR:대상:6   = 홉고블린
+		CASE 특수세력_외래인
+			NAME:대상     = 외래인
+			CALLNAME:대상 = 외래인
+			CSTR:대상:1   = 외래인
+			CSTR:대상:3   = 외래인
+			CSTR:대상:4   = 외래인
+			CSTR:대상:6   = 외래인
+		CASE 특수세력_촉수
+			NAME:대상     = 촉수병
+			CALLNAME:대상 = 촉수병
+			CSTR:대상:1   = 촉수병
+			CSTR:대상:3   = 촉수병
+			CSTR:대상:4   = 촉수병
+			CSTR:대상:6   = 촉수병
+		CASE 특수세력_자경단
+			NAME:대상     = 자경단원
+			CALLNAME:대상 = 자경단원
+			CSTR:대상:1   = 자경단원
+			CSTR:대상:3   = 자경단원
+			CSTR:대상:4   = 자경단원
+			CSTR:대상:6   = 자경단원
+		CASE 특수세력_서큐버스
+			NAME:대상     = 서큐버스
+			CALLNAME:대상 = 서큐버스
+			CSTR:대상:1   = 서큐버스
+			CSTR:대상:3   = 서큐버스
+			CSTR:대상:4   = 서큐버스
+			CSTR:대상:6   = 서큐버스
+		CASE 특수세력_광신도
+			NAME:대상     = 광신도
+			CALLNAME:대상 = 광신도
+			CSTR:대상:1   = 광신도
+			CSTR:대상:3   = 광신도
+			CSTR:대상:4   = 광신도
+			CSTR:대상:6   = 광신도
+	ENDSELECT
+	NAME:대상     = %NAME:대상%%UNICODE(0xFF21 + 루프)%
+	CALLNAME:대상 = %CALLNAME:대상%%UNICODE(0xFF21 + 루프)%
+	CSTR:대상:1   = %CSTR:대상:1%%UNICODE(0xFF21 + 루프)%
+ENDIF
+
+MAXBASE:대상:체력 = 3000
+MAXBASE:대상:기력 = 3000
+MAXBASE:대상:정신력 = 1500
+BASE:대상:체력 = MAXBASE:대상:체력
+BASE:대상:기력 = MAXBASE:대상:기력
+BASE:대상:정신력 = MAXBASE:대상:정신력
+CFLAG:대상:소속 = 세력
+
+TALENT:대상:절륜 = 1
+TALENT:대상:특수세력소질 = 세력정수
+TALENT:대상:음모현재치 = 음모_표준
+TALENT:대상:음모목표치 = 음모_표준
+TALENT:대상:겨드랑이털현재치 = 음모_표준
+TALENT:대상:겨드랑이털목표치 = 음모_표준
+TALENT:대상:Ｖ조임 = GET_DEFAULT_TIGHTNESS("보통")
+TALENT:대상:Ａ조임 = GET_DEFAULT_TIGHTNESS("보통")
+
+TARGET = 대상
+SIF IS_FEMALE(대상)
+	CALL RANDOM_CHARA_BUSTSIZE()
+SIF HAS_PENIS(대상)
+	CALL RANDOM_CHARA_PENISSIZE()
+
+
+IF 세력정수 == 특수세력_외래인
+	CALL SKILL_LEARN(대상, FINDELEMENT(SKILL_GENRE_ENG, "BASE"), SKILL_SP_COUNTRY_NO:세력정수, 0)
+ELSE
+	CALL SKILL_LEARN(대상, FINDELEMENT(SKILL_GENRE_ENG, "SP"), SKILL_SP_COUNTRY_NO:세력정수, 0)
+ENDIF
+
+SELECTCASE 세력정수
+	CASE 특수세력_도둑
+		ABL:대상:Ｃ감 = 3
+		ABL:대상:욕망 = 5
+		ABL:대상:성기술 = 3
+		ABL:대상:성지식 = 5
+		ABL:대상:봉사 = 3
+		ABL:대상:성교 = 5
+		ABL:대상:노출 = 2
+		ABL:대상:사정 = 3
+		ABL:대상:배설 = 2
+		ABL:대상:주도도Ｕ = 500
+		ABL:대상:주도도Ｎ = 300
+		ABL:대상:도착도 = 300
+		EXP:대상:절정경험 = 500
+	CASE 특수세력_홉고블린
+		ABL:대상:Ｃ감 = 4
+		ABL:대상:욕망 = 6
+		ABL:대상:성기술 = 4
+		ABL:대상:성지식 = 5
+		ABL:대상:봉사 = 2
+		ABL:대상:성교 = 4
+		ABL:대상:노출 = 1
+		ABL:대상:사정 = 4
+		ABL:대상:배설 = 2
+		ABL:대상:주도도Ｕ = 700
+		ABL:대상:주도도Ｎ = 300
+		ABL:대상:도착도 = 300
+		EXP:대상:절정경험 = 500
+	CASE 특수세력_외래인
+		ABL:대상:Ｃ감 = 3
+		IF IS_FEMALE(대상)
+			ABL:대상:Ｂ감 = 2
+			ABL:대상:Ｖ감 = 2
+			ABL:대상:Ａ감 = 2
+			ABL:대상:Ｍ감 = 3
+			TALENT:대상:겨드랑이털현재치 = 겨드랑이털_손질됨
+			TALENT:대상:겨드랑이털목표치 = 겨드랑이털_손질됨
+		ENDIF
+		ABL:대상:욕망 = 5
+		ABL:대상:성기술 = 4
+		ABL:대상:성지식 = 5
+		ABL:대상:봉사 = 4
+		ABL:대상:성교 = 2
+		ABL:대상:노출 = 3
+		IF HAS_PENIS(대상)
+			ABL:대상:사정 = 3
+		ENDIF
+		ABL:대상:배설 = 2
+		ABL:대상:주도도Ｕ = 700
+		ABL:대상:주도도Ｎ = 300
+		ABL:대상:도착도 = 600
+		EXP:대상:절정경험 = 500
+	CASE 특수세력_촉수
+		ABL:대상:Ｃ감 = 4
+		IF IS_FEMALE(대상)
+			ABL:대상:Ｂ감 = 3
+			ABL:대상:Ｖ감 = 4
+			TALENT:대상:겨드랑이털현재치 = 겨드랑이털_손질됨
+			TALENT:대상:겨드랑이털목표치 = 겨드랑이털_손질됨
+		ENDIF
+		ABL:대상:Ａ감 = 2
+		ABL:대상:Ｍ감 = 3
+		ABL:대상:욕망 = 7
+		ABL:대상:성기술 = 1
+		ABL:대상:성지식 = 5
+		ABL:대상:봉사 = 2
+		ABL:대상:성교 = 6
+		ABL:대상:노출 = 1
+		IF HAS_PENIS(대상)
+			ABL:대상:사정 = 6
+		ENDIF
+		ABL:대상:분유 = 1
+		ABL:대상:배설 = 2
+		ABL:대상:촉수 = RAND(1, 5)
+		ABL:대상:주도도Ｕ = 500
+		ABL:대상:주도도Ｎ = 300
+		ABL:대상:도착도 = 300
+		EXP:대상:절정경험 = 500
+		IF HAS_VAGINA(대상)
+			EXP:대상:촉수출산경험 = RAND(10)
+		ENDIF
+	CASE 특수세력_자경단
+		ABL:대상:Ｃ감 = 2
+		IF IS_FEMALE(대상)
+			ABL:대상:Ｂ감 = 2
+			ABL:대상:Ｖ감 = 2
+			ABL:대상:Ａ감 = 1
+			ABL:대상:Ｍ감 = 2
+			TALENT:대상:겨드랑이털현재치 = 겨드랑이털_손질됨
+			TALENT:대상:겨드랑이털목표치 = 겨드랑이털_손질됨
+		ENDIF
+		ABL:대상:욕망 = 3
+		ABL:대상:성기술 = 2
+		ABL:대상:성지식 = 5
+		ABL:대상:봉사 = 2
+		ABL:대상:성교 = 1
+		ABL:대상:노출 = 1
+		IF HAS_PENIS(대상)
+			ABL:대상:사정 = 2
+		ENDIF
+		ABL:대상:배설 = 1
+		ABL:대상:주도도Ｕ = RAND(-300, 300)
+		ABL:대상:주도도Ｎ = RAND(-300, 300)
+		ABL:대상:도착도 = RAND:300
+		EXP:대상:절정경험 = 100
+	CASE 특수세력_서큐버스
+		ABL:대상:Ｃ감 = 3
+		IF IS_FEMALE(대상)
+			ABL:대상:Ｂ감 = 3
+			ABL:대상:Ｖ감 = 3
+			TALENT:대상:겨드랑이털현재치 = 겨드랑이털_손질됨
+			TALENT:대상:겨드랑이털목표치 = 겨드랑이털_손질됨
+		ENDIF
+		ABL:대상:Ａ감 = 3
+		ABL:대상:Ｍ감 = 3
+		ABL:대상:욕망 = 5
+		ABL:대상:성기술 = 4
+		ABL:대상:성지식 = 5
+		ABL:대상:봉사 = 4
+		ABL:대상:성교 = 3
+		ABL:대상:정애 = 3
+		ABL:대상:레즈 = 3
+		ABL:대상:노출 = 2
+		ABL:대상:배설 = 2
+		ABL:대상:주량 = 3
+		ABL:대상:주도도Ｕ = 500
+		ABL:대상:주도도Ｎ = 300
+		ABL:대상:도착도 = 300
+		EXP:대상:절정경험 = 500
+	CASE 특수세력_광신도
+		ABL:대상:Ｃ감 = 3
+		ABL:대상:욕망 = 5
+		IF IS_FEMALE(대상)
+			ABL:대상:Ｂ감 = 3
+			ABL:대상:Ｖ감 = 4
+			ABL:대상:Ａ감 = 1
+			ABL:대상:Ｍ감 = 3
+			TALENT:대상:겨드랑이털현재치 = 겨드랑이털_손질됨
+			TALENT:대상:겨드랑이털목표치 = 겨드랑이털_손질됨
+		ENDIF
+		ABL:대상:성기술 = 4
+		ABL:대상:성지식 = 5
+		ABL:대상:봉사 = 2
+		ABL:대상:성교 = 5
+		ABL:대상:노출 = 2
+		IF HAS_PENIS(대상)
+			ABL:대상:사정 = 4
+		ENDIF
+		ABL:대상:배설 = 2
+		ABL:대상:주도도Ｕ = 700
+		ABL:대상:주도도Ｎ = 300
+		ABL:대상:도착도 = 600
+		EXP:대상:절정경험 = 500
+ENDSELECT
+
+ABL:대상:주량 = 3
+
+;베이스 100, 난도 의존 20(난도 3으로 100), 랜덤 기대치 20 =합계 220
+;능력4종 평균 조금 위
+SELECTCASE 세력정수
+	CASE 특수세력_도둑
+		ABL:대상:무투 = 30 + 6 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:방위 = 30 + 6 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:지략 = 20 + 4 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:정치 = 20 + 4 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+	CASE 특수세력_홉고블린
+		ABL:대상:무투 = 40 + 6 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:방위 = 30 + 5 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:지략 = 10 + 4 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:정치 = 20 + 5 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+	CASE 특수세력_외래인
+		ABL:대상:무투 = 10 + 4 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:방위 = 20 + 4 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:지략 = 40 + 6 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:정치 = 30 + 6 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+	CASE 특수세력_촉수
+		ABL:대상:무투 = 40 + 7 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:방위 = 30 + 4 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:지략 = 15 + 3 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:정치 = 10 + 4 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		TALENT:대상:요술지식 = 1
+		ABL:대상:요술 = 5 + 2 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+	CASE 특수세력_자경단
+		ABL:대상:무투 = 20 + 4 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:방위 = 40 + 6 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:지략 = 20 + 5 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:정치 = 20 + 5 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+	CASE 특수세력_서큐버스
+		ABL:대상:무투 = 15 + 4 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:방위 = 40 + 6 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:지략 = 30 + 6 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:정치 = 15 + 4 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+	CASE 특수세력_광신도
+		ABL:대상:무투 = 20 + 4 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:방위 = 20 + 4 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:지략 = 30 + 6 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ABL:대상:정치 = 30 + 6 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		IF SP_COUNTRY_RANK:세력정수 > RAND:10
+			TALENT:대상:요술지식 = 1
+			ABL:대상:요술 = 3 + 2 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		ENDIF
+ENDSELECT
+
+ABL:대상:가창 = 10 + 3 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+ABL:대상:요리 = 10 + 3 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+
+ABL:대상:무투 += RAND:10
+ABL:대상:방위 += RAND:10
+ABL:대상:지략 += RAND:10
+ABL:대상:정치 += RAND:10
+
+IF 보스
+	ABL:대상:무투 += 10
+	ABL:대상:방위 += 10
+	ABL:대상:지략 += 10
+	ABL:대상:정치 += 10
+	ABL:대상:가창 += 5
+	ABL:대상:요리 += 5
+ENDIF
+
+SELECTCASE 세력정수
+	CASE 특수세력_도둑
+		CALL SET_CLOTH_BY_NAME(대상, 의상부위_상의, "옷")
+		CALL SET_CLOTH_BY_NAME(대상, 의상부위_하의, "바지")
+		CALL SET_CLOTH_BY_NAME(대상, 의상부위_속옷하, "트렁크스")
+		CALL SET_CLOTH_BY_NAME(대상, 의상부위_양말, "양말")
+		CALL SET_CLOTH_BY_NAME(대상, 의상부위_구두, "구두")
+	CASE 특수세력_홉고블린
+		CALL SET_CLOTH_BY_NAME(대상, 의상부위_하의, "요포")
+	CASE 특수세력_외래인
+		CALL SET_CLOTH_BY_NAME(대상, 의상부위_상의, "와이셔츠")
+		CALL SET_CLOTH_BY_NAME(대상, 의상부위_하의, "슬랙스")
+		CALL SET_CLOTH_BY_NAME(대상, 의상부위_윗도리, "백의")
+		IF IS_FEMALE(대상)
+			CALL SET_CLOTH_BY_NAME(대상, 의상부위_속옷상, "브라")
+			CALL SET_CLOTH_BY_NAME(대상, 의상부위_속옷하, "팬티")
+		ELSE
+			CALL SET_CLOTH_BY_NAME(대상, 의상부위_속옷하, "트렁크스")
+		ENDIF
+		CALL SET_CLOTH_BY_NAME(대상, 의상부위_양말, "양말")
+		CALL SET_CLOTH_BY_NAME(대상, 의상부위_구두, "구두")
+	CASE 특수세력_촉수
+		;아무것도 입지 않는다
+	CASE 특수세력_자경단
+		CALL SET_CLOTH_BY_NAME(대상, 의상부위_상의, "옷")
+		CALL SET_CLOTH_BY_NAME(대상, 의상부위_하의, "바지")
+		IF IS_FEMALE(대상)
+			CALL SET_CLOTH_BY_NAME(대상, 의상부위_속옷상, "브라")
+			CALL SET_CLOTH_BY_NAME(대상, 의상부위_속옷하, "팬티")
+		ELSE
+			CALL SET_CLOTH_BY_NAME(대상, 의상부위_속옷하, "트렁크스")
+		ENDIF
+		CALL SET_CLOTH_BY_NAME(대상, 의상부위_양말, "양말")
+		CALL SET_CLOTH_BY_NAME(대상, 의상부위_구두, "구두")
+	CASE 특수세력_서큐버스
+		;아무것도 입지 않는다
+	CASE 특수세력_광신도
+		CALL SET_CLOTH_BY_NAME(대상, 의상부위_상하의, "수도옷")
+		CALL SET_CLOTH_BY_NAME(대상, 의상부위_양말, "양말")
+		CALL SET_CLOTH_BY_NAME(대상, 의상부위_구두, "구두")
+ENDSELECT
+
+SELECTCASE 세력정수
+	CASE 특수세력_도둑
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "번갈아삽입") = 1
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "번갈아Ａ삽입") = 1
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "마약") = 2
+		COM_TENDENCY:대상:(GETNUM(TRAINNAME,"펠라치오") + 1000) = 1
+		COM_TENDENCY:대상:(GETNUM(TRAINNAME,"파이즈리") + 1000) = 1
+		COM_TENDENCY:대상:(GETNUM(TRAINNAME,"대딸") + 1000) = 1
+		COM_TENDENCY:대상:(GETNUM(TRAINNAME,"구슬빨기") + 1000) = 1
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "신체에낙서") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "노출플레이") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "스팽킹") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "채찍") = 1
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "바늘") = 1
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "눈가리개") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "밧줄") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "재갈") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "피스트퍽") = 1
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "애널피스트") = 1
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "때리기") = 1
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "이라마치오") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "피어싱") = 1
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "문신") = 1
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "코걸이") = 1
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "목조르기") = 1
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "원격조교") = 1
+		COM_TENDENCY:대상:(GETNUM(TRAINNAME,"도게자") + 1000) = 1
+	CASE 특수세력_홉고블린
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "번갈아삽입") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "번갈아Ａ삽입") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "Ａ안면승마") = 2
+		COM_TENDENCY:대상:(GETNUM(TRAINNAME,"펠라치오") + 1000) = 2
+		COM_TENDENCY:대상:(GETNUM(TRAINNAME,"파이즈리") + 1000) = 2
+		COM_TENDENCY:대상:(GETNUM(TRAINNAME,"대딸") + 1000) = 2
+		COM_TENDENCY:대상:(GETNUM(TRAINNAME,"구슬빨기") + 1000) = 2
+		COM_TENDENCY:대상:(GETNUM(TRAINNAME,"애널핥기") + 1000) = 2
+		COM_TENDENCY:대상:(GETNUM(TRAINNAME,"조르기") + 1000) = 1
+	CASE 특수세력_외래인
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "로터") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "바이브") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "애널바이브") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "클리캡") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "유두캡") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "Ｖ확장벌룬") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "Ａ확장벌룬") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "로션") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "미약") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "배란유발제") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "절륜환") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "마약") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "콘돔") = 2
+		COM_TENDENCY:대상:(GETNUM(TRAINNAME,"자위") + 1000) = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "비디오촬영") = 3
+	CASE 특수세력_촉수
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "촉수삽입") = 3
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "촉수Ａ삽입") = 3
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "촉수클리고문") = 3
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "촉수가슴애무") = 3
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "촉수오나홀") = 3
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "촉수대딸") = 3
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "촉수착유") = 3
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "촉수긴박") = 3
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "촉수펠라") = 3
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "촉수자위") = 3
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "촉수산란") = 3
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "촉수Ａ산란") = 3
+	CASE 특수세력_자경단
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "노출플레이") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "비디오촬영") = 2
+	CASE 특수세력_서큐버스
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "조개맞대기") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "쌍두바이브") = 2
+	CASE 특수세력_광신도
+		COM_TENDENCY:대상:(GETNUM(TRAINNAME,"펠라치오") + 1000) = 1
+		COM_TENDENCY:대상:(GETNUM(TRAINNAME,"파이즈리") + 1000) = 1
+		COM_TENDENCY:대상:(GETNUM(TRAINNAME,"대딸") + 1000) = 1
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "정상위") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "후배위") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "대면좌위") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "배면좌위") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "기승위") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "배면기승위") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "2개삽입") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "측위") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "굴곡위") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "대면입위") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "배면입위") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "서서뒷치기") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "Ａ정상위") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "Ａ후배위") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "Ａ대면좌위") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "Ａ배면좌위") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "Ａ기승위") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "Ａ배면기승위") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "Ａ2개삽입") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "Ａ측위") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "Ａ굴곡위") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "Ａ대면입위") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "Ａ배면입위") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "Ａ서서뒷치기") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "차례로삽입") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "차례로Ａ삽입") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "번갈아삽입") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "번갈아Ａ삽입") = 2
+		COM_TENDENCY:대상:GETNUM(TRAINNAME, "배란유발제") = 3
+ENDSELECT
+
+
+RETURN 대상

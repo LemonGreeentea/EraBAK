@@ -1,0 +1,94 @@
+﻿;-------------------------------------------------
+;# COM_AUTO 전체
+;	_COM_AUTOSELECT와_COM_AUTOSELECT_N로 공유
+;-------------------------------------------------
+;커맨드 하나하나에 카테고리를 할당한다
+#DIM COM_AUTO_COM_CATEGORY, 3000
+
+;각 카테고리내의 커맨드수（요소수는 카테고리종수이상）
+#DIM COM_AUTO_COM_CATEGORY_COM_NUM, 30
+
+;커맨드 실행 우선도의 계산에 사용하는 일시 변수（요소수는 카테고리종수이상）
+#DIM COM_AUTO_COM_PRIORITY_SUM, 30
+
+;카테고리 마다 선택 우선도를 할당한다（요소수는 카테고리종수이상）
+;이 값에 비례한 확률로 커맨드의 경향이 정해진다
+#DIM COM_AUTO_CATEGORY_PRIORITY, 30	
+
+;커맨드 마다 실행 우선도를 할당한다(이 값에 비례한 확률로 커맨드가 선택된다)
+;0～999는 MAIN_PLAYER가 실행, 1000～1999는 MAIN_TARGET가 실행, 2000～2999는 제삼자
+#DIM COM_AUTO_COM_PRIORITY, 3000
+
+;오토모드는 「된다」등의 역전 행동이나 제삼자끼리의 행위등
+;통상 커맨드 번호에 이하의 수치를 더해 가공 커맨드 번호로서 선택지에 가세하고 있다
+#DIM CONST ADD_NUM_대상이실행 = 1000
+#DIM CONST ADD_NUM_제삼자에게실행 = 2000
+
+;-------------------------------------------------
+;# COM_AUTOSELECT_3_카테고리의 우선도 설정
+;-------------------------------------------------
+;성교 카테고리로 조작하는 윤활 추가 카테고리의 가부 플래그
+#DIM COM_AUTO_CHECK_FLAG_IS_WET_ENOUGH
+
+;-------------------------------------------------
+;# COM_AUTOSELECT_4_커맨드의 우선도 설정
+;-------------------------------------------------
+;각 커맨드에 갖게하는 기본치
+#DIM CONST COM_AUTO_AI_REFERENCE_VALUE = 30
+
+;-------------------------------------------------
+;# COM_AUTOSELECT_2_실행 대상 캐릭터 설정
+;-------------------------------------------------
+#DIM COM_AUTO_RANDOMIZED_COUNTER = 0	;란택용 카운터
+#DIM COM_AUTO_RANDOMIZED_NUM, 1000		;란택용 번호
+#DIM COM_AUTO_RANDOMIZED_WEIGHTED, 1000	;란택용 중량감
+
+;-------------------------------------------------
+;# COM_AUTO_CATEGORY 네야 오토 카테고리
+;-------------------------------------------------
+#DIM CONST COM_AUTO_CATEGORY_NUM_애무한다 = 1
+#DIM CONST COM_AUTO_CATEGORY_NUM_성교한다 = 2
+#DIM CONST COM_AUTO_CATEGORY_NUM_피임한다 = 3
+#DIM CONST COM_AUTO_CATEGORY_NUM_윤활추가한다 = 4
+#DIM CONST COM_AUTO_CATEGORY_NUM_도구사용한다 = 5
+#DIM CONST COM_AUTO_CATEGORY_NUM_가학한다 = 6
+#DIM CONST COM_AUTO_CATEGORY_NUM_심하게가학한다 = 7
+#DIM CONST COM_AUTO_CATEGORY_NUM_노출한다 = 8
+#DIM CONST COM_AUTO_CATEGORY_NUM_소배설한다 = 9
+#DIM CONST COM_AUTO_CATEGORY_NUM_대배설한다 = 10
+#DIM CONST COM_AUTO_CATEGORY_NUM_촉수를취급한다 = 11
+#DIM CONST COM_AUTO_CATEGORY_NUM_애무시킨다 = 12
+#DIM CONST COM_AUTO_CATEGORY_NUM_성교시킨다 = 13
+#DIM CONST COM_AUTO_CATEGORY_NUM_피임시킨다 = 14
+#DIM CONST COM_AUTO_CATEGORY_NUM_윤활추가시킨다 = 15
+#DIM CONST COM_AUTO_CATEGORY_NUM_도구사용하게한다 = 16
+#DIM CONST COM_AUTO_CATEGORY_NUM_피학한다 = 17
+#DIM CONST COM_AUTO_CATEGORY_NUM_심하고피학한다 = 18
+#DIM CONST COM_AUTO_CATEGORY_NUM_노출시킨다 = 19
+#DIM CONST COM_AUTO_CATEGORY_NUM_소배설시킨다 = 20
+#DIM CONST COM_AUTO_CATEGORY_NUM_대배설시킨다 = 21
+#DIM CONST COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 = 22
+#DIM CONST COM_AUTO_CATEGORY_NUM_설득 = 23
+#DIM CONST COM_AUTO_CATEGORY_NUM_MAX = 23
+
+;-------------------------------------------------
+;# COM_AUTO_CATEGORY_LIKE 일상 오토 카테고리
+;-------------------------------------------------
+#DIM CONST COM_AUTO_CATEGORY_LIKE_0 = 1
+#DIM CONST COM_AUTO_CATEGORY_LIKE_300 = 2
+#DIM CONST COM_AUTO_CATEGORY_LIKE_500 = 3
+#DIM CONST COM_AUTO_CATEGORY_LIKE_800 = 4
+#DIM CONST COM_AUTO_CATEGORY_LIKE_1500 = 5
+#DIM CONST COM_AUTO_CATEGORY_LIKE_MAX = 5
+
+;-------------------------------------------------
+;# COM_AUTO_FILTER 맡김시 전용의 원 버튼 필터
+;	CONFIG:11을 사용해 CONFIG.ERB로 설정한다
+;-------------------------------------------------
+#DIM CONST COM_AUTO_FILTER_MAX = 5
+#DIM CONST COM_AUTO_FILTER_남성의Ａ를노리는행위를허가 = 1
+#DIM CONST COM_AUTO_FILTER_과격한폭력을금지 = 2
+#DIM CONST COM_AUTO_FILTER_ＳＭ를금지 = 3
+#DIM CONST COM_AUTO_FILTER_대스캇을금지 = 4
+#DIM CONST COM_AUTO_FILTER_소스캇을금지 = 5
+

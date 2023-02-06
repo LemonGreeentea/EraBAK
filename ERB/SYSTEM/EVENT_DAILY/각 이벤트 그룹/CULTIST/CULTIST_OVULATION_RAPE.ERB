@@ -1,0 +1,87 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_CULTIST_OVULATION_RATE()
+RETURN 75
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_CULTIST_OVULATION_DECISION()
+#DIM 광신도
+광신도 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_광신도))
+SIF 광신도 == -1
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;특정의 조건을 채우는 캐릭터를 랜덤에 선택하는 경우에 이용
+;다른 함수는 필수이지만, 이것만은 없어도 좋다  라고 할까 퍼포먼스에 영향을 주므로 불필요하면 만들어서는 안 된다
+;대상이 존재하지 않고 데일리를 개시 할 수 없는 경우는 0을 돌려주는 것으로 데일리의 발생을 캔슬한다
+;---------------------
+@EVENT_DAILY_CULTIST_OVULATION_SETTARGET()
+#DIM 광신도
+광신도 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_광신도)
+FOR LOCAL, 0, CHARANUM
+	;광신도 세력 소속으로 포로가 아니고 임신하고 있지 않고 위험일인 여성 캐릭터
+	SIF CFLAG:LOCAL:소속 != 광신도
+		CONTINUE
+	SIF !GETBIT(TALENT:LOCAL:특수세력함락계, 특수세력_광신도)
+		CONTINUE
+	SIF CFLAG:LOCAL:포로처
+		CONTINUE
+	SIF TALENT:LOCAL:임신
+		CONTINUE
+	SIF !IS_OVULATION(LOCAL)
+		CONTINUE
+	DAILY_TARGET:DAILY_TARGET_NUM = LOCAL
+	DAILY_TARGET_NUM ++
+NEXT
+SIF DAILY_TARGET_NUM < 1
+	RETURN 0
+RETURN 1
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_CULTIST_OVULATION_GENRE()
+RETURN 데일리_장르_특수세력
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_CULTIST_OVULATION
+#DIM 대상
+#DIM 광신도
+
+대상 = DAILY_TARGET:(RAND:DAILY_TARGET_NUM)
+광신도 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_광신도)
+
+PRINTFORML 광신도들이 의식를 실시하고 있다
+PRINTFORML 한사람의 여자를 집단에서 범해, 자식을 심는 것으로, 신의 위광에 접한다는 의식이다
+PRINTFORMW 영예 있는 「잉녀」에는, %조사처리(ANAME(대상),"가")% 선택되었다
+PRINTFORMW 이 영예를 받기에 충분할 정도 열심인 신도이며, 그리고 무엇보다, 위험일이기 때문이다
+PRINTFORML 아직 의식도 시작되지 않았는데, %ANAME(대상)%의 육체는 쑤셔, 비부로부터는 녹진녹진 꿀이 넘쳐 나오고 있다
+PRINTFORMW 신금액이다 지난 쾌락에의 기대, 그리고 무엇보다, 사전에 투여된 배란유발제의 작용이었다
+PRINTFORMW 이윽고 %조사처리(ANAME(대상),"는")% 스스로 비부를 내며, 종을 옮겨 심어 주도록(듯이) 다른 신자에게 간원 한다
+PRINTFORMW 신자들은 차례차례%ANAME(대상)%에 모여, 그 배가 개구리같이 부푸는 만큼 자식을 계속 따랐다……
+
+;피임약을 무효화해, 배란유발제를 사용하고 있던 것으로 한다
+CFLAG:대상:피임약남은턴 = 0
+TCVAR:대상:65 = 1
+
+CALL FUCK_SP(대상, "욕망, 정애, 봉사, 성교, Ｖ, 윤간", "질내사정, 처녀상실", 광신도, GET_SPERM_ID("광신도"), @"광신도의 \@ RAND:2 ? 입술 # 페니스 \@", "광신도", "", "윤간")
+
+FOR LOCAL, 0, 10
+	CALL FUCK_SP(대상, "", "질내사정, 처녀상실", 광신도, GET_SPERM_ID("광신도"), @"광신도의 \@ RAND:2 ? 입술 # 페니스 \@", "광신도", "", "윤간")
+NEXT
+CALL COLOR_PRINTW(@"%ANAME(대상)%의 자궁에, 농후한 정액이 한껏 따라졌다", 칼라_핑크)
+
+RETURN 1

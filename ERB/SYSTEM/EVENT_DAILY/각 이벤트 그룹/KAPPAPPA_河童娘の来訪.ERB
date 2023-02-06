@@ -1,0 +1,268 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_KAPPAPPA_RATE()
+RETURN (DVAR:갓파_안은회수 > 0 ? (120 + (DVAR:갓파_안은회수 * 30)) # 30)
+
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_KAPPAPPA_DECISION()
+RETURN 10 <= DAY
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_KAPPAPPA_GENRE()
+RETURN 데일리_장르_에로
+
+
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_KAPPAPPA
+#DIM 금액
+#DIM 대상
+
+IF DVAR:갓파_발생플래그 == 0
+	PRINTFORML 일을 하고 있으면 부하가 손님을 고했다
+	PRINTFORML 뭔가 갓파의 집단의 사용해답다
+	PRINTFORMW 요괴가 무슨 용무일까? 신경이 쓰인 %조사처리(ANAME(MASTER),"는")% 만나기로 했다
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+	PRINTFORML 「안녕하세요―, 만나 주어 기뻐」
+	PRINTFORML 「여기의 앞에 다른 나라에도 갔지만 말야, 어디에서라도 문전 박대인 걸, 심하다고 생각하지 않아? 일전에란 말야-…」
+	PRINTFORMW 나타난 것은 사람 붙임성 있는 웃는 얼굴을 보이는, 갓파의 아가씨였다
+	PRINTFORMW 수다를 좋아하는 것 같고, 여기에 올 때까지의 노고라든가 무엇이라든가 긴 이야기를 차단해, 주제를 재촉했다
+	PRINTFORML 「그래그래, 그랬어. 글쎄요-, 우리들은 여러가지 발명을 좋아하지만 말야」
+	PRINTFORML 「역시 그러한 것은 자신들로 사용할 뿐(만큼)이 아니고 여러 사람 들이 사용하기를 원하지 않아?」
+	PRINTFORML 「그러니까 거래를 시작하려고 생각해! 그 허가를 받으러 온 것이야」
+	PRINTFORML 「어떤 발명품인가는? 응후-, 신경이 쓰여 버려? 그렇지만―, 아직 발매전이고―, 그렇지만 신경이 쓰인다라고 말한다면 가르치지 않는 것도…」
+	PRINTFORMW 상당히 이야기를 들어 받을 수 있어 기쁜 것인지 즐거운 듯이 말을 계속하는 그녀의 이야기를 들은체 만체 한다
+	PRINTFORML 요점은 영내에서 거래를 하고 싶기 때문에 허가를 갖고 싶다는 것인것 같다
+	PRINTFORMW 발명품의 내용도 위험은 없는 것 같다…요괴의 말하는 것이니까 말을 절반만 들음이 좋을지도 모르겠지만
+	DVAR:갓파_발생플래그 = 1
+ELSEIF DVAR:갓파_발생플래그 == 1
+	PRINTFORML 예의 갓파의 아가씨가 다시 방문해 왔다
+	IF DVAR:갓파_안은회수 == 0
+		PRINTFORML 「그 후, 다른 나라와도 교섭했지만, 역시 허가 받을 수 없었던 것이야」
+		PRINTFORML 「여기만이 의지인 것이, 네? 부탁한다」
+		PRINTFORMW 변함없는 사람 붙임성 있는 웃는 얼굴과 말이 빠르다
+	ELSEIF DVAR:갓파_안은회수 > 6
+		PRINTFORML 「응…안녕하세요, 에헤헤, 또 와 버렸다…」
+		PRINTFORML 「이번도, 부탁하러 온 것…거래와…그 밖에도,?」
+		PRINTFORMW 그녀는 완전히 암컷의 표정을 해, 아첨하는 것 같은 음색을 내고 있다
+	ELSE
+		PRINTFORML 「으음…그 후, 다른 나라와도 교섭했지만, 역시 허가 받을 수 없었던 것이다」
+		PRINTFORML 「그러니까 그…또 부탁하고 싶다는…」
+		PRINTFORMW 이전과 달라 어조는 더듬거리고, 마음 탓인지얼굴이 붉다
+	ENDIF
+ENDIF
+PRINTFORML 자, 그럼, 어떻게 하지……
+CALL SINGLE_DRAWLINE
+CALL ASK_MULTI_JUDGE("기분 좋게 허가를 낸다", 1, "금을 요구한다", 1, "체를 요구한다", HAS_PENIS(MASTER), "그만둔다", 1)
+;거절하는 패턴
+IF RESULT == 3
+	IF DVAR:갓파_안은회수 > 0
+		PRINTFORML 「우우…그런」
+		PRINTFORMW 아가씨는 실망해 돌아갔다
+	ELSE
+		PRINTFORML 「에-, 유감이다…」
+		PRINTFORMW 아가씨는 실망해 돌아갔다
+	ENDIF
+	DVAR:갓파_발생플래그 = 1
+	RETURN
+;원조하는 패턴
+ELSEIF RESULT == 0
+	IF DVAR:갓파_안은회수 > 5
+		PRINTFORML 「고마워요♥그렇지만, 그것 뿐…?」
+		PRINTFORML 기분 좋게 허가를 내 주면, 그녀는 머뭇머뭇 몸을 흔들기 시작했다
+		PRINTFORMW 그 눈동자에는 뭔가를 기대하는 것 같은 시선이 섞이고 있었다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 쓴웃음 지으면 그녀에게 다가가, 허리에 손을 썼다
+		PRINTFORML 「앗…」
+		PRINTFORMW 희미하게 목을 진동시켜 신음소리를 흘린 그녀를, 침실로 데리고 들어갔다
+		PRINTFORML …
+		PRINTFORML …
+		PRINTFORMW ·
+		PRINTFORMW 완전히 %ANAME(MASTER)%기호가 된 그녀의 신체를 한껏 귀여워했다
+	ELSEIF DVAR:갓파_안은회수 > 0
+		PRINTFORML 「엣, 응…좋은거야?」
+		PRINTFORMW 기분 좋게 허가를 내 주면 그녀는 맥 빠짐 같은 소리를 냈다
+		PRINTFORML 「으음…저, 고마워요」
+		PRINTFORMW 아가씨는 %조사처리(ANAME(MASTER),"를")% 힐끔힐끔 되돌아 보면서 빠른 걸음에 떠나 갔다
+	ELSE
+		PRINTFORML 「정말!? 해냈다―! 고마워요!」
+		PRINTFORMW 아가씨는 뛰어 올라 기쁨, 기쁜 나머지 %ANAME(MASTER)%에 껴안아 왔다
+		PRINTFORML 「에헤헤-, 이것으로 모두에게도 좋은 보고할 수 있다―! 정말 고마워요!」
+		PRINTFORMW 아가씨는 피용피용 뛰면서, 크게 손을 흔들면서 떠나 갔다
+	ENDIF
+	DVAR:갓파_발생플래그 = 1
+	DVAR:갓파_장사한회수 ++
+;금을 요구하는 패턴
+ELSEIF RESULT == 1
+	금액 = 4000 + DAY * 100
+	SIF 금액 > MONEY / 4
+		금액 = MONEY / 4
+	IF DVAR:갓파_안은회수 > 5
+		PRINTFORML 「으음, 갖고 싶은 것은 그것 뿐…?」
+		PRINTFORML 돈을 요구하면 그녀는 머뭇머뭇 몸을 흔들기 시작했다
+		PRINTFORMW 그 눈동자에는 뭔가를 기대하는 것 같은 시선이 섞이고 있었다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 쓴웃음 지으면 그녀에게 다가가, 허리에 손을 썼다
+		PRINTFORML 「앗…」
+		PRINTFORMW 희미하게 목을 진동시켜 신음소리를 흘린 그녀를, 침실로 데리고 들어갔다
+		PRINTFORML …
+		PRINTFORML …
+		PRINTFORMW ·
+		PRINTFORMW 완전히 %ANAME(MASTER)%기호가 된 그녀의 신체를 한껏 귀여워했다
+	ELSEIF DVAR:갓파_안은회수 > 0
+		PRINTFORML 「엣…그것만으로 좋은거야?」
+		PRINTFORMW 돈을 요구하면 그녀는 뭔가 맥 빠짐 한 같은 표정을 보였다
+		PRINTFORML 「아, 아니! 아무것도 아니다! …응, 알았어」
+		PRINTFORMW 그녀는 당황해 전언을 철회하면, 순조롭게 돈을 지불했다
+	ELSE
+		PRINTFORML 「응, 돈인가―」
+		PRINTFORML 「연구에도 돈 들지만, 우-응우-응…어쩔 수 없다―」
+		PRINTFORMW 아가씨는 잠깐 고민하고 있던 것 같지만, 등이 배는 대신할 수 없는 것 같았다
+	ENDIF
+	SETCOLOR 칼라_오렌지
+	PRINTFORMW {금액}의 자금을 얻었다
+	RESETCOLOR
+	MONEY += 금액
+	LOCAL = 1
+;신체를 요구하는 패턴
+;1회째와 2회째 이후의 2 패턴만 준비했지만 모금아가씨같게도 와 여러가지 패턴 구상 써도 좋은거야! 좋은거야!
+ELSEIF RESULT == 2
+	IF DVAR:갓파_안은회수 == 0
+		PRINTFORML 허가를 내는 대신에 너를 안게 해라
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")% 그렇게 고하면, 그녀는 일순간 무슨 말을 해졌는지 모르고 경직되었다
+		PRINTFORML 「앗……엣……그, 그것……」
+		PRINTFORMW 말해진 것을 이해하면, 그녀는 얼굴을 새빨갛게 해 입을 빠끔빠끔 하기 시작한다
+		PRINTFORML 「노, 농담이……지요?」
+		PRINTFORMW 간신히 제 정신이 된 그녀는, 흠칫흠칫%ANAME(MASTER)%에게 물어 왔다
+		PRINTFORML 하지만 한 번 더 같은 것을 고한다
+		PRINTFORMW 안게 해라
+		PRINTFORML 「읏!!!」
+		PRINTFORML 「그, 그런 일, 말해! 하 부끄럽고, 없는거야!?」
+		PRINTFORMW 그녀는 뛰어 올라 분노 낸다
+		PRINTFORML 하지만 안 되면 이것으로 이야기는 끝이라면 %조사처리(ANAME(MASTER),"가")% 냉철하게 고하면
+		PRINTFORMW 그녀는 말에 막혀, 숙였다
+		PRINTFORML 「………」
+		PRINTFORMW 한동안의 침묵의 뒤, 그녀로부터 짜내는 것 같은 소리가 새었다
+		PRINTFORML 「…아, 알았어……」
+		PRINTFORML 머뭇머뭇 하면서도 승낙의 말을 중얼거렸다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 조속히 그녀의 손을 잡아 당겨, 침실로 데리고 들어간다
+		PRINTFORML 「아……그, 그렇지만……이 일은……그, 모두에게는, 비밀로……해……」
+		PRINTFORMW 얼굴을 새빨갛게 하면서 간원 하는 그녀에게 약속해 주면, 침실의 문을 닫았다
+	ELSEIF DVAR:갓파_안은회수 > 5
+		PRINTFORML 「…에헤헤, 응」
+		PRINTFORMW 신체를 요구하면, 그녀는 어딘가 기쁜듯이 수줍은 웃음을 했다
+		PRINTFORML 그녀를 껴안아, 신체를 만지작거리면서 추잡한 아이라고 속삭인다
+		PRINTFORMW 「아읏, 그런 심술쟁이 말해…이런 몸으로 한 것은 %조사처리(ANAME(MASTER),"니")%까…♥」
+		PRINTFORML 그녀는 항의하면서도 기쁜듯이 몸을 구불거리게 할 수 있었다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀와 러브러브 하면서 침실에 향했다
+	ELSE
+		PRINTFORML 「………읏」
+		PRINTFORMW 다시 그녀의 몸을 요구하면, 역시 얼굴을 붉히고 숙여 버린다
+		PRINTFORML 하지만 미리 각오 하고 있던 것 같아, 뺨을 물들이면서도 곧바로 승낙했다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀의 손을 잡아 당기면, 침실로 향했다
+	ENDIF
+		PRINTFORML …
+		PRINTFORML …
+		PRINTFORMW ·
+		SELECTCASE RAND:10
+			CASE 0
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀의 허리를 배후로부터 잡으면서, 격렬하게 허리를 쳐박고 있다
+				PRINTFORMW 유육이 서로 부딪치는 소리가 울려, 거기에 맞추어 그녀로부터 신음소리 섞인 신음소리가 샌다
+				PRINTFORMW 일발 찌르기마다 자궁을 찔러 주면, 그녀는 다리를 삐걱삐걱 진동시켜 어떻게든 참고 있다
+				PRINTFORMW 상태의 좋은 점에 참지 못하고 정액을 발하면, 그녀도 등을 크고 활처럼 뒤로 젖혀 절정 했다
+			CASE 1
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀의 양팔을 배후로부터 잡으면서, 격렬하게 범하고 있다
+				PRINTFORMW 허리를 격렬하게 모습 페니스로 질육을 후벼팔 때마다, 그녀의 몸이 뛰고 요염한 소리가 흘러넘친다
+				PRINTFORMW 일발 찌르기마다 그 소리는 응석부림을 띠어 가 점차 페니스에의 억압도 힘들게 되어 간다
+				PRINTFORMW 절정과 함께 단단히 조여 오는 질의 감촉을 즐기면서, 그녀의 안쪽으로 종을 풀었다
+			CASE 2
+				PRINTFORMW 그녀를 쓰러트리고, 덮어씌우는 모습으로 깊숙히 페니스를 삽입한다
+				PRINTFORMW 허리를 깊게 가라앉힌 상태인 채, 페니스의 첨단으로 보르치오를 동글동글 자극해 주면
+				PRINTFORMW 그녀의 목으로부터 무심코 단정치 못한 신음소리가 새어, 양 다리로 %ANAME(MASTER)%의 허리에 껴안아 왔다
+				PRINTFORMW 밀착한 채로 그녀의 태내로 자식을 쏟아 주면, 그녀는 꽈악 껴안아 왔다
+			CASE 3
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀를 껴안은 모습으로, 천천히 그녀를 예의범절을 가르친다
+				PRINTFORMW 일부러 느긋한 허리 사용으로 그녀를 초조하게 하는 것처럼 공격하면, 그녀 쪽으로부터 허리를 흔들기 시작한다
+				PRINTFORMW 참지 못하고 정액을 자궁으로 발하면, 그녀는 암컷의 본능대로 기쁨의 소리를 높였다
+				PRINTFORMW 절정의 여운에 잠긴 %ANAME(MASTER)%의 목에 손을 써, 그녀는 야비하게 다음을 졸라 왔다
+			CASE 4
+				PRINTFORMW 책상다리를 한 %ANAME(MASTER)% 위에 걸치면서 그녀는 달콤한 소리를 높이고 있다
+				PRINTFORMW 깊숙히 꽂힌 페니스로부터 주어지는 쾌감에, 그녀는 열중해 허리를 흔들고 있다
+				PRINTFORMW 한계가 가까워진 %조사처리(ANAME(MASTER),"는")% 그녀를 껴안아, 농후한 키스를 하면서 안쪽 깊고로 사정했다
+				PRINTFORMW 그녀는 질내를 꽉 단단히 조여, 다리를 핑 늘리면서 움찔움찔 신체를 진동시켰다
+			CASE 5
+				PRINTFORMW 시간을 들여 차분히 그녀의 전신을 애무해 주면, 이윽고 그녀 쪽으로부터 페니스를 요구해 왔다
+				PRINTFORMW 사랑스럽고 졸라대는 것처럼 명하면, 그녀는 뺨을 물들이면서 스스로 음부를 나누어 열어 권유의 말을 뽑았다
+				PRINTFORMW %조사처리(ANAME(MASTER),"가")% 초조하게 하는 것처럼 천천히 삽입해 주면, 그녀는 그것만으로 몇번이고 절정 한다
+				PRINTFORMW 수치도 잊어 추잡하게 허덕이는 그녀를 즐기면서, 차분히 질내를 즐겼다
+			CASE 6
+				PRINTFORMW 그녀는 추잡한 표정을 하면서, 침대 위에서 격렬하게 허리를 흔들고 있다
+				PRINTFORMW %조사처리(ANAME(MASTER),"가")% 상태를 물어도, 말씨가 돌지 않는 혀로 부정의 말을 토해내지만
+				PRINTFORMW 그 표정은 분명하게 녹고 있어 페니스로부터 주어지는 쾌락에 몰두하고 있는 것을 알 수 있다
+				PRINTFORMW 그녀의 허풍도 길게 계속되지 않고, %ANAME(MASTER)%의 사정을 받으면 암컷인것 같은 교성을 주어 절정 했다
+			CASE 7
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀를 엎드린 자세로 해, 엉덩이를 들어 올리는 모습으로 범하고 있다
+				PRINTFORMW 그녀를 희롱하는 것처럼 일부러 천천히 허리를 움직여, 약점을 찾는 것처럼 공격해 주면
+				PRINTFORMW 전신을 진동시켜 몇번이고 절정 하기 시작하면서도, 베개에 얼굴을 묻어 필사적으로 소리를 흘리지 않으리라고 참고 있다
+				PRINTFORMW 하지만 %조사처리(ANAME(MASTER),"가")% 사정하면, 결국 참지 못하고 큰 교성을 올리면서 절정 했다
+			CASE 8
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 침대에 뒹굴어, 걸치는 그녀에게 허리를 흔들게 하고 있다
+				PRINTFORMW 봉사하는 그녀의 가슴을 주물러, 유두를 비틀면, 흠칫 신체를 진동시키고 질을 단단히 조인다
+				PRINTFORMW 항의하려고 하는 그녀를 무시해, 더욱 가슴을 혀와 손가락으로 애무해 주면, 견딜 수 없는 달콤한 소리가 샌다
+				PRINTFORMW 녹진녹진이 된 그녀의 몸을 즐기면서, 절정 하는 그녀에 맞추어 그 최안쪽에서 사정했다
+			CASE 9
+				PRINTFORMW 그녀의 몸을 배후로부터 껴안아, 깊숙히 페니스를 찌르면서 전신을 즐긴다
+				PRINTFORMW 목덜미를 빨면서 가슴을 주무르면, 그녀는 황홀로 한 표정으로 응석부린 소리를 흘린다
+				PRINTFORMW 견딜 수 없게 되었는지, 그녀 쪽으로부터 허리를 꾹꾹 강탈 페니스를 자극해 온다
+				PRINTFORMW 절정 할 때에 녹는 그녀의 몸을 즐기면서, 몇 번이나 정액을 발해 주었다
+		ENDSELECT
+	CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", @"갓파아가씨의 질", "화간")
+	PRINTFORML
+	IF DVAR:갓파_안은회수 == 6
+		PRINTFORML 「하아…이제(이미/벌써/더는/정말) 완전히 %ANAME(MASTER)%에 예의범절을 가르쳐져 버렸다…」
+		PRINTFORMW 사후, %ANAME(MASTER)%의 팔에 안기면서 그녀가 중얼거린다
+		PRINTFORML 「저기…또 와도, 좋아?」
+		PRINTFORMW 물기를 띤 눈동자로 올려봐 오는 그녀에게 대답 대신에 살그머니 키스했다
+	ELSEIF DVAR:갓파_안은회수 > 6
+		PRINTFORML 그녀와 충분히 즐긴 후, 허가를 내 주었다
+		PRINTFORML 「또 오네요♥」
+		PRINTFORMW 그녀는 이별할 때, %ANAME(MASTER)%의 뺨에 키스 해 떠나 갔다
+	ELSEIF DVAR:갓파_안은회수 >= 3
+		PRINTFORML 만족했으므로 약속대로 허가를 내 주었다
+		PRINTFORMW 그녀는 뺨을 붉히고, 자각이 있는지 않은 것인지 서운한 것 같은 표정으로 떠나 갔다
+	ELSE
+		PRINTFORMW 약속대로 허가를 내 주면 그녀는 도망치는 것처럼 떠났다
+	ENDIF
+	DVAR:갓파_발생플래그 = 1
+	SIF DVAR:갓파_안은회수 < 7
+		DVAR:갓파_안은회수 ++
+ENDIF
+
+LOCAL:1 = RAND:6 + LOCAL
+IF LOCAL:1 >= 3
+	PRINTFORML ………
+	PRINTFORMW 갓파들의 거래로 큰 사고가 일어난 것 같다
+	CALL DAILY_EVENT_RAND_CITYSELECT(0)
+	대상 = RESULT
+	IF 대상 > 0
+		CALL MODIFY_CITY_ECONOMY(대상, RAND(10000, 30000) * -1)
+	ENDIF
+ELSE
+	PRINTFORML ………
+	PRINTFORMW 갓파들의 거래로 영내의 경제가 활성화 한 것 같다
+	CALL DAILY_EVENT_RAND_CITYSELECT(0)
+	대상 = RESULT
+	IF 대상 > 0
+		CALL MODIFY_CITY_ECONOMY(대상, RAND(10000, 30000))
+	ENDIF
+ENDIF
+
+RETURN 1

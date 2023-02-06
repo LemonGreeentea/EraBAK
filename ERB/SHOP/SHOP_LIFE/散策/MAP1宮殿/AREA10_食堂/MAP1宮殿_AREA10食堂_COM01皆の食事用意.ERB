@@ -1,0 +1,613 @@
+﻿;-------------------------------------------------
+; 「모두의 식사 준비」의 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA10_COM1_EXIST
+RETURN 1
+
+;-------------------------------------------------
+; 「모두의 식사 준비」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA10_COM1_NAME
+RESULTS:0 '= "모두의 식사 준비"
+RETURN 1
+
+;-------------------------------------------------
+; 「모두의 식사 준비」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA10_COM1_CHECK
+RETURN 1
+
+;-------------------------------------------------
+; 「모두의 식사 준비」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA10_COM1_CHECKCHARA(ARG:0)
+
+SIF MASTER == ARG:0
+	RETURN 0
+SIF ID_TO_CHARA(FLAG:오락담당) != ARG:0
+	RETURN 0
+SIF CFLAG:(ARG:0):행동완료
+	RETURN 0
+SIF CFLAG:(ARG:0):포로처
+	RETURN 0
+SIF CFLAG:MASTER:소속 != CFLAG:(ARG:0):소속
+	RETURN 0
+SIF COOLTIME:(ARG:0):0
+	RETURN 0
+SIF !CFLAG:(ARG:0):안면 == 1
+	RETURN 0
+SIF IS_ANIMAL(ARG:0)
+	RETURN 0
+
+RETURN 1
+
+;-------------------------------------------------
+; 「모두의 식사 준비」의 메인 처리
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA10_COM1_MAIN
+#DIM 대상
+
+대상 = GET_COOK()
+
+CALL SHOP_LIFE67_MAP1_AREA10_COM1_TEXT_1(대상)
+WAIT
+PRINTL 
+CALL SHOP_LIFE67_MAP1_AREA10_COM1_TEXT_2(대상)
+WAIT
+
+LINES_SHOP = LINECOUNT
+
+CFLAG:대상:행동완료 = 1
+SHOP_TIME ++
+BEGIN TURNEND
+
+RETURN 1
+
+;-------------------------------------------------
+; 묘사 1
+;	구상주를 자유롭게 바꿀 수 있도록(듯이)
+;	@KOJO_EVENT_DEFAULT(ARG)로 옮기는 것이 좋을지도
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA10_COM1_TEXT_1(대상)
+#DIM 대상
+#DIM 주인공서투름플래그
+#DIM 대상서투름플래그
+
+SELECTCASE RAND:2
+	CASE 0
+	LOCALS:2 = 저녁식사
+	CASEELSE
+	LOCALS:2 = 내일의 아침 식사
+ENDSELECT
+
+PRINTFORML  %LOCALS:2%를 준비하려고 식당에 오면, 요리사의 %조사처리(ANAME(대상),"가")% 이미 준비를 시작하고 있었다
+PRINTFORMW  %조사처리(ANAME(MASTER),"는")% 심부름을 신청했다
+PRINTL 
+
+주인공서투름플래그 = 0
+IF ABL:(MASTER):요리 < 30
+	PRINTFORML  %조사처리(ANAME(MASTER),"는")% 떨리는 관계를 끊지 않게 신중하게 조리를 진행시키고 있다
+	PRINTFORML  %조사처리(ANAME(대상),"는")% 걱정인 것처럼 말을 걸어 왔다
+	주인공서투름플래그 = 2
+ELSEIF ABL:(MASTER):요리 < 50
+	PRINTFORML  %조사처리(ANAME(MASTER),"는")% 어디에 조미료가 있는지도 모르고 시간이 걸려 있다
+	PRINTFORML  %조사처리(ANAME(대상),"는")% 보기 힘든 것처럼 말을 걸어 왔다
+	주인공서투름플래그 = 1
+ELSE
+	주인공서투름플래그 = 0
+	PRINTFORML  %조사처리(ANAME(MASTER),"는")% 속시원한 소리를 내 부엌칼을 취급하고 있다
+	PRINTFORML  %조사처리(ANAME(대상),"는")% 그것을 보며 감탄 한 모습으로 요리를 가르쳐 주셨으면 한다고 말해 왔다
+ENDIF
+
+IF ABL:(대상):요리 < 30
+	대상서투름플래그 = 2
+	IF 주인공서투름플래그 == 2
+		PRINTFORML  하지만 %ANAME(대상)%의 수중도 상당한 위태로움이다
+	ELSEIF 주인공서투름플래그 == 1
+		PRINTFORML  하지만 %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%에 한 술 더 떠 서툴렀다
+	ELSE
+		PRINTFORML  하지만 %조사처리(ANAME(대상),"는")% 조금 한 눈을 팔면 손을 새길 것 같아 야채를 씻어 받기로 했다
+	ENDIF
+ELSEIF ABL:(대상):요리 < 50
+	대상서투름플래그 = 1
+	IF 주인공서투름플래그 == 2
+		PRINTFORML  하지만 %ANAME(대상)%의 솜씨도 익숙해져 있다고는 말할 수 없는 것 같다
+	ELSEIF 주인공서투름플래그 == 1
+		PRINTFORML  하지만 %ANAME(대상)%의 요리 솜씨도 %조사처리(ANAME(MASTER),"와")% 도토리의 키재기다
+	ELSE
+		PRINTFORML  무엇을 하면 좋은 것인지 모르는 모습의 %ANAME(대상)%에 %조사처리(ANAME(MASTER),"는")% 요리를 가르쳤다
+	ENDIF
+ELSE
+	대상서투름플래그 = 0
+	IF 주인공서투름플래그 == 2
+		PRINTFORML  %조사처리(ANAME(MASTER),"가")% 가지는 부엌칼을 뒤로부터 잡아 가르치면서 %조사처리(ANAME(대상),"는")% 요령 있게 야채를 잘게 썰어 간다
+	ELSEIF 주인공서투름플래그 == 1
+		PRINTFORML  %ANAME(MASTER)%에 순서를 가르치면서 %조사처리(ANAME(대상),"는")% 솜씨 좋게 부엌칼을 취급하고 있다
+	ELSE
+		PRINTFORML  솜씨 좋게 사전준비를 진행시키는 %조사처리(ANAME(대상),"와")% 마음이 맞은 작업을 할 수 있었다
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+; 묘사 2
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA10_COM1_TEXT_2(대상)
+#DIM 대상
+#DIM 주인공서투름플래그
+#DIM 대상서투름플래그
+#DIM 능력, 1
+#DIM 경험치, 1
+
+CALL COOKING(MASTER, 대상)
+		PRINTFORM  %조사처리(ANAME(대상),"와")% 함께
+		CALL COLOR_PRINTL(@" %FOODNAME%", 칼라_오렌지, @"%조사만처리(FOODNAME,"를")% 만들었다", GETDEFCOLOR())
+
+IF ABL:(MASTER):요리 + ABL:(대상):요리 < 60
+	PRINTFORML  음식은 아닌 것 같은 식감이다
+	PRINTFORML  %조사처리(ANAME(대상),"는")% 입다물고 먹고 있다…
+ELSEIF ABL:(MASTER):요리 + ABL:(대상):요리 < 100
+	PRINTFORML  노고의 보람 맞아 상당한 맛이다
+	PRINTFORML  함께 먹은 %ANAME(대상)%도 만족한 것 같게 하고 있다…
+ELSE
+	PRINTFORML  훌륭한 성과다
+	PRINTFORML  함께 먹은 %조사처리(ANAME(대상),"는")% 너무나 맛있어서 놀라고 있는 것 같다…
+	PRINTL 
+	IF ABL:(MASTER):요리 >= 100
+		CALL COLOR_PRINTL(@" %ANAME(대상)%의 호감도가 올랐다", 칼라_주의)
+		CFLAG:(대상):호감도 += 20
+	ENDIF
+ENDIF
+
+;---------------------------------------------------------------------- 
+;경험치의 표시 대상
+;---------------------------------------------------------------------- 
+PRINTL 
+
+SETCOLOR COLOR("실버")
+PRINTFORML  <%ANAME(대상)%>
+능력 = GETNUM(ABL, "요리")
+경험치 = GETNUM(EXP, "요리경험치")
+IF GETNUM(EXP, "요리경험치")
+CALL PRINT_ADD_EXP(대상, EXPNAME:(경험치), RAND(10, 15))
+ENDIF
+
+;상대보다 자신있는 일을 하고 있으면 존경되어 상대보다 서투른 일을 하고 있으면 걱정된다
+LOCAL:0 = 0
+;무승부
+IF (주인공서투름플래그 == 2 && 대상서투름플래그 == 2) || (주인공서투름플래그 == 1 && 대상서투름플래그 == 1) || (주인공서투름플래그 == 0 && 대상서투름플래그 == 0)
+	LOCAL:0 = 50 + RAND:10
+	CFLAG:(대상):2 += LOCAL:0
+	PRINTFORM  호감도+{LOCAL:0}({CFLAG:(대상):2})
+	PRINT   
+	LOCAL:0 = 25 + RAND:10
+	CFLAG:(대상):3 += LOCAL:0
+	PRINTFORM  의존도+{LOCAL:0}({CFLAG:(대상):3})
+	PRINT   
+	LOCAL:0 = 25 + RAND:10
+	CFLAG:(대상):4 += LOCAL:0
+	PRINTFORM  종속도+{LOCAL:0}({CFLAG:(대상):4})
+	PRINTL 
+;대승리
+ELSEIF 주인공서투름플래그 == 0 && 대상서투름플래그 == 2
+	LOCAL:0 = 90 + RAND:10
+	CFLAG:(대상):2 += LOCAL:0
+	PRINTFORM  호감도+{LOCAL:0}({CFLAG:(대상):2})
+	PRINT   
+	LOCAL:0 = 10 + RAND:10
+	CFLAG:(대상):3 += LOCAL:0
+	PRINTFORM  의존도+{LOCAL:0}({CFLAG:(대상):3})
+	PRINT   
+	LOCAL:0 = 80 + RAND:10
+	CFLAG:(대상):4 += LOCAL:0
+	PRINTFORM  종속도+{LOCAL:0}({CFLAG:(대상):4})
+	PRINTL 
+;승리
+ELSEIF (주인공서투름플래그 == 0 && 대상서투름플래그 == 1) || (주인공서투름플래그 == 1 && 대상서투름플래그 == 2)
+	LOCAL:0 = 50 + RAND:10
+	CFLAG:(대상):2 += LOCAL:0
+	PRINTFORM  호감도+{LOCAL:0}({CFLAG:(대상):2})
+	PRINT   
+	LOCAL:0 = 25 + RAND:10
+	CFLAG:(대상):3 += LOCAL:0
+	PRINTFORM  의존도+{LOCAL:0}({CFLAG:(대상):3})
+	PRINT   
+	LOCAL:0 = 50 + RAND:10
+	CFLAG:(대상):4 += LOCAL:0
+	PRINTFORM  종속도+{LOCAL:0}({CFLAG:(대상):4})
+	PRINTL 
+;패배
+ELSEIF (주인공서투름플래그 == 1 && 대상서투름플래그 == 0) || (주인공서투름플래그 == 2 && 대상서투름플래그 == 1)
+	LOCAL:0 = 25 + RAND:10
+	CFLAG:(대상):2 += LOCAL:0
+	PRINTFORM  호감도+{LOCAL:0}({CFLAG:(대상):2})
+	PRINT   
+	LOCAL:0 = 50 + RAND:10
+	CFLAG:(대상):3 += LOCAL:0
+	PRINTFORM  의존도+{LOCAL:0}({CFLAG:(대상):3})
+	PRINT   
+	LOCAL:0 = 25 + RAND:10
+	CFLAG:(대상):4 += LOCAL:0
+	PRINTFORM  종속도+{LOCAL:0}({CFLAG:(대상):4})
+	PRINTL 
+;대패북
+ELSEIF 주인공서투름플래그 == 2 && 대상서투름플래그 == 0
+	LOCAL:0 = 10 + RAND:10
+	CFLAG:(대상):2 += LOCAL:0
+	PRINTFORM  호감도+{LOCAL:0}({CFLAG:(대상):2})
+	PRINT   
+	LOCAL:0 = 80 + RAND:10
+	CFLAG:(대상):3 += LOCAL:0
+	PRINTFORM  의존도+{LOCAL:0}({CFLAG:(대상):3})
+	PRINT   
+	LOCAL:0 = 10 + RAND:10
+	CFLAG:(대상):4 += LOCAL:0
+	PRINTFORM  종속도+{LOCAL:0}({CFLAG:(대상):4})
+	PRINTL 
+ENDIF
+
+;정신력의 강화
+IF MAXBASE:(대상):정신력 < 3000 || (MAXBASE:(대상):정신력 < 3500 && RAND:5 == 0)
+	MAXBASE:(대상):정신력 += 10 + RAND:2
+ENDIF
+;기력의 강화
+IF MAXBASE:(대상):기력 < 1600
+	MAXBASE:(대상):기력 += 10 + RAND:2
+ELSEIF MAXBASE:(대상):기력 < 2000 && RAND:2 == 0
+	MAXBASE:(대상):기력 += 10 + RAND:2
+ELSEIF MAXBASE:(대상):기력 < 2500 && RAND:6 == 0
+	MAXBASE:(대상):기력 += 10 + RAND:2
+ENDIF
+RESETCOLOR
+CALL TRAIN_AUTO_ABLUP(대상)
+
+;---------------------------------------------------------------------- 
+;경험치의 표시 주인공
+;---------------------------------------------------------------------- 
+PRINTL 
+
+SETCOLOR COLOR("실버")
+PRINTFORML  <%ANAME(MASTER)%>
+능력 = GETNUM(ABL, "요리")
+경험치 = GETNUM(EXP, "요리경험치")
+IF GETNUM(EXP, "요리경험치")
+CALL PRINT_ADD_EXP(MASTER, EXPNAME:(경험치), RAND(10, 15))
+ENDIF
+
+IF MAXBASE:(MASTER):정신력 < 3000 || (MAXBASE:(MASTER):정신력 < 3500 && RAND:5 == 0)
+	MAXBASE:(MASTER):정신력 += 1 + RAND:2
+ENDIF
+IF MAXBASE:(MASTER):기력 < 1600
+	MAXBASE:(MASTER):기력 += 1 + RAND:2
+ELSEIF MAXBASE:(MASTER):기력 < 2000 && RAND:2 == 0
+	MAXBASE:(MASTER):기력 += 1 + RAND:2
+ELSEIF MAXBASE:(MASTER):기력 < 2500 && RAND:6 == 0
+	MAXBASE:(MASTER):기력 += 1 + RAND:2
+ENDIF
+RESETCOLOR
+CALL TRAIN_AUTO_ABLUP(MASTER)
+
+;============================================================================== 
+;■요리 내용의 결정
+;============================================================================== 
+@COOKING(ARG:0, ARG:1)
+
+SELECTCASE RAND:121
+	CASE 0
+		요리명 = 마파두부
+	CASE 1
+		요리명 = 피자
+	CASE 2
+		요리명 = 햄버그
+	CASE 3
+		요리명 = 새우칠레
+	CASE 4
+		요리명 = 스브라키
+	CASE 5
+		요리명 = 타코스
+	CASE 6
+		요리명 = 우동
+	CASE 7
+		요리명 = 튀김
+	CASE 8
+		요리명 = 인도카레
+	CASE 9
+		요리명 = 해물찌개
+	CASE 10
+		요리명 = 부야베스
+	CASE 11
+		요리명 = 탕수육
+	CASE 12
+		요리명 = 그릴 랍스타
+	CASE 13
+		요리명 = 햄버거
+	CASE 14
+		요리명 = 탄두리 치킨
+	CASE 15
+		요리명 = 혀가자미 뫼니에르
+	CASE 16
+		요리명 = 아일리쉬 스튜
+	CASE 17
+		요리명 = 로스트 포크
+	CASE 18
+		요리명 = 피쉬 앤 칩스
+	CASE 19
+		요리명 = 샥스핀 스프
+	CASE 20
+		요리명 = 쿠샤리
+	CASE 21
+		요리명 = 구야시
+	CASE 22
+		요리명 = 북경오리
+	CASE 23
+		요리명 = 팔라펠
+	CASE 24
+		요리명 = 리조트
+	CASE 25
+		요리명 = 케밥
+	CASE 26
+		요리명 = 점심
+	CASE 27
+		요리명 = 일식
+	CASE 28
+		요리명 = 일본정식
+	CASE 29
+		요리명 = 카레라이스
+	CASE 30
+		요리명 = 스튜
+	CASE 31
+		요리명 = 닭튀김
+	CASE 32
+		요리명 = 라면
+	CASE 33
+		요리명 = 오므라이스
+	CASE 34
+		요리명 = 무사카
+	CASE 35
+		요리명 = 니쿠쟈가
+	CASE 36
+		요리명 = 브리또
+	CASE 37
+		요리명 = 마카로니 치즈
+	CASE 38
+		요리명 = 생선회
+	CASE 39
+		요리명 = 킷슈・로레누
+	CASE 40
+		요리명 = 라타투유
+	CASE 41
+		요리명 = 로스트 비프
+	CASE 42
+		요리명 = 미트파이
+	CASE 43
+		요리명 = 양고기그릴
+	CASE 44
+		요리명 = 브리야니
+	CASE 45
+		요리명 = 파스티쵸
+	CASE 46
+		요리명 = 타메이야
+	CASE 47
+		요리명 = 스테이크
+	CASE 48
+		요리명 = 돼지고기조림
+	CASE 49
+		요리명 = 회과육
+	CASE 50
+		요리명 = 고기만두
+	CASE 51
+		요리명 = 초밥
+	CASE 52
+		요리명 = 돼지고기된장국
+	CASE 53
+		요리명 = 라자냐
+	CASE 54
+		요리명 = 주먹밥
+	CASE 55
+		요리명 = 닭가슴살구이
+	CASE 56
+		요리명 = 생선구이
+	CASE 57
+		요리명 = 야끼소바
+	CASE 58
+		요리명 = 라면
+	CASE 59
+		요리명 = 샌드위치
+	CASE 60
+		요리명 = 오야코동
+	CASE 61
+		요리명 = 볶음밥
+	CASE 62
+		요리명 = 파스타
+	CASE 63
+		요리명 = 스키야키
+	CASE 64
+		요리명 = 샤크슈카
+	CASE 65
+		요리명 = 무르키야
+	CASE 66
+		요리명 = 풀・메단메스
+	CASE 67
+		요리명 = 사맛쿠・마쉬
+	CASE 68
+		요리명 = 미네스트로네
+	CASE 69
+		요리명 = 오소부코
+	CASE 70
+		요리명 = 페스카토레
+	CASE 71
+		요리명 = 아크아팟차
+	CASE 72
+		요리명 = 밀라노풍 커틀릿
+	CASE 73
+		요리명 = 살틴・보카
+	CASE 74
+		요리명 = 아란치니
+	CASE 75
+		요리명 = 카르파초
+	CASE 76
+		요리명 = 교자
+	CASE 77
+		요리명 = 짜장면
+	CASE 78
+		요리명 = 팔보채
+	CASE 79
+		요리명 = 탄탄면
+	CASE 80
+		요리명 = 텐진한
+	CASE 81
+		요리명 = 고추잡채
+	CASE 82
+		요리명 = 오리의 콘피
+	CASE 83
+		요리명 = 부야베스
+	CASE 84
+		요리명 = 어니언그라탕 스프
+	CASE 85
+		요리명 = 레드와인 쇠고기조림
+	CASE 86
+		요리명 = 크림소스 송아지조림
+	CASE 87
+		요리명 = 포토푀
+	CASE 88
+		요리명 = 코코뱅
+	CASE 89
+		요리명 = 젠멜・크뢰델
+	CASE 90
+		요리명 = 사르말레
+	CASE 91
+		요리명 = 마마리가
+	CASE 92
+		요리명 = 쵸르바 
+	CASE 93
+		요리명 = 토키트라
+	CASE 94
+		요리명 = 소고기카레
+	CASE 95
+		요리명 = 버터치킨카레
+	CASE 96
+		요리명 = 아브구 슈트
+	CASE 97
+		요리명 = 쿄후테
+	CASE 98
+		요리명 = 돌마
+	CASE 99
+		요리명 = 예미스타
+	CASE 100
+		요리명 = 보크시티
+	CASE 101
+		요리명 = 셰퍼드 파이
+	CASE 102
+		요리명 = 보르시치
+	CASE 103
+		요리명 = 피로슈키
+	CASE 104
+		요리명 = 비프 스트로가노프
+	CASE 105
+		요리명 = 브리누이
+	CASE 106
+		요리명 = 시치
+	CASE 107
+		요리명 = 고르붓치
+	CASE 108
+		요리명 = 호르호그
+	CASE 109
+		요리명 = 호쇼르
+	CASE 110
+		요리명 = 보즈
+	CASE 111
+		요리명 = 쵸이완
+	CASE 112
+		요리명 = 치레레제노
+	CASE 113
+		요리명 = 모레・포브라노
+	CASE 114
+		요리명 = 포소레
+	CASE 115
+		요리명 = 간보
+	CASE 116
+		요리명 = 쟌바라야
+	CASE 117
+		요리명 = 로코모코
+	CASE 118
+		요리명 = 포크덮밥
+	CASE 119
+		요리명 = 사이민
+	CASE 120
+		요리명 = 라우라우
+	CASEELSE
+		요리명 = 칠레콘칸
+ENDSELECT
+
+;◇이따금 자신의 좋아하는 것을 만든다
+;IF (NAME_TO_CHARA("아비게일") == ARG:0 ||NAME_TO_CHARA("아비게일") == ARG:1) && RAND:10 <= 2
+;	요리명 = 팬케이크	
+;ELSEIF (NAME_TO_CHARA("미야모토 무사시") == ARG:0 ||NAME_TO_CHARA("미야모토 무사시") == ARG:1) && RAND:10 <= 2
+;	요리명 = 우동
+;ELSEIF (NAME_TO_CHARA("마리") == ARG:0 ||NAME_TO_CHARA("마리") == ARG:1) && RAND:10 <= 2
+;	요리명 = 브리옷슈
+;ELSEIF (NAME_TO_CHARA("오케아노스의 캐스터") == ARG:0 ||NAME_TO_CHARA("오케아노스의 캐스터") == ARG:1) && RAND:10 <= 2
+;	요리명 = 큐케온
+;ELSEIF (NAME_TO_CHARA("브디카") == ARG:0 ||NAME_TO_CHARA("브디카") == ARG:1) && RAND:10 <= 2
+;	요리명 = 가렛트
+;ELSEIF (NAME_TO_CHARA("아라슈") == ARG:0 ||NAME_TO_CHARA("아라슈") == ARG:1) && RAND:10 <= 2
+;	요리명 = 병아리콩의스프
+;ENDIF
+
+;혼자서 만들었을 경우
+IF ARG:1 == 0
+	IF ABL:(ARG:0):요리 < 30
+		FOODNAME = %요리명%?
+	ELSEIF ABL:(ARG:0):요리 < 100
+		FOODNAME = %요리명%
+	ELSE
+		SELECTCASE RAND:8
+		CASE 1
+			접두사 = 황금의
+		CASE 2
+			접두사 = 궁극의
+		CASE 3
+			접두사 = 매우 화려한
+		CASE 4
+			접두사 = 세련된
+		CASE 5
+			접두사 = 행복의
+		CASE 6
+			접두사 = 지고의
+		CASE 7
+			접두사 = 눈물나는
+		CASEELSE
+			접두사 = 요리사를 압도하는
+		ENDSELECT
+		FOODNAME = %접두사% %요리명%
+	ENDIF
+ELSE
+;둘이서 만들었을 경우
+	IF ABL:(ARG:0):요리 + ABL:(ARG:1):요리 < 60
+		FOODNAME = %요리명%?
+	ELSEIF ABL:(ARG:0):요리 + ABL:(ARG:1):요리 < 200
+		FOODNAME = %요리명%
+	ELSE
+		SELECTCASE RAND:8
+		CASE 1
+			접두사 = 황금의
+		CASE 2
+			접두사 = 궁극의
+		CASE 3
+			접두사 = 매우 화려한
+		CASE 4
+			접두사 = 세련된
+		CASE 5
+			접두사 = 행복의
+		CASE 6
+			접두사 = 지고의
+		CASE 7
+			접두사 = 눈물나는
+		CASEELSE
+			접두사 = 요리사를 압도하는
+		ENDSELECT
+		FOODNAME = %접두사% %요리명%
+	ENDIF
+ENDIF
+
+RETURN 0
+

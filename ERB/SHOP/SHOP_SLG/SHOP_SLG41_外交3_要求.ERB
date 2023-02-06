@@ -1,0 +1,911 @@
+﻿;외교로 상대에게 요구를 했을 경우의 처리
+;(다만 「항복 권고」는 DIPLOMACY_EACH.ERB)
+
+;-------------------------------------------------
+;요구시의 공통 처리
+;ARG:0은 대상, ARG:1은 판정의 난이도
+;ARG:2에 1을 건네주면, 복종계 소질을 가지는 캐릭터에게 판정을 스킵
+;요구가 다녔을 경우 1, 통하지 않았던 경우 0, 처리를 캔슬했을 경우는-1을 돌려준다
+;-------------------------------------------------
+@DIPLOMACY_REQUEST_COMMON(ARG:0, ARG:1, ARG:2 = 0)
+LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+LOCAL:5 = GET_COUNTRY_BOSS(ARG:0)
+
+;●무력에 의한 위협이 통과할지 어떨지를 판정
+LOCAL:10 = 0
+
+;세력끼리의 인접 관계 맵을 작성
+CALL TMP_CREATE_COUNTRY_NEIBORING_MAP
+
+CALL TMP_CREATE_SUM_ECONOMY_MAP
+CALL TMP_CREATE_SUM_SOLDIER_MAP
+CALL TMP_CREATE_POLITICS_POWER_MAP
+
+LOCAL:6 = TMP_SUM_ECONOMY:(CFLAG:MASTER:소속)
+LOCAL:7 = TMP_SUM_ECONOMY:(ARG:0)
+
+LOCAL:8 = 0
+FOR LOCAL:0, 1, MAX_COUNTRY
+	SIF TMP_COUNTRY_IS_NEIBORING:(CFLAG:MASTER:소속):(LOCAL:0)
+		LOCAL:8 += TMP_SUM_ECONOMY:(LOCAL:0)
+NEXT
+
+;※조건은 항복 권고보다 완화, 인수로 요구 내용 근처 참조해 변화할 수 있도록(듯이)하고 싶구나
+LOCAL:10 = DIPLOMACY_REQUEST_CHECK(CFLAG:MASTER:소속, ARG:0, ARG:1, 1)
+
+;이미 요구를 마셨던 적이 있어, 전회와 같은 방법이 통용되는 경우
+IF (LOCAL:10 && CFLAG:(LOCAL:5):외교요구성공플래그 == 1) || ((CFLAG:(LOCAL:5):외교요구성공플래그 == 2 && (TALENT:(LOCAL:5):낙인 || TALENT:(LOCAL:5):복종 || TALENT:(LOCAL:5):예속 || (GETBIT(TALENT:(LOCAL:5):음란계, 소질_음란_마조) && TALENT:(LOCAL:5):연모)))) || (CFLAG:(LOCAL:5):외교요구성공플래그 == 3 && GETBIT(TALENT:(LOCAL:5):음란계, 소질_음란_약물중독))
+	IF (CFLAG:(LOCAL:5):외교요구성공플래그 == 2) || (TALENT:(LOCAL:5):낙인 || TALENT:(LOCAL:5):복종 || TALENT:(LOCAL:5):예속 || (GETBIT(TALENT:(LOCAL:5):음란계, 소질_음란_마조) && TALENT:(LOCAL:5):연모))
+		PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 곤란한 것처럼 눈동자를 방황하게 하면서도, 아첨하는 것 같은 소리로 %ANAME(MASTER)%의 요구를 받아들였다
+		CALL DIPLOMACY_REQUEST_GOHOUBI(ARG:0)
+	ELSEIF CFLAG:(LOCAL:5):외교요구성공플래그 == 3 && GETBIT(TALENT:(LOCAL:5):음란계, 소질_음란_약물중독)
+		PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 공허한 눈동자로, 따르기 때문에 약을 주는 듯%ANAME(MASTER)%에 호소해 왔다
+		CALL DIPLOMACY_REQUEST_DRUG(ARG:0)
+	ELSEIF CFLAG:(LOCAL:5):외교요구성공플래그 == 4 && GETBIT(TALENT:(LOCAL:5):음란계, 소질_음란_꼭두각시)
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")% 손가락을 울리면, %조사처리(ANAME(LOCAL:5),"는")% 공허한 눈동자가 되어, 그 말에 수긍했다
+		CALL DIPLOMACY_REQUEST_HYPNOSIS(ARG:0)
+	ELSEIF TALENT:(LOCAL:5):반항적 || TALENT:(LOCAL:5):거만함 || TALENT:(LOCAL:5):프라이드높음
+		PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% %조사처리(ANAME(MASTER),"를")% 원망스러운 듯이 노려보면서, 노기가 깃들인 소리로 요구를 받아들였다
+	ELSE
+		PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 비통한 표정을 띄우면, 지친 것 같은 소리로 %ANAME(MASTER)%의 요구를 받아들였다
+	ENDIF
+	RETURN 1
+	DIPLOMACY_HATE:(CFLAG:MASTER:소속) += 4
+
+ELSEIF ARG:2 && (TALENT:(LOCAL:5):낙인 || TALENT:(LOCAL:5):복종 || TALENT:(LOCAL:5):예속 || (GETBIT(TALENT:(LOCAL:5):음란계, 소질_음란_마조) && TALENT:(LOCAL:5):연모))
+	IF TALENT:(LOCAL:5):낙인
+		PRINTFORMW 이미 %ANAME(MASTER)%에 낙인을 조각할 수 있는 소유물이 된 %조사처리(ANAME(LOCAL:5),"는")%, 거절할 수도 있지 않고 수긍했다
+		PRINTFORMW ……마음 탓인지 기쁜듯이 보인다
+		CFLAG:(LOCAL:5):외교요구성공플래그 = 2
+		CALL DIPLOMACY_REQUEST_GOHOUBI(ARG:0)
+	ELSE
+		PRINTFORMW 이미 %ANAME(MASTER)%에 도취해 버린 %조사처리(ANAME(LOCAL:5),"는")%, 눈을 피하면서도 수긍했다
+		PRINTFORMW ……마음 탓인지 기쁜듯이 보인다
+		CFLAG:(LOCAL:5):외교요구성공플래그 = 2
+		CALL DIPLOMACY_REQUEST_GOHOUBI(ARG:0)
+	ENDIF
+	DIPLOMACY_HATE:(CFLAG:MASTER:소속) += 4
+	RETURN 1
+
+;요구를 마셨던 적이 없는 or 전회의 방법이 통용되지 않는 경우
+ELSE
+	IF ARG:2 && TALENT:(LOCAL:5):연모
+		PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% 일순간 헤매도록(듯이) 눈동자를 방황하게 했지만,
+		PRINTFORMW 곧바로 제 정신이 된 것처럼 고개를 저어, 그런 일 할 수 있을 이유가 없으면 거절했다
+	ELSEIF TALENT:(LOCAL:5):반항적 || TALENT:(LOCAL:5):거만함 || TALENT:(LOCAL:5):프라이드높음
+		PRINTFORMW ……이지만, %조사처리(ANAME(LOCAL:5),"는")% 무슨 농담일까하고 웃어 버렸다
+	ELSE
+		PRINTFORMW ……이지만, %조사처리(ANAME(LOCAL:5),"는")% 그런 일 할 수 있을 이유가 없으면 강한 어조로 거절했다
+	ENDIF
+	LOCAL:11 = 0
+	LOCAL:12 = 0
+	PRINTFORML [0] 국력을 배경으로 위협한다
+	IF TALENT:(LOCAL:5):낙인 || TALENT:(LOCAL:5):복종 || TALENT:(LOCAL:5):예속 || (GETBIT(TALENT:(LOCAL:5):음란계, 소질_음란_마조) && TALENT:(LOCAL:5):연모)
+		PRINTFORML [1] 쾌락으로 말하는 것을 들려준다
+		LOCAL:11 = 1
+	ENDIF
+	IF GETBIT(TALENT:(LOCAL:5):음란계, 소질_음란_약물중독)
+		PRINTFORML [2] 약물로 말하는 것을 들려준다
+		LOCAL:12 = 1
+	ENDIF
+	IF GETBIT(TALENT:(LOCAL:5):음란계, 소질_음란_꼭두각시)
+		PRINTFORML [3] 최면술을 걸친다
+		LOCAL:13 = 1
+	ENDIF
+	PRINTFORML [4] 단념한다…
+	
+	$INPUT_LOOP
+	INPUT
+	;무력으로 위협한다
+	IF RESULT == 0
+		IF DIPLOMACY_REQUEST_CHECK(CFLAG:MASTER:소속, ARG:0, ARG:1)
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 노골적으로 양국의 국력의 차이를 반짝이게 하면서 교섭했다
+			IF TALENT:(LOCAL:5):반항적 || TALENT:(LOCAL:5):거만함 || TALENT:(LOCAL:5):프라이드높음
+				PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% %ANAME(MASTER)%의 말에 분명하게 초조하고 있지만, 세력의 역량의 압도적인 차이를 앞에 반론 못하고 있다
+				PRINTFORMW ……이윽고, %조사처리(ANAME(LOCAL:5),"는")% 분노를 억누른 소리로, 요구에 따를 것을 약속했다
+			ELSE
+				PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% %ANAME(MASTER)%의 위협이나 마찬가지의 말의 전에, 괴로운 듯한 표정으로 침묵을 지키고 있다
+				PRINTFORMW ……이윽고, %조사처리(ANAME(LOCAL:5),"는")% 단념한 것처럼해, %ANAME(MASTER)%의 요구에 따를 것을 약속했다
+			ENDIF
+
+			;관계 악화
+			CALL CHANGE_RELATION_C_TO_C(ARG:0, CFLAG:MASTER:소속, -100, 150)
+
+			;성적인 요구라면 주위로부터의 평판도 악화
+			IF ARG:2
+				FOR LOCAL:0, 1, MAX_COUNTRY
+					SIF IS_COUNTRY(LOCAL:0) && LOCAL:0 != CFLAG:MASTER:소속
+						CALL CHANGE_RELATION_C_TO_C(LOCAL:0, CFLAG:MASTER:소속, -100, 50)
+				NEXT
+			ENDIF
+
+			CFLAG:(LOCAL:5):외교요구성공플래그 = 1
+			DIPLOMACY_HATE:(CFLAG:MASTER:소속) += 4
+			RETURN 1
+
+		ELSE
+			IF TALENT:(LOCAL:5):반항적 || TALENT:(LOCAL:5):거만함 || TALENT:(LOCAL:5):프라이드높음
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 양국의 무력의 차이를 열심히 말을 걸었지만, %조사처리(ANAME(LOCAL:5),"는")% (듣)묻는 귀를 가지지 않았다…
+			ELSE
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 양국의 무력의 차이를 열심히 말을 걸었지만, %ANAME(LOCAL:5)%에 냉정하게 반론되고 이야기가 진행되지 않았다…
+			ENDIF
+
+			RETURN 0
+		ENDIF
+
+	;쾌락으로 말하는 것을 들려준다
+	ELSEIF RESULT == 1 && LOCAL:11
+		;구상의 표시
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:5)%에 주위 사람을 없게 함을 하도록(듯이) 요구했다
+		PRINTFORMW ………………
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:5)%의 몸을 초조하게 하는 것 같은 손놀림으로 애무하면서,
+		PRINTFORMW 요구를 마시면 포상에 충분히 괴롭혀 주면 %ANAME(LOCAL:5)%의 귓전으로 속삭였다
+		PRINTL 
+
+		;●실행치의 계산
+		CVARSET TCVAR, 24, -10000
+		CVARSET TCVAR, 25, 10000
+
+		;실행치의 설정
+		TCVAR:(LOCAL:5):25 = 110
+
+		LOCAL:2 = 0
+		IF CFLAG:(LOCAL:5):4 < 1500
+			LOCAL:2 = MAX(CFLAG:(LOCAL:5):4 / 100, 0)
+		ELSE
+			LOCAL:2 = MIN((CFLAG:(LOCAL:5):4 - 1500) / 500 + 15, 200)
+		ENDIF
+		CALL COM_ORDER_ELEMENT(LOCAL:5, "종속도", LOCAL:2)
+
+		LOCAL:2 = 0
+		IF CFLAG:(LOCAL:5):3 < 1500
+			LOCAL:2 = MAX(CFLAG:(LOCAL:5):3 / 100, 0)
+		ELSE
+			LOCAL:2 = MIN((CFLAG:(LOCAL:5):3 - 1500) / 500 + 15, 200)
+		ENDIF
+		CALL COM_ORDER_ELEMENT(LOCAL:5, "의존도", LOCAL:2)
+
+		IF TALENT:(LOCAL:5):예속
+			CALL COM_ORDER_ELEMENT(LOCAL:5, "예속", 50)
+		ELSEIF TALENT:(LOCAL:5):복종
+			CALL COM_ORDER_ELEMENT(LOCAL:5, "복종", 25)
+		ENDIF
+
+		SIF TALENT:(LOCAL:5):낙인
+			CALL COM_ORDER_ELEMENT(LOCAL:5, "낙인", 15)
+
+		IF TALENT:(LOCAL:5):친애
+			CALL COM_ORDER_ELEMENT(LOCAL:5, "친애", 20)
+		ELSEIF TALENT:(LOCAL:5):연모
+			CALL COM_ORDER_ELEMENT(LOCAL:5, "연모", 10)
+		ENDIF
+
+		SIF GETBIT(TALENT:(LOCAL:5):음란계, 소질_음란_마조)
+			CALL COM_ORDER_ELEMENT(LOCAL:5, "마조", 20)
+
+		CALL COM_ORDER_ELEMENT(LOCAL:5, "욕망", ABL:(LOCAL:5):욕망 * 2)
+
+		SIF TALENT:(LOCAL:5):겁쟁이
+			CALL COM_ORDER_ELEMENT(LOCAL:5, "겁쟁이", 8)
+		SIF TALENT:(LOCAL:5):반항적
+			CALL COM_ORDER_ELEMENT(LOCAL:5, "반항적", -5)
+		SIF TALENT:(LOCAL:5):꿋꿋함
+			CALL COM_ORDER_ELEMENT(LOCAL:5, "꿋꿋함", -10)
+		SIF TALENT:(LOCAL:5):솔직함
+			CALL COM_ORDER_ELEMENT(LOCAL:5, "솔직함", 5)
+		SIF TALENT:(LOCAL:5):프라이드높음
+			CALL COM_ORDER_ELEMENT(LOCAL:5, "프라이드높음", -15)
+		SIF TALENT:(LOCAL:5):거만함
+			CALL COM_ORDER_ELEMENT(LOCAL:5, "거만함", -5)
+		SIF TALENT:(LOCAL:5):프라이드낮음
+			CALL COM_ORDER_ELEMENT(LOCAL:5, "프라이드낮음", 10)
+		SIF TALENT:(LOCAL:5):자제심
+			CALL COM_ORDER_ELEMENT(LOCAL:5, "자제심", -15)
+		SIF TALENT:(LOCAL:5):선을넘지않음
+			CALL COM_ORDER_ELEMENT(LOCAL:5, "선을넘지않음", -10)
+
+		;판정 결과를 표시
+		PRINTFORMW  = {TCVAR:(LOCAL:5):24} %TOSTR_COMPARE(TCVAR:(LOCAL:5):24, TCVAR:(LOCAL:5):25)% 실행치{TCVAR:(LOCAL:5):25}
+
+		;실행 판정
+		IF TCVAR:(LOCAL:5):24 >= TCVAR:(LOCAL:5):25
+			PRINTFORMW ………………
+			PRINTFORML 한동안 애무를 계속하면, %조사처리(ANAME(LOCAL:5),"는")% 완전히 도취한 표정이 되어,
+			PRINTFORMW 아첨하는 것 같은 태도로 %ANAME(MASTER)%의 요구를 마실 것을 약속했다
+			CFLAG:(LOCAL:5):외교요구성공플래그 = 2
+			DIPLOMACY_HATE:(CFLAG:MASTER:소속) += 4
+			RETURN 2
+		ELSE
+			PRINTFORML 이지만, 아무리%ANAME(MASTER)%의 부탁이라도 그것만은 응하는 것이 할 수 없으면,
+			PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 미안한 것같이 눈을 숙여 거절했다
+			RETURN 0
+		ENDIF
+	ELSEIF RESULT == 2 && LOCAL:12
+		;구상의 표시
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:5)%에 주위 사람을 없게 함을 하도록(듯이) 요구했다
+		PRINTFORMW ………………
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:5)%의 눈앞에 정제를 아른거리게 하면서,
+		PRINTFORMW 요구를 마시면 특출키구나 개를 주면 %ANAME(LOCAL:5)%의 귓전으로 속삭였다
+		PRINTL 
+		IF CFLAG:(LOCAL:5):약물의존 >= REL_HATE:(LOCAL:5):(MASTER)
+			PRINTFORMW ………………
+			PRINTFORML 1에도 2에도 없고, 요구에 따르는 것을 %조사처리(ANAME(LOCAL:5),"는")% 동의 했다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 포상으로서 내밀어진 혀 위에 정제를 실어 주었다……
+			CFLAG:(LOCAL:5):외교요구성공플래그 = 3
+			CFLAG:(LOCAL:5):약물의존 += RAND(20, 50)
+			DIPLOMACY_HATE:(CFLAG:MASTER:소속) += 5
+			RETURN 3
+		ENDIF
+	ELSEIF RESULT == 3 && LOCAL:13
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")% 손가락을 울리면, %조사처리(ANAME(LOCAL:5),"는")% 공허한 눈동자가 되어 고개 숙였다
+		PRINTFORMW ………………
+		IF EXP:(LOCAL:5):피최면경험 >= REL_HATE:(LOCAL:5):MASTER
+			PRINTFORMW %조사처리(ANAME(MASTER),"가")% 강렬한 암시를 걸어 주면, 충실한 인형인 %조사처리(ANAME(LOCAL:5),"는")% 당연히 따랐다
+			CFLAG:(LOCAL:5):외교요구성공플래그= 4
+			RETURN 4
+		ELSE
+			PRINTFORMW ……가, %조사처리(ANAME(MASTER),"를")% 혐오 하는 기분이 웃돈 것 같다
+		ENDIF
+	ENDIF
+ENDIF
+
+;단념한다
+RETURN -1
+
+;-------------------------------------------------
+;요구를 마셨을 때의 포상
+;-------------------------------------------------
+@DIPLOMACY_REQUEST_PRIZE(ARG:0)
+#DIM TRAIN_LIST, 20
+
+LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+LOCAL:5 = GET_COUNTRY_BOSS(ARG:0)
+
+PRINTL 
+PRINTFORMW ………………
+PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 기대하는 것 같은 눈동자로 %조사처리(ANAME(MASTER),"를")% 응시하고 있다…
+
+VARSET LOCALS, "", 0, 20
+VARSET TRAIN_LIST, -1
+
+SIF HAS_VAGINA(LOCAL:5) && (HAS_PENIS(MASTER) || ITEM:페니스밴드)
+	LOCALS:0 = 암컷구멍을 범해 준다
+
+SIF HAS_PENIS(MASTER) || ITEM:페니스밴드
+	LOCALS:1 = 엉덩이 구멍을 범해 준다
+
+SIF HAS_PENIS(MASTER)
+	LOCALS:2 = 입을 범해 준다
+
+;IF HAS_PENIS(LOCAL:5)
+;	LOCALS:3 =다리로 괴롭혀 준다
+;ENDIF
+
+;IF HAS_VAGINA(MASTER)
+;	LOCALS:4 =히지리 물을 선물 한다
+;ENDIF
+
+SIF (!HAS_VAGINA(LOCAL:5) || (ITEM:클리캡 && ITEM:바이브 && !TALENT:(LOCAL:5):처녀)) && ITEM:유두캡 && ITEM:애널바이브 && ITEM:밧줄
+	LOCALS:5 = 전신에 고문도구를 붙여 관찰해 준다
+
+SIF HAS_VAGINA(LOCAL:5) && ITEM:밧줄 && !TALENT:(LOCAL:5):처녀
+	LOCALS:6 = 병사에 제공한다
+SIF HAS_VAGINA(LOCAL:5) && !TALENT:(LOCAL:5):처녀
+	LOCALS:7 = 궁정을 산책시켜 준다
+;IF HAS_VAGINA(LOCAL:5) && ! TALENT:(LOCAL:5):처녀 && (HAS_PENIS(MASTER) || ITEM:페니스밴드)
+;	LOCALS:6 =키스 섹스 해 준다
+;ENDIF
+
+;IF HAS_VAGINA(MASTER) && ! TALENT:(MASTER):처녀 && (HAS_PENIS(LOCAL:5) || ITEM:페니스밴드)
+;	LOCALS:7 =키스 섹스 해 준다
+;ENDIF
+
+LOCALS:19 = 노예의 분수로 건방지다……방치!
+
+LOCAL:2 = 0
+FOR LOCAL:0, 0, 20
+	IF LOCALS:(LOCAL:0) != ""
+		PRINTBUTTON @"{LOCAL:2, 3}[%LOCALS:(LOCAL:0)%]", LOCAL:2
+		PRINTL 
+		TRAIN_LIST:(LOCAL:2) = LOCAL:0
+		LOCAL:2 ++
+	ENDIF
+NEXT
+
+$INPUT_LOOP
+INPUT
+
+IF !INRANGE(RESULT, 0, 19) || TRAIN_LIST:RESULT == -1
+	GOTO INPUT_LOOP
+ENDIF
+
+SELECTCASE TRAIN_LIST:RESULT
+	;암컷구멍을 범해 준다
+	CASE 0
+		PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% %조사처리(ANAME(MASTER),"를")% 침실에 안내했다…
+		PRINTFORML %조사처리(ANAME(MASTER),"가")% 조속히 %ANAME(LOCAL:5)%의 옷을 벗게 하면, 범해지는 상상으로 욕정해 버렸는지,
+		PRINTFORMW %ANAME(LOCAL:5)%의 저기는 흘림에서도 한 것이 아닐까라고 생각하는 만큼 흠뻑흠뻑 젖고 있었다
+		CALL ASK_YN("솔직한 좋은 아이다……기분 좋게 해 준다", "절조가 없는 나쁜 아이다……범하면서 엉덩이를 두드린다")
+		IF RESULT == 0
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(LOCAL:5),"를")% 엎드린 자세로 시키면, 지체없이 뒤로부터 덮어씌워 %조사처리(BAR_NAME(MASTER),"를")% 삽입했다
+			PRINTFORML 욕정해 버린 %조사처리(ANAME(LOCAL:5),"는")% 삽입의 충격만으로 달하게 되어 삐걱삐걱 몸을 진동시키지만,
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 상관없이, %ANAME(LOCAL:5)%의 질의 억압을 즐기면서 난폭하게 허리를 쳐박는다
+			PRINTFORML 쾌감으로 미친 것처럼 울부짖는 %ANAME(LOCAL:5)%의 소리가 밖에 새지 않도록, 손으로 억지로 %ANAME(LOCAL:5)%의 입을 누르면서,
+			IF HAS_PENIS(MASTER)
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:5)%의 자궁입구에 페니스를 꽉 눌러, 충동에 맡겨 대량의 자식을 쏟았다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그 뒤도, 정력의 계속되는 한 %조사처리(ANAME(LOCAL:5),"를")% 다 범했다…
+			ELSE
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:5)%의 자궁입구를 쳐 형태로 몇 번이나 찔러 주었다
+				PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 침대사와 애액을 흩뿌리면서, 끊임없는 강렬한 절정에 번민 미쳤다…
+			ENDIF
+			PRINTFORMW ………………
+			PRINTFORML 행복한 아헤얼굴을 쬐면서 쾌감의 여운에 움찔움찔 떨리는 %조사처리(ANAME(LOCAL:5),"를")% 그 자리에 남겨,
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그 자리를 뒤로 했다…
+			CALL FUCK(MASTER, "Ｃ, 욕망, 성교, 사정, Ｖ삽입", "동정상실", 0, "", "", @"%ANAME(LOCAL:5)%의 질", "외교 요구의 포상에서의 조교")
+			CALL FUCK(LOCAL:5, "욕망, 봉사, 성교, 정애, Ｖ, Ｖ성교", "처녀상실, 질내사정", GET_ID(MASTER), "", ANAME(MASTER), "", "외교 요구의 포상에서의 조교")
+			CFLAG:(LOCAL:5):4 += 300
+			CFLAG:(LOCAL:5):3 += 300
+			WAIT
+		ELSE
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(LOCAL:5),"를")% 엎드린 자세로 시키면, 멋대로 발정해 적신 것을 질책 하면서, 전력으로 엉덩이를 두드렸다
+			PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 아픔에 비명을 올린다가, 그 표정은 어딘가 기쁜 듯해, 도저히 반성하고 있도록(듯이)는 안보인다
+			PRINTFORMW 거기서 %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:5)%에 반성을 재촉할 수 있도록, 발정해 흠칫흠칫 쑤시는 절조 없음의 암컷구멍에 %조사처리(BAR_NAME(MASTER),"를")% 찔러 넣었다
+			PRINTFORML 이지만, %조사처리(ANAME(LOCAL:5),"는")% 삽입의 충격만으로 가 버려,
+			PRINTFORMW 반성하기는 커녕 기분 좋은 것 같은 소리를 높여 쾌감에 떨고 있다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 넣어진 것 뿐으로 가 버린 %조사처리(ANAME(LOCAL:5),"를")% 격렬하게 매도하면서,
+			PRINTFORMW 여러번 엉덩이를 두드려 나쁜 암캐에의 예의 범절을 가르쳤다
+			PRINTFORMW ………………
+			PRINTFORML 이윽고, 새빨갛게 된 엉덩이를 한심하게 움찔움찔 세게 튀기는 %조사처리(ANAME(LOCAL:5),"를")% 그 자리에 남겨,
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그 자리를 뒤로 했다…
+			CALL FUCK(MASTER, "Ｃ, 욕망, 성교, 사정, Ｖ삽입", "동정상실", 0, "", "", @"%ANAME(LOCAL:5)%의 질", "외교 요구의 포상에서의 조교")
+			CALL FUCK(LOCAL:5, "욕망, 봉사, 성교, 정애, Ｖ, 고통쾌락, 마조, Ｖ삽입", "처녀상실, 질내사정", GET_ID(MASTER), "", ANAME(MASTER), "", "외교 요구의 포상에서의 조교")
+			CFLAG:(LOCAL:5):4 += 500
+			CFLAG:(LOCAL:5):3 += 100
+		ENDIF
+
+	;엉덩이 구멍을 범해 준다
+	CASE 1
+		PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% %조사처리(ANAME(MASTER),"를")% 침실에 안내했다…
+		PRINTFORML %조사처리(ANAME(MASTER),"가")% 조속히 %ANAME(LOCAL:5)%의 옷을 벗게 하면,
+		PRINTFORMW 완전히 발정해 버린 %조사처리(ANAME(LOCAL:5),"는")% 스스로 침대 위에 엎드린 자세로든지, 이쪽에 엉덩이를 향하여 졸라댔다
+		IF HAS_PENIS(LOCAL:5)
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:5)%의 엉덩이 구멍에 한껏 로션을 처바르면,
+			PRINTFORMW %ANAME(LOCAL:5)%의 뒤로부터 덮어씌워, 요구를 마신 포상으로서 그 엉덩이 구멍에 %조사처리(BAR_NAME(MASTER),"를")% 찔러 넣어 주었다
+			PRINTFORML 욕정해 버린 %조사처리(ANAME(LOCAL:5),"는")% 삽입의 충격만으로 가볍게 달하게 되어, 삐걱삐걱 몸을 진동시키지만,
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 상관없이, %ANAME(LOCAL:5)%의 엉덩이 구멍으로 난폭하게 허리를 계속 쳐박는다
+			IF HAS_PENIS(MASTER)
+				PRINTFORML 얼마 지나지 않아 %ANAME(LOCAL:5)%의 몸이 한층 더 크게 떨리면, 그 장대푸우 트코로텐 정액이 새어나와,
+				PRINTFORMW 동시에 %ANAME(MASTER)%의 페니스를 문 엉덩이 구멍이 꾸욱 강하게 꼭 죄인다
+				PRINTFORML %조사처리(ANAME(MASTER),"가")% 감격해 %ANAME(LOCAL:5)%의 엉덩이 구멍에 대량의 정액을 쏟아 주면,
+				PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 쾌감에 번민 미치면서 기쁜듯이 엉덩이 구멍을 실룩거리게 했다…
+				PRINTFORMW ………………
+				PRINTFORML 두 명 분의 백탁으로 질척질척이 되면서 쾌감의 여운에 잠긴 %조사처리(ANAME(LOCAL:5),"를")% 그 자리에 남겨,
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그 자리를 뒤로 했다…
+			ELSE
+				PRINTFORML 얼마 지나지 않아 %ANAME(LOCAL:5)%의 몸이 한층 더 크게 떨리면,
+				PRINTFORMW 전혀 접할 수 있지 않은 장대푸우 트코로텐 정액이 새어나와, 침대를 흠뻑더럽혀 갔다
+				PRINTFORMW 정액을 흘리면서 쾌감에 번민 미치는 %ANAME(LOCAL:5)%의 엉덩이 구멍을 한층 더 찔러 주면,
+				PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 짐승과 같이 신음해, 재미있게 움찔움찔 몸을 뛰게 했다…
+				PRINTFORMW ………………
+				PRINTFORML 자기 자신의 백탁에 젖은 침대 위에서 쾌감의 여운에 잠긴 %조사처리(ANAME(LOCAL:5),"를")% 그 자리에 남겨,
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그 자리를 뒤로 했다…
+			ENDIF
+		ELSE
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:5)%의 엉덩이 구멍에 한껏 로션을 처바르면,
+			PRINTFORMW %ANAME(LOCAL:5)%의 뒤로부터 덮어씌워, 요구를 마신 포상으로서 그 엉덩이 구멍에 %조사처리(BAR_NAME(MASTER),"를")% 찔러 넣어 주었다
+			PRINTFORML 욕정해 버린 %조사처리(ANAME(LOCAL:5),"는")% 삽입의 충격만으로 달하게 되어, 상스럽게 몸을 진동시키지만,
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 상관없이, %ANAME(LOCAL:5)%의 엉덩이 구멍으로 난폭하게 허리를 계속 쳐박는다
+			IF HAS_PENIS(MASTER)
+				PRINTFORML %조사처리(ANAME(MASTER),"가")% 엉덩이 구멍을 찌를 때, 그것을 맞아들이는 %ANAME(LOCAL:5)%의 장벽 4다 와 꼭 죄여,
+				PRINTFORMW 한층 더 균열로부터는 절조 없고 질질 늘어지고 떨어지는 애액이 침대에 무수한 얼룩을 만들어 간다
+				PRINTFORML 이윽고 감격한 %조사처리(ANAME(MASTER),"가")% %ANAME(LOCAL:5)%의 엉덩이 구멍에 대량의 정액을 쏟아 주면,
+				PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 쾌감에 번민 미치면서 기쁜듯이 엉덩이 구멍을 실룩거리게 했다…
+			ELSE
+				PRINTFORML %조사처리(ANAME(MASTER),"가")% 엉덩이 구멍을 찌를 때마다 %조사처리(ANAME(LOCAL:5),"는")% 짐승과 같은 울음 소리를 올려,
+				PRINTFORMW 한층 더 균열로부터 절조 없고 질질 애액을 흘려 보내 침대를 적셔 버린다
+				PRINTFORML 엉덩이 구멍으로 기분 좋아져 버리는 변태 암캐에게 벌을 할 수 있도록,
+				PRINTFORML %조사처리(ANAME(MASTER),"가")% 허리를 강압해 %ANAME(LOCAL:5)%의 장내를 동글동글 휘저어 주면,
+				PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 지나친 쾌감에 새우 휘어진 상태가 되어, 자순사리와 조수를 뿜었다…
+			ENDIF
+			PRINTFORMW ………………
+			PRINTFORML 완전히 열고 있을 뿐이 된 엉덩이 구멍을 쬐어 행복하게 쾌감의 여운에 잠긴 %조사처리(ANAME(LOCAL:5),"를")% 그 자리에 남겨,
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그 자리를 뒤로 했다…
+		ENDIF
+		CALL FUCK(MASTER, "Ｃ, 욕망, 성교, 사정, Ａ삽입", "동정상실", 0, "", "", @"%ANAME(LOCAL:5)%의 애널", "외교 요구의 포상에서의 조교")
+		CALL FUCK(LOCAL:5, "욕망, 봉사, 성교, 정애, Ａ, 사정, Ａ성교", "Ａ처녀상실, 장내사정", 0, "", ANAME(MASTER), "", "외교 요구의 포상에서의 조교")
+		CFLAG:(LOCAL:5):4 += 400
+		CFLAG:(LOCAL:5):3 += 200
+		WAIT
+	;입을 범해 준다
+	CASE 2
+		PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% %조사처리(ANAME(MASTER),"를")% 침실에 안내했다…
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 침대에 앉아, 다리를 조금 열었다
+		PRINTFORMW 꼼꼼하게 예의범절을 가르쳐진 %조사처리(ANAME(LOCAL:5),"는")%, 그것만으로 무엇을 하라고 말해졌는지 헤아린 것 같다
+		PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% %ANAME(MASTER)%아래에 무릎 꿇어, 그 하나의 물건을 노출시킨다
+		PRINTFORMW 그리고 그 입내에, 뜸든 육봉을 맞아들였다
+		PRINTFORML , 와 특유의 물소리가 실내에 울린다
+		PRINTFORMW %ANAME(LOCAL:5)%의 입안에서는 혀가 귀두를 핥아대, 염이 있는 입술은 장대에 달라붙어, 잡아당겨 세우고 있다
+		PRINTFORML ……%ANAME(LOCAL:5)%의 기술은 확실하지만, %ANAME(MASTER)%에 있어서는 그런데도 더욱 부족했다
+		PRINTFORML 속상해진 %조사처리(ANAME(MASTER),"는")%, %조사처리(ANAME(LOCAL:5),"를")% 위로 향해 쓰러트렸다
+		PRINTFORMW 그리고 그 안면에, 위로부터 페니스를 내던져 간다…
+		PRINTFORMW ………………
+		PRINTFORML %조사처리(ANAME(MASTER),"가")% 만족하는 무렵에는, %조사처리(ANAME(LOCAL:5),"는")% 얼굴 뿐만이 아니라 상반신마다 정액 투성이가 되어 있었다
+		PRINTFORML 입 끝에는 음모가 달라붙어, 비혈로부터도 백탁이 역류 하고 있다
+		PRINTFORML 야무지지 못한 아헤얼굴을 쬐면서 산소 결핍으로 가볍게 경련하고 있는 %조사처리(ANAME(LOCAL:5),"를")% 방치해,
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그 자리를 뒤로 했다…
+		CALL FUCK(MASTER, "Ｃ, 욕망, 사정")
+		CALL FUCK(LOCAL:5, "욕망, 봉사, 성기술, 정애, 펠라티오", "키스상실, 구강사정", 0, @"%ANAME(MASTER)%의 페니스", "", "", "외교 요구의 포상에서의 조교")
+		CFLAG:(LOCAL:5):4 += 300
+		CFLAG:(LOCAL:5):3 += 300
+		WAIT
+	;전신에 고문도구를 붙여 관찰해 준다
+	CASE 5
+		PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% %조사처리(ANAME(MASTER),"를")% 침실에 안내했다…
+		IF !HAS_VAGINA(LOCAL:5)
+			PRINTFORML %조사처리(ANAME(MASTER),"가")% 조속히 %ANAME(LOCAL:5)%의 옷을 벗게 하면, 괴롭힐 수 있는 망상으로 욕정해 버렸는지,
+			PRINTFORMW %ANAME(LOCAL:5)%의 페니스는 완전히 단단하게 젖혀져 서, 자극을 요구해 흠칫흠칫 떨고 있다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 알몸이 된 %조사처리(ANAME(LOCAL:5),"를")% チングリ返し의 자세로 침대에 재우면,
+			PRINTFORMW 손목과 발목을 밧줄로 침대에 고정해, 부끄러운 몸의 자세인 채 동작을 잡히지 않도록 했다
+			PRINTFORML 그 자세인 채 엉덩이 구멍에 애널바이브를 쑤셔 넣어, 한층 더 유두에 유두캡을 설치해 주면,
+			PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 2점으로부터의 쾌락 자극에 여자와 같은 소리로 허덕였다
+			PRINTFORML 한동안 그대로의 상태로 방치해 주면, 이윽고 겹겹이 쌓이는 쾌감에 %조사처리(ANAME(LOCAL:5),"가")% 몸을 쫑긋쫑긋 떨리게 해
+			PRINTFORMW 마침내 한층 더 키를 크게 뒤로 젖혀 건조함 오르가즘에 이르렀다
+			PRINTFORMW 이지만, 고문도구는 일절이 적절한 조치를 취하지 않고, 절정에서 민감하게 된 몸을 계속 자극한다
+			PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% 몇 번이나 달콤한 소리를 높이면서 절정 해, 이윽고 엉덩이 구멍에의 자극으로 불기 시작한 트코로텐 정액이,
+			PRINTFORMW %ANAME(LOCAL:5)%의 얼굴에 철푸덕 내리고 걸렸다
+			PRINTFORMW ………………
+			PRINTFORML 자기 자신의 백탁 투성이가 된 채로 기절하는 %조사처리(ANAME(LOCAL:5),"를")% 그대로 방치해,
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그 자리를 뒤로 했다…
+		ELSEIF !HAS_PENIS(LOCAL:5)
+			PRINTFORML %조사처리(ANAME(MASTER),"가")% 조속히 %ANAME(LOCAL:5)%의 옷을 벗게 하면, 괴롭힐 수 있는 망상으로 욕정해 버렸는지,
+			PRINTFORMW %ANAME(LOCAL:5)%의 저기는 흘림에서도 한 것이 아닐까라고 생각하는 만큼 흠뻑흠뻑 젖고 있었다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 우선 알몸이 된 %조사처리(ANAME(LOCAL:5),"를")% 굴곡위의 자세로 침대에 재우면,
+			PRINTFORMW 손목과 발목을 밧줄로 침대에 고정해, 부끄러운 몸의 자세인 채 동작을 잡히지 않도록 했다
+			PRINTFORML 그 자세인 채, %조사처리(ANAME(MASTER),"는")% 비순과 엉덩이 구멍의 양쪽 모두에 바이브를 쑤셔 넣어,
+			PRINTFORMW 한층 더 클리와 유두에 진동하는 캡을 달아 준다
+			PRINTFORML 전신의 모든 성감대를 도구로 몰아세울 수 있었던 %조사처리(ANAME(LOCAL:5),"는")%,
+			PRINTFORMW 참는 것조차 용서되지 않고, 눈 깜짝할 순간에 절정에 밀어 올려져 삐걱삐걱 몸을 진동시켰다
+			PRINTFORMW 이지만, 고문도구는 일절이 적절한 조치를 취하지 않고, 절정에서 민감하게 된 몸을 계속 자극한다
+			PRINTFORML 지나친 쾌감에, %조사처리(ANAME(LOCAL:5),"는")% 도무지 알 수 없는 소리를 높이면서 등을 뒤로 젖혀,
+			PRINTFORMW 질벽과 바이브의 틈새사리와 기세 좋게 조수를 뿜기 시작했다
+			PRINTFORMW ………………
+			PRINTFORML 쾌감으로 다 완전히 느슨해진 표정인 채 기절하는 %조사처리(ANAME(LOCAL:5),"를")% 그대로 방치해,
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그 자리를 뒤로 했다…
+		ELSE
+			PRINTFORML %조사처리(ANAME(MASTER),"가")% 조속히 %ANAME(LOCAL:5)%의 옷을 벗게 하면, 괴롭힐 수 있는 망상으로 욕정해 버렸는지,
+			PRINTFORMW %ANAME(LOCAL:5)%의 페니스는 완전히 단단하게 젖혀져 서, 자극을 요구해 흠칫흠칫 떨고 있다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 우선 알몸이 된 %조사처리(ANAME(LOCAL:5),"를")% 굴곡위의 자세로 침대에 재우면,
+			PRINTFORMW 손목과 발목을 밧줄로 침대에 고정해, 부끄러운 몸의 자세인 채 동작을 잡히지 않도록 했다
+			PRINTFORML 그 자세인 채, %조사처리(ANAME(MASTER),"는")% 비순과 엉덩이 구멍의 양쪽 모두에 바이브를 쑤셔 넣어,
+			PRINTFORMW 한층 더 클리와 유두에 진동하는 캡을 달아 준다
+			PRINTFORML 전신의 모든 성감대를 도구로 몰아세울 수 있었던 %조사처리(ANAME(LOCAL:5),"는")%,
+			PRINTFORMW 참는 것조차 용서되지 않고, 눈 깜짝할 순간에 절정에 밀어 올려져 삐걱삐걱 몸을 진동시켰다
+			PRINTFORMW 이지만, 고문도구는 일절이 적절한 조치를 취하지 않고, 절정에서 민감하게 된 몸을 계속 자극한다
+			PRINTFORML 지나친 쾌감에, %조사처리(ANAME(LOCAL:5),"는")% 도무지 알 수 없는 소리를 높여 아헤 표정하면서,
+			PRINTFORMW 페니스로부터 폭포같이 정액을 불기 시작해 자기 자신의 얼굴에 주룩주룩 뿌렸다
+			PRINTFORMW ………………
+			PRINTFORML 대량의 백탁 투성이가 된 채로 기절하는 %조사처리(ANAME(LOCAL:5),"를")% 그대로 방치해,
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그 자리를 뒤로 했다…
+		ENDIF
+		CALL FUCK(LOCAL:5, "욕망, Ｖ, Ｃ, Ａ, 긴박, 고통쾌락, 마조", "처녀상실, Ａ처녀상실", 0, "", "바이브", "", "외교 요구의 포상에서의 조교")
+		CFLAG:(LOCAL:5):4 += 300
+		CFLAG:(LOCAL:5):3 += 300
+		WAIT
+	;병사에 제공한다
+	CASE 6
+		PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% %조사처리(ANAME(MASTER),"를")% 침실에 안내했다…
+		PRINTFORML %조사처리(ANAME(MASTER),"가")% 조속히 %ANAME(LOCAL:5)%의 옷을 벗게 하면, 범해지는 상상으로 욕정해 버렸는지,
+		PRINTFORMW %ANAME(LOCAL:5)%의 저기는 흘림에서도 한 것이 아닐까라고 생각하는 만큼 흠뻑흠뻑 젖고 있었다
+		PRINTFORML 인사 대신에 손가락끝으로 만지작거려 주면, %조사처리(ANAME(LOCAL:5),"는")% 그것만으로 견딜 수 없다는 소리를 질렀다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀를 단단히 묶어, 들어 와도 좋아라고 전한다
+		PRINTFORMW 사전의 협의 대로, %ANAME(MASTER)%의 부하의 병사가 줄줄(질질)하고 방에 마구 들어가 앉아 왔다
+		PRINTFORML 놀라움에 열린 채로 된 %ANAME(LOCAL:5)%의 입안에, 병사는 노출시킨 당신의 하나의 물건을 돌진한다
+		PRINTFORMW 또%ANAME(LOCAL:5)%의 흠뻑 젖는 질 구멍, 쇠퇴해진 엉덩이 구멍도, 다른 병사가 각각 범하기 시작했다
+		PRINTFORML 농후한 수컷의 맛, 하반신으로부터 뇌에 전해지는 쾌락에, %조사처리(ANAME(LOCAL:5),"는")% 이미 아헤얼굴을 쬐고 있다
+		PRINTFORMW 완전히 암컷의 표정이 된 그녀를 보고, 병사들은 보다 흥분한 것 같아, 한층 더 격렬하게 허리를 흔들어 빼앗는다…
+		PRINTFORML 적당하게 즐겨 두라고 그들에게 전해, %조사처리(ANAME(MASTER),"는")% 방을 뒤로 한다
+		PRINTFORMW 배후로부터, 쾌락에 번민 미치는 여자의 교성이 들려 왔다……
+		PRINTFORMW ………………
+		PRINTFORML 방으로 돌아간 %조사처리(ANAME(MASTER),"를")% 맞이한 것은, 숨이 막힐 정도의 성의 냄새였다
+		PRINTFORML 침대 위에서는, 전신 새하얗게 물들었던 %조사처리(ANAME(LOCAL:5),"가")%, 양구멍과 입으로부터 자식을 질질 흘림으로 하면서,
+		PRINTFORML 육봉을 조르는 말을 늘어놓고 있었다……
+		CALL FUCK(LOCAL:5, "욕망, 성교, 정애, 봉사, 성기술, Ｖ, Ｃ, Ａ, Ｂ, Ｍ, 펠라티오, 긴박, 고통쾌락, 마조, 윤간, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("병사"), "병사의 페니스", "병사", "", "외교 요구의 포상에서의 윤간")
+		WAIT
+	;궁정을 산책한다
+	CASE 7
+		PRINTFORML %조사처리(ANAME(LOCAL:5),"가")% %조사처리(ANAME(MASTER),"를")% 침실에 안내하면, %조사처리(ANAME(MASTER),"는")% 그것을 멈추었다
+		PRINTFORMW 그리고, 이 장소에서 벗는 듯%ANAME(LOCAL:5)%에게 전했다……
+		PRINTFORML 일순간 주저한 %조사처리(ANAME(LOCAL:5),"이지만")%, %조사처리(ANAME(MASTER),"가")% 유무를 말하게 하지 않는 표정으로 반복하면, 얌전하게 따랐다
+		PRINTFORMW 수치 이유인가, %ANAME(LOCAL:5)%의 저기는 다음으로부터 다음에 이슬을 흘러넘치게 해 허벅지를 적시고 있다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 태어날 때부터의 모습의 %ANAME(LOCAL:5)%에 목걸이를 입어, 함께 궁정을 산책하기 시작했다……
+		SELECTCASE RAND:4
+			CASE 0
+				PRINTFORML 한동안 걷고 있으면, 긴 복도에 서로 갔다
+				PRINTFORMW 리드를 끌어, %조사처리(ANAME(LOCAL:5),"를")% 가차 없이 따르고 걷고 있으면, %ANAME(LOCAL:5)%의 부하의 일단을 당했다
+				PRINTFORML 부하들은 믿을 수 없는 것을 보는 것 같은 눈으로, %조사처리(ANAME(MASTER),"를")%, 그리고 무엇보다 %조사처리(ANAME(LOCAL:5),"를")% 보고 있다
+				PRINTFORML %조사처리(ANAME(MASTER),"가")% 재촉하면, %조사처리(ANAME(LOCAL:5),"는")%, 스스로가 %ANAME(MASTER)%에 굴복 해, 암컷이 된 것을 보고했다
+				PRINTFORML 그리고 그들·그녀들이 보고 있는 앞에서, %ANAME(MASTER)%의 하나의 물건을 노출시켜, 그 입술로 봉사를 시작했다……
+				CALL FUCK(LOCAL:5, "욕망, 정애, 봉사, 성기술, 노출, 노출, 펠라티오", "키스상실, 구강사정", 0, @"%ANAME(MASTER)%의 페니스", "", "", "외교 요구의 포상에서의 공중의 면전에서의 조교")
+			CASE 1
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 안뜰에 왔다
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(LOCAL:5),"를")% 눈에 띄지 않는 수풀의 그늘에 데리고 가, 그 자리에서 방뇨하도록(듯이) 명했다
+				PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% 부끄러워하면서도, 샤아아, 라고 진한 오줌을 발하기 시작했다
+				PRINTFORMW 지면에 얼룩이 퍼져 간다……
+				PRINTFORML 한층 더%조사처리(ANAME(MASTER),"는")%, 황새 걸음을 넓혀 자위를 하는 듯%ANAME(LOCAL:5)%에 명했다
+				PRINTFORML 처음은 부끄러워하고 있었던 %ANAME(LOCAL:5)%도, 점차 쾌락에 넋을 잃어,
+				PRINTFORMW 마지막에는 궁정안에 울려 퍼지는 것 같은 소리로 가 미쳤다……
+				CALL FUCK(LOCAL:5, "욕망, 자위, 자위, 성기술, 노출, 노출, 배설, Ｃ, Ｂ")
+			CASE 2
+				PRINTFORML 산책의 도중, 경비병을 우연히 만났다
+				PRINTFORML 놀라 당황하는 병사를 딴 곳에, %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:5)%에, 그에게 봉사하도록(듯이) 명했다
+				PRINTFORMW 처음은 주저한 %조사처리(ANAME(LOCAL:5),"이지만")%, %조사처리(ANAME(MASTER),"가")% 다시 재촉하면, 그의 뜸든 하나의 물건을 노출시켜, 그 입으로 잡아당기기 시작했다……
+				PRINTFORML %ANAME(MASTER)%에 의해 가르쳐진 기술은, 병사를 눈 깜짝할 순간에 고조되게 해 사정으로 이끌었다
+				PRINTFORML 발해지는 백탁을, %조사처리(ANAME(LOCAL:5),"는")% 소리를 내 삼켜 간다
+				PRINTFORMW %조사처리(ANAME(MASTER),"가")% %ANAME(LOCAL:5)%의 질 구멍을 사용하는 허가를 내면, 병사는 감사하면서 그녀를 사납게 범하기 시작했다……
+				CALL FUCK(LOCAL:5, "욕망, 정애, 봉사, 성교, 성기술, 노출, 노출, 펠라티오, Ｖ감", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("병사"), "병사의 페니스", "병사", "", "외교 요구의 포상에서의 조교")
+			CASE 3
+				PRINTFORML 남의 눈에 띄지 않는 복도의 그늘에, %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(LOCAL:5),"를")% 데리고 들어갔다
+				PRINTFORMW %ANAME(LOCAL:5)%의 유두는, 보여져 버릴지도 모른다는 흥분에, 응과 딱딱하게 긴장되고 있다
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:5)%에, 벽에 도착해 엉덩이를 내밀도록(듯이) 명령했다
+				PRINTFORMW 그리고 절조가 없는 암캐에의 벌로서 육봉을 깊숙히 찔러 넣었다
+				PRINTFORML 누군가에게 보여지고 있는 일도 잊어, %조사처리(ANAME(LOCAL:5),"는")% 견딜 수 없다는 소리를 질러 허리를 흔들고 싶어서 좋아해 미치고 있다
+				PRINTFORML 이윽고 %조사처리(ANAME(MASTER),"가")% 질 구멍 깊고로 사정하면, %조사처리(ANAME(LOCAL:5),"는")% 궁정안에 영향을 줄 정도의 소리로 절정 했다……
+				CALL FUCK(LOCAL:5, "욕망, 정애, 봉사, 성교, 성기술, 노출, 노출, Ｖ감, Ｖ성교", "처녀상실, 질내사정", GET_ID(MASTER), "", ANAME(MASTER), "", "외교 요구의 포상에서의 조교")
+		ENDSELECT
+		PRINTFORMW ………………
+		PRINTFORML 그 후, 방으로 돌아간 %조사처리(ANAME(MASTER),"는")%, 노출의 쾌락에 고조된 채로의 %조사처리(ANAME(LOCAL:5),"를")% 충분히 예의범절을 가르쳐 주었다
+		PRINTL 종속도＋200
+		PRINTL 의존도＋200
+		WAIT
+	;노예의 분수로 건방지다……방치!
+	CASE 19
+		;자위 또는 촉수자위의 지식의 유무를 판정
+		LOCAL:0 = 0
+		CALL CHECK_COM_KNOWLEDGE(LOCAL:5, 100)
+		LOCAL:0 += RESULT
+		CALL CHECK_COM_KNOWLEDGE(LOCAL:5, 211)
+		LOCAL:0 += RESULT
+
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:5)%의 기대가 깃들인 시선을 무시해, 아무것도 하지 않고 그 자리를 뒤로 했다
+		PRINTFORML 이미 괴롭힐 수 있는 망상으로 발정해 버리고 있었던 %조사처리(ANAME(LOCAL:5),"는")% 기대를 배신당해
+		IF !LOCAL:0
+			PRINTFORMW 번민스럽게 한 기분인 채 하루를 보냈다…
+			PRINTFORML <%ANAME(LOCAL:5)%>
+			CFLAG:(LOCAL:5):3 -= 300
+			PRINTL 의존도-300
+		ELSE
+			PRINTFORMW %조사처리(ANAME(MASTER),"가")% 돌아간 다음에 한사람, 욕정에 달아오르는 몸을 위로했다…
+			PRINTFORML <%ANAME(LOCAL:5)%>
+			CFLAG:(LOCAL:5):3 -= 300
+			PRINTL 의존도-300
+
+			;자위의 종류와 회수의 결정
+			CALL CALC_SELF_PARAMETER(LOCAL:5, 0)
+			LOCAL:10 = RESULT:1
+			LOCAL:11 = RESULT:2
+
+			;ＣＢ자위
+			IF LOCAL:10 == 0
+				CALL FUCK(LOCAL:5, "욕망, 자위, 자위, 성기술, 사정, Ｃ, Ｂ")
+			;아나운서 무릎 관절
+			ELSE
+				CALL FUCK(LOCAL:5, "욕망, 자위, 자위, 성기술, 사정, Ｃ, Ｂ")
+			ENDIF
+		ENDIF
+		WAIT
+ENDSELECT
+
+;-------------------------------------------------
+;요구를 마셨을 때의 포상（약물）
+;-------------------------------------------------
+@DIPLOMACY_REQUEST_DRUG_USE(ARG:0)
+LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+LOCAL:5 = GET_COUNTRY_BOSS(ARG:0)
+
+SELECTCASE RAND:100
+	CASE IS > 60
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 페니스를 노출시키면, 그 위에 정제를 태웠다
+		PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% 눈빛을 바꾸어, 뜸든 고기의 봉에 달라붙어서 놓지 않다
+		PRINTFORMW 그리고 그대로, 와 소리를 내 빨아 세우기 시작했다
+		PRINTFORML , 와 추잡한 물소리가 방안에 울려 퍼진다
+		PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 이미 분명하게, 약만을 위해서 이러한 행위를 하고 있는 것은 아니었다
+		PRINTFORML 이윽고 %조사처리(ANAME(MASTER),"가")% 한계를 맞이해, 그 정액을 %ANAME(LOCAL:5)%의 입안에 발하면,
+		PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 소리를 내 그것을 삼켜 갔다……
+		CALL FUCK(MASTER, "Ｃ, 욕망, 사정")
+		CALL FUCK(LOCAL:5, "욕망, 봉사, 성기술, 정애, 펠라티오", "키스상실, 구강사정", 0, @"%ANAME(MASTER)%의 페니스", "", "", "외교 요구의 포상에서의 약을 섞어진 조교")
+	CASEELSE
+		PRINTFORML %조사처리(ANAME(MASTER),"는")%, 트립 하는 %조사처리(ANAME(LOCAL:5),"를")% 침대 위에 쓰러트렸다
+		PRINTFORML 그리고 전희도 하는 둥 마는 둥, 그 젖은 구멍에 페니스를 삽입했다
+		PRINTFORMW 약물의 효과에 의해, %조사처리(ANAME(LOCAL:5),"는")% 짐승 같아 보인 교성을 질러 몸부림쳤다
+		SIF TALENT:(LOCAL:5):처녀
+			PRINTFORML 라는 소리와 함께, %ANAME(LOCAL:5)%의 순결은 잃어 버려졌지만, 지금의 그녀에게는 그것조차 쾌락인 것 같았다
+		PRINTFORML 도를 넘은 쾌락에 %ANAME(LOCAL:5)%의 신체는 삐걱삐걱 떨려 절정 하고 있다
+		PRINTFORMW 이지만, %ANAME(MASTER)%에 있어서는 그런 일은 관계없다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")%, 구불거리는 %ANAME(LOCAL:5)%의 엉덩이에 오로지 허리를 쳐박아, 몇 번이나 그 안쪽에서 사정해 주었다……
+		CALL FUCK(MASTER, "Ｃ, 욕망, 성교, 사정, Ｖ삽입", "동정상실", 0, "", "", @"%ANAME(LOCAL:5)%의 질")
+		CALL FUCK(LOCAL:5, "욕망, 봉사, 성교, 정애, Ｖ, 고통쾌락, 마조, Ｖ성교", "처녀상실, 질내사정", GET_ID(MASTER), "", ANAME(MASTER), "", "외교 요구의 포상에서의 약을 섞어진 조교")
+		CFLAG:(LOCAL:5):4 += 300
+		CFLAG:(LOCAL:5):3 += 300
+		WAIT
+ENDSELECT
+
+;-------------------------------------------------
+;요구를 마셨을 때의 포상（최면）
+;-------------------------------------------------
+@DIPLOMACY_REQUEST_HYPNOSIS_USE(ARG:0)
+#DIM 대상
+대상 = GET_COUNTRY_BOSS(ARG:0)
+
+CALL ASK_MULTI("이대로 희롱한다", "의식만 되돌린다", "음란하게 한다", "이쪽을 인식 할 수 없게 한다")
+
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"를")%, 이대로 희롱해 주기로 했다
+		PRINTFORMW 옷을 벗도록(듯이) 명하면, %조사처리(ANAME(대상),"는")% 공허한 눈동자인 채 스스로의 의복에 손을 대어, 벗어 던져 간다
+		PRINTFORML 공공연하게 된 %조사처리(STR_BODY("가슴:감촉", 대상),"나")% %조사처리(STR_BODY("질:감도", 대상),"를")% 희롱해, %조사처리(STR_BODY("엉덩이", 대상),"를")% 돌리듯이 어루만지며 해도, %PRONOUN(대상)%는 표정 하나나 없다
+		PRINTFORMW 하지만, 역시 성감을 기억하고 있는 것 같아, 암컷구멍의 안쪽으로부터는 서서히 꿀이 흘러넘쳐 온다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 실신 한 채로의 %ANAME(대상)%에 육봉을 쑤셔 넣어, 무방비인 보지를 범해 간다
+		PRINTFORMW 말하지 않는 인형인 것 같은 %ANAME(대상)%상대에게, 몇 번이나 종을 옮겨 심어 주었다……
+	CASE 1
+		PRINTFORML 의식을 되찾은 %조사처리(ANAME(대상),"는")%, 스스로가 전라로, %ANAME(MASTER)% 앞으로 무릎 꿇고 있는 일을 눈치챈다
+		PRINTFORML 무슨 일인가 따지려고 했지만, 신체가 자유롭게 움직이지 않는다
+		PRINTFORMW 그 뿐만 아니라 %ANAME(MASTER)%에 겸손하게 해, 아첨하는 말을 입은 늘어놓는다
+		PRINTFORML 손가락은 의사와 관계없이 스스로의 신체를 위로해, 양다리는 멋대로 크게 넓힐 수 있다
+		PRINTFORMW 스스로 %STR_BODY("질", 대상)%를 나누어 열어, 육봉등 된다
+		PRINTFORML 용맹스러운 페니스를 쑤셔 넣어지면, 굴욕조차 잊어 버릴 정도의 쾌락이 전신을 달려나간다……
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 그대로, 몇 번이나 %ANAME(MASTER)%에 범해졌다……
+	CASE 2
+		PRINTFORML %조사처리(ANAME(MASTER),"가")% 강렬한 암시를 걸친 후%ANAME(대상)%의 의식을 되돌리면, %PRONOUN(대상)%는 곧바로 녹은 표정을 띄우기 시작했다
+		PRINTFORMW 「우연히」곧 근처에 있던 남자인 %조사처리(ANAME(MASTER),"로")% 하고 눈사태 걸려, 추잡한 말을 늘어놓아 권한다
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")% 초조하게 하도록(듯이) 신체를 더듬으면, 참을 수 없게 되었는지 이쪽을 쓰러트렸다
+		PRINTFORML 합의를 얻는 시간도 아깝다고 하도록(듯이) 이쪽의 하의를 비켜 놓아, 노출한 육봉을 빨아 세워 온다
+		PRINTFORMW 창녀 압도하는 정열적인 펠라치오에 %조사처리(ANAME(MASTER),"가")% 충분히 사정하면, %조사처리(ANAME(대상),"는")% 눈탕하사 견딜 수 없다고 하도록(듯이) 삼킴해 나간다
+		PRINTFORMW 그 후, 스스로 가랑이를 열었던 %조사처리(ANAME(대상),"를")%, %조사처리(ANAME(MASTER),"는")% 한껏 범해 주었다……
+	CASE 3
+		PRINTFORML 의식을 되찾은 %조사처리(ANAME(대상),"는")%, 아무래도 깜빡 졸음 하고 있던 것 같다고 생각했다
+		PRINTFORML 눈앞의 서류에 진절머리 나면서도, 1개씩정리해 간다
+		PRINTFORMW 그렇다 치더라도 새로운 의자는 안정감이 좋고 기분이 좋다고 생각하면서……
+		PRINTFORMW ……%조사처리(ANAME(MASTER),"가")% %조사처리(ANAME(대상),"를")% 사납게 밀어올리고 있다
+		PRINTFORML %STR_BODY("질:처녀 확인:시간 경과", 대상)%를 범해져도, %조사처리(STR_BODY("가슴:감촉", 대상),"를")% 주물러지려고, %조사처리(ANAME(대상),"는")% 눈치도 채지 않는다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그대로, 책상 일에 쫓기는 %ANAME(대상)%의 자궁에, 한껏 백탁을 토해내 주었다……
+ENDSELECT
+
+CALL FUCK(대상, "욕망, 성교, 정애, 봉사, 성기술, Ｖ, Ｃ, Ａ, Ｂ, Ｍ, 펠라티오, 고통쾌락, 마조, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 키스상실, 질내사정, 장내사정, 구강사정", GET_ID(MASTER), @"%ANAME(MASTER)%의 페니스", ANAME(MASTER), "", "외교 요구의 포상에서의 최면중의 조교")
+CALL FUCK(MASTER, "Ｃ, 욕망, 성교, 사정, Ｖ삽입", "동정상실,  ", 0, "", "", @"%ANAME(대상)%의 질")
+
+
+
+
+;-------------------------------------------------
+;요구를 마셨을 때의 포상（약물）
+;-------------------------------------------------
+@DIPLOMACY_REQUEST_DRUG(ARG:0)
+
+LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+LOCAL:5 = GET_COUNTRY_BOSS(ARG:0)
+
+CFLAG:(LOCAL:5):약물의존 += RAND(20, 50)
+PRINTL 
+PRINTFORMW ………………
+PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 기대하는 것 같은 눈동자로 %조사처리(ANAME(MASTER),"를")% 응시하고 있다…
+PRINTFORMW 요구를 받아들인 포상에, 내밀어진 혀 위에 약을 얹어 주었다…
+PRINTFORML
+IF HAS_VAGINA(LOCAL:5) && HAS_PENIS(MASTER)
+	PRINTFORML 트립 하고 있는 %조사처리(ANAME(LOCAL:5),"를")% 「사용」인가?
+	PRINTFORML [0] 사용한다
+	PRINTFORML [1] 그만둔다
+	INPUT
+	IF RESULT == 0
+		CALL DIPLOMACY_REQUEST_DRUG_USE(ARG:0)
+	ELSE
+	ENDIF
+ENDIF
+;-------------------------------------------------
+;2회째 이후의 요구를 마셨을 때의 포상
+;-------------------------------------------------
+@DIPLOMACY_REQUEST_GOHOUBI(ARG:0)
+	;포상의 처리
+	$INPUT_GOHOUBI
+	PRINTFORML [0] 포상에 괴롭히기를 원할까? 라고 묻는다
+	PRINTFORML [1] 아무것도 하지 않는다
+	INPUT
+	IF RESULT == 0
+		CALL DIPLOMACY_REQUEST_PRIZE(ARG:0)
+	ELSEIF RESULT == 1
+
+	ENDIF
+
+;-------------------------------------------------
+;2회째 이후의 요구를 마셨을 때의 포상
+;-------------------------------------------------
+@DIPLOMACY_REQUEST_HYPNOSIS(ARG:0)
+LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+LOCAL:5 = GET_COUNTRY_BOSS(ARG:0)
+
+SIF !IS_FEMALE(LOCAL:5) || !HAS_PENIS(MASTER)
+	RETURN 0
+
+PRINTL 
+PRINTFORMW ………………
+PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 공허한 눈동자로 고개 숙이고 있다……
+PRINTFORML %ANAME(LOCAL:5)%에 새로운 최면술을 걸쳐 「즐거운 것」을 할까?
+CALL ASK_YN("즐긴다", "그만둔다")
+IF RESULT == 0
+	CALL DIPLOMACY_REQUEST_HYPNOSIS_USE(ARG:0)
+ELSE
+ENDIF
+
+;-------------------------------------------------
+;외교에 의한 조교 요구 플래그의 해제 판정
+;-------------------------------------------------
+@CHECK_DIPLOMACY_TRAIN_FLAG
+#DIM TRAIN_FLAG
+;세력끼리의 인접 관계 맵을 작성
+CALL TMP_CREATE_COUNTRY_NEIBORING_MAP
+CALL TMP_CREATE_SUM_ECONOMY_MAP
+CALL TMP_CREATE_SUM_SOLDIER_MAP
+CALL TMP_CREATE_POLITICS_POWER_MAP
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 외교 조교 보고
+CALL COLOR_LINE
+
+FOR LOCAL:0, 0, CHARANUM
+	IF !CFLAG:(LOCAL:0):외교조교중
+		SIF CFLAG:(LOCAL:0):외교조교카운터 > 0
+			CFLAG:(LOCAL:0):외교조교카운터 --
+		CONTINUE
+	ENDIF
+
+	IF !IS_COUNTRY(CFLAG:(LOCAL:0):소속)
+		CFLAG:(LOCAL:0):외교조교중 = 0
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(LOCAL:0),"가")% 어디에도 소속하지 않게 되었기 때문에, 「포로의조교」의 조교 대상으로부터 빗나갔습니다…
+		RESETCOLOR
+		CONTINUE
+	ENDIF
+
+	IF CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속
+		CFLAG:(LOCAL:0):외교조교중 = 0
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(LOCAL:0),"가")% %조사처리(ANAME(MASTER),"와")% 소속을 같이 하게 되었으므로, 「포로의조교」의 조교 대상으로부터 빗나갔습니다…
+		RESETCOLOR
+		CONTINUE
+	ENDIF
+
+	;당신이 어느 세력에도 속하지 않으면 해제
+	;IS_COUNTRY의 성질상, 영토가 없는 도둑에게 소속해 있는 경우는 해제되지 않고
+	IF !IS_COUNTRY(CFLAG:MASTER:소속)
+		CFLAG:(LOCAL:0):외교조교중 = 0
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(LOCAL:0),"는")% 당신이 무소속이 되었기 때문에, 「포로의조교」의 조교 대상으로부터 빗나갔습니다…
+		RESETCOLOR
+		CONTINUE
+	ENDIF
+
+	TRAIN_FLAG = 0
+
+	;【조건 A】국력에 의한 중압에 굴하고 있다
+	;강요시부터 기초 판정값은 내리고 있습니다
+	;호감도에 의한 난이도 보정의 상황상 판정값을 인하해, 하는 김에 턴 경과와 함께 난이도가 오르도록(듯이)
+	SIF DIPLOMACY_REQUEST_CHECK(CFLAG:MASTER:소속, CFLAG:(LOCAL:0):소속, 300 + CFLAG:(LOCAL:0):외교조교카운터 * 5, 1)
+		SETBIT TRAIN_FLAG, 0
+
+	;【조건 B】예종계 함락소질의 소지, 혹은 군주로 피학의 열락에 물들어 「포상」을 위해서(때문에) 몸을 팔았다
+	SIF IS_SLAVE(LOCAL:0)
+		SETBIT TRAIN_FLAG, 1
+
+	SIF GET_COUNTRY_BOSS(CFLAG:(LOCAL:0):소속) == LOCAL:0 && GETBIT(TALENT:(LOCAL:0):음란계, 소질_음란_마조) && IS_LOVER(LOCAL:0) && CFLAG:(LOCAL:0):외교요구성공플래그 == 2
+		SETBIT TRAIN_FLAG, 1
+
+	;【조건 C】군주이며, 약살결에 빠져 약을 위해서(때문에) 몸을 팔고 있었다（
+	SIF LOCAL:0 == GET_COUNTRY_BOSS(CFLAG:(LOCAL:0):소속) && CFLAG:(LOCAL:0):약물의존 >= REL_HATE:(LOCAL:0):(MASTER) && CFLAG:(LOCAL:0):외교요구성공플래그 == 3
+		SETBIT TRAIN_FLAG, 2
+
+	;【조건 A】【조건 B】【조건 C】의 모두 채우지 않고 턴이 경과하고 있으면 빗나간다
+	IF !TRAIN_FLAG && CFLAG:(LOCAL:0):외교조교카운터 > 4
+		CFLAG:(LOCAL:0):외교조교중 = 0
+		PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 더 이상%ANAME(MASTER)%에 몸을 허락할 생각은 없으면 통고했다…
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(LOCAL:0),"가")% 「포로의조교」의 조교 대상으로부터 빗나갔습니다…
+		RESETCOLOR
+		CONTINUE
+	ENDIF
+	
+	DEBUGPRINTFORML %ANAME(LOCAL:0)%:외교 조교 계속({CFLAG:(LOCAL:0):외교조교카운터}턴눈)
+	SIF CFLAG:(LOCAL:0):외교조교중
+		CFLAG:(LOCAL:0):외교조교카운터 ++
+NEXT
+
+;-------------------------------------------------
+;캐릭터 ARG:0을 사정할 수 있는 최대 회수를 취득
+;-------------------------------------------------
+@ROUND_MAX(ARG:0)
+#FUNCTION
+;●사정에 의한 체력의 소모량을 계산
+;체력 소비의 기본치
+LOCAL:2 = 50000
+
+;사정 Lv에 의한 보정
+SELECTCASE ABL:(ARG:0):사정
+	CASE 0
+		TIMES LOCAL:2, 1.00
+	CASE 1
+		TIMES LOCAL:2, 0.80
+	CASE 2
+		TIMES LOCAL:2, 0.60
+	CASE 3
+		TIMES LOCAL:2, 0.45
+	CASE 4
+		TIMES LOCAL:2, 0.30
+	CASEELSE
+		LOCAL:2 = LOCAL:2 / (MIN(ABL:(ARG:0):사정 - 5, 55) + 5)
+ENDSELECT
+
+;욕망 Lv에 의한 보정
+IF ABL:(ARG:0):욕망 < 5
+	LOCAL:2 = LOCAL:2 * (30 - ABL:(ARG:0):욕망) / 30
+ELSE
+	LOCAL:2 = LOCAL:2 * (130 - MIN(ABL:(ARG:0):욕망, 30)) / 150
+ENDIF
+
+LOCAL:3 = MAXBASE:(ARG:0):체력 * 100 / MAX(LOCAL:2, 1)
+LOCAL:3 = MIN(LOCAL:3, TALENT:(ARG:0):절륜 ? 40 # 20)
+
+RETURNF LOCAL:3
+
+;----------------------------------
+;ARG:0 세력이 ARG:1 세력에 간 요구가 통과할까의 판정
+;TMP_CREATE_SUM_ECONOMY_MAP TMP_CREATE_SUM_SOLDIER_MAP TMP_CREATE_POLITICS_POWER_MAP의 호출이 필요
+;----------------------------------
+@DIPLOMACY_REQUEST_CHECK(세력, 요구처, 할당량, 비표시플래그)
+#FUNCTION
+#DIM 세력
+#DIM 요구처
+#DIM 군주
+#DIM 요구선군주
+#DIM 할당량
+#DIM 최종할당량
+#DIM 스코아, 3
+#DIM 최종치
+#DIM 경제비
+#DIM 병력비
+#DIM 정치력비
+#DIM 비표시플래그
+
+군주 = GET_COUNTRY_BOSS(세력)
+요구선군주 = GET_COUNTRY_BOSS(요구처)
+경제비 = TMP_SUM_ECONOMY:세력 * 100 /  MAX(TMP_SUM_ECONOMY:요구처, 1)
+스코아:0 = MIN(경제비 / 10, 200)
+
+정치력비 = TMP_SUM_POLITICS_POWER:세력 * 100 / MAX(TMP_SUM_POLITICS_POWER:요구처, 1)
+스코아:1 = MIN(정치력비 / 10, 200)
+
+병력비 = TMP_SUM_SOLDIER:세력 * 100 / MAX(TMP_SUM_SOLDIER:요구처, 1)
+스코아:2 = MIN(병력비 / 10, 200)
+
+최종할당량 = 할당량
+최종할당량 += DIPLOMACY_HATE:(세력) * 15 + INDEPENDENCE_COUNTER:요구처 * 10
+
+
+최종치 = 스코아:0 + 스코아:1 + 스코아:2
+
+SELECTCASE REL_LIKE:요구선군주:군주 - REL_HATE:요구선군주:군주
+	CASE IS > 1000
+		TIMES 최종할당량, 0.5
+	CASE IS > 600
+		TIMES 최종할당량, 0.8
+	CASE IS < -600
+		TIMES 최종할당량, 1.2
+	CASE IS < -1000
+		TIMES 최종할당량, 1.5
+ENDSELECT
+
+최종할당량 = 최종할당량 * MAX(GET_DIFFICULTY_CORRECTION(), 100) / 100
+
+SIF !비표시플래그
+	PRINTFORML 경제력({스코아:0}) + 정치력({스코아:1}) + 병력({스코아:2}) = {최종치} %TOSTR_COMPARE(최종치, 최종할당량)% {최종할당량}
+
+DEBUGPRINTFORML %ANAME(군주), MAX_CHARANAME_LENGTH%, %ANAME(요구선군주), MAX_CHARANAME_LENGTH%, {스코아:0, 3}, {스코아:1, 3}, {스코아:2, 3}, {최종치, 3}
+
+RETURNF 최종할당량 <= 최종치

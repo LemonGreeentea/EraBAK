@@ -1,0 +1,387 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_ZEGEN_RATE()
+RETURN 30
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_ZEGEN_DECISION()
+RETURN 12 <= DAY
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_ZEGEN_GENRE()
+RETURN 데일리_장르_에로
+
+
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_ZEGEN()
+#DIM 대상
+#DIM 금액
+#DIM 대상도시
+#DIM 포로번호, 3000
+VARSET LOCAL
+VARSET 포로번호
+
+PRINTFORML 유괴범 조직의 정보를 잡았다
+PRINTFORML 이 조직은 나라들을 돌어다나며 활약해 암약 하고 있는 것 같다
+PRINTFORMW 어떻게 하지?
+CALL ASK_MULTI("수사한다" ,"거래한다" ,"무시한다")
+IF RESULT == 2
+	PRINTFORMW 무시했다
+ELSEIF RESULT == 1
+	PRINTFORML 거래하기로 했다
+	PRINTFORMW 조직에 심부름을 보냈다
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+	PRINTFORML 조직의 사람이 왔다
+	PRINTFORMW 어떻게 하지?
+	CALL ASK_MULTI_JUDGE("마을 아가씨를 판다", 1,"타국의 포로를 산다", 1,"자신을 판다", IS_FEMALE(MASTER) && !TALENT:MASTER:처녀)
+	IF RESULT == 0
+		PRINTFORMW 마을 아가씨를 팔았다
+		금액 = 3000 + 1000 * (DAY / 5)
+		MONEY += 금액 
+		FOR LOCAL, 1, MAX_COUNTRY
+			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:1, -50, 50)
+		NEXT
+		CALL COLOR_PRINT(@"금{금액}를 손에 넣었다", 칼라_시안)
+		PRINTFORML 
+		CALL COLOR_PRINT(@"소문이 퍼져 타국의 평판이 내렸다", 칼라_경고)
+		PRINTFORMW 
+	ELSEIF RESULT == 1
+		PRINTFORML 타국의 포로를 휩쓸어 와 받기로 했다
+		$SHOW_LOOP
+		PRINTFORMW 누구를 잡아 와 받을까?
+		FOR LOCAL, 0, CHARANUM
+			IF CFLAG:LOCAL:포로처 != 0 && CFLAG:LOCAL:포로처 != CFLAG:MASTER:소속 && !IS_SP_CHARA(LOCAL)
+				포로번호:(LOCAL:1) = LOCAL
+				IF SLAVE_TRADER_PRICE(LOCAL) <= MONEY
+					PRINTFORM [{LOCAL:1}]%ANAME(LOCAL), 16, RIGHT% - 금{SLAVE_TRADER_PRICE(LOCAL), 6, RIGHT}
+				ELSE
+					SETCOLOR 칼라_선택불가
+					PRINTPLAINFORM [{LOCAL:1}]%ANAME(LOCAL), 16, RIGHT% - 금{SLAVE_TRADER_PRICE(LOCAL), 6, RIGHT}
+					RESETCOLOR
+				ENDIF
+				PRINTL
+				LOCAL:1 ++
+			ENDIF
+		NEXT
+		CALL SINGLE_DRAWLINE
+		PRINTFORML [1000] 그만둔다
+		$INPUT_LOOP
+		INPUT
+		IF RESULT == 1000
+			PRINTFORML 역시 그만두자
+			PRINTFORMW 유괴범은 어깨를 움츠려 떠나 갔다
+			RETURN 1
+		ELSEIF RESULT < 0 || RESULT >= LOCAL:1 || SLAVE_TRADER_PRICE(포로번호:RESULT) > MONEY
+			GOTO INPUT_LOOP
+		ELSE
+			대상 = 포로번호:(RESULT)
+			PRINTFORMW 「%조사처리(ANAME(대상),"를")% 잡아 준다면 좋군요?」
+			CALL ASK_YN("부탁한다", "다시 생각한다")
+			IF RESULT == 1
+				PRINTFORMW 아니, 역시 한 번 더 다시 생각하자
+				CALL SINGLE_DRAWLINE
+				GOTO SHOW_LOOP
+			ELSE
+				PRINTFORMW 유괴범을 부탁했다
+				PRINTFORML ·
+				PRINTFORML ·
+				PRINTFORMW ·
+				PRINTFORML 그들은 보기좋게 %PRONOUN(대상)%를 휩쓸어 와 주었다
+				PRINTFORMW 비싼 쇼핑이었지만 당신은 만족해 %PRONOUN(대상)%를 내려다 보았다
+				IF CFLAG:MASTER:소속 == CFLAG:대상:소속
+					CALL CAPTURE(대상, 0)
+				ELSE
+					CALL CAPTURE(대상, CFLAG:MASTER:소속)
+				ENDIF
+				MONEY -= SLAVE_TRADER_PRICE(대상)
+				CALL COLOR_PRINT(@"금{SLAVE_TRADER_PRICE(대상)}를 지불했다", 칼라_주의)
+				PRINTFORML 
+				IF CFLAG:대상:소속 != CFLAG:MASTER:소속
+					FOR LOCAL, 1, MAX_COUNTRY
+						SIF IS_COUNTRY(LOCAL)
+							CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -100, 100)
+					NEXT
+					CALL COLOR_PRINT(@"유괴범 조직과의 연결이 발각되어 타국의 평판이 내렸다", 칼라_경고)
+					PRINTFORMW
+				ENDIF
+			ENDIF
+		ENDIF
+	ELSE
+		PRINTFORML 자신을 팔기로 했다
+		PRINTFORMW 유곽에서 일해졌다
+		CALL ZEGEN_SEXWORK(MASTER)
+		금액 = 1000 + (ABL:MASTER:성교 + ABL:MASTER:성기술 + ABL:MASTER:봉사 + ABL:MASTER:Ｖ감) * 500
+		MONEY += 금액 
+		CALL COLOR_PRINT(@"금{금액}를 손에 넣었다", 칼라_시안)
+		PRINTFORMW
+	ENDIF
+ELSE
+	PRINTFORML 수사하기로 했다
+	PRINTFORML 의심받지 않게 여성 한사람에 맡기자
+	PRINTFORMW 누구로 해?
+	CALL SINGLE_DRAWLINE
+	CALL SELECT_CHARA_LIST_ONLY_LOGIC_SLG("ZEGEN", "ZEGEN")
+	대상 = RESULT
+	IF RESULT == -1
+		PRINTFORMW ……아니, 역시 위험함
+		PRINTFORMW 그만두기로 하자……
+		RETURN 1
+	ELSEIF 대상 == MASTER
+		PRINTFORMW %ANAME(대상)%스스로 수사하기로 했다
+	ELSE
+		PRINTFORMW %조사처리(ANAME(대상),"를")% 수사에 향하게 했다
+	ENDIF
+	CALL DAILY_EVENT_RAND_CITYSELECT(0)
+	대상도시 = RESULT
+	PRINTFORML 마을 아가씨에게 잊혀져 잠입에 성공했다
+	PRINTFORML 다른 아가씨와 함께 유곽에 데려가졌다
+	PRINTFORMW 어떻게 하지?
+	CALL ASK_MULTI("무력 제압한다" ,"손님으로부터 정보를 얻는다" ,"아가씨들을 놓친다")
+	IF RESULT == 0
+		PRINTFORMW 무력으로 제압을 시도했다
+		PRINTFORML ·
+		PRINTFORML ·
+		PRINTFORMW ·
+		IF ABL:대상:무투 * (RAND:5 + 1) > 40 * (RAND:9 + 1)
+			PRINTFORML 거점을 제압했다!
+			PRINTFORMW 이것으로 국내에서의 무리의 활동은 줄어들 것이다
+			IF 대상도시 > 0
+				CITY_GUARD:대상도시 += 20
+				CALL COLOR_PRINT(@"%CITY_NAME:대상도시%의 방위율이 20 상승해, {CITY_GUARD:대상도시}가 되었다", 칼라_시안)
+				PRINTFORMW 
+			ENDIF
+		ELSE
+			PRINTFORML 실패해 버렸다……
+			PRINTFORMW 약을 맞아 꿈꾸는 듯한 기분이 된 %조사처리(ANAME(대상),"는")%, 손님의 상대를 하게 하는 일이 되었다
+			CALL ZEGEN_SEXWORK(대상)
+			CFLAG:대상:약물의존 += RAND(30, 60)
+			PRINTFORMW 그 후, %조사처리(ANAME(대상),"는")% 어떻게든 도망치기 시작했다
+		ENDIF
+	ELSEIF RESULT == 2
+		PRINTFORMW 아가씨들을 놓치기로 했다
+		PRINTFORML ·
+		PRINTFORML ·
+		PRINTFORMW ·
+		IF ABL:대상:지략 * (RAND:5 + 1) > 40 * (RAND:9 + 1)
+			PRINTFORML 성공했다!
+			PRINTFORMW 구출한 아가씨들은 가족들과 재회 되어있고 울어 기뻐하고 있었다
+			FOR LOCAL, 1, MAX_COUNTRY
+				SIF IS_COUNTRY(LOCAL)
+					CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:1, 50, -50)
+			NEXT
+			CALL COLOR_PRINT(@"아가씨들을 도운 것으로 타국의 평판이 올랐다", 칼라_시안)
+			PRINTFORMW 
+		ELSE
+			PRINTFORML 실패해 버렸다……
+			PRINTFORMW 약을 맞아 꿈꾸는 듯한 기분이 된 %조사처리(ANAME(대상),"는")%, 손님의 상대를 하게 하는 일이 되었다
+			CALL ZEGEN_SEXWORK(대상)
+			CFLAG:대상:약물의존 += RAND(30, 60)
+			PRINTFORMW 그 후, %조사처리(ANAME(대상),"는")% 어떻게든 도망치기 시작했다
+		ENDIF
+	ELSE
+		PRINTFORMW 손님의 상대를 해 정보를 얻기로 했다
+		CALL ZEGEN_SEXWORK(대상)
+		PRINTFORML ·
+		PRINTFORML ·
+		PRINTFORMW ·
+		IF (ABL:대상:성교 + ABL:대상:성기술 + ABL:대상:봉사 + ABL:대상:Ｖ감) > 10 + DAY / 10
+			PRINTFORML %ANAME(대상)%의 봉사에 만족한 손님은 나불나불 정보를 이야기해 주었다
+			PRINTFORMW 그 정보를 손에 유곽을 빠져 나간 %조사처리(ANAME(대상),"는")% 녀석들의 조직을 적발했다
+			IF 대상도시 > 0
+				CITY_GUARD:대상도시 += 25
+				CALL COLOR_PRINT(@"%CITY_NAME:대상도시%의 방위율이 25 상승해, {CITY_GUARD:대상도시}가 되었다", 칼라_시안)
+				PRINTFORML 
+			ENDIF
+			FOR LOCAL, 1, MAX_COUNTRY
+				SIF IS_COUNTRY(LOCAL)
+					CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:1, 100, -100)
+			NEXT
+			CALL COLOR_PRINT(@"조직 적발에 의해 타국의 평판이 올랐다", 칼라_시안)
+			PRINTFORMW 
+		ELSE
+			PRINTFORML 하지만 손님을 만족 당하지 않고 정보도 얻을 수 없었다
+			PRINTFORMW 그 후, %조사처리(ANAME(대상),"는")% 어떻게든 도망치기 시작했다
+		ENDIF
+	ENDIF
+ENDIF
+
+RETURN 1
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_ZEGEN(대상)
+#DIM 대상
+RETURN CFLAG:대상:행동불능상태 != 행동불능_아이 && CFLAG:대상:소속 == CFLAG:MASTER:소속 && !IS_ANIMAL(대상) && !IS_MALE(대상)
+
+@SELECT_CHARA_LIST_SELECT_LOGIC_ZEGEN(대상)
+#DIM 대상
+RETURN CFLAG:대상:포로처 == 0
+
+
+;-------------------------------------------------
+;유곽에서의 일
+;-------------------------------------------------
+@ZEGEN_SEXWORK(ARG:0)
+
+PRINTFORML 
+SELECTCASE RAND:6
+	CASE 0
+		PRINTFORML 손님은 추잡한 미소를 한 중년남성이었다
+		PRINTFORMW 그는 %조사처리(ANAME(ARG:0),"를")% 봐 입맛을 다신다와 난폭하게 이불에 쓰러트렸다
+	CASE 1
+		PRINTFORML 손님은 단단하게 한 체구의 청년이었다
+		PRINTFORMW 그는 %조사처리(ANAME(ARG:0),"를")% 봐 기쁜듯이 휘파람을 불면, 조속히 옷을 벗겼다
+	CASE 2
+		PRINTFORML 손님은 기름기가 돈 약간 통통함의 아저씨였다
+		PRINTFORMW 그는 %조사처리(ANAME(ARG:0),"를")% 봐 숨을 거칠게 하면, 무리하게 껴안고 입술을 거듭해 왔다
+	CASE 3
+		PRINTFORML 손님은 그야말로 똘마니라는 청년이었다
+		PRINTFORMW 그는 의지를 숨기는 일 없이, 조속히 %ANAME(ARG:0)%의 신체를 주무르기 시작했다
+	CASE 4
+		PRINTFORML 손님은 옷차림이 좋은 상쾌한 청년이었다
+		PRINTFORMW 그는 %조사처리(ANAME(ARG:0),"와")% 잠깐 회화를 즐긴 후, 상냥하게 이불에 쓰러트렸다
+	CASE 5
+		PRINTFORML 손님은 유복할 것 같은 초로의 남성이었다
+		PRINTFORMW 온화한 미소를 띄우면서도, %조사처리(ANAME(ARG:0),"를")% 추잡하게 더듬었다
+ENDSELECT
+PRINTFORML 
+SELECTCASE RAND:30
+	CASE 0
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 그의 위에 걸쳐 추잡한 표정을 보이면서 신체를 구불거리게 되어지고 있다
+		PRINTFORML 대담한 육봉에 꿀단지를 가득 압박받아, 허리를 흔드는 동안에 저리는 것 같은 쾌락이 달려 교성을 흘려 버린다
+		PRINTFORMW %조사처리(ANAME(ARG:0),"는")% 완전히 손님의 씩씩함에 헤롱헤롱이 되어, 자식을 따라 받으려고 열중해 봉사를 계속했다
+	CASE 1
+		PRINTFORML 자궁에 자식이 힘차게 쏟아져 %조사처리(ANAME(ARG:0),"는")% 크게 신체를 뒤로 젖히게 한다
+		PRINTFORML 그의 용감한 섹스로 완전히 암컷으로서 마무리해지고 있었던 %조사처리(ANAME(ARG:0),"는")% 교성을 올리면서 몇 번이나 절정 한다
+		PRINTFORMW 사정이 끝나도 그의 페니스는 쇠약해지지 않고, %조사처리(ANAME(ARG:0),"는")% 눈을♥로 해 허리를 구불거리게 할 수 있는 다음을 졸라댔다
+	CASE 2
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 엎드려 있는 자세로 배후로부터 격렬하게 찔리면서 교성을 올리고 있다
+		PRINTFORML 정수리까지 영향을 주는 것 같은 몹시 거친 스트로크에 %조사처리(ANAME(ARG:0),"는")% 완전히 암컷으로서 예의범절을 가르칠 수 있어 야무지지 못하고 미친듯이 자지러지는 신음소리를 낸다
+		PRINTFORMW 갑자기 질 안쪽으로 작열의 정액을 발해지면, %조사처리(ANAME(ARG:0),"는")% 기쁨의 소리를 높여 활처럼 몸을 뒤로 젖혔다
+	CASE 3
+		PRINTFORML 이불에 밀어 쓰러트려진 %조사처리(ANAME(ARG:0),"는")% 그에게 덮어씌울 수 있어 격렬하게 밀어올려지고 있다
+		PRINTFORML 일발 찌르기마다 질육을 후벼파져 눈앞이 새하얗게 되어, %조사처리(ANAME(ARG:0),"는")% 참지 못하고 달콤한 한숨을 흘려 몸을 진동시킨다
+		PRINTFORMW %조사처리(ANAME(ARG:0),"는")% 눈치채면 그에게 매달려, 암컷의 본능대로 보다 깊게 페니스를 권하는 것처럼 허리를 흔들고 있었다
+	CASE 4
+		PRINTFORML 방 안에 고기가 서로 치는 소리와 %ANAME(ARG:0)%의 교성이 리드미컬하게 영향을 주고 있다
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 립 백의 자세로 난폭하게 손님에게 범해지면서, 견딜 수 없다고 한 바람으로 몸을 구불거리게 할 수 있어 허덕인다
+		PRINTFORMW 그 추잡한 행동에 손님의 흥분도 더욱 더 흥분해, 시간을 잊어 격렬한 섹스가 계속되었다
+	CASE 5
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 굴곡위의 모습으로 난폭하게 허리를 쳐박을 수 있어 미친듯이 자지러지는 신음소리를 내고 있다
+		PRINTFORML 몸도 마음도 정복 되는 것 같은 격렬한 섹스에 %조사처리(ANAME(ARG:0),"는")% 완전히 예의범절을 가르칠 수 있어 야무지지 못한 아헤얼굴을 쬔다
+		PRINTFORMW 이윽고 그가 한계를 맞이해 힘차게 정액을 발하면, %조사처리(ANAME(ARG:0),"는")% 암컷의 기쁨과 함께 강렬한 절정에 이르렀다
+	CASE 6
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 손님과 혀를 얽히게 되어지면서 깊숙히 페니스를 쑤셔 넣어져 몸을 진동시키고 있다
+		PRINTFORML 끈적한 허리사용으로 미육은 녹진녹진이 되어 있어 그의 페니스를 힘들게 잡아 자식을 재촉 하고 있다
+		PRINTFORMW 행복감에 휩싸여진 %조사처리(ANAME(ARG:0),"는")% 그에게 귀여워해지는 대로 미친듯이 자지러지는 신음소리를 내며, 밤새도록 씨뿌리기 되었다
+	CASE 7
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 그의 팔에 안기면서 야비한 말을 토해 섹스에 몰두하고 있다
+		PRINTFORML 정열적인 허리사용에 암컷의 본능이 자극된 %조사처리(ANAME(ARG:0),"는")%, 일을 잊어 한마리의 암컷에 되어 내려감몸을 구불거리게 할 수 있다
+		PRINTFORMW 질내사정이 예고되면, %조사처리(ANAME(ARG:0),"는")% 전신으로 그에게 매달려 자식을 조르기 하기 시작했다
+	CASE 8
+		PRINTFORML 보일듯 말듯의 의상을 몸에 걸친 %조사처리(ANAME(ARG:0),"가")% 손님 위에서 추잡하게 신체를 흔들고 있다
+		PRINTFORML 허리를 흔들면 씩씩한 육봉에 질육을 후벼파져, %조사처리(ANAME(ARG:0),"는")% 오슬오슬 등줄기를 진동시켜 달콤할 때를 흘린다
+		PRINTFORMW 극상의 봉사에 손님의 흥분도 고조되어, 몇 번이나 그 최안쪽에 욕망을 발해, 그때마다 %조사처리(ANAME(ARG:0),"는")% 절정 했다
+	CASE 9
+		PRINTFORML 베개에 얼굴을 묻으면서 배후로부터 씩씩한 페니스로 끈적 공격해대어지고 있다
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 지나친 쾌락에 트바 없게 베개를 꾹 잡으면서, 전신을 진동시켜 필사적으로 견디고 있다
+		PRINTFORMW 하지만 갑자기 작열의 정액을 발해지면, %조사처리(ANAME(ARG:0),"는")% 참지 못하고 정신을 잃을 정도의 절정에 이르러 버렸다
+	CASE 10
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 대면좌위의 모습으로 안기면서 전신을 끈적 애무되고 있다
+		PRINTFORML 사타구니에는 깊숙히 페니스가 쑤셔 넣어지고 있어 때때로 허리를 작동될 때에 %조사처리(ANAME(ARG:0),"는")% 가볍게 달해 교성을 준다
+		PRINTFORMW 손님은 그 반응을 즐기는 것처럼 시간을 들여 공격해, %조사처리(ANAME(ARG:0),"는")% 몸도 마음도 녹진녹진 예의범절을 가르쳐져 갔다
+	CASE 11
+		PRINTFORML 목욕탕으로부터 물의 뛰는 소리와 단정치 못함%ANAME(ARG:0)%의 교성이 영향을 주어 온다
+		PRINTFORML 끝없이 욕조로 섹스 계속 당해, %조사처리(ANAME(ARG:0),"는")% 머리나 몸도 붇고 잘라 야무지지 못한 표정으로 허덕이고 있다
+		PRINTFORMW 목욕을 마친 후 뒤도 그의 성욕은 안정되지 않고, 다 달아오른 몸을 밤새도록 한껏 범해졌다
+	CASE 12
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 개와 같은 자세로 짐승과 같이 격렬하게 허리를 쳐박혀지고 있다
+		PRINTFORML 자궁이 무너질 정도의 스트로크에, %조사처리(ANAME(ARG:0),"는")% 머리가 튈 것 같은 충격을 받아 히익히익 거리며 야무지지 못하게 허덕인다
+		PRINTFORMW 완전히 단순한 암컷에 되어버린 %조사처리(ANAME(ARG:0),"는")%, 그와 열중해 교미를 계속했다
+	CASE 13
+		PRINTFORML 넋을 잃은 표정의 %조사처리(ANAME(ARG:0),"가")% 손님의 팔에 안기면서 잠자리에서의 대화를 하고 있다
+		PRINTFORML 교묘한 테크닉으로 한껏 귀여워해진 %조사처리(ANAME(ARG:0),"는")%, 마치 연인같이 사랑스러운 듯이 그에게 다가붙고 있다
+		PRINTFORMW 휴식을 끝낸 그에게 다시 요구되면, %조사처리(ANAME(ARG:0),"는")% 기대에 뺨을 물들이면서 몸을 열었다
+	CASE 14
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 그와 얼싸안아 땀투성이가 되면서 키스를 얽히게 되어지고 있다
+		PRINTFORML 페니스에 찔러질 때에 자궁이 기쁨으로 쑤셔, %조사처리(ANAME(ARG:0),"는")% 응석부리는 것처럼 그에게 휘감겨보다 깊은 쾌락을 조른다
+		PRINTFORMW 쾌락에 물들여진 %조사처리(ANAME(ARG:0),"는")% 암컷의 본능대로 계속 교접해, 밖이나 안도 질척질척으로 되어 갔다
+	CASE 15
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 손님에게 덮어씌워져 전체중을 실은 씨뿌리기 프레스를 받고 있다
+		PRINTFORML 강렬한 피스톤에 %조사처리(ANAME(ARG:0),"는")% 괴로운 듯이 신음하면서도 애태우는 것 같은 쾌락에 자궁을 쑤시게 해 몸을 진동시킨다
+		PRINTFORMW 이윽고 힘차게 그의 자식을 태내에 따라지면, %조사처리(ANAME(ARG:0),"는")% 머리를 새하얗게 하면서 절정 했다
+	CASE 16
+		PRINTFORML 손님은 본 것 뿐으로 임신할 것 같은 훌륭한 페니스를 가지고 있어 곧바로 %ANAME(ARG:0)%의 신체를 쾌락에 염색해 냈다
+		PRINTFORML 페니스가 출입할 때에 질육이 튀어나오는 것처럼 격렬하게 후벼파져 %조사처리(ANAME(ARG:0),"는")% 그에게 다 안으면서 미친듯이 자지러지는 신음소리를 낸다
+		PRINTFORMW 이 수컷에게 헤롱헤롱이 된 %조사처리(ANAME(ARG:0),"는")% 그 뒤도 전신으로 봉사를 계속해 한껏 자식을 따라졌다
+	CASE 17
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 손님에게 껴안겨지면서 격렬하게 밀어올릴 수 있어 교성을 올리고 있다
+		PRINTFORML 일발 찌르기마다 %조사처리(ANAME(ARG:0),"는")% 몸을 뛰게 해 견딜 수 없다고 한 소리를 높여 질로 꽉 페니스를 조른다
+		PRINTFORMW 한계를 맞이한 손님이 질내사정을 발하면, %조사처리(ANAME(ARG:0),"는")% 발끝까지 즉각 늘리면서 절정에 이르렀다
+	CASE 18
+		PRINTFORML 대담한 페니스를 깊숙히 암컷구멍에 쑤셔 넣어져 %조사처리(ANAME(ARG:0),"는")% 몹시 놀라고 있다
+		PRINTFORML 귀두로 동글동글 보르치오를 후벼파지면 %ANAME(ARG:0)%의 정수리까지 쾌락이 달려, 참지 못하고 허리를 구불거리게 할 수 있다
+		PRINTFORMW 한인것 같은 페니스에 몸도 마음도 암컷으로 된 %조사처리(ANAME(ARG:0),"는")% 그의 허리에 매달려 미친듯이 자지러지는 신음소리를 냈다
+	CASE 19
+		PRINTFORML 손님의 굵은 손가락에 의한 교묘한 애무로 %조사처리(ANAME(ARG:0),"는")% 조수를 뿜 정도로 전신을 녹게 되어지고 있다
+		PRINTFORML 자궁에 강렬한 욱신거림을 기억한 %조사처리(ANAME(ARG:0),"는")% 스스로 몸을 열어 단정치 못한 말과 함께 섹스냈다
+		PRINTFORMW 남이 천천히 페니스를 삽입하면, %조사처리(ANAME(ARG:0),"는")% 대망의 쾌락을 맛보면서 격렬하게 절정 했다
+	CASE 20
+		PRINTFORML 손님은 %ANAME(ARG:0)%의 가슴에 껴안으면서 열중해 허리를 흔들고 있다
+		PRINTFORML 그 %조사처리(ANAME(ARG:0),"는")% 그의 응석부리는 것 같은 행동에 모성 본능을 자극 받으며, 자궁과 함께 가슴이 쑤시는 것을 느껴 견딜 수 없게 허덕인다
+		PRINTFORMW 퓨웃 퓨웃과 힘차게 정액을 따라지면서 행복감에 휩싸여, %조사처리(ANAME(ARG:0),"는")% 기분 좋은 절정에 이르렀다
+	CASE 21
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 그에게 껴안겨지면서 상냥한 피스톤을 받으면서 허덕이고 있다
+		PRINTFORML 똑똑똑과 자궁을 찔러지고 계속해 머리가 정신나간 %조사처리(ANAME(ARG:0),"는")%, 응석부리는 것 같은 소리를 내 몸을 구불거리게 할 수 있다
+		PRINTFORMW 그리고 남자아이 종이 쏟아지면, %조사처리(ANAME(ARG:0),"는")% 눈을♥로 하면서 교성을 올렸다
+	CASE 22
+		PRINTFORML 질퍽질퍽 추잡한 소리 모두%ANAME(ARG:0)%의 암컷구멍에 대담한 페니스가 출입하고 있다
+		PRINTFORML 절륜의 손님에게 끝없이 공격받은 %조사처리(ANAME(ARG:0),"는")% 쾌락으로 신체를 삐걱삐걱 떨리면서 망가진 것처럼 허덕이고 있다
+		PRINTFORMW 몇 번째인가의 사정을 받아, %조사처리(ANAME(ARG:0),"는")% 자궁에 스며드는 열을 느끼면서 아헤얼굴을 쬐어 절정 했다
+	CASE 23
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 그와 서로의 성기를 서로 빨면서 움찔움찔 떨고 있다
+		PRINTFORML 구에 퍼지는 수컷 수상함과 그의 교묘한 혀놀림으로 %ANAME(ARG:0)%의 머릿속은 쾌락으로 가득 되어, 자궁이 쑤셔 버린다
+		PRINTFORMW 이윽고 인내 할 수 없게 된 %조사처리(ANAME(ARG:0),"는")% 스스로 졸라대 한껏 귀여워해 받았다
+	CASE 24
+		PRINTFORML 메이드 의상으로 갈아입게 되어진 %조사처리(ANAME(ARG:0),"가")% 그에 걸쳐 봉사하고 있다
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 그에게 봉사를 칭찬받아 무심코 자궁을 쑤시게 하면서, 주인님과 열정적이게 숨을 내쉬어 허리를 흔드는
+		PRINTFORMW 점차 봉사하는 것을 본심으로부터의에 기쁨을 느끼면서, %조사처리(ANAME(ARG:0),"는")% 몇 번이나 포상의 자식을 따라졌다
+	CASE 25
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 엉덩이를 밀어올리는 모습으로 퍼억퍼억 격렬하게 찔려 교성을 올리고 있다
+		PRINTFORML 난폭하지만 용감한 피스톤으로 서서히 자궁입구가 열어 가는 것을 느끼면서, %조사처리(ANAME(ARG:0),"는")% 높은 곳에 올라 간다
+		PRINTFORMW 이윽고 귀두를 자궁에 강압되어지면서 사정되면 %조사처리(ANAME(ARG:0),"는")% 몸을 뒤로 젖히게 해 절정 했다
+	CASE 26
+		PRINTFORML 그는 %조사처리(ANAME(ARG:0),"를")% 연인같이 상냥하게 껴안으면서 격렬하게
+		PRINTFORML 사랑의 말을 속삭여지면서 정열적으로 페니스를 쳐박을 수 있어 %조사처리(ANAME(ARG:0),"는")% 가슴의 안쪽이 쑤시는 것을 느껴 몸부림 한다
+		PRINTFORMW %조사처리(ANAME(ARG:0),"는")% 그와의 농후한 섹스에 의해 자궁이 내리는 것 느끼면서, 높은 곳에 올라 갔다
+	CASE 27
+		PRINTFORML 상냥하게 허리를 쳐박혀지면서 전신이 애무되어, %조사처리(ANAME(ARG:0),"는")% 달콤한 한숨을 흘린다
+		PRINTFORML 그와 서로 응시하면서의 농후한 섹스에 %조사처리(ANAME(ARG:0),"는")% 점차 녹아 가 야무지지 못한 표정이 되어 간다
+		PRINTFORMW 두 명은 서로 오로지 허리를 서로 쳐박아, 1조의 차례 실 해 열중해 교미를 계속했다
+	CASE 28
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 페니스로 관철해진 채로 그에게 의지해 숨을 거칠게 하고 있다
+		PRINTFORML 격렬한 섹스를 반복해, 헤롱헤롱으로 된 %조사처리(ANAME(ARG:0),"는")% 황홀이라는 표정으로 응석부리는 것처럼 그에게 다가선다
+		PRINTFORMW 그에게 어루만져지면 자궁이 뜨끔 쑤셔, %조사처리(ANAME(ARG:0),"는")% 다음의 섹스를 졸라 신체를 열었다
+	CASE 29
+		PRINTFORML 페니스를 깊숙히 쑤셔 넣어져 질육을 휘저어져 %조사처리(ANAME(ARG:0),"는")% 난폭한 숨을 내쉬고 있다
+		PRINTFORML 자궁을 동글동글 후벼파지고 있으면, %조사처리(ANAME(ARG:0),"는")% 무심코 신체를 뒤로 젖히게 해 소리가 되지 않는 소리를 높여 절정 한다
+		PRINTFORMW %조사처리(ANAME(ARG:0),"는")% 강렬한 쾌락으로 머리를 새하얗게 하면서 신체를 구불거리게 할 수 있어 본능인 채 자식을 재촉 했다
+ENDSELECT
+CALL FUCK((ARG:0), "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, 펠라티오, 매춘, Ｖ성교", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("창관의 손님"), "창관의 손님의 페니스", "창관의 손님", "", "매춘")
+
+RETURN 1

@@ -1,0 +1,192 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_FAIR_DATE_RATE()
+RETURN 25
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_FAIR_DATE_DECISION()
+SIF !HAS_PENIS(MASTER)
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;특정의 조건을 채우는 캐릭터를 랜덤에 선택하는 경우에 이용
+;다른 함수는 필수이지만, 이것만은 없어도 좋다  라고 할까 퍼포먼스에 영향을 주므로 불필요하면 만들어서는 안 된다
+;대상이 존재하지 않고 데일리를 개시 할 수 없는 경우는 0을 돌려주는 것으로 데일리의 발생을 캔슬한다
+;---------------------
+@EVENT_DAILY_FAIR_DATE_SETTARGET()
+
+FOR LOCAL, 0, CHARANUM
+	;녀 캐릭터, 한편 자국 소속 또한 포로가 아닌, 한편 동물이 아니다
+	IF IS_FEMALE(LOCAL) && CFLAG:LOCAL:소속 == CFLAG:MASTER:소속 && !CFLAG:LOCAL:포로처 && !IS_ANIMAL(LOCAL) && CFLAG:LOCAL:안면 && CFLAG:LOCAL:호감도 > 0
+		DAILY_TARGET:DAILY_TARGET_NUM = LOCAL
+		DAILY_TARGET_NUM ++
+	ENDIF
+NEXT
+
+SIF DAILY_TARGET_NUM < 1
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_FAIR_DATE_GENRE()
+RETURN 데일리_장르_그외
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_FAIR_DATE
+#DIM 대상
+
+대상 = DAILY_TARGET:(RAND:DAILY_TARGET_NUM)
+
+PRINTFORML 유카타 모습의 %조사처리(ANAME(대상),"와")% 만났다
+PRINTFORMW 지금부터 젯날에 나가는 것이라고 한다
+IF CFLAG:대상:호감도 >= 500 
+	PRINTFORMW %ANAME(MASTER)%도 함께 가지 않을까 권해졌다
+ELSE
+	PRINTFORMW 한가한 것으로 그녀를 뒤따라 갈까?
+ENDIF
+PRINTFORML 어떻게 하지?
+CALL ASK_YN("함께 간다", "전송한다")
+IF RESULT == 1
+	PRINTFORMW 피곤하므로 전송하는 일로 했다
+	IF CFLAG:대상:호감도 >= 500
+		PRINTFORMW 그녀는 유감스러운 듯했지만 즐겨 오면 미소지으면서 나갔다
+	ENDIF
+	RETURN
+ELSE
+	PRINTFORMW 함께 가자고 하면 그녀는 싱긋 웃었다
+ENDIF
+PRINTFORML 
+PRINTFORML 젯날은 사람으로 뒤끓고 있었다
+PRINTFORMW 놓치지 않게 들러붙고 있으면 그녀의 부드러운 냄새가 비강을 간질였다
+PRINTFORML 그녀는 일을 잊어, 단순한 소녀같이 까불며 떠들고 있다
+PRINTFORMW 평상시와 다른 그 모습에 색기를 느껴 무심코 넋을 잃고 봐 버린다
+PRINTFORML 멍-하니 하고 있으면 그녀에게 찔려 당황해 제 정신이 되었다
+PRINTFORML 그녀는 %조사처리(ANAME(대상),"를")% 조롱하도록(듯이) 웃어 보인다
+PRINTFORMW 부끄러움을 속이면서 둘이서 젯날을 돌아봤다…
+PRINTFORML 
+SELECTCASE RAND:9
+	;먹으러 돌아다니기
+	CASE 0
+		PRINTFORML 맛있을 것 같은 냄새가 여기저기로부터 감돌아 왔다
+		PRINTFORML 야끼소바, 타코야끼, 솜사탕, 초콜렛 바나나
+		PRINTFORMW 그녀에게 졸라지는 대로 먹으러 돌아다니기면서 포장마차를 둘러쌌다
+		IF MONEY >= 1000
+			MONEY -= 1000
+			CFLAG:대상:호감도 += 100
+			PRINTFORMW 금 1000을 소비했다
+			PRINTFORMW 호감도가 100올랐다
+		ENDIF
+	;과녁
+	CASE 1
+		PRINTFORML 과녁 오두막을 찾아냈다
+		PRINTFORMW 그녀에게 경품의 인형을 졸라져 도전하기로 했다
+		PRINTFORML 
+		IF ABL:MASTER:무투 / 10 + RAND:5 >= RAND:7
+			PRINTFORML 훌륭히 경품을 손에 넣었다!
+			PRINTFORMW 그녀에게 인형을 건네주면 기쁜듯이 웃어 주었다
+			CFLAG:대상:호감도 += 150
+			PRINTFORMW 호감도가 150올랐다
+		ELSE
+			PRINTFORML 성공하지 않았다…
+			PRINTFORMW 그녀는 유감스러운 듯이 하면서도 위로해 주었다
+			CFLAG:대상:호감도 += 50
+			PRINTFORMW 호감도가 50올랐다
+		ENDIF
+	;금붕어 건져내기
+	CASE 2
+		PRINTFORML 금붕어 건져내기에 이끌렸다
+		PRINTFORMW 그녀와 경쟁하는 일이 되었다
+		PRINTFORML 
+		IF ABL:MASTER:지략 / 10 + RAND:5 >= RAND:7
+			PRINTFORML 훌륭히 경쟁에 승리했다!
+			PRINTFORMW 어떻게 금붕어를 기를까 상담하면서 포장마차 순회를 계속했다
+			CFLAG:대상:호감도 += 150
+			PRINTFORMW 호감도가 150올랐다
+		ELSE
+			PRINTFORML 그녀에게는 이루어지지 않았다
+			PRINTFORMW 그녀에게 금붕어의 육아 방법을 상담받으면서 포장마차 순회를 계속했다
+			CFLAG:대상:호감도 += 50
+			PRINTFORMW 호감도가 50올랐다
+		ENDIF
+	;제비뽑기
+	CASE 3
+		PRINTFORML 제비뽑기가게를 찾아냈다
+		PRINTFORMW 운수 시험에 해 보려고 권해졌다
+		PRINTFORML 
+		IF RAND:3 == 0
+			PRINTFORML 훌륭히 당을 당겼다!
+			PRINTFORMW 경품을 그녀에게 올리면 기쁜듯이 미소지었다
+			CFLAG:대상:호감도 += 150
+			PRINTFORMW 호감도가 150올랐다
+		ELSE
+			PRINTFORML 유감, 빗나감이었다
+			PRINTFORMW 적중을 당겨 만열인 그녀와 다시 포장마차 둘러싸러 돌아왔다
+			CFLAG:대상:호감도 += 50
+			PRINTFORMW 호감도가 50올랐다
+		ENDIF
+	;먹으러 돌아다니기 2
+	CASE 4
+		PRINTFORML 맛있을 것 같은 냄새가 여기저기로부터 감돌아 왔다
+		PRINTFORML 아메리칸 독, 빙수, 감자 버터
+		PRINTFORMW 둘이서 취향의 음식을 사서는 서로 먹어 넘으면서 포장마차를 둘러쌌다
+		IF MONEY >= 1000
+			MONEY -= 1000
+			CFLAG:대상:호감도 += 100
+			PRINTFORMW 금 1000을 소비했다
+			PRINTFORMW 호감도가 100올랐다
+		ENDIF
+	;가면가게
+	CASE 5
+		PRINTFORML 가면가게를 찾아냈다
+		PRINTFORMW 그리운 물건이나 본 일이 없는 가면까지 여러가지 가면이 팔고 있다
+		PRINTFORML 그녀와 가면의 비교 사랑을 해 마음에 든 것을 구입했다
+		PRINTFORMW 분위기가 나와요와 웃는 그녀와 함께 다시 포장마차 둘러싸러 돌아왔다
+		CFLAG:대상:호감도 += 80
+		PRINTFORMW 호감도가 80올랐다
+	;잠시 쉼
+	CASE 6
+		PRINTFORML 포장마차 순회에 지친 %ANAME(대상)%들은 조금 쉬기로 했다
+		PRINTFORMW 꼭 자주(잘) 벤치를 찾아냈으므로 둘이서 걸터앉고 이야기를 한다
+		PRINTFORML 그녀는 오랜만의 젯날에 까불며 떠들고 있을 뿐이다
+		PRINTFORMW 한동안 쉰 후 다시 그녀에게 끌려가 포장마차 둘러싸러 돌아왔다
+		CFLAG:대상:호감도 += 80
+		PRINTFORMW 호감도가 80올랐다
+	;혼잡안
+	CASE 7
+		PRINTFORML 젯날은 사람으로 뒤끓고 있었다
+		PRINTFORMW 조금 한 눈을 팔면 그녀와 따로 따로 떨어짐이 될 것 같다
+		PRINTFORML 그녀가 살그머니 당신의 손을 잡아 왔다
+		PRINTFORML 당신은 아무것도 말하지 않고 제대로 그녀의 손을 잡아 돌려주었다
+		PRINTFORMW 손과 연결하면서 둘이서 포장마차를 둘러쌌다
+		CFLAG:대상:호감도 += 80
+		PRINTFORMW 호감도가 80올랐다
+	;요요 낚시
+	CASE 8
+		PRINTFORML 요요 낚시를 하고 있는 아이를 보기 시작했다
+		PRINTFORML 그것을 본 그녀에게 해 보고 싶으면 졸라졌다
+		PRINTFORMW 다수의 요요중에서 그녀 취향의 요요를 노렸다
+		PRINTFORML 
+		IF ABL:MASTER:방위 / 10 + RAND:5 >= RAND:7
+			PRINTFORML 훌륭히 낚아 올렸다!
+			PRINTFORMW 그녀에게 건네주면 기쁜듯이 웃어 아이같이 까불며 떠들기 시작했다
+			CFLAG:대상:호감도 += 150
+			PRINTFORMW 호감도가 150올랐다
+		ELSE
+			PRINTFORML 하지만 능숙하게 할 수 없었다
+			PRINTFORMW 유감스러운 듯이 하는 그녀와 함께 포장마차 둘러싸러 돌아왔다
+			CFLAG:대상:호감도 += 50
+			PRINTFORMW 호감도가 50올랐다
+		ENDIF
+ENDSELECT
+
+RETURN 1

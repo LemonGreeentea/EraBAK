@@ -1,0 +1,72 @@
+﻿
+;--------------------------------------
+;봉기 이벤트가 발생할까의 판정
+;--------------------------------------
+@CULTIST_RISE_RATE()
+;이미 출현하고 있는지, 광신도 없음 설정이라면 발동하지 않는다
+SIF SP_COUNTRY_APPEARED:특수세력_광신도 || !SP_COUNTRY_RANK:(특수세력_광신도)
+	RETURN 0
+
+;가득하면 안 돼
+SIF GET_NEW_COUNTRY() == -1
+	RETURN 0
+
+SIF !CHECK_SP_COUNTRY_RISE()
+	RETURN 0
+RETURN 1
+
+
+;--------------------------------------
+;외래 세력 출현 이벤트
+;출현할 수 있으면 1, 할 수 없으면 0을 돌려준다
+;--------------------------------------
+@CULTIST_RISE(도시 = 0)
+#DIM 광신도
+#DIM 도시
+
+;외래 세력을 작성
+CALL CULTIST_INIT()
+광신도 = RESULT
+;만들 수 없으면 되돌린다
+SIF 광신도 == -1
+	RETURN 0
+
+CALL SP_COUNTRY_RISE(광신도, 도시)
+
+SIF !RESULT
+	RETURN 0
+
+SP_COUNTRY_APPEARED:특수세력_광신도 = 1
+RETURN 광신도
+
+;--------------------------------------
+;봉기 이벤트용 도시 선택 처리
+;--------------------------------------
+@CULTIST_RISE_SELECT_CITY()
+#DIM 신사
+#DIM 소유자
+
+신사 = GET_CITYNUMBER("모리야 신사")
+IF 신사 >= 0 && (!IS_COUNTRY(CITY_OWNER:신사) || GET_OWN_CITY(CITY_OWNER:신사) >= 3)
+	LOCAL = 신사
+;그렇지 않으면 랜덤
+ELSE
+	CALL SP_COUNTRY_RISE_SELECT_CITY()
+	LOCAL = RESULT
+ENDIF
+
+RETURN LOCAL
+
+
+;---------------------
+;봉기 이벤트용 메세지 함수
+;---------------------
+@CULTIST_RISE_MSG(세력, 대상)
+#DIM 세력
+#DIM 대상
+CALL SINGLE_DRAWLINE
+SETCOLOR 칼라_경고
+PRINTFORMW 불안정한 정세로부터 카루토 집단이 태어나 광신도가 무기를 취해 일어섰습니다!
+PRINTFORMW 포교와 세트의 군사 작전에 의해, %CITY_NAME:(대상)%\@ GET_OWN_CITY(세력) > 1 ? 등 # \@가 빼앗겼습니다
+PRINTFORMW 이것에 수반해, 환상향의 각 세력이 이변 해결의 준비를 시작한 것 같습니다…
+RESETCOLOR

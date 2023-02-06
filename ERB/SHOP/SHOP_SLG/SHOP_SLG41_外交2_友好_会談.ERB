@@ -1,0 +1,86 @@
+﻿;-------------------------------------------------
+;회담한다
+;-------------------------------------------------
+@DIPLOMACY_TALK(ARG:0)
+#DIM 군주
+#DIM FIRST_LINE, 2
+#DIM CONST 지불액 = 1, 5, 50, 100, 500, 1000, 2500, 5000, 10000, 15000, 20000, 30000, 40000, 50000
+FIRST_LINE:0 = LINECOUNT
+군주 = GET_COUNTRY_BOSS(ARG:0)
+
+PRINTFORML %조사처리(ANAME(군주),"와")% 회담하기로 했다……
+PRINTFORML 옛부터 접대라고 하면, 돈인가 「즐거움」이 상도다
+PRINTFORML %조사처리(ANAME(군주),"를")% 만족시키려면, 어느 쪽인지를 준비해야 할 것이다……
+CALL SINGLE_DRAWLINE
+CALL ASK_MULTI_JUDGE(@"국고로부터 자금원조 현재:{MONEY:(CFLAG:MASTER:소속)}", 1, "「즐거움」를 준비(상대에게 성지식 3이 필요)", ABL:군주:성지식 >= 3, "돌아온다", 1)
+SIF RESULT == 2
+	RETURN 0
+IF RESULT == 1
+	CALL DIPLOMACY_TALK_SEX(군주)
+	IF RESULT == -1
+		CLEARLINE LINECOUNT - FIRST_LINE:0
+		RESTART
+	ELSE
+		PRINTL 
+	ENDIF
+	;호감도 상승·적대치 하강 기준치
+	LOCAL:2 = RESULT
+	LOCAL = SQRT(TMP_GET_POLITICS_POWER(CFLAG:MASTER:소속)) / 10
+	LOCAL:1 = SQRT(TMP_GET_COOKING_POWER(CFLAG:MASTER:소속)) / 10
+
+	LOCAL:2 = MAX(LOCAL:2 * (LOCAL + LOCAL:1 + 100) / 100, 5)
+
+	;서로의 나라끼리의 호감도를 상승시키고 적대치를 저하시킨다
+	CALL DIPLOMACY_IMPROVE_RELATION(ARG:0, LOCAL:2)
+ELSEIF RESULT == 0
+	FIRST_LINE:1 = LINECOUNT
+	$SEND_MONEY_LOOP
+	PRINTFORML 아무리 보낼까……(손입력·버튼으로부터 입력, 0 이하로 캔슬, 최대 50000)
+	CALL ICPRINT(@"현재의 국고:<{MONEY:(CFLAG:MASTER:소속)}>", "L", 칼라_주의)
+	FOR LOCAL, 0, VARSIZE("지불액")
+		SIF MONEY:(CFLAG:MASTER:소속) < 지불액:LOCAL
+			BREAK
+		PRINTBUTTON @"[{지불액:LOCAL}지불한다]", 지불액:LOCAL
+		PRINTL
+	NEXT
+	PRINTFORML
+	PRINTBUTTON @"[{MONEY:(CFLAG:MASTER:소속)}지불한다]", MONEY:(CFLAG:MASTER:소속)
+	PRINTFORM [0] 돌아온다
+	INPUT
+	IF RESULT <= 0
+		CLEARLINE LINECOUNT - FIRST_LINE:0
+		RESTART
+	ELSEIF MONEY:(CFLAG:MASTER:소속) < RESULT || RESULT > 50000
+		CLEARLINE LINECOUNT - FIRST_LINE:1
+		GOTO SEND_MONEY_LOOP
+	ENDIF
+	CALL SEND_MONEY(ARG:0, RESULT)
+	WAIT
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+;송금 처리용 함수
+;-------------------------------------------------
+@CALC_SEND_MONEY_EFFECT(ARG:0)
+#FUNCTION
+RETURNF LIMIT(SQRT(ARG:0 * 2) * RAND(900, 1100) / 1000, 0, 300)
+
+;-------------------------------------------------
+;송금 처리
+;-------------------------------------------------
+@SEND_MONEY(ARG:0, ARG:1)
+CALL ICPRINT(@"%조사처리(ANAME(MASTER),"는")% %ANAME(GET_COUNTRY_BOSS(ARG:0))%에 국고로부터 돈<{ARG:1}>를 보냈다……", "L", 칼라_주의)
+MONEY:(CFLAG:MASTER:소속) -= ARG:1
+LOCAL = CALC_SEND_MONEY_EFFECT(ARG:1)
+;호감도 상승·적대치 하강 기준치
+LOCAL:1 = SQRT(TMP_GET_COOKING_POWER(CFLAG:MASTER:소속)) / 10
+LOCAL:2 = SQRT(TMP_GET_POLITICS_POWER(CFLAG:MASTER:소속)) / 10
+
+
+LOCAL:3 = MAX(LOCAL * (LOCAL:1 + LOCAL:2 + 100) / 100, 5)
+
+;서로의 나라끼리의 호감도를 상승시키고 적대치를 저하시킨다
+CALL DIPLOMACY_IMPROVE_RELATION(ARG:0, LOCAL:3)
+

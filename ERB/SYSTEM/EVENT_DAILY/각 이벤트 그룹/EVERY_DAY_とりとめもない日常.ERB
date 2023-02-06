@@ -1,0 +1,729 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_EVERY_DAY_RATE()
+RETURN 25
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_EVERY_DAY_DECISION()
+SIF DAY < 5
+	RETURN 0
+;MASTER에 페니스가 있다
+SIF !HAS_PENIS(MASTER)
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;특정의 조건을 채우는 캐릭터를 랜덤에 선택하는 경우에 이용
+;다른 함수는 필수이지만, 이것만은 없어도 좋다  라고 할까 퍼포먼스에 영향을 주므로 불필요하면 만들어서는 안 된다
+;대상이 존재하지 않고 데일리를 개시 할 수 없는 경우는 0을 돌려주는 것으로 데일리의 발생을 캔슬한다
+;---------------------
+@EVENT_DAILY_EVERY_DAY_SETTARGET()
+
+FOR LOCAL, 0, CHARANUM
+	;녀 캐릭터, 한편 자국 소속 또한 포로가 아닌, 한편 동물이 아니다
+	IF IS_FEMALE(LOCAL) && CFLAG:LOCAL:소속 == CFLAG:MASTER:소속 && !CFLAG:LOCAL:포로처 && !IS_ANIMAL(LOCAL) && CFLAG:LOCAL:안면
+		DAILY_TARGET:DAILY_TARGET_NUM = LOCAL
+		DAILY_TARGET_NUM ++
+	ENDIF
+NEXT
+
+SIF DAILY_TARGET_NUM < 11
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_EVERY_DAY_GENRE()
+RETURN 데일리_장르_그외
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_EVERY_DAY
+#DIM 대상
+
+대상 = DAILY_TARGET:(RAND:DAILY_TARGET_NUM)
+
+SIF CFLAG:대상:안면 == 0
+	CFLAG:대상:안면 = 1
+
+IF CFLAG:대상:호감도 < 0 
+	PRINTFORML %조사처리(ANAME(대상),"가")% 보였지만 피해져 버렸다
+	PRINTFORMW 지금까지의 %ANAME(MASTER)%의 행동으로, 그녀에게 악인상을 갖게하고 있는 것 같다…
+	RETURN
+ENDIF
+
+SELECTCASE RAND:20
+	;머리 모양
+	CASE 0
+		PRINTFORMW 궁전을 걷고 있으면 %조사처리(ANAME(대상),"가")% 보였다
+		PRINTFORML 하지만 뭔가 평상시와 인상이 다르다…
+		PRINTFORMW 그렇다, 평상시와 머리 모양이 변한다
+		PRINTFORML %ANAME(MASTER)%의 시선을 눈치챘는지, 그녀도 이쪽을 뒤돌아 보면 접근해 왔다
+		PRINTFORMW 두 마디 세 마디 인사를 주고 받은 후, 『기분 전환에 머리 모양을 바꾸어 본 것이지만 부디』이라고 물을 수 있었다
+		PRINTFORML 어떻게 하지?
+		CALL ASK_MULTI("어울리고 있다고 칭찬한다" ,"평소의 머리 모양 쪽이 좋다고 한다" ,"머리를쓰다듬는다")
+		IF RESULT == 0
+			PRINTFORML 어울리고 있다고 칭찬하면 그녀는 싱긋 웃었다
+			PRINTFORMW 그리고 몇개인가 정신이 없는 회화를 주고 받아, 그녀는 일하러 돌아와 갔다
+			PRINTFORML 
+			PRINTFORMW 그 후, 때때로 그 때의 머리 모양으로 바꾸고 있는 그녀를 보기 시작하게 되었다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 50
+			ELSE
+				CFLAG:대상:종속도 += 50
+			ENDIF
+		ELSEIF RESULT == 1
+			PRINTFORML 평소의 머리 모양 쪽이 어울리고 있다고 고했다
+			PRINTFORMW 그녀는 머리를 어루만지면서 『그런가』라고 작게 중얼거렸다
+			PRINTFORMW 그리고 몇개인가 정신이 없는 회화를 주고 받아, 그녀는 일하러 돌아와 갔다
+		ELSE
+			PRINTFORML 어울리고 있다고 칭찬하면서 그녀의 머리에 손을 뻗었다
+			LOCAL = RAND:300
+			IF CFLAG:대상:호감도 + LOCAL >= 1000 || CFLAG:대상:종속도 + LOCAL >= 1000
+				PRINTFORML 두를 어루만져 주면 그녀는 작게 뺨을 과
+				PRINTFORMW 그리고 몇개인가 정신이 없는 회화를 주고 받아, 그녀는 일하러 돌아와 갔다
+				PRINTFORML 
+				PRINTFORMW 그 후, 때때로 그 때의 머리 모양으로 바꾸고 있는 그녀를 보기 시작하게 되었다
+				IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+					CFLAG:대상:호감도 += 80
+				ELSE
+					CFLAG:대상:종속도 += 80
+				ENDIF
+			ELSE
+				PRINTFORML 하지만 넌지시 손을 뿌리쳐져 버렸다
+				PRINTFORMW 역시 조금 너무 허물없었을 것인가
+				PRINTFORMW 그리고 몇개인가 정신이 없는 회화를 주고 받아, 그녀는 일하러 돌아와 갔다
+			ENDIF
+		ENDIF
+	;꾸벅꾸벅
+	CASE 1
+		PRINTFORML 업무중, %조사처리(ANAME(대상),"가")% 꾸벅꾸벅 하고 있는 것이 보였다
+		PRINTFORML 어떻게 하지?
+		CALL ASK_MULTI("놀래킨다" ,"재워 준다" ,"커피를 끓인다")
+		IF RESULT == 0
+			PRINTFORMW 못된 장난을 생각해 낸 %조사처리(ANAME(MASTER),"는")% 조용하게 그녀의 배후로 돌았다
+			PRINTFORML 
+			PRINTFORML …왓!
+			PRINTFORMW 
+			PRINTFORML 배후로부터 큰 소리로 놀래키면 그녀는 엉뚱한 절규를 질러 뛰어 올랐다
+			PRINTFORML 그리고 웃고 있는 %조사처리(ANAME(MASTER),"를")% 보면 그녀는 뺨을 부풀려 분노하기 시작했다
+			PRINTFORMW 미안 미안이라고 사과하면 뾰로통한 얼굴 하고 있던 그녀도 끌려 웃기 시작했다
+			PRINTFORMW 완전히 졸음도 깬 것 같아 그 뒤는 둘이서 일에 힘썼다
+		ELSEIF RESULT == 1
+			PRINTFORML 그대로 보고 있으면 곧바로 그녀는 책상에 푹 엎드려 숨소리를 내기 시작했다
+			PRINTFORML 일으킬까하고도 생각했지만, 지금은 바쁜 것도 아니기 때문에 재워 주는 일로 했다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 비근하게 있던 모포를 덮고 하면 일하러 돌아왔다
+			PRINTFORML 
+			PRINTFORML 약 1시간 후, 그녀는 눈을 떴다
+			PRINTFORML 안녕과 말와 멍청히 한 후, 업무중이었던 일을 생각해 냈는지 뺨을 붉히고
+			PRINTFORMW 그녀는 모포를 눈치채면 쑥스러운 듯이 작은 소리로 답례를 고했다
+			PRINTFORMW 완전히 졸음도 깬 것 같아 그 뒤는 둘이서 일에 힘썼다
+		ELSE
+			PRINTFORML 꼭 좋은 시간인 것으로 휴식하는 김에 커피를 끓여 주었다
+			PRINTFORMW 둘이서 커피를 마시면서 정신이 없는 회화를 즐겼다
+			PRINTFORML 
+			PRINTFORMW 완전히 졸음도 깬 것 같아 그 뒤는 둘이서 일에 힘썼다
+		ENDIF
+		IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+			CFLAG:대상:호감도 += 50
+		ELSE
+			CFLAG:대상:종속도 += 50
+		ENDIF
+	;티켓
+	CASE 2
+		PRINTFORML 서커스의 티켓이 맞았다
+		PRINTFORMW 두 명분 있지만 어떻게 하지 생각하고 있으면 %조사처리(ANAME(대상),"가")% 보였다
+		PRINTFORML 어떻게 하지?
+		CALL ASK_MULTI("그녀를 부른다" ,"혼자서 즐긴다" ,"전매한다")
+		IF RESULT == 2
+			PRINTFORML 서커스 같은거 흥미는 없다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 티켓을 전매했다
+			PRINTFORMW 티켓은 금 1000으로 팔렸다
+			MONEY += 1000
+		ELSEIF RESULT == 1
+			PRINTFORML 하지만 혼자서 즐기기로 했다
+			PRINTFORMW 서커스는 매우 재미있고, 두 번 보러 갔지만 질리지 않았다
+		ELSE
+			PRINTFORML 모처럼인 것으로 그녀를 불렀다
+			PRINTFORMW %ANAME(MASTER)%의 권유에 %조사처리(ANAME(대상),"는")% 기꺼이 응해 주었다
+			PRINTFORML 
+			PRINTFORML 서커스는 매우 재미있고, 둘이서 많이 즐겼다
+			PRINTFORMW 돌아가는 길, 그녀는 불러 주어 고마워요 만면의 미소를 보여 주었다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 50
+			ELSE
+				CFLAG:대상:종속도 += 50
+			ENDIF
+		ENDIF
+	;마작
+	CASE 3
+		PRINTFORML 휴일, 자기 방에서 느긋하게 쉬고 있으면 %ANAME(대상)%에 마작에 이끌렸다
+		PRINTFORMW 한가한 것으로 교제하는 일로 했다
+		CALL ASK_MULTI("너등이 그을려 있어" ,"죽으면 살아나는데…" ,"이거야 전문가기술의 진면목【제비처럼 재빨리 몸을 반전시킴】")
+		PRINTFORML ·
+		PRINTFORML ·
+		PRINTFORMW ·
+		IF RAND:2 == 0
+			PRINTFORML 용서하지 않고 감아올렸다
+			PRINTFORMW 그녀는 눈물고인 눈이 되면서, 지갑으로부터 용돈을 내몄다
+			PRINTFORMW 불쌍했기 때문에 밥을 한턱 내 주었다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 50
+			ELSE
+				CFLAG:대상:종속도 += 50
+			ENDIF
+			MONEY += 2000
+		ELSE
+			PRINTFORML 가차 없이 감아올려졌다
+			PRINTFORMW 용서해라고 해도 용서되지 않고, 지갑이 텅 비게 될 때까지 맞대졌다
+			PRINTFORMW 그녀는 매우 기분이 좋아 밥을 한턱 내 주었다…
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 50
+			ELSE
+				CFLAG:대상:종속도 += 50
+			ENDIF
+			LOCAL = 10000
+			SIF MONEY < LOCAL
+				LOCAL = MONEY
+			MONEY -= LOCAL
+		ENDIF
+	;회식
+	CASE 4
+		PRINTFORML 밤 늦게 돌아가면 연회가 열리고 있었다
+		PRINTFORML 참가하려고 하면 %조사처리(ANAME(대상),"와")% 시선이 마주쳐, 손짓함 되었다
+		PRINTFORMW 그녀는 이미 취기의 같고 매우 기분이 좋게 술을 권해 왔다
+		PRINTFORML 어떻게 하지?
+		CALL ASK_MULTI("팡팡 마신다" ,"자연스럽게 신체에 닿는다" ,"객기를 부리지 않게 감시한다")
+		IF RESULT == 0
+			PRINTFORMW 그녀와 함께 팡팡 마셨다
+			PRINTFORML 
+			IF ABL:MASTER:주량 + RAND:3 >= 5
+				PRINTFORML %ANAME(MASTER)%의 먹는 모습에 그녀는 많이 분위기를 살렸다
+				PRINTFORMW 그 후, 둘이서 연회를 빠져 나가, 구더기 마시는 것으로 한껏 즐겼다
+				IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+					CFLAG:대상:호감도 += 80
+				ELSE
+					CFLAG:대상:종속도 += 80
+				ENDIF
+			ELSE
+				PRINTFORML 우쭐해져서 과음하자 마자에 취해 부서져 버렸다
+				PRINTFORMW 그녀는 %조사처리(ANAME(MASTER),"를")% 두어 다른 무리와 계속 마셨다
+				PRINTFORML 
+				PRINTFORMW 다음날은 심한 숙취에 골치를 썩여 버렸다
+			ENDIF
+		ELSEIF RESULT == 2
+			PRINTFORML 그녀가 너무 객기를 부리지 않게 주의하기로 했다
+			PRINTFORMW 술취한 그녀의 푸념에 교제해, 적당히 즐겼다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 50
+			ELSE
+				CFLAG:대상:종속도 += 50
+			ENDIF
+		ELSE
+			PRINTFORML 자연스럽게 그녀의 신체에 손을 뻗었다
+			PRINTFORMW 그녀는 쾅 하고 %ANAME(MASTER)%의 손뼉을 쳐, 요염한 소리로 안 돼요라고 고해 왔다
+			PRINTFORML 아무래도 상상 이상에 취해 있는 것 같다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 이 즐거운 분위기를 부수지 않게 더 이상은 단념해 보통으로 마시기로 했다
+		ENDIF
+	;직매
+	CASE 5
+		PRINTFORML 나가려고 하고 있는 %조사처리(ANAME(대상),"와")% 만났다
+		PRINTFORMW 아무래도 직매하러 가는 곳 같다
+		LOCAL = RAND:500
+		IF (CFLAG:대상:호감도 + LOCAL >= 1000) && (CFLAG:대상:호감도 > CFLAG:대상:종속도)
+			PRINTFORML 그녀는 이쪽을 알아차려, 손을 흔들어 왔다
+			PRINTFORML 아무래도 쇼핑에 교제하면 좋은 것 같다
+			PRINTFORMW 꼭 한가한 %조사처리(ANAME(MASTER),"는")% 물론 교제해 주는 일로 했다
+			PRINTFORMW 둘이서 직매하는 김에 데이트를 즐겼다
+			CFLAG:대상:호감도 += 100
+		ELSEIF CFLAG:대상:종속도 + LOCAL >= 1000
+			PRINTFORML 그녀는 이쪽을 눈치채면, 종종걸음으로 와 손을 잡아 왔다
+			PRINTFORML 아무래도 쇼핑에 교제하면 좋은 것 같다
+			PRINTFORMW 눈을 치켜 뜨고 조심스럽게 미소짓는 그녀에게 승낙하면, 파앗 웃는 얼굴을 보였다
+			PRINTFORMW 보통 데이트의 같아 그녀는 다소 흠칫흠칫 하면서도 기쁜 듯했다
+			CFLAG:대상:종속도 += 100
+		ELSE
+			PRINTFORML 그녀는 %조사처리(ANAME(MASTER),"를")% 눈치채면 가볍게 고개를 숙여 나갔다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀를 전송하면 방으로 돌아갔다
+		ENDIF
+	;찾는 물건
+	CASE 6
+		PRINTFORML 잃어 것을 해 버렸다
+		PRINTFORMW 어디에 두었는지 고개를 갸우뚱하면서 궁전안을 걸어 다니고 있으면 %조사처리(ANAME(대상),"를")% 만났다
+		LOCAL = RAND:400
+		IF (CFLAG:대상:호감도 + LOCAL >= 800) || (CFLAG:대상:종속도 + LOCAL >= 800)
+			PRINTFORML 그녀에게 잃어 것에 대해 물으면, %조사처리(ANAME(MASTER),"가")% 어디선가 사용하고 있던 것을 기억하고 있어 주었다
+			PRINTFORMW 그랬다고 떠올린 %조사처리(ANAME(MASTER),"가")% 예의를 표한다와 그녀는 꾸벅 고개를 숙여 걸어 갔다
+			PRINTFORML 평상시부터 자신을 봐 주고 있는 것이라고 조금 기뻐졌다
+			PRINTFORMW 찾는 물건은 무사히 발견되어, 이번 그녀에게 뭔가 사치할까하고 생각했다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 80
+			ELSE
+				CFLAG:대상:종속도 += 80
+			ENDIF
+		ELSE
+			PRINTFORML 그녀에게 잃어 것에 대해 물었지만, 몰랐다
+			PRINTFORMW 꼭 한가했던 것 같게 그녀도 수색에 도와 주었지만 발견되지 않았다
+			PRINTFORML 하지만 수색을 도와 준 답례에 간식을 한턱 내기로 했다
+			PRINTFORMW 그녀는 최초 사양하고 있었지만, 마지막에는 기분 좋게 답례를 받아 주는 일이 되었다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 50
+			ELSE
+				CFLAG:대상:종속도 += 50
+			ENDIF
+		ENDIf
+	;빗속
+	CASE 7
+		PRINTFORML 비로 나갈 수 있지 못하고, 궁전안에서 빈둥빈둥 하고 있었다
+		PRINTFORMW 있는 방에서 %조사처리(ANAME(대상),"가")% 한사람, 비의 쳐박는 창으로부터 밖을 바라보고 있는 것이 보였다
+		PRINTFORML 어떻게 하지?
+		CALL ASK_MULTI("함께 바라본다" ,"놀이로 이끈다" ,"살그머니 해 둔다")
+		IF RESULT == 2
+			PRINTFORML 뭔가 걱정거리라도 하고 있을까, 살그머니 해 두어 주는 일로 했다
+			PRINTFORMW 하지만 떠나려고한 %ANAME(MASTER)%에 그녀가 깨달아, 말을 걸어 왔다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 다소의 거북함을 기억하면서도 그녀에게 무엇을 하고 있는지 묻는다
+			PRINTFORMW 그녀는 조금 부끄러운 듯이 비의 뜰을 바라보고 있으면 풀어지는 것이다라고 대답했다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀와 둘이서 잠깐, 온화한 비의 오후의 담소를 즐겼다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 50
+			ELSE
+				CFLAG:대상:종속도 += 50
+			ENDIF
+		ELSEIF RESULT == 1
+			PRINTFORML 짬을 하고 있다면과 놀이로 이끌었다
+			PRINTFORML 하지만 그녀는 오늘은 빈둥거리고 싶은 기분이라고 거절당했다
+			PRINTFORMW 무리하게 권하는 일도 없을 것이다, %조사처리(ANAME(MASTER),"는")% 물러나, 다른 상대를 찾기에 향했다
+		ELSE
+			PRINTFORML 무엇을 보고 있을까?
+			PRINTFORMW 신경이 쓰인 %조사처리(ANAME(MASTER),"는")% 그녀의 곁에 살그머니 접근해 함께 밖을 바라보았다
+			PRINTFORML 한동안 하면 그녀는 이쪽을 알아차려, 당황한 같은 행동을 보였다
+			PRINTFORMW 그녀에게 무엇을 보고 있는지 물으면, 부끄러운 듯이 다만 멍-하니 하고 있었다고 대답한다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀와 둘이서 잠깐, 창 밖의 평상시와 조금 다른 풍경을 즐겼다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 50
+			ELSE
+				CFLAG:대상:종속도 += 50
+			ENDIF
+		ENDIF
+	;점심 밥
+	CASE 8
+		PRINTFORML 부엌의 근처를 걷고 있으면 좋은 냄새가 났다
+		PRINTFORMW 부엌을 들여다 보면 %조사처리(ANAME(대상),"가")% 요리를 하고 있었다
+		LOCAL = RAND:300
+		IF (CFLAG:대상:호감도 + LOCAL >= 600) || (CFLAG:대상:종속도 + LOCAL >= 600)
+			PRINTFORML 맛있을 것 같은 냄새에 모이지 않고 회충이 울어 버린다
+			PRINTFORMW 하면 그 소리를 알아차려 그녀가 이쪽에 뒤돌아 보았다
+			PRINTFORML %조사처리(ANAME(MASTER),"가")% 속이기 위해서(때문에) 웃으면, 그녀도 미소를 띄우고 함께 먹지 않을까 권해졌다
+			PRINTFORMW 물론 거절할 이유는 없고 동행을 맡기로 했다
+			PRINTFORMW 요리는 매우 맛있었다!
+			IF ABL:대상:요리 >= ABL:MASTER:요리
+				PRINTFORMW %조사처리(ANAME(MASTER),"가")% 요리의 요령을 물으면, 그녀는 기쁜듯이 가르쳐 주었다
+				IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+					CFLAG:대상:호감도 += 80
+				ELSE
+					CFLAG:대상:종속도 += 80
+				ENDIF
+				CALL PRINT_ADD_EXP(대상, "요리경험치", RAND:5 + RAND:5 + 6, 1)
+			ELSE
+				PRINTFORMW %ANAME(MASTER)%의 먹는 모습에 그녀도 기뻐해 준 것 같다
+				IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+					CFLAG:대상:호감도 += 50
+				ELSE
+					CFLAG:대상:종속도 += 50
+				ENDIF
+			ENDIF
+		ELSE
+			PRINTFORML 그녀는 %조사처리(ANAME(MASTER),"를")% 눈치채면, 맛보기를 부탁해 왔다
+			PRINTFORMW 매우 맛있다고 전하면 그녀는 웃는 얼굴을 띄워, 상을 차리는 일을 부탁받았다
+			PRINTFORMW 그녀의 손수 만든 요리는 매우 맛있었다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 30
+			ELSE
+				CFLAG:대상:종속도 += 30
+			ENDIF
+		ENDIF
+	;일기
+	CASE 9
+		PRINTFORMW %ANAME(대상)%의 일기를 주웠다
+		PRINTFORML 매우 신경이 쓰인다
+		PRINTFORML 아니아니, 하지만 사람의 일기를 들여다 봐서는 안 된다
+		PRINTFORML 에서도 잠시라면…
+		PRINTFORMW 아니아니, 발각되면 미움받아 버린다…
+		PRINTFORML 어떻게 하지?
+		CALL ASK_YN("읽는다", "돌려준다")
+		IF RESULT == 1
+			PRINTFORML 유혹에 지지 않고 본인에게 반환했다
+			PRINTFORML 그녀는 %ANAME(MASTER)%에 몹시 감사해 주었다
+			PRINTFORMW 내용을 보지 않은가 다짐해졌지만, %조사처리(ANAME(MASTER),"를")% 믿어 준 것 같다
+			CFLAG:대상:호감도 += 50
+		ELSE
+			PRINTFORMW 유혹에 져 읽어 버렸다
+			PRINTFORML 
+			PRINTFORML …호우호우
+			PRINTFORMW 
+			PRINTFORML 몹시 흥미로운 내용이었다
+			PRINTFORMW 다 읽은 후, 일기는 그녀의 책상 위에 놓아두었다
+			PRINTFORMW 그 후 한동안 그녀는 왜일까 삐걱삐걱 하고 있었다
+			CFLAG:대상:종속도 += 50
+		ENDIF
+	;경단
+	CASE 10
+		PRINTFORML 온 마을을 탐색중, 휴식에 들른 찻집에서 %조사처리(ANAME(대상),"와")% 털썩 만났다
+		PRINTFORML 그녀는 %조사처리(ANAME(MASTER),"를")% 보면 조금 당황한 것 같은 모습을 보였다
+		PRINTFORMW 고개를 갸웃하면서 그녀의 근처를 들여다 보면, 몇 개의 빈 접시와 경단의 꼬치가 겹치고 있었다
+		PRINTFORML 어떻게 하지?
+		CALL ASK_MULTI("함께 먹는다" ,"보지 않았던 것에" ,"조롱한다")
+		IF RESULT == 0
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 쓴웃음 지으면서, 그녀와 같은 양의 경단을 주문했다
+			PRINTFORML 과연, 그녀가 열중하는 만큼 매우 맛있었다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀와 경단을 맛보면서 잠깐 담소했다
+			PRINTFORML 
+			PRINTFORMW 결국 둘이서 과식한 일을 서로 웃으면서 선물로 몇개인가 싸 받았다
+		ELSEIF RESULT == 1
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 아무것도 보지 않았던 것으로 해 떠나려고 했다
+			PRINTFORML 하지만 꽉 옷의 옷자락을 그녀가 잡혀져 버렸다
+			PRINTFORMW 그리고 경단을 무리하게 입의 안에 밀어넣어졌다
+			PRINTFORML …과연, 그녀가 열중하는 만큼 매우 맛있었다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 체념해 그녀와 동량 이상의 경단을 먹게 되어졌다
+		ELSE
+			PRINTFORML 과식했을 것이라고 조롱했다
+			PRINTFORMW 그녀구와 뾰로통한 얼굴 있고 되었다
+			PRINTFORML 그 뺨, 마치 경단같다와 더욱 조롱하면
+			PRINTFORMW 그녀는 푸우 불기 시작해, 인내 할 수 없게 웃었다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀와 경단을 맛보면서 잠깐 담소했다
+		ENDIF
+		IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+			CFLAG:대상:호감도 += 40
+		ELSE
+			CFLAG:대상:종속도 += 40
+		ENDIF
+		LOCAL = 1000
+		SIF MONEY < 1000
+			LOCAL = MONEY
+		MONEY -= LOCAL
+	;펫의 토끼
+	CASE 11
+		PRINTFORML 일을 하고 있으면 %ANAME(대상)%에 말을 걸려졌다
+		PRINTFORML 그 팔에는 한마리의 토끼를 껴안겨지고 있었다
+		PRINTFORML 어떻게 했는지와 물으면, 마당에 헤매고 있던 것 같다
+		PRINTFORMW 미아의 애완동물일까?
+		PRINTFORML 어떻게 하지?
+		CALL ASK_MULTI("시중을 들어 준다" ,"병사에 맡긴다" ,"냄비로 하자")
+		IF RESULT == 1
+			PRINTFORML 언제까지나 안게 해 둘 수는 없다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀를 설득해 병사에 맡기게 했다
+			PRINTFORMW 그녀는 서운한 듯이 몇번이나 토끼를 되돌아 보고 있었다
+			PRINTFORML 
+			PRINTFORMW 그 후, 무사하게 토끼는 사육주의 바탕으로 돌려주어진 것 같다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 30
+			ELSE
+				CFLAG:대상:종속도 += 30
+			ENDIF
+		ELSEIF RESULT == 2
+			PRINTFORMW 토과로 하자
+			PRINTFORMW 철썩
+			PRINTFORML 그녀의 귀싸대기가 날아 왔다
+			PRINTFORMW 농담이라고 사과하면 함께 사육주를 찾는데 맞대졌다
+		ELSE
+			PRINTFORMW 버리기토끼로도 미아토끼로도 서투르게 주워 오는 것은 안 된다
+			PRINTFORML 원의 장소에 되돌리는 것처럼 그녀를 설득하려고 했지만, 토끼의 둥근 눈동자에 응시할 수 있는 아무것도 말할 수 없게 되어 버렸다
+			PRINTFORMW 결국 그녀에게 간원 되어 궁전에서 주선을 봐주기로 했다
+			PRINTFORML 
+			PRINTFORMW 토끼는 그 귀여운 용모로부터 %조사처리(ANAME(MASTER),"나")% 그녀 만이 아니게 군사의 사이에서도 인기인이 되었다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 50
+			ELSE
+				CFLAG:대상:종속도 += 50
+			ENDIF
+		ENDIF
+	;유행의 옷
+	CASE 12
+		PRINTFORML %조사처리(ANAME(대상),"가")% 잡지를 읽고 있는 것이 보였다
+		PRINTFORML 뒤로부터 들여다 보면, 아무래도 패션 잡지인것 같다
+		PRINTFORMW %조사처리(ANAME(MASTER),"를")% 눈치챈 그녀는 유행의 옷에 대해 상담했다
+		PRINTFORML 어떻게 하지?
+		CALL ASK_MULTI("평소의 옷이 어울리고 있다" ,"가끔씩은 그러한 옷도 좋은 것이 아닌가" ,"함께 시착하러 갈까")
+		IF RESULT == 0
+			PRINTFORMW 평소의 옷이 어울리고 있어
+			PRINTFORML 솔직하게 그렇게 전하면 그녀는 일순간 경직된 후
+			PRINTFORMW 「그런가」라고 작게 중얼거려 다시 잡지를 읽어냈다
+			PRINTFORMW 이상한 말을 했는지? 라고 흠칫흠칫 안색을 엿보면, 그녀의 뺨이 약간 붉어지고 있었다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 30
+			ELSE
+				CFLAG:대상:종속도 += 30
+			ENDIF
+		ELSEIF RESULT == 1
+			PRINTFORMW 가끔씩은 그러한 옷도 좋은 것이 아닐까
+			PRINTFORML 솔직하게 그렇게 전하면 그녀는 「그런가～」라고 작게 중얼거렸다
+			PRINTFORMW 그 뒤도 그녀에게 있을 수 있는이나 이것이나 패션에 대해 의견을 물었다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 30
+			ELSE
+				CFLAG:대상:종속도 += 30
+			ENDIF
+		ELSE
+			PRINTFORMW 함께 시착하러 갈까?
+			PRINTFORML 아무렇지도 않게 그렇게 말하면, 그녀는 박과 얼굴을 올려%조사처리(ANAME(MASTER),"를")% 응시해 왔다
+			PRINTFORML 「지금부터?」그렇게 묻고 %조사처리(ANAME(MASTER),"가")% 수긍하면, 그녀는 돌연 일어섰다
+			PRINTFORMW 그리고 방에 향했는지라고 생각하면 곧바로 나와, %ANAME(MASTER)%의 팔을 당기면 억지로 거리로 끌어내졌다
+			PRINTFORMW 그 날은 하루, 그녀의 기분이 풀릴 때까지 옷 가게를 둘러싸고 시착에 교제하는 일이 되었다
+			CFLAG:대상:호감도 += 60
+		ENDIF
+	;점
+	CASE 13
+		PRINTFORML 일일 경과라고 있으면 %ANAME(대상)%에 말을 걸려졌다
+		PRINTFORMW 최근 점에 열중하고 있으므로 점치게 하면 좋겠다고 부탁받았다
+		PRINTFORML 어떻게 하지?
+		CALL ASK_YN("손바닥을 내민다", "거절한다")
+		IF RESULT == 1
+			PRINTFORML 나쁘지만 점은 믿지 않았다
+			PRINTFORMW %조사처리(ANAME(MASTER),"가")% 거절하면 그녀는 유감스러운 듯이 하고 있었다
+			IF RAND:2 == 0
+				PRINTFORML 그렇게 재미있는 것일까?
+				PRINTFORMW %조사처리(ANAME(MASTER),"가")% 흥미 본위로 물으면 그녀는 기쁜듯이 웃어, 점의 책을 내몄다
+				PRINTFORMW 그 날의 오후는, 룰루랄라의 그녀로부터 점쳐에 대한 지도를 받았다
+				IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+					CFLAG:대상:호감도 += 40
+				ELSE
+					CFLAG:대상:종속도 += 40
+				ENDIF
+			ENDIF
+		ELSE
+			PRINTFORML 재미있을 것 같은 것으로 손바닥을 내몄다
+			PRINTFORML 그녀는 %ANAME(MASTER)%의 손을 잡으면 한동안 진지하게 응시하면서 무슨 일인가 중얼거리고 있었다
+			PRINTFORMW 이윽고 그녀는 %ANAME(MASTER)%의 얼굴을 응시하고
+			IF RAND:2 == 0
+				PRINTFORMW 「정확히! 이번달의 운세는 요시!」
+			ELSE
+				PRINTFORMW 「정확히! 이번달의 운세는 흉!」
+			ENDIF
+			PRINTFORML 와 자랑스럽게 고해 왔다
+			PRINTFORMW 어이를 상실하고 있으면 그녀는 %ANAME(MASTER)%의 손바닥을 가리켜, 이것저것 해설을 시작했다
+			PRINTFORMW 룰루랄라의 그녀로부터 피할 수 있지 않고, 그 날의 오후 한 잔 점의 지도를 받는 일이 되었다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 50
+			ELSE
+				CFLAG:대상:종속도 += 50
+			ENDIF
+		ENDIF
+	;감기기운
+	CASE 14
+		PRINTFORML 오늘은 조금 몸이 불편함
+		PRINTFORML 나른한 신체를 질질 끌면서 일을 하고 있으면, 책상 위에 컵이 놓여졌다
+		PRINTFORMW 얼굴을 올리면 %조사처리(ANAME(대상),"가")% 있었다
+		LOCAL = RAND:200
+		IF (CFLAG:대상:호감도 + LOCAL >= 600) && (CFLAG:대상:호감도 > CFLAG:대상:종속도)
+			PRINTFORML 그녀는 싱긋 미소지으면 그다지 무리를 하지 않도록이라고 말해, 걸어 떠났다
+			PRINTFORML 컵안에는 %조사처리(ANAME(MASTER),"가")% 좋아하는 따뜻한 음료가 따라지고 있었다
+			PRINTFORMW 그녀에게 감사하면서 천천히 마시면, 전신이 후끈후끈 해 시원해졌다
+			CFLAG:대상:호감도 += 60
+		ELSEIF CFLAG:대상:종속도 + LOCAL >= 600
+			PRINTFORML 그녀는 걱정인 것처럼 그다지 무리를 하지 말아 주세요라고 말했다
+			PRINTFORML 컵안에는 %조사처리(ANAME(MASTER),"가")% 좋아하는 따뜻한 음료가 따라지고 있었다
+			PRINTFORMW 그녀에게 감사하면서 천천히 마시면, 전신이 후끈후끈 해 시원해졌다
+			CFLAG:대상:종속도 += 60
+		ELSE
+			PRINTFORML 그녀는 그다지 무리를 하지 않게라고 말해, 걸어 떠났다
+			PRINTFORMW 감사하면서 컵의 알맹이를 마시면, 조금 컨디션이 좋아진 것 같았다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 40
+			ELSE
+				CFLAG:대상:종속도 += 40
+			ENDIF
+		ENDIF
+	;젯날
+	CASE 15
+		PRINTFORMW 오늘은 성벽아래로 축제가 열리고 있는 것 같다
+		LOCAL = RAND:400
+		IF (CFLAG:대상:호감도 + LOCAL >= 800) || (CFLAG:대상:종속도 + LOCAL >= 800)
+			PRINTFORML %ANAME(대상)%에 이끌렸으므로 함께 가기로 했다
+			PRINTFORMW 평상시와 다른 유카타 모습의 그녀는 매우 예뻤다
+			PRINTFORMW 놓치지 않게 그녀와 손을 잡으면서 축제를 즐겼다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 60
+			ELSE
+				CFLAG:대상:종속도 += 60
+			ENDIF
+		ELSE
+			PRINTFORML 유카타 모습의 %조사처리(ANAME(대상),"가")% 보였다
+			PRINTFORMW 아무래도 지금부터 축제에 가는 것 같다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI_JUDGE("함께 간다", MONEY >= 1000,"전송한다", 1)
+			IF RESULT == 1
+				PRINTFORML 즐겨 둬라고 전송했다
+				PRINTFORMW 그녀는 미소지으면서 당신에 손을 흔들어, 나갔다
+				PRINTFORML 
+				PRINTFORMW 선물로서 금붕어와 타코야끼를 받았다
+				IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+					CFLAG:대상:호감도 += 20
+				ELSE
+					CFLAG:대상:종속도 += 20
+				ENDIF
+			ELSE
+				PRINTFORML 한가한 것으로 자신도 함께 가도 좋을까 묻는다
+				PRINTFORMW 그녀는 못된 장난 같고, 한턱 내 주는 거네? 라고 웃었다
+				PRINTFORMW 평상시와 다른 분위기에 까불며 떠드는 그녀와 함께 축제를 즐겼다
+				IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+					CFLAG:대상:호감도 += 40
+				ELSE
+					CFLAG:대상:종속도 += 40
+				ENDIF
+				MONEY -= 1000
+			ENDIF
+		ENDIF
+	;잡담
+	CASE 16
+		PRINTFORML 휴식 하고 있으면 %ANAME(대상)%에 말을 걸려졌다
+		PRINTFORML 특별히 요건도 없고 다만 짬을 하고 있어 %조사처리(ANAME(MASTER),"가")% 보인 것 뿐인것 같다
+		PRINTFORMW 그녀는 %ANAME(MASTER)%의 근처에 걸터앉아 왔다
+		PRINTFORML 어떻게 하지?
+		CALL ASK_MULTI(@"전의 이야기를 한다" ,"생활의 이야기를 한다" ,"그녀의 이야기를 듣는다")
+		IF RESULT == 0
+			PRINTFORML 최근의 싸움의 이야기했다
+			PRINTFORML 그녀는 길게 계속되는 싸움에 진절머리 난 모습이었다
+			PRINTFORMW 그런데도 %ANAME(MASTER)%의 이야기를 들어 주었다
+		ELSEIF RESULT == 1
+			PRINTFORML 최근 일어난 신변을 이야기했다
+			PRINTFORMW 어떻다고 할 일은 없는 잡담이었지만 그녀는 즐거운 듯이 귀를 기울여 주었다
+			PRINTFORML …
+			PRINTFORML 깨달으면 상당한 시간이 흐르고 있었다
+			PRINTFORMW 목이 말랐으므로 그녀를 차로 이끌면 빙그레 웃어 「잘 먹었어요」라고 말해졌다
+		ELSE
+			PRINTFORML 화제가 생각해내지 못했기 때문에 그녀의 이야기를 듣기로 했다
+			PRINTFORMW 그녀는 조금 쑥스러운 듯이 최근 일어난 신변을 가르쳐 주었다
+			PRINTFORML …
+			PRINTFORML 깨달으면 상당한 시간이 흐르고 있었다
+			PRINTFORMW 그녀는 이야기를 들어 주어 고마워요 예를 고하면 웃는 얼굴로 떠나 갔다
+		ENDIF
+		IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+			CFLAG:대상:호감도 += 30
+		ELSE
+			CFLAG:대상:종속도 += 30
+		ENDIF
+	;소녀 만화
+	CASE 17
+		PRINTFORMW 휴게실에서 뭔가를 열심히 읽고 있는 %조사처리(ANAME(대상),"가")% 보였다
+		PRINTFORML …표지를 보건데 소녀 만화인것 같다
+		PRINTFORML 뜻밖의 일면이라고 말할까 사랑스러운 취미에 작게 웃음이 새어 버렸다
+		PRINTFORMW 하면 그녀가 %조사처리(ANAME(MASTER),"를")% 알아차려, 그 만화를 알고 있는지 물어 왔다
+		PRINTFORML 어떻게 하지?
+		CALL ASK_MULTI(@"모른다" ,"알고 있다" ,"네타바레 한다")
+		IF RESULT == 2
+			PRINTFORML 실은 그 등장 인물은 그 앞～
+			PRINTFORML 거기까지 말했을 때, 방석이 날아 왔다
+			PRINTFORMW 피하지 못하고 충격으로 의자에서 구르고 떨어져 버렸다
+			IF MONEY >= 3000
+				PRINTFORMW 그 후, 화낸 그녀를 달래기 위해서(때문에) 나머지의 권을 사지는 일이 되었다
+				IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+					CFLAG:대상:호감도 += 20
+				ELSE
+					CFLAG:대상:종속도 += 20
+				ENDIF
+				MONEY -= 3000
+			ELSE
+				PRINTFORMW 그녀는 화내 어딘가에 가 버렸다
+			ENDIF
+		ELSEIF RESULT == 1
+			PRINTFORML 알고 있다고 고하면 그녀는 기쁜듯이 웃었다
+			PRINTFORMW 그 밖에 알고 있는 사람이 있지 않고 외로웠던 것 같다
+			PRINTFORML 평상시는 볼 수 없는 표정의 그녀에게 만화 담의를 권해지고 거절할 수 없었다
+			PRINTFORMW 그녀가 계산해 둘이서 그 만화를 재료에 차를 하는 일이 되었다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 50
+			ELSE
+				CFLAG:대상:종속도 += 50
+			ENDIF
+		ELSE
+			PRINTFORML 모른다고 고하면 그녀는 실망한 모습을 보였다
+			PRINTFORMW 그 밖에 알고 있는 사람이 있지 않고 외로운 것 같다
+			PRINTFORML 재미있는 것인지라고 물으면 그녀는 %조사처리(ANAME(MASTER),"를")% 앉게 한 이야기 냈다
+			PRINTFORMW 그녀의 기분이 풀릴 때까지 만화 담의에 교제하는 일이 되었다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 40
+			ELSE
+				CFLAG:대상:종속도 += 40
+			ENDIF
+		ENDIF
+	;순회중
+	CASE 18
+		PRINTFORML %조사처리(ANAME(대상),"와")%의 순회 임무중, 휴식에 이끌렸다
+		PRINTFORML 마음에 드는 찻집이 있는 것 같다
+		PRINTFORMW 어쩌면 언제나 거기서 게으름 피우고 있는지 물으면 그녀는 작게 혀를 내밀었다
+		PRINTFORML 어떻게 하지?
+		CALL ASK_MULTI("교제한다" ,"순회를 계속한다" ,"사치해 받는다")
+		IF RESULT == 0
+			PRINTFORML 하지만 %ANAME(MASTER)%도 피곤했다
+			PRINTFORMW 모두에게는 비밀이다라고 하면 그녀는 못된 장난 같게 웃었다
+			PRINTFORML 그녀에게 언제나 먹고 있다는 과자를 추천할 수 있었다
+			PRINTFORML 한입 집어 먹으면, 매우 달콤하게 지친 신체를 달래 주었다
+			PRINTFORMW 약 1시간 정도 그녀와 빈둥거렸다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 40
+			ELSE
+				CFLAG:대상:종속도 += 40
+			ENDIF
+		ELSEIF RESULT == 1
+			PRINTFORML 순회는 아직 도중이다
+			PRINTFORML 그녀의 제안을 각하 해 앞을 서둘렀다
+			PRINTFORMW 그녀는 서운한 듯이 하면서도 %ANAME(MASTER)%에 따라 왔다
+		ELSE
+			PRINTFORML 군이 계산하면 좋아
+			PRINTFORMW 그렇게 말하면 그녀는 일순간 고민한 뒤로 승낙했다
+			PRINTFORML 그녀에게 언제나 먹고 있다는 과자를 추천할 수 있었다
+			PRINTFORML 한입 집어 먹으면, 매우 달콤하게 지친 신체를 달래 주었다
+			PRINTFORMW 약 1시간 정도 그녀와 빈둥거렸다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 30
+			ELSE
+				CFLAG:대상:종속도 += 30
+			ENDIF
+		ENDIF
+	;악기
+	CASE 19
+		PRINTFORML %조사처리(ANAME(대상),"와")% 창고의 정리를 하고 있으면 악기를 주웠다
+		PRINTFORMW 언제쯤부터 있을까? 대단히 먼지를 쓰고 있지만 아직 사용할 수 있을 것 같다
+		IF ABL:대상:가창 >= 50
+			PRINTFORML 하면 그녀가 그것을 손에 들어 연주해 보였다
+			PRINTFORML 꽤의 솜씨였다
+			PRINTFORMW 박수를 보내면 그녀는 수줍은 것처럼 웃었다
+			PRINTFORMW 휴식하는 김에 그녀에게 연주를 배웠다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 40
+			ELSE
+				CFLAG:대상:종속도 += 40
+			ENDIF
+			CALL PRINT_ADD_EXP(대상, "가창경험치", RAND:15 + RAND:15 + 6, 1)
+		ELSEIF ABL:MASTER:가창 >= 50
+			PRINTFORML 연주하면 깨끗한 음색이 울렸다
+			PRINTFORML 한 곡 다 연주하면 그녀가 박수쳐 칭찬해 주었다
+			PRINTFORMW 기분이 좋아진 %조사처리(ANAME(MASTER),"는")% 앵콜에 응해 이제(이미/벌써/더는/정말) 1곡 피로 했다
+			PRINTFORMW 그녀에게 연주 방법을 졸라졌으므로 휴식하는 김에 가르쳐 주었다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 40
+			ELSE
+				CFLAG:대상:종속도 += 40
+			ENDIF
+			CALL PRINT_ADD_EXP(대상, "가창경험치", RAND:10 + RAND:10 + 6, 1)
+		ELSE
+			PRINTFORML 하지만 %ANAME(MASTER)%도 그녀도 연주하는 방법을 몰랐다
+			PRINTFORML 적당하게 연주하면 이상한 곡이 되었다
+			PRINTFORMW 그녀는 그 음색이 항아리에 들어간 것 같게 웃기 시작했다
+			PRINTFORMW 둘이서 휴식겸, 몹시 서투른 연주회를 즐겼다
+			IF CFLAG:대상:호감도 >= CFLAG:대상:종속도
+				CFLAG:대상:호감도 += 30
+			ELSE
+				CFLAG:대상:종속도 += 30
+			ENDIF
+		ENDIF
+ENDSELECT
+
+RETURN 1

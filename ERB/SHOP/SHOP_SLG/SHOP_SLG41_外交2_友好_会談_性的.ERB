@@ -1,0 +1,756 @@
+﻿;-------------------------------------------------
+;회담 성적
+;-------------------------------------------------
+@SELECT_CHARA_LIST_SHOW_LOGIC_DIPLOMACY_TALK_SEX(대상)
+#DIM 대상
+RETURN CFLAG:대상:행동불능상태 != 행동불능_아이 && CFLAG:대상:소속 == CFLAG:MASTER:소속 && !IS_ANIMAL(대상)
+
+@SELECT_CHARA_LIST_SELECT_LOGIC_DIPLOMACY_TALK_SEX(대상)
+#DIM 대상
+RETURN IS_FREE(대상) && CFLAG:대상:포로처 == 0 && TALK_CAN_GIVE_SEX(대상)
+
+;---------------------------
+;회담에서 여자를 준비했을 경우
+;---------------------------
+@DIPLOMACY_TALK_SEX(제공처)
+#DIM 플레이내용
+#DIM 제공처
+#DIM 제공원
+#DIM 만족도
+#DIM FIRST_LINE
+#DIM CONST 상호페라 = 0
+#DIM CONST 상호삽입 = 1
+#DIM CONST 상호애널섹스 = 2
+#DIM CONST 페라한다 = 3
+#DIM CONST 페라된다 = 4
+#DIM CONST 섹스한다 = 5
+#DIM CONST 섹스된다 = 6
+#DIM CONST 애널섹스한다 = 7
+#DIM CONST 애널섹스된다 = 8
+#DIM CONST 쿤닐링구스한다 = 9
+#DIM CONST 쿤닐링구스된다 = 10
+#DIM CONST 조개맞대기 = 11
+#DIM CONST 키스 = 12
+#DIM CONST 난교 = 13
+#DIM CONST 병사에제공된다 = 14
+#DIM CONST 춤을피로한다 = 15
+#DIM CONST 범용 = 16
+VARSET 만족도
+$SELECT_CHARA
+CALL SINGLE_DRAWLINE
+PRINTFORML %조사처리(ANAME(MASTER),"는")% 「즐거움」를 제공하기로 했다
+PRINTFORML 어느 정도의 성지식이 없으면 원래 이야기가 되지 않고,
+PRINTFORML 명하면 타인에게 신체를 열 정도로 굴복 하고 있을 필요도 있다
+PRINTFORML 혹은, 타인에게 신체를 여는 것을 저항이 없는 왈패라도 좋겠지만……
+PRINTFORML 그런데, 누구에게 해야 하는가……
+CALL SINGLE_DRAWLINE
+CALL SELECT_CHARA_LIST("DIPLOMACY_TALK_SEX", "DIPLOMACY_TALK_SEX", "DEFAULT", "욕망", "성기술", "봉사", "성교", "정치")
+SIF RESULT == -1
+	RETURN -1
+제공원 = RESULT
+CALL SELECT_PLAY_LIST(제공원, 제공처)
+SIF RESULT == -1
+	GOTO SELECT_CHARA
+플레이내용 = RESULT
+SELECTCASE 플레이내용
+	CASE 상호페라
+		IF HAS_PENIS(제공처) && HAS_PENIS(제공원)
+			PRINTFORML %조사처리(ANAME(제공처),"는")% 즉시, %ANAME(제공원)%의 옷을 벗게 해 스스로도 옷을 벗었다
+			PRINTFORML 두 명의 가랑이에 있는 일물은, 쾌락에의 기대로 이미 격분하고 있다……
+			PRINTFORML %조사처리(ANAME(제공처),"는")% 스스로의 일물을 %ANAME(제공원)%의 거기에 강압해, 가볍게 허리를 움직인다
+			PRINTFORML 두 명의 페니스로부터는, 이미 앞달리기가 녹진녹진 흘러넘치고 있다……
+			PRINTFORML 이윽고 %조사처리(ANAME(제공처),"는")% %조사처리(ANAME(제공원),"를")% 위로 향해 시키면, 그 위에 엇갈림에 덮어씌웠다
+			PRINTFORML 그리고 %ANAME(제공원)%에 봉사시키면서, 스스로도 %ANAME(제공원)%의 페니스를 빨아 세웠다……
+			CALL FUCK(제공처, "욕망, 봉사, 성기술, Ｃ, 사정, 펠라티오, 정애", "키스상실, 구강사정", 0, @"%ANAME(제공원)%의 페니스", "", "", "외교 관계 유지를 위한 화간")
+			CALL FUCK(제공원, "욕망, 봉사, 성기술, Ｃ, 사정, 펠라티오, 정애", "키스상실, 구강사정", 0, @"%ANAME(제공처)%의 페니스", "", "", "외교 관계 유지를 위한 화간")
+			PRINTFORML 행위는 두 명이 몇 번이나 사정해, 서로의 안면이 서로의 국물 투성이가 될 때까지 계속되었다……
+		ELSE
+			GOTO SELECT_CHARA
+		ENDIF
+	CASE 상호삽입
+		IF HAS_VAGINA(제공처) && HAS_PENIS(제공처) && HAS_VAGINA(제공원) && HAS_PENIS(제공원)
+			PRINTFORML %조사처리(ANAME(제공처),"는")% 즉시, %ANAME(제공원)%의 옷을 벗게 해 스스로도 옷을 벗었다
+			PRINTFORML 두 명의 가랑이에 있는 일물은, 쾌락에의 기대로 이미 격분하고 있다……
+			PRINTFORML %조사처리(ANAME(제공처),"는")% 스스로의 일물을 %ANAME(제공원)%의 거기에 강압해, 가볍게 허리를 움직인다
+			PRINTFORML 두 명의 페니스로부터는, 이미 앞달리기가 녹진녹진 흘러넘치고 있다……
+			SELECTCASE RAND:7
+				CASE 0
+					PRINTFORML 계속해서 %조사처리(ANAME(제공처),"는")%, %조사처리(ANAME(제공원),"를")% 엎드린 자세로시켜, 뒤로부터 그 암컷구멍을 관철했다
+				CASE 1
+					PRINTFORML 계속해서 %조사처리(ANAME(제공처),"는")%, %조사처리(ANAME(제공원),"를")% 위로 향해시켜, 덮어씌워 위로부터 몇 번이나 암컷구멍을 찔렀다
+				CASE 2
+					PRINTFORML 계속해서 %조사처리(ANAME(제공처),"는")%, %ANAME(제공원)%에 벽에 손을 붙어 엉덩이를 향하게 해 뒤로부터 그 암컷구멍을 관철했다
+				CASE 3
+					PRINTFORML 계속해서 %조사처리(ANAME(제공처),"는")%, %조사처리(ANAME(제공원),"와")% 서로 마주 봐, 선 채로 암컷구멍을 관철했다
+				CASE 4
+					PRINTFORML 계속해서 %조사처리(ANAME(제공처),"는")% 앉아, %조사처리(ANAME(제공원),"를")% 서로 마주 본 몸의 자세로 걸치게 해 아래로부터 몇 번이나 밀어올렸다
+				CASE 5
+					PRINTFORML 계속해서 %조사처리(ANAME(제공처),"는")% 앉아, %조사처리(ANAME(제공원),"를")% 퇴행적인 몸의 자세로 걸치게 해 아래로부터 몇 번이나 밀어올렸다
+				CASE 6
+					PRINTFORML 계속해서 %조사처리(ANAME(제공처),"는")% 위로 향해 자면, %조사처리(ANAME(제공원),"를")% 당신 위에 걸치게 해 스스로 허리를 흔들게 했다
+			ENDSELECT
+			PRINTFORML 이윽고 %조사처리(ANAME(제공처),"는")%, %ANAME(제공원)%의 질내에 한껏 사정했다
+			SELECTCASE RAND:7
+				CASE 0
+					PRINTFORML 그리고 이번은 스스로 %ANAME(제공원)%에 엉덩이를 향해, 허리를 구불거리게 할 수 있어 성교를 졸랐다
+				CASE 1
+					PRINTFORML 그리고 이번은 스스로 위로 향해 가로놓여, 가랑이를 열어 비밀의 틈을 손가락으로 열려 성교를 졸랐다
+				CASE 2
+					PRINTFORML 그리고 이번은 스스로 벽에 손을 붙어 %ANAME(제공원)%에 엉덩이를 향해, 뒤로부터 암컷구멍을 관철하도록(듯이) 졸랐다
+				CASE 3
+					PRINTFORML 그리고 이번은 %조사처리(ANAME(제공원),"와")% 서로 마주 봐, 선 채로의 자세로 범하도록(듯이) 명했다
+				CASE 4
+					PRINTFORML 계속해서 %조사처리(ANAME(제공처),"는")% %조사처리(ANAME(제공원),"를")% 앉게 해 서로 마주 본 몸의 자세로 걸치면, 아래로부터 밀어올리도록(듯이) 졸랐다
+				CASE 5
+					PRINTFORML 계속해서 %조사처리(ANAME(제공처),"는")% %조사처리(ANAME(제공원),"를")% 앉게 해 퇴행적인 몸의 자세로 걸치면, 아래로부터 몇 번이나 밀어올리도록(듯이) 졸랐다
+				CASE 6
+					PRINTFORML 계속해서 %조사처리(ANAME(제공처),"는")% %조사처리(ANAME(제공원),"를")% 위로 향해 재워, 그 위에 걸치면, 귀두에 당신의 암컷구멍의 입구를 문지른다
+			ENDSELECT
+			PRINTFORML 질내사정으로 욕망에 불이 붙었던 %조사처리(ANAME(제공원),"가")%, 그 유혹에 거역할 수 있을 리도 없었다……
+			CALL FUCK(제공처, "욕망, Ｃ, Ｖ, 성교, 정애, 사정,   Ｖ성교, Ｖ삽입", "처녀상실, 동정상실, 질내사정", GET_ID(제공원), "", ANAME(제공원), @"%ANAME(제공원)%의 질", "외교 관계 유지를 위한 화간")
+			CALL FUCK(제공원, "욕망, Ｃ, Ｖ, 성교, 정애, 사정,   Ｖ성교, Ｖ삽입", "처녀상실, 동정상실, 질내사정", GET_ID(제공처), "", ANAME(제공원), @"%ANAME(제공처)%의 질", "외교 관계 유지를 위한 화간")
+			PRINTFORML 행위가 끝나는 무렵에는, 서로의 신체는 새하얗게 되어 있었다……
+		ELSE
+			GOTO SELECT_CHARA
+		ENDIF
+	CASE 상호애널섹스
+		IF HAS_PENIS(제공처) && HAS_PENIS(제공원)
+			PRINTFORML %조사처리(ANAME(제공처),"는")% 즉시, %ANAME(제공원)%의 옷을 벗게 해 스스로도 옷을 벗었다
+			PRINTFORML 두 명의 가랑이에 있는 일물은, 쾌락에의 기대로 이미 격분하고 있다……
+			PRINTFORML %조사처리(ANAME(제공처),"는")% 스스로의 일물을 %ANAME(제공원)%의 거기에 강압해, 가볍게 허리를 움직인다
+			PRINTFORML 두 명의 페니스로부터는, 이미 앞달리기가 녹진녹진 흘러넘치고 있다……
+			SELECTCASE RAND:7
+				CASE 0
+					PRINTFORML 계속해서 %조사처리(ANAME(제공처),"는")%, %조사처리(ANAME(제공원),"를")% 엎드린 자세로시켜, 뒤로부터 그 엉덩이구멍을 관철했다
+				CASE 1
+					PRINTFORML 계속해서 %조사처리(ANAME(제공처),"는")%, %조사처리(ANAME(제공원),"를")% 위로 향해시켜, 덮어씌워 위로부터 몇 번이나 엉덩이구멍을 찔렀다
+				CASE 2
+					PRINTFORML 계속해서 %조사처리(ANAME(제공처),"는")%, %ANAME(제공원)%에 벽에 손을 붙어 엉덩이를 향하게 해 뒤로부터 그 엉덩이구멍을 관철했다
+				CASE 3
+					PRINTFORML 계속해서 %조사처리(ANAME(제공처),"는")%, %조사처리(ANAME(제공원),"와")% 서로 마주 봐, 선 채로 엉덩이구멍을 관철했다
+				CASE 4
+					PRINTFORML 계속해서 %조사처리(ANAME(제공처),"는")% 앉아, %조사처리(ANAME(제공원),"를")% 서로 마주 본 몸의 자세로 걸치게 해 아래로부터 몇 번이나 엉덩이 구멍을 밀어올렸다
+				CASE 5
+					PRINTFORML 계속해서 %조사처리(ANAME(제공처),"는")% 앉아, %조사처리(ANAME(제공원),"를")% 퇴행적인 몸의 자세로 걸치게 해 아래로부터 몇 번이나 엉덩이 구멍을 밀어올렸다
+				CASE 6
+					PRINTFORML 계속해서 %조사처리(ANAME(제공처),"는")% 위로 향해 자면, %조사처리(ANAME(제공원),"를")% 당신 위에 걸치게 해 스스로 허리를 흔들게 했다
+			ENDSELECT
+			PRINTFORML 이윽고 %조사처리(ANAME(제공처),"는")%, %ANAME(제공원)%의 항내에 한껏 사정했다
+			PRINTFORML 그리고 이번은 스스로 %ANAME(제공원)%에 엉덩이를 향해, 성교를 졸랐다
+			SELECTCASE RAND:7
+				CASE 0
+					PRINTFORML 그리고 이번은 스스로 %ANAME(제공원)%에 엉덩이를 향해, 허리를 구불거리게 할 수 있어 항문 성교를 졸랐다
+				CASE 1
+					PRINTFORML 그리고 이번은 스스로 위로 향해 가로놓여, 가랑이를 열어 엉덩이 구멍을 손가락으로 열려 항문 성교를 졸랐다
+				CASE 2
+					PRINTFORML 그리고 이번은 스스로 벽에 손을 붙어 %ANAME(제공원)%에 엉덩이를 향해, 뒤로부터 애널을 범하도록(듯이) 졸랐다
+				CASE 3
+					PRINTFORML 그리고 이번은 %조사처리(ANAME(제공원),"와")% 서로 마주 봐, 선 채로의 자세로 애널을 범하도록(듯이) 명했다
+				CASE 4
+					PRINTFORML 계속해서 %조사처리(ANAME(제공처),"는")% %조사처리(ANAME(제공원),"를")% 앉게 해 서로 마주 본 몸의 자세로 걸치면, 아래로부터 엉덩이구멍을 밀어올리도록(듯이) 졸랐다
+				CASE 5
+					PRINTFORML 계속해서 %조사처리(ANAME(제공처),"는")% %조사처리(ANAME(제공원),"를")% 앉게 해 퇴행적인 몸의 자세로 걸치면, 아래로부터 엉덩이구멍을 몇 번이나 밀어올리도록(듯이) 졸랐다
+				CASE 6
+					PRINTFORML 계속해서 %조사처리(ANAME(제공처),"는")% %조사처리(ANAME(제공원),"를")% 위로 향해 재워, 그 위에 걸치면, 귀두에 당신의 엉덩이 구멍의 입구를 문지른다
+			ENDSELECT
+			PRINTFORML 항내사정으로 욕망에 불이 붙었던 %조사처리(ANAME(제공원),"가")%, 그 유혹에 거역할 수 있을 리도 없었다……
+			CALL FUCK(제공처, "욕망, Ｃ, Ａ, 성교, 정애, 사정, Ａ성교, Ａ삽입", "Ａ처녀상실, 동정상실, 장내사정", 0, "", ANAME(제공원), @"%ANAME(제공원)%의 애널", "외교 관계 유지를 위한 화간")
+			CALL FUCK(제공원, "욕망, Ｃ, Ａ, 성교, 정애, 사정, Ａ성교, Ａ삽입", "Ａ처녀상실, 동정상실, 장내사정", 0, "", ANAME(제공원), @"%ANAME(제공처)%의 애널", "외교 관계 유지를 위한 화간")
+			PRINTFORML 행위가 끝나는 무렵에는, 서로의 신체는 새하얗게 되어 있었다……
+		ELSE
+			GOTO SELECT_CHARA
+		ENDIF
+	CASE 난교
+		IF HAS_VAGINA(제공처) && HAS_PENIS(제공처) && HAS_VAGINA(제공원) && HAS_PENIS(제공원)
+			PRINTFORML %조사처리(ANAME(제공처),"는")% 즉시, %ANAME(제공원)%의 옷을 벗게 해 스스로도 옷을 벗었다
+			PRINTFORML 두 명의 가랑이에 있는 일물은, 쾌락에의 기대로 이미 격분하고 있다……
+			PRINTFORML %조사처리(ANAME(제공처),"는")% 스스로의 일물을 %ANAME(제공원)%의 거기에 강압해, 가볍게 허리를 움직인다
+			PRINTFORML 두 명의 페니스로부터는, 이미 앞달리기가 녹진녹진 흘러넘치고 있다……
+			PRINTFORML 갑자기, %조사처리(ANAME(제공처),"는")% 팡팡 손뼉을 쳤다
+			PRINTFORML 하면, 추잡한 의상을 감긴 남녀가 줄줄(질질)하고 방에 들어 왔다. %조사처리(ANAME(제공처),"가")% 둘러싸고 있는 것이라고 한다
+			PRINTFORML 그들·그녀들도 섞어, 두 명은 장장, 문자 그대로 심혈 다할 때까지 몇 번이나, 누구라고도 사귀었다……
+			CALL FUCK(제공처, "욕망, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, Ｖ확장, Ａ확장, 성교, 자위, 정애, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, 윤간, Ｖ삽입, Ａ삽입, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, 동정상실, 질내사정, 장내사정, 구강사정", (RAND:2 ? GET_SPERM_ID("병사") # GET_ID(제공원)), @"\@ RAND:2 ?%ANAME(제공원)%의 페니스 # %ANAME(제공처)%의 사병의 페니스\@", @"\@ RAND:2 ?%ANAME(제공원)% # %ANAME(제공처)%의 사병\@", @"\@ RAND:2 ?%ANAME(제공원)% # %ANAME(제공처)%의 사병\@의 \@ RAND:2 ? 질 # 애널 \@", "외교 관계 유지를 위한 윤간")
+			CALL FUCK(제공원, "욕망, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, Ｖ확장, Ａ확장, 성교, 자위, 정애, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, 윤간, Ｖ삽입, Ａ삽입, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, 동정상실, 질내사정, 장내사정, 구강사정", (RAND:2 ? GET_SPERM_ID("병사") # GET_ID(제공처)), @"\@ RAND:2 ?%ANAME(제공처)%의 페니스 # %ANAME(제공처)%의 사병의 페니스\@", @"\@ RAND:2 ?%ANAME(제공처)% # %ANAME(제공처)%의 사병\@", @"\@ RAND:2 ?%ANAME(제공처)% # %ANAME(제공처)%의 사병\@의 \@ RAND:2 ? 질 # 애널 \@", "외교 관계 유지를 위한 윤간")
+			PRINTFORML 연회가 끝나는 무렵에는, 두 사람 모두 새하얗게 염색해 내지고 있었다
+		ELSEIF HAS_VAGINA(제공원) && HAS_VAGINA(제공처)
+			PRINTFORML %조사처리(ANAME(제공처),"는")% 즉시, %ANAME(제공원)%의 옷을 벗게 해 스스로도 옷을 벗었다
+			PRINTFORML 두 명의 비밀의 틈은, 쾌락에의 기대로 녹진녹진이 되어 있다……
+			PRINTFORML 갑자기, %조사처리(ANAME(제공처),"는")% 팡팡 손뼉을 쳤다
+			PRINTFORML 하면, 강인한 병사들이 줄줄(질질)하고 몰려닥쳐 왔다
+			PRINTFORML 그대로, %조사처리(ANAME(제공처),"와")% %조사처리(ANAME(제공원),"는")%, 위안이라고 칭해 병사들과 난교에 이르렀다……
+			PRINTFORML 이윽고 것이 끝나면, 거기에는 전신 모든 구멍에서 종을 흘리는 %조사처리(ANAME(제공원),"와")% %조사처리(ANAME(제공처),"가")% 남아 있었다
+			CALL FUCK(제공처, "욕망, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, Ｖ확장, Ａ확장, 성교, 자위, 정애, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, 동정상실, 질내사정, 장내사정, 구강사정", (RAND:2 ? GET_SPERM_ID("병사") # GET_ID(제공원)), @"%ANAME(제공처)%의 사병의 페니스", @"%ANAME(제공처)%의 사병", "", "외교 관계 유지를 위한 윤간")
+			CALL FUCK(제공원, "욕망, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, Ｖ확장, Ａ확장, 성교, 자위, 정애, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, 동정상실, 질내사정, 장내사정, 구강사정", (RAND:2 ? GET_SPERM_ID("병사") # GET_ID(제공처)), @"%ANAME(제공처)%의 사병의 페니스", @"%ANAME(제공처)%의 사병", "", "외교 관계 유지를 위한 윤간")
+		ELSE
+			GOTO SELECT_CHARA
+		ENDIF
+	CASE 페라한다
+		IF HAS_PENIS(제공처)
+			PRINTFORML %조사처리(ANAME(제공처),"는")% 즉시, %ANAME(제공원)%의 옷을 벗게 해 스스로도 옷을 벗었다
+			PRINTFORML %ANAME(제공처)%의 가랑이에 있는 일물은, 쾌락에의 기대로 이미 격분하고 있다……
+			PRINTFORML %조사처리(ANAME(제공처),"는")% %조사처리(ANAME(제공원),"를")% 무릎 꿇게 하면, 스스로의 일물을 %ANAME(제공원)%의 뺨에 강압한다
+			PRINTFORML 무엇을해라고 (듣)묻고 있을까 헤아린 %조사처리(ANAME(제공원),"는")%, 조속히 %ANAME(제공처)%의 페니스에 봉사를 시작했다
+			SELECTCASE RAND:3
+				CASE 0
+					PRINTFORML 농후한 수컷의 냄새가, 미각에, 후각에 충만한다……
+				CASE 1
+					PRINTFORML , , 와 끈적 한 물소리가 실내에 충만한다……
+				CASE 2
+					PRINTFORML 뇌를 녹이는 것 같은 수컷의 페로몬에게, %ANAME(제공원)%의 눈초리는 처지고 있다……
+			ENDSELECT
+			PRINTFORML 이윽고 %조사처리(ANAME(제공처),"는")% 낮게 신음해, %ANAME(제공원)%의 입안에 끈적한 종을 내뱉으며
+			PRINTFORML %조사처리(ANAME(제공원),"는")% 스스로의 음부를 만지작거리면서, 소리를 내 그것을 다 마셨다……
+			CALL FUCK(제공처, "욕망, Ｃ, 사정")
+			CALL FUCK(제공원, "봉사, 성기술, 펠라티오, 정애", "키스상실, 구강사정", 0, @"%ANAME(제공처)%의 페니스", "", "", "외교 관계 유지를 위한 화간")
+		ELSE
+			GOTO SELECT_CHARA
+		ENDIF
+	CASE 페라된다
+		IF HAS_PENIS(제공원)
+			PRINTFORML %조사처리(ANAME(제공처),"는")% 즉시, %ANAME(제공원)%의 옷을 벗게 해 스스로도 옷을 벗었다
+			PRINTFORML %ANAME(제공원)%의 가랑이에 있는 일물은, 쾌락에의 기대로 이미 격분하고 있다……
+			PRINTFORML 이것은 기대할 수 있을 것 같다면, %조사처리(ANAME(제공처),"는")% 입맛을 다심 했다
+			PRINTFORML %조사처리(ANAME(제공처),"는")% %조사처리(ANAME(제공원),"를")% 앉게 하면 그 원래로 무릎 꿇는다
+			PRINTFORML %조사처리(ANAME(제공원),"가")% 눈치있게 처신해 조금다리를 열면, %조사처리(ANAME(제공처),"는")% 조속히 거기에 달라붙어서 놓지 않았다……
+			SELECTCASE RAND:3
+				CASE 0
+					PRINTFORML 농후한 수컷의 냄새가, 미각에, 후각에 충만한다……
+				CASE 1
+					PRINTFORML , , 와 끈적 한 물소리가 실내에 충만한다……
+				CASE 2
+					PRINTFORML 뇌를 녹이는 것 같은 수컷의 페로몬에게, %ANAME(제공처)%의 눈초리는 처지고 있다……
+			ENDSELECT
+			PRINTFORML 이윽고 %조사처리(ANAME(제공원),"는")% 낮게 신음해, %ANAME(제공처)%의 입안에 끈적한 종을 내뱉으며
+			PRINTFORML %조사처리(ANAME(제공처),"는")% 스스로의 음부를 만지작거리면서, 소리를 내 그것을 다 마셨다……
+			CALL FUCK(제공처, "봉사, 성기술, 펠라티오, 정애", "키스상실, 구강사정", 0, @"%ANAME(제공원)%의 페니스", "", "", "외교 관계 유지를 위한 화간")
+			CALL FUCK(제공원, "욕망, Ｃ, 사정")
+		ELSE
+			GOTO SELECT_CHARA
+		ENDIF
+	CASE 섹스한다
+		IF HAS_PENIS(제공원) && HAS_VAGINA(제공처)
+			PRINTFORML %조사처리(ANAME(제공처),"는")% 즉시, %ANAME(제공원)%의 옷을 벗게 해 스스로도 옷을 벗었다
+			PRINTFORML %ANAME(제공원)%의 가랑이에 있는 일물은, 쾌락에의 기대로 이미 격분하고 있다……
+			PRINTFORML 이것은 기대할 수 있을 것 같다면, %조사처리(ANAME(제공처),"는")% 입맛을 다심 했다
+			SELECTCASE RAND:7
+				CASE 0
+					PRINTFORML %조사처리(ANAME(제공처),"는")% 스스로 %ANAME(제공원)%에 엉덩이를 향해, 허리를 구불거리게 할 수 있어 성교를 졸랐다
+				CASE 1
+					PRINTFORML %조사처리(ANAME(제공처),"는")% 스스로 위로 향해 가로놓여, 가랑이를 열어 비밀의 틈을 손가락으로 열려 성교를 졸랐다
+				CASE 2
+					PRINTFORML %조사처리(ANAME(제공처),"는")% 스스로 벽에 손을 붙어 %ANAME(제공원)%에 엉덩이를 향해, 뒤로부터 암컷구멍을 관철하도록(듯이) 졸랐다
+				CASE 3
+					PRINTFORML %조사처리(ANAME(제공처),"는")% %조사처리(ANAME(제공원),"와")% 서로 마주 봐, 선 채로의 자세로 범하도록(듯이) 명했다
+				CASE 4
+					PRINTFORML %조사처리(ANAME(제공처),"는")% %조사처리(ANAME(제공원),"를")% 앉게 해 서로 마주 본 몸의 자세로 걸치면, 아래로부터 밀어올리도록(듯이) 졸랐다
+				CASE 5
+					PRINTFORML %조사처리(ANAME(제공처),"는")% %조사처리(ANAME(제공원),"를")% 앉게 해 퇴행적인 몸의 자세로 걸치면, 아래로부터 몇 번이나 밀어올리도록(듯이) 졸랐다
+				CASE 6
+					PRINTFORML %조사처리(ANAME(제공처),"는")% %조사처리(ANAME(제공원),"를")% 위로 향해 재워, 그 위에 걸치면, 귀두에 당신의 암컷구멍의 입구를 문지른다
+			ENDSELECT
+			PRINTFORML %조사처리(ANAME(제공원),"는")% 명해지는 대로, %ANAME(제공처)%에 삽입했다……
+			PRINTFORML 이윽고 %조사처리(ANAME(제공원),"가")% 한계를 맞이하면, %조사처리(ANAME(제공처),"는")% 그대로질내에서 사정시켰다……
+			PRINTFORML 페니스를 뽑아 내진 음렬으로부터는, 흰 것이 걸죽 흘러 떨어지고 있다……
+			CALL FUCK(제공처, "욕망, Ｖ, 성교, 정애, Ｖ성교", "처녀상실, 질내사정", GET_ID(제공원), "", ANAME(제공원), "", "외교 관계 유지를 위한 화간")
+			CALL FUCK(제공원, "욕망, Ｃ, 성교, 사정, Ｖ삽입", "동정상실", 0, "", "", @"%ANAME(제공처)%의 질", "외교 관계 유지를 위한 화간")
+		ELSE
+			GOTO SELECT_CHARA
+		ENDIF
+	CASE 섹스된다
+		IF HAS_PENIS(제공처) && HAS_VAGINA(제공원)
+			PRINTFORML %조사처리(ANAME(제공처),"는")% 즉시, %ANAME(제공원)%의 옷을 벗게 해 스스로도 옷을 벗었다
+			PRINTFORML %ANAME(제공처)%의 가랑이에 있는 일물은, 쾌락에의 기대로 이미 격분하고 있다……
+			SELECTCASE RAND:7
+				CASE 0
+					PRINTFORML %조사처리(ANAME(제공처),"는")%, %조사처리(ANAME(제공원),"를")% 엎드린 자세로시켜, 뒤로부터 그 암컷구멍을 관철했다
+				CASE 1
+					PRINTFORML %조사처리(ANAME(제공처),"는")%, %조사처리(ANAME(제공원),"를")% 위로 향해시켜, 덮어씌워 위로부터 몇 번이나 암컷구멍을 찔렀다
+				CASE 2
+					PRINTFORML %조사처리(ANAME(제공처),"는")%, %ANAME(제공원)%에 벽에 손을 붙어 엉덩이를 향하게 해 뒤로부터 그 암컷구멍을 관철했다
+				CASE 3
+					PRINTFORML %조사처리(ANAME(제공처),"는")%, %조사처리(ANAME(제공원),"와")% 서로 마주 봐, 선 채로 암컷구멍을 관철했다
+				CASE 4
+					PRINTFORML %조사처리(ANAME(제공처),"는")% 앉아, %조사처리(ANAME(제공원),"를")% 서로 마주 본 몸의 자세로 걸치게 해 아래로부터 몇 번이나 밀어올렸다
+				CASE 5
+					PRINTFORML %조사처리(ANAME(제공처),"는")% 앉아, %조사처리(ANAME(제공원),"를")% 퇴행적인 몸의 자세로 걸치게 해 아래로부터 몇 번이나 밀어올렸다
+				CASE 6
+					PRINTFORML %조사처리(ANAME(제공처),"는")% 위로 향해 자면, %조사처리(ANAME(제공원),"를")% 당신 위에 걸치게 해 스스로 허리를 흔들게 했다
+			ENDSELECT
+			CALL FUCK(제공처, "욕망, Ｃ, 성교, 사정, Ｖ삽입", "동정상실", 0, "", "", @"%ANAME(제공원)%의 질", "외교 관계 유지를 위한 화간")
+			CALL FUCK(제공원, "욕망, Ｖ, 성교, 정애, Ｖ성교", "처녀상실, 질내사정", GET_ID(제공처), "", ANAME(제공처), "", "외교 관계 유지를 위한 화간")
+			PRINTFORML 이윽고 %조사처리(ANAME(제공처),"는")%, %ANAME(제공원)%의 질내에 한껏 사정했다
+			PRINTFORML 페니스를 뽑아 내진 음렬으로부터는, 흰 것이 걸죽 흘러 떨어지고 있다……
+		ELSE
+			GOTO SELECT_CHARA
+		ENDIF
+	CASE 애널섹스한다
+		IF HAS_PENIS(제공원)
+			PRINTFORML %조사처리(ANAME(제공처),"는")% 즉시, %ANAME(제공원)%의 옷을 벗게 해 스스로도 옷을 벗었다
+			PRINTFORML %ANAME(제공원)%의 가랑이에 있는 일물은, 쾌락에의 기대로 이미 격분하고 있다……
+			PRINTFORML 이것은 기대할 수 있을 것 같다면, %조사처리(ANAME(제공처),"는")% 입맛을 다심 했다
+			SELECTCASE RAND:7
+				CASE 0
+					PRINTFORML %조사처리(ANAME(제공처),"는")% 스스로 %ANAME(제공원)%에 엉덩이를 향해, 허리를 구불거리게 할 수 있어 항문 성교를 졸랐다
+				CASE 1
+					PRINTFORML %조사처리(ANAME(제공처),"는")% 스스로 위로 향해 가로놓여, 가랑이를 열어 엉덩이 구멍을 손가락으로 열려 항문 성교를 졸랐다
+				CASE 2
+					PRINTFORML %조사처리(ANAME(제공처),"는")% 스스로 벽에 손을 붙어 %ANAME(제공원)%에 엉덩이를 향해, 뒤로부터 애널을 범하도록(듯이) 졸랐다
+				CASE 3
+					PRINTFORML %조사처리(ANAME(제공처),"는")% %조사처리(ANAME(제공원),"와")% 서로 마주 봐, 선 채로의 자세로 애널을 범하도록(듯이) 명했다
+				CASE 4
+					PRINTFORML %조사처리(ANAME(제공처),"는")% %조사처리(ANAME(제공원),"를")% 앉게 해 서로 마주 본 몸의 자세로 걸치면, 아래로부터 엉덩이구멍을 밀어올리도록(듯이) 졸랐다
+				CASE 5
+					PRINTFORML %조사처리(ANAME(제공처),"는")% %조사처리(ANAME(제공원),"를")% 앉게 해 퇴행적인 몸의 자세로 걸치면, 아래로부터 엉덩이구멍을 몇 번이나 밀어올리도록(듯이) 졸랐다
+				CASE 6
+					PRINTFORML %조사처리(ANAME(제공처),"는")% %조사처리(ANAME(제공원),"를")% 위로 향해 재워, 그 위에 걸치면, 귀두에 당신의 엉덩이 구멍의 입구를 문지른다
+			ENDSELECT
+			PRINTFORML %조사처리(ANAME(제공원),"는")% 명해지는 대로, %ANAME(제공처)%의 엉덩이 구멍에 삽입했다……
+			CALL FUCK(제공처, "욕망, Ａ, 성교, 정애, Ａ성교", "Ａ처녀상실, 장내사정", 0, "", ANAME(제공원), "", "외교 관계 유지를 위한 화간")
+			CALL FUCK(제공원, "욕망, Ｃ, 성교, 사정, Ａ삽입", "동정상실", 0, "", "", @"%ANAME(제공처)%의 애널", "외교 관계 유지를 위한 화간")
+			PRINTFORML 이윽고 %조사처리(ANAME(제공원),"가")% 한계를 맞이하면, %조사처리(ANAME(제공처),"는")% 그대로항내에서 사정시켰다……
+			PRINTFORML 페니스를 뽑아 내진 엉덩이구멍으로부터는, 흰 것이 걸죽 흘러 떨어지고 있다……
+		ELSE
+			GOTO SELECT_CHARA
+		ENDIF
+	CASE 애널섹스된다
+		IF HAS_PENIS(제공처)
+			PRINTFORML %조사처리(ANAME(제공처),"는")% 즉시, %ANAME(제공원)%의 옷을 벗게 해 스스로도 옷을 벗었다
+			PRINTFORML %ANAME(제공처)%의 가랑이에 있는 일물은, 쾌락에의 기대로 이미 격분하고 있다……
+			SELECTCASE RAND:7
+				CASE 0
+					PRINTFORML %조사처리(ANAME(제공처),"는")%, %조사처리(ANAME(제공원),"를")% 엎드린 자세로시켜, 뒤로부터 그 엉덩이구멍을 관철했다
+				CASE 1
+					PRINTFORML %조사처리(ANAME(제공처),"는")%, %조사처리(ANAME(제공원),"를")% 위로 향해시켜, 덮어씌워 위로부터 몇 번이나 엉덩이구멍을 찔렀다
+				CASE 2
+					PRINTFORML %조사처리(ANAME(제공처),"는")%, %ANAME(제공원)%에 벽에 손을 붙어 엉덩이를 향하게 해 뒤로부터 그 엉덩이구멍을 관철했다
+				CASE 3
+					PRINTFORML %조사처리(ANAME(제공처),"는")%, %조사처리(ANAME(제공원),"와")% 서로 마주 봐, 선 채로 엉덩이구멍을 관철했다
+				CASE 4
+					PRINTFORML %조사처리(ANAME(제공처),"는")% 앉아, %조사처리(ANAME(제공원),"를")% 서로 마주 본 몸의 자세로 걸치게 해 아래로부터 몇 번이나 엉덩이 구멍을 밀어올렸다
+				CASE 5
+					PRINTFORML %조사처리(ANAME(제공처),"는")% 앉아, %조사처리(ANAME(제공원),"를")% 퇴행적인 몸의 자세로 걸치게 해 아래로부터 몇 번이나 엉덩이 구멍을 밀어올렸다
+				CASE 6
+					PRINTFORML %조사처리(ANAME(제공처),"는")% 위로 향해 자면, %조사처리(ANAME(제공원),"를")% 당신 위에 걸치게 해 스스로 허리를 흔들게 했다
+			ENDSELECT
+			CALL FUCK(제공처, "욕망, Ｃ, 성교, 사정, Ａ삽입", "동정상실", 0, "", "", @"%ANAME(제공원)%의 애널", "외교 관계 유지를 위한 화간")
+			CALL FUCK(제공원, "욕망, Ａ, 성교, 정애, Ａ성교", "Ａ처녀상실, 장내사정", 0, "", ANAME(제공처), "", "외교 관계 유지를 위한 화간")
+			PRINTFORML 이윽고 %조사처리(ANAME(제공처),"는")%, %ANAME(제공원)%의 항내에 한껏 사정했다
+			PRINTFORML 페니스를 뽑아 내진 엉덩이구멍으로부터는, 흰 것이 걸죽 흘러 떨어지고 있다……
+		ELSE
+			GOTO SELECT_CHARA
+		ENDIF
+	CASE 쿤닐링구스한다
+		IF HAS_VAGINA(제공처)
+			PRINTFORML %조사처리(ANAME(제공처),"는")% 즉시, %ANAME(제공원)%의 옷을 벗게 해 스스로도 옷을 벗었다
+			PRINTFORML %ANAME(제공처)%의 비밀의 틈은, 쾌락에의 기대로 이미 녹진녹진이 되어 있다……
+			PRINTFORML %조사처리(ANAME(제공처),"는")% %조사처리(ANAME(제공원),"를")% 무릎 꿇게 하면, 스스로는 의자에 앉아 조금다리를 연다
+			PRINTFORML 무엇을해라고 (듣)묻고 있을까 헤아린 %조사처리(ANAME(제공원),"는")%, 조속히 %ANAME(제공처)%의 비밀의 틈에 봉사를 시작했다……
+			CALL FUCK(제공처, "욕망, Ｃ")
+			CALL FUCK(제공원, "봉사, 성기술, 펠라티오", "키스상실", 0, @"%ANAME(제공처)%의 음부", "", "", "외교 관계 유지를 위한 화간")
+		ELSE
+			GOTO SELECT_CHARA
+		ENDIF
+	CASE 쿤닐링구스된다
+		IF HAS_VAGINA(제공원)
+			PRINTFORML %조사처리(ANAME(제공처),"는")% 즉시, %ANAME(제공원)%의 옷을 벗게 해 스스로도 옷을 벗었다
+			PRINTFORML %ANAME(제공원)%의 비밀의 틈은, 쾌락에의 기대로 이미 녹진녹진이 되어 있다……
+			PRINTFORML %조사처리(ANAME(제공처),"는")% %조사처리(ANAME(제공원),"를")% 앉게 해 그 다리를 열게 했다
+			PRINTFORML 그리고 그 비밀의 틈을, 음핵을, 혀와 손가락으로 가지고 희롱하기 시작했다……
+			CALL FUCK(제공처, "봉사, 성기술, 펠라티오", "키스상실", 0, @"%ANAME(제공원)%의 음부", "", "", "외교 관계 유지를 위한 화간")
+			CALL FUCK(제공원, "욕망, Ｃ")
+		ELSE
+			GOTO SELECT_CHARA
+		ENDIF
+	CASE 조개맞대기
+		IF HAS_VAGINA(제공원) && HAS_VAGINA(제공처)
+			PRINTFORML %조사처리(ANAME(제공처),"는")% 즉시, %ANAME(제공원)%의 옷을 벗게 해 스스로도 옷을 벗었다
+			PRINTFORML 두 명의 비밀의 틈은, 쾌락에의 기대로 이미 녹진녹진이 되어 있다……
+			PRINTFORML %조사처리(ANAME(제공처),"는")% %ANAME(제공원)%에 다리를 열게 하면, 흠뻑 젖는 비부를 거듭해 맞추었다
+			PRINTFORML 그리고 그대로 다리를 서로 걸어, 갈라진 곳을 맞대고 비벼, 서로 몇 번이나 절정 서로 시켰다……
+		ELSE
+			GOTO SELECT_CHARA
+		ENDIF
+	CASE 키스
+		PRINTFORML %조사처리(ANAME(제공처),"는")% 즉시, %ANAME(제공원)%의 옷을 벗게 해 스스로도 옷을 벗었다
+		IF RAND:2
+			PRINTFORML %조사처리(ANAME(제공처),"는")% %조사처리(ANAME(제공원),"와")% 피부를 거듭해 농후한 입맞춤을 주고 받았다……
+		ELSE
+			PRINTFORML %조사처리(ANAME(제공처),"는")% %ANAME(제공원)%에 명해 농후한 입맞춤을 주고 받았다……
+		ENDIF
+
+		CALL FUCK(제공처, "봉사, 성기술, 키스", "키스상실", 0, @"%ANAME(제공원)%의 입술", "", "", "외교 관계 유지를 위한 화간")
+		CALL FUCK(제공원, "봉사, 성기술, 키스", "키스상실", 0, @"%ANAME(제공원)%의 입술", "", "", "외교 관계 유지를 위한 화간")
+	CASE 병사에제공된다
+		IF HAS_VAGINA(제공원)
+			PRINTFORML %조사처리(ANAME(제공처),"는")% 즉시, %ANAME(제공원)%의 옷을 벗게 해 스스로도 옷을 벗었다
+			PRINTFORML %ANAME(제공처)%의 가랑이에 있는 일물은, 쾌락에의 기대로 이미 격분하고 있다……
+			PRINTFORML 갑자기, %조사처리(ANAME(제공처),"는")% 팡팡 손뼉을 쳤다
+			PRINTFORML 하면, 강인한 병사들이 줄줄(질질)하고 몰려닥쳐 왔다
+			PRINTFORML 그대로, %조사처리(ANAME(제공원),"는")%, 위안으로서 병사들에게 제공되어 버렸다……
+			CALL FUCK(제공처, "욕망, Ｃ, Ｂ, 자위", "")
+			CALL FUCK(제공원, "욕망, 봉사, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, Ｖ확장, Ａ확장, 성교, 자위, 정애, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("병사"), @"%ANAME(제공처)%의 사병의 페니스", @"%ANAME(제공처)%의 사병", "", "외교 관계 유지를 위한 윤간")
+			PRINTFORML 이윽고 것이 끝나면, 거기에는 전신 모든 구멍에서 종을 흘리는 %조사처리(ANAME(제공원),"와")%
+			PRINTFORML %ANAME(제공원)%의 치태를 술안주에 몇 번이나 자위를 해, 축쳐친 %조사처리(ANAME(제공처),"가")% 남아 있었다
+		ELSE
+			GOTO SELECT_CHARA
+		ENDIF
+	CASE 춤을피로한다
+		PRINTFORML 어슴푸레한 방 안, %조사처리(ANAME(제공처),"는")% 소파에서 느긋하게 쉬면서 즐거움의 도착을 기다리고 있었다
+		PRINTFORML 그런데, 오늘 밤은 도대체 어떻게해 자신을 만족시켜 주는 것인가……
+		PRINTFORML ·
+		PRINTFORML …
+		PRINTFORMW …
+		IF !RAND:3
+			PRINTFORML %ANAME(제공처)% 앞으로 코트 모습의 %조사처리(ANAME(제공원),"가")% 방문했다
+			PRINTFORML %조사처리(ANAME(제공원),"는")% 조속히 코트를 벗어 던져, 박포 한 장이 되어 %조사처리(ANAME(제공처),"를")% 위한 마이를 피로 했다
+			IF !TALENT:제공원:더러운아저씨
+				PRINTFORML 신비적이면서 요염한 듯한 색과 향기를 감겨, 두 명의 사이에 이상한 공간이 양성되어 간다……
+				PRINTFORML 손가락끝까지 두루 미친 섬세한 움직임에 %조사처리(ANAME(제공처),"는")% 매료된 것처럼 바라보고 있었지만
+				PRINTFORM 희미하게 틈이 날 수 있는 %ANAME(제공원)%의
+				IF GROUPMATCH(TALENT:제공원:체격, 체격_아이, 체격_작은체형)
+					PRINTFORM 미성숙인 지체
+				ELSEIF GET_BUSTSIZE(제공원) > 0 || TALENT:제공원:체형 >= 체형_글래머
+					PRINTFORM 성적 매력인 지체
+				ELSEIF !HAS_VAGINA(제공원) && HAS_PENIS(제공원)
+					PRINTFORM 육체
+				ELSE
+					PRINTFORM 지체
+				ENDIF
+				PRINTFORML 에 참지 못하고, 마침내 스스로의 \@ HAS_PENIS(제공처) ? 페니스를 훑어 내 # 비밀스런 장소를 만지작거려 \@냈다……
+			ELSE
+				PRINTFORML 예상외의 수상한 자의 내방에 아직도 상황을 삼킬 수 없는 %조사처리(ANAME(제공처),"였")%지만
+				PRINTFORML %ANAME(제공원)%의 야무지지 못한 외관에 어울리지 않는 흐르는 것 같은 몸놀림이, 두 명의 사이에 기묘한 공간을 형성한다……
+				PRINTFORML 목전에 이상한 춤을 피로 하는 얇게 입은 중년남성을 %조사처리(ANAME(제공처),"는")% 아연하게로서 바라보고 있었지만
+				PRINTFORML 꽤 훌륭한 모습에 되돌려 보낼 수도 있지 않고, 결국 끝까지 감상 할 수밖에 없었다……
+			ENDIF
+		ELSEIF RAND:2
+			PRINTFORML %ANAME(제공처)%의 원래로 요염한 의상을 감긴 %조사처리(ANAME(제공원),"가")% 방문했다
+			IF !TALENT:제공원:더러운아저씨
+				PRINTFORM %조사처리(ANAME(제공원),"는")% 괴로운 듯이 신체를 구불거리게 되어지면서, 한 장, 또 한 장과 초조하게 하도록(듯이) 의상을 벗어 던져 그
+				IF GROUPMATCH(TALENT:제공원:체격, 체격_아이, 체격_작은체형)
+					PRINTFORM 어린 지체
+				ELSEIF GET_BUSTSIZE(제공원) > 0 || TALENT:제공원:체형 >= 체형_글래머
+					PRINTFORM 성적 매력인 지체
+				ELSEIF !HAS_VAGINA(제공원) && HAS_PENIS(제공원)
+					PRINTFORM 육체
+				ELSE
+					PRINTFORM 지체
+				ENDIF
+				PRINTFORML 를 쬐어 간다……
+				PRINTFORML %조사처리(ANAME(제공처),"는")% 완전히 상기 한 모습으로, 자신의 흥분한 \@ HAS_PENIS(제공처) ? 일물 # 비순 \@를 만지작거리면서 추잡한 마이를 즐겨
+				IF RAND:2 && HAS_VAGINA(제공원)
+					PRINTFORM %ANAME(제공원)%의
+					IF GROUPMATCH(TALENT:제공원:체격, 체격_아이, 체격_작은체형) && GET_BUSTSIZE(제공원) < 0
+						PRINTFORM 미성숙인 가슴
+					ELSEIF GET_BUSTSIZE(제공원) > 0
+						PRINTFORM 흔들리는 가슴
+					ELSE
+						PRINTFORM 균정을 취할 수 있던 가슴
+					ENDIF
+				ELSE
+					PRINTFORM 마지막 한 장이 철거해져 이슬이 된 %ANAME(제공원)%의 \@ HAS_PENIS(제공원) ? 페니스 # 비밀스런 장소 \@
+				ENDIF
+				PRINTFORML 를 삼킬 듯이 응시하면서 절정에 이르렀다……
+			ELSE
+				PRINTFORML 예상외의 수상한 놈의 내습에 놀라는 %ANAME(제공처)%의 사정 따위 상관없이
+				PRINTFORML %조사처리(ANAME(제공원),"는")% 정열적인 액션과 함께, 한 장, 또 한 장과 쓸데없이 화려한 의상을 벗어 던져 그 고깃덩이를 드러내 간다……
+				PRINTFORML %조사처리(ANAME(제공처),"는")% 변질자로부터 흩날리는 땀을 손으로 막으면서, 머리를 다 메우는 물음표와 격투하고 있었지만
+				PRINTFORML 교섭의 앞 막힘없이도 하지 못하고, 석연치 않는 부분이 있으면서도 결국 끝까지 연회재주를 바라보고 있을 수밖에 않았다……
+			ENDIF
+		ELSE
+			IF !TALENT:제공원:더러운아저씨
+				PRINTFORML %ANAME(제공처)% 앞으로 아슬아슬한 본디지를 감긴 %조사처리(ANAME(제공원),"가")% 방문했다
+				PRINTFORM %조사처리(ANAME(제공원),"는")% 차분히 노래하면서 %ANAME(제공처)%에 몸을 바치듯이
+				IF GROUPMATCH(TALENT:제공원:체격, 체격_아이, 체격_작은체형)
+					PRINTFORM 미성숙인 지체
+				ELSEIF GET_BUSTSIZE(제공원) > 0 || TALENT:제공원:체형 >= 체형_글래머
+					PRINTFORM 성적 매력인 지체
+				ELSEIF !HAS_VAGINA(제공원) && HAS_PENIS(제공원)
+					PRINTFORM 육체
+				ELSE
+					PRINTFORM 지체
+				ENDIF
+				PRINTFORML 를 밀착시켜 체온을 전해
+				PRINTFORML 피부를 훑도록(듯이), 때때로 휘감기도록(듯이) 손가락끝을 기게 해 흥분을 권했다……
+				PRINTFORML %ANAME(제공처)%의 숨은 점차 난폭해져, %조사처리(ANAME(제공원),"를")% 쓰러트려 끝내고 싶은 충동에 사로잡혔지만
+				PRINTFORML 조용하게 %ANAME(제공원)%에 제지해져 %ANAME(제공처)%의 신체는 초조해 해지면서도 조금씩 열을 띠어 간다
+				PRINTFORML 배덕적인 공기안, 천천히 확실히, %ANAME(제공처)%의 쾌감은 마침내 정점으로 달했다……
+			ELSE
+				PRINTFORML 돌연 방이 밝아져, 템포의 빠른 음악이 흐르기 시작한다
+				PRINTFORML 이상하게 여긴 %ANAME(제공처)%의 원래로, 기발한 의상을 감긴 %조사처리(ANAME(제공원),"가")% 압도적인 텐션과 함께 돌입한다!
+				PRINTFORML 지나친 사건에 %조사처리(ANAME(제공처),"는")%\@ RAND:2 ? 마시고 있던 차를 분출해 # 가지고 있던 글라스를 떨어뜨려 \@끝냈다
+				PRINTFORML 이해가 따라잡지 않는 %조사처리(ANAME(제공처),"를")% 거들떠보지도 않고, %조사처리(ANAME(제공원),"는")% 이성에게 어필 하는 진귀한 짐승과 같이 격렬하게 춤추면서 상대 거리를 줄여 간다……!
+				PRINTFORML 눈물고인 눈의 %조사처리(ANAME(제공처),"는")% 닥쳐오는 재앙을 되물리치려고 하지만, 고깃덩이의 질량이 그것을 막아, 꽤 능숙하게 가지 않는다
+				PRINTFORML 입씨름의 끝, %조사처리(ANAME(제공처),"는")% 어떻게든%조사처리(ANAME(제공원),"를")% 달래, 이번 회담은 무사하게 옮겼다는 이야기로 돌아가 주시게 되었다……
+			ENDIF
+		ENDIF
+		CALL FUCK(제공원, "욕망, 노출", "")
+	CASE 범용
+		PRINTFORML %조사처리(ANAME(제공처),"는")% %ANAME(제공원)%의 신체로 즐긴 것 같다……
+	CASEELSE
+		GOTO SELECT_CHARA
+ENDSELECT
+
+만족도 = MIN(ABL:제공원:욕망 * 3, 15) + MIN(ABL:제공원:성기술 * 2, 10) + MIN(ABL:제공원:봉사 * 2, 10) + MIN(ABL:제공원:성교, 5)
+만족도 += MIN(ABL:제공처:욕망, 10)
+
+SIF TALENT:제공원:소악마
+	만족도 += 1
+SIF TALENT:제공원:매혹
+	만족도 += 3
+SIF TALENT:제공원:수수께끼의매력
+	만족도 += 5
+SIF TALENT:제공원:인기
+	만족도 += 3
+SIF TALENT:제공원:각선미
+	만족도 += 2
+SIF TALENT:제공원:예쁜엉덩이
+	만족도 += 2
+SIF GET_HIPSIZE(제공원) >= 1
+	만족도 += 2
+SIF TALENT:제공원:붕괴
+	만족도 -= 10
+SIF TALENT:제공원:공허
+	만족도 -= 10
+
+FOR LOCAL, 0, VARSIZE("SEX_TALENT_NAME")
+	SIF GETBIT(TALENT:제공원:음란계, LOCAL)
+		만족도 += 3
+NEXT
+
+SIF TALENT:제공원:더러운아저씨
+	TIMES 만족도, 0.50
+
+;정치력에 의한 보정
+SELECTCASE ABL:제공원:정치 - ABL:제공처:정치
+	CASE IS >= 50
+		TIMES 만족도, 1.20
+	CASE IS >= 35
+		TIMES 만족도, 1.15
+	CASE IS >= 25
+		TIMES 만족도, 1.10
+	CASE IS >= 10
+		TIMES 만족도, 1.05
+	CASE IS < -10
+		TIMES 만족도, 0.95
+	CASE IS < -25
+		TIMES 만족도, 0.90
+	CASE IS < -35
+		TIMES 만족도, 0.85
+	CASE IS < -50
+		TIMES 만족도, 0.80
+	CASEELSE
+ENDSELECT
+
+;최저치 보증
+만족도 = MAX(만족도, 5)
+
+IF IS_SP_CHARA(제공원)
+	CALL COLOR_PRINTL("특수 캐릭터를 제공:만족도에 패널티", 칼라_경고)
+	만족도 = MAX(만족도 /10, 1)
+ENDIF
+
+CALL ADD_COOLTIME(제공원, 1)
+
+IF 제공원 == MASTER
+	CFLAG:제공처:안면 = 1
+ENDIF
+IF 제공원 != MASTER
+	LOCAL:1 = LIMIT(CFLAG:제공원:호감도 / 10, 200, 1000)
+	LOCAL:2 = LIMIT(CFLAG:제공원:종속도 / 10, 200, 1000)
+	CFLAG:제공원:호감도 -= LIMIT(CFLAG:제공원:호감도 / 10, 200, 1000)
+	CFLAG:제공원:종속도 -= LIMIT(CFLAG:제공원:종속도 / 10, 200, 1000)
+	PRINTL
+	PRINTFORM %ANAME(제공원), 8%:
+	PRINTFORM 호감도 %TOSTR_SIGN(LOCAL:1 * - 1)%{ABS(LOCAL:1)}(합계:{CFLAG:제공원:호감도}) 
+	PRINTFORM 종속도 %TOSTR_SIGN(LOCAL:2 * - 1)%{ABS(LOCAL:2)}(합계:{CFLAG:제공원:종속도})
+	PRINTL
+ENDIF
+
+RETURN 만족도
+
+@TALK_CAN_GIVE_SEX(ARG:0)
+#FUNCTION
+;소속이 MASTER와 다르면 안 돼
+SIF CFLAG:(ARG:0):소속 != CFLAG:MASTER:소속
+	RETURNF 0
+;주인공 이외는 군주라면 안 돼
+SIF ARG:0 != MASTER && ARG:0 == GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+	RETURNF 0
+;성지식이 필요
+SIF ABL:(ARG:0):성지식 < 3
+	RETURNF 0
+;주인공 이외는 「함락계 소질 떡인, 기성 사실 3, 공중변소, 약물 중독」의 어느쪽이든을 채울 필요가 있다
+SIF ARG:0 != MASTER && !(IS_SLAVE(ARG:0) || IS_LOVER(ARG:0) || IS_SLAVED_BY(ARG:0) || MARK:(ARG:0):기성사실 == 3 || GETBIT(TALENT:(ARG:0):음란계, 소질_음란_정액변소) || GETBIT(TALENT:(ARG:0):음란계, 소질_음란_약물중독) || (IS_SP_COUNTRY(CFLAG:MASTER:소속) && GETBIT(TALENT:(ARG:0):특수세력함락계, SP_COUNTRY_TO_CONST(CFLAG:MASTER:소속))))
+	RETURNF 0
+RETURNF 1
+
+
+;------------------------------------
+;플레이 내용의 선택용
+;------------------------------------
+@SELECT_PLAY_LIST(제공원, 제공처)
+#DIM 플레이내용
+#DIMS CONST 플레이문자열 = "상호페라", "상호삽입", "상호애널섹스", "페라한다", "페라된다", "섹스한다", "섹스된다", "애널섹스한다", "애널섹스된다", "쿤닐링구스한다", "쿤닐링구스된다", "조개맞대기", "키스", "난교", "병사에제공된다", "춤을피로한다"
+#DIM CONST 후타후타플레이배열 = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+#DIM CONST 후타남플레이배열 = 0, 2, 3, 4, 7, 8, 9, 12, 15
+#DIM CONST 후타녀플레이배열 = 3, 6, 9, 10, 11, 12, 14, 15
+#DIM CONST 남후타플레이배열 = 0, 2, 3, 4, 6, 7, 8, 10, 12, 14, 15
+#DIM CONST 남녀플레이배열 = 3, 6, 8, 10, 12, 14, 15
+#DIM CONST 남남플레이배열 = 0, 2, 3, 4, 7, 8, 12, 15
+#DIM CONST 여후타플레이배열 = 4, 5, 7, 9, 10, 11, 12, 13, 14, 15
+#DIM CONST 여남플레이배열 = 4, 5, 7, 9, 12, 15
+#DIM CONST 여여플레이배열 = 9, 10, 11, 12, 13, 14, 15
+#DIM FIRST_LINE
+#DIM 제공원
+#DIM 제공처
+FIRST_LINE = LINECOUNT
+$SHOW_LOOP
+;후타 후타
+IF HAS_VAGINA(제공처) && HAS_PENIS(제공처) && HAS_VAGINA(제공원) && HAS_PENIS(제공원)
+	FOR LOCAL, 0, VARSIZE("후타후타플레이배열")
+		PRINTFORML [{LOCAL}] %플레이문자열:(후타후타플레이배열:(LOCAL:0))%
+	NEXT
+	PRINTL [99] 돌아온다
+	INPUT
+	IF RESULT == 99
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RETURN -1
+	ELSEIF INRANGE(RESULT, 0, VARSIZE("후타후타플레이배열"))
+		플레이내용 = 후타후타플레이배열:RESULT
+	ELSE
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+	ENDIF
+;후타  남
+ELSEIF HAS_VAGINA(제공처) && HAS_PENIS(제공처) && !HAS_VAGINA(제공원) && HAS_PENIS(제공원)
+	FOR LOCAL, 0, VARSIZE("후타남플레이배열")
+		PRINTFORML [{LOCAL}] %플레이문자열:(후타남플레이배열:(LOCAL:0))%
+	NEXT
+	PRINTL [99] 돌아온다
+	INPUT
+	IF RESULT == 99
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RETURN -1
+	ELSEIF INRANGE(RESULT, 0, VARSIZE("후타남플레이배열"))
+		플레이내용 = 후타남플레이배열:RESULT
+	ELSE
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+	ENDIF
+;후타  녀
+ELSEIF HAS_VAGINA(제공처) && HAS_PENIS(제공처) && HAS_VAGINA(제공원) && !HAS_PENIS(제공원)
+	FOR LOCAL, 0, VARSIZE("후타녀플레이배열")
+		PRINTFORML [{LOCAL}] %플레이문자열:(후타녀플레이배열:(LOCAL:0))%
+	NEXT
+	PRINTL [99] 돌아온다
+	INPUT
+	IF RESULT == 99
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RETURN -1
+	ELSEIF INRANGE(RESULT, 0, VARSIZE("후타녀플레이배열"))
+		플레이내용 = 후타녀플레이배열:RESULT
+	ELSE
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+	ENDIF
+;남  후타
+ELSEIF !HAS_VAGINA(제공처) && HAS_PENIS(제공처) && HAS_VAGINA(제공원) && HAS_PENIS(제공원)
+	FOR LOCAL, 0, VARSIZE("남후타플레이배열")
+		PRINTFORML [{LOCAL}] %플레이문자열:(남후타플레이배열:(LOCAL:0))%
+	NEXT
+	PRINTL [99] 돌아온다
+	INPUT
+	IF RESULT == 99
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RETURN -1
+	ELSEIF INRANGE(RESULT, 0, VARSIZE("남후타플레이배열"))
+		플레이내용 = 남후타플레이배열:RESULT
+	ELSE
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+	ENDIF
+;남  남
+ELSEIF !HAS_VAGINA(제공처) && HAS_PENIS(제공처) && !HAS_VAGINA(제공원) && HAS_PENIS(제공원)
+	FOR LOCAL, 0, VARSIZE("남남플레이배열")
+		PRINTFORML [{LOCAL}] %플레이문자열:(남남플레이배열:(LOCAL:0))%
+	NEXT
+	PRINTL [99] 돌아온다
+	INPUT
+	IF RESULT == 99
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RETURN -1
+	ELSEIF INRANGE(RESULT, 0, VARSIZE("남남플레이배열"))
+		플레이내용 = 남남플레이배열:RESULT
+	ELSE
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+	ENDIF
+;남녀
+ELSEIF !HAS_VAGINA(제공처) && HAS_PENIS(제공처) && HAS_VAGINA(제공원) && !HAS_PENIS(제공원)
+	FOR LOCAL, 0, VARSIZE("남녀플레이배열")
+		PRINTFORML [{LOCAL}] %플레이문자열:(남녀플레이배열:(LOCAL:0))%
+	NEXT
+	PRINTL [99] 돌아온다
+	INPUT
+	IF RESULT == 99
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RETURN -1
+	ELSEIF INRANGE(RESULT, 0, VARSIZE("남녀플레이배열"))
+		플레이내용 = 남녀플레이배열:RESULT
+	ELSE
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+	ENDIF
+;녀 후타
+ELSEIF HAS_VAGINA(제공처) && !HAS_PENIS(제공처) && HAS_VAGINA(제공원) && HAS_PENIS(제공원)
+	FOR LOCAL, 0, VARSIZE("여후타플레이배열")
+		PRINTFORML [{LOCAL}] %플레이문자열:(여후타플레이배열:(LOCAL:0))%
+	NEXT
+	PRINTL [99] 돌아온다
+	INPUT
+	IF RESULT == 99
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RETURN -1
+	ELSEIF INRANGE(RESULT, 0, VARSIZE("여후타플레이배열"))
+		플레이내용 = 여후타플레이배열:RESULT
+	ELSE
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+	ENDIF
+;녀남
+ELSEIF HAS_VAGINA(제공처) && !HAS_PENIS(제공처) && !HAS_VAGINA(제공원) && HAS_PENIS(제공원)
+	FOR LOCAL, 0, VARSIZE("여남플레이배열")
+		PRINTFORML [{LOCAL}] %플레이문자열:(여남플레이배열:(LOCAL:0))%
+	NEXT
+	PRINTL [99] 돌아온다
+	INPUT
+	IF RESULT == 99
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RETURN -1
+	ELSEIF INRANGE(RESULT, 0, VARSIZE("여남플레이배열"))
+		플레이내용 = 여남플레이배열:RESULT
+	ELSE
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+	ENDIF
+;녀  녀
+ELSEIF HAS_VAGINA(제공처) && !HAS_PENIS(제공처) && HAS_VAGINA(제공원) && !HAS_PENIS(제공원)
+	FOR LOCAL, 0, VARSIZE("여여플레이배열")
+		PRINTFORML [{LOCAL}] %플레이문자열:(여여플레이배열:(LOCAL:0))%
+	NEXT
+	PRINTL [99] 돌아온다
+	INPUT
+	IF RESULT == 99
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RETURN -1
+	ELSEIF INRANGE(RESULT, 0, VARSIZE("여여플레이배열"))
+		플레이내용 = 여여플레이배열:RESULT
+	ELSE
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+	ENDIF
+ELSE
+	플레이내용 = -1
+ENDIF
+RETURN 플레이내용

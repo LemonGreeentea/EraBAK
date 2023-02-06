@@ -1,0 +1,607 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_BANDIT_CONQUER_RATE()
+RETURN 40
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_BANDIT_CONQUER_DECISION()
+#DIM 도둑
+도둑 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_도둑))
+SIF 도둑 == -1
+	RETURN 0
+SIF IS_SP_COUNTRY(CFLAG:MASTER:소속)
+	RETURN 0
+SIF BANDIT_POP_SUSPENDED > 0
+	RETURN 0
+
+RETURN DAY >= 15
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_BANDIT_CONQUER_GENRE()
+RETURN 데일리_장르_특수세력
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_BANDIT_CONQUER
+#DIM 도둑
+#DIM 후보, 3
+#DIM 인원수
+#DIM 무투합계
+#DIM 지략합계
+VARSET 인원수
+VARSET 후보
+VARSET 무투합계
+VARSET 지략합계
+
+도둑 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_도둑))
+
+
+IF DVAR:도둑토벌_발생플래그 == 0
+	PRINTFORML 어느 날, %ANAME(MASTER)% 앞으로 보고가 들어갔다
+	PRINTFORMW 무려, 그 고기나무 도둑들의 아지트의 장소를 잡았다는 것이다!
+ELSEIF DVAR:도둑토벌_발생플래그 == 1
+	PRINTFORML 이전 불퉁불퉁해 준 도둑들이지만, 아무래도 최근, 또 나타나고 있는 것 같다
+	PRINTFORMW 슬슬, 한 번 더 토벌 해 주어야 할 것인가……
+ELSEIF DVAR:도둑토벌_발생플래그 == 2
+	PRINTFORML 이전 잠입에 실패하고 나서 행방을 감추고 있던 도둑이지만, 새로운 아지트의 장소가 판명되었다
+	PRINTFORMW 그 때의 원한을, 지금이야말로 풀 때다……
+ENDIF
+PRINTFORML 비겁한 녀석들이니까, 너무 여럿이서 가면 도망쳐져 버린다
+PRINTFORMW 매우 소수의 정예를 보내 토벌 하는 작전이 적합한 것처럼 생각된다
+PRINTFORM 여기는
+CALL COLOR_PRINT(@"3", 칼라_주의)
+PRINTFORML 인 정도의 부하를 보내, 1날뛰고 해 와 받는 것이 좋을 것이다
+PRINTFORMW 문제는, 누구를 보낼까이지만……
+CALL BANDIT_CONQUER_SELECT_COMMANDER
+
+FOR LOCAL, 0 ,3
+	후보:LOCAL = RESULT:LOCAL
+NEXT
+IF 후보:0 == -1
+	PRINTFORML ……아니, 함부로 부하를 위험에 처할 것도 없을 것이다
+	PRINTFORMW 그렇게 다시 생각한 %조사처리(ANAME(MASTER),"는")%, 아무도 파견하지 않기로 했다
+	RETURN 1
+ENDIF
+
+
+
+FOR LOCAL, 0, 3
+	IF 후보:LOCAL >= 0
+		무투합계 += ABL:(후보:LOCAL):무투
+		지략합계 += ABL:(후보:LOCAL):지략
+		인원수 ++
+	ENDIF
+NEXT
+
+PRINTFORM %ANAME(후보:0)%
+SIF 후보:1 >= 0
+	PRINTFORM 、%ANAME(후보:1)%
+SIF 후보:2 >= 0
+	PRINTFORM 、%ANAME(후보:2)%
+SIF 인원수 > 1
+	PRINTFORM 들
+PRINTFORMW 를, 도둑들의 근거지에 내보냈다……
+PRINTFORML
+CALL SINGLE_DRAWLINE
+;1/3로 중시되는 것이 지략이 된다
+LOCAL:1 = RAND:3 ? (무투합계 * 2 + 지략합계) # (무투합계 + 지략합계 * 2)
+;판정치는 100에서 600, 대개 300 근처에 들르도록(듯이) 궁리
+;하는 김에 도둑인 것으로 도둑의 강함 설정을 판정에 반영하도록(듯이)(최약을 기준치로서 랭크 마다＋10%)
+LOCAL:2 = MAX(RAND:201 + RAND:201 + RAND:201, 100) * (SP_COUNTRY_RANK:(특수세력_도둑) + 9) / 10
+;성공 패턴, 더 동수는 실패
+IF LOCAL:1 > LOCAL:2
+	PRINTFORMW 잠입은 잘된 것 같다
+	SELECTCASE RAND:5
+		CASE 0
+			PRINTFORML %ANAME(후보:(RAND:(인원수)))%는 근거지에 잘 침입해, 그들을 일망타진으로 했다
+			PRINTFORML 붙잡히고 있던 근처의 마을 아가씨 따위의 일도 해방해 주었다
+		CASE 1
+			PRINTFORML %ANAME(후보:(RAND:(인원수)))%는 소리도 없이 파수를 배제해, 눈치채지는 일 없이 침입했다
+			PRINTFORML 그리고 기습을 계속해, 누구에게도 눈치채지는 일 없이, 근거지를 괴멸 시켰다
+		CASE 2
+			PRINTFORML %ANAME(후보:(RAND:(인원수)))%는 여행의 거리 공연인으로 변해, 그들의 연회에 섞여 붐비었다
+			PRINTFORML 그들이 이상하게 눈치채는 것은, 술에 혼합할 수 있었던 마취제가 효과가 있어 왔을 무렵이 되고 나서였다……
+		CASE 3
+			PRINTFORML %ANAME(후보:(RAND:(인원수)))%는 창녀로 변해, 그들의 수령에 아첨한 것 같다
+			PRINTFORML 침실에서 수령이 옷을 벗은 순간에 덤벼 들어, 그를 보기좋게 죽였다……
+		CASE 4
+			PRINTFORML %ANAME(후보:(RAND:(인원수)))%는 그들의 공물의 것이 될 예정이었던 마을 아가씨로 변했다
+			PRINTFORML 그들이 이상하게 눈치챈 것은, 날카로운 일격을 먹어 땅에 쓰러져 엎어진 후였다……
+	ENDSELECT
+	CALL SINGLE_DRAWLINE
+	PRINTFORMW 이것으로 한동안 도둑은 나타나지 않을 것이다
+	PRINTFORMW 도둑에게 골머리를 썩고 있던 다른 세력도, 이 기능을 긍정적으로 보고 있는 것 같다……
+	SETCOLOR 칼라_주의
+	PRINTFORMW 도둑이 한동안 출현하지 않게 되었다
+	PRINTFORMW 다른 세력과의 관계가 크게 개선했다
+	RESETCOLOR
+	;도둑 부대를 모두 해체, 중지 기간 추가, 관계 개선
+	DVAR:도둑토벌_발생플래그 = 1
+	CALL CLEAR_ALL_UNIT(도둑)
+	BANDIT_POP_SUSPENDED = 10
+	FOR LOCAL, 0, MAX_COUNTRY
+		SIF IS_COUNTRY(LOCAL) && LOCAL != 도둑
+			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, 500, -300)
+	NEXT
+	RETURN 1
+;실패 패턴
+ELSE
+	DVAR:도둑토벌_발생플래그 = 2
+	SETCOLOR 칼라_주의
+	PRINTFORML 잠입 작전은 실패해 버린 것 같다……
+	RESETCOLOR
+	;상처가 없다는 것도 어떨까라고 생각하므로 민첩하게 휴가 받는 것 합니다
+	IF CONFIG:200
+		PRINTFORML %ANAME(후보:(RAND:(인원수)))%들은 간신히 돌아왔지만, 상처의 치료가 필요한 것 같다…
+		FOR LOCAL,0, 3
+			IF 후보:LOCAL >= 0
+				LOCAL:2 = INRANGE(4 + SP_COUNTRY_RANK:(특수세력_도둑) - (LOCAL:1 ? (ABL:(후보:LOCAL):무투 * 2 + ABL:(후보:LOCAL):지략) # (ABL:(후보:LOCAL):무투 + ABL:(후보:LOCAL):지략 * 2)) / 50, 2, 5)
+				CALL SET_COOLTIME(후보:LOCAL, LOCAL:2)
+			ENDIF
+		NEXT
+		RETURN 1
+	ENDIF
+
+	FOR LOCAL, 0 , 인원수
+		PRINTFORML
+		IF IS_FEMALE(후보:LOCAL)
+			LOCAL:1 = RAND:22
+			SELECTCASE LOCAL:1
+				CASE 0
+					PRINTFORML 누구에게도 눈치채지지 않게 잠입한 %조사처리(ANAME(후보:LOCAL),"였")%지만, 발견되어 버렸다
+					PRINTFORMW 응원을 불리고 다수의 도둑에게 둘러싸인 %조사처리(ANAME(후보:LOCAL),"는")%, 저항도 허무하게 덮어누를 수 있다
+					PRINTFORML 칼날을 내세웠지만, 거기서 %조사처리(ANAME(후보:LOCAL),"가")% 상당한 「상등품」인 일을 눈치챈다
+					PRINTFORMW 그들의 목적은, %ANAME(후보:LOCAL)%에 폭행을 더하는 것으로부터, 능욕하는 것으로 바뀌었다
+					PRINTFORML 굵은 손이 %ANAME(후보:LOCAL)%의 %STR_BODY("신체", 후보:LOCAL)%를 겨, 그 옷을 벗겨내 간다
+					PRINTFORMW 그리고 전희도 하는 둥 마는 둥, 날뛰는 %조사처리(ANAME(후보:LOCAL),"를")% 억눌러, 그 비부에 육봉을 쑤셔 넣었다
+					PRINTFORML 처음은 혐오 하고 있었던 %ANAME(후보:LOCAL)%도, 성교의 쾌락의 전에, 점차 소리를 녹여 간다
+					PRINTFORMW 그것은, 그들이 이상한 듯한 주사를 %ANAME(후보:LOCAL)%에 친 것으로, 결정적으로 되었다
+					PRINTFORML 남은 제멋대로로 허리를 흔들어 %ANAME(후보:LOCAL)%의 질내를 맛봐, %ANAME(후보:LOCAL)%도 허리를 구불거리게 할 수 있는 그것을 받아들인다
+					PRINTFORMW 이윽고 %ANAME(후보:LOCAL)%의 질내에 농후한 백탁이 발해지면, 그녀는 마음껏 등을 뒤로 젖혀 절정 한다
+					PRINTFORML 이지만, 그래서 끝나 따위는 하지 않았다 
+					PRINTFORMW 그녀에게 부과된 것은, 이 아지트 전원의 상대인 것이니까……
+				CASE 1
+					PRINTFORML 우선은 파수를 배제하려고한 %조사처리(ANAME(후보:LOCAL),"였")%지만, 눈치채져 버렸다
+					PRINTFORMW 파수는 응원을 부르지 않는 대신에 이것을 기쁘게 해라와 당신의 하나의 물건을 노출했다
+					PRINTFORML 왜 이런 것을……혐오 하는 %조사처리(ANAME(후보:LOCAL),"였")%지만, 등이 배는 대신할 수 없다
+					PRINTFORMW 오면서도 그것을 물어, 천천히면서 빨기 시작했다
+					PRINTFORML 입안에 수컷의 맛과 냄새가 퍼진다. 그것은 기분 좋은 것으로는 없을 것이라고 말하는데, 그녀의 깊은 속을 쑤시게 한다
+					PRINTFORMW 여자의 본능이, 다짜고짜로 반응해 버리고 있다
+					PRINTFORML 이윽고 남자는, %ANAME(후보:LOCAL)%의 입안에 한껏 백탁을 흩뿌린다
+					PRINTFORMW 명령 받고도 없다고 말하는데, %조사처리(ANAME(후보:LOCAL),"는")%, 눈치채면 토해내진 자식을 스스로 삼킴하고 있었다
+					PRINTFORML 여하튼, 이것으로 침입할 수 있을 것이다……안심하는 %조사처리(ANAME(후보:LOCAL),"였")%지만, 달콤했다
+					PRINTFORML 파수의 남자는 약속을 지키지 않았다. 큰 소리를 질러, 응원을 모은 것이다
+					PRINTFORMW 눈 깜짝할 순간에 둘러싸여 깔아눌러진 %조사처리(ANAME(후보:LOCAL),"를")%, 그들은 차례차례로 능욕해 갔다……
+				CASE 2
+					PRINTFORML %조사처리(ANAME(후보:LOCAL),"는")% 거리 공연인으로 변해, 그들의 연회에 섞여 붐비었다
+					PRINTFORMW 술에 마취제를 섞을 생각이었던 것이지만, 반대로 이상한 듯한 약을 섞어져 버렸다
+					PRINTFORML 만취 해, 제정신을 잃은 %ANAME(후보:LOCAL)%의 옷을, 도둑들은 벗겨내 간다
+					PRINTFORML 그리고 그 %STR_BODY("가슴", 후보:LOCAL)%를 난폭하게 주물러, 비부에 손가락을 쑤셔 넣어 희롱한다
+					PRINTFORMW 수면제와 미약과 술의 효과로, %조사처리(ANAME(후보:LOCAL),"는")% 굉장한 저항도 하지 못하고 다만 허덕여질 수밖에 없다
+					PRINTFORML 이윽고 그들의 머리가, 그 장대한 하나의 물건을 %ANAME(후보:LOCAL)%의 %STR_BODY("음순:처녀 확인", 후보:LOCAL)%에 꽉 누른다
+					PRINTFORML 쾌락에 탕그 아무것도 모르게 되고 있는 %조사처리(ANAME(후보:LOCAL),"는")%, 주위의 시선에도 아랑곳 없게 그것을 요구했다
+					PRINTFORMW 소망이라면 하고, 남자는 껄껄 웃으면서, 흉악한 것을 그녀의 젖은 구멍에 쑤셔 넣었다
+					PRINTFORML 정수리를 관통하는 것 같은 쾌락에, %조사처리(ANAME(후보:LOCAL),"는")% 흐트러지고 자른 암컷의 표정을 띄웠다
+					PRINTFORML 이윽고 두령이 신음해 사정하면, %조사처리(ANAME(후보:LOCAL),"는")% 뱃속으로부터 탕 쉬는 것 같은 쾌감에,
+					PRINTFORMW 몇 번이나 법열을 맞이했다……
+					PRINTFORMW 그 후, %조사처리(ANAME(후보:LOCAL),"는")% 부하들에게 「제공」되어 안주에 몇 번이나 받아져 버렸다……
+					CFLAG:(후보:LOCAL):약물의존 += 100
+				CASE 3
+					PRINTFORML %조사처리(ANAME(후보:LOCAL),"는")% 거리 공연인으로 변해, 그들의 연회에 섞여 붐비었다
+					PRINTFORMW 술에 마취제를 섞을 생각이었던 것이지만, 반대로 이상한 듯한 약을 섞어져 버렸다
+					PRINTFORML 제정신을 잃은 %ANAME(후보:LOCAL)%에, 도둑들은 정말로 거리 공연을 하도록(듯이) 명했다
+					PRINTFORMW 테이블 위에 올라, 즉석의 스트립 쇼를 하라고 말한다
+					PRINTFORML 보통이라면거부한다곳이겠지만, 지금의 %ANAME(후보:LOCAL)%에 착실한 사고는 존재하지 않는다
+					PRINTFORML 스스로 테이블에 올라, 그들이 잡의 것에 맞추어 춤추면서, 그 피부를 쬐어 간다
+					PRINTFORMW 마지막 한 장, 속옷이 철거해져 그 지체의 아름다움에 그들은 숨을 삼켰다
+					PRINTFORML 남자들은 그대로, %ANAME(후보:LOCAL)%에 자위를 하도록(듯이) 명한다
+					PRINTFORMW %조사처리(ANAME(후보:LOCAL),"는")% (듣)묻는 대로, 크게 다리를 벌려, 상스러운 소리를 질러 당신을 위로한다
+					PRINTFORML 그러던 중, 인내를 할 수 없게 된 남자들은, 그녀를 테이블에서 질질 끌어 내려 깔아누른다
+					PRINTFORMW 그리고, 당신의 장대한 하나의 물건을 흠뻑 젖은 %STR_BODY("음순:처녀 확인:수식", 후보:LOCAL)%비밀의 틈에 쑤셔 넣었다
+					PRINTFORML 또, 입안에도 엉덩이구멍에도, 똑같이 페니스가 비집고 들어가 온다
+					PRINTFORMW 모든 구멍을 격렬하게 떠 돌려주어져 희게 물들여지면서, %조사처리(ANAME(후보:LOCAL),"는")% 몇 번이나 절정 해 버렸다……
+					CFLAG:(후보:LOCAL):약물의존 += 100
+				CASE 4
+					PRINTFORML %조사처리(ANAME(후보:LOCAL),"는")% 도둑들에게 제공되는 마을 아가씨들중에 섞여 왔다
+					PRINTFORMW 하지만, 숨겨 가지고 있던 무기가 발견되어 버렸다!
+					PRINTFORMW 당연히 무기는 빼앗겨 옷을 벗겨내지고 손발에 형벌 도구를 붙여진 상태로, %조사처리(ANAME(후보:LOCAL),"는")% 아지트에 데리고 들어가졌다
+					PRINTFORML 단순한 마을 아가씨라도 변변한 눈에는 당하지 않는데, 침입자가 되면 당연, 그들이 상냥하게 할 리도 없다
+					PRINTFORMW 벽에 연결될 수 있었던 %조사처리(ANAME(후보:LOCAL),"를")%, 신체검사라고 칭해 도둑들은 만지작거려 간다
+					PRINTFORML 난폭한 손놀림이면서, 성감대를 집요하게 노리는 그 손놀림에, %ANAME(후보:LOCAL)%의 호흡은 점차 난폭하게 되어 간다
+					PRINTFORMW 1시간이나 그처럼 되어 %ANAME(후보:LOCAL)%의 신체는 완전히 발정해 버리고 있었다
+					PRINTFORML 그 %STR_BODY("음순:처녀 확인:수식", 후보:LOCAL)%비부에 육봉을 꽉 누를 수 있었을 때, %ANAME(후보:LOCAL)%의 입으로부터 빠진 것은, 거부의 말은 아니고 작은 교성이었다
+					PRINTFORML 범해지자고 하는데 느끼고 있는 모양을 비웃으며, 남자는 일격으로, %ANAME(후보:LOCAL)%의 질 구멍을 깊숙히 관철한다
+					PRINTFORMW 타는 것 같은 쾌감이 달려, %조사처리(ANAME(후보:LOCAL),"는")% 크게 등을 뒤로 젖혀 몸부림쳤다
+					PRINTFORML 이런 녀석들에게……라는 생각은, 격렬한 삽입질에 의한 쾌락이 흘러가게 해 간다
+					PRINTFORMW 둘러싸는 남자들은, %조사처리(ANAME(후보:LOCAL),"가")% 흐트러지는 모습을 보면서 음경을 잡아당기고 있다
+					PRINTFORMW 이윽고 질내의 페니스가 부풀어 올라, 백탁이 토해내지면, %조사처리(ANAME(후보:LOCAL),"는")% 한층 더 높은 소리를 높여, 여자로서의 쾌락에 미쳤다……
+					PRINTFORMW 그리고 그것을 축복하도록(듯이), 주위의 남자들은 그녀에게 백탁을 털어 놓아 갔다……
+				CASE 5
+					PRINTFORML %조사처리(ANAME(후보:LOCAL),"는")% 도둑들에게 제공되는 마을 아가씨들중에 섞여 왔다
+					PRINTFORMW 하지만, 아지트에 들어가자마자 이상한 약을 맞아 넋을 잃어 버렸다
+					PRINTFORML 약효가 이성을 일발로 날려, 그녀는 암컷의 본능에 거역할 수 없게 되어 버린다
+					PRINTFORMW 다른 아가씨 같이, 스스로 옷을 벗어 던지면, 이미 질척질척에 흠뻑 젖고 있는 %STR_BODY("음순:처녀 확인:수식", 후보:LOCAL)%음렬을 손가락으로 휘저으면서, 성교를 졸랐다
+					PRINTFORML %조사처리(ANAME(후보:LOCAL),"와")% 같은 「상등품」의 부탁과 하면, 그들이 거절할 리도 없었다
+					PRINTFORMW 위로 향해 재운 %ANAME(후보:LOCAL)%에 덮어씌우면, 추잡한 암컷구멍에 허리를 내던지기 시작했다
+					PRINTFORML %조사처리(ANAME(후보:LOCAL),"는")% 적극적으로 허리를 구불거리게 해, 혀를 얽히게 할 수 있는 만나, 쾌락을 탐내 간다
+					PRINTFORMW 이윽고 남자가 그녀의 질 구멍에 백탁을 풀면, %조사처리(ANAME(후보:LOCAL),"는")% 미칠 것 같을 정도의 쾌락에 격렬하게 절정 했다
+					PRINTFORML 그 뒤도 그녀는, 질 뿐만 아니라 입이나 엉덩이 구멍, 손이나 유방도 사용해, 남자들을 계속 즐겁게 했다
+					PRINTFORMW 일이 끝나면, 다른 아가씨들을 모방해 스스로 감옥에 들어가, 다시 사귈 때를 기다리기 시작했다……
+					CFLAG:(후보:LOCAL):약물의존 += 100
+				CASE 6
+					PRINTFORML %조사처리(ANAME(후보:LOCAL),"는")% 창녀로 변해, 도둑의 수령의 침실에 기어드는 것에는 성공했다
+					PRINTFORMW 오산이었던 것은, 그가 이상한까지의 테크니션이었다는 일이다
+					PRINTFORML 조금 손대게 해 방심시키자……라는 생각은, 녹이는 것 같은 애무를 받아, 바람에 날아가 버렸다
+					PRINTFORML 눈앞에 내밀어진 그의 하나의 물건에, %조사처리(ANAME(후보:LOCAL),"는")% 당신의 임무도 잊어 달라 붙으며 끝낸다
+					PRINTFORML 굵고 용감하게 딱딱한 그것은, 구강을 화상 입게 할 것 같을 정도에 뜨겁고, 관능을 불타오르게 해 온다
+					PRINTFORMW 깨달으면, 진짜의 창녀같이, 아니 그 이상으로 열심히, 그에게 봉사해 버리고 있었다
+					PRINTFORMW 이윽고 백탁이 발해지면, %조사처리(ANAME(후보:LOCAL),"는")% 진심으로 맛좋다고 느끼면서, 그것을 삼킴해 갔다
+					PRINTFORML %STR_BODY("음순:처녀 확인:수식", 후보:LOCAL)%비부에, 장대한 것을 꽉 누를 수 있다. 그녀는 스스로 다리를 열어, 그것을 맞아들인다
+					PRINTFORMW 그리고, 암컷구멍을 고기말뚝에 뚫어지는 쾌락에, 잠시동안 계속 만취했다……
+					PRINTFORMW 것이 끝나는 무렵에는, 그의 팔 중(안)에서 응석부리는, 한사람의 창녀가 거기에 있었다……
+				CASE 7
+					PRINTFORML %조사처리(ANAME(후보:LOCAL),"는")% 창녀로 변해, 도둑의 수령의 침실에 기어드는 것에는 성공했다
+					PRINTFORML 하지만, 그는 %조사처리(ANAME(후보:LOCAL),"가")% 가짜라는 일을 눈치채고 있던 것 같다
+					PRINTFORMW 틈을 보였기 때문에 덤벼 든 생각이, 다음의 순간에는 공격을 받아, 졸도 당했다……
+					PRINTFORML 
+					PRINTFORMW 눈을 뜬 %조사처리(ANAME(후보:LOCAL),"는")%, 자신이 남자에게 범해지고 있는 일을 깨달았다
+					PRINTFORML 보다 정확하게는, 「남자에게」는 아니고 「남자들에게」, 이다
+					PRINTFORMW 정신을 잃고 있는 동안에, 수령은 그녀를 쇠사슬에 연결해, 그리고 부하들에게 제공한 것 같다
+					PRINTFORML 날뛰는 %조사처리(ANAME(후보:LOCAL),"이지만")%, 쇠사슬이 그것을 억누른다
+					PRINTFORMW 싫어해 봐도, 이미 몇 번이나 종을 발해진 질 구멍이나 엉덩이 구멍은, 굉장한 저항도 없게 육봉을 받아들여 버린다
+					PRINTFORML 몇 번이나 매도되어 뺨을 쳐져 목 안을 페니스로 찔러지면서, 그녀는 그들 전원이 만족할 때까지,
+					PRINTFORMW 끝없이 노리겟감으로 계속 되었다……
+				CASE 8
+					PRINTFORML %조사처리(ANAME(후보:LOCAL),"는")%, 아지트의 한가운데에서 그들에게 발견되어 버렸다
+					PRINTFORMW 저항은 했지만, 상대는 너무 많다. 다수의 의견이 힘이 있어, 결국은 패배해 버린다
+					PRINTFORML 그들은 %ANAME(후보:LOCAL)%의 옷을 벗겨내전라로 하면, 생명과 바꾸어에, 도게자하도록(듯이) 명했다
+					PRINTFORMW 왜 이런 녀석들에게……라고는 생각하지만, 따르지 않으면 생명은 없다. 선택지는 없는 것이나 마찬가지였다
+					PRINTFORML 입술을 악물면서도, %조사처리(ANAME(후보:LOCAL),"는")% 깊숙히 고개를 숙여, 땅에 이마를 붙였다
+					PRINTFORMW 남자들은 껄껄 웃으면서, 당치 않게 그 자세인 채 그녀를 범해 간다
+					PRINTFORML 날뛴다 (일)것은 커녕 조금 움직이는 것조차 용서되지 않는 가운데, %조사처리(ANAME(후보:LOCAL),"는")% 범해지고 계속한다
+					PRINTFORMW 질 구멍에 엉덩이 구멍에와 남자들은 번갈아, 몇 번이나 몇 번이나 그녀를 안쪽으로부터 희게 더럽혀 갔다……
+				CASE 9
+					PRINTFORML %조사처리(ANAME(후보:LOCAL),"는")% 도둑의 수령의 방에 잠입해, 그와의 결전에 가져 넣는 것에는 성공했다
+					PRINTFORMW 오산이었던 것은, 그가 %ANAME(후보:LOCAL)% 이상의 사용자였다는 일이다
+					PRINTFORML 패배한 %조사처리(ANAME(후보:LOCAL),"는")%, 육변기로서 잡혀 버렸다
+					PRINTFORMW 그녀의 %STR_BODY("신체", 후보:LOCAL)%는 벽에 파묻혀 하반신만이 드러내지고 있다
+					PRINTFORML 도둑의 남자들은, 조금 배설을 하는 것 같은 감각으로, %ANAME(후보:LOCAL)%의 고기구멍에 페니스를 쑤셔 넣는다
+					PRINTFORMW 그리고 제멋대로로 허리를 흔들어 빼앗아, 그 가장 안쪽에서 자식을 풀어 간다
+					PRINTFORML 천한 신분들의 종을 심어지고 있다는데, %조사처리(ANAME(후보:LOCAL),"는")% 추잡한 교성을 지르고 있다
+					PRINTFORMW 그녀를 효율 좋게 육변기와 하기 위해(때문), 수령은 미리 대량의 미약을 투여하고 있던 것이다
+					PRINTFORML 범해지지 않으면 욕망으로, 범해지고 있으면 쾌락으로 미칠 것 같게 되면서, 그녀는 오로지,
+					PRINTFORMW 페니스에 봉사하는 물건으로서의 역할을 계속 완수했다……
+				CASE 10
+					PRINTFORML %조사처리(ANAME(후보:LOCAL),"는")% 도둑의 수령의 방에 잠입해, 그와의 결전에 가져 넣는 것에는 성공했다
+					PRINTFORML 하지만, 그가 무슨 일인가 이상한 듯한 주문을 중얼거리면, 신체의 자유가 듣지 않게 되어 버렸다
+					PRINTFORMW 마법이 효과가 있던 것을 확인하면, 수령은 %ANAME(후보:LOCAL)%의 옷을 벗게 해 방의 밖에 내던졌다……
+					PRINTFORML 손가락 한 개 자신의 의사로 움직일 수 없는 상태에서는, 어쩔 수 없다. %조사처리(ANAME(후보:LOCAL),"는")% 곧바로 도둑에게 발견되어 버린다
+					PRINTFORML 하면 %ANAME(후보:LOCAL)%의 입으로부터는, 당치 않게, 남자를 유혹하는 추잡한 말이 흘려 보내지고 시작한이 아닌가
+					PRINTFORML 게다가, 스스로 안짱다리가 되어, %STR_BODY("음순:처녀 확인:수식", 후보:LOCAL)%비부를 손가락으로 벌리는, 정열적인 「서비스」첨부였다
+					PRINTFORMW 당연, 남자는 많이 흥분해, 동료들을 큰 소리로 부르기 시작했다……
+					PRINTFORML 주위를 남자들에게 둘러싸진 중에서, %조사처리(ANAME(후보:LOCAL),"는")% 아첨하는 것 같은 소리로 성교를 조른다
+					PRINTFORMW 더 바랄 나위 없는 것이라고, 남자들은 앞 다투어 %ANAME(후보:LOCAL)%에 모이기 시작했다……
+					PRINTFORML 그렇게 %조사처리(ANAME(후보:LOCAL),"는")%, 마치 스스로 바래 있는 것과 같은, 하지만 실제로는 전혀 바라지 않은 섹스를,
+					PRINTFORMW 몇십인이라는 남자와 만 하루 당했다……
+				CASE 11
+					PRINTFORML 패배한 %조사처리(ANAME(후보:LOCAL),"는")%, 형벌 도구를 낄 수 있어 목걸이를 걸칠 수 있어 리드를 붙여졌다
+					PRINTFORML 그리고 본보기로서전라로 가까이의 마을을 「산책」당했다
+					PRINTFORMW 그 신체에는, 도둑들에 의해 베풀어진 추잡한 낙서가 대량으로 기입해지고 있다……
+					PRINTFORML 도 가는 (곳)중에 남자와 엇갈리면, 입이나 유방으로 봉사하도록(듯이) 도둑들은 명령한다
+					PRINTFORMW 목덜미에 칼날을 꽉 눌려지면서로는, %ANAME(후보:LOCAL)%도 따를 수밖에 없었다
+					PRINTFORML 남도 도와 주지 않는다. 도둑의 무서움은 본고장의 사람인 그도 파악하고 있고, 무엇보다,
+					PRINTFORMW 여자에게 뽑아 받을 수 있을 찬스를 버리는 것 같은 바보는 없었던 것이다
+					PRINTFORML 안면으로부터 %STR_BODY("가슴:수식", 후보:LOCAL)%가슴의 근처에 걸쳐서까지, 흰 것이 흠뻑달라 붙었을 무렵,
+					PRINTFORMW 두 명은 마을의 중심의 광장에 겨우 도착했다
+					PRINTFORML 그리고 마을사람 전원이 보고 있는 가운데, 공개 질내사정 섹스 쇼를 하게 했다……
+					PRINTFORMW 그 후, %조사처리(ANAME(후보:LOCAL),"는")% 마을사람들에게 「제공」되어 젊은이 전원의 상대를 하게 했다……
+				CASE 12
+					PRINTFORML 패배한 %조사처리(ANAME(후보:LOCAL),"는")%, 도둑의 수령의 개인적인 「즐거움」에 사용되었다
+					PRINTFORMW 그의 애완동물인 개와 무리하게에 마그원 된 것이다
+					PRINTFORML 울부짖어싫어하는 %조사처리(ANAME(후보:LOCAL),"이지만")%, 번식욕구 밖에 없는 개에 있어 보면, 상대의 상황 따위 관계없다
+					PRINTFORMW 단지 계속해서, 본능이 향하는 대로, 굽실굽실 허리를 계속 쳐박는다
+					PRINTFORML 축생의 페니스라고는 해도, 물건은 물건. 그녀는 점차 쾌락을 느껴 버린다
+					PRINTFORMW 이런 일은 안 된다고는 알고 있어도, 허리가 구불거려 버린다
+					PRINTFORML 짐승 따위에 가랑이를 열어 느끼고 있는 모양을, 수령은 비웃음은 있다
+					PRINTFORMW 이윽고 개가 사정해, 맞추듯이 %조사처리(ANAME(후보:LOCAL),"가")% 절정 하면, 웃음소리는 한층 더 높아졌다……
+					EXP:(후보:LOCAL):수간경험 += 10
+				CASE 13
+					PRINTFORML 패배해 정신을 잃었던 %조사처리(ANAME(후보:LOCAL),"가")% 눈을 뜨면, 당신의 신체가 심하게 되어 있는 일을 눈치챈다
+					PRINTFORMW 양유방에 딱한 피어스가, 그리고 아랫배에 하트의 문장이 새겨지고 있는 것이 아닌가
+					PRINTFORML 그리고 지금, 위로돌리고로 받침대에 얽매이고 있는 %조사처리(ANAME(후보:LOCAL),"는")%, 남자들에게 둘러싸지고 있다
+					PRINTFORML 혐오 밖에 안지 않아야 할 것을 보고, %조사처리(ANAME(후보:LOCAL),"는")% 왠지 굶주림을 느껴 버린다
+					PRINTFORMW 그 굶주림은, 남자에게 덮어씌워져 %STR_BODY("음순:처녀 확인:수식", 후보:LOCAL)%질구와 귀두가 밀착한 순간, 한층 더 강해졌다
+					PRINTFORML 남이 페니스를 찔러 넣는다. %조사처리(ANAME(후보:LOCAL),"는")% 쾌락에 좋아해, 등을 뒤로 젖힌다. 그러자 굶주림은, 아주 조금만 들어갔다
+					PRINTFORMW 과연 이것이, 굶주림을 채울 방법인가. 그렇게 눈치챈 %조사처리(ANAME(후보:LOCAL),"는")%, 스스로 허리를 흔들어, 남자를 요구해 간다
+					PRINTFORML 이윽고 남자가 종을 발하면, 가장 굶고 있던 장소, 정확히 하트의 문이 새겨지고 있는 근처에서,
+					PRINTFORMW 이루 말할 수 없는 행복감이 부풀어 올라 갔다
+					PRINTFORML 일련의 감각이 하트의 문의 효능인 것은 분명하지만, 도리는 알고 있어도, 신체는 속일 수 없었다
+					PRINTFORMW 만족한 남자가 페니스를 뽑아 내면, 그녀는 주위의 시선에도 아랑곳 없고, 다음의 육봉을 졸라 버렸다……
+				CASE 14
+					PRINTFORML %조사처리(ANAME(후보:LOCAL),"는")% 속이 비어 있는 눈으로, 네에들 네에들과 웃고 있다
+					PRINTFORMW 패배한 그녀에게, 도둑은 한계 최대한의 양의 약물을 쳐박은 것이다
+					PRINTFORML 그 피부에 남자들이 페니스를 문질러 오려고, 유방이나 비부를 만지작거려 오려고, %조사처리(ANAME(후보:LOCAL),"는")% 저항하지 않는다
+					PRINTFORMW 그 뿐만 아니라, 오히려 스스로 그것들을 받아들여 어느 정도였다
+					PRINTFORML 그녀가 저항하지 않는 것을 구실로, 남자들은 차례차례로 %ANAME(후보:LOCAL)%에 모여 간다
+					PRINTFORMW 머리카락, 입, 손, 유방, 질 구멍, 엉덩이 구멍과 대략 사용할 수 있는 곳은 모두 사용해, 그들은 %조사처리(ANAME(후보:LOCAL),"로")% 성욕을 처리해 나간다
+					PRINTFORML 압도적인 쾌락이 약효에서 증량 되어 %조사처리(ANAME(후보:LOCAL),"는")% 폐인이 되어 끝날 것 같은 쾌락에, 그저 좋아해, 아헤 표정할 수밖에 없었다……
+					PRINTFORMW 추가의 약물을 몇병이나 치면서, 도둑들은 %조사처리(ANAME(후보:LOCAL),"를")% 문자 그대로 만 계속 하루종일 윤간했다……
+					CFLAG:(후보:LOCAL):약물의존 += 100
+				CASE 15
+					PRINTFORML 동물의 듣기 괴로운 울음과 요염한 여자의 소리가 축사에게 영향을 준다
+					PRINTFORMW 도둑들은, 불손한 침입자인 %조사처리(ANAME(후보:LOCAL),"를")%, 돼지의 번식용으로 이용하기로 한 것이다
+					PRINTFORML 번식대에 실려진 %ANAME(후보:LOCAL)%에, 그녀보다 3바퀴는 있으리라 말하는 수퇘지가 덥쳐, 허리를 흔들고 있다
+					PRINTFORMW 허리를 흔들라고는 말해도, 그녀 몇 사람분의 체중에 의한 피스톤이다
+					PRINTFORML 그녀는 그저, 뒤틀린 페니스에 후벼파지는 압도적 쾌락의 전에, 몹시 놀라 몸부림칠 수밖에 없었다
+					PRINTFORMW 이윽고 돼지가, 그녀의 가장 안쪽 깊이, 축생의 스펌을 털어 놓기 시작한다
+					PRINTFORML 그 양은 심상치 않고, 금새 그녀의 자궁은 부풀어 올라, 밖으로부터 봐도 아는 임산부와 같은 있는 그대로 되었다
+					PRINTFORMW 만족한 돼지가 하나의 물건을 뽑아 내면, 느릿느릿 힘차게, 흰 것이 그녀의 질로부터 역류 했다……
+					EXP:(후보:LOCAL):수간경험 += 10
+				CASE 16
+					PRINTFORML 패배한 %조사처리(ANAME(후보:LOCAL),"는")%, 처참한 능욕을 받고 있다
+					PRINTFORML 옷도 벗겨내져 속옷도 빼앗긴 상태로, 그녀는 몇 번이나 몇 번이나, 여자로서 태어난 신체를 짓밟아져 간다
+					PRINTFORMW 윤간은 이미 몇 시간으로 계속되고 있었다. 이미 그녀의 신체로, 희지 않은 곳은 없다
+					PRINTFORML 그리고 또, 그녀를 관철하는 남자들은, 한계를 맞이한 것 같았다
+					PRINTFORMW 최초로 질, 다음에 입, 엉덩이와 남자들은 차례차례에 사정해 나간다
+					PRINTFORML 범해지고 있다는데, 견딜 수 없는 쾌락의 전에, %조사처리(ANAME(후보:LOCAL),"는")% 달콤한 소리를 질러 버린다
+					PRINTFORMW 페니스가 구멍으로부터 뽑아 내지자, 곧바로 다른 남자가 거기를 범하기 시작하는 것이었다……
+				CASE 17
+					PRINTFORML 패배한 %조사처리(ANAME(후보:LOCAL),"는")%, 처참한 능욕을 받고 있다
+					PRINTFORMW 옷도 벗겨내져 속옷도 빼앗긴 상태로, 그녀는 몇 번이나 몇 번이나, 여자로서 태어난 신체를 짓밟아져 간다
+					PRINTFORMW 그녀를 둘러싸는 남자는, 당치 않게, 다른 남자와 함께, %ANAME(후보:LOCAL)%의 질 구멍에 2 개의 페니스를 쑤셔 넣었다!
+					PRINTFORML 가장 민감한 부분을 무리하게 펴넓힐 수 있어 %조사처리(ANAME(후보:LOCAL),"는")% 강렬한 쾌락과 아픔에 의한 비명을 지른다
+					PRINTFORML 이지만, 그만두는 것 줄 수 있을 리도 없다. 그들은 그것을 (듣)묻고 싶어서, 그러한 일을 하고 있으니까
+					PRINTFORMW 결국 능욕은, 그녀가 정신을 잃어 반나절 경과했을 무렵에, 간신히 종식했다……
+				CASE 18
+					PRINTFORML 잡힌 %조사처리(ANAME(후보:LOCAL),"는")%, 전라로 구속되어 죄인으로 되고 있다
+					PRINTFORMW 당연, 남자들이 그것을 다만 바라보고 즐기는 것만으로 끝마칠 리도 없었다
+					PRINTFORML 도둑들은 그녀에게 모여, 그 %STR_BODY("신체:수식", 후보:LOCAL)%육체를 저 좋은 대로 희롱하고 있다
+					PRINTFORML 유두를 꼬집어 음핵을 뭉그러뜨려, 무리하게에 쾌락을 꺼내 간다
+					PRINTFORMW 싫다고는 생각하고 있어도, 주어지는 자극을 앞에, 신체는 솔직하게 쾌락을 느껴 버린다
+					PRINTFORML 이윽고 남자들은, %ANAME(후보:LOCAL)%의 모든 구멍에 육봉을 쑤셔 넣어, 격렬하게 삽입질 해 나간다
+					PRINTFORML 끊임없이 내던질 수 있는 성감에, %조사처리(ANAME(후보:LOCAL),"는")% 몹시 놀라 몸부림칠 수밖에 없었다
+					PRINTFORMW 남자들이 종을 발하면, 그 뜨거움에 %조사처리(ANAME(후보:LOCAL),"는")% 격렬하게 절정 해 버렸다
+					PRINTFORML 범해지면서 야비하게 가는 모양을 비웃음 있으면서, 도둑들은 %조사처리(ANAME(후보:LOCAL),"를")% 계속 범했다……
+					PRINTFORMW 능욕은 만 하루 계속되었다……
+				CASE 19
+					PRINTFORMW 잡힌 %조사처리(ANAME(후보:LOCAL),"는")%, 옷을 벗겨내져 무리하게에 깔아눌러졌다
+					PRINTFORML 날뛰는 %조사처리(ANAME(후보:LOCAL),"였")%지만, 이상한 듯한 약을 맞고와, 저항심은 완전히 사라져 없어져 버렸다
+					PRINTFORMW 그리고 그 대신에, 억제하지 못할 성욕이 치솟기 시작한다
+					PRINTFORML 이런 일은 안 된다고 알고 있어도, %조사처리(ANAME(후보:LOCAL),"는")% 스스로를 위로하는 것을 그만둘 수 없다
+					PRINTFORMW 그런 그녀에게, 남자의 좋은 점을 가르쳐 주어와 도둑들은 모여 간다
+					PRINTFORML 고기구멍에, 엉덩이구멍에 페니스가 쑤셔 넣어져 몇 번이나 몇 번이나 그녀를 후벼판다
+					PRINTFORML 그렇게 그들은, 너는 어차피암컷에 지나지 않는 것이라는 일을,
+					PRINTFORMW %ANAME(후보:LOCAL)%의 육체에 철저히 가르치고 있다
+					PRINTFORML 격렬한 쾌감의 전에 %ANAME(후보:LOCAL)%의 육체는, 그 다음에 마음은, 자꾸자꾸굴복 해 버린다
+					PRINTFORMW 그들이 대충 즐겼을 무렵에는, 거기에는 한마리의 암컷이 있을 뿐이었다……
+					CFLAG:(후보:LOCAL):약물의존 += 100
+				CASE 20
+					PRINTFORMW 잡힌 %조사처리(ANAME(후보:LOCAL),"는")%, 도둑들의 성욕 처리계에 할당할 수 있던 것 같다
+					PRINTFORMW 도둑들로부터의 취급은 심한 것이었다. 그들은 여자를, 뽑기 위한 도구정도 밖에 생각하지 않았다
+					PRINTFORML %조사처리(ANAME(후보:LOCAL),"는")% 육봉등 되어 %STR_BODY("음순:처녀 확인:수식", 후보:LOCAL)%질내에 종을 붙일 수 있어 끝에는 엉덩이 구멍을 빨게 되어진다
+					PRINTFORML 하지만, %조사처리(ANAME(후보:LOCAL),"는")% 싫어하지 않았다. 이상한 듯한 약품의 힘이, 그녀를 인사불성에 시키고 있었다
+					PRINTFORMW 아니, 싫어하지 않기는 커녕, 스스로 가랑이를 열어, 남자를 받아들이는 상태였다
+					PRINTFORML 그리고 지금, 확실히, 한사람의 도둑에게, 성욕 처리가 요구된 곳이었다
+					PRINTFORML %조사처리(ANAME(후보:LOCAL),"는")% 기분 좋게 응해 벽에 손을 붙어 %STR_BODY("엉덩이", 후보:LOCAL)%를 내밀면, 스스로 비밀의 틈을 열어 육봉을 졸라댄다
+					PRINTFORMW 흥분한 도둑은 사납게 허리를 흔드는. 잠깐의 사이, 두 명은 서로 격렬하게 요구했다……
+				CASE 21
+					PRINTFORML 거리 공연인으로 변한 %조사처리(ANAME(후보:LOCAL),"는")%, 그들의 연회에 잠입했다
+					PRINTFORMW 하지만, 입을 붙인 술에 수면제가 번창해지고 있어 %조사처리(ANAME(후보:LOCAL),"는")% 골아떨어져 버린다
+					PRINTFORML 도둑들은, 전혀 눈을 뜨지 않는 %ANAME(후보:LOCAL)%에 모여, 그 %STR_BODY("신체:수식", 후보:LOCAL)%육체를 희롱하기 시작했다
+					PRINTFORML 말하지 않는 인형과 같은 %ANAME(후보:LOCAL)%의 %STR_BODY("가슴:수식", 후보:LOCAL)% 유방이, 음핵이, 난폭하게 만지작거려진다
+					PRINTFORMW 그리고, 충분히 젖은 비밀의 틈에, 육봉이 삽입되었다
+					PRINTFORML 순번을 기다릴 수 없는 남자들은, 그녀의 입이나 엉덩이 구멍에까지, 물건을 쑤셔 넣어 간다
+					PRINTFORMW %조사처리(ANAME(후보:LOCAL),"는")% 의식이 없는 채, 그 육체를 안에서 밖으로부터 몇 번이나 더럽혀져 버렸다……
+			ENDSELECT
+		ELSE
+			PRINTFORML 잡힌 %조사처리(ANAME(후보:LOCAL),"는")%, 벌거벗은 채로 도둑의 수령의 전에 끌어내졌다
+			PRINTFORMW 놀랄 만한 일로, 수령은 여자였다. 그것도 절세의 미녀라고 해도 좋다
+			PRINTFORML 무심코 숨을 삼키는 %조사처리(ANAME(후보:LOCAL),"를")% 뒷전으로, 수령은 스스로도 옷을 벗기 시작한다
+			PRINTFORMW 의복아래에 숨겨진 육체도 또 비록 그렇다길도 없고 아름답고, %조사처리(ANAME(후보:LOCAL),"는")% 무심코 하나의 물건을 서게 해 버린다
+			SELECTCASE RAND:3
+				CASE 0
+					PRINTFORMW ……수령은 기학적인 미소를 띄우면, 손에 가지고 있던 채찍을 그의 하나의 물건 노리고 휘어지게 한다!
+					PRINTFORML 강렬한 일격에, 과연 %ANAME(후보:LOCAL)%도 신음하면서 웅크리고 앉을 수밖에 없었다
+					PRINTFORML 그런 그를 %조사처리(ANAME(후보:LOCAL),"는")% 가차 없이 짓밟아, 다리를 빨도록(듯이) 명한다
+					PRINTFORML 지금의 입장에서는 가부간의 대답 없음이다. %조사처리(ANAME(후보:LOCAL),"는")% 혀를 펴, 다리를 빨기 시작한다
+					PRINTFORMW 굴욕일 것이라고 말하는데, 마음의 어딘가가 쑤시고 있었다
+					PRINTFORML 이윽고 수령은 다리를 떼어 놓아, 꽤 나쁘지 않았으니까 포상을 준다고 하기 시작했다
+					PRINTFORMW 그리고, %ANAME(후보:LOCAL)%의 타액 투성이가 된 다리로, 다름아닌 %ANAME(후보:LOCAL)%자신의 페니스를 잡아당기기 시작했다
+					PRINTFORML 부드러운 발바닥의 감촉이, 그리고 무엇보다, 그런 곳에서 물건을 잡아당겨지고 있다는 사실이, 그를 고조되게 한다
+					PRINTFORMW %조사처리(ANAME(후보:LOCAL),"는")% 그다지 떡도 하지 않고, 순식간에 정액을 발해 버린다
+					PRINTFORML 수령은 백탁 투성이가 된 당신의 발가락을 또다시 그에게 빨게 한다
+					PRINTFORMW 손가락이 예쁘게 되면, 그 사이에 다시 딱딱해진 것을, 다시 다리로 다뤄 간다
+					PRINTFORMW 행위는, 그의 것이 시들고 잘라, 전혀 서지 않게 되어도 계속되었다……
+				CASE 1
+					PRINTFORMW 수령은 그것을 보며 입맛을 다심 하면, %ANAME(후보:LOCAL)%의 전에 무릎 꿇어, 물건을 빨기 시작한다
+					PRINTFORML 그 기술은 다른 어느 여자보다 교묘해, %조사처리(ANAME(후보:LOCAL),"는")% 다만 희롱해질 수밖에 없다
+					PRINTFORMW 1분으로 가지지 못하고, 그는 여자 수령의 입안에, 끈적한 종을 토해내 버렸다
+					PRINTFORML 하지만, 물론 그래서 끝은 아니다
+					PRINTFORML 수령은 %조사처리(ANAME(후보:LOCAL),"를")% 위로 향해 쓰러트리고 그 위에 걸쳤다
+					PRINTFORMW 그리고, 이미 흠뻑 젖고 있던 고기구멍에, 그를 맞아들였다
+					PRINTFORML 그 질은, 그리고 허리 사용은, 마성이라고 부르는 것 외에 없는 것이었다
+					PRINTFORML 이미 한 번 사정하고 있다는데, 그런 일은 상관없이, 불알로부터 정액이 복받쳐 온다
+					PRINTFORMW 추잡한 허리의의 전에는 참지 못하고, %조사처리(ANAME(후보:LOCAL),"는")% 순식간에 그녀의 질내에 종을 토해냈다
+					PRINTFORML 그러나, 저 편은 그래서 더 만족하지 않는 것 같았다
+					PRINTFORML 여자는 그가 사정하든지, 상관치 않고 허리를 계속 흔든다. 뽑지않고세발, 4발, 5발……이라는 식으로
+					PRINTFORMW 결국, 성교는, 그가 체력의 한계를 맞이해 기절할 때까지 계속되었다……
+				CASE 2
+					PRINTFORML 이지만, 수령의 신체에는 있는 「이상한 점」이 있었다. 그 사타구니에 난 육봉이다
+					PRINTFORML 그녀는 후타나리였던 것이다. 그리고 그 봉은, %ANAME(후보:LOCAL)%의 것등과는 비교가 안 되는,
+					PRINTFORMW 잘 드는 칼이라고 부르는 것 외에 없을 정도(수록) 훌륭한, 확실히 「악마」였다.
+					PRINTFORML 싫은 예감이 한다……%조사처리(ANAME(후보:LOCAL),"가")% 준비하는 것보다도 먼저, 수령은 그의 입에 하나의 물건을 쑤셔 넣고 있었다
+					PRINTFORML 수령은 %ANAME(후보:LOCAL)%의 머리를 잡아, 그대로 슥싹슥싹 전후시켜, 당신의 하나의 물건을 다뤄 간다
+					PRINTFORML 물건과 같이 다루어져 또 물건등 되고 있다는데, %조사처리(ANAME(후보:LOCAL),"는")% 이상하게 욱신거림을 느끼고 있었다
+					PRINTFORML 당신보다 장대한 수컷의 전에, 그 수컷은 굴복 해, 암컷이 얼굴을 들여다 보게 한 있다
+					PRINTFORMW 수령이 사정해, %ANAME(후보:LOCAL)%보다 훨씬 진한 백탁을 그 입내에, 안면에 털어 놓으면, %조사처리(ANAME(후보:LOCAL),"는")% 표정을 녹였다
+					PRINTFORML 수령은 %조사처리(ANAME(후보:LOCAL),"를")% 엎드린 자세로시켜, 뒤로부터 덮어씌워, 그 엉덩이구멍에 목적을 정한다
+					PRINTFORMW 그리고 그대로, 당신의 흉기로 가지고, 그의 배설구를 관철했다
+					PRINTFORML 달리는 강렬한 쾌락에, %조사처리(ANAME(후보:LOCAL),"는")% 등을 뒤로 젖혀, 마치 여자와 같은 신음소리를 준다
+					PRINTFORMW 그의 것으로부터 걸죽 늘어진 백탁은, 일찍이 그가 수컷이었던 일, 지금은 암컷이 되어 끝난 것의, 무엇보다의 증명이었다……
+			ENDSELECT
+		ENDIF
+		FOR LOCAL:1, 0, 3
+			CALL FUCK_GANGBANG(후보:LOCAL, GET_SPERM_ID("도둑"), @"도둑의 \@ RAND:2 ? 페니스 # 입술\@", "도둑")
+		NEXT
+
+	NEXT
+
+ENDIF
+
+RETURN 1
+
+@BANDIT_CONQUER_SELECT_COMMANDER
+VARSET LOCAL
+;사관이 부대에 소속해 있는지 어떤지의 맵을 작성(고속화용)
+CALL TMP_CREATE_IS_FREE_MAP
+VARSET LOCAL, -1, 10, 13
+;페이지수의 계산
+LOCAL:20 = 0
+FOR LOCAL:0, 0, CHARANUM
+	;마스터와 소속 세력이 같은 캐릭터만 카운트  ※서당 내왕은 제외
+	IF (CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속)
+		LOCAL:20 ++
+	ENDIF
+NEXT
+LOCAL:20 = (LOCAL:20 - 1) / 40 + 1
+LOCAL:21 = 1
+
+$SHOW_LOOP2
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 잠입시키는 부하를 선택해 주세요(최대 3명까지)
+PRINTFORML 선택하지 않고 결정하면 잠입시키지 않습니다
+CALL SINGLE_DRAWLINE
+PRINTL 
+
+LOCAL:25 = 10
+LOCAL:1 = 0
+LOCAL:22 = 0
+LOCAL:23 = (LOCAL:21 - 1) * 40
+LOCAL:24 = LOCAL:21 * 40
+FOR LOCAL:0, 0, CHARANUM
+	;마스터와 소속 세력이 같은 캐릭터만
+	IF (CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속)
+		IF LOCAL:22 >= LOCAL:23 && LOCAL:22 < LOCAL:24
+			IF LOCAL:1 % 2 != 0
+				PRINT 　　　
+			ELSEIF LOCAL:1 >= 1
+				PRINTL 
+				LOCAL:25 ++
+			ENDIF
+			IF MATCH(LOCAL, LOCAL:0, 10, 13)
+				SETCOLOR 칼라_선택중
+			ENDIF
+
+			IF TMP_IS_FREE:(LOCAL:0):0 == 0
+				PRINTFORM [{NO:(LOCAL:0) + 99, 4}]%ANAME(LOCAL:0), 16, RIGHT%
+			ELSE
+				LOCALS:0 = [{NO:(LOCAL:0) + 99, 4}]%ANAME(LOCAL:0), 16, RIGHT%
+				SETCOLOR 칼라_선택불가
+				PRINTPLAINFORM %LOCALS:0%
+			ENDIF
+			RESETCOLOR
+			LOCAL:1 ++
+		ENDIF
+		LOCAL:22 ++
+	ENDIF
+NEXT
+PRINTL 
+CALL SINGLE_DRAWLINE
+
+IF LOCAL:20 >= 2
+	LOCAL:25 += 2
+	IF LOCAL:21 > 1
+		PRINT [  8] 이전페이지            
+	ELSE
+		PRINT                             
+	ENDIF
+	LOCALS:0 = page{LOCAL:21}/{LOCAL:20}
+	PRINTPLAINFORM %LOCALS:0, 28, LEFT%
+	IF LOCAL:21 < LOCAL:20
+		PRINT [  9] 다음페이지
+	ENDIF
+	PRINTL 
+	CALL SINGLE_DRAWLINE
+ENDIF
+
+PRINTL [  0] 결정
+PRINTL 
+
+REDRAW 0
+
+$INPUT_LOOP2
+INPUT
+
+IF RESULT == 8 && LOCAL:21 > 1
+	LOCAL:21 --
+	CLEARLINE LOCAL:25
+	GOTO SHOW_LOOP2
+ELSEIF RESULT == 9 && LOCAL:21 < LOCAL:20
+	LOCAL:21 ++
+	CLEARLINE LOCAL:25
+	GOTO SHOW_LOOP2
+ELSEIF RESULT == 0
+	;장을 No의 젊은 순서에 소트
+	FOR LOCAL:0, 0, 3
+		IF LOCAL:(LOCAL:0 + 10) >= 0
+			LOCAL:(LOCAL:0 + 20) = NO:(LOCAL:(LOCAL:0 + 10))
+		ELSE
+			LOCAL:(LOCAL:0 + 20) = 99999
+		ENDIF
+	NEXT
+	LOCAL:15 = 1
+	WHILE LOCAL:15
+		LOCAL:15 = 0
+		FOR LOCAL:0, 0, 2
+			IF LOCAL:(LOCAL:0 + 20) > LOCAL:(LOCAL:0 + 21)
+				SWAP LOCAL:(LOCAL:0 + 10), LOCAL:(LOCAL:0 + 11)
+				SWAP LOCAL:(LOCAL:0 + 20), LOCAL:(LOCAL:0 + 21)
+				LOCAL:15 = 1
+			ENDIF
+		NEXT
+	WEND
+	REDRAW 1
+	RETURN LOCAL:10, LOCAL:11, LOCAL:12
+ELSE
+	LOCAL:5 = NO_TO_CHARA(RESULT - 99)
+	IF LOCAL:5 < 0 || CFLAG:(LOCAL:5):소속 != CFLAG:MASTER:소속 || TMP_IS_FREE:(LOCAL:5):0 != 0
+		CLEARLINE 1
+		GOTO INPUT_LOOP2
+	ENDIF
+
+	;이미 선택 끝난 캐릭터라면 선택 해제
+	FOR LOCAL:0, 10, 13
+		IF LOCAL:(LOCAL:0) == LOCAL:5
+			LOCAL:(LOCAL:0) = -1
+			CLEARLINE LOCAL:25
+			GOTO SHOW_LOOP2
+		ENDIF
+	NEXT
+
+	;미선택의 캐릭터는 선택
+	FOR LOCAL:0, 10, 13
+		IF LOCAL:(LOCAL:0) < 0
+			LOCAL:(LOCAL:0) = LOCAL:5
+			CLEARLINE LOCAL:25
+			GOTO SHOW_LOOP2
+		ENDIF
+	NEXT
+
+	CLEARLINE 2
+	PRINTFORML 장의 수가 최대입니다
+ENDIF
+GOTO INPUT_LOOP2

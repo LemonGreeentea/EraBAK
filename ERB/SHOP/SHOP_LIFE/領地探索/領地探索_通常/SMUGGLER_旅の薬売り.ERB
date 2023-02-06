@@ -1,0 +1,57 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_SMUGGLER_EXISTS()
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_SMUGGLER_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_SMUGGLER(대상)
+#DIM 대상
+PRINTFORML 탐색중, 여행의 약팔이와 우연히 만났다
+PRINTFORML 귀한 물건의 약이 있는 것 같은, 가격은 금 3000이다
+PRINTFORML 현재의 소지금:{MONEY}
+PRINTL
+CALL ASK_MULTI_JUDGE("모처럼이니까 사 본다", MONEY >= 3000,"그만둔다", 1)
+
+IF RESULT == 1
+	PRINTFORML 공교롭게도 지금은 병도 아니다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 끈질긴 약팔이를 뿌리쳐 거점에 돌아왔다
+	RETURN 1
+ENDIF
+
+MONEY -= 3000
+
+CALL ICPRINT("금<3000>을 지불했다", "W", 칼라_주의)
+PRINTFORMW 약을 산 %조사처리(ANAME(대상),"는")%, 거점에 돌아와서 마셔 보았다
+
+SELECTCASE RAND:3
+	CASE 0
+		PRINTFORML ……하지만 아무것도 일어나지 않았다
+		PRINTFORML 금을 쓸데없게 해 버린 것 같다……
+	CASE 1
+		PRINTFORML 곧바로 몸이 뜨거워졌다
+		PRINTFORMW ……어쩐지 영리해진 것 같다!
+		CALL PRINT_ADD_EXP(대상, "지략경험치", 10)
+		PRINTFORML 꽤 좋은 쇼핑을 한 것 같다……
+	CASE 2
+		PRINTFORML 곧바로 몸이 달아오르기 시작했다
+		PRINTFORMW ……미약의 종류였던 것 같다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 스스로를 위로하지 않고 있을 수 없었다……
+		IF IS_MALE(대상)
+			CALL FUCK(대상, "자위, Ｃ, 사정")
+		ELSE
+			CALL FUCK(대상, "자위, Ｃ, Ｂ")
+		ENDIF
+ENDSELECT
+
+RETURN 1

@@ -1,0 +1,32 @@
+﻿[SKIPSTART]
+DEBUG.ERB
+=========
+개요
+----
+  eratohoK 맵 제작 지원을 만들어 가고라고 가는 가운데 그것들의 맵 읽어들여, 표시가 적정하게 행해질까를 확인하기 위한 시스템이 필요하다고 생각했으므로 작성.
+향후 유사한 기능을 갖고 싶다고 생각했을 경우는 여기에 돌진해 간다.
+[SKIPEND]
+
+@DEBUGMENU()
+
+ALIGNMENT CENTER
+CALL SINGLE_DRAWLINE
+PRINTL Welcome Debug
+CALL SINGLE_DRAWLINE
+ALIGNMENT LEFT
+WHILE 1
+	CALL SINGLE_DRAWLINE
+	PRINTL DEBUG MENU
+	CALL SINGLE_DRAWLINE
+	PRINTBUTTON "0[ 그만둔다]", 0
+	PRINTL
+	PRINTBUTTON "1[맵 디버그]", 1
+	PRINTL
+	INPUT
+	SELECTCASE RESULT
+		CASE 0
+			RETURN
+		CASE 1
+			CALL MAPDEBUG()
+	ENDSELECT
+WEND

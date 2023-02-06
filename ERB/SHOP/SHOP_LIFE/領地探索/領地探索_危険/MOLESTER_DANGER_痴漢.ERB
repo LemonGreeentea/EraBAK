@@ -1,0 +1,96 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_MOLESTER_DANGER_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_MOLESTER_DANGER_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_MOLESTER_DANGER(대상)
+#DIM 대상
+
+IF IS_MALE(대상)
+	PRINTFORML 소란함안, 치한 되고 있는 여성을 보았다
+	PRINTFORML 부끄러운 것인지, 얼굴을 새빨갛게 해 되는 대로 되어 있다
+	PRINTFORML
+	CALL ASK_MULTI("돕는다", "방치한다")
+	SELECTCASE RESULT
+		CASE 0
+			PRINTFORML 편은은 둘 수 없다
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 혼잡을 써 (뜻)이유, 여성과 치한의 사이에 비집고 들어간다
+			PRINTFORMW 여성으로부터 감사받아 답례를 받았다
+			CALL ICPRINT("금<3000>을 받았다", "L", 칼라_주의)
+			MONEY += 3000
+		CASE 1
+			PRINTFORML 귀찮게 관련되고 싶지는 않다
+			PRINTFORML 방치했다
+	ENDSELECT
+	RETURN 1
+ENDIF
+
+PRINTFORML 소란함안을 걷고 있으면, 치한에 습격당했다
+PRINTFORMW 기분탓일까하고 생각하고 있었지만, %STR_BODY("엉덩이:감촉", 대상)%를 돌리듯이 어루만지며 온다
+PRINTFORML 몸을 비틀어 피하려고 했지만, 딱 들러붙어 와 떨어지지 않는다
+PRINTFORML 
+
+CALL ASK_MULTI("큰 소리를 지른다", "얌전하게 한다", "접하고 돌려준다")
+
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML %조사처리(ANAME(대상),"는")% 큰 소리를 질렀다
+		PRINTFORMW 주위에 사정을 설명하는 무렵에는, 치한은 도망쳐 버리고 있었다
+		PRINTFORML 치한을 해산시키는 것에야말로 성공했지만, 녀석이 퍼부을 수 있던 천하게 보인 시선은 잊을 수 없었다
+		CALL FUCK(대상, "욕망, 노출")
+	CASE 1
+		PRINTFORML 가만히 하고 있으면 그 중 질린다
+		PRINTFORMW 그렇게 생각한 %조사처리(ANAME(대상),"는")% 얌전하게 하고 있기로 했다
+		PRINTFORML 
+		PRINTFORML %조사처리(ANAME(대상),"가")% 저항하지 않는 것을 구실로, 치한의 행위는 에스컬레이트한다
+		PRINTFORMW 처음은 옷 너머로 %STR_BODY("엉덩이:감촉", 대상)%를 어루만지고 있었던 것이, 옷중에 들어가, 한층 더 속옷중에 기어들어 직접적으로 접해 온다
+		PRINTFORML 그런 만큼 충분히 만족하지 않고, %STR_BODY("가슴:애무", 대상)%를 주물러, %STR_BODY("클리", 대상)%를 손가락끝으로 희롱해 온다
+		PRINTFORMW 끈적한 손놀림에, %조사처리(ANAME(대상),"는")% 점차 달콤한 한숨을 흘리기 시작한다
+		PRINTFORMW 결정타같이, %STR_BODY("질:처녀 확인", 대상)%얕게를 손가락끝으로 후벼파져 %조사처리(ANAME(대상),"는")% 소리를 억누르면서 절정 한다
+		CALL FUCK(대상, "욕망, Ｃ, Ｖ, Ｂ, 노출, 마조")
+		PRINTFORML 
+		PRINTFORML ……그 뒤도 희롱해진 %조사처리(ANAME(대상),"는")%, 치한에 뒷골목에 데리고 들어가졌다
+		PRINTFORMW 저항하려고 하는 것도 이미 도중 중단으로 되고 있어 조금 성감대를 훑어진 것 뿐으로 힘이 빠져 버린다
+		PRINTFORML 흠뻑흠뻑이 되어 있던 속옷을 빼앗겨 엉덩이를 내미는 것 같은 형태로 비밀스런 장소를 노출된다
+		PRINTFORMW 그는 %ANAME(대상)%의 방금전의 치태에 대해 논하면서, 페니스를 삽입했다
+		PRINTFORML 그의 허리 사용은 손가락 써 이상으로 교묘해, 곧바로 %조사처리(ANAME(대상),"는")% 헤롱헤롱으로 된다
+		PRINTFORMW 질육을 후비어지면서 %STR_BODY("유두:욕정", 대상)%나 %STR_BODY("클리", 대상)%를 오돌오돌 궁리해져 %조사처리(ANAME(대상),"는")% 야무지지 못한 암컷의 소리를 높인다
+		PRINTFORMW 이미 %ANAME(대상)%에 저항심 따위 남지 않고, 다만 그에게 희롱해질 뿐이다
+		PRINTFORMW 치한에 마음에 들었던 %조사처리(ANAME(대상),"는")% 그 뒤도 한껏 조교되어 암컷의 기쁨을 신체에 주입해졌다
+		CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｖ성교", "처녀상실, 질내사정", GET_SPERM_ID("치한"), @"치한의 \@RAND:2 ? 페니스 # 입술\@", "치한", "", "뒷골목에서의 강간")
+		PRINTFORML 
+		PRINTFORML %조사처리(ANAME(대상),"는")% 미명무렵이 되어 간신히 해방되었다
+		PRINTFORMW 유두를 펄떡펄떡 서게 한 애액을 질질 흘림으로 하면서 꿈꾸는 듯한 기분으로 귀로에 들었다
+	CASE 2
+		PRINTFORML 기분 좋게 해 준다면, 기분 좋게 해 주자
+		PRINTFORMW 그렇게 생각 치한의 가랑이에 닿아, 옷 위로부터 페니스를 어루만진다
+		PRINTFORML 그는 놀란 것 같았지만, %ANAME(대상)%의 의도하는 곳을 곧바로 이해한 것 같다
+		PRINTFORMW 의복중, 속옷안에까지 손을 기어들게 해 %STR_BODY("엉덩이:감촉", 대상)%나 %STR_BODY("가슴:애무", 대상)%、%STR_BODY("클리", 대상)%를 희롱한다
+		PRINTFORMW 끈적한 손놀림에 %조사처리(ANAME(대상),"는")% 달콤한 소리를 흘려, 쾌감의 예로서 그의 페니스를 잡아당기기 시작한다
+		PRINTFORML 그는 그것만으로 만족 할 수 없게 된 것 같고, %ANAME(대상)%의 허벅지에 페니스를 강압해 왔다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 소란함 중(안)에서 꼼짝 못하는 풍을 가장하면서, 그의 것을 허벅지와 %STR_BODY("음순:처녀 확인", 대상)%로 사이에 둬, 쓸어올려 주었다……
+		CALL FUCK(대상, "욕망, Ｃ, Ｖ, Ｂ, 성기술, 성교, 봉사, 노출, 정애")
+		PRINTFORML 
+		PRINTFORMW 그 후 남자는 %ANAME(대상)%의 귓전으로, 속삭이도록(듯이) 호텔로 이끌어 왔다
+		PRINTFORMW %조사처리(ANAME(대상),"가")% 수긍하면, 그는 연인같이 허리에 팔을 돌렸다
+		PRINTFORMW 그는 손가락 뿐만이 아니라 허리 사용도 교묘해, 밤새 몇 번이나 귀여워해졌다
+		CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("치한"), @"치한의 \@RAND:2 ? 페니스 # 입술\@", "치한", "", "호텔에서의 화간")
+		PRINTFORML 
+		PRINTFORMW 한껏 예의범절을 가르쳐진 %조사처리(ANAME(대상),"는")%, 그와 입맞춤을 주고 받아 헤어졌다
+ENDSELECT
+
+
+RETURN 1

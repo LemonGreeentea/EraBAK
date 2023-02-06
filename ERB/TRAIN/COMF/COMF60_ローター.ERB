@@ -1,0 +1,215 @@
+﻿;로터
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME60
+LOCALS:0 = 로터
+
+RESULTS:0 = %조사처리(LOCALS:0,"를")% 사용한다
+RESULTS:1 = %LOCALS:0%로 봉사한다
+RESULTS:2 = %LOCALS:0%로 봉사시킨다
+RESULTS:3 = %LOCALS:0%로 꾸짖을 수 있다
+RESULTS:4 = %LOCALS:0%로 꾸짖게 한다
+RESULTS:5 = %LOCALS:0%과시하고
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE60
+;공통 부분
+CALL COM_ABLE_COMMON(60)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 1명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 1
+	RETURN 0
+;타겟은 1명 이상
+SIF MTAR_NUM <= 0
+	RETURN 0
+;플레이어가 행동불능이라면 불가
+SIF !IS_PLAYABLE(MPLY:0)
+	RETURN 0
+;로터가 필요
+SIF !ITEM:로터 && !ITEM:A_로터
+	RETURN 0
+;플레이어가 안면승마 되고 있다면 불가
+SIF IS_RIDDEN(MPLY:0)
+	RETURN 0
+;플레이어가 구속중이라면 불가
+SIF IS_BIND(MPLY:0)
+	RETURN 0
+FOR LOCAL, 0, MTAR_NUM
+	;대상으로Ｖ가 필요
+	SIF !HAS_VAGINA(MTAR:LOCAL)
+		RETURN 0
+	;타겟으로부터 플레이어에 삽입중에서 체위가 후배위·배면좌위라면 불가
+	SIF GROUPMATCH(GET_SEX_POSITION(MTAR:LOCAL, MPLY:0), 2, 4)
+		RETURN 0
+NEXT
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM60
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;●플레이어에 대해 처리
+DOWNBASE:(MPLY:0):체력 += 80
+
+EXP:(MPLY:0):성기술경험치 += MTAR_NUM / 2 + 1
+
+SOURCE:(MPLY:0):봉사 = SERVE_HOUSHI(MPLY:0, 200)
+SOURCE:(MPLY:0):접촉 = 10
+SOURCE:(MPLY:0):성행동 = 90
+
+;주도권에 응한 우월·굴종의 소스 추가
+CALL ADD_SOURCE_INITIATIVE_U(MPLY:0, 100, 20)
+
+;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+TCVAR:(MPLY:0):4 = 1
+FOR LOCAL, 0, MTAR_NUM
+	LOCAL:2 = MTAR:LOCAL
+	;●타겟으로 붙어 처리
+	DOWNBASE:(LOCAL:2):체력 += 80
+
+	SOURCE:(LOCAL:2):노출 = 50
+	SOURCE:(LOCAL:2):일탈 = 80
+	SOURCE:(LOCAL:2):접촉 = 10
+	SOURCE:(LOCAL:2):쾌Ｃ = SENSE_HOUSHI(MPLY:0, LOCAL:2, 2300)
+	SOURCE:(LOCAL:2):성행동 = 180
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:2, 50, 0)
+
+	IF TALENT:(MPLY:0):기사
+		TIMES SOURCE:(LOCAL:2):쾌Ｃ, 1.50
+	ENDIF
+
+	;사정 개소와 대상을 세트
+	CALL STACK_SPERM(LOCAL:2, MPLY:0, 0)
+NEXT
+
+;주도도 변화 기준치
+TFLAG:49 = 1
+
+;도착도 변화 기준치
+TFLAG:50 = 0
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 2
+
+RETURN 1
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER60(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 60
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 4)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 1, 10))
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -1)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 6)
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -1)
+ENDIF
+
+;합의
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -10)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE60
+IF MTAR_NUM >= 2
+	LOCALS:1 = %ANAME(MTAR:0)%들
+ELSE
+	LOCALS:1 = %ANAME(MTAR:0)%
+ENDIF
+SELECTCASE GET_COM_INITIATIVE()
+	;플레이어에 주도권
+	CASE 0
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 비순에 떨리는 로터를 꽉 눌%TARGET_STR("렀다", "러 왔다")%…
+	;타겟으로 주도권
+	CASE 1
+		PRINTFORMW %조사처리(LOCALS:1,"는")% %ANAME(MPLY:0)%의 손에 로터를 갖게하면, 그것을 자신의 클리토리스에 꽉 누르게 했다…
+	;제삼자에게 주도권
+	CASEELSE
+		PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에, 로터를 사용해 %조사처리(LOCALS:1,"를")% 꾸짖도록(듯이) 명령했다
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% (듣)묻는 대로 %LOCALS:1%의 비순에 떨리는 로터를 꽉 눌렀다…
+ENDSELECT
+
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST60
+FOR LOCAL:0, 0, MTAR_NUM
+	IF MTAR:LOCAL != MASTER
+		LOCAL:2 = CUP:(MTAR:LOCAL):쾌Ｃ
+
+		IF LOCAL:2 < 300
+			PRINTFORML %ANAME(MTAR:LOCAL)%의 거기는 아직 촉촉하고 닫은 채다. 쾌락을 느끼려면 좀 더 걸릴지도 모른다
+		ELSEIF LOCAL:2 < 1000
+			PRINTFORML %ANAME(MTAR:LOCAL)%는 클리토리스에의 자극에 가만히 참고 있지만, 확실히 느껴 오고 있는 것 같다
+		ELSEIF LOCAL:2 < 3000
+			PRINTFORM 민감한 콩을 열심히 만지작거려진다고 느끼는지, %ANAME(MTAR:LOCAL)%는
+			IF TALENT:(MTAR:LOCAL):수줍음
+				PRINTL 수치에 뺨을 붉게 물들이고 손으로 자신의 입을 억제해 소리가 나오는 것을 참고 있다
+			ELSEIF TALENT:(MTAR:LOCAL):해방 || TALENT:(MTAR:LOCAL):쾌감에솔직
+				PRINTL 뜨거운 한숨을 토하면서 쾌락에 몸을 맡기고 있다
+			ELSEIF TALENT:(MTAR:LOCAL):억압 || TALENT:(MTAR:LOCAL):고고함 || TALENT:(MTAR:LOCAL):쾌감을부정
+				PRINTL 쾌락을 부정하도록(듯이) 고개를 저어 참고 있다
+			ELSE
+				PRINTL 비밀스런 장소로부터 애액을 늘어뜨리면서 조금 작게 한숨을 흘렸다
+			ENDIF
+		ELSEIF LOCAL:2 < 6000
+			PRINTFORML %ANAME(MTAR:LOCAL)%가 작은 콩을 떨리는 로터로 쓸어올려 주면 %ANAME(MTAR:LOCAL)%는 사랑스러운 소리를 흘리면서 삐걱삐걱 신체를 흔들었다
+		ELSEIF LOCAL:2 < 10000
+			PRINTFORML %ANAME(MTAR:LOCAL)%는 분명한 쾌락의 소리를 질러 스스로 로터에 그 부분을 강압해 왔다
+		ELSE
+			IF TALENT:(MTAR:LOCAL):Ｃ민감
+				PRINTFORML %ANAME(MTAR:LOCAL)%는 민감한 클리토리스에의 고문에 격렬하게 몸부림 해, 뻥튀기도 없는 계속 소리를 질렀다
+			ELSE
+				PRINTFORML %ANAME(MTAR:LOCAL)%는 클리토리스에의 자극에 격렬한 신음소리를 올리면서 계속 몸부림쳤다
+			ENDIF
+		ENDIF
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN60
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_60()
+RETURN POWER(2, 성적기호_도구를사용하고싶다)
+
+@COM_PREFERENCE_TARGET_60()
+RETURN POWER(2, 성적기호_도구를사용되고싶다)
+

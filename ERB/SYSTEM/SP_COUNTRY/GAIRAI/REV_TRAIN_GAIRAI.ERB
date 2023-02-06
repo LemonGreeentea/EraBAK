@@ -1,0 +1,312 @@
+﻿;-------------------------------------------------
+;첫회 조교시의 이벤트
+;-------------------------------------------------
+@GAIRAI_REV_TRAIN_SP_EVENT(세력)
+#DIM 대상
+#DIM 세력
+;MASTER가 남자로 첫회만 발동
+SIF !IS_MALE(MASTER) || FLAG:역조교회수
+	RETURN 0
+
+대상 = -1
+FOR LOCAL, 0, CHARANUM
+	IF CFLAG:MASTER:소속 == CFLAG:LOCAL:소속 && CFLAG:LOCAL:포로처 == 세력 && TALENT:LOCAL:연인 && IS_FEMALE(LOCAL)
+		대상 = LOCAL
+		BREAK
+	ENDIF
+NEXT
+
+SIF 대상 == -1
+	RETURN 0
+
+CALL SINGLE_DRAWLINE
+PRINTFORMW 「야아!   너가 %ANAME(MASTER)%인가!   이야기는 듣고 있다」
+PRINTFORML 감옥에 갇힌 %ANAME(MASTER)%에, 마름의 남자가 말을 걸어 왔다
+PRINTFORMW 백의를 몸에 대고 있는 근처, 간수는 아닐 것이다. 노려본다
+PRINTFORMW 「어이쿠, 그렇게 무서운 얼굴을 하지 말아 줘. 가두고 있는 것은 미안하다고 생각하고 있다」
+PRINTFORMW 「어쩔 수 없기에붉지 않은가, 이렇게 하지 않으면 너, 날뛴다일 것이다?」
+PRINTFORMW 「아마, 너는 우리의 활동에게 오해를 안고 있다. 우리는 너희들에게 해를 이룰 생각은 없다」
+PRINTFORMW 「너의 상대자씨……%ANAME(대상)%던가?   에도 도와 받았지만, 상처 하나 없다고」
+PRINTFORML 믿을 수 있는지, %조사처리(ANAME(대상),"를")% 풀어줘라―-물도록(듯이) 단언하지만, 상대는 동요하지 않았다
+PRINTFORMW 두 명을 멀리하는 강철의 우리를 신용하고 있을 것이다. 사실, 이것만은 파괴할 길도 없었다
+PRINTFORMW 「아아응, 그래. 실은 %ANAME(대상)%에 도와 받은 실험이 끝나」
+PRINTFORMW 「특히 이제 용무는 없고, 해방하려고 생각한다. %조사처리(ANAME(대상),"가")% 아무래도라고 하기 때문에, 너도 함께 말야」
+PRINTFORML 해방?   이 남자는 무슨 말을 하고 있을 것이다
+PRINTFORMW 이 녀석들의 집념이 강함에 대해서는, 소문으로 (듣)묻고 있다. 그렇게 간단하게 포로를 풀 리가 없다
+PRINTFORMW 의심하는 %조사처리(ANAME(MASTER),"이지만")%, 남자는 신경쓰지 않는 것 같았다
+PRINTFORMW 「뭐 믿을 수 없구나. 그럴 것이다 되고 생각한다. 그러니까 데려 왔어, 이봐요, 와」
+PRINTFORML 남이 손짓하면, 카게가 가까워져 왔다
+PRINTFORMW ……%조사처리(ANAME(대상),"다")%!   무사했던 것이다!
+PRINTFORMW 상처도 하고 있지 않은 것 같다……. %조사처리(ANAME(MASTER),"는")% 가슴을 쓸어내린다
+PRINTFORMW 「어때, 조금은 신용해 줄 마음이 생겼는지?」
+PRINTFORML ……확실히, %조사처리(ANAME(대상),"가")% 무사하다는 곳은 거짓말은 아니었을 것이다
+PRINTFORMW 이지만, 너희가 비도인 실험을 하고 있지 않다는 것의 증명은 되지 않는다. 빨리 풀어줘라―-그렇게 말했다
+PRINTFORMW 「우와아, 심한 미움받는 모양이다……응, 신용을 획득하기 위해서(때문에)도, %ANAME(대상)%에 도와 받은 실험의 설명을 할까」
+PRINTFORMW 「우리의 팀의 테마는 간단. 『사람은 어떻게, 다른 사람에게 예속 하는 것인가』」
+PRINTFORMW 「그러니까%ANAME(대상)%에는, 예속 해 받았다」
+PRINTFORMW 「연구 과정에서 다양한 것이 밝혀졌어. 다만 아픔을 줄 뿐만 아니라 거기에 위협의 한마디가 있는 편이 좋다든가」
+PRINTFORMW 「같은 레벨의 고통에서도 화상은 특히 유효, 같은 것도 있었군요. 이것은 흥미롭고, 좀 더 조사하기로 하자」
+PRINTFORMW 「어떤 것, 조금 결과를 보여 주자!   ……%ANAME(대상)%」
+PRINTFORML 남이 %ANAME(대상)%의 이름을 부른다. %조사처리(ANAME(대상),"는")% 흠칫 어깨를 진동시킨다.
+PRINTFORMW 비교해 보도록(듯이), %조사처리(ANAME(MASTER),"와")% 남자에게 교대로 눈을 돌렸다
+PRINTFORMW 「어떻게 했어?   나는 그에게 연구 결과를 보여 주고 싶다. 도와 줘. ……그렇지 않으면, 『그 이외의 일』을 되고 싶은 것인지?」
+PRINTFORMW 그 이외의 일. 그 한마디가 나온 순간, %ANAME(대상)%의 표정이 비뚤어진다
+PRINTFORML 그 「무엇인가」로부터 피하고 싶다고 할듯이, 그녀는 옷을 풀어헤쳐, 당신의 피부를 쬐어 간다
+PRINTFORMW ……태어날 때부터의 모습이 된 그녀의 피부에는, 몇개의 문신이, 피어스가 붙여져 있었다
+PRINTFORML 「응-, 붙여 보았다는 좋지만, 이러한 것은, 실험에는 그다지 공헌하지 않았다」
+PRINTFORMW 「역시 좀 더 신체 감각에 호소하는 것이 아니면 안 되는 것 같다. 아픔이라든지 괴로움이라든지 뜨거움이라든지 쾌감이라든지」
+PRINTFORMW 「뭐, 안 된다고 안 것 뿐이라도, 습득물이지만 말야」
+PRINTFORMW 남은 어깨를 움츠린다. %조사처리(ANAME(대상),"는")% 아무것도 말하지 않고, 다만 우뚝서고 있었다
+PRINTFORMW 「그런데, 서론은 이상이다. %ANAME(대상)%의 예속 형편을 보여드린다. 정면에 있는 우리는 보일까?」
+PRINTFORMW 정면에 있는 우리--공허한 눈동자를 한 남자들이, 벽에 의지하고 있다. 눈동자에는 생기가 없었다
+PRINTFORMW 「너에게는 미안하다고 생각하고 있다, 그 우리, 뭔가 불길한 걸. 그 정면에서 보내는 것은 침착하지 않았을 것이다?」
+PRINTFORMW 「그것은 접어두어……%ANAME(대상)%. 저것에 안기고 와」
+PRINTFORML 남이 말했던 것은, 상궤를 벗어나고 있었다. 하지만, 보다 믿을 수 없었던 것은, %조사처리(ANAME(대상),"가")% 수긍한 것이었다
+PRINTFORMW 무엇을 하고 있다, 그만두어라―-쇠창살에 물고 늘어지도록(듯이)해 외치지만, 우리로 향하는 %ANAME(대상)%의 걸음은 멈추지 않는다
+PRINTFORMW 「걱정 무용. 저것도 실험의 산물이다. 우리에게 예속 하고 있다―-실패작이니까 『망가져 있다』하지만, 불이익하게 되지는 않는다」
+PRINTFORMW 「그렇지 않으면, %ANAME(대상)%의 신체를 걱정하고 있을까나?   그것도 걱정 무용, 이봐요, (들)물어 보면 좋다」
+PRINTFORML 남은 노출로 된 %ANAME(대상)%의 비순에, 당연히 손을 뻗는다. %ANAME(대상)%도, 거부하지 않고, 스스로 다리를 열어 손가락을 받아들인다
+PRINTFORMW , 질척 물에 젖은 고기를 반죽하는 소리가, 복도에 울렸다
+PRINTFORMW 「알았는지? 　%조사처리(ANAME(대상),"는")% 발정하고 있다, 지금부터 일어나는 것을 상상해」
+PRINTFORMW 「이만큼 젖고 있으면, 페니스를 삽입하는 마찰에 의한 고통 같은거 생각하지 않아도 괜찮을 것이다」
+PRINTFORMW 「이것은 아무튼, 실험의 부산물일까. 정기적으로 쾌락을 준 결과구나」
+PRINTFORMW 그렇게 말하고 있는 동안에도, %조사처리(ANAME(대상),"는")% 걸음을 진행시켜, 맞은 쪽의 우리로 스스로 들어가 버린다
+PRINTFORML 우리안의 남자들은, 생기가 없는 눈동자 인 채의 휘어짐과 일어나, 느릿느릿%ANAME(대상)%아래에 모여, 오르거나와 깔아누른다
+PRINTFORMW 마치, 「들어 온 여자를 범해라」라고 미리 명령 받고 있던, 인형인 것 같았다
+PRINTFORMW 그런 것의 상대를 하게 한다는데, %조사처리(ANAME(대상),"는")% 저항 하나 하지 않는다
+PRINTFORMW 「처음은 이것도 싫어한 것이야. 그러니까 일단, 고통을 줄 방침으로 전환했다. 이것이 좋았어요」
+PRINTFORMW 「재우지 않는다고 말하는 것이 특별히 효과가 있었군요. 상시 폭음을 계속 (듣)묻게 해, 그런데도 눈꺼풀이 나오면 물을 뿌린다. 이것 뿐」
+PRINTFORMW 「심플하지만, 수면은 생물의 생명 유지에 빠뜨릴 수 없으니까. 비용대 효과는 매우 높았다」
+PRINTFORMW 「뒤는 전격이라든지―-아무튼, 한동안 그러한 것을 계속하고 있으면, 여기도 싫어하지 않게 된 것이다」
+PRINTFORML 남은 즐거운 듯이 설명한다. --락 무성하고라고 해도, 거기에 기학의 색은 일절 없었다
+PRINTFORMW 5살아나 6살아가, 자신의 발견을 즐거운 듯이 말할 때의, 그러한 음색이었다
+PRINTFORML 그렇게 하고 있는 동안에도, 인형과 같은 남자의 일체가, %ANAME(대상)%의 가랑이에 페니스를 꽉 눌러, 그리고 삽입한다
+PRINTFORML 쓰는, 쓰면, 허리가 흔들린다. %ANAME(대상)%의 질 구멍이, 범해지고 있다
+PRINTFORMW 그만두라고 절규하지만, 연구자의 남자는 (듣)묻지 않는 것 같았다
+PRINTFORMW 「그렇게 걱정하지 않아도 괜찮아. 괜찮기 때문에, 이봐요 들리겠지?   그녀도 싫어하지는 않았다」
+PRINTFORML 따분한 리듬으로 영향을 주는, 고기가 부딪치는 소리와 젖은 밀의 소리. 거기에 섞여, 여자의 목소리가 들려 온다
+PRINTFORML
+PRINTFORMW ……다름아닌 %ANAME(대상)%의, 교성이
+PRINTFORML
+PRINTFORMW 「싫어해는, 있을 리가 없기에붉지 않은가. 이것은 엿과 채찍의 엿이야?   누구라도 엿을 선택하는, 그것은」
+PRINTFORMW 「그러니까 너는 아무것도 걱정하지 않아도 괜찮다」
+PRINTFORML 나쁜 꿈인 것 같았다. 벽에 머리를 쳐박는다. 꿈은 깨어 주지 않는다. 당연하다. 이것은 꿈은 아닌 것이니까
+PRINTFORML 연인이 지옥과 같은 고통을 맛봐지고 있었다는데, 그리고 지금도, 눈앞에서 범해지고 있다는데, 아무것도 할 수 없다
+PRINTFORMW 이런 쇠창살 하나 멀리한 것 뿐로―-%조사처리(ANAME(MASTER),"는")%, 너무 무력했다
+PRINTFORMW 「이봐요, 슬슬이 아닌가」
+PRINTFORML %조사처리(ANAME(대상),"를")% 범하는 남자의 움직임이, 자꾸자꾸빨라져 간다. 그것이 무엇을 의미하는지, %ANAME(MASTER)%에도 이해할 수 있다
+PRINTFORMW 이제(이미/벌써/더는/정말) 그만두어 줘. 당초의 기세도 잃어, 의기 소침해진 것처럼 중얼거리는 %ANAME(MASTER)%에, 다름아닌 %조사처리(ANAME(대상),"가")% 추격을 걸친다
+PRINTFORML
+PRINTFORMW 질내에 사정해 주십시오―-
+PRINTFORML
+PRINTFORMW 그녀는 틀림없고, 그렇게 말했다. 연인인 %ANAME(MASTER)% 이외의 종을 받아 들이고 싶다고, 그러한 것이다
+PRINTFORMW 「응, 훌륭하다. 그녀의 컨셉은 『만인에게로의 예속』이야」
+PRINTFORMW 「보통은 특정의 누군가에게 예속 하는 것일 것이다?   에서도 그녀는 다르다. 자신에게 관련되는 모든 것에 예속 해 받았다」
+PRINTFORMW 「이것은 희소한 예야. 실로 귀중하다. 앗, 물론 너에게도 예속 한다. 나중에 뭔가 명령하고 시험하면 좋아」
+PRINTFORML 자화자찬하는 예술가와 같은 어조로, 연구자는 말한다
+PRINTFORML 이지만, 그의 말 따위, %조사처리(ANAME(MASTER),"는")% (듣)묻지 않았었다. 아무것도 (듣)묻고 싶지 않았고, 아무것도 보고 싶지 않았다
+PRINTFORMW 다만, 이 똥싸개인 뭔가가, 조금이라도 빨리 끝나 줄 것을 바랄 뿐이었다
+PRINTFORMW 그리고, 그 「마지막」는, 곧바로 왔다
+PRINTFORML 인형과 같은 남자가, 허리를 깊게 전에 내민다. %ANAME(대상)%의 등이 젖혀져, 한층 더 높은, 기쁨의 소리가 높아진다
+PRINTFORMW 절정 했다고, 본 것 뿐으로 아는 광경이었다
+PRINTFORML 충분히 10초 정도도 있었을 것인가. 불알의 내용을 모두 다 토해낸 남자는, %ANAME(대상)%의 고기구멍으로부터 페니스를 뽑아 낸다
+PRINTFORMW 걸죽 다 들어가지 않는 것이 늘어진다. 죄송합니다 라고 %조사처리(ANAME(대상),"는")% 중얼거렸다. 귀중한 타네를 흘려 버렸던과
+PRINTFORMW 그녀는 일어나, 방금전까지 스스로를 관철하고 있던 것에, 그 입으로 봉사를 시작한다. 그것을 연구자는 멈추었다
+PRINTFORMW 「어이쿠%ANAME(대상)%. 말한대로로 할 수 있던 것은 훌륭하지만, 조금 기다려. 지금은 나의 용무가 우선이다」
+PRINTFORMW 「이것은 %ANAME(MASTER)%훈. 전에 말했지?   너의 새로운 주인님이다. 자, 인사하세요」
+PRINTFORMW %조사처리(ANAME(대상),"는")% 물건으로부터 입을 떼어 놓아, 그리고 이쪽으로 휘청휘청 가까워져 온다. 땅에 무릎을 꿇어, 이마를 붙여, 쇠창살 너머로 말했다
+PRINTFORML
+PRINTFORMW 주인님, 지금부터 이 %조사처리(ANAME(대상),"를")%, 잘 부탁 드리겠습니다―-
+PRINTFORML
+PRINTFORMW 거기에, %ANAME(대상)%의 모습은, 남지 않았었다
+PRINTFORMW 「!   약속대로, 너희들을 여기로부터 해방하자. 돌아가 받아 좋다」
+PRINTFORMW 「다만, 또 여기에 오는 것 같은 일을 하는 것은 용서해 주어라?   우리는 본래, 야만스러운 싸움에 적합하지 않기도 하고」
+PRINTFORML 남은 %ANAME(MASTER)%의 우리의 열쇠를 열면, 빨리 떠나 버렸다
+PRINTFORMW 뒤쫓아, 죽일 수 있다. 그러나, %ANAME(MASTER)%에는 그것을 하는 기력조차 남지 않았었다
+PRINTFORMW --무엇보다, 저것을 죽인 곳에서, 부수어져 버린 %조사처리(ANAME(대상),"가")%, 원래에 돌아올 것은 아닌 것이다
+PRINTFORMW 일어선다. 감옥에서 나온다. %ANAME(대상)%의 잔해를 껴안는다
+PRINTFORMW 어떻게든 되었습니까, 주인님, 울지 말아 주세요―-귓전에, 저주와 같은 말이 흘려 넣어지고 계속하고 있었다……
+CALL COLOR_PRINTW(@"%조사처리(ANAME(MASTER),"와")% %조사처리(ANAME(대상),"는")%, 해방되었습니다", 칼라_주의)
+CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"가")% 망가졌습니다", 칼라_경고)
+CALL COLOR_PRINTW(@"%ANAME(대상)%의 소질이 변화했습니다", 칼라_경고)
+CFLAG:대상:호감도 = 0
+CFLAG:대상:의존도 = 3000
+CFLAG:대상:종속도 = 10000
+CFLAG:대상:지배도 = 0
+TALENT:대상:연모 = 0
+TALENT:대상:친애 = 0
+TALENT:대상:연인 = 0
+TALENT:대상:주인 = 0
+TALENT:대상:소유자 = 0
+TALENT:대상:복종 = 1
+TALENT:대상:예속 = 1
+TALENT:대상:합의 = 1
+TALENT:대상:솔직함 = 1
+TALENT:대상:반항적 = 0
+TALENT:대상:거만함 = 0
+TALENT:대상:프라이드높음 = 0
+TALENT:대상:호기심 = 0
+TALENT:대상:무관심 = 1
+TALENT:대상:감정결핍 = 1
+TALENT:대상:선을넘지않음 = 1
+TALENT:대상:억압 = 1
+TALENT:대상:Ｓ기질 = 0
+TALENT:대상:헌신적 = 1
+TALENT:대상:음모현재치 = 음모_하트형
+TALENT:대상:음모목표치 = 음모_하트형
+CALL VIRGIN_COMMON(대상, @"외래인", "조교")
+CALL VIRGIN_COMMON_A(대상, @"외래인", "조교")
+CALL KISS_COMMON(대상, @"외래인의 페니스", "조교")
+EXP:대상:절정경험 += RAND(1000, 1500)
+EXP:대상:고통쾌락경험 += RAND(500, 1000)
+EXP:대상:Ｖ확장경험 += RAND(30, 50)
+EXP:대상:Ａ확장경험 += RAND(30, 50)
+EXP:대상:긴박경험 += RAND(200, 500)
+EXP:대상:구음경험 += RAND(200, 300)
+EXP:대상:트라우마경험 += RAND(1000, 2000)
+EXP:대상:윤간경험 += RAND(200, 250)
+EXP:대상:수간경험 += RAND(200, 250)
+SETBIT SEXUAL_PREFERENCE:대상:0, 성적기호_봉사하고싶다
+SETBIT SEXUAL_PREFERENCE:대상:0, 성적기호_성교되고싶다
+SETBIT SEXUAL_PREFERENCE:대상:0, 성적기호_도구를사용되고싶다
+SETBIT SEXUAL_PREFERENCE:대상:0, 성적기호_시달리고싶다
+SETBIT SEXUAL_PREFERENCE:대상:0, 성적기호_욕보여지고싶다
+SETBIT SEXUAL_PREFERENCE:대상:0, 성적기호_속박되고싶다
+SETBIT SEXUAL_PREFERENCE:대상:0, 성적기호_짐승과사귀고싶다
+SETBIT SEXUAL_PREFERENCE:대상:0, 성적기호_노출하고싶다
+SETBIT SEXUAL_PREFERENCE:대상:0, 성적기호_조교되고싶다
+SETBIT SEXUAL_PREFERENCE:대상:0, 성적기호_윤간되고싶다
+SETBIT SEXUAL_PREFERENCE:대상:0, 성적기호_임신하고싶다
+ABL:대상:Ｃ감 += RAND(4,6)
+ABL:대상:Ｖ감 += RAND(4,6)
+ABL:대상:Ａ감 += RAND(4,6)
+ABL:대상:Ｂ감 += RAND(4,6)
+ABL:대상:Ｍ감 += RAND(4,6)
+ABL:대상:욕망 += RAND(4,6)
+ABL:대상:성기술 += RAND(4,6)
+ABL:대상:봉사 += RAND(4,6)
+ABL:대상:성교 += RAND(4,6)
+ABL:대상:자위 += RAND(4,6)
+ABL:대상:정애 += RAND(4,6)
+ABL:대상:배설 += RAND(4,6)
+ABL:대상:주도도Ｎ = MIN(-700, ABL:대상:주도도Ｎ)
+ABL:대상:주도도Ｕ = MIN(-700, ABL:대상:주도도Ｕ)
+ABL:대상:도착도 = MAX(800, ABL:대상:도착도)
+CALL SET_PIERCE_RANDOM(대상, 0)
+CALL SET_PIERCE_RANDOM(대상, 0)
+CALL SET_PIERCE_RANDOM(대상, 0)
+CALL SET_PIERCE_RANDOM(대상, 0)
+CALL SET_TATTOO_RANDOM(대상, STR_FOR_TATTOO(-1), 0)
+CALL SET_TATTOO_RANDOM(대상, STR_FOR_TATTOO(-1), 0)
+CALL SET_TATTOO_RANDOM(대상, STR_FOR_TATTOO(-1), 0)
+CALL SET_TATTOO_RANDOM(대상, STR_FOR_TATTOO(-1), 0)
+FOR LOCAL, 0, 5
+	SIF TRAINNAME:LOCAL != ""
+		COM_EXP:대상:(LOCAL + 1000) += RAND(500, 1000)
+NEXT
+FOR LOCAL, 10, 16
+	SIF TRAINNAME:LOCAL != ""
+		COM_EXP:대상:LOCAL += RAND(500, 1000)
+NEXT
+COM_EXP:대상:320 += RAND(500, 1000)
+FOR LOCAL, 30, 80
+	SIF !GROUPMATCH(LOCAL, 50, 75) && TRAINNAME:LOCAL != "" 
+		COM_EXP:대상:(LOCAL + 1000) += RAND(500, 1000)
+NEXT
+FOR LOCAL, 80, 100
+	SIF TRAINNAME:LOCAL != ""
+		COM_EXP:대상:(LOCAL + 1000) += RAND(1000, 1500)
+NEXT
+FOR LOCAL, 100, 120
+	SIF !GROUPMATCH(LOCAL, 108, 109, 112, 113, 114) && TRAINNAME:LOCAL != ""
+		COM_EXP:대상:(LOCAL) += RAND(500, 1000)
+NEXT
+COM_EXP:대상:1112 += RAND(500, 1000)
+COM_EXP:대상:1113 += RAND(500, 1000)
+COM_EXP:대상:1114 += RAND(500, 1000)
+COM_EXP:대상:130 += RAND(500, 1000)
+COM_EXP:대상:1131 += RAND(500, 1000)
+COM_EXP:대상:1132 += RAND(500, 1000)
+COM_EXP:대상:1140 += RAND(500, 1000)
+COM_EXP:대상:1141 += RAND(500, 1000)
+FOR LOCAL, 80, 160
+	SIF TRAINNAME:LOCAL != ""
+		COM_EXP:대상:(LOCAL + 1000) += RAND(1000, 1500)
+NEXT
+CALL CAPTURE(MASTER, 0)
+CALL CAPTURE(대상, 0)
+RETURN 1
+
+
+;-------------------------------------------------
+;정기 이벤트
+;-------------------------------------------------
+@GAIRAI_REV_TRAIN_REGULAR_EVENT(세력)
+#DIM 세력
+
+SIF FLAG:역조교회수 == 0 || FLAG:역조교회수 % 4 != 0
+	RETURN 0
+
+PRINTFORML 조교의 시간이 가까워지면, %조사처리(ANAME(MASTER),"는")% 여느 때처럼 「연구실」에서 구속되어
+PRINTFORMW 후는 외래인에 자기 마음대로되는 것을 기다릴 뿐되었다
+PRINTFORMW 그런데, 온 외래 사람들은, 뜻밖의 것을 말하기 시작한다
+PRINTFORMW 군은 연구 대상으로 해 훌륭한, 실로 모범적이다
+PRINTFORMW 만약 우리에게 협력해 준다면, 어느 정도의 행동의 자유는 인정하자, 라고……
+PRINTFORML 이대로 거부해 계속해도, 이 녀석들은 자신을 계속 더럽힐 것이다
+PRINTFORML 목을 세로에 흔들면, 얼마 정도는 편해질 수 있을지도 모른다
+PRINTFORMW 어떻게 해야 할 것일까……
+CALL ASK_YN("단념해 받아들인다（노예화)", "이런 녀석들의 노예는 미안이다")
+IF RESULT == 0
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 수긍하면, 그들은 만족기분에 웃었다
+	IF RAND:3
+		CALL SET_PIERCE_RANKED(MASTER, 0, 피어스_음순, 피어스_페니스, 피어스_클리토리스, 피어스_유두, 피어스_배꼽, 피어스_귀, 피어스_혀, 피어스_코)
+		SIF RESULT != -1
+			CALL COLOR_PRINTW(@"%ANAME(MASTER)%의 %GET_PIERCE_NAME(RESULT)%에, 연구 대상인 것을 나타내는 피어스가 장착되었다……", 칼라_핑크)
+	ELSE
+		CALL SET_TATTOO_RANKED(MASTER, "연구용 노예", 0, 문신_비부, 문신_엉덩이, 문신_뺨, 문신_이마, 문신_어깨, 문신_가슴, 문신_등, 문신_배, 문신_넙적다리, 문신_발목)
+		SIF RESULT != -1
+			CALL COLOR_PRINTW(@"%ANAME(MASTER)%의 %GET_TATTOO_NAME(RESULT)%에, 연구 대상인 것을 나타내는 문신이 새겨졌다……", 칼라_핑크)
+	ENDIF
+	PRINTFORMW 한층 더 그 목에, 관리용의 목걸이를 끼워졌다
+	SETCOLOR 칼라_주의
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 외래 사람들의 연구용 노예가 되었습니다
+	RESETCOLOR
+	SETBIT TALENT:MASTER:특수세력함락계, 특수세력_외래인
+	CALL CHANGE_COUNTRY(MASTER, 세력, 1)
+	CALL PLAYER_FALLEN_TO_SP_COUNTRY(세력)
+	RETURN 1
+ELSE
+	PRINTFORML 그런 것으로, %ANAME(MASTER)%의 거부를 특별히 신경쓴 바람도 아니고 외래 사람들은 받아들인다
+	PRINTFORML 그것은 어쩔 수 없는, 그럼 이대로 연구에 들어가 라고 %ANAME(MASTER)%에 모여 간다……
+ENDIF
+
+;-------------------------------------------------
+;아는 사람이 왔을 때의 이벤트
+;-------------------------------------------------
+@GAIRAI_REV_TRAIN_MSG(세력, 아는사람참가자, 아는사람참가수)
+#DIM 세력
+#DIM REF 아는사람참가자
+#DIM 아는사람참가수
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 조교의 시간이 가까워지면, %조사처리(ANAME(MASTER),"는")% 여느 때처럼 실험실에서 구속되어
+PRINTFORMW 후는 남자들에게 더럽혀지는 것을 기다릴 뿐되었다
+PRINTFORMW 온 외래인은, %조사처리(ANAME(MASTER),"가")% 자주(잘) 면식이 있던 상대를 데리고 와서 있었다
+PRINTFORMW %ANAME(아는사람참가자:0, 아는사람참가수)%다
+PRINTFORMW 한 때의 모습은 이미 없고, 어딘가 공허해 생기가 없는 눈동자를 하고 있다
+PRINTFORMW 이상한 듯한 헤드기어나 케이블을 여기저기에 장착되고 있다는데, 모두 그것을 의문에도 생각하지 않는 것 같았다
+IF IS_FEMALE(아는사람참가자:0)
+	PRINTFORMW 사전에 한껏 범해져 왔을 것이다, 양쪽 모두의 구멍은 이미 애액과 정액으로 질척질척 젖고 있다
+	IF HAS_PENIS(MASTER)
+		PRINTFORMW 성욕으로 가득 찬 시선은, %조사처리(ANAME(MASTER),"는")% 아니고, %ANAME(MASTER)%의 격분한 남근에 따라지고 있었다…
+	ELSE
+		PRINTFORMW 성욕으로 가득 찬 시선은, %조사처리(ANAME(MASTER),"는")% 아니고, %ANAME(MASTER)%의 몸에게 따라지고 있었다…
+	ENDIF
+ELSE
+	PRINTFORMW 사전에 한껏 범해져 왔을 것이다, 전신은 백탁 투성이가 되어 있다
+	IF HAS_PENIS(MASTER)
+		PRINTFORMW 성욕으로 가득 찬 시선은, %조사처리(ANAME(MASTER),"는")% 아니고, %ANAME(MASTER)%의 격분한 남근에 따라지고 있었다…
+	ELSE
+		PRINTFORMW 성욕으로 가득 찬 시선은, %조사처리(ANAME(MASTER),"는")% 아니고, %ANAME(MASTER)%의 몸에게 따라지고 있었다…
+	ENDIF
+ENDIF

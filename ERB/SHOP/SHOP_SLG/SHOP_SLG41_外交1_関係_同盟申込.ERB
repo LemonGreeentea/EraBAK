@@ -1,0 +1,79 @@
+﻿;-------------------------------------------------
+;동맹을 신청한다
+;-------------------------------------------------
+@DIPLOMACY_ALLIANCE(상대세력)
+#DIM 세력
+#DIM 상대세력
+#DIM 군주
+#DIM 상대군주
+#DIM 상대외교계획
+#DIM 판정치
+#DIM 기간
+#DIM 세력경제
+#DIM 상대세력경제
+
+IF IS_SP_COUNTRY(상대세력)
+	PRINTFORMW 동맹을 꺼냈습니다만, 저 편은 코로 웃어 왔습니다
+	RETURN 0
+ENDIF
+세력 = CFLAG:MASTER:소속
+군주 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+상대군주 = GET_COUNTRY_BOSS(상대세력)
+
+상대외교계획 = CHECK_AI_DIPLOMACY_PLAN(상대세력, CFLAG:MASTER:소속)
+
+;상대의 외교 계획내라면, 무조건으로 성립
+IF 상대외교계획 == AI_외교계획_동맹
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% 동맹을 걸면, %조사처리(ANAME(LOCAL:5),"는")% 기분 좋게 승낙했다…
+	GOTO SUCCESS
+ENDIF
+
+세력경제 = GET_SUM_ECONOMY(세력)
+상대세력경제 = GET_SUM_ECONOMY(상대세력)
+
+
+판정치 = (REL_LIKE:상대군주:군주 - REL_HATE:상대군주:군주) * 100 / 1500
+판정치 = 판정치 * MAX(세력경제 * 100 / 상대세력경제, 100) / 100
+판정치 += MAX((세력경제 - 상대세력경제) / 5000, 0)
+
+DEBUGPRINTFORML 동맹의 베이스 판정치:{판정치}
+
+;세력끼리의 인접 관계 맵을 작성
+CALL TMP_CREATE_COUNTRY_NEIBORING_MAP
+
+SIF !TMP_COUNTRY_IS_NEIBORING:세력:상대세력
+	판정치 /= 2
+
+SELECTCASE 판정치
+	CASE IS >= 50
+		PRINTFORMW %조사처리(ANAME(군주),"가")% 동맹을 꺼내면, %조사처리(ANAME(상대군주),"는")% 기분 좋게 승낙했다…
+	CASE 35 TO 49
+		CALL DIPLOMACY_REQUESTED(상대세력)
+		;요구할 수 있는 것 없음
+		IF RESULT == -1
+			IF INRANGE(판정치, 40, 49)
+				PRINTFORMW %조사처리(ANAME(군주),"가")% 동맹을 꺼내면, %조사처리(ANAME(상대군주),"는")% 고민하면서도 승낙했다…
+			ELSE
+				PRINTFORMW %조사처리(ANAME(군주),"가")% 동맹을 꺼내면, %조사처리(ANAME(상대군주),"는")% 고민하면서도 거절했다…
+				RETURN
+			ENDIF
+		ELSEIF RESULT == 0
+			RETURN
+		ENDIF
+	CASEELSE
+		PRINTFORMW %조사처리(ANAME(군주),"는")% 동맹을 제안했지만, %조사처리(ANAME(상대군주),"는")% 거절했다…
+		SIF !TMP_COUNTRY_IS_NEIBORING:세력:상대세력
+			PRINTFORMW 영지가 인접하고 있지 않는 상태에서의 동맹은, 통상보다 어려운 것이 되는 것 같다…
+		RETURN
+ENDSELECT
+
+$SUCCESS
+기간 = MAX((REL_LIKE:상대군주:군주 * AI_RELATION:(COUNTRY_AI_TYPE:상대세력):(COUNTRY_AI_TYPE:세력) / 100 -  REL_HATE:상대군주:군주 * AI_RELATION:(COUNTRY_AI_TYPE:상대세력):(COUNTRY_AI_TYPE:세력) / 100) / 100, 3)
+
+CALL INIT_ALLIANCE(세력, 상대세력, 기간)
+
+PRINTL 
+SETCOLOR 칼라_주의
+PRINTFORMW %조사처리(ANAME(상대군주),"와")% {기간}기간의 동맹이 성립했습니다
+RESETCOLOR
+

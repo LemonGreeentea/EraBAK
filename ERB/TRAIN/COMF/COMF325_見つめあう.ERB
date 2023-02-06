@@ -1,0 +1,136 @@
+﻿;서서로응시한다
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME325
+RESULTS:0 = 서로응시한다
+RESULTS:1 = 서로응시한다
+RESULTS:2 = 서로응시한다
+RESULTS:3 = 서로응시한다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE325
+;공통 부분
+CALL COM_ABLE_COMMON(325)
+SIF RESULT == 0
+	RETURN 0
+;주인공이 플레이어 때 한정
+SIF MPLY:0 != MASTER
+	RETURN 0
+;상처라면 불가
+SIF CFLAG:(MTAR:0):행동불능상태 == 3
+	RETURN 0
+;키스중은 불가
+SIF IS_EQUIP(MPLY:0, 342)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM325
+;실행 판정
+CALL COM_ORDER_COMMON
+IF RESULT == 0
+	RETURN 0
+ENDIF
+
+;커맨드의 성공 여부를 TFLAG:18에 세트
+CALL JUDGE_COM_RESULT(MTAR:0, 5, 10)
+
+;호감도 500 미만이라면 확실히 실패
+IF MPLY:0 == MASTER && CFLAG:(MTAR:0):2 < 500
+	TFLAG:18 = -1
+ENDIF
+
+;주도권에 응한 우월·수동의 소스 추가
+CALL ADD_SOURCE_INITIATIVE_N(MPLY:0, 50, 50)
+CALL ADD_SOURCE_INITIATIVE_N(MTAR:0, 50, 50)
+
+;친밀하게 응한 환락의 소스 추가
+SOURCE:(MPLY:0):환락 = -50
+SOURCE:(MTAR:0):환락 = -50
+CALL ADD_SOURCE_KANRAKU(MPLY:0, 70)
+CALL ADD_SOURCE_KANRAKU(MTAR:0, 70)
+SOURCE:(MPLY:0):환락 = MAX(SOURCE:(MPLY:0):환락, 0)
+SOURCE:(MTAR:0):환락 = MAX(SOURCE:(MTAR:0):환락, 0)
+
+;친밀하게 응한 애정의 소스 추가
+CALL ADD_SOURCE_AIZYOU(MPLY:0, 165)
+CALL ADD_SOURCE_AIZYOU(MTAR:0, 165)
+
+;실패
+IF TFLAG:18 == -1
+	TIMES SOURCE:(MPLY:0):환락, 0.10
+	TIMES SOURCE:(MPLY:0):우월, 0.50
+	TIMES SOURCE:(MPLY:0):애정, 0.10
+	TIMES SOURCE:(MTAR:0):환락, 0.10
+	TIMES SOURCE:(MTAR:0):우월, 0.50
+	TIMES SOURCE:(MTAR:0):애정, 0.10
+	SOURCE:(MPLY:0):반감 += 60
+	SOURCE:(MTAR:0):반감 += 60
+	SOURCE:(MPLY:0):불만 += 500
+	SOURCE:(MTAR:0):불만 += 500
+	TFLAG:37 -= 5
+;성공
+ELSEIF TFLAG:18 == 0
+
+;대성공
+ELSE
+	TIMES SOURCE:(MPLY:0):환락, 2.00
+	TIMES SOURCE:(MPLY:0):우월, 2.00
+	TIMES SOURCE:(MPLY:0):애정, 2.00
+	TIMES SOURCE:(MTAR:0):환락, 2.00
+	TIMES SOURCE:(MTAR:0):우월, 2.00
+	TIMES SOURCE:(MTAR:0):애정, 2.00
+	TFLAG:37 += 5
+ENDIF
+
+;주도도 변화 기준치
+TFLAG:49 = 0
+
+;도착도 변화 기준치
+TFLAG:50 = -1
+
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE325
+IF TFLAG:18 == 1
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"와")% %조사처리(ANAME(MTAR:0),"는")% 눈을 맞추어 가만히 서로 응시했다
+	PRINTFORML 두 명의 사이에 달콤한 공기가 흘렀다…
+ELSEIF TFLAG:18 == 0
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"와")% %조사처리(ANAME(MTAR:0),"는")% 눈을 맞추어 가만히 서로 응시했다
+	IF TALENT:(MTAR:0):반항적 || TALENT:(MTAR:0):거만함 || TALENT:(MTAR:0):보수적
+		PRINTFORML 한동안 하면 %조사처리(ANAME(MTAR:0),"는")% 수줍도록(듯이)해 눈을 피했다…
+	ELSE
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 상냥하게 미소짓고 있다…
+	ENDIF
+ELSEIF TFLAG:18 == -1
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 눈을 맞추어 서로 응시하려고 했다
+	IF TALENT:(MTAR:0):반항적 || TALENT:(MTAR:0):거만함 || TALENT:(MTAR:0):보수적
+		PRINTFORML ……가, %ANAME(MTAR:0)%에 기색 나쁜 것 같은 눈으로 보여져 버렸다
+	ELSE
+		PRINTFORML ……가, %조사처리(ANAME(MTAR:0),"는")% 잘 모르고 곤혹한 표정을 띄웠다
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;-------------------------------------------------
+@COM_TEXT_LAST325
+;일상 커맨드에 공통의 지문
+;CALL COM_TEXT_LAST_LIFE
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN325
+RETURN 커맨드_일상

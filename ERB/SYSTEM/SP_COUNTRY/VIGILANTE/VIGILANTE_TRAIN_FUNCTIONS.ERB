@@ -1,0 +1,58 @@
+﻿;-------------------------------------------------
+;조교 함수 존재 판정
+;-------------------------------------------------
+@VIGILANTE_DOES_TRAIN()
+
+;-------------------------------------------------
+;조교 함락시 메세지
+;-------------------------------------------------
+@VIGILANTE_FALLEN_MSG(대상)
+#DIM 대상
+IF !GETBIT(TALENT:대상:특수세력함락계, 특수세력_자경단)
+	PRINTFORMW 자경단원등의 열심이고 성실한 「설득」이나 「교육」에 의해, %조사처리(ANAME(대상),"는")% 충실한 자경단원으로서 다시 태어났다
+	PRINTFORMW 지급된 제복에 %조사처리(ANAME(대상),"는")% 스스로 소매를 통해, 이상하게 반짝 반짝 빛나는 눈동자와 웃는 얼굴을 띄워 그들의 사상을 외운다
+	PRINTFORMW 지금은 %조사처리(ANAME(대상),"는")% 사고의 근저까지, 충실한 단원으로서 다시 만들어지고 있었다……
+	IF TALENT:대상:낙인
+		PRINTFORML %조사처리(ANAME(대상),"가")% %ANAME(MASTER)%전용인 것을 나타내는 낙인 위로부터,
+		PRINTFORMW 자경단원의 증거인 소인이 베풀어졌다
+		TALENT:대상:낙인 = 0
+	ELSE
+		PRINTFORMW %ANAME(대상)%의 몸에, 자경단원의 증거인 소인이 베풀어졌다
+	ENDIF
+	IF TALENT:(대상):프라이드높음
+		PRINTL
+		PRINTFORMW  이전에는 자랑을 안고 있었던 %조사처리(ANAME(대상),"이지만")%, 사람들을 위해 다하는 자경단원에 그런 것은 불필요하다고 눈치챘다
+		PRINTFORMW %ANAME(대상)%의 프라이드는, 가열을 나무원째 「교육」에 의해 철저하게 쳐부수어지고 있었다……
+		CALL TALENT_LOSE_PRIDE(대상, 1, 1)
+	ENDIF
+ELSE
+	PRINTFORMW 처음은 저항하고 있었던 %ANAME(대상)%도, 불면 불휴로 「교육」을 베풀어지면, 스스로의 입장을 생각해 낸다
+	PRINTFORMW 한 번 굽힌 마음은, 희롱해질 때, 그들에 따르지 않으면 안 된다고 생각하기 시작한다
+	PRINTFORMW 교육이 끝나는 무렵에는, %조사처리(ANAME(대상),"는")% 충실한 단원으로서 다시 만들어지고 있었다……
+ENDIF
+
+;-------------------------------------------------
+;조교 함락시에 피어싱 하거나 하는 경우의 처리
+;-------------------------------------------------
+@VIGILANTE_FALLEN_LEAVE_MARK(대상)
+#DIM 대상
+SELECTCASE RAND:10
+	CASE IS < 3
+		CALL SET_PIERCE_RANDOM(대상, 0)
+		SIF RESULT != -1
+			CALL COLOR_PRINTW(@"%ANAME(대상)%의 %GET_PIERCE_NAME(RESULT)%에, 단원의 일원인 것을 나타내는 피어스가 장착되었다……", 칼라_핑크)
+	CASE IS < 7
+		CALL SET_TATTOO_RANDOM(대상, "무상", 0)
+		SIF RESULT != -1
+			CALL COLOR_PRINTW(@"%ANAME(대상)%의 %GET_TATTOO_NAME(RESULT)%에, 「무상」이라고 문신이 새겨졌다……", 칼라_핑크)
+	CASEELSE
+		IF GET_INMOU(대상) >= 음모_표준 && IS_FEMALE(대상)
+		CALL COLOR_PRINTW(@"단원이 증거로 삼아, %ANAME(대상)%의 음모는 하트형에 정돈되었다……", 칼라_핑크)
+		TALENT:대상:음모목표치 = 음모_하트형
+		TALENT:대상:음모현재치 = 음모_하트형
+		ELSE
+			CALL COLOR_PRINTW(@"단원이 증거로 삼아, %ANAME(대상)%의 음모는 영구 제모되었다……", 칼라_핑크)
+			TALENT:대상:음모목표치 = 음모_백보지
+			TALENT:대상:음모현재치 = 음모_백보지
+		ENDIF
+ENDSELECT

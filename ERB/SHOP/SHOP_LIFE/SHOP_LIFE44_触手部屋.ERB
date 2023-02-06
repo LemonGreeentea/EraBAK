@@ -1,0 +1,139 @@
+﻿;-------------------------------------------------
+;「촉수의방」의 명칭
+;오락담당의 페이지와 표시를 맞추기 (위해)때문에 오른쪽 컬럼 캐릭터 리스트에서의 표시에 개변했습니다
+;메뉴 표시도 맞추었습니다만 되돌리는 것이 좋은 일이 있는 경우는 알려 주세요
+;-------------------------------------------------
+@SHOP_LIFE_NAME44
+RESULTS:0 '= "촉수의방"
+
+;-------------------------------------------------
+;「촉수의방」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE_CHECK44
+SIF !ITEM:촉수의방
+	RETURN 0
+SIF CFLAG:MASTER:포로처
+	RETURN 0
+SIF !CFLAG:MASTER:소속
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「촉수의방」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA44(ARG:0)
+SIF !IS_SYOKUSYU_MANAGE(ARG:0)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「촉수의방의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY44
+FLAG:거점페이즈페이지 = 1
+FLAG:요바이 = 0
+RETURN 0
+
+;-------------------------------------------------
+;「촉수의방」의 오른쪽 컬럼 캐릭터 리스트 버튼 표시에 추적 시키는 정보
+;  이 덧붙여 씀 후 Default의 정보를 표시하지 않는 경우는 RETURN 1
+;-------------------------------------------------
+@SHOP_LIFE_BUTTON_ADD44(ARG:0)
+PRINTPLAIN  
+PRINTFORM 요:
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:(ARG:0):요술)
+PRINTFORM  {ABL:(ARG:0):요술, 2, RIGHT} 
+RETURN 1
+
+;-------------------------------------------------
+;「촉수의방」의 오른쪽 컬럼 캐릭터 리스트 1의 버튼（함수미지정이라면 선택중색없음 표시）
+;-------------------------------------------------
+@SHOP_LIFE_LIST1_BUTTON44(ARG:0, ARG:1)
+;캐릭터, 선택중 칼라 표시 플래그, 버튼 번호에 추가하는 수치, CHECKCHARA의 반환값, 행동이 끝난 마크를 오프로 하는 플래그
+CALL COLUMN_RIGHT_CHARALIST_BUTTON(ARG:0, ARG:0 == ID_TO_CHARA(FLAG:촉수의방관리자), SHOP_LIFE_LIST1_ADD_INPUT, ARG:1, 1)
+RETURN 0
+
+;-------------------------------------------------
+;「촉수의방」의 오른쪽 컬럼 표시 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SHOW44
+;촉수의방의 관리가 가능한 캐릭터의 수를 센다
+LOCAL:9 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_SYOKUSYU_MANAGE(LOCAL:0)
+		LOCAL:9 ++
+	ENDIF
+NEXT
+
+;타이틀
+CALL COLUMN_RIGHT_TITLE("관리자 선택", "0", "1", "0", "0")
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+CALL COLOR_PRINT(" 촉수의 방의 관리를 실시하려면", 칼라_주석)
+CALL COLUMN_RIGHT_PRINTL
+CALL COLOR_PRINT(" <요술지식>·성지식 Lv5 이상·주인공 이외라면 촉수 Lv5 이상이 필요합니다", 칼라_주석)
+CALL COLUMN_RIGHT_PRINTL
+CALL COLOR_PRINT(" 촉수의 방의 관리를 실시하면, 매턴 약간의 요술경험치와 촉수경험치를 얻을 수 있습니다", 칼라_주석)
+CALL COLUMN_RIGHT_PRINTL
+CALL COLOR_PRINT(" 현재의 관리자는", 칼라_주석)
+IF ID_TO_CHARA(FLAG:촉수의방관리자) == -1
+	FONTSTYLE 1
+	CALL COLOR_PRINT(" 없습니다 ", 칼라_주석)
+	FONTSTYLE 0
+ELSEIF IS_SYOKUSYU_MANAGE(ID_TO_CHARA(FLAG:촉수의방관리자))
+	FONTSTYLE 1
+	SETCOLOR 칼라_오렌지
+	PRINTFORM  %ANAME(ID_TO_CHARA(FLAG:촉수의방관리자))% 
+	FONTSTYLE 0
+	RESETCOLOR
+	CALL COLOR_PRINT(@"입니다", 칼라_주석)
+ELSE
+	FONTSTYLE 1
+	SETCOLOR 칼라_오렌지
+	PRINTFORM  %ANAME(ID_TO_CHARA(FLAG:촉수의방관리자))% 
+	FONTSTYLE 0
+	RESETCOLOR
+	CALL COLOR_PRINT(@"입니다만, 현재는", 칼라_주석)
+	CALL COLOR_PRINT(@"관리 불능", 칼라_선택중)
+	CALL COLOR_PRINT(@"입니다", 칼라_주석)
+ENDIF
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+;표준적인 캐릭터 리스트와 페이지 이동
+;ARG:0=3 리스트 1행에 늘어놓는 버튼수를 3으로 바꾼다
+CALL COLUMN_RIGHT_CHARALIST(3)
+
+RETURN 0
+
+;-------------------------------------------------
+;「촉수의방」의 리스트 1 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP44(ARG:0)
+CALL SINGLE_DRAWLINE
+IF ARG:0 >= 0 && IS_SYOKUSYU_MANAGE(ARG:0)
+	IF ARG:0 == ID_TO_CHARA(FLAG:촉수의방관리자)
+		PRINTFORMW %조사처리(ANAME(ARG:0),"를")% 촉수의방의 관리자로부터 제외했습니다
+		FLAG:촉수의방관리자 = 0
+	ELSE
+		PRINTFORMW %조사처리(ANAME(ARG:0),"를")% 촉수의방의 관리자로 설정했습니다
+		FLAG:촉수의방관리자 = GET_ID(ARG:0)
+	ENDIF
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;캐릭터 ARG:0이 촉수의방을 관리 가능한지 어떤지를 판정하는 함수
+;-------------------------------------------------
+@IS_SYOKUSYU_MANAGE(ARG:0)
+#FUNCTION
+IF CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속 && CFLAG:(ARG:0):포로처 == 0
+	IF TALENT:(ARG:0):요술지식 && ABL:(ARG:0):성지식 >= 4 && (ARG:0 == MASTER || ABL:(ARG:0):촉수 >= 3)
+		RETURNF 1
+	ENDIF
+ENDIF
+RETURNF 0
+

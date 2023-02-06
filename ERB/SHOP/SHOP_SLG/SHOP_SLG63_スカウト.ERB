@@ -1,0 +1,440 @@
+﻿;-------------------------------------------------
+;「스카우트」의 명칭
+;-------------------------------------------------
+@SHOP_SLG_NAME63
+RESULTS:0 '= "스카우트"
+
+;-------------------------------------------------
+;「스카우트」의 선택 가부
+;-------------------------------------------------
+@SHOP_SLG_CHECK63
+SIF CFLAG:MASTER:소속 == 0
+	RETURN 0
+;플레이어가 특수 세력 소속이라면 안 돼
+SIF IS_SP_COUNTRY(CFLAG:MASTER:소속)
+	RETURN 0
+;후보가 있으면 ok
+FOR LOCAL, 0, VARSIZE("SCOUT_CANDIDATES")
+	SIF ID_TO_CHARA(SCOUT_CANDIDATES:LOCAL) != -1
+		RETURN 1
+NEXT
+RETURN 0
+
+;-------------------------------------------------
+;「스카우트」의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_SLG_EVENTBUY63
+CALL SLG_SCOUT
+RETURN 1
+
+;-------------------------------------------------
+;「스카우트」본체
+;-------------------------------------------------
+@SLG_SCOUT
+#DIM 대상
+#DIM 대상첨자
+#DIM FIRST_LINE
+FIRST_LINE = LINECOUNT
+VARSET SHOP_CHARA_LIST, -1
+FOR LOCAL, 0, VARSIZE("SCOUT_CANDIDATES")
+	SHOP_CHARA_LIST:LOCAL = ID_TO_CHARA(SCOUT_CANDIDATES:LOCAL)
+NEXT
+
+CALL SINGLE_DRAWLINE
+PRINTFORML  자국의 강화를 위해서(때문에), 재야의 인재를 스카우트 해 오자……
+PRINTFORML  지금 후보에 오르고 있는 인재는 이하와 같지만, 누구를 스카우트 할까……
+SIF !SCOUT_COUNT
+	CALL COLOR_PRINTL("첫회 스카우트를 위해서(때문에),★6 이하의 캐릭터의 제시액이 대폭 할인（외교 해금까지! ）", 칼라_주의)
+SETCOLOR 칼라_선택불가
+PRINTFORM  소지금:
+SETCOLOR 칼라_선택중
+IF STRLENS(NUM_FORMAT(MONEY)) <= 11
+	PRINTFORML %NUM_FORMAT(MONEY), 11%
+ELSE
+	PRINTFORML %NUM_FORMAT(MONEY)%
+ENDIF
+RESETCOLOR
+CALL SINGLE_DRAWLINE
+
+FOR LOCAL, 0, VARSIZE("SCOUT_CANDIDATES")
+	LOCAL:1 = ID_TO_CHARA(SCOUT_CANDIDATES:LOCAL)
+	IF LOCAL:1 == -1
+		CONTINUE
+	ENDIF
+	;어떠한 이유로써（데이터 조작이라든지）방랑하고 있지 않는 경우, 퍼지
+	IF CFLAG:(LOCAL:1):특수상태 != 특수상태_방랑
+		SCOUT_CANDIDATES:(LOCAL) = 0
+		CONTINUE
+	ENDIF
+	CALL SCOUT_SHOW_INFO(LOCAL:1, LOCAL)
+	SETCOLOR 칼라_회색
+	CALL SINGLE_DRAWLINE
+	RESETCOLOR
+NEXT
+PRINTPLAIN  
+PRINTBUTTON @"[%"돌아온다", MAX_CHARANAME_LENGTH, LEFT%]", 99
+
+$INPUT_LOOP
+INPUT
+IF RESULT == 99
+	RETURN 0
+ENDIF
+
+IF RESULT < 0
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ELSEIF 100 <= RESULT && RESULT < VARSIZE("SCOUT_CANDIDATES") + 100
+	대상첨자 = RESULT - 100
+	대상 = ID_TO_CHARA(SCOUT_CANDIDATES:대상첨자)
+	IF 대상 == -1
+		CLEARLINE 1
+		GOTO INPUT_LOOP
+	ENDIF
+	CALL SINGLE_DRAWLINE
+	CALL SHOW_INFO_WITH_UI(대상, 1)
+	CLEARLINE LINECOUNT - FIRST_LINE
+	RESTART
+ELSEIF VARSIZE("SCOUT_CANDIDATES") <= RESULT
+		CLEARLINE 1
+		GOTO INPUT_LOOP
+ENDIF
+
+대상 = ID_TO_CHARA(SCOUT_CANDIDATES:RESULT)
+대상첨자 = RESULT
+
+
+IF 대상 == -1
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+
+PRINTFORML %ANAME(대상)%에 관직에 오름 하지 않을까 꺼냈다……
+PRINTFORML %조사처리(ANAME(대상),"는")% 돈 %NUM_FORMAT(SCOUT_PRICE:대상첨자)%를 요구했다
+PRINTL
+CALL ASK_MULTI_JUDGE("요구액수를 지불한다", SCOUT_PRICE:대상첨자 <= MONEY, "지불금액을 입력한다", 1, "그만둔다", 1)
+IF RESULT == 2
+	CLEARLINE LINECOUNT - FIRST_LINE
+	RESTART
+ENDIF
+
+IF RESULT == 0
+	LOCAL = SCOUT_PRICE:대상첨자
+ELSE
+	PRINTFORM 아무리 지불해……? (소지금:{MONEY}) 요구액:
+	PRINTBUTTON @"[{SCOUT_PRICE:대상첨자}]", SCOUT_PRICE:대상첨자
+	$PAYMENT_LOOP
+	INPUT
+	LOCAL = RESULT
+	SIF LOCAL > MONEY
+		GOTO PAYMENT_LOOP
+ENDIF
+
+IF !SCOUT_JUDGE_PAYMENT_DISCOUNT(대상, SCOUT_PRICE:대상첨자, LOCAL)
+	PRINTFORMW %ANAME(대상)%에, 그런 액으로는 관직에 오름 할 수 없으면 돌려주어졌다……
+	SCOUT_CANDIDATES:대상첨자 = 0
+	RESTART
+ENDIF
+
+PRINTFORML 전력 보강을 위해서라면 싼 것이다……
+PRINTFORML %ANAME(대상)%에 돈{LOCAL}를 지불했다
+
+LOCAL:1 = SCOUT_JUDGE_PAYMENT_PLUS(대상, SCOUT_PRICE:대상첨자, LOCAL)
+
+IF LOCAL:1 && SCOUT_COUNT
+	PRINTFORML %조사처리(ANAME(대상),"는")% 이렇게 받을 수 있다니!   와 기뻐하고 있는 것 같다……
+	PRINTFORML %ANAME(대상)%의 능력이 상승했다
+	FOR LOCAL:2, 0, LOCAL:1
+		SELECTCASE RAND:6
+			CASE 0
+				ABL:대상:무투 ++
+			CASE 1
+				ABL:대상:방위 ++
+			CASE 1
+				ABL:대상:지략 ++
+			CASE 2
+				ABL:대상:정치 ++
+			CASE 3
+				ABL:대상:가창 ++
+			CASE 4
+				ABL:대상:요리 ++
+		ENDSELECT
+	NEXT
+ENDIF
+
+PRINTFORML %조사처리(ANAME(대상),"와")% 단단한 악수를 주고 받았다……
+CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"가")% 동료가 되었습니다", 칼라_주의)
+
+MONEY -= LOCAL
+CALL CHANGE_COUNTRY(대상, CFLAG:MASTER:소속, 1)
+CFLAG:대상:호감도 = MAX(300, CFLAG:대상:호감도 + 300)
+CFLAG:대상:종속도 = MAX(100, CFLAG:대상:종속도 + 100)
+CFLAG:대상:의존도 = MAX(50, CFLAG:대상:의존도 + 50)
+
+SCOUT_CANDIDATES:(대상첨자) = 0
+
+;회수 늘려 재계산
+SCOUT_COUNT ++
+FOR LOCAL, 0, VARSIZE("SCOUT_CANDIDATES")
+	대상 = ID_TO_CHARA(SCOUT_CANDIDATES:LOCAL)
+	SIF 대상 != -1
+		SCOUT_PRICE:LOCAL = SCOUT_CALC_PRICE(대상)
+NEXT
+RETURN
+
+;-------------------------------------------------
+;스카우트 대상의 정보 표시＋버튼 생성
+;-------------------------------------------------
+@SCOUT_SHOW_INFO(대상, 번호)
+#DIM 대상
+#DIM 번호
+
+PRINTPLAIN  
+PRINTBUTTON @"[%ANAME(대상), MAX_CHARANAME_LENGTH, LEFT%]", 번호
+PRINTPLAIN   
+PRINTBUTTON "[능력표시]", 번호 + 100
+SIF MONEY < SCOUT_PRICE:번호
+	CALL COLOR_PRINT("자금부족", 칼라_경고)
+PRINTL 
+;제시액의 종렬을 눈에 띄게 한 오른쪽맞춤에
+SETCOLOR 칼라_선택불가
+PRINTFORM  제시액:
+RESETCOLOR
+PRINTFORM  %NUM_FORMAT(SCOUT_PRICE:번호), 10%
+SETCOLOR 칼라_선택불가
+PRINTFORM /  
+RESETCOLOR
+;쇼우는 눈에 띄므로 이름이 눈에 띄지 않게 되지 않게 조금 인하
+CALL TMP_PRINT_CHARA_STARS_NUM(대상)
+PRINT   무:
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:대상:무투)
+PRINTFORM {ABL:대상:무투, 3, LEFT}
+PRINT  방:
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:대상:방위)
+PRINTFORM {ABL:대상:방위, 3, LEFT}
+PRINT  지:
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:대상:지략)
+PRINTFORM {ABL:대상:지략, 3, LEFT}
+PRINT  정:
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:대상:정치)
+PRINTFORM {ABL:대상:정치, 3, LEFT}
+PRINT  요:
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:대상:요술)
+PRINTFORM {ABL:대상:요술, 3, LEFT}
+PRINT  료:
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:대상:요리)
+PRINTFORM {ABL:대상:요리, 3, LEFT}
+PRINT  가창:
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:대상:가창)
+PRINTFORM {ABL:대상:가창, 3, LEFT}
+PRINT  야심:
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:대상:야심)
+PRINTFORM {ABL:대상:야심, 3, LEFT}
+
+PRINTL 
+
+
+;-------------------------------------------------
+;스카우트 대상의 액 계산
+;-------------------------------------------------
+@SCOUT_CALC_PRICE(대상)
+#FUNCTION
+#DIM 대상
+#DIM 제시액
+#DIM 관계보정
+#DIM 호감도보정
+
+;첫회 구입이라면★6 이하는 가격인하
+SIF !SCOUT_COUNT && TMP_CHARA_STARS:대상 < 7
+	RETURNF RAND(500, 1000)
+	
+제시액 = SCOUT_CALC_PRICE_BASIS(대상)
+
+;최저액 보증
+제시액 = MAX(제시액, 5000)
+
+;안면이 있으면 할인
+SIF !CFLAG:대상:안면
+	TIMES 제시액, 0.9
+
+;REL_LIKE와 REL_HATE의 차이에 근거해 최대 30%의 보정
+관계보정 = REL_LIKE:대상:MASTER - REL_HATE:대상:MASTER - DIPLOMACY_HATE:(CFLAG:MASTER:소속) * 50
+관계보정 /= 50
+관계보정 = 100 - 관계보정
+
+제시액 = 제시액 * 관계보정 / 100
+
+;호감도에 근거해 보정
+호감도보정 = 100 - MIN(MAX(CFLAG:대상:호감도, CFLAG:대상:종속도, CFLAG:대상:지배도) / 100, 30)
+제시액 = 제시액 * 호감도보정 / 100
+
+;일수로 보정한다
+;50일째로 50％온에
+제시액 = 제시액 * (100 + MIN(DAY, 50)) / 100
+
+;도시수로 보정한다
+;10도시 넘는 도시수근처 4%
+SIF GET_OWN_CITY(CFLAG:MASTER:소속) > 10
+	제시액 = 제시액 * (100 + (GET_OWN_CITY(CFLAG:MASTER:소속) - 10) * 4) / 100
+
+;난수를 싣는다
+제시액 = 제시액 * RAND(90, 110) / 100
+
+;구입 회수 1회에 대해 15%
+제시액 = 제시액 * (100 + SCOUT_COUNT * 15) / 100
+
+RETURNF 제시액
+
+;-------------------------------------------------
+;스카우트 대상의 액 계산(능력 부분)
+;AI등도 이용한다
+;-------------------------------------------------
+@SCOUT_CALC_PRICE_BASIS(대상)
+#FUNCTION
+#DIM 대상
+#DIM 능력4종 = GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치")
+#DIM 제시액
+
+;기본액은 능력으로부터 산출
+제시액 = ABL:대상:무투 + ABL:대상:방위 + ABL:대상:지략 + ABL:대상:정치 + ABL:대상:요리 + ABL:대상:가창 + (ABL:대상:요술 * 5)
+제시액 *= 30
+
+FOR LOCAL, 0, VARSIZE("능력4종")
+	SIF ABL:대상:(능력4종:LOCAL) >= 랭크역치:랭크_ＳＬＧ:랭크_B
+		제시액 += 3000
+NEXT
+
+RETURNF MAX(제시액, 1)
+
+;-------------------------------------------------
+;스카우트용, 그 턴의 후보의 준비
+;-------------------------------------------------
+@SCOUT_PREPARE_CANDIDATES
+VARSET SCOUT_CANDIDATES
+VARSET SCOUT_PRICE
+
+;외교 해금으로 첫회 구입 플래그를 세운다
+SIF !SCOUT_COUNT && DAY >= SLG_PP:1
+	SCOUT_COUNT = 1
+
+CALL SELECT_CHARA_RANDOM_MULTI(SCOUT_MAX_CANDIDATES, "SCOUT_PREPARE_CANDIDATES")
+
+;후보가 없으면 없음으로.
+IF SELECTED_CHARA_NUM < 1
+	RETURN 0
+ENDIF
+
+;작성한 후보 배열로부터 랜덤에서 상품으로 한다.
+;이 함수를 어디서 호출해도 캐릭터 번호 엇갈림 버그가 일어나지 않게, 대상은 캐릭터 번호가 아니고 ID로 보존한다.
+FOR LOCAL, 0, MIN(SELECTED_CHARA_NUM, SCOUT_MAX_CANDIDATES)
+	SCOUT_CANDIDATES:LOCAL = GET_ID(SELECTED_CHARA:LOCAL)
+	SCOUT_PRICE:LOCAL = SCOUT_CALC_PRICE(SELECTED_CHARA:LOCAL)
+NEXT
+
+@SELECT_CHARA_RANDOM_LOGIC_SCOUT_PREPARE_CANDIDATES(대상)
+#DIM 대상
+;SP캐릭터는 대상으로 하지 않는다（도둑 그 자체가 리스트업 되는 것을 막는다
+SIF IS_SP_CHARA(대상)
+	RETURN 0
+IF IS_COUNTRY(CFLAG:MASTER:소속)
+	LOCAL = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+ELSE
+	LOCAL = MASTER
+ENDIF
+;관계성이 너무 나쁜 캐릭터도 대상으로 하지 않는다
+SIF REL_LIKE:대상:LOCAL - REL_HATE:대상:LOCAL - DIPLOMACY_HATE:(CFLAG:MASTER:소속) * 50 <= -1000
+	RETURN 0
+;방랑중이 아니면 안 돼
+SIF CFLAG:대상:특수상태 != 특수상태_방랑
+	RETURN 0
+
+RETURN 1
+
+;-------------------------------------------------
+;스카우트 대상이 어디까지 가격인하를 허락할까
+;-------------------------------------------------
+@SCOUT_JUDGE_PAYMENT_DISCOUNT(대상, 제시액, 지불액)
+#FUNCTION
+#DIM 대상
+#DIM 제시액
+#DIM 지불액
+#DIM 배율
+#DIM 관계보정
+
+배율 = RAND(90, 100)
+
+SIF TALENT:대상:프라이드낮음
+	배율 -= 5
+SIF TALENT:대상:프라이드높음
+	배율 += 5
+SIF TALENT:대상:솔직함
+	배율 -= 5
+SIF TALENT:대상:반항적
+	배율 += 5
+SIF TALENT:대상:무관심
+	배율 -= 5
+SIF TALENT:대상:고고함
+	배율 += 20
+
+SIF IS_LOVER(대상) || IS_SLAVE(대상) || IS_SLAVED_BY(대상)
+	배율 -= 10
+
+배율 -= MIN(MAX(CFLAG:대상:호감도, CFLAG:대상:종속도, CFLAG:대상:지배도) / 100, 50)
+
+;REL_LIKE와 REL_HATE의 차이에 근거해 최대 15%의 보정
+관계보정 = REL_LIKE:대상:MASTER - REL_HATE:대상:MASTER
+관계보정 /= 100
+관계보정 = 100 - 관계보정
+
+배율 = 배율 * 관계보정 / 100
+
+;최대 100
+배율 = MIN(배율, 100)
+
+SIF 지불액 >= 제시액 * 배율 / 100
+	RETURNF 1
+
+RETURNF 0
+
+;-------------------------------------------------
+;추가했을 때 스카우트 대상이 의지를 내는지, 어느 정도 내는 것인가
+;-------------------------------------------------
+@SCOUT_JUDGE_PAYMENT_PLUS(대상, 제시액, 지불액)
+#FUNCTION
+#DIM 대상
+#DIM 제시액
+#DIM 지불액
+#DIM 배율
+#DIM 관계보정
+
+배율 = 100
+
+배율 = TMP_CHARA_STARS:대상 * 5
+
+SIF TALENT:대상:프라이드낮음
+	배율 -= 5
+SIF TALENT:대상:프라이드높음
+	배율 += 5
+SIF TALENT:대상:솔직함
+	배율 -= 5
+SIF TALENT:대상:반항적
+	배율 += 5
+SIF TALENT:대상:무관심
+	배율 -= 5
+SIF TALENT:대상:고고함
+	배율 += 15
+
+SIF IS_LOVER(대상) || IS_SLAVE(대상) || IS_SLAVED_BY(대상)
+	배율 -= 25
+
+;REL_LIKE와 REL_HATE의 차이에 근거해 최대 15%의 보정
+관계보정 = REL_LIKE:대상:MASTER - REL_HATE:대상:MASTER
+관계보정 /= 100
+관계보정 = 100 - 관계보정
+
+배율 = 배율 * 관계보정 / 100
+
+배율 = LIMIT(배율, 120, 200)
+
+제시액 = 제시액 * 배율 / 100
+
+RETURNF LIMIT((지불액 - 제시액) / 300, 0, 50)

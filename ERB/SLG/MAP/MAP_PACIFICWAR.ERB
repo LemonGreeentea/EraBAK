@@ -1,0 +1,911 @@
+﻿;맵 관계
+[SKIPSTART]
+DRAWMAP의 내용을 알기 쉽게 제시하기 위한 코멘트 블록
+;-------------------------------------------------
+;맵의 외관(더미 함수)
+;-------------------------------------------------
+
+PRINTL ;;;;;;;;;;;;; Sca┓;;;;;;;;;;;;;;;;;;;;;;Nar━Kir━Gav;;;┏━┳Joe┓;;Ark┓       ",    1,    2,    3,    4,   5,   6)
+PRINTL ;;;;┏Blf;;Gla┛ Edi;;;;;;;;Nos;;;;;;Brg┻Osl┓┗┳┛;;Vaa ┏Vip┓ Pet┛ ┗┓     ",    7,    8,    9, 141,   10,   11, 12, 13, 14)
+PRINTL ;;;Gal┃;;;;;┗Dum┛;;;;;;;;;;;;;;;;;;;;;;;;Mal━Sto;;┗Hel┛;;┏Lng┻┓  Krv     ",   15,   16,   17,   18,   19, 20, 21)
+PRINTL ;;;┗Dub;;;;;  ┣┓;;;;;;;;;;;;;;;;;;;;;Kpn;;;;;;;;Blt;;;;;;;;;Tll ┃ Gor┛┃     ",   22,   23, 142,   24,   25)
+PRINTL ;;;;;;;;;;;  ┏╋Nor;;;;;;;;;;;;;;;;;;  ┃;;;;;;;;;;;;;Kla━Rig┛  ┃ ┃   ┃     ",   26,   27,   28)
+PRINTL ;;;;;;;;Pre━┻Lon┛;Dov;┏Rot┳Ams━Kil┻Ros━Gds━Kor┫┗┓┗━━┻Msc┓ ┗┓   ", 143,   29,   30, 144,   31,   32,   33,   34,   35,   36,   37)
+PRINTL ;;Clt;;;;;;;;;;;;;;;;;┏Bru━Nam━Fri╋Mag┻Ber┫ ┏┻Pin━╋━Smo━┛  ┗━Ryz   ",   38,   39,   40,   41,   42,   43,   44,   45)
+PRINTL ;;;;;;;;Bre━━Nrm━Dan┳┻Lux╋Col┫┃ ┃     ┣Wrc┓ ┃  ┃   ┗┓     ┏┛┃   ",   46,   47,   48,   49,   50,   51)
+PRINTL ;;;;;;;;;;┃ ┏┛┗━╋Par┳━Met━╋Frk┻┳━Cot━Krw━Tal┻Luc┳┻━━Smr━Vlg  ",   52,   53,   54,   55,   56,   57,   58,   59,   60)
+PRINTL ;;;;;;;;;;┣Ang    ┏┛┏Wer━┫ ┏┛┃ ┏Dre┓    ┃   ┃   ┃ ┃      ┃　　┃  ",   61,   62,   63)
+PRINTL ;;;;;;;;;;┃ ┗━━╋━┫     ┣Str━Nur╋━Pra━Tes━Pre━Kiv━Rsv━━Stl┓  ┃  ",   64,   65,   66,   67,   68,   69,   70,   71)
+PRINTL ;;;;;;;;;;┗┓  ┏Vic  ┣━┓Gnv┓      ┣Mun┫  ┗┓┏┛   ┃   ┃    ┃ ┗━Ast ",   72,   150, 73,   74)
+PRINTL ;;;Vcy;;;;;Bor━┛ ┣━┫ Lyn━Bln   ┏Inb━Win━━Deb━┳━┛   ┃┏━Srk    ┃  ", 145,   75,   76,   77,   78,   79,   80,   81)
+PRINTL ;;;;;;;;;;;;┃   ┏┛  ┃  ┗┓ ┗Mln┻┓    ┣Bda━┻┳Jas┓┏━Sev;;;┗┓   ┃  ",   82,   83,   84,   85)
+PRINTL ;;;;;;;;;;;;┣━Mls━Tou━━━Gen━┛ ┏Vnc┓┃ ┃    ┗Bcr╋Con;;;;Bls; Bat  ┃  ",   86,   87,   88,   89,   90,   91, 146, 92)
+PRINTL ;;;;Len━Ovi┛   ┃;;;;;;;;;;;┗Psa━Bol;;;Zgr━Bgr┳Sof╋Bug;;;;;;;;;;;;┃┗Bak  ",   93,   94,   95,   151,   96,   97,   98, 99, 100)
+PRINTL ;;;;┃   ┃    ┏Bcl;;;;;;;;;;;;;┗┓ ┃;;;;┗Cet╋Nis━┻━Isb;┏━━Trb┛ ┏┛  ", 101, 102, 103, 104, 105)
+PRINTL ;;;Pol━Mad━Val;;;;;;;;;;;;;;;;;;:Rom┫;;;;;;┗Tir ┃ ;;;;;┗Anc     ┗┓  ┃    ", 106, 107, 108, 109, 110, 111)
+PRINTL ;;;;┃  ┃   ┃;;;;;;;;;Sdn;;;;;;;;┗Npl ;;;;;;;┗━Per;;;;;;;;┗━Sis┓┃┏Erz   ", 147, 112, 113, 114, 115)
+PRINTL ;;;Lsb━Col━Mur;;;;;;;;;;;;;;;;;;;;;┗Trn;;;;;;;;;  ┃ ;;;;;;;;;;;;;;;Gaz┛┃    ", 116, 117, 118, 119, 120)
+PRINTL ;;;;;┗━Grn┛;;;;;;;;;;;;;;;;;;;;;;Pal┛;;;;;;;;;;; Atn;;;;;;;;;;;;;;;;┃ Mos    ", 121, 122, 123, 124)
+PRINTL ;;;;;;┏Gib┛;;;;;;;;┏━━Tun;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Scs;;;;;;;;;Jer┛┗┓ ", 125, 126, 148, 127)
+PRINTL ;; ┏━Fez━━━━Alg┛     ┃;;;;;;;;;Ion;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;┃    Bgd ", 128, 129, 149, 130)
+PRINTL ;Cas                        ┃ ;;;;;;;;;;;;;;;;;Bng━━━━Ela━━Alx━Sue━Amm┛ ", 131, 132, 133, 134, 135, 136)
+PRINTL ;┃                         ┗━━━━Trp━━━━┛         ┗Cir━┻┓ ;;;       ", 137, 138)
+PRINTL ;Dak                                                                 Add;;;;      ", 139, 140)
+
+
+PRINTL ;;;;;;;;;;;;; S1a┓;;;;;;;;;;;;;;;;;;;;;;N2r━K3r━G4v;;;┏━┳J5e┓;;A6k┓       ",    1,    2,    3,    4,   5,   6)
+PRINTL ;;;;┏B7f;;G8a┛ E9i;;;;;;;;141;;;;;;B10┻O11┓┗┳┛;;V12 ┏V13┓ P14┛ ┗┓     ",    7,    8,    9, 141,   10,   11, 12, 13, 14)
+PRINTL ;;;G15┃;;;;;┗D16┛;;;;;;;;;;;;;;;;;;;;;;;;M17━S18;;┗H19┛;;┏L20┻┓  K21     ",   15,   16,   17,   18,   19, 20, 21)
+PRINTL ;;;┗D22;;;;;  ┣┓;;;;;;;;;;;;;;;;;;;;;K23;;;;;;;142;;;;;;;;;;T24 ┃ G25┛┃     ",   22,   23, 142,   24,   25)
+PRINTL ;;;;;;;;;;;  ┏╋N26;;;;;;;;;;;;;;;;;;  ┃;;;;;;;;;;;;;K27━R28┛  ┃ ┃   ┃     ",   26,   27,   28)
+PRINTL ;;;;;;;;P29━┻L30┛144;;┏R31┳A32━K33┻R34━G35━K36┫┗┓┗━━┻M37┓ ┗┓   ", 143,   29,   30, 144,   31,   32,   33,   34,   35,   36,   37)
+PRINTL ;143;;;;;;;;;;;;;;;;;;┏B38━N39━F40╋M41┻B42┫ ┏┻P43━╋━S44━┛  ┗━R45   ",   38,   39,   40,   41,   42,   43,   44,   45)
+PRINTL ;;;;;;;;B46━━N47━D48┳┻L49╋C50┫┃ ┃     ┣W51┓ ┃  ┃   ┗┓     ┏┛┃   ",   46,   47,   48,   49,   50,   51)
+PRINTL ;;;;;;;;;;┃ ┏┛┗━╋P52┳━M53━╋F54┻┳━C55━K56━T57┻L58┳┻━━S59━V60  ",   52,   53,   54,   55,   56,   57,   58,   59,   60)
+PRINTL ;;;;;;;;;;┣A61    ┏┛┏W62━┫ ┏┛┃ ┏D63┓    ┃   ┃   ┃ ┃      ┃　　┃  ",   61,   62,   63)
+PRINTL ;;;;;;;;;;┃ ┗━━┫  ┃     ┣S64━N65╋━P66━T67━P68━K69━R70━━S71┓  ┃  ",   64,   65,   66,   67,   68,   69,   70,   71)
+PRINTL ;;;;;;;;;;┗┓  ┏V72━╋━┓150┓      ┣M73┫  ┗┓┏┛   ┃   ┃    ┃ ┗━A74",   72,   150,   73,   74)
+PRINTL ;;;145;;;;;B75━┛ ┃  ┃ L76━B77   ┏I78━W79━━D80━┳━┛   ┃┏━S81    ┃  ", 145,   75,   76,   77,   78,   79,   80,   81)
+PRINTL ;;;;;;;;;;;;┃   ┏┛  ┃  ┗┓ ┗M82┻┓    ┣B83━┻┳J84┓┏━S85;;;┗┓   ┃  ",   82,   83,   84,   85)
+PRINTL ;;;;;;;;;;;;┣━M86━T87━━━G88━┛ ┏V89┓┃ ┃    ┗B90╋C91;;;146;; B92  ┃  ",   86,   87,   88,   89,   90,   91, 146, 92)
+PRINTL ;;;;L93━O94┛   ┃;;;;;;;;;;;┗P95━151  ;Z96━B97┳S98╋B99;;;;;;;;;;;;┃┗100  ",   93,   94,   95,   151,   96,   97,   98, 99, 100)
+PRINTL ;;;;┃   ┃    ┏101;;;;;;;;;;;;;┗┓ ┃;;;;┗102╋103━┻━104;┏━━105┛ ┏┛  ", 101, 102, 103, 104, 105)
+PRINTL ;;;106━107━108;;;;;;;;;;;;;;;;;;:109┫;;;;;;┗110 ┃ ;;;;;┗111     ┗┓  ┃    ", 106, 107, 108, 109, 110, 111)
+PRINTL ;;;;┃  ┃   ┃;;;;;;;;;147;;;;;;;;┗112 ;;;;;;;┗━113;;;;;;;;┗━114┓┃┏115   ", 147, 112, 113, 114, 115)
+PRINTL ;;;116━117━118;;;;;;;;;;;;;;;;;;;;;┗119;;;;;;;;;  ┃ ;;;;;;;;;;;;;;;120┛┃    ", 116, 117, 118, 119, 120)
+PRINTL ;;;;;┗━121┛;;;;;;;;;;;;;;;;;;;;;;122┛;;;;;;;;;;; 123;;;;;;;;;;;;;;;;┃ 124    ", 121, 122, 123, 124)
+PRINTL ;;;;;;┏125┛;;;;;;;;┏━━126;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;148;;;;;;;;;127┛┗┓ ", 125, 126, 148, 127)
+PRINTL ;; ┏━128━━━━129┛     ┃;;;;;;;;;149;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;┃    130", 128, 129, 149, 130)
+PRINTL ;131                        ┃ ;;;;;;;;;;;;;;;;;132━━━━133━━134━135━136┛ ", 131, 132, 133, 134, 135, 136)
+PRINTL ;┃                         ┗━━━━137━━━━┛         ┗138━┻┓ ;;;       ", 137, 138)
+PRINTL ;139                                                                 140;;;;      ", 139, 140)
+[SKIPEND]
+
+;-------------------------------------------------
+;맵의 묘화 ARG:0에 1을 지정하면 군사 화면용의 버튼을 생성
+;-------------------------------------------------
+@DRAWMAP_PACIFICWAR(ARG:0 = 0, ARG:1 = 0)
+
+CALL DRAWMAP_INIT(ARG:0, 0)
+
+CALL DRAWMAP_LINE("                                       Okh░░░░░░Oxa░░░░░░░░░░░░░░░░░░░░░░░░░░░░Moa━┓      ",   1,   2,   3)
+CALL DRAWMAP_LINE(" Oms━━━Nov━━┳━━Irk━━━Ykt━━╋━Kha░░┃ ░░░░░░░Brs░░░░░░░Ksk░░Ats░░░░░░░░┃      ",   4,   5,   6, 7,  8,  9, 10, 11)
+CALL DRAWMAP_LINE(" ┗┓     ┃     Kzl┳┛              Hbn   ┃░░Tyh░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░┃      ",  12,  13,  14)
+CALL DRAWMAP_LINE("   ┣━━Arm━━┫  Mor┳Ula━Mkd━Hnc╋┳━Vla░░░░░░░░░Ohs░░░░  ░░░░░░░░░░░░░░░░░░░┃      ",  15,  16,  17,  18,  19,  20,  125)
+CALL DRAWMAP_LINE("  Frn     ┃    ┃  ┃┏Hht┳┛ ┃  ░Dln┃ ░░░░░Soj░░░░░░░░░░░ Spr ░░░░░░░░░░░░░░░░░Sat━Cye",  21, 133,  22,  23,  24,  25,  26)
+CALL DRAWMAP_LINE("   ┣Uru━Glm━Pln━Yan━━Tyn━Bgn ░░░ Pyn ░░░░░░░░░░░░░░░░░░░┃░░░░░░░░░░░░░░░░░░░░┃   ┃",  27,  38,  28,  29,  30,  31,  32)
+CALL DRAWMAP_LINE("  Slb      ┃   ┃   ┗┓   ┃   ┃ ░░░░ ┃ ░░░░░       ┏Kzw━Akt░░░░Pco░░░░░░░░░░░░Sfc  ┃",  33,  34,  35,  36,  37)
+CALL DRAWMAP_LINE("   ┣━━━Xnn━Lnz┳━Xia━Jin┳Qgn░░░░Bus ░Ngs━Hsm┳Osk┓  ┃┃░░░░░░░░░░░░░░░░░░░┣Sam┫", 131,  39,  40,  41,  42,  43,  44,  45,  46,  47)
+CALL DRAWMAP_LINE("   Kab┓   ┃     Chg   ┃     ┃ ░░░░░░░░░░░┃ ░░┃░┃░┗Ykh━Tky░░░░░░░░░░░░Phb░░░Los  Lam",  48,  49,  50,  51,  52,  53,  54)
+CALL DRAWMAP_LINE("  ┃  Sng━Lha━Kum┻Cng╋Njn━Shh░░░░░░░░░░░Kgs░░Skk┛░░░░░░░░░░░░░░░░░░░░Mid░░░░░░░┃  ┃ ", 132,  55,  56,  57,  58,  59,  60,  61,  62)
+CALL DRAWMAP_LINE(" Hrt  ┃   ┃   ┃      ┃┗┓ ┃░░░Yls░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░Wki░░░░░░░░░░░░Sde┛ ",  63,  64,  65,  66)
+CALL DRAWMAP_LINE(" ┃   ┣Kat┻Thi╋Gli┳Gug━Fuz┛░░░░░░░░░░Okn░░░░░░░░░░░░░░░░░░Iou░░░░░░░░░░░░░░░░░░░      ",  67,  68,  69,  70,  71,  72,  73)
+CALL DRAWMAP_LINE(" ┣Del┫┗Imp┛ ┃░░Hnd░┃░░░░░░░░░░Tai░░░░░░░░░░░░░░Iot░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    ",  74, 128, 127,  75,  76)
+CALL DRAWMAP_LINE(" ┃   Kol ┃┗┓┣Hni░░░Hgk░░░░░░░░░   ░░░░░░░░░░░░░░░░░░░░░Spn░░░░░░░░░░░░░░░Jns░░░░░░░░░  ",  77,  78,  79,  80,  81)
+CALL DRAWMAP_LINE("Kar┓  ┣Ran━Bkk ┃░░░░░░░░░░░Cfi░░░░░░░░░░░░░░░Mrt░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░",  82,  83,  84,  85,  86)
+CALL DRAWMAP_LINE("░░Bmb  ┃░░░ ┃░┗Sgn░░░Spi░░░░░┃░░░░Pps░░░░░░░░░░░░░░░░░░░Gua░░░░░░░░░░░Kjl░░░░░░░░░░░░░░░",  87,  88,  93,  89,  90,  91)
+CALL DRAWMAP_LINE("░░░┗┳┛░░░ Tnb░░░░░░░░░░░Srk░Man░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░Trk░░░░░░░░░░░░░░░░░░░░░",  92, 129,  94,  95)
+CALL DRAWMAP_LINE("░░░░░Koc░░░░░ ┃░░░░░Got░░░ ┃░░┗Let░░ Mnd ░░░░Plu░Ngn┓  ░░░Rbl░░░░░░░░░░░░░░░░░░░░░░░░░░░",  96, 126,  97, 104,  98,  99, 100)
+CALL DRAWMAP_LINE("░░░░░░░░░Cln░░Sin░░░░░░░░░  Kmt░░░░░░░  ░░░░░░░░░░░░░  ┗Pmb░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░", 101, 102, 130, 103)
+CALL DRAWMAP_LINE("░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ░░░░░░░░Afs░░░░░░░░░░Gdc░░░░░░░░░░░░░░░░░░░░░░░░░░░", 105, 106)
+CALL DRAWMAP_LINE("░░░░░░░░░░░░░░░Ohv━━Btv━━Sby░░Bls░░░░░┏Dar░░░░░░░░Car░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░", 107, 108, 109, 110, 111, 112)
+CALL DRAWMAP_LINE("░░░░░░░░░Ids░░░░░░░░░░░░░░░░░░░░░░░░░░░░┏┛  ┗┳━┳┛┃░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░", 113)
+CALL DRAWMAP_LINE("░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░┃      ┃ Hhd━Syd░░░░░Auc░░░░░░░░░░░░░░░░░░░░░░░░░", 114, 115, 116)
+CALL DRAWMAP_LINE("░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░┃     Ali━┻┓ ┃░Tms░┃░░░░░░░░░░░░░░░░░░░░░░░░░░", 117, 118)
+CALL DRAWMAP_LINE("░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░┃      ┃    ┗Can░░░░Wel░░░░░░░░░░░░░░░░░░░░░░░░░░", 119, 120)
+CALL DRAWMAP_LINE("░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░┃┏━━┻━Ade ┃░░░░░┃░░░░░░░░░░░░░░░░░░░░░░░░░░░", 121)
+CALL DRAWMAP_LINE("░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░Prt░░░░░░░░░░░┗Mel░░░Crc░░░░░░░░░░░░░░░░░░░░░░░░░░░", 122, 123, 124)
+
+CALL DRAWMAP_END()
+
+
+;-------------------------------------------------
+;전도시수를 돌려주는 함수
+;-------------------------------------------------
+@SET_CITY_NUM_PACIFICWAR()
+CITY_NUM = 133
+;-------------------------------------------------
+;단축 도시명을 설정
+;-------------------------------------------------
+@SET_SHORTCITYNAME_PACIFICWAR()
+CITY_NAME_SHORT:1 = Okh
+CITY_NAME_SHORT:2 = Oxa
+CITY_NAME_SHORT:3 = Moa
+CITY_NAME_SHORT:4 = Oms
+CITY_NAME_SHORT:5 = Nov
+CITY_NAME_SHORT:6 = Irk
+CITY_NAME_SHORT:7 = Ykt
+CITY_NAME_SHORT:8 = Kha
+CITY_NAME_SHORT:9 = Brs
+CITY_NAME_SHORT:10 = Ksk
+CITY_NAME_SHORT:11 = Ats
+CITY_NAME_SHORT:12 = Kzl
+CITY_NAME_SHORT:13 = Hbn
+CITY_NAME_SHORT:14 = Tyh
+CITY_NAME_SHORT:15 = Arm
+CITY_NAME_SHORT:16 = Mor
+CITY_NAME_SHORT:17 = Ula
+CITY_NAME_SHORT:18 = Mkd
+CITY_NAME_SHORT:19 = Hnc
+CITY_NAME_SHORT:20 = Vla
+CITY_NAME_SHORT:21 = Frn
+CITY_NAME_SHORT:22 = Dln
+CITY_NAME_SHORT:23 = Soj
+CITY_NAME_SHORT:24 = Spr
+CITY_NAME_SHORT:25 = Sat
+CITY_NAME_SHORT:26 = Cye
+CITY_NAME_SHORT:27 = Uru
+CITY_NAME_SHORT:28 = Pln
+CITY_NAME_SHORT:29 = Yan
+CITY_NAME_SHORT:30 = Tyn
+CITY_NAME_SHORT:31 = Bgn
+CITY_NAME_SHORT:32 = Pyn
+CITY_NAME_SHORT:33 = Slb
+CITY_NAME_SHORT:34 = Kzw
+CITY_NAME_SHORT:35 = Akt
+CITY_NAME_SHORT:36 = Pco
+CITY_NAME_SHORT:37 = Sfc
+CITY_NAME_SHORT:38 = Glm
+CITY_NAME_SHORT:39 = Lnz
+CITY_NAME_SHORT:40 = Xia
+CITY_NAME_SHORT:41 = Jin
+CITY_NAME_SHORT:42 = Qgn
+CITY_NAME_SHORT:43 = Bus
+CITY_NAME_SHORT:44 = Ngs
+CITY_NAME_SHORT:45 = Hsm
+CITY_NAME_SHORT:46 = Osk
+CITY_NAME_SHORT:47 = Sam
+CITY_NAME_SHORT:48 = Kab
+CITY_NAME_SHORT:49 = Chg
+CITY_NAME_SHORT:50 = Ykh
+CITY_NAME_SHORT:51 = Tky
+CITY_NAME_SHORT:52 = Phb
+CITY_NAME_SHORT:53 = Los
+CITY_NAME_SHORT:54 = Lam
+CITY_NAME_SHORT:55 = Lha
+CITY_NAME_SHORT:56 = Kum
+CITY_NAME_SHORT:57 = Cng
+CITY_NAME_SHORT:58 = Njn
+CITY_NAME_SHORT:59 = Shh
+CITY_NAME_SHORT:60 = Kgs
+CITY_NAME_SHORT:61 = Skk
+CITY_NAME_SHORT:62 = Mid
+CITY_NAME_SHORT:63 = Hrt
+CITY_NAME_SHORT:64 = Yls
+CITY_NAME_SHORT:65 = Wki
+CITY_NAME_SHORT:66 = Sde
+CITY_NAME_SHORT:67 = Kat
+CITY_NAME_SHORT:68 = Thi
+CITY_NAME_SHORT:69 = Gli
+CITY_NAME_SHORT:70 = Gug
+CITY_NAME_SHORT:71 = Fuz
+CITY_NAME_SHORT:72 = Okn
+CITY_NAME_SHORT:73 = Iou
+CITY_NAME_SHORT:74 = Del
+CITY_NAME_SHORT:75 = Tai
+CITY_NAME_SHORT:76 = Iot
+CITY_NAME_SHORT:77 = Kol
+CITY_NAME_SHORT:78 = Hni
+CITY_NAME_SHORT:79 = Hgk
+CITY_NAME_SHORT:80 = Spn
+CITY_NAME_SHORT:81 = Jns
+CITY_NAME_SHORT:82 = Kar
+CITY_NAME_SHORT:83 = Ran
+CITY_NAME_SHORT:84 = Bkk
+CITY_NAME_SHORT:85 = Cfi
+CITY_NAME_SHORT:86 = Mrt
+CITY_NAME_SHORT:87 = Bmb
+CITY_NAME_SHORT:88 = Sgn
+CITY_NAME_SHORT:89 = Pps
+CITY_NAME_SHORT:90 = Gua
+CITY_NAME_SHORT:91 = Kjl
+CITY_NAME_SHORT:92 = Tnb
+CITY_NAME_SHORT:93 = Spi
+CITY_NAME_SHORT:94 = Man
+CITY_NAME_SHORT:95 = Trk
+CITY_NAME_SHORT:96 = Koc
+CITY_NAME_SHORT:97 = Let
+CITY_NAME_SHORT:98 = Plu
+CITY_NAME_SHORT:99 = Ngn
+CITY_NAME_SHORT:100 = Rbl
+CITY_NAME_SHORT:101 = Cln
+CITY_NAME_SHORT:102 = Sin
+CITY_NAME_SHORT:103 = Pmb
+CITY_NAME_SHORT:104 = Mnd
+CITY_NAME_SHORT:105 = Afs
+CITY_NAME_SHORT:106 = Gdc
+CITY_NAME_SHORT:107 = Ohv
+CITY_NAME_SHORT:108 = Btv
+CITY_NAME_SHORT:109 = Sby
+CITY_NAME_SHORT:110 = Bls
+CITY_NAME_SHORT:111 = Dar
+CITY_NAME_SHORT:112 = Car
+CITY_NAME_SHORT:113 = Ids
+CITY_NAME_SHORT:114 = Hhd
+CITY_NAME_SHORT:115 = Syd
+CITY_NAME_SHORT:116 = Auc
+CITY_NAME_SHORT:117 = Ali
+CITY_NAME_SHORT:118 = Tms
+CITY_NAME_SHORT:119 = Can
+CITY_NAME_SHORT:120 = Wel
+CITY_NAME_SHORT:121 = Ade
+CITY_NAME_SHORT:122 = Prt
+CITY_NAME_SHORT:123 = Mel
+CITY_NAME_SHORT:124 = Crc
+CITY_NAME_SHORT:125 = Ohs
+CITY_NAME_SHORT:126 = Got
+CITY_NAME_SHORT:127 = Hnd
+CITY_NAME_SHORT:128 = Imp
+CITY_NAME_SHORT:129 = Srk
+CITY_NAME_SHORT:130 = Kmt
+CITY_NAME_SHORT:131 = Xnn
+CITY_NAME_SHORT:132 = Sng
+CITY_NAME_SHORT:133 = Hht
+
+;-------------------------------------------------
+;도시명을 설정하는 함수
+;-------------------------------------------------
+@SET_CITYNAME_PACIFICWAR()
+VARSET CITY_NAME, "무명"
+CITY_NAME:1 = 오호츠크
+CITY_NAME:2 = 오하
+CITY_NAME:3 = 앵커리지
+CITY_NAME:4 = 옴스크
+CITY_NAME:5 = 노보시비르스크
+CITY_NAME:6 = 이르쿠츠쿠
+CITY_NAME:7 = 야쿠츠크
+CITY_NAME:8 = 하바로프스크
+CITY_NAME:9 = 베링해
+CITY_NAME:10 = 키스카섬
+CITY_NAME:11 = 애투섬
+CITY_NAME:12 = 키질
+CITY_NAME:13 = 하얼빈
+CITY_NAME:14 = 토요하라
+CITY_NAME:15 = 알마아타
+CITY_NAME:16 = 무렌
+CITY_NAME:17 = 울란바토르
+CITY_NAME:18 = 선양
+CITY_NAME:19 = 신징
+CITY_NAME:20 = 블라디보스토크
+CITY_NAME:21 = 프룬제
+CITY_NAME:22 = 다롄
+CITY_NAME:23 = 동해
+CITY_NAME:24 = 삿포로
+CITY_NAME:25 = 시애틀
+CITY_NAME:26 = 샤이엔
+CITY_NAME:27 = 우르무치
+CITY_NAME:28 = 핑량
+CITY_NAME:29 = 옌안
+CITY_NAME:30 = 타이위안
+CITY_NAME:31 = 베이징
+CITY_NAME:32 = 평양
+CITY_NAME:33 = 스탈리나바드
+CITY_NAME:34 = 카나자와
+CITY_NAME:35 = 아키타
+CITY_NAME:36 = 서태평양
+CITY_NAME:37 = 샌프란시스코
+CITY_NAME:38 = 거얼무
+CITY_NAME:39 = 란저우
+CITY_NAME:40 = 시안
+CITY_NAME:41 = 제남
+CITY_NAME:42 = 아오시마
+CITY_NAME:43 = 부산
+CITY_NAME:44 = 나가사키
+CITY_NAME:45 = 히로시마
+CITY_NAME:46 = 오사카
+CITY_NAME:47 = 새크라멘토
+CITY_NAME:48 = 카불
+CITY_NAME:49 = 청두
+CITY_NAME:50 = 요코하마
+CITY_NAME:51 = 도쿄
+CITY_NAME:52 = 진주만
+CITY_NAME:53 = 로스앤젤레스
+CITY_NAME:54 = 로스앨러모스
+CITY_NAME:55 = 라싸
+CITY_NAME:56 = 쿠민
+CITY_NAME:57 = 충칭
+CITY_NAME:58 = 난징
+CITY_NAME:59 = 상하이
+CITY_NAME:60 = 가고시마
+CITY_NAME:61 = 시코쿠
+CITY_NAME:62 = 미드웨이섬
+CITY_NAME:63 = 헤랏트
+CITY_NAME:64 = 황해
+CITY_NAME:65 = 웨이크섬
+CITY_NAME:66 = 샌디에고
+CITY_NAME:67 = 카트만두
+CITY_NAME:68 = 팀부
+CITY_NAME:69 = 구이린
+CITY_NAME:70 = 광저우
+CITY_NAME:71 = 푸저우
+CITY_NAME:72 = 오키나와
+CITY_NAME:73 = 이오섬
+CITY_NAME:74 = 델리
+CITY_NAME:75 = 타이완
+CITY_NAME:76 = 이즈해구
+CITY_NAME:77 = 캘커타
+CITY_NAME:78 = 하노이
+CITY_NAME:79 = 홍콩
+CITY_NAME:80 = 사이판섬
+CITY_NAME:81 = 죤슨섬
+CITY_NAME:82 = 카라치
+CITY_NAME:83 = 랑군
+CITY_NAME:84 = 방콕
+CITY_NAME:85 = 클락필드
+CITY_NAME:86 = 마리아나해구
+CITY_NAME:87 = 봄베이
+CITY_NAME:88 = 사이공
+CITY_NAME:89 = 필리핀해
+CITY_NAME:90 = 괌
+CITY_NAME:91 = 콰자레인
+CITY_NAME:92 = 톤부리
+CITY_NAME:93 = 스프레틀리군도
+CITY_NAME:94 = 마닐라
+CITY_NAME:95 = 트럭섬
+CITY_NAME:96 = 코친
+CITY_NAME:97 = 레이테
+CITY_NAME:98 = 팔라우
+CITY_NAME:99 = 뉴기니
+CITY_NAME:100 = 라바울
+CITY_NAME:101 = 세일론섬
+CITY_NAME:102 = 싱가폴
+CITY_NAME:103 = 포트모르즈비
+CITY_NAME:104 = 메나드
+CITY_NAME:105 = 아라푸라해
+CITY_NAME:106 = 과달카날섬
+CITY_NAME:107 = 오스트하펜
+CITY_NAME:108 = 바타비아
+CITY_NAME:109 = 수라바야
+CITY_NAME:110 = 발리해협
+CITY_NAME:111 = 다윈
+CITY_NAME:112 = 케언스
+CITY_NAME:113 = 인도양
+CITY_NAME:114 = 휴엔덴
+CITY_NAME:115 = 시드니
+CITY_NAME:116 = 오클랜드
+CITY_NAME:117 = 앨리스스프링스
+CITY_NAME:118 = 테즈메이니아만
+CITY_NAME:119 = 캔버라
+CITY_NAME:120 = 웰링턴
+CITY_NAME:121 = 애들레이드
+CITY_NAME:122 = 퍼스
+CITY_NAME:123 = 멜버른
+CITY_NAME:124 = 크라이스트·처치
+CITY_NAME:125 = 오호츠크해
+CITY_NAME:126 = 태국만
+CITY_NAME:127 = 해남도
+CITY_NAME:128 = 인펄
+CITY_NAME:129 = 사라와크
+CITY_NAME:130 = 보르네오
+CITY_NAME:131 = 시닝
+CITY_NAME:132 = 스리나가르
+CITY_NAME:133 = 후허하오터
+
+;-------------------------------------------------
+;도시 타입의 설정
+;-------------------------------------------------
+@SET_CITY_TYPE_PACIFICWAR
+FOR LOCAL:0, 134, MAX_CITY
+	CITY_TYPE:(LOCAL:0) = 1
+NEXT
+
+;-------------------------------------------------
+;루트의 설정
+;-------------------------------------------------
+@SET_MAP_ROUTE_PACIFICWAR
+;여기서 사용하는 이름은 CITY_NAME의 (분)편인 일에 주의
+CALL REGISTER_ROUTE_S(  "오호츠크",     "동해",   "이르쿠츠쿠",   "하바로프스크",   "하얼빈")
+CALL REGISTER_ROUTE_S(  "오하",         "토요하라",   "베링해", "오호츠크해")
+CALL REGISTER_ROUTE_S(  "앵커리지",         "애투섬")
+CALL REGISTER_ROUTE_S(  "옴스크",         "노보시비르스크",   "알마아타",       "프룬제")
+CALL REGISTER_ROUTE_S(  "노보시비르스크",         "옴스크",   "이르쿠츠쿠",       "키질",       "알마아타")
+CALL REGISTER_ROUTE_S(  "이르쿠츠쿠",         "노보시비르스크",   "야쿠츠크",       "키질",       "무렌")
+CALL REGISTER_ROUTE_S(  "야쿠츠크",         "오호츠크",   "이르쿠츠쿠",       "하바로프스크",       "하얼빈")
+CALL REGISTER_ROUTE_S(  "하바로프스크",         "오호츠크",   "야쿠츠크",       "하얼빈",       "동해")
+CALL REGISTER_ROUTE_S(  "베링해",         "오하",   "토요하라",       "키스카섬",       "애투섬",       "삿포로",       "오호츠크해")
+CALL REGISTER_ROUTE_S(  "키스카섬",         "애투섬",   "베링해")
+CALL REGISTER_ROUTE_S(  "애투섬",         "키스카섬",   "앵커리지")
+CALL REGISTER_ROUTE_S(  "앵커리지",         "애투섬",   "시애틀")
+CALL REGISTER_ROUTE_S(  "키질",         "노보시비르스크",   "이르쿠츠쿠",       "알마아타",       "핑량",       "무렌")
+CALL REGISTER_ROUTE_S(  "하얼빈",         "오호츠크",   "야쿠츠크",       "하바로프스크", "신징", "블라디보스토크）", "다롄", "평양")
+CALL REGISTER_ROUTE_S(  "토요하라",         "오하",   "동해",       "베링해",       "오호츠크해")
+CALL REGISTER_ROUTE_S(  "알마아타",         "옴스크",   "키질",       "프룬제",       "거얼무",     "핑량",     "노보시비르스크")
+CALL REGISTER_ROUTE_S(  "무렌",         "이르쿠츠쿠",   "키질",       "울란바토르",     "옌안")
+CALL REGISTER_ROUTE_S(  "울란바토르",         "무렌",   "선양")
+CALL REGISTER_ROUTE_S(  "선양",         "울란바토르",   "신징",       "베이징",       "타이위안")
+CALL REGISTER_ROUTE_S(  "신징",         "선양",   "하얼빈",       "다롄", "평양", "블라디보스토크")
+CALL REGISTER_ROUTE_S(  "블라디보스토크",         "하바로프스크",   "신징",       "하얼빈",     "다롄", "평양", "동해")
+CALL REGISTER_ROUTE_S("프룬제",         "옴스크",   "알마아타",       "스탈리나바드",       "우르무치")
+CALL REGISTER_ROUTE_S(  "동해",         "오호츠크",       "하바로프스크",     "토요하라",       "블라디보스토크",         "오호츠크해",   "카나자와",       "황해",       "나가사키")
+CALL REGISTER_ROUTE_S(  "다롄",         "하얼빈",   "신징",       "블라디보스토크",       "평양", "황해")
+CALL REGISTER_ROUTE_S(  "삿포로",         "아키타",   "오호츠크해",       "베링해")
+CALL REGISTER_ROUTE_S("오호츠크해",         "동해",   "베링해",       "토요하라",       "오하",       "삿포로")
+CALL REGISTER_ROUTE_S(  "시애틀",         "앵커리지", "샤이엔",       "샌프란시스코",       "진주만")
+CALL REGISTER_ROUTE_S(  "샤이엔",         "시애틀",   "새크라멘토",       "로스앨러모스")
+CALL REGISTER_ROUTE_S(  "우르무치",       "프룬제",   "스탈리나바드",       "거얼무")
+CALL REGISTER_ROUTE_S(  "핑량",         "키질",   "알마아타",       "거얼무",       "란저우",       "옌안")
+CALL REGISTER_ROUTE_S(  "옌안",         "무렌",   "핑량",       "타이위안",       "시안")
+CALL REGISTER_ROUTE_S(  "타이위안",         "옌안",   "베이징",       "제남",       "선양")
+CALL REGISTER_ROUTE_S(  "베이징",         "선양",   "타이위안",       "아오시마")
+CALL REGISTER_ROUTE_S(  "평양",         "부산",   "하얼빈",   "신징",         "블라디보스토크",     "다롄")
+CALL REGISTER_ROUTE_S(  "스탈리나바드",         "프룬제",   "우르무치",       "카불")
+CALL REGISTER_ROUTE_S(  "카나자와",         "아키타",   "오사카",       "동해")
+CALL REGISTER_ROUTE_S(  "아키타",         "삿포로",   "도쿄",       "서태평양")
+CALL REGISTER_ROUTE_S(  "서태평양",         "아키타",   "도쿄",       "웨이크섬",         "미드웨이섬",   "진주만")
+CALL REGISTER_ROUTE_S(  "샌프란시스코",         "시애틀",   "새크라멘토",       "로스앤젤레스",       "진주만")
+CALL REGISTER_ROUTE_S(  "거얼무",         "우르무치",   "알마아타",       "시닝",       "핑량")
+CALL REGISTER_ROUTE_S(  "란저우",         "핑량",   "시닝",       "시안",     "청두")
+CALL REGISTER_ROUTE_S(  "시안",         "옌안",   "란저우",         "청두",   "제남",         "충칭）",   "난징",         "광저우")
+CALL REGISTER_ROUTE_S(  "제남",         "타이위안",   "시안",     "아오시마")
+CALL REGISTER_ROUTE_S("아오시마",         "베이징",   "제남",     "상하이",         "황해")
+CALL REGISTER_ROUTE_S(  "부산",         "평양",         "황해")
+CALL REGISTER_ROUTE_S(  "나가사키",       "히로시마",       "가고시마",       "황해",       "동해")
+CALL REGISTER_ROUTE_S("히로시마",         "시코쿠",   "나가사키",     "오사카",         "이즈해구")
+CALL REGISTER_ROUTE_S(  "오사카",         "카나자와",         "요코하마",         "시코쿠",         "이즈해구")
+CALL REGISTER_ROUTE_S(  "새크라멘토",       "샌프란시스코",       "로스앨러모스",       "샤이엔",       "로스앨러모스")
+CALL REGISTER_ROUTE_S(  "카불",       "스탈리나바드",       "시닝",       "헤랏트")
+CALL REGISTER_ROUTE_S(  "청두",         "란저우",   "시안",     "쿠민",     "충칭")
+CALL REGISTER_ROUTE_S(  "요코하마",         "도쿄",   "오사카",       "이즈해구",         "이오섬")
+CALL REGISTER_ROUTE_S(  "도쿄",         "요코하마",   "아키타",       "서태평양",         "이오섬")
+CALL REGISTER_ROUTE_S(  "진주만",         "서태평양",   "미드웨이섬",   "로스앤젤레스",         "샌프란시스코",     "시애틀",     "샌디에고",     "죤슨섬")
+CALL REGISTER_ROUTE_S(  "로스앤젤레스",         "진주만",   "샌프란시스코",       "새크라멘토",     "샌디에고")
+CALL REGISTER_ROUTE_S(  "로스앨러모스",         "샤이엔",   "새크라멘토",       "로스앤젤레스",     "샌디에고")
+CALL REGISTER_ROUTE_S(  "라싸",         "시닝",   "쿠민",       "카트만두",     "팀부")
+CALL REGISTER_ROUTE_S(  "쿠민",         "청두",   "충칭",       "팀부",         "구이린",   "하노이",     "방콕")
+CALL REGISTER_ROUTE_S(  "충칭",         "시안",   "난징",       "청두",       "광저우")
+CALL REGISTER_ROUTE_S(  "난징",         "시안",   "충칭",       "상하이",   "광저우",       "푸저우")
+CALL REGISTER_ROUTE_S(  "상하이",         "제남",   "아오시마",       "푸저우",     "황해")
+CALL REGISTER_ROUTE_S(  "가고시마",         "나가사키",   "황해",         "오키나와",   "이즈해구")
+CALL REGISTER_ROUTE_S(  "시코쿠",         "히로시마",   "오사카",     "이즈해구")
+CALL REGISTER_ROUTE_S("미드웨이섬",         "웨이크섬",   "진주만",     "서태평양",     "죤슨섬")
+CALL REGISTER_ROUTE_S(  "헤랏트",         "카불",         "델리",     "카라치")
+CALL REGISTER_ROUTE_S(  "황해",       "부산",       "다롄",       "아오시마",       "상하이",     "가고시마",     "나가사키",     "타이완",     "스프레틀리군도",     "동해")
+CALL REGISTER_ROUTE_S("웨이크섬",         "미드웨이섬",   "서태평양",     "이오섬",         "죤슨섬")
+CALL REGISTER_ROUTE_S("샌디에고",         "로스앤젤레스",   "로스앨러모스",     "진주만")
+CALL REGISTER_ROUTE_S(  "카트만두",         "라싸",         "팀부",         "델리",         "캘커타",     "인펄")
+CALL REGISTER_ROUTE_S(  "팀부",       "라싸",       "카트만두",       "구이린",       "하노이",     "쿠민",     "방콕",     "인펄")
+CALL REGISTER_ROUTE_S(  "구이린",       "광저우",       "해남도",       "쿠민",     "팀부",     "하노이",     "방콕")
+CALL REGISTER_ROUTE_S(  "광저우",         "시안",   "충칭",     "난징",     "구이린",     "해남도",     "푸저우",     "홍콩")
+CALL REGISTER_ROUTE_S(  "푸저우",         "난징",   "상하이",       "광저우",         "스프레틀리군도")
+CALL REGISTER_ROUTE_S(  "오키나와",         "가고시마",   "황해",       "이즈해구",         "마리아나해구",         "필리핀해")
+CALL REGISTER_ROUTE_S(  "이오섬",         "요코하마",   "도쿄",   "사이판섬",         "웨이크섬")
+CALL REGISTER_ROUTE_S(  "델리",         "헤랏트",   "카라치",       "카트만두",     "캘커타")
+CALL REGISTER_ROUTE_S(  "인펄",         "카트만두",   "팀부",       "랑군",     "방콕")
+CALL REGISTER_ROUTE_S(  "해남도",         "구이린",   "광저우",       "태국만",     "스프레틀리군도")
+CALL REGISTER_ROUTE_S(  "타이완",         "황해",   "필리핀해",       "마리아나해구")
+CALL REGISTER_ROUTE_S(  "이즈해구",         "가고시마",   "히로시마",       "시코쿠",         "오사카",   "요코하마",     "이오섬",     "사이판섬",         "마리아나해구",         "오키나와",         "괌")
+CALL REGISTER_ROUTE_S(  "캘커타",         "카트만두",   "델리",       "랑군",       "코친")
+CALL REGISTER_ROUTE_S(  "하노이",         "쿠민",   "팀부",       "구이린",   "방콕",       "사이공",     "태국만")
+CALL REGISTER_ROUTE_S(  "홍콩",         "광저우",   "스프레틀리군도")
+CALL REGISTER_ROUTE_S("사이판섬",         "이오섬",   "이즈해구",     "마리아나해구",     "괌",     "트럭섬")
+CALL REGISTER_ROUTE_S(  "죤슨섬",         "콰자레인",         "진주만",     "미드웨이섬",     "웨이크섬")
+CALL REGISTER_ROUTE_S(  "카라치",       "헤랏트",       "델리",       "봄베이")
+CALL REGISTER_ROUTE_S("랑군",         "캘커타",   "방콕",     "봄베이",         "코친",         "인도양",     "인펄")
+CALL REGISTER_ROUTE_S(  "방콕",         "랑군",         "쿠민",         "팀부",         "구이린",         "하노이",         "사이공",         "톤부리",         "인펄")
+CALL REGISTER_ROUTE_S(  "클락필드",       "마닐라",       "필리핀해",       "스프레틀리군도")
+CALL REGISTER_ROUTE_S(  "마리아나해구",       "이즈해구",       "오키나와",       "타이완",     "필리핀해",     "팔라우",     "뉴기니",     "사이판섬",     "괌")
+CALL REGISTER_ROUTE_S(  "봄베이",         "카라치",   "코친",     "인도양")
+CALL REGISTER_ROUTE_S(  "사이공",         "하노이",   "방콕",         "태국만")
+CALL REGISTER_ROUTE_S(  "필리핀해",         "오키나와",   "타이완",     "마리아나해구",     "클락필드",     "마닐라",     "팔라우",     "레이테",     "메나드")
+CALL REGISTER_ROUTE_S(  "괌",         "사이판섬",   "라바울",       "트럭섬",         "마리아나해구",         "포트모르즈비",         "이즈해구")
+CALL REGISTER_ROUTE_S(  "콰자레인",         "죤슨섬",   "트럭섬")
+CALL REGISTER_ROUTE_S(  "톤부리",         "방콕",   "싱가폴",   "태국만")
+CALL REGISTER_ROUTE_S(  "스프레틀리군도",         "클락필드",   "마닐라",       "황해",     "태국만",         "홍콩",         "푸저우",         "해남도",     "사라와크")
+CALL REGISTER_ROUTE_S("사라와크",         "보르네오",   "스프레틀리군도")
+CALL REGISTER_ROUTE_S(  "마닐라",         "클락필드",   "레이테",       "필리핀해",     "스프레틀리군도")
+CALL REGISTER_ROUTE_S(  "트럭섬",         "콰자레인",   "괌",       "라바울",     "트럭섬")
+CALL REGISTER_ROUTE_S(  "코친",         "봄베이",   "랑군",       "캘커타",         "세일론섬")
+CALL REGISTER_ROUTE_S(  "태국만",         "하노이",   "싱가폴",       "방콕",       "톤부리",         "해남도",   "인도양",       "스프레틀리군도",       "오스트하펜",       "바타비아")
+CALL REGISTER_ROUTE_S(  "레이테",         "마닐라",   "발리해협",       "필리핀해")
+CALL REGISTER_ROUTE_S(  "팔라우",         "마리아나해구",   "필리핀해",       "뉴기니",       "아라푸라해")
+CALL REGISTER_ROUTE_S("뉴기니",         "포트모르즈비",   "아라푸라해",     "팔라우",     "마리아나해구")
+CALL REGISTER_ROUTE_S(  "라바울",         "과달카날섬",         "포트모르즈비",     "괌",     "트럭섬")
+CALL REGISTER_ROUTE_S(  "세일론섬",       "코친",       "인도양")
+CALL REGISTER_ROUTE_S("싱가폴",         "인도양",   "스프레틀리군도",     "톤부리")
+CALL REGISTER_ROUTE_S("보르네오",         "사라와크",   "발리해협")
+CALL REGISTER_ROUTE_S(  "포트모르즈비",         "뉴기니",         "라바울",         "과달카날섬",         "괌",      "아라푸라해")
+CALL REGISTER_ROUTE_S(  "메나드",       "발리해협",       "필리핀해",       "아라푸라해")
+CALL REGISTER_ROUTE_S(  "아라푸라해",       "팔라우",       "뉴기니",       "포트모르즈비",     "과달카날섬",     "필리핀해",     "메나드",     "다윈",     "케언스",       "테즈메이니아만")
+CALL REGISTER_ROUTE_S(  "과달카날섬",         "포트모르즈비",   "라바울",     "아라푸라해",       "테즈메이니아만",       "오클랜드")
+CALL REGISTER_ROUTE_S(  "오스트하펜",         "바타비아",   "인도양",       "태국만")
+CALL REGISTER_ROUTE_S(  "바타비아",         "태국만",   "수라바야",   "오스트하펜")
+CALL REGISTER_ROUTE_S(  "수라바야",         "바타비아",   "발리해협")
+CALL REGISTER_ROUTE_S(  "발리해협",         "메나드",   "수라바야",       "다윈",     "보르네오")
+CALL REGISTER_ROUTE_S(  "다윈",         "발리해협",   "아라푸라해",       "케언스",     "휴엔덴",       "앨리스스프링스",     "퍼스")
+CALL REGISTER_ROUTE_S(  "케언스",         "아라푸라해",   "테즈메이니아만",       "다윈",         "앨리스스프링스",         "휴엔덴",         "시드니")
+CALL REGISTER_ROUTE_S(  "인도양",         "카라치",   "봄베이",       "코친",         "세일론섬",         "랑군",         "오스트하펜",         "싱가폴",         "태국만")
+CALL REGISTER_ROUTE_S(  "휴엔덴",         "시드니",   "다윈",       "앨리스스프링스",       "캔버라")
+CALL REGISTER_ROUTE_S(  "시드니",         "케언스",   "휴엔덴",       "캔버라",         "테즈메이니아만")
+CALL REGISTER_ROUTE_S(  "오클랜드",         "테즈메이니아만",   "웰링턴",       "과달카날섬")
+CALL REGISTER_ROUTE_S("앨리스스프링스",         "다윈",   "케언스",     "휴엔덴",     "캔버라",         "퍼스",         "애들레이드")
+CALL REGISTER_ROUTE_S(  "테즈메이니아만",         "아라푸라해",         "과달카날섬",     "케언스",         "시드니",         "캔버라",         "멜버른",         "오클랜드",         "웰링턴",         "크라이스트·처치")
+CALL REGISTER_ROUTE_S(  "캔버라",       "시드니",       "휴엔덴",         "앨리스스프링스",         "멜버른",         "테즈메이니아만")
+CALL REGISTER_ROUTE_S("웰링턴",         "오클랜드",   "크라이스트·처치",     "테즈메이니아만")
+CALL REGISTER_ROUTE_S(  "애들레이드",         "앨리스스프링스",         "멜버른",         "퍼스")
+CALL REGISTER_ROUTE_S(  "퍼스",       "다윈",       "앨리스스프링스",       "애들레이드")
+CALL REGISTER_ROUTE_S(  "멜버른",       "캔버라",       "애들레이드",       "테즈메이니아만")
+CALL REGISTER_ROUTE_S(  "크라이스트·처치",         "웰링턴",   "테즈메이니아만")
+
+CALL REGISTER_ROUTE_S(  "시닝",       "거얼무",       "란저우",       "스탈리나바드",       "카불",       "라싸")
+CALL REGISTER_ROUTE_S(  "스리나가르",         "카불",   "라싸",       "카트만두",       "델리",       "캘커타")
+CALL REGISTER_ROUTE_S(  "후허하오터",         "선양",   "타이위안",       "옌안",       "울란바토르",       "무렌")
+
+@MAP_INIT_PACIFICWAR
+;일본
+CALL CITY_ECONOMY_S(  "삿포로", 10000)
+CALL CITY_ECONOMY_S(  "아키타", 10000)
+CALL CITY_ECONOMY_S(  "도쿄", 50000)
+CALL CITY_ECONOMY_S(  "요코하마", 25000)
+CALL CITY_ECONOMY_S(  "카나자와", 10000)
+CALL CITY_ECONOMY_S(  "오사카", 25000)
+CALL CITY_ECONOMY_S(  "히로시마", 20000)
+CALL CITY_ECONOMY_S(  "시코쿠", 10000)
+CALL CITY_ECONOMY_S(  "나가사키", 15000)
+CALL CITY_ECONOMY_S(  "가고시마", 10000)
+CALL CITY_ECONOMY_S(  "오키나와", 15000)
+CALL CITY_ECONOMY_S(  "토요하라", 10000)
+
+CALL CITY_ECONOMY_S(  "이오섬", 10000)
+CALL CITY_ECONOMY_S(  "콰자레인", 10000)
+CALL CITY_ECONOMY_S(  "팔라우", 10000)
+CALL CITY_ECONOMY_S(  "사이판섬", 10000)
+CALL CITY_ECONOMY_S(  "트럭섬", 10000)
+
+CALL CITY_ECONOMY_S(  "부산", 15000)
+CALL CITY_ECONOMY_S(  "평양", 15000)
+
+CALL CITY_ECONOMY_S(  "다롄", 20000)
+CALL CITY_ECONOMY_S(  "타이완", 15000)
+
+CALL CITY_ECONOMY_S(  "베링해", 10000)
+CALL CITY_ECONOMY_S(  "오호츠크해", 10000)
+CALL CITY_ECONOMY_S(  "황해", 10000)
+CALL CITY_ECONOMY_S(  "마리아나해구", 10000)
+CALL CITY_ECONOMY_S(  "이즈해구", 10000)
+CALL CITY_ECONOMY_S(  "서태평양", 10000)
+CALL CITY_ECONOMY_S(  "동해", 10000)
+
+;아메리카 합중국
+CALL CITY_ECONOMY_S("앵커리지", 10000)
+CALL CITY_ECONOMY_S(  "시애틀", 40000)
+CALL CITY_ECONOMY_S(  "샌프란시스코", 50000)
+CALL CITY_ECONOMY_S(  "새크라멘토", 35000)
+CALL CITY_ECONOMY_S("샤이엔", 35000)
+CALL CITY_ECONOMY_S(  "로스앤젤레스", 45000)
+CALL CITY_ECONOMY_S(  "로스앨러모스", 30000)
+CALL CITY_ECONOMY_S(  "샌디에고", 45000)
+
+CALL CITY_ECONOMY_S(  "키스카섬", 10000)
+CALL CITY_ECONOMY_S(  "애투섬", 10000)
+CALL CITY_ECONOMY_S(  "진주만", 20000)
+CALL CITY_ECONOMY_S(  "미드웨이섬", 15000)
+CALL CITY_ECONOMY_S(  "웨이크섬", 15000)
+CALL CITY_ECONOMY_S(  "괌", 30000)
+CALL CITY_ECONOMY_S(  "죤슨섬", 10000)
+
+;뉴질랜드
+CALL CITY_ECONOMY_S(  "오클랜드", 30000)
+CALL CITY_ECONOMY_S(  "웰링턴", 40000)
+CALL CITY_ECONOMY_S(  "크라이스트·처치", 15000)
+
+;오스트레일리아
+CALL CITY_ECONOMY_S(  "다윈", 20000)
+CALL CITY_ECONOMY_S(  "케언스", 15000)
+CALL CITY_ECONOMY_S(  "휴엔덴", 15000)
+CALL CITY_ECONOMY_S("앨리스스프링스", 20000)
+CALL CITY_ECONOMY_S(  "시드니", 25000)
+CALL CITY_ECONOMY_S(  "캔버라", 15000)
+CALL CITY_ECONOMY_S("퍼스", 10000)
+CALL CITY_ECONOMY_S(  "애들레이드", 25000)
+CALL CITY_ECONOMY_S(  "멜버른", 25000)
+
+CALL CITY_ECONOMY_S(  "아라푸라해", 10000)
+CALL CITY_ECONOMY_S(  "테즈메이니아만", 10000)
+
+CALL CITY_ECONOMY_S("포트모르즈비", 10000)
+CALL CITY_ECONOMY_S(  "라바울", 15000)
+
+;필리핀
+CALL CITY_ECONOMY_S(  "클락필드", 20000)
+CALL CITY_ECONOMY_S(  "마닐라", 55000)
+CALL CITY_ECONOMY_S(  "레이테", 35000)
+
+CALL CITY_ECONOMY_S("필리핀해", 10000)
+
+;란령 인도네시아
+CALL CITY_ECONOMY_S(  "오스트하펜", 15000)
+CALL CITY_ECONOMY_S(  "바타비아", 25000)
+CALL CITY_ECONOMY_S("수라바야", 10000)
+CALL CITY_ECONOMY_S(  "뉴기니", 15000)
+CALL CITY_ECONOMY_S(  "메나드", 15000)
+CALL CITY_ECONOMY_S(  "보르네오", 15000)
+
+CALL CITY_ECONOMY_S(  "발리해협", 10000)
+
+;영령 아시아 식민지
+CALL CITY_ECONOMY_S(  "카라치", 25000)
+CALL CITY_ECONOMY_S(  "봄베이", 30000)
+CALL CITY_ECONOMY_S(  "코친", 15000)
+CALL CITY_ECONOMY_S(  "랑군", 25000)
+CALL CITY_ECONOMY_S("캘커타", 20000)
+CALL CITY_ECONOMY_S(  "델리", 25000)
+CALL CITY_ECONOMY_S(  "인펄", 25000)
+CALL CITY_ECONOMY_S(  "스리나가르", 10000)
+
+CALL CITY_ECONOMY_S(  "세일론섬", 15000)
+CALL CITY_ECONOMY_S("과달카날섬", 10000)
+CALL CITY_ECONOMY_S(  "싱가폴", 20000)
+CALL CITY_ECONOMY_S(  "홍콩", 20000)
+CALL CITY_ECONOMY_S(  "사라와크", 15000)
+
+CALL CITY_ECONOMY_S("인도양", 10000)
+CALL CITY_ECONOMY_S(  "스프레틀리군도", 10000)
+CALL CITY_ECONOMY_S(  "태국만", 10000)
+
+;타이
+CALL CITY_ECONOMY_S("방콕", 45000)
+CALL CITY_ECONOMY_S(  "톤부리", 40000)
+
+;불령 인도차이나
+CALL CITY_ECONOMY_S(  "하노이", 40000)
+CALL CITY_ECONOMY_S("사이공", 40000)
+
+;네팔
+CALL CITY_ECONOMY_S(  "카트만두", 55000)
+
+;부탄
+CALL CITY_ECONOMY_S(  "팀부", 50000)
+
+;아프가니스탄
+CALL CITY_ECONOMY_S(  "카불", 55000)
+CALL CITY_ECONOMY_S("헤랏트", 30000)
+
+;만주국
+CALL CITY_ECONOMY_S("선양", 50000)
+CALL CITY_ECONOMY_S(  "신징", 55000)
+CALL CITY_ECONOMY_S(  "하얼빈", 45000)
+
+;탄누·트바
+CALL CITY_ECONOMY_S(  "키질", 50000)
+
+;몽골
+CALL CITY_ECONOMY_S(  "울란바토르", 55000)
+CALL CITY_ECONOMY_S("무렌", 50000)
+
+;중국
+CALL CITY_ECONOMY_S(  "베이징", 55000)
+CALL CITY_ECONOMY_S(  "타이위안", 50000)
+CALL CITY_ECONOMY_S(  "옌안", 55000)
+CALL CITY_ECONOMY_S(  "핑량", 45000)
+CALL CITY_ECONOMY_S("우르무치", 50000)
+CALL CITY_ECONOMY_S(  "거얼무", 55000)
+CALL CITY_ECONOMY_S(  "란저우", 25000)
+CALL CITY_ECONOMY_S(  "시안", 30000)
+CALL CITY_ECONOMY_S(  "제남", 35000)
+CALL CITY_ECONOMY_S(  "아오시마", 35000)
+CALL CITY_ECONOMY_S("상하이", 30000)
+CALL CITY_ECONOMY_S(  "난징", 35000)
+CALL CITY_ECONOMY_S(  "청두", 35000)
+CALL CITY_ECONOMY_S(  "충칭", 30000)
+CALL CITY_ECONOMY_S(  "쿠민", 55000)
+CALL CITY_ECONOMY_S(  "구이린", 55000)
+CALL CITY_ECONOMY_S("광저우", 60000)
+CALL CITY_ECONOMY_S(  "푸저우", 15000)
+CALL CITY_ECONOMY_S(  "해남도", 25000)
+CALL CITY_ECONOMY_S(  "시닝", 40000)
+
+;러시아 시베리아·극동군관할구역
+CALL CITY_ECONOMY_S(  "옴스크", 30000)
+CALL CITY_ECONOMY_S(  "노보시비르스크", 45000)
+CALL CITY_ECONOMY_S(  "이르쿠츠쿠", 15000)
+CALL CITY_ECONOMY_S("야쿠츠크", 30000)
+CALL CITY_ECONOMY_S(  "오호츠크", 15000)
+CALL CITY_ECONOMY_S(  "하바로프스크", 15000)
+CALL CITY_ECONOMY_S(  "블라디보스토크", 30000)
+CALL CITY_ECONOMY_S(  "오하", 15000)
+CALL CITY_ECONOMY_S(  "프룬제", 15000)
+CALL CITY_ECONOMY_S("스탈리나바드", 30000)
+CALL CITY_ECONOMY_S(  "알마아타", 15000)
+;티벳
+CALL CITY_ECONOMY_S(  "라싸", 55000)
+
+;몽고국
+CALL CITY_ECONOMY_S(  "후허하오터", 50000)
+
+
+;경제 규모의 상한치의 설정
+FOR LOCAL:0, 1, MAX_CITY
+	CITY_ECONOMY_LIMIT:(LOCAL:0) = MIN(CITY_ECONOMY:(LOCAL:0) * 2, 300000)
+NEXT
+;방위 효율  기본치 100  책으로+20요새에서+100석벽한 장으로＋50도하로＋30  산에서＋30 양륙으로＋50
+;중요 도시에서+50동토에서+50
+
+;일본
+CALL CITY_GUARD_S(  "삿포로", 150)
+CALL CITY_GUARD_S(  "아키타", 150)
+CALL CITY_GUARD_S(  "도쿄", 200)
+CALL CITY_GUARD_S(  "요코하마", 150)
+CALL CITY_GUARD_S(  "카나자와", 150)
+CALL CITY_GUARD_S(  "오사카", 200)
+CALL CITY_GUARD_S(  "히로시마", 300)
+CALL CITY_GUARD_S(  "시코쿠", 150)
+CALL CITY_GUARD_S(  "나가사키", 200)
+CALL CITY_GUARD_S(  "가고시마", 300)
+CALL CITY_GUARD_S(  "오키나와", 400)
+CALL CITY_GUARD_S(  "토요하라", 150)
+
+CALL CITY_GUARD_S(  "이오섬", 500)
+CALL CITY_GUARD_S(  "콰자레인", 150)
+CALL CITY_GUARD_S(  "팔라우", 450)
+CALL CITY_GUARD_S(  "사이판섬", 300)
+CALL CITY_GUARD_S(  "트럭섬", 300)
+
+CALL CITY_GUARD_S(  "부산", 200)
+CALL CITY_GUARD_S(  "평양", 150)
+
+CALL CITY_GUARD_S(  "다롄", 150)
+CALL CITY_GUARD_S(  "타이완", 150)
+
+CALL CITY_GUARD_S(  "베링해", 100)
+CALL CITY_GUARD_S(  "오호츠크해", 100)
+CALL CITY_GUARD_S(  "황해", 100)
+CALL CITY_GUARD_S(  "마리아나해구", 100)
+CALL CITY_GUARD_S(  "이즈해구", 100)
+CALL CITY_GUARD_S(  "서태평양", 100)
+CALL CITY_GUARD_S(  "동해", 100)
+
+;아메리카 합중국
+CALL CITY_GUARD_S("앵커리지", 100)
+CALL CITY_GUARD_S(  "시애틀", 300)
+CALL CITY_GUARD_S(  "샌프란시스코", 300)
+CALL CITY_GUARD_S(  "새크라멘토", 150)
+CALL CITY_GUARD_S("샤이엔", 500)
+CALL CITY_GUARD_S(  "로스앤젤레스", 400)
+CALL CITY_GUARD_S(  "로스앨러모스", 500)
+CALL CITY_GUARD_S(  "샌디에고", 200)
+
+CALL CITY_GUARD_S(  "키스카섬", 100)
+CALL CITY_GUARD_S(  "애투섬", 100)
+CALL CITY_GUARD_S(  "진주만", 100)
+CALL CITY_GUARD_S(  "미드웨이섬", 100)
+CALL CITY_GUARD_S(  "웨이크섬", 100)
+CALL CITY_GUARD_S(  "괌", 100)
+CALL CITY_GUARD_S(  "죤슨섬", 100)
+
+;뉴질랜드
+CALL CITY_GUARD_S(  "오클랜드", 200)
+CALL CITY_GUARD_S(  "웰링턴", 100)
+CALL CITY_GUARD_S(  "크라이스트·처치", 150)
+
+;오스트레일리아
+CALL CITY_GUARD_S(  "다윈", 300)
+CALL CITY_GUARD_S(  "케언스", 150)
+CALL CITY_GUARD_S(  "휴엔덴", 300)
+CALL CITY_GUARD_S("앨리스스프링스", 300)
+CALL CITY_GUARD_S(  "시드니", 150)
+CALL CITY_GUARD_S(  "캔버라", 150)
+CALL CITY_GUARD_S("퍼스", 300)
+CALL CITY_GUARD_S(  "애들레이드", 150)
+CALL CITY_GUARD_S(  "멜버른", 150)
+
+CALL CITY_GUARD_S(  "아라푸라해", 100)
+CALL CITY_GUARD_S(  "테즈메이니아만", 100)
+
+CALL CITY_GUARD_S("포트모르즈비", 300)
+CALL CITY_GUARD_S(  "라바울", 150)
+
+;필리핀
+CALL CITY_GUARD_S(  "클락필드", 100)
+CALL CITY_GUARD_S(  "마닐라", 100)
+CALL CITY_GUARD_S(  "레이테", 100)
+
+CALL CITY_GUARD_S("필리핀해", 100)
+
+;란령 인도네시아
+CALL CITY_GUARD_S(  "오스트하펜", 150)
+CALL CITY_GUARD_S(  "바타비아", 150)
+CALL CITY_GUARD_S("수라바야", 300)
+CALL CITY_GUARD_S(  "뉴기니", 150)
+CALL CITY_GUARD_S(  "메나드", 150)
+CALL CITY_GUARD_S(  "보르네오", 150)
+
+CALL CITY_GUARD_S(  "발리해협", 100)
+
+;영령 아시아 식민지
+CALL CITY_GUARD_S(  "카라치", 150)
+CALL CITY_GUARD_S(  "봄베이", 300)
+CALL CITY_GUARD_S(  "코친", 100)
+CALL CITY_GUARD_S(  "랑군", 250)
+CALL CITY_GUARD_S("캘커타", 300)
+CALL CITY_GUARD_S(  "델리", 250)
+CALL CITY_GUARD_S(  "인펄", 350)
+CALL CITY_GUARD_S(  "스리나가르", 150)
+
+CALL CITY_GUARD_S(  "세일론섬", 150)
+CALL CITY_GUARD_S("과달카날섬", 300)
+CALL CITY_GUARD_S(  "싱가폴", 350)
+CALL CITY_GUARD_S(  "홍콩", 300)
+CALL CITY_GUARD_S(  "사라와크", 150)
+
+CALL CITY_GUARD_S("인도양", 100)
+CALL CITY_GUARD_S(  "스프레틀리군도", 100)
+CALL CITY_GUARD_S(  "태국만", 100)
+
+;타이
+CALL CITY_GUARD_S("방콕", 300)
+CALL CITY_GUARD_S(  "톤부리", 100)
+
+;불령 인도차이나
+CALL CITY_GUARD_S(  "하노이", 250)
+CALL CITY_GUARD_S("사이공", 300)
+
+;네팔
+CALL CITY_GUARD_S(  "카트만두", 150)
+
+;부탄
+CALL CITY_GUARD_S(  "팀부", 150)
+
+;아프가니스탄
+CALL CITY_GUARD_S(  "카불", 250)
+CALL CITY_GUARD_S("헤랏트", 200)
+
+;만주국
+CALL CITY_GUARD_S("선양", 300)
+CALL CITY_GUARD_S(  "신징", 250)
+CALL CITY_GUARD_S(  "하얼빈", 150)
+
+;탄누·트바
+CALL CITY_GUARD_S(  "키질", 150)
+
+;몽골
+CALL CITY_GUARD_S(  "울란바토르", 150)
+CALL CITY_GUARD_S("무렌", 100)
+
+;중국
+CALL CITY_GUARD_S(  "베이징", 350)
+CALL CITY_GUARD_S(  "타이위안", 300)
+CALL CITY_GUARD_S(  "옌안", 400)
+CALL CITY_GUARD_S(  "핑량", 300)
+CALL CITY_GUARD_S("우르무치", 200)
+CALL CITY_GUARD_S(  "거얼무", 150)
+CALL CITY_GUARD_S(  "란저우", 150)
+CALL CITY_GUARD_S(  "시안", 300)
+CALL CITY_GUARD_S(  "제남", 150)
+CALL CITY_GUARD_S(  "아오시마", 250)
+CALL CITY_GUARD_S("상하이", 450)
+CALL CITY_GUARD_S(  "난징", 350)
+CALL CITY_GUARD_S(  "청두", 100)
+CALL CITY_GUARD_S(  "충칭", 300)
+CALL CITY_GUARD_S(  "쿠민", 250)
+CALL CITY_GUARD_S(  "구이린", 150)
+CALL CITY_GUARD_S("광저우", 300)
+CALL CITY_GUARD_S(  "푸저우", 150)
+CALL CITY_GUARD_S(  "해남도", 250)
+CALL CITY_GUARD_S(  "시닝", 150)
+;러시아 시베리아·극동군관할구역
+CALL CITY_GUARD_S(  "옴스크", 300)
+CALL CITY_GUARD_S(  "노보시비르스크", 150)
+CALL CITY_GUARD_S(  "이르쿠츠쿠", 150)
+CALL CITY_GUARD_S("야쿠츠크", 300)
+CALL CITY_GUARD_S(  "오호츠크", 150)
+CALL CITY_GUARD_S(  "하바로프스크", 150)
+CALL CITY_GUARD_S(  "블라디보스토크", 300)
+CALL CITY_GUARD_S(  "오하", 150)
+CALL CITY_GUARD_S(  "프룬제", 150)
+CALL CITY_GUARD_S("스탈리나바드", 300)
+CALL CITY_GUARD_S(  "알마아타", 150)
+;티벳
+CALL CITY_GUARD_S(  "라싸", 150)
+
+;몽고국
+CALL CITY_GUARD_S(  "후허하오터", 250)
+
+;에러 발견기
+FOR LOCAL, 1, GET_CITY_NUM() + 1
+	SIF CITY_ECONOMY:LOCAL == 0
+		THROW %GET_CITYNAME(LOCAL)%
+NEXT
+FOR LOCAL, 1, GET_CITY_NUM() + 1
+	SIF CITY_GUARD:LOCAL == 0
+		THROW %GET_CITYNAME(LOCAL)%
+NEXT

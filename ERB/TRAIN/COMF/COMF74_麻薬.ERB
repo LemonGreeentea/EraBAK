@@ -1,0 +1,201 @@
+﻿;마약
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME74
+LOCALS:0 = 마약
+
+RESULTS:0 = %조사처리(LOCALS:0,"를")% 친다
+RESULTS:1 = %조사처리(LOCALS:0,"를")% 맞는다
+RESULTS:2 = %조사처리(LOCALS:0,"를")% 치게 한다
+RESULTS:3 = %조사처리(LOCALS:0,"를")% 맞는다
+RESULTS:4 = %조사처리(LOCALS:0,"를")% 치게 한다
+RESULTS:5 = %LOCALS:0%사용 과시하고
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE74
+;공통 부분
+CALL COM_ABLE_COMMON(74)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 1명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 1
+	RETURN 0
+;타겟은 1명 이상
+SIF MTAR_NUM <= 0
+	RETURN 0
+;플레이어가 행동불능이라면 불가
+SIF !IS_PLAYABLE(MPLY:0)
+	RETURN 0
+;마약이 필요
+SIF ITEM:마약 < MTAR_NUM && ITEM:A_마약 < MTAR_NUM
+	RETURN 0
+;플레이어가 구속중이라면 불가
+SIF IS_BIND(MPLY:0)
+	RETURN 0
+;플레이어가 풋잡·전기안마중이라면 불가
+SIF IS_EQUIP_PLAYER(MPLY:0, 14, 103)
+	RETURN 0
+FOR LOCAL, 0, MTAR_NUM
+	;이미 마약이 미약을 사용되고 있다면 불가
+	SIF TCVAR:(MTAR:LOCAL):마약
+		RETURN 0
+	;타겟의 입이 막히고 있다면 불가
+	SIF IS_M_HOLD(MTAR:LOCAL)
+		RETURN 0
+	;타겟으로부터 플레이어에 삽입중에서 체위가 후배위·배면좌위라면 불가
+	SIF GROUPMATCH(GET_SEX_POSITION(MTAR:LOCAL, MPLY:0), 2, 4)
+		RETURN 0
+NEXT
+
+
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM74
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;마약을 감소시킨다(추가 아이템 사용시는 감소시키지 않다)
+IF ITEM:A_마약 <= 0
+	ITEM:마약 = MAX(ITEM:마약 - MTAR_NUM, 0)
+ENDIF
+
+;●플레이어측의 처리
+FOR LOCAL, 0, MTAR_NUM
+	;●타겟측의 처리
+	;마약 사용 플래그를 세운다
+	TCVAR:(MTAR:LOCAL):마약 = 1
+
+	;소스와 CFLAG의 증가
+	SELECTCASE CFLAG:(MTAR:LOCAL):약물의존
+		CASE IS < 100
+			SOURCE:(MTAR:LOCAL):반감 = 300
+			SOURCE:(MTAR:LOCAL):불안 = 600
+			SOURCE:(MTAR:LOCAL):약물추가 += 3000
+			CFLAG:(MTAR:LOCAL):약물의존 += RAND(80, 100)
+		CASE IS < 200
+			SOURCE:(MTAR:LOCAL):반감 = 200
+			SOURCE:(MTAR:LOCAL):불안 = 400
+			SOURCE:(MTAR:LOCAL):약물추가 += 2000
+			CFLAG:(MTAR:LOCAL):약물의존 += RAND(60, 100)
+		CASE IS < 300
+			SOURCE:(MTAR:LOCAL):반감 = 50
+			SOURCE:(MTAR:LOCAL):불안 = 150
+			SOURCE:(MTAR:LOCAL):약물추가 += 1000
+			CFLAG:(MTAR:LOCAL):약물의존 += RAND(40, 100)
+		CASEELSE
+			CFLAG:(MTAR:LOCAL):약물의존 += 100
+			SOURCE:(MTAR:LOCAL):약물추가 += 1000
+	ENDSELECT
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(MTAR:LOCAL, 30, 60)
+
+	;사정 개소와 대상을 세트
+	CALL STACK_SPERM(MPLY:0, MTAR:LOCAL, 0)
+NEXT
+;주도도 변화 기준치
+TFLAG:49 = 1
+
+;도착도 변화 기준치
+TFLAG:50 = 1
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 0
+
+;경과시간을 무리하게 1줄인다
+TFLAG:55 --
+
+RETURN 1
+
+;-------------------------------------------------
+;고유의 실행 판정(플레이어측)
+;-------------------------------------------------
+@COM_ORDER_PLAYER74(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 90
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 4)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 1, 10))
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -1)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 6)
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -1)
+ENDIF
+
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -10)
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE74
+IF MTAR_NUM > 1
+	LOCALS:0 = 들
+ELSE
+	LOCALS:0 = 
+ENDIF
+
+SELECTCASE GET_COM_INITIATIVE()
+	;플레이어에 주도권
+	CASE 0
+		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)% %LOCALS:0%에 마약을 주사%TARGET_STR("했다", "해 왔다")%…
+	;타겟으로 주도권
+	CASE 1
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)% %LOCALS:0%에 마약을 주사하도록 명령했다
+		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% (듣)묻는 대로 %ANAME(MTAR:0)% %LOCALS:0%에 마약을 주사했다…
+	;제삼자에게 주도권
+	CASEELSE
+		PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에게, %ANAME(MTAR:0)% %LOCALS:0%에 마약을 주사하도록 명령했다
+		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% (듣)묻는 대로 %ANAME(MTAR:0)% %LOCALS:0%에 마약을 주사했다…
+ENDSELECT
+
+;-------------------------------------------------
+;지문(실행 후)
+;-------------------------------------------------
+@COM_TEXT_AFTER74
+IF GETBIT(TALENT:(MTAR:0):음란계, 소질_음란_약물중독)
+	PRINTFORML %ANAME(MTAR:0)% %조사처리(LOCALS:0,"는")%, 기다려 바라고 있던 것을 쳐박아져 마음 속 행복하게 네에로 웃고 있다…
+ELSE
+	PRINTFORML 약이 돌아 왔는지, %ANAME(MTAR:0)% %조사처리(LOCALS:0,"는")% 공허한 눈동자로 에들 네에들과 웃고 있다…
+ENDIF
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN74
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_74()
+RETURN POWER(2, 성적기호_도구를사용하고싶다) + POWER(2, 성적기호_학대하고싶다)
+
+@COM_PREFERENCE_TARGET_74()
+RETURN POWER(2, 성적기호_도구를사용되고싶다) + POWER(2, 성적기호_시달리고싶다)
+

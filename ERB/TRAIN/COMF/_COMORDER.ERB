@@ -1,0 +1,764 @@
+﻿;-------------------------------------------------
+;커맨드를 실행할 수 있는지 판정하는 함수(ARG:0은 캐릭터 번호)
+;각 커맨드의 COM_ORDER를 호출해, 성공이라면 1을, 실패라면 0을 돌려준다
+;-------------------------------------------------
+@COM_ORDER_COMMON
+;맡김 플래그가 서 있다면 무시
+IF TFLAG:0
+	RETURN 1
+ENDIF
+
+LOCAL:2 = 1
+FOR LOCAL:0, 0, MPLY_NUM
+	LOCAL:1 = MPLY:(LOCAL:0)
+
+	IF LOCAL:1 != MASTER
+		RESULT = 0
+		;각 커맨드의 고유 실행 판정
+		TRYCALLFORM COM_ORDER_PLAYER{SELECTCOM}(LOCAL:1)
+		IF RESULT
+			;판정 결과를 표시
+			PRINTFORMW  = {TCVAR:(LOCAL:1):24} %TOSTR_COMPARE(TCVAR:(LOCAL:1):24, TCVAR:(LOCAL:1):25)% 실행치{TCVAR:(LOCAL:1):25}
+
+			;실행 할 수 없는 경우
+			IF TCVAR:(LOCAL:1):24 < TCVAR:(LOCAL:1):25
+				;실행 판정 실패 구상 호출
+				CALL KOJO_EVENT(LOCAL:1, 150)
+				LOCAL:2 = 0
+			ENDIF
+		ENDIF
+	ENDIF
+NEXT
+
+FOR LOCAL:0, 0, MTAR_NUM
+	LOCAL:1 = MTAR:(LOCAL:0)
+
+	IF LOCAL:1 != MASTER
+		RESULT = 0
+		;각 커맨드의 고유 실행 판정
+		TRYCALLFORM COM_ORDER_TARGET{SELECTCOM}(LOCAL:1)
+		IF RESULT
+			;판정 결과를 표시
+			PRINTFORMW  = {TCVAR:(LOCAL:1):24} %TOSTR_COMPARE(TCVAR:(LOCAL:1):24, TCVAR:(LOCAL:1):25)% 실행치{TCVAR:(LOCAL:1):25}
+
+			;실행 할 수 없는 경우
+			IF TCVAR:(LOCAL:1):24 < TCVAR:(LOCAL:1):25
+				;실행 판정 실패 구상 호출
+				CALL KOJO_EVENT(LOCAL:1, 150)
+				LOCAL:2 = 0
+			ENDIF
+		ENDIF
+	ENDIF
+NEXT
+RETURN LOCAL:2
+
+;-------------------------------------------------
+;COM_ORDER용의 표시＆판정치 가산
+;ARG:0=캐릭터 번호, ARGS:1=표시하는 문자열, ARG:2=가산하는 판정치
+;-------------------------------------------------
+@COM_ORDER_ELEMENT(ARG:0, ARGS:1, ARG:2)
+IF TCVAR:(ARG:0):24 == -10000
+	TCVAR:(ARG:0):24 = 0
+ELSE
+	PRINT  + 
+ENDIF
+PRINTFORM %ARGS:1%({ARG:2})
+TCVAR:(ARG:0):24 += ARG:2
+
+;-------------------------------------------------
+;범용적인 커맨드의 실행 판정(판정치는 TFLAG:46으로 돌려준다)
+;매우 기본적인 요소(호감도·의존도·종속도·기분) 마셔
+;ARG:0=캐릭터 번호
+;-------------------------------------------------
+@COM_ORDER_BASE(ARG:0)
+IF CFLAG:(ARG:0):2 >= 50000
+	LOCAL:0 = (CFLAG:(ARG:0):2 - 50000) / 10000 + 120
+ELSEIF CFLAG:(ARG:0):2 >= 10000
+	LOCAL:0 = (CFLAG:(ARG:0):2 - 10000) / 2000 + 100
+ELSEIF CFLAG:(ARG:0):2 >= 3000
+	LOCAL:0 = (CFLAG:(ARG:0):2 - 3000) / 350 + 80
+ELSEIF CFLAG:(ARG:0):2 >= 1500
+	LOCAL:0 = (CFLAG:(ARG:0):2 - 1500) / 75 + 60
+ELSE
+	LOCAL:0 = MAX(CFLAG:(ARG:0):2 / 25, 0)
+ENDIF
+
+IF CFLAG:(ARG:0):3 >= 50000
+	LOCAL:1 = (CFLAG:(ARG:0):3 - 50000) / 20000 + 60
+ELSEIF CFLAG:(ARG:0):3 >= 10000
+	LOCAL:1 = (CFLAG:(ARG:0):3 - 10000) / 4000 + 50
+ELSEIF CFLAG:(ARG:0):3 >= 3000
+	LOCAL:1 = (CFLAG:(ARG:0):3 - 3000) / 700 + 40
+ELSEIF CFLAG:(ARG:0):3 >= 1500
+	LOCAL:1 = (CFLAG:(ARG:0):3 - 1500) / 150 + 30
+ELSE
+	LOCAL:1 = MAX(CFLAG:(ARG:0):3 / 50, 0)
+ENDIF
+
+IF CFLAG:(ARG:0):4 >= 50000
+	LOCAL:2 = (CFLAG:(ARG:0):4 - 50000) / 10000 + 120
+ELSEIF CFLAG:(ARG:0):4 >= 10000
+	LOCAL:2 = (CFLAG:(ARG:0):4 - 10000) / 2000 + 100
+ELSEIF CFLAG:(ARG:0):4 >= 3000
+	LOCAL:2 = (CFLAG:(ARG:0):4 - 3000) / 350 + 80
+ELSEIF CFLAG:(ARG:0):4 >= 1500
+	LOCAL:2 = (CFLAG:(ARG:0):4 - 1500) / 75 + 60
+ELSE
+	LOCAL:2 = MAX(CFLAG:(ARG:0):4 / 25, 0)
+ENDIF
+
+IF CFLAG:(ARG:0):5 >= 50000
+	LOCAL:3 = (CFLAG:(ARG:0):5 - 50000) / 10000 + 120
+ELSEIF CFLAG:(ARG:0):5 >= 10000
+	LOCAL:3 = (CFLAG:(ARG:0):5 - 10000) / 2000 + 100
+ELSEIF CFLAG:(ARG:0):5 >= 3000
+	LOCAL:3 = (CFLAG:(ARG:0):5 - 3000) / 350 + 80
+ELSEIF CFLAG:(ARG:0):5 >= 1500
+	LOCAL:3 = (CFLAG:(ARG:0):5 - 1500) / 75 + 60
+ELSE
+	LOCAL:3 = MAX(CFLAG:(ARG:0):5 / 25, 0)
+ENDIF
+
+LOCAL:4 = MAX(LOCAL:0, LOCAL:2, LOCAL:3)
+LOCAL:0 = LOCAL:4 + (LOCAL:0 + LOCAL:2 + LOCAL:3 - LOCAL:4) / 4
+
+CALL COM_ORDER_ELEMENT(ARG:0, "호감도·종속도·지배도", LOCAL:0)
+CALL COM_ORDER_ELEMENT(ARG:0, "의존도", LOCAL:1)
+
+;기분의 영향
+LOCAL:0 = 0
+SELECTCASE TOSTR_EMOTION(ARG:0)
+	CASE "행복"
+		LOCAL:0 = 15
+	CASE "기쁨"
+		LOCAL:0 = 10
+	CASE "양호"
+		LOCAL:0 = 5
+	CASE "원한"
+		IF TALENT:(ARG:0):아이인질
+			LOCAL:0 = -35
+		ELSE
+			LOCAL:0 = -50
+		ENDIF
+	CASE "분노"
+		IF TALENT:(ARG:0):아이인질
+			LOCAL:0 = -14
+		ELSE
+			LOCAL:0 = -20
+		ENDIF
+	CASE "분개"
+		IF TALENT:(ARG:0):아이인질
+			LOCAL:0 = -7
+		ELSE
+			LOCAL:0 = -10
+		ENDIF
+	CASE "암울"
+		LOCAL:0 = -15
+	CASE "슬픔"
+		LOCAL:0 = -10
+	CASE "우울"
+		LOCAL:0 = -5
+	CASE "광기"
+		LOCAL:0 = 30
+	CASE "공포"
+		LOCAL:0 = 20
+	CASE "겁냄"
+		LOCAL:0 = 8
+ENDSELECT
+CALL COM_ORDER_ELEMENT(ARG:0, @"기분<%TOSTR_EMOTION(ARG:0)%>", LOCAL:0)
+
+;-------------------------------------------------
+;범용적인 커맨드의 실행 판정(판정치는 TFLAG:46으로 돌려준다)
+;ARG:0=캐릭터 번호
+;-------------------------------------------------
+@COM_ORDER(ARG:0)
+;호감도·의존도·종속도·기분의 고려
+CALL COM_ORDER_BASE(ARG:0)
+
+IF IS_SP_COUNTRY_CHARA(ARG:0)
+	CALL COM_ORDER_ELEMENT(ARG:0, "특수 세력 캐릭터", 100)
+ENDIF
+
+IF IS_FALLEN_TO_SP_COUNTRY(ARG:0) && IS_SP_COUNTRY(CFLAG:MASTER:소속)
+	CALL COM_ORDER_ELEMENT(ARG:0, "특수 세력에 함락", 100)
+ENDIF
+
+IF CFLAG:(ARG:0):위안모브
+	CALL COM_ORDER_ELEMENT(ARG:0, "위안모브", 100)
+ENDIF
+
+IF TALENT:(ARG:0):쵸로인
+	CALL COM_ORDER_ELEMENT(ARG:0, "쵸로인", 20)
+ENDIF
+
+IF TALENT:(ARG:0):반항적
+	IF TALENT:(ARG:0):아이인질
+		CALL COM_ORDER_ELEMENT(ARG:0, "반항적", -4)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "반항적", -5)
+	ENDIF
+ENDIF
+IF TALENT:(ARG:0):꿋꿋함
+	IF TALENT:(ARG:0):아이인질
+		CALL COM_ORDER_ELEMENT(ARG:0, "꿋꿋함", -4)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "꿋꿋함", -5)
+	ENDIF
+ENDIF
+IF TALENT:(ARG:0):솔직함
+	CALL COM_ORDER_ELEMENT(ARG:0, "솔직함", 5)
+ENDIF
+IF TALENT:(ARG:0):프라이드높음
+	IF TALENT:(ARG:0):아이인질
+		CALL COM_ORDER_ELEMENT(ARG:0, "프라이드높음", -11)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "프라이드높음", -15)
+	ENDIF
+ENDIF
+IF TALENT:(ARG:0):프라이드낮음
+	CALL COM_ORDER_ELEMENT(ARG:0, "프라이드낮음", 5)
+ENDIF
+IF TALENT:(ARG:0):호기심
+	CALL COM_ORDER_ELEMENT(ARG:0, "호기심", 5)
+ENDIF
+IF TALENT:(ARG:0):보수적
+	;우후후중
+	IF FLAG:우후후플래그
+		IF TALENT:(ARG:0):아이인질
+			CALL COM_ORDER_ELEMENT(ARG:0, "보수적", -7)
+		ELSE
+			CALL COM_ORDER_ELEMENT(ARG:0, "보수적", -10)
+		ENDIF
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "보수적", -5)
+	ENDIF
+ENDIF
+IF TALENT:(ARG:0):주목받기원함
+	CALL COM_ORDER_ELEMENT(ARG:0, "주목받기원함", 2)
+ENDIF
+IF TALENT:(ARG:0):고고함
+	CALL COM_ORDER_ELEMENT(ARG:0, "고고함", -(20 * KOKOU_RATE(ARG:0) / 100))
+ENDIF
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음란) && FLAG:우후후플래그
+	CALL COM_ORDER_ELEMENT(ARG:0, "음란", 5)
+ENDIF
+
+;COM_ORDER로 하고 있다
+ IF TALENT:(ARG:0):친애
+ 	CALL COM_ORDER_ELEMENT(ARG:0, "친애", 30)
+ ELSEIF TALENT:(ARG:0):연모
+ 	CALL COM_ORDER_ELEMENT(ARG:0, "연모", 15)
+ ELSEIF TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "친구", 15)
+ ENDIF
+ IF TALENT:(ARG:0):연인
+ 	CALL COM_ORDER_ELEMENT(ARG:0, "연인", 10)
+ ENDIF
+
+IF TALENT:(ARG:0):예속
+	CALL COM_ORDER_ELEMENT(ARG:0, "예속", 30)
+ELSEIF TALENT:(ARG:0):복종
+	CALL COM_ORDER_ELEMENT(ARG:0, "복종", 15)
+ENDIF
+
+IF TALENT:(ARG:0):낙인
+	CALL COM_ORDER_ELEMENT(ARG:0, "낙인", 10)
+ENDIF
+
+IF TALENT:(ARG:0):소유자
+	CALL COM_ORDER_ELEMENT(ARG:0, "소유자", 30)
+ELSEIF TALENT:(ARG:0):주인
+	CALL COM_ORDER_ELEMENT(ARG:0, "주인", 15)
+ENDIF
+
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_정액변소)
+	CALL COM_ORDER_ELEMENT(ARG:0, "정액변소", 20)
+ENDIF
+
+IF GETBIT(TALENT:MASTER:음란계, 소질_음란_정액변소)
+	CALL COM_ORDER_ELEMENT(ARG:0, "주인공이 정액변소", 5)
+ENDIF
+
+IF TALENT:(ARG:0):프라이드높음
+	LOCAL:0 = 4
+	SIF TALENT:(ARG:0):아이인질
+		LOCAL:0 -= 1
+ELSEIF TALENT:(ARG:0):프라이드낮음
+	LOCAL:0 = 1
+ELSE
+	LOCAL:0 = 2
+ENDIF
+
+IF MARK:(ARG:0):기성사실 >= 1
+	CALL COM_ORDER_ELEMENT(ARG:0, @"기성 사실 Lv{MARK:(ARG:0):기성사실}", MARK:(ARG:0):기성사실 * 3 * LOCAL:0)
+ENDIF
+
+;동성
+IF IS_SAMESEX(MASTER, ARG:0)
+	;우후후중
+	IF FLAG:우후후플래그
+		IF !TALENT:(ARG:0):바이
+			CALL COM_ORDER_ELEMENT(ARG:0, "동성", -5)
+		ENDIF
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "동성", 5)
+	ENDIF
+
+	;남성
+	IF IS_MALE(ARG:0)
+		CALL COM_ORDER_ELEMENT(ARG:0, @"ＢＬLv{ABL:(ARG:0):ＢＬ}", ABL:(ARG:0):ＢＬ * 3)
+	;여성
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, @"레즈 Lv{ABL:(ARG:0):레즈}", ABL:(ARG:0):레즈 * 3)
+	ENDIF
+ENDIF
+
+IF TALENT:MASTER:매혹
+	CALL COM_ORDER_ELEMENT(ARG:0, "주인공의 매혹", 6)
+ENDIF
+IF TALENT:MASTER:수수께끼의매력
+	CALL COM_ORDER_ELEMENT(ARG:0, "주인공의 수수께끼의매력", 6)
+ENDIF
+
+IF PALAM:(ARG:0):취기 >= 150
+	CALL COM_ORDER_ELEMENT(ARG:0, "취기", PALAM:(ARG:0):취기 / 150)
+ENDIF
+
+IF TFLAG:69
+	CALL COM_ORDER_ELEMENT(ARG:0, "도원향", 8)
+ENDIF
+
+;마약은 약물의존이 높을 정도 효과가 얇다
+IF TCVAR:(ARG:0):마약
+	CALL COM_ORDER_ELEMENT(ARG:0, "마약", MAX(50 / (CFLAG:(ARG:0):약물의존 / 20), 1))
+ENDIF
+
+;CFLAG 약물의존을 소지하고 있어, 마약을 소비하고 있지 않으면, 금단증상으로 반대로 실효가가 내린다
+IF !TCVAR:(ARG:0):마약 && CFLAG:(ARG:0):약물의존
+	IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_약물중독)
+		CALL COM_ORDER_ELEMENT(ARG:0, "약의 금단증상", CFLAG:(ARG:0):약물의존 / 3 * -1)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "약의 금단증상", CFLAG:(ARG:0):약물의존 / 8 * -1)
+	ENDIF
+ENDIF
+
+
+IF MAXBASE:(ARG:0):정신력 > 0 
+	LOCAL:0 = BASE:(ARG:0):정신력 * 100 / MAXBASE:(ARG:0):정신력
+	IF LOCAL:0 < 0
+		CALL COM_ORDER_ELEMENT(ARG:0, "정신력 저하", 60)
+	ELSEIF LOCAL:0 <= 50
+		CALL COM_ORDER_ELEMENT(ARG:0, "정신력 저하", 50)
+	ELSEIF LOCAL:0 <= 75
+		CALL COM_ORDER_ELEMENT(ARG:0, "정신력 저하", 25)
+	ENDIF
+ENDIF
+
+IF TCVAR:(ARG:0):최면중 > 0
+	LOCAL:0 = MAX(ABL:MASTER:최면 + ABL:(ARG:0):최면 / 2, 1) * 15
+	CALL COM_ORDER_ELEMENT(ARG:0, "최면술", LOCAL:0)
+ENDIF
+
+;혈연 관계
+IF IS_FATHER(ARG:0, MASTER) || IS_MOTHER(ARG:0, MASTER) || IS_FATHER(MASTER, ARG:0) || IS_MOTHER(MASTER, ARG:0)
+	CALL COM_ORDER_ELEMENT(ARG:0, "부모와 자식", 20)
+ELSEIF IS_PURE_BROTHER(ARG:0, MASTER)
+	CALL COM_ORDER_ELEMENT(ARG:0, "형제 자매", 20)
+ENDIF
+
+;-------------------------------------------------
+;질성교의 실행 판정(Ｐ측)
+;-------------------------------------------------
+@COM_ORDER_VSEX_P(ARG:0)
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 4)
+CALL COM_ORDER_ELEMENT(ARG:0, @"Ｃ감 Lv{ABL:(ARG:0):Ｃ감}", ABL:(ARG:0):Ｃ감 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 2)
+CALL COM_ORDER_ELEMENT(ARG:0, @"성교 Lv{ABL:(ARG:0):성교}", ABL:(ARG:0):성교 * 5)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", LOCAL:0 * 4)
+
+IF IS_SP_COUNTRY_CHARA(ARG:0)
+	CALL COM_ORDER_ELEMENT(ARG:0, "특수 세력 캐릭터", 100)
+ENDIF
+
+IF IS_FALLEN_TO_SP_COUNTRY(ARG:0) && IS_SP_COUNTRY(CFLAG:MASTER:소속)
+	CALL COM_ORDER_ELEMENT(ARG:0, "특수 세력에 함락", 100)
+ENDIF
+
+IF TALENT:(ARG:0):쵸로인
+	CALL COM_ORDER_ELEMENT(ARG:0, "쵸로인", 20)
+ENDIF
+
+IF TALENT:(ARG:0):수줍음
+	IF TALENT:(ARG:0):아이인질
+		CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -1)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -2)
+	ENDIF
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	IF TALENT:(ARG:0):아이인질
+		CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -4)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -5)
+	ENDIF
+ENDIF
+IF TALENT:(ARG:0):여성혐오
+	IF TALENT:(ARG:0):아이인질
+		CALL COM_ORDER_ELEMENT(ARG:0, "여성혐오", -5)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "여성혐오", -7)
+	ENDIF
+ENDIF
+IF TALENT:(ARG:0):동정
+	IF TALENT:(ARG:0):아이인질
+		CALL COM_ORDER_ELEMENT(ARG:0, "동정", -4)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "동정", -5)
+	ENDIF
+ENDIF
+IF TALENT:(ARG:0):선을넘지않음
+	IF TALENT:(ARG:0):동정
+		IF TALENT:(ARG:0):아이인질
+			CALL COM_ORDER_ELEMENT(ARG:0, "선을넘지않음", -14)
+		ELSE
+			CALL COM_ORDER_ELEMENT(ARG:0, "선을넘지않음", -20)
+		ENDIF
+	ELSE
+		IF TALENT:(ARG:0):아이인질
+			CALL COM_ORDER_ELEMENT(ARG:0, "선을넘지않음", -7)
+		ELSE
+			CALL COM_ORDER_ELEMENT(ARG:0, "선을넘지않음", -10)
+		ENDIF
+	ENDIF
+ENDIF
+
+IF TCVAR:(ARG:0):60
+	CALL COM_ORDER_ELEMENT(ARG:0, "미약", 6)
+ENDIF
+
+;더러움의 판정
+;IF ! TALENT:(ARG:0):불결무시
+;	LOCAL:0 = 0
+;	;애액의 더러움
+;	SIF STAIN:PLAYER:2 & 1
+;		LOCAL:0 += 1
+;	;정액의 더러움
+;	SIF STAIN:PLAYER:2 & 4
+;		LOCAL:0 += 3
+;	;애널의 더러움
+;	SIF STAIN:PLAYER:2 & 8
+;		LOCAL:0 += 7
+;	SIF STAIN:PLAYER:2 & 16
+;		LOCAL:0 += 15
+;	SIF TALENT:(ARG:0):악취둔감
+;		LOCAL:0/= 3
+;	SIF TALENT:(ARG:0):악취민감
+;		LOCAL:0 *= 2
+
+	;더러운 영향이 작다
+;	LOCAL:0/= 3
+
+	;서로 더러워져
+;	IF LOCAL:0 > 0
+;		CALL COM_ORDER_ELEMENT(ARG:0, "서로 더러워져", -LOCAL:0)
+;	ENDIF
+;ENDIF
+
+;합의
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	IF TALENT:(ARG:0):아이인질
+		CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -14)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -20)
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;질성교의 실행 판정(Ｖ측) ※쌍두바이브 때는 ARG:1에 1을 설정
+;-------------------------------------------------
+@COM_ORDER_VSEX_V(ARG:0, ARG:1 = 0)
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 3)
+CALL COM_ORDER_ELEMENT(ARG:0, @"Ｖ감 Lv{ABL:(ARG:0):Ｖ감}", ABL:(ARG:0):Ｖ감 * 2)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 3)
+CALL COM_ORDER_ELEMENT(ARG:0, @"성교 Lv{ABL:(ARG:0):성교}", ABL:(ARG:0):성교 * 5)
+
+IF IS_SP_COUNTRY_CHARA(ARG:0)
+	CALL COM_ORDER_ELEMENT(ARG:0, "특수 세력 캐릭터", 100)
+ENDIF
+
+IF IS_FALLEN_TO_SP_COUNTRY(ARG:0) && IS_SP_COUNTRY(CFLAG:MASTER:소속)
+	CALL COM_ORDER_ELEMENT(ARG:0, "특수 세력에 함락", 100)
+ENDIF
+
+IF TALENT:(ARG:0):쵸로인
+	CALL COM_ORDER_ELEMENT(ARG:0, "쵸로인", 20)
+ENDIF
+
+IF PALAM:(ARG:0):윤활 < PALAMLV:5
+	IF TALENT:(ARG:0):아이인질
+		CALL COM_ORDER_ELEMENT(ARG:0, "윤활 부족", -4)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "윤활 부족", -5)
+	ENDIF
+ENDIF
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", LOCAL:0 * 4)
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -2)
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	IF TALENT:(ARG:0):아이인질
+		CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -4)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -5)
+	ENDIF
+ENDIF
+IF ARG:1
+	IF TALENT:(ARG:0):여성혐오
+		IF TALENT:(ARG:0):아이인질
+			CALL COM_ORDER_ELEMENT(ARG:0, "여성혐오", -5)
+		ELSE
+			CALL COM_ORDER_ELEMENT(ARG:0, "여성혐오", -7)
+		ENDIF
+	ENDIF
+ELSE
+	IF TALENT:(ARG:0):남성혐오
+		IF TALENT:(ARG:0):아이인질
+			CALL COM_ORDER_ELEMENT(ARG:0, "남성혐오", -5)
+		ELSE
+			CALL COM_ORDER_ELEMENT(ARG:0, "남성혐오", -7)
+		ENDIF
+	ENDIF
+ENDIF
+IF TALENT:(ARG:0):처녀
+	CALL COM_ORDER_ELEMENT(ARG:0, "처녀", -20)
+ENDIF
+IF TALENT:(ARG:0):선을넘지않음
+	IF TALENT:(ARG:0):처녀
+		CALL COM_ORDER_ELEMENT(ARG:0, "선을넘지않음", -20)
+	ELSE
+		IF TALENT:(ARG:0):아이인질
+			CALL COM_ORDER_ELEMENT(ARG:0, "선을넘지않음", -7)
+		ELSE
+			CALL COM_ORDER_ELEMENT(ARG:0, "선을넘지않음", -10)
+		ENDIF
+	ENDIF
+ENDIF
+
+IF TCVAR:(ARG:0):60
+	CALL COM_ORDER_ELEMENT(ARG:0, "미약", 6)
+ENDIF
+
+;더러움의 판정
+;IF ! TALENT:(ARG:0):불결무시
+;	LOCAL:0 = 0
+;	;애액의 더러움
+;	SIF STAIN:PLAYER:2 & 1
+;		LOCAL:0 += 1
+;	;정액의 더러움
+;	SIF STAIN:PLAYER:2 & 4
+;		LOCAL:0 += 3
+;	;애널의 더러움
+;	SIF STAIN:PLAYER:2 & 8
+;		LOCAL:0 += 7
+;	SIF STAIN:PLAYER:2 & 16
+;		LOCAL:0 += 15
+;	SIF TALENT:(ARG:0):악취둔감
+;		LOCAL:0/= 3
+;	SIF TALENT:(ARG:0):악취민감
+;		LOCAL:0 *= 2
+
+	;더러운 영향이 작다
+;	LOCAL:0/= 3
+
+	;서로 더러워져
+;	IF LOCAL:0 > 0
+;		CALL COM_ORDER_ELEMENT(ARG:0, "서로 더러워져", -LOCAL:0)
+;	ENDIF
+;ENDIF
+
+;합의
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -20)
+ENDIF
+
+;-------------------------------------------------
+;애널섹스의 실행 판정(Ｐ측)
+;-------------------------------------------------
+@COM_ORDER_ASEX_P(ARG:0)
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 4)
+CALL COM_ORDER_ELEMENT(ARG:0, @"Ｃ감 Lv{ABL:(ARG:0):Ｃ감}", ABL:(ARG:0):Ｃ감 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 2)
+CALL COM_ORDER_ELEMENT(ARG:0, @"성교 Lv{ABL:(ARG:0):성교}", ABL:(ARG:0):성교 * 5)
+
+IF IS_SP_COUNTRY_CHARA(ARG:0)
+	CALL COM_ORDER_ELEMENT(ARG:0, "특수 세력 캐릭터", 100)
+ENDIF
+
+IF IS_FALLEN_TO_SP_COUNTRY(ARG:0) && IS_SP_COUNTRY(CFLAG:MASTER:소속)
+	CALL COM_ORDER_ELEMENT(ARG:0, "특수 세력에 함락", 100)
+ENDIF
+
+IF TALENT:(ARG:0):쵸로인
+	CALL COM_ORDER_ELEMENT(ARG:0, "쵸로인", 20)
+ENDIF
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", LOCAL:0 * 4)
+
+IF TALENT:(ARG:0):수줍음
+	IF TALENT:(ARG:0):아이인질
+		CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -1)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -2)
+	ENDIF
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	IF TALENT:(ARG:0):아이인질
+		CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -4)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -5)
+	ENDIF
+ENDIF
+IF TALENT:(ARG:0):동정
+	IF TALENT:(ARG:0):아이인질
+		CALL COM_ORDER_ELEMENT(ARG:0, "동정", -4)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "동정", -5)
+	ENDIF
+ENDIF
+IF TALENT:(ARG:0):선을넘지않음
+	IF TALENT:(ARG:0):동정
+		IF TALENT:(ARG:0):아이인질
+			CALL COM_ORDER_ELEMENT(ARG:0, "선을넘지않음", -14)
+		ELSE
+			CALL COM_ORDER_ELEMENT(ARG:0, "선을넘지않음", -20)
+		ENDIF
+
+	ELSE
+		IF TALENT:(ARG:0):아이인질
+			CALL COM_ORDER_ELEMENT(ARG:0, "선을넘지않음", -7)
+		ELSE
+			CALL COM_ORDER_ELEMENT(ARG:0, "선을넘지않음", -10)
+		ENDIF
+	ENDIF
+ENDIF
+
+IF TCVAR:(ARG:0):60
+	CALL COM_ORDER_ELEMENT(ARG:0, "미약", 6)
+ENDIF
+
+;더러움의 판정
+;IF ! TALENT:(ARG:0):불결무시
+;	LOCAL:0 = 0
+;	;애액의 더러움
+;	SIF STAIN:PLAYER:2 & 1
+;		LOCAL:0 += 1
+;	;정액의 더러움
+;	SIF STAIN:PLAYER:2 & 4
+;		LOCAL:0 += 3
+;	;애널의 더러움
+;	SIF STAIN:PLAYER:2 & 8
+;		LOCAL:0 += 7
+;	SIF STAIN:PLAYER:2 & 16
+;		LOCAL:0 += 15
+;	SIF TALENT:(ARG:0):악취둔감
+;		LOCAL:0/= 3
+;	SIF TALENT:(ARG:0):악취민감
+;		LOCAL:0 *= 2
+
+	;더러운 영향이 작다
+;	LOCAL:0/= 3
+
+	;서로 더러워져
+;	IF LOCAL:0 > 0
+;		CALL COM_ORDER_ELEMENT(ARG:0, "서로 더러워져", -LOCAL:0)
+;	ENDIF
+;ENDIF
+
+;합의
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -20)
+ENDIF
+
+;-------------------------------------------------
+;애널섹스의 실행 판정(Ａ측)
+;-------------------------------------------------
+@COM_ORDER_ASEX_A(ARG:0)
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 3)
+CALL COM_ORDER_ELEMENT(ARG:0, @"Ａ감 Lv{ABL:(ARG:0):Ａ감}", ABL:(ARG:0):Ａ감 * 3)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 3)
+CALL COM_ORDER_ELEMENT(ARG:0, @"성교 Lv{ABL:(ARG:0):성교}", ABL:(ARG:0):성교 * 4)
+
+IF IS_SP_COUNTRY_CHARA(ARG:0)
+	CALL COM_ORDER_ELEMENT(ARG:0, "특수 세력 캐릭터", 100)
+ENDIF
+
+IF IS_FALLEN_TO_SP_COUNTRY(ARG:0) && IS_SP_COUNTRY(CFLAG:MASTER:소속)
+	CALL COM_ORDER_ELEMENT(ARG:0, "특수 세력에 함락", 100)
+ENDIF
+IF TALENT:(ARG:0):쵸로인
+	CALL COM_ORDER_ELEMENT(ARG:0, "쵸로인", 20)
+ENDIF
+
+IF PALAM:(ARG:0):윤활 < PALAMLV:5
+	IF TALENT:(ARG:0):아이인질
+		CALL COM_ORDER_ELEMENT(ARG:0, "윤활 부족", -4)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "윤활 부족", -5)
+	ENDIF
+ENDIF
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", LOCAL:0 * 4)
+
+IF TALENT:(ARG:0):수줍음
+	IF TALENT:(ARG:0):아이인질
+		CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -1)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -2)
+	ENDIF
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	IF TALENT:(ARG:0):아이인질
+		CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -4)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -5)
+	ENDIF
+ENDIF
+IF TALENT:(ARG:0):선을넘지않음
+	IF TALENT:(ARG:0):아이인질
+		CALL COM_ORDER_ELEMENT(ARG:0, "선을넘지않음", -4)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "선을넘지않음", -5)
+	ENDIF
+ENDIF
+
+IF TCVAR:(ARG:0):60
+	CALL COM_ORDER_ELEMENT(ARG:0, "미약", 6)
+ENDIF
+
+;합의
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	IF TALENT:(ARG:0):아이인질
+		CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -14)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -20)
+	ENDIF
+ENDIF

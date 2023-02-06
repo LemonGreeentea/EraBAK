@@ -1,0 +1,77 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_HAGURE_SUCCUBUS_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_HAGURE_SUCCUBUS_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_HAGURE_SUCCUBUS(대상)
+#DIM 대상
+
+PRINTFORML 변두리에서는 자포자기하고 서큐버스와 조우했다
+PRINTFORMW 그녀는 %조사처리(ANAME(대상),"를")% 보면 입맛을 다심을 해 음기를 날렸다
+PRINTFORML 어떻게 하지?
+PRINTFORML 
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "무투"))
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "방위"))
+CALL ASK_MULTI("검을 뽑는다" ,"기력으로 참는다" ,"몸을 바친다")
+IF RESULT == 2
+	PRINTFORMW 지나친 음기에 저항하지 못하고 몸을 바쳤다…
+ELSEIF RESULT == 0
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 검을 뽑아 도미카 샀다
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+	IF LIMIT(ABL:대상:무투, 40, 90) > RAND:100
+		PRINTFORML %조사처리(ANAME(대상),"는")% 훌륭히 훌륭히 서큐버스를 퇴치했다
+		PRINTFORMW 서큐버스의 음기에 참은 일로 성의 기술에 정통한 것 같다
+		CALL PRINT_ADD_EXP(대상, "무투경험치", RAND:8 + 1, 1)
+		CALL FUCK(대상, "성기술")
+		RETURN 1
+	ELSE
+		PRINTFORMW 생각의 외 만만치 않게 져 버렸다…
+	ENDIF
+ELSEIF RESULT == 1
+	PRINTFORMW 음기에 지지 않게 기력을 쥐어짰다
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+	IF LIMIT(ABL:대상:방위, 40, 90) > RAND:100
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 훌륭히 서큐버스의 유혹에 참아냈다
+		PRINTFORMW 서큐버스의 음기에 참은 일로 성의 기술에 정통한 것 같다
+		CALL PRINT_ADD_EXP(대상, "방위경험치", RAND:8 + 1, 1)
+		CALL FUCK(대상, "성기술")
+		RETURN 1
+	ELSE
+		PRINTFORMW 하지만 음마의 유혹은 저항하기 어려웠다…
+	ENDIF
+ENDIF
+PRINTFORML 
+IF IS_MALE(대상) || (HAS_PENIS(대상) && RAND:2 == 0)
+	PRINTFORML 그늘에 데리고 들어가진 %조사처리(ANAME(대상),"는")% 서큐버스에게 역강간 되고 있다
+	PRINTFORML 그녀는 %ANAME(대상)%에 걸쳐 그 풍만한 육체를 격렬하게 흔들면서 교묘하게 하나의 물건을 공격해대어 온다
+	PRINTFORML 생물과 같이 꿈틀거리는 질 구멍은 저항하는 일을 허락하지 않고, 장대 전체와 귀두에 이 이상 없는 쾌락이 덤벼 든다
+	PRINTFORMW 한 번이나 두 번의 사정에서는 그녀는 떼어 놓아 주지 않고, 기력 다할 때까지 그녀를 만끽될 수 있었다
+	CALL FUCK(대상, "성기술, 성교, Ｃ, 사정, Ｖ삽입" + (IS_FEMALE(대상) ? ", Ｂ, Ｖ, 레즈" # "") , "동정상실, 키스상실", 0, "서큐버스의 입술", "", "서큐버스의 질", "패배한 끝의 강간")
+ELSE
+	PRINTFORML 그늘로부터 %조사처리(ANAME(대상),"와")% 서큐버스의 단정치 못한 신음소리가 주워듣는동 넘어 온다
+	PRINTFORML 그녀의 교묘한 손놀림에 의한 애무는 저항하기 어렵고, %조사처리(ANAME(대상),"는")% 곧바로 전신 녹진녹진으로 되었다
+	PRINTFORML 쿠츄♥엣취♥(와)과 음부가 얽히면, 저리는 것 같은 쾌락이 전신을 달려 허덕여져 버린다
+	PRINTFORMW 전신이 녹는 것 같은 농후한 레즈 섹스에 이미 %조사처리(ANAME(대상),"는")% 저항하지 못하고 몸을 바칠 뿐(만큼)이었다
+	CALL FUCK(대상, "성기술, 성교, Ｃ, Ｂ, Ｖ, 레즈", "키스상실", 0, "서큐버스의 입술", "", "", "강간")
+ENDIF
+PRINTFORML 
+PRINTFORMW 서큐버스는 만족한 것 같아 어딘가로 떠나 갔다
+
+RETURN 1

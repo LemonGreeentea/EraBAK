@@ -1,0 +1,69 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_BEAT_BRIGAND_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_BEAT_BRIGAND_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_BEAT_BRIGAND(대상)
+#DIM 대상
+PRINTFORML 이 근처에서 산적이 나타나 곤란해 하고 있는 것 같다
+PRINTFORML 어떻게든 해 주고와 부탁받았다
+PRINTL
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "무투"))
+
+CALL ASK_YN("토벌을 시도한다", "그만둔다")
+
+IF RESULT == 1
+	PRINTFORML 단신 향하는 것은 위험함
+	PRINTFORMW 영지민에게는 미안하지만 거점에 돌아가기로 했다
+	RETURN 1
+ENDIF
+
+PRINTFORML 놓칠 수 없다
+PRINTFORML %조사처리(ANAME(대상),"는")% 산적의 토벌에 향했다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+IF LIMIT(ABL:대상:무투, 30, 80) > RAND:100
+	PRINTFORML 했다!
+	PRINTFORML %조사처리(ANAME(대상),"는")% 훌륭히 산적을 토벌 하는 것을 성공했다
+	PRINTFORMW 영지민에게 감사받아 거점에 돌아왔다
+	CALL PRINT_ADD_EXP(대상, "무투경험치", RAND:15 + 1, 1)
+	RETURN 1
+ENDIF
+
+IF IS_MALE(대상)
+	PRINTFORML 당했다!
+	PRINTFORMW 산적은 상상 이상으로 만만치 않고, 역관광에 있었던 %조사처리(ANAME(대상),"는")% 간신히 도망치고 돌아갔다
+	CALL ADD_COOLTIME(대상, 2)
+	RETURN 1
+ENDIF
+
+PRINTFORML 당했다!
+PRINTFORMW 산적은 상상 이상으로 만만치 않고, %조사처리(ANAME(대상),"는")% 역관광으로 되어 보금자리로 질질 끌어져 갔다
+PRINTFORML 
+PRINTFORML %조사처리(ANAME(대상),"는")% 산적의 노리겟감으로 되고 있다
+PRINTFORML 저항할 때에 맞아 벌이라고 칭해 범해지고 계속해, %조사처리(ANAME(대상),"는")% 완전히 그들에게 온순하게 봉사하고 있다
+PRINTFORML 지금도 또한 한사람의 산적 위에 걸쳐 추잡하게 몸을 구불거리게 되어지면서 스스로 허리를 흔들고 있다
+PRINTFORML 남이 한계를 맞이하면 %조사처리(ANAME(대상),"는")% 약간 공허하게 웃으면서 질을 단단히 조여, 그 정액을 한 방울 남김없이 %STR_BODY("질:처녀 확인:시간 경과:Ｖ삽입:질내사정", 대상)%로 받아 들였다
+PRINTFORMW 그들에게 마음에 들었던 %조사처리(ANAME(대상),"는")% 그 뒤도 %STR_BODY("신체", 대상)%를 사용되어 한껏 씨뿌리기 계속 되었다
+CALL FUCK(대상, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 윤간, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정", GET_SPERM_ID("산적"), @"산적의 \@RAND:2 ? 페니스 # 입술\@", "산적", "", "패배한 끝의 윤간")
+PRINTFORML 
+PRINTFORMW %조사처리(ANAME(대상),"는")% 심하게 범해진 후, 어떻게든 도망갔다
+CALL ADD_COOLTIME(대상, 2)
+
+RETURN 1
+

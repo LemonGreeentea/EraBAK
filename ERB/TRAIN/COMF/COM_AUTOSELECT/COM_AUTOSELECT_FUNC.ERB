@@ -1,0 +1,893 @@
+﻿;-------------------------------------------------
+;# 공격역 특수 캐릭터
+;	위안모브는 동물 이외
+;	특수 세력은 자경단·서큐버스 이외
+;-------------------------------------------------
+@CHECK_SP_SADIST_CHARA(ARG_CHARA_NUM)
+#FUNCTION
+#DIM ARG_CHARA_NUM
+
+SIF TALENT:ARG_CHARA_NUM:위안모브 != 0 && !GROUPMATCH(TALENT:ARG_CHARA_NUM:위안모브, 위안_캐릭터_개, 위안_캐릭터_돼지, 위안_캐릭터_말, 위안_캐릭터_원숭이)
+	RETURNF 1
+SIF CFLAG:ARG_CHARA_NUM:위안참가자
+	RETURNF 1
+SIF TALENT:ARG_CHARA_NUM:특수세력소질 != 0 && !GROUPMATCH(TALENT:ARG_CHARA_NUM:특수세력소질, 특수세력_서큐버스, 특수세력_자경단)
+	RETURNF 1
+
+RETURNF 0
+
+;-------------------------------------------------
+;# 존재 체크 위안손님에게 여자는 있을까
+;-------------------------------------------------
+@BEING_IAN_GUEST_FEMALE
+#FUNCTION
+#DIM L_COUNTER
+
+FOR L_COUNTER, 0, CHARANUM
+	SIF !CFLAG:L_COUNTER:조교참가플래그
+		CONTINUE
+	SIF !IS_AUTOSELECT(L_COUNTER)
+		CONTINUE
+	SIF !TALENT:L_COUNTER:위안모브 && !CFLAG:L_COUNTER:위안참가자
+		CONTINUE
+	SIF !IS_FEMALE(L_COUNTER)
+		CONTINUE
+	RETURNF 1
+NEXT
+
+RETURNF 0
+
+;-------------------------------------------------
+;# 존재 체크 서비스 측에녀는 있을까
+;-------------------------------------------------
+@BEING_IAN_SERVE_FEMALE
+#FUNCTION
+#DIM L_COUNTER
+
+FOR L_COUNTER, 0, CHARANUM
+	SIF !CFLAG:L_COUNTER:조교참가플래그
+		CONTINUE
+	SIF !IS_AUTOSELECT(L_COUNTER)
+		CONTINUE
+	SIF TALENT:L_COUNTER:위안모브 || CFLAG:L_COUNTER:위안참가자
+		CONTINUE
+	SIF !IS_FEMALE(L_COUNTER)
+		CONTINUE
+	RETURNF 1
+NEXT
+
+RETURNF 0
+
+;-------------------------------------------------
+;# 이 캐릭터는 남자의 위안손님인가
+;-------------------------------------------------
+@IS_IAN_GUEST_MALE(ARGCHARA)
+#FUNCTION
+#DIM ARGCHARA
+
+SIF !CFLAG:ARGCHARA:조교참가플래그
+	RETURNF 0
+SIF !IS_AUTOSELECT(ARGCHARA)
+	RETURNF 0
+SIF !TALENT:ARGCHARA:위안모브 && !CFLAG:ARGCHARA:위안참가자
+	RETURNF 0
+SIF !IS_MALE(ARGCHARA)
+	RETURNF 0
+
+RETURNF 1
+
+;-------------------------------------------------
+;# TRAINNAME로부터 TRAIN 번호를 취한다
+;-------------------------------------------------
+@GET_TRAINNUM(ARG_TEXT)
+#FUNCTION
+#DIMS ARG_TEXT
+
+GETNUM TRAINNAME, ARG_TEXT
+
+RETURNF RESULT:0
+
+;-------------------------------------------------
+;# 침실에서 자동 행동할 수 있는 캐릭터인지를 판정
+;	ARG:0 =캐릭터
+;-------------------------------------------------
+@IS_AUTOSELECT(ARG:0)
+#FUNCTION
+
+SIF ARG:0 != MASTER && CFLAG:(ARG:0):조교참가플래그 && !TCVAR:(ARG:0):51 && !TCVAR:(ARG:0):52 && !TCVAR:(ARG:0):53
+	RETURNF 1
+
+RETURNF 0
+
+;-------------------------------------------------
+;# 일상으로 자동 행동할 수 있는 캐릭터인지를 판정
+;-------------------------------------------------
+@IS_AUTOSELECT_N(ARG:0)
+#FUNCTION
+
+SIF ARG:0 != MASTER && CFLAG:(ARG:0):조교참가플래그 && !TCVAR:(ARG:0):51 && !TCVAR:(ARG:0):52 && !TCVAR:(ARG:0):53
+	RETURNF 1
+
+RETURNF 0
+
+;-------------------------------------------------
+;# 카테고리 설정의 중복 체크
+;-------------------------------------------------
+@SET_COM_AUTO_COM_CATEGORY(ARG_TRAIN_NUM, ARG_COM_CATEGORY_NUM)
+#DIM ARG_TRAIN_NUM
+#DIM ARG_COM_CATEGORY_NUM
+
+[IF_DEBUG]
+	IF COM_AUTO_COM_CATEGORY:ARG_TRAIN_NUM
+		DEBUGPRINTFORML 
+		DEBUGPRINTFORM  카테고리 설정 중복 
+		IF ARG_TRAIN_NUM >= ADD_NUM_제삼자에게실행
+			DEBUGPRINTFORM {ARG_TRAIN_NUM}. %@"제삼자에게 %TRAINNAME:(ARG_TRAIN_NUM - ADD_NUM_제삼자에게실행)%", 26, LEFT%
+		ELSEIF ARG_TRAIN_NUM >= ADD_NUM_대상이실행 && ARG_TRAIN_NUM < ADD_NUM_제삼자에게실행
+			DEBUGPRINTFORM {ARG_TRAIN_NUM}. %@"%TRAINNAME:(ARG_TRAIN_NUM - ADD_NUM_대상이실행)%시킨다", 26, LEFT%
+		ELSE
+			DEBUGPRINTFORM {ARG_TRAIN_NUM}. %@"%TRAINNAME:ARG_TRAIN_NUM%한다", 26, LEFT%
+		ENDIF
+		DEBUGPRINTFORML  설정제
+	ENDIF
+[ENDIF]
+COM_AUTO_COM_CATEGORY:ARG_TRAIN_NUM = ARG_COM_CATEGORY_NUM
+
+RETURN 0
+
+;-------------------------------------------------
+;# 주도도Ｕ의 보정치
+;  ARG:0=캐릭터 번호
+;-------------------------------------------------
+@GET_INITIATIVE_U_RANK(ARG:0)
+#FUNCTION
+
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_새드)
+	RETURNF 6
+ELSEIF ABL:(ARG:0):주도도Ｕ >= 500
+	RETURNF 5
+ELSEIF ABL:(ARG:0):주도도Ｕ >= 300
+	RETURNF 3
+ELSEIF ABL:(ARG:0):주도도Ｕ >= 100
+	RETURNF 1
+ELSEIF ABL:(ARG:0):주도도Ｕ > -100
+	RETURNF 0
+ELSEIF ABL:(ARG:0):주도도Ｕ > -300
+	RETURNF -1
+ELSEIF ABL:(ARG:0):주도도Ｕ > -500
+	RETURNF -3
+ELSE
+	RETURNF -5
+ENDIF
+
+;-------------------------------------------------
+;# 주도도Ｎ의 보정치
+;	ARG:0=캐릭터 번호
+;-------------------------------------------------
+@GET_INITIATIVE_N_RANK(ARG:0)
+#FUNCTION
+
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_새드)
+	RETURNF 6
+ELSEIF ABL:(ARG:0):주도도Ｎ >= 500
+	RETURNF 5
+ELSEIF ABL:(ARG:0):주도도Ｎ >= 300
+	RETURNF 3
+ELSEIF ABL:(ARG:0):주도도Ｎ >= 100
+	RETURNF 1
+ELSEIF ABL:(ARG:0):주도도Ｎ > -100
+	RETURNF 0
+ELSEIF ABL:(ARG:0):주도도Ｎ > -300
+	RETURNF -1
+ELSEIF ABL:(ARG:0):주도도Ｎ > -500
+	RETURNF -3
+ELSE
+	RETURNF -5
+ENDIF
+
+;-------------------------------------------------
+;# 도착도의 보정치
+;	ARG:0=캐릭터 번호
+;-------------------------------------------------
+@GET_PERVERSION_RANK(ARG:0)
+#FUNCTION
+
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_새드) || GETBIT(TALENT:(ARG:0):음란계, 소질_음란_마조)
+	RETURNF 7
+ELSEIF ABL:(ARG:0):도착도 >= 800
+	RETURNF 6
+ELSEIF ABL:(ARG:0):도착도 >= 500
+	RETURNF 4
+ELSEIF ABL:(ARG:0):도착도 >= 300
+	RETURNF 2
+ELSEIF ABL:(ARG:0):도착도 >= 100
+	RETURNF 1
+ELSE
+	RETURNF 0
+ENDIF
+
+;-------------------------------------------------
+;# 맡김시의 자동 지속 행동 해제
+;	EQUIP
+;-------------------------------------------------
+@AUTO_EQUIP_RELEASE
+#DIM L_COUNTER
+#DIM L_COUNTER_CHECK
+#DIM CHECK_SEARCH_EQUIP				;계속 행동 상태의 체크
+#DIM MAX_AUTOSELECT_CHARA_NUM		;행동 가능한 캐릭터의 인원수
+#DIM PROBABILITY_NOT_PULL_OUT		;뽑아 내지 않는 확률
+#DIM PROBABILITY_PULL_OUT_MULTI		;뽑아 내는 확률의 곱셈 보정
+#DIM CHECK_AUTO_MEQUIP_PLAYER_NUM	;계속중 캐릭터
+
+;행동 가능한 캐릭터의 수를 조사한다
+MAX_AUTOSELECT_CHARA_NUM = 0
+FOR L_COUNTER, 0, CHARANUM
+	IF IS_AUTOSELECT(L_COUNTER)
+		MAX_AUTOSELECT_CHARA_NUM ++
+	ENDIF
+NEXT
+
+IF MAX_AUTOSELECT_CHARA_NUM >= 3
+	PROBABILITY_PULL_OUT_MULTI = 40
+ELSEIF MAX_AUTOSELECT_CHARA_NUM >= 2
+	PROBABILITY_PULL_OUT_MULTI = 25
+ELSE
+	PROBABILITY_PULL_OUT_MULTI = 15
+ENDIF
+
+;사정했다／되었다면 랜덤에서 EQUIP 해제
+FOR L_COUNTER, 0, CHARANUM
+	IF L_COUNTER != MASTER && CFLAG:L_COUNTER:조교참가플래그
+		;고무 해제
+		IF NOWEX:L_COUNTER:사정 >= 1
+			CHECK_SEARCH_EQUIP = SEARCH_EQUIP(GET_TRAINNUM("콘돔"), -1, L_COUNTER)
+			SIF CHECK_SEARCH_EQUIP >= 0 && RAND:100 <= MEQUIP_TURN:CHECK_SEARCH_EQUIP * 3 && FLAG:조교모드 != 조교_침실
+				CALL RELEASE_EQUIP(CHECK_SEARCH_EQUIP, 1)
+		ENDIF
+		;뽑지 않는 확률의 설정
+		PROBABILITY_NOT_PULL_OUT = 30 + MIN(ABL:L_COUNTER:욕망 * 6 + ABL:L_COUNTER:성교 * 6 + GET_PERVERSION_RANK(L_COUNTER) * 5, 200)
+		;자기 부담의 장대의 경우
+		IF HAS_PENIS(L_COUNTER)
+			;이 캐릭터가 상대에게 질내／장내사정했을 경우
+			IF NOWEX:L_COUNTER:사정 >= 1
+				FOR L_COUNTER_CHECK, GET_TRAINNUM("정상위"), GET_TRAINNUM("Ａ대면입위") + 1
+					CHECK_SEARCH_EQUIP = SEARCH_EQUIP(L_COUNTER_CHECK, L_COUNTER, -1)
+					IF CHECK_SEARCH_EQUIP >= 0 && RAND:100 >= PROBABILITY_NOT_PULL_OUT - MEQUIP_TURN:CHECK_SEARCH_EQUIP * PROBABILITY_PULL_OUT_MULTI
+						WAIT
+						PRINTL 
+						CALL RELEASE_EQUIP(CHECK_SEARCH_EQUIP, 1)
+						BREAK
+					ENDIF
+				NEXT
+			ENDIF
+
+			;이 캐릭터가 상대에게 구강사정 했을 경우
+			IF NOWEX:L_COUNTER:사정 >= 1
+				CHECK_SEARCH_EQUIP = SEARCH_EQUIP(GET_TRAINNUM("이라마치오"), L_COUNTER, -1)
+				IF CHECK_SEARCH_EQUIP >= 0 && RAND:100 >= PROBABILITY_NOT_PULL_OUT / 2 - MEQUIP_TURN:CHECK_SEARCH_EQUIP * 30
+					WAIT
+					PRINTL 
+					CALL RELEASE_EQUIP(CHECK_SEARCH_EQUIP, 1)
+					BREAK
+				ENDIF
+			ENDIF
+
+		;페니스밴드의 경우
+		ELSE
+			;성교 관계
+			FOR L_COUNTER_CHECK, GET_TRAINNUM("정상위"), GET_TRAINNUM("Ａ대면입위") + 1
+				CHECK_SEARCH_EQUIP = SEARCH_EQUIP(L_COUNTER_CHECK, L_COUNTER, -1)
+				IF CHECK_SEARCH_EQUIP >= 0 && MEQUIP_TURN:CHECK_SEARCH_EQUIP >= 4 && RAND:100 >= PROBABILITY_NOT_PULL_OUT - MEQUIP_TURN:CHECK_SEARCH_EQUIP * PROBABILITY_PULL_OUT_MULTI
+					WAIT
+					PRINTL 
+					CALL RELEASE_EQUIP(CHECK_SEARCH_EQUIP, 1)
+					BREAK
+				ENDIF
+			NEXT
+
+			;이라마치오
+			CHECK_SEARCH_EQUIP = SEARCH_EQUIP(GET_TRAINNUM("이라마치오"), L_COUNTER, -1)
+			IF CHECK_SEARCH_EQUIP >= 0 && MEQUIP_TURN:CHECK_SEARCH_EQUIP >= 4 && RAND:100 >= PROBABILITY_NOT_PULL_OUT / 2 - MEQUIP_TURN:CHECK_SEARCH_EQUIP * 30
+				WAIT
+				PRINTL 
+				CALL RELEASE_EQUIP(CHECK_SEARCH_EQUIP, 1)
+				BREAK
+			ENDIF
+		ENDIF
+
+		;상대로부터의 삽입
+		FOR L_COUNTER_CHECK, GET_TRAINNUM("정상위"), GET_TRAINNUM("Ａ대면입위") + 1
+			CHECK_SEARCH_EQUIP = SEARCH_EQUIP(L_COUNTER_CHECK, -1, L_COUNTER)
+			IF CHECK_SEARCH_EQUIP >= 0
+				CHECK_AUTO_MEQUIP_PLAYER_NUM = MEQUIP_PLAYER:CHECK_SEARCH_EQUIP:0
+				;상대에게 장대가 있는 경우
+				IF HAS_PENIS(CHECK_AUTO_MEQUIP_PLAYER_NUM)
+					;상대가 이 캐릭터에게 질내／장내사정했을 경우에 뽑아 내 판정
+					IF NOWEX:CHECK_AUTO_MEQUIP_PLAYER_NUM:사정 >= 1 && RAND:100 >= PROBABILITY_NOT_PULL_OUT - MEQUIP_TURN:CHECK_SEARCH_EQUIP * PROBABILITY_PULL_OUT_MULTI
+						WAIT
+						PRINTL 
+						CALL RELEASE_EQUIP(CHECK_SEARCH_EQUIP, 1)
+						BREAK
+					ENDIF
+				;상대가 페니스밴드을 사용하고 있는 경우
+				ELSE
+					;4턴 이상 경과하고 있으면 항상 뽑아 내 판정
+					IF MEQUIP_TURN:CHECK_SEARCH_EQUIP >= 4 && RAND:100 >= PROBABILITY_NOT_PULL_OUT - MEQUIP_TURN:CHECK_SEARCH_EQUIP * PROBABILITY_PULL_OUT_MULTI
+						WAIT
+						PRINTL 
+						CALL RELEASE_EQUIP(CHECK_SEARCH_EQUIP, 1)
+						BREAK
+					ENDIF
+				ENDIF
+			ENDIF
+		NEXT
+
+		;상대로부터의 이라마
+		CHECK_SEARCH_EQUIP = SEARCH_EQUIP(GET_TRAINNUM("이라마치오"), -1, L_COUNTER)
+		IF CHECK_SEARCH_EQUIP >= 0
+			CHECK_AUTO_MEQUIP_PLAYER_NUM = MEQUIP_PLAYER:CHECK_SEARCH_EQUIP:0
+			;상대에게 장대가 있는 경우
+			IF HAS_PENIS(CHECK_AUTO_MEQUIP_PLAYER_NUM)
+				;상대가 이 캐릭터에게 구강사정 했을 경우에 뽑아 내 판정
+				IF NOWEX:CHECK_AUTO_MEQUIP_PLAYER_NUM:사정 >= 1 && RAND:100 >= PROBABILITY_NOT_PULL_OUT - MEQUIP_TURN:CHECK_SEARCH_EQUIP * 30
+					WAIT
+					PRINTL 
+					CALL RELEASE_EQUIP(CHECK_SEARCH_EQUIP, 1)
+					BREAK
+				ENDIF
+			;상대가 페니스밴드을 사용하고 있는 경우
+			ELSE
+				;4턴 이상 경과하고 있으면 항상 뽑아 내 판정
+				IF MEQUIP_TURN:CHECK_SEARCH_EQUIP >= 4 && RAND:100 >= PROBABILITY_NOT_PULL_OUT - MEQUIP_TURN:CHECK_SEARCH_EQUIP * 30
+					WAIT
+					PRINTL 
+					CALL RELEASE_EQUIP(CHECK_SEARCH_EQUIP, 1)
+					BREAK
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+NEXT
+
+;삽입·밧줄·이라마·고무·촉수 이외는 최저 3 턴 계속해, 일률 25%로 해제
+FOR L_COUNTER, 0, MAX_MEQUIP
+{
+	IF !GROUPMATCH(MEQUIP:L_COUNTER, GET_TRAINNUM("정상위"), GET_TRAINNUM("후배위"), GET_TRAINNUM("대면좌위"), GET_TRAINNUM("배면좌위"), GET_TRAINNUM("기승위"),
+		GET_TRAINNUM("배면기승위"), GET_TRAINNUM("측위"), GET_TRAINNUM("굴곡위"), GET_TRAINNUM("대면입위"), GET_TRAINNUM("배면입위"), GET_TRAINNUM("서서뒷치기"),
+		GET_TRAINNUM("Ａ정상위"), GET_TRAINNUM("Ａ후배위"), GET_TRAINNUM("Ａ대면좌위"), GET_TRAINNUM("Ａ배면좌위"), GET_TRAINNUM("Ａ기승위"),
+		GET_TRAINNUM("Ａ배면기승위"), GET_TRAINNUM("Ａ측위"), GET_TRAINNUM("Ａ굴곡위"), GET_TRAINNUM("Ａ대면입위"), GET_TRAINNUM("Ａ배면입위"),
+		GET_TRAINNUM("Ａ서서뒷치기"), GET_TRAINNUM("밧줄"), GET_TRAINNUM("이라마치오"), GET_TRAINNUM("콘돔"), GET_TRAINNUM("촉수소환"),
+		GET_TRAINNUM("비디오촬영"))
+}
+		;200가 촉수소환, 201～219가 촉수 할당 번호
+		IF MEQUIP:L_COUNTER >= GET_TRAINNUM("촉수삽입") && MEQUIP:L_COUNTER <= 219
+			IF MEQUIP_TURN:L_COUNTER >= 6 && RAND:100 < 20
+				CALL RELEASE_EQUIP(L_COUNTER, 1)
+			ENDIF
+		ELSE
+			IF MEQUIP_TURN:L_COUNTER >= 3 && RAND:100 < 25
+				CALL RELEASE_EQUIP(L_COUNTER, 1)
+			ENDIF
+		ENDIF
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;# 윤활 체크
+;	남녀 모두 도착도나 주도도Ｕ에 따라서는
+;	윤활이 필수가 되도록(듯이) 분기 추가했으므로
+;	쿤닐링구스나 애널핥기 2회 정도로 완화
+;-------------------------------------------------
+@COM_AUTOSELECT_IS_WET_ENOUGH(ARG:0)
+#FUNCTION
+
+RETURNF GET_PALAMLV(PALAM:(ARG:0):윤활) >= 2
+
+;-------------------------------------------------
+;# 타입 보정 1 활발
+;	ARG:0=캐릭터 번호 ARG:1 1=가산 0=감산
+;-------------------------------------------------
+@AUTO_N_TYPE_활발(ARG:0, ARG:1)
+#FUNCTION
+#DIM RETURN_NUM
+
+VARSET RETURN_NUM
+IF ARG:1 == 1
+	RETURN_NUM += (TALENT:(ARG:0):솔직함) * 2
+	RETURN_NUM += (TALENT:(ARG:0):낙관적) * 2
+	RETURN_NUM += (TALENT:(ARG:0):주목받기원함) * 2
+	RETURN_NUM += (TALENT:(ARG:0):해방) * 2
+	RETURN_NUM += (TALENT:(ARG:0):수치심옅음) * 2
+	RETURN_NUM += (TALENT:(ARG:0):거만함) * 2
+	RETURN_NUM += (TALENT:(ARG:0):반항적) * 2
+	RETURN_NUM += (TALENT:(ARG:0):츤데레) * 2
+	RETURN_NUM += (TALENT:(ARG:0):소악마) * 2
+	RETURN_NUM += (TALENT:(ARG:0):유치) * 2
+ELSE
+	RETURN_NUM = 20
+	RETURN_NUM -= (TALENT:(ARG:0):솔직함) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):낙관적) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):주목받기원함) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):해방) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):수치심옅음) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):거만함) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):반항적) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):츤데레) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):소악마) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):유치) * 2
+ENDIF
+
+RETURNF RETURN_NUM
+
+;-------------------------------------------------
+;# 타입 보정 2얌전함
+;-------------------------------------------------
+@AUTO_N_TYPE_얌전함(ARG:0, ARG:1)
+#FUNCTION
+#DIM RETURN_NUM
+
+VARSET RETURN_NUM
+IF ARG:1 == 1
+	RETURN_NUM += (TALENT:(ARG:0):겁쟁이) * 2
+	RETURN_NUM += (TALENT:(ARG:0):얌전함) * 2
+	RETURN_NUM += (TALENT:(ARG:0):보수적) * 2
+	RETURN_NUM += (TALENT:(ARG:0):비관적) * 2
+	RETURN_NUM += (TALENT:(ARG:0):프라이드낮음) * 2
+	RETURN_NUM += (TALENT:(ARG:0):습득느림) * 2
+	RETURN_NUM += (TALENT:(ARG:0):헌신적) * 2
+	RETURN_NUM += (TALENT:(ARG:0):수줍음) * 2
+	RETURN_NUM += (TALENT:(ARG:0):Ｍ기질) * 2
+	RETURN_NUM += GETBIT(TALENT:(ARG:0):음란계, 소질_음란_마조) * 2
+ELSE
+	RETURN_NUM = 20
+	RETURN_NUM -= (TALENT:(ARG:0):겁쟁이) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):얌전함) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):보수적) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):비관적) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):프라이드낮음) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):습득느림) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):헌신적) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):수줍음) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):Ｍ기질) * 2
+	RETURN_NUM -= GETBIT(TALENT:(ARG:0):음란계, 소질_음란_마조) * 2
+ENDIF
+
+RETURNF RETURN_NUM
+
+;-------------------------------------------------
+;# 타입 보정 3 쿨
+;-------------------------------------------------
+@AUTO_N_TYPE_쿨(ARG:0, ARG:1)
+#FUNCTION
+#DIM RETURN_NUM
+
+VARSET RETURN_NUM
+IF ARG:1 == 1
+	RETURN_NUM += (TALENT:(ARG:0):자제심) * 2
+	RETURN_NUM += (TALENT:(ARG:0):무관심) * 2
+	RETURN_NUM += (TALENT:(ARG:0):감정결핍) * 2
+	RETURN_NUM += (TALENT:(ARG:0):호기심) * 2
+	RETURN_NUM += (TALENT:(ARG:0):억압) * 2
+	RETURN_NUM += (TALENT:(ARG:0):고고함) * 2
+	RETURN_NUM += (TALENT:(ARG:0):젖기어려움) * 2
+	RETURN_NUM += FIND_PASSIVE_SKILL(ARG:0, "노력가") * 2
+ELSE
+	RETURN_NUM = 16
+	RETURN_NUM -= (TALENT:(ARG:0):자제심) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):무관심) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):감정결핍) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):호기심) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):억압) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):고고함) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):젖기어려움) * 2
+	RETURN_NUM -= FIND_PASSIVE_SKILL(ARG:0, "노력가") * 2
+ENDIF
+
+RETURNF RETURN_NUM
+
+;-------------------------------------------------
+;# 타입 보정 4늠름했다
+;-------------------------------------------------
+@AUTO_N_TYPE_늠름했다(ARG:0, ARG:1)
+#FUNCTION
+#DIM RETURN_NUM
+
+VARSET RETURN_NUM
+IF ARG:1 == 1
+	RETURN_NUM += (TALENT:(ARG:0):꿋꿋함) * 2
+	RETURN_NUM += (TALENT:(ARG:0):프라이드높음) * 2
+	RETURN_NUM += (TALENT:(ARG:0):선을넘지않음) * 2
+	RETURN_NUM += (TALENT:(ARG:0):정조관념) * 2
+	RETURN_NUM += (TALENT:(ARG:0):습득빠름) * 2
+	RETURN_NUM += (TALENT:(ARG:0):아픔에강함) * 2
+	RETURN_NUM += (TALENT:(ARG:0):악취민감) * 2
+	RETURN_NUM += (TALENT:(ARG:0):쾌감을부정) * 2
+	RETURN_NUM += (TALENT:(ARG:0):Ｓ기질) * 2
+	RETURN_NUM += GETBIT(TALENT:(ARG:0):음란계, 소질_음란_새드) * 2
+ELSE
+	RETURN_NUM = 20
+	RETURN_NUM -= (TALENT:(ARG:0):꿋꿋함) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):프라이드높음) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):선을넘지않음) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):정조관념) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):습득빠름) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):아픔에강함) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):악취민감) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):쾌감을부정) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):Ｓ기질) * 2
+	RETURN_NUM -= GETBIT(TALENT:(ARG:0):음란계, 소질_음란_새드) * 2
+ENDIF
+
+RETURNF RETURN_NUM
+
+;-------------------------------------------------
+;# 타입 보정 5 건달
+;-------------------------------------------------
+@AUTO_N_TYPE_건달(ARG:0, ARG:1)
+#FUNCTION
+#DIM RETURN_NUM
+
+VARSET RETURN_NUM
+IF ARG:1 == 1
+	RETURN_NUM += (TALENT:(ARG:0):농땡이마왕) * 2
+	RETURN_NUM += (TALENT:(ARG:0):아픔에약함) * 2
+	RETURN_NUM += (TALENT:(ARG:0):젖기쉬움) * 2
+	RETURN_NUM += (TALENT:(ARG:0):혀놀림) * 2
+	RETURN_NUM += (TALENT:(ARG:0):자위하기쉬움) * 2
+	RETURN_NUM += (TALENT:(ARG:0):정조관념없음) * 2
+	RETURN_NUM += (TALENT:(ARG:0):악취둔감) * 2
+	RETURN_NUM += (TALENT:(ARG:0):불결무시) * 2
+	RETURN_NUM += (TALENT:(ARG:0):쾌감에솔직) * 2
+	RETURN_NUM += (TALENT:(ARG:0):중독하기쉽다) * 2
+	RETURN_NUM += (TALENT:(ARG:0):도착적) * 2
+	RETURN_NUM += GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음란) * 2
+	RETURN_NUM += GETBIT(TALENT:(ARG:0):음란계, 소질_음란_키스마) * 2
+	RETURN_NUM += GETBIT(TALENT:(ARG:0):음란계, 소질_음란_사정광) * 2
+ELSE
+	RETURN_NUM = 28
+	RETURN_NUM -= (TALENT:(ARG:0):농땡이마왕) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):아픔에약함) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):젖기쉬움) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):혀놀림) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):자위하기쉬움) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):정조관념없음) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):악취둔감) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):불결무시) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):쾌감에솔직) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):중독하기쉽다) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):도착적) * 2
+	RETURN_NUM -= GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음란) * 2
+	RETURN_NUM -= GETBIT(TALENT:(ARG:0):음란계, 소질_음란_키스마) * 2
+	RETURN_NUM -= GETBIT(TALENT:(ARG:0):음란계, 소질_음란_사정광) * 2
+ENDIF
+
+RETURNF RETURN_NUM
+
+;-------------------------------------------------
+;# 타입 보정 6 매료
+;-------------------------------------------------
+@AUTO_N_TYPE_매료(ARG:0, ARG:1)
+#FUNCTION
+#DIM RETURN_NUM
+
+VARSET RETURN_NUM
+IF ARG:1 == 1
+	RETURN_NUM += (TALENT:(ARG:0):매혹) * 2
+	RETURN_NUM += (TALENT:(ARG:0):수수께끼의매력) * 2
+	RETURN_NUM += (TALENT:(ARG:0):인기) * 2
+	RETURN_NUM += (TALENT:(ARG:0):하늘의사자) * 2
+ELSE
+	RETURN_NUM = 8
+	RETURN_NUM -= (TALENT:(ARG:0):매혹) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):수수께끼의매력) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):인기) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):하늘의사자) * 2
+ENDIF
+
+RETURNF RETURN_NUM
+
+;-------------------------------------------------
+;# 타입 보정 7 함락이나 기성 사실
+;-------------------------------------------------
+@AUTO_N_TYPE_함락(ARG:0, ARG:1)
+#FUNCTION
+#DIM RETURN_NUM
+
+VARSET RETURN_NUM
+IF ARG:1 == 1
+	RETURN_NUM += (TALENT:(ARG:0):연모) * 2
+	RETURN_NUM += (TALENT:(ARG:0):친구) * 2
+	RETURN_NUM += (TALENT:(ARG:0):친애) * 5
+	RETURN_NUM += (TALENT:(ARG:0):복종) * 2
+	RETURN_NUM += (TALENT:(ARG:0):예속) * 5
+	RETURN_NUM += (TALENT:(ARG:0):연인) * 2
+	RETURN_NUM += (TALENT:(ARG:0):낙인) * 2
+	RETURN_NUM += (TALENT:(ARG:0):합의) * 2
+	RETURN_NUM += (TALENT:(ARG:0):정실) * 5
+ELSE
+	RETURN_NUM = 27
+	RETURN_NUM -= (TALENT:(ARG:0):연모) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):친구) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):친애) * 5
+	RETURN_NUM -= (TALENT:(ARG:0):복종) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):예속) * 5
+	RETURN_NUM -= (TALENT:(ARG:0):연인) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):낙인) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):합의) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):정실) * 5
+	RETURN_NUM -= (TALENT:(ARG:0):첩) * 5
+ENDIF
+
+RETURNF RETURN_NUM
+
+;-------------------------------------------------
+;# 타입 보정 8 상태 이상
+;-------------------------------------------------
+@AUTO_N_TYPE_상태이상(ARG:0, ARG:1)
+#FUNCTION
+#DIM RETURN_NUM
+#DIM L_COUNTER
+
+VARSET RETURN_NUM
+IF ARG:1 == 1
+	RETURN_NUM += (TALENT:(ARG:0):붕괴) * 2
+	RETURN_NUM += (TALENT:(ARG:0):공허) * 2
+	RETURN_NUM += GETBIT(TALENT:(ARG:0):음란계, 소질_음란_암캐) * 2
+	RETURN_NUM += GETBIT(TALENT:(ARG:0):음란계, 소질_음란_정액변소) * 2
+	RETURN_NUM += (TALENT:(ARG:0):임신) * 2
+	FOR L_COUNTER, 0, MAX_SP_COUNTRY
+		RETURN_NUM += GETBIT(TALENT:(ARG:0):특수세력함락계, L_COUNTER) * 2
+	NEXT
+	RETURN_NUM += GETBIT(TALENT:(ARG:0):데일리계, 소질_데일리_약팔이의성노예) * 2
+	RETURN_NUM += GETBIT(TALENT:(ARG:0):데일리계, 소질_데일리_귀족의포로) * 2
+ELSE
+	RETURN_NUM = 32
+	RETURN_NUM -= (TALENT:(ARG:0):붕괴) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):공허) * 2
+	RETURN_NUM -= GETBIT(TALENT:(ARG:0):음란계, 소질_음란_암캐) * 2
+	RETURN_NUM -= GETBIT(TALENT:(ARG:0):음란계, 소질_음란_정액변소) * 2
+	RETURN_NUM -= (TALENT:(ARG:0):임신) * 2
+	RETURN_NUM += GETBIT(TALENT:(ARG:0):특수세력함락계, 특수세력_도둑) * 2
+	RETURN_NUM += GETBIT(TALENT:(ARG:0):특수세력함락계, 특수세력_홉고블린) * 2
+	RETURN_NUM += GETBIT(TALENT:(ARG:0):특수세력함락계, 특수세력_외래인) * 2
+	RETURN_NUM -= GETBIT(TALENT:(ARG:0):데일리계, 소질_데일리_약팔이의성노예) * 2
+	RETURN_NUM -= GETBIT(TALENT:(ARG:0):데일리계, 소질_데일리_귀족의포로) * 2
+ENDIF
+
+RETURNF RETURN_NUM
+
+;-------------------------------------------------
+;# 네야 오토 카테고리 표시
+;	디버그용
+;	콘솔에는 토해내고 있지만 실제의 표시에는 사용하고 있지 않다
+;-------------------------------------------------
+@COM_AUTO_COM_CATEGORY_NAME(ARG:0)
+#FUNCTIONS
+#DIMS RETURN_TEXT
+
+RETURN_TEXT '= ""
+SELECTCASE ARG:0
+	CASE COM_AUTO_CATEGORY_NUM_애무한다
+		RETURN_TEXT '= "애무한다"
+	CASE COM_AUTO_CATEGORY_NUM_성교한다
+		RETURN_TEXT '= "성교한다"
+	CASE COM_AUTO_CATEGORY_NUM_피임한다
+		RETURN_TEXT '= "피임한다"
+	CASE COM_AUTO_CATEGORY_NUM_윤활추가한다
+		RETURN_TEXT '= "윤활 추가한다"
+	CASE COM_AUTO_CATEGORY_NUM_도구사용한다
+		RETURN_TEXT '= "도구 사용한다"
+	CASE COM_AUTO_CATEGORY_NUM_가학한다
+		RETURN_TEXT '= "가학 한다"
+	CASE COM_AUTO_CATEGORY_NUM_심하게가학한다
+		RETURN_TEXT '= "심하게 가학 한다"
+	CASE COM_AUTO_CATEGORY_NUM_노출한다
+		RETURN_TEXT '= "노출한다"
+	CASE COM_AUTO_CATEGORY_NUM_소배설한다
+		RETURN_TEXT '= "소배설한다"
+	CASE COM_AUTO_CATEGORY_NUM_대배설한다
+		RETURN_TEXT '= "대배설한다"
+	CASE COM_AUTO_CATEGORY_NUM_촉수를취급한다
+		RETURN_TEXT '= "촉수를 취급한다"
+	CASE COM_AUTO_CATEGORY_NUM_애무시킨다
+		RETURN_TEXT '= "애무시킨다"
+	CASE COM_AUTO_CATEGORY_NUM_성교시킨다
+		RETURN_TEXT '= "성교시킨다"
+	CASE COM_AUTO_CATEGORY_NUM_피임시킨다
+		RETURN_TEXT '= "피임시킨다"
+	CASE COM_AUTO_CATEGORY_NUM_윤활추가시킨다
+		RETURN_TEXT '= "윤활 추가시킨다"
+	CASE COM_AUTO_CATEGORY_NUM_도구사용하게한다
+		RETURN_TEXT '= "도구 사용하게 한다"
+	CASE COM_AUTO_CATEGORY_NUM_피학한다
+		RETURN_TEXT '= "피학 한다"
+	CASE COM_AUTO_CATEGORY_NUM_심하고피학한다
+		RETURN_TEXT '= "심하고 피학 한다"
+	CASE COM_AUTO_CATEGORY_NUM_노출시킨다
+		RETURN_TEXT '= "노출시킨다"
+	CASE COM_AUTO_CATEGORY_NUM_소배설시킨다
+		RETURN_TEXT '= "소배설시킨다"
+	CASE COM_AUTO_CATEGORY_NUM_대배설시킨다
+		RETURN_TEXT '= "대배설시킨다"
+	CASE COM_AUTO_CATEGORY_NUM_촉수를취급하게한다
+		RETURN_TEXT '= "촉수를 취급하게 한다"
+	CASE COM_AUTO_CATEGORY_NUM_설득
+		RETURN_TEXT '= "설득"
+	CASEELSE
+		RETURN_TEXT '= "불명"
+ENDSELECT
+
+RETURNF RETURN_TEXT
+
+;-------------------------------------------------
+;# 일상 오토 카테고리 표시
+;	디버그용
+;-------------------------------------------------
+@COM_AUTO_N_COM_CATEGORY_NAME(ARG:0)
+#FUNCTIONS
+#DIMS RETURN_TEXT
+
+RETURN_TEXT '= ""
+SELECTCASE ARG:0 
+	CASE COM_AUTO_CATEGORY_LIKE_0
+		RETURN_TEXT '= "호감도   0"
+	CASE COM_AUTO_CATEGORY_LIKE_300
+		RETURN_TEXT '= "호감도 300"
+	CASE COM_AUTO_CATEGORY_LIKE_500
+		RETURN_TEXT '= "호감도 500"
+	CASE COM_AUTO_CATEGORY_LIKE_800
+		RETURN_TEXT '= "호감도 800"
+	CASE COM_AUTO_CATEGORY_LIKE_1500
+		RETURN_TEXT '= "호감도 1500"
+	CASEELSE
+		RETURN_TEXT '= "불명"
+ENDSELECT
+
+RETURNF RETURN_TEXT
+
+;-------------------------------------------------
+;# 맡김시의 행동 필터 항목
+;-------------------------------------------------
+@COM_AUTO_FILTER_NAME(ARG:0)
+#FUNCTIONS
+#DIMS RETURN_TEXT
+
+RETURN_TEXT '= ""
+SELECTCASE ARG:0 
+	CASE COM_AUTO_FILTER_남성의Ａ를노리는행위를허가
+		RETURN_TEXT '= "남성의Ａ를 노리는 행위를 허가한다"
+	CASE COM_AUTO_FILTER_과격한폭력을금지
+		RETURN_TEXT '= "과격한 폭력을 금지한다"
+	CASE COM_AUTO_FILTER_ＳＭ를금지
+		RETURN_TEXT '= "ＳＭ를 금지한다"
+	CASE COM_AUTO_FILTER_대스캇을금지
+		RETURN_TEXT '= "대스캇을 금지한다"
+	CASE COM_AUTO_FILTER_소스캇을금지
+		RETURN_TEXT '= "소스캇을 금지한다"
+	CASEELSE
+		RETURN_TEXT '= "불명"
+ENDSELECT
+
+RETURNF RETURN_TEXT
+
+;-------------------
+;# 중량감 다하고 란택
+;	목적  :확률을 바꾸면서 후보를 취해 랜덤에 선택하고 싶을 때에 사용한다
+;			있으면 편한 것으로 만들고 있었던 발리로부터 가져왔습니다, 다른 것이라도 사용할 것 같으면 이동해 주세요
+;	사용  :리셋트		→CALL COM_AUTO_RANDOMIZED_WEIGHTED_START
+;			후보의 담아	→CALL COM_AUTO_RANDOMIZED_WEIGHTED_VALUE(숫자 후보, 중량감)
+;			결과를 취한다		→결과 = COM_AUTO_RANDOMIZED_WEIGHTED_RESULT()
+;	변수  :이하의 변수는 COM_AUTOSELECT.ERH로 선언하고 있다
+;			COM_AUTO_RANDOMIZED_COUNTER		카운터. 요소를 대입할 때 추가해, 다음에 배열의 요소수최대치로서 사용한다
+;			COM_AUTO_RANDOMIZED_NUM			최종적으로 갖고 싶은 번호. 배열로부터 하나 선택할 때 요소 번호 정수라든지를 넣어 간다
+;			COM_AUTO_RANDOMIZED_WEIGHTED	중량감. 이것이 큰 만큼 나오기 쉬워진다. 수치의 폭은 그때마다 자유롭게 결정한다
+;-------------------
+;-------------------
+; 란택 개시시 리셋트
+;	사용  :CALL COM_AUTO_RANDOMIZED_WEIGHTED_START
+;	비고  :이 함수 자체는 사용하는 변수를 리셋트 할 뿐
+;-------------------
+@COM_AUTO_RANDOMIZED_WEIGHTED_START
+VARSET COM_AUTO_RANDOMIZED_COUNTER
+VARSET COM_AUTO_RANDOMIZED_NUM
+VARSET COM_AUTO_RANDOMIZED_WEIGHTED
+
+RETURN 0
+
+;-------------------
+; 란택 후보의 중량감 설정
+;	사용  :CALL COM_AUTO_RANDOMIZED_WEIGHTED_VALUE(숫자 후보, 중량감)
+;	인수  :LOCAL_RESULT	COM_AUTO_RANDOMIZED_NUM에 대입하는 결과적으로 갖고 싶은 값
+;			LOCAL_NUM		COM_AUTO_RANDOMIZED_WEIGHTED에 대입하는 중량감치
+;-------------------
+@COM_AUTO_RANDOMIZED_WEIGHTED_VALUE(LOCAL_RESULT, LOCAL_NUM)
+#DIM LOCAL_RESULT
+#DIM LOCAL_NUM
+
+COM_AUTO_RANDOMIZED_COUNTER ++
+COM_AUTO_RANDOMIZED_NUM:COM_AUTO_RANDOMIZED_COUNTER = LOCAL_RESULT
+COM_AUTO_RANDOMIZED_WEIGHTED:COM_AUTO_RANDOMIZED_COUNTER = LOCAL_NUM
+
+RETURN 0
+
+;-------------------
+; 란택 결과 취득
+;	사용  :결과 변수 = COM_AUTO_RANDOMIZED_WEIGHTED_RESULT()
+;	비고  :이만큼 식 안의 함수
+;-------------------
+@COM_AUTO_RANDOMIZED_WEIGHTED_RESULT
+#FUNCTION
+#DIM LOCAL_COUNTER
+#DIM COM_AUTO_RANDOMIZED_WEIGHTED_SUMARRAY
+#DIM COM_AUTO_RANDOMIZED_WEIGHTED_RAND_NUM
+#DIM COM_AUTO_RANDOMIZED_WEIGHTED_DETERMINED_NUM
+
+COM_AUTO_RANDOMIZED_WEIGHTED_SUMARRAY = SUMARRAY(COM_AUTO_RANDOMIZED_WEIGHTED, 1, COM_AUTO_RANDOMIZED_COUNTER + 1)
+
+IF !COM_AUTO_RANDOMIZED_WEIGHTED_SUMARRAY
+	DEBUGPRINTFORML     COM_AUTO_RANDOMIZED_WEIGHTED_SUMARRAY가 없습니다.
+	RETURNF -1
+ENDIF
+
+IF COM_AUTO_RANDOMIZED_WEIGHTED_SUMARRAY <= 1
+	COM_AUTO_RANDOMIZED_WEIGHTED_DETERMINED_NUM = COM_AUTO_RANDOMIZED_NUM:LOCAL_COUNTER
+ELSE
+	COM_AUTO_RANDOMIZED_WEIGHTED_RAND_NUM = RAND(1, COM_AUTO_RANDOMIZED_WEIGHTED_SUMARRAY + 1)
+	COM_AUTO_RANDOMIZED_WEIGHTED_SUMARRAY = 0
+	FOR LOCAL_COUNTER, 1, COM_AUTO_RANDOMIZED_COUNTER + 1
+		IF COM_AUTO_RANDOMIZED_WEIGHTED_RAND_NUM >= COM_AUTO_RANDOMIZED_WEIGHTED_SUMARRAY && COM_AUTO_RANDOMIZED_WEIGHTED_RAND_NUM <= COM_AUTO_RANDOMIZED_WEIGHTED_SUMARRAY + COM_AUTO_RANDOMIZED_WEIGHTED:LOCAL_COUNTER
+			COM_AUTO_RANDOMIZED_WEIGHTED_DETERMINED_NUM = COM_AUTO_RANDOMIZED_NUM:LOCAL_COUNTER
+			BREAK
+		ENDIF
+		COM_AUTO_RANDOMIZED_WEIGHTED_SUMARRAY += COM_AUTO_RANDOMIZED_WEIGHTED:LOCAL_COUNTER
+	NEXT
+ENDIF
+
+RETURNF COM_AUTO_RANDOMIZED_WEIGHTED_DETERMINED_NUM
+
+;-------------------
+;# 조교 모드의 문자열 표시
+;	디버그용
+;	어디엔가 있을 것이지만 발견되지 않았다
+;	간과하고 있으면 미안합니다
+;	0 조교_만나는 1 조교_침실 2 조교_포로 조교 3 조교_육아
+;	4 조교_역조교특수 5 조교_역조교통상 6 조교_포로 회화 7 조교_위안
+;-------------------
+@COM_AUTO_MODE_NAME
+#FUNCTIONS
+#DIMS RETURN_TEXT
+
+SELECTCASE FLAG:조교모드
+CASE 조교_만난다
+	RETURN_TEXT '= "만나러간다"
+CASE 조교_침실
+	RETURN_TEXT '= "침실호출 "
+CASE 조교_포로조교
+	RETURN_TEXT '= "포로 조교"
+CASE 조교_육아
+	RETURN_TEXT '= "육아"
+CASE 조교_역조교특수
+	RETURN_TEXT '= "역조교특수"
+CASE 조교_역조교통상
+	RETURN_TEXT '= "역조교통상"
+CASE 조교_포로회화
+	RETURN_TEXT '= "포로 회화"
+CASE 조교_위안
+	RETURN_TEXT '= "위안"
+	SELECTCASE FLAG:위안모드
+	CASE 1
+		RETURN_TEXT '= RETURN_TEXT + " 백성위안"
+	CASE 2
+		RETURN_TEXT '= RETURN_TEXT + " 위안할당 "
+	CASE 3
+		RETURN_TEXT '= RETURN_TEXT + " 본보기"
+	CASEELSE
+		RETURN_TEXT '= RETURN_TEXT + " 불명"
+	ENDSELECT
+CASEELSE
+	RETURN_TEXT '= RETURN_TEXT + "불명"
+ENDSELECT
+
+RETURNF RETURN_TEXT
+
+

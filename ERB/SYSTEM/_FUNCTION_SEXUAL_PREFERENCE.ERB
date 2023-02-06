@@ -1,0 +1,24 @@
+﻿;--------------------------------
+;성적 기호의 변화를 실시한다
+;--------------------------------
+@CHECK_SEXUAL_PREFERENCE(대상)
+#DIM 대상
+#DIM 기호수
+VARSET 기호수
+
+FOR LOCAL, 0, VARSIZE("SEXUAL_PREFERENCE_EXP")
+	SIF GETBIT(SEXUAL_PREFERENCE:대상:0, LOCAL)
+		기호수 ++
+NEXT
+
+FOR LOCAL, 0, VARSIZE("SEXUAL_PREFERENCE_EXP")
+	;기호 획득에 필요한 최저 경험치는 100. 다만 기호를 둘획득할 때 마다 50늘어 간다
+	IF !GETBIT(SEXUAL_PREFERENCE:대상:0, LOCAL) && SEXUAL_PREFERENCE_EXP:대상:LOCAL > 100 + 기호수 / 2 * 50
+		PRINTFORML %ANAME(대상)%의 모습이 이상하다……
+		CALL COLOR_PRINTW(@"여러가지 성 경험을 거쳐, %조사처리(ANAME(대상),"는")%", GETDEFCOLOR(), @"<%SEXUAL_PREFERENCE_STR:LOCAL%>", 칼라_핑크, "라고 느끼게 된 것 같다……", GETDEFCOLOR())
+		SETBIT SEXUAL_PREFERENCE:대상:0, LOCAL
+		;기호수 1->2같은 변동을 했을 때를 위해서(때문에) 기호수를 늘린다
+		;한 번에 복수개 취득 가능한 상태가 되는 것은 우선 없다고 생각되지만, 사양으로서는 이렇게 하는 것이 올바르기 때문에
+		기호수 ++
+	ENDIF
+NEXT

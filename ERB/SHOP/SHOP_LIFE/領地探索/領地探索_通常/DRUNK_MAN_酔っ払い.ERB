@@ -1,0 +1,83 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_DRUNK_MAN_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_DRUNK_MAN_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_DRUNK_MAN(대상)
+#DIM 대상
+
+PRINTFORMW 떠들썩한 환락가를 걷고 있으면, 술주정꾼이 얽힐 수 있었다
+
+IF IS_MALE(대상) || (HAS_PENIS(대상) && RAND:2)
+	PRINTFORML 여자는 몹시 몹시 취하고 있는 것 같아, 기모노의 틈새로부터 가슴의 골짜기가 보일 것 같게 되어 있다
+	PRINTFORML 하룻밤 상대 해 주지 않을래?   라고 말해 왔지만……
+	PRINTL
+CALL ASK_MULTI("상대 한다", "함께 마신다", "거절한다")
+	SELECTCASE RESULT
+		CASE 0
+			PRINTFORML 이런 기회를 놓치는 손은 없다
+			PRINTFORML 휘청거리는 그녀를 껴안아 숙소로 데리고 들어갔다
+			PRINTFORML 
+			PRINTFORML 방 안에서, 팡팡 리드미컬하게 고기의 쳐박는 소리가 울린다
+			PRINTFORML 알코올이 돈 그녀의 신체는 뜨겁고, 질척질척 불은 비밀스런 장소에는 %ANAME(대상)%의 페니스가 격렬하게 출입하고 있다
+			PRINTFORML 몇 번째인가의 사정의 예감에 한층 안쪽 깊게 찔러 넣었던 %조사처리(ANAME(대상),"는")%, 그대로 움찔움찔 허리를 움직여 사정했다
+			PRINTFORML 여자는 술로 인사불성이 되면서도, 제대로 %ANAME(대상)%에 봉사해 온다
+			PRINTFORML %조사처리(ANAME(대상),"는")% 그 뒤도, 몇 번이나 그녀를 귀여워했다……
+			CALL FUCK(대상, "성기술, 성교, Ｃ, 사정, Ｖ삽입" + (IS_FEMALE(대상) ? ", Ｂ, Ｖ, 레즈" # ""), "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "화간")
+		CASE 1
+			PRINTFORML 술주정꾼을 안는 것은 양심이 비난한다
+			PRINTFORML 하지만, 적어도 하룻밤 즐겁게 밤새워 술마시기로 했다
+			PRINTFORML 
+			PRINTFORML ……과음한 것 같다
+			PRINTFORML 이튿날 아침, 심한 두통이 났다
+			CALL PRINT_ADD_EXP(대상, "주량경험치", RAND(50, 100), 1)
+			CALL ADD_COOLTIME(대상, 1)
+		CASE 2
+			PRINTFORML 그러한 기분은 아니다
+			PRINTFORML 거절했다
+	ENDSELECT
+ELSE
+	PRINTFORML 남은 %ANAME(대상)%에 관련되면서, 추잡한 시선으로 빤히 바라봐 온다
+	PRINTFORML 그리고 얼굴을 접근하면 술 냄새나는 숨을 내뱉으면서 「5000으로 어때?」라고 (들)물어 왔다
+	PRINTFORML 무슨 일인가는 다 알고 있는, 신체를 판로라고 말할 것이다
+	PRINTL
+CALL ASK_MULTI("수긍한다", "때린다", "거절한다")
+	SELECTCASE RESULT
+		CASE 0
+			PRINTFORML 꽤 경기가 좋은 남자답다
+			PRINTFORML %조사처리(ANAME(대상),"는")% 조금 생각하고 나서 윙크 해 승낙을 전했다
+			PRINTFORMW 추잡한 미소를 띄우는 남자에게 안기면서, 가까이의 여인숙으로 들어갔다
+			PRINTFORML 
+			PRINTFORML 방에 들어가면 남자는 조속히 %ANAME(대상)%의 옷을 난폭하게 벗게 해 왔다
+			PRINTFORML %ANAME(대상)%도 저항하지 않고, 오히려 애무를 즐기는 것 같은 소리를 내, %STR_BODY("신체", 대상)%를 구불거리게 할 수 있는 그를 부른다
+			PRINTFORML 알몸에 벗겨지면 혀를 얽히게 되어지면서 침대에 밀어 쓰러트려져 격분한 악마가 삽입된다
+			PRINTFORML %STR_BODY("질:감도:욕정", 대상)%는 순조롭게 페니스를 받아들여, %조사처리(ANAME(대상),"는")% 흠칫 경련했다
+			PRINTFORML 남의 허리 사용은 상상 이상으로 교묘해, %조사처리(ANAME(대상),"는")% 질벽을 후벼파질 때에 몸을 진동시키면서 야무지지 못하게 좋아해 미친다
+			PRINTFORMW 완전히 열중한 %조사처리(ANAME(대상),"는")% 응석부리도록(듯이) 남자에게 달라붙어, 밤새 자식을 졸랐다
+			CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교, 매춘", "처녀상실, 질내사정, 키스상실, 장내사정, 구강사정", GET_SPERM_ID("술주정꾼"), @"술주정꾼의 \@RAND:2 ? 페니스 # 입술\@", "술주정꾼", "", "매춘")
+			PRINTFORML 
+			PRINTFORMW 이튿날 아침, 연락처를 교환하고 나서 긴 키스를 주고 받아 남자와 헤어졌다
+			MONEY += 5000
+			CALL ICPRINT("금<5000>을 손에 넣었다", "L", 칼라_주의)
+		CASE 1
+			PRINTFORML 무례한 녀석!
+			PRINTFORML 남을 마음껏 때려, 빨리 떠났다
+		CASE 2
+			PRINTFORML 자신은 그러한 여자는 아니다
+			PRINTFORML 단호히 거절해 떠났다
+	ENDSELECT
+ENDIF
+RETURN 1

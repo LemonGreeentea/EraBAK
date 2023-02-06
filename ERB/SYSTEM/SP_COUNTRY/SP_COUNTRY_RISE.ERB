@@ -1,0 +1,167 @@
+﻿;--------------------------------------
+;특수 세력의 봉기 처리
+;일단, 통상 세력의 봉기 이벤트에도 사용할 수 있다
+;--------------------------------------
+@SP_COUNTRY_RISE(세력번호, 초기도시 = 0)
+#DIM 세력번호
+#DIM 초기도시
+#DIMS CALLBACK
+#DIM 대상
+CALLBACK = %SP_COUNTRY_NAME_ENG:SP_COUNTRY_TO_CONST(세력번호)%
+
+IF 초기도시 == 0
+	;도시 선택 처리
+	TRYCCALLFORM %CALLBACK%_RISE_SELECT_CITY
+	CATCH
+		CALL SP_COUNTRY_RISE_SELECT_CITY
+	ENDCATCH
+	SIF RESULT == -1
+		RETURN 0
+
+	대상 = RESULT
+ELSE
+	대상 = 초기도시
+ENDIF
+
+;도시 찬탈 처리
+TRYCCALLFORM %CALLBACK%_RISE_TAKEOVER_CITY(세력번호, 대상)
+CATCH
+	CALL SP_COUNTRY_RISE_TAKEOVER_CITY(세력번호, 대상)
+ENDCATCH
+
+SIF RESULT == -1
+	RETURN 0
+
+;봉기 메세지
+TRYCCALLFORM %CALLBACK%_RISE_MSG(세력번호, 대상)
+CATCH
+	CALL SP_COUNTRY_RISE_MSG(세력번호, 대상)
+ENDCATCH
+
+RETURN 세력번호
+
+;--------------------------------------
+;특수 세력의 봉기 처리에 있어서의, 랜덤인 도시를 선택하기 위한 처리
+;--------------------------------------
+@SP_COUNTRY_RISE_SELECT_CITY
+#DIM 세력, MAX_COUNTRY
+#DIM 판정치, MAX_COUNTRY
+#DIM 도시, MAX_CITY
+#DIM 대상세력
+#DIM 후보수
+#DIM 대상도시
+VARSET 세력
+VARSET 판정치, -1
+VARSET 도시
+VARSET 후보수
+
+;각 세력의 도시수에 근거해 판정치를 산출
+FOR LOCAL, 0, MAX_COUNTRY
+	IF GET_OWN_CITY(LOCAL) > 1 || (!IS_COUNTRY(LOCAL) && GET_OWN_CITY(LOCAL) > 0)
+		세력:후보수 = LOCAL
+		판정치:후보수 = RAND:GET_OWN_CITY(LOCAL)
+		후보수 ++
+	ENDIF
+NEXT
+
+;있을 수 없을 것이다
+SIF 후보수 == 0
+	RETURN -1
+
+;도시수가 많은 세력(정도)만큼 노려지기 쉽다
+대상세력 = 세력:FINDELEMENT(판정치, MAXARRAY(판정치, 0, 후보수), 0, 후보수)
+
+VARSET 후보수
+
+;대상 도시를 선택
+FOR LOCAL, 1, CITY_NUM + 1
+	IF CITY_OWNER:LOCAL == 대상세력
+		도시:후보수 = LOCAL
+		후보수 ++
+	ENDIF
+NEXT
+
+;일단, 있을 수 없을 것이다
+SIF 후보수 == 0
+	RETURN -1
+
+대상도시 = 도시:(RAND:후보수)
+
+
+RETURN 대상도시
+
+;--------------------------------------
+;특수 세력의 봉기 처리에 있어서의, 주어진 도시의 주위를 찬탈하는 처리
+;--------------------------------------
+@SP_COUNTRY_RISE_TAKEOVER_CITY(세력, 초기도시)
+#DIM 세력
+#DIM 초기도시
+#DIM 접속처
+#DIM 찬탈수
+#DIM 찬탈상한
+
+CALL TAKEOVER_CITY_FROM_NO(세력, 초기도시)
+
+찬탈수 = 1
+;초기 도시를 중심으로, 접속되고 있는 도시를 빼앗는다
+;중계점이 있는 경우는 80%
+FOR LOCAL:0, 0, VARSIZE("CITY_ROUTE", 1)
+	
+	;접속처를 취득
+	접속처 = CITY_ROUTE:초기도시:(LOCAL:0)
+	SIF 접속처 == 0
+		BREAK
+	
+	SELECTCASE CITY_TYPE:접속처
+		;접속처가 도시
+		;OWNER의 소유 도시수를 조사해, 3이상이라면 빼앗는다
+		CASE 0
+			IF !IS_COUNTRY(CITY_OWNER:접속처)
+				CALL TAKEOVER_CITY_FROM_NO(세력, 접속처)
+				찬탈수 ++
+			ELSE
+				IF GET_OWN_CITY(CITY_OWNER:접속처) >= 3 && 100 - GET_CITY_COMMANDER_NUM(접속처) * 30 > RAND:100
+					CALL TAKEOVER_CITY_FROM_NO(세력, 접속처)
+					찬탈수 ++
+				ENDIF
+			ENDIF
+		;접속처가 중계지
+		;한층 더 접속하고 있는 앞을 취득해, 같은 처리
+		CASE 1
+			SIF RAND:100 > 60
+				CONTINUE
+			FOR LOCAL:2, 0, VARSIZE("CITY_ROUTE", 1)
+				LOCAL:3  = CITY_ROUTE:접속처:(LOCAL:2)
+				SIF LOCAL:3 == 0
+					BREAK
+				IF LOCAL:3 != 초기도시
+					IF !IS_COUNTRY(CITY_OWNER:(LOCAL:3))
+						CALL TAKEOVER_CITY_FROM_NO(세력, (LOCAL:3))
+						찬탈수 ++
+						BREAK
+					ELSE
+						IF GET_OWN_CITY(CITY_OWNER:(LOCAL:3)) >= 2  && 100 - GET_CITY_COMMANDER_NUM(접속처) * 30 > RAND:100
+							CALL TAKEOVER_CITY_FROM_NO(세력, LOCAL:3)
+							찬탈수 ++
+							BREAK
+						ENDIF
+					ENDIF
+				ENDIF
+			NEXT
+	ENDSELECT
+NEXT
+
+RETURN 찬탈수
+
+;--------------------------------------
+;특수 세력의 봉기 처리에 있어서의, 메세지 부분
+;--------------------------------------
+@SP_COUNTRY_RISE_MSG(세력번호, 대상)
+#DIM 세력번호
+#DIM 대상
+CALL SINGLE_DRAWLINE
+SETCOLOR 칼라_경고
+PRINTFORMW %ANAME(GET_COUNTRY_BOSS(세력번호))%가 봉기 했습니다!
+PRINTFORMW %CITY_NAME:(대상)%\@ GET_OWN_CITY(세력번호) > 1 ? 등 # \@를 점거한 것 같습니다……
+RESETCOLOR
+CALL SINGLE_DRAWLINE

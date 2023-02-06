@@ -1,0 +1,223 @@
+﻿;호색가계
+#DIM CONST 약팔이_발생플래그 = 0
+#DIM CONST 약팔이_조교대상ID = 1
+#DIM CONST 약팔이_조교진행도 = 2
+#DIM CONST 약팔이_함락보고가끝난상태 = 3
+
+;대금업자
+#DIM CONST 대금업자_반제기간 = 11
+#DIM CONST 대금업자_나머지융자액 =  12
+#DIM CONST 대금업자_어깨ID = 13
+#DIM CONST 대금업자_융자총액 = 14
+#DIM CONST 대금업자_발생플래그= 15
+
+;부호
+#DIM CONST 부호_발생플래그 = 30
+#DIM CONST 부호_마음에든다ID = 31
+#DIM CONST 부호_마음에든다조교횟수 = 32
+#DIM CONST 부호_유괴카운터 = 33
+#DIM CONST 부호_유괴대상 = 34
+#DIM CONST 부호_조교카운터 = 35
+#DIM CONST 부호_애첩카운터 = 36
+#DIM CONST 부호_탐색단념플래그 = 37
+#DIM CONST 부호_후원자플래그 = 38;추가분
+#DIM CONST 부호_네토라레플래그 = 39;추가분
+
+;모금
+#DIM CONST 모금_발생플래그 = 40
+#DIM CONST 모금_안은회수 = 41
+
+;최면
+#DIM CONST 최면_발생플래그 = 50
+
+;접대
+#DIM CONST 접대_발생플래그 = 60
+#DIM CONST 접대_연속으로거절한회수 = 61
+
+;보은
+#DIM CONST 보은_발생플래그 = 70
+#DIM CONST 보은_내왕아내플래그 = 71
+#DIM CONST 보은_동물번호 = 72
+#DIM CONST 보은_임신플래그 = 73
+#DIM CONST 보은_임신도 = 74
+#DIM CONST 보은_캐릭터ID = 75;추가분
+#DIM CONST 보은_데이트 = 76;추가분
+
+;내기
+#DIM CONST 내기_첫회실행이끝난상태 = 80
+
+;갓파아가씨
+#DIM CONST 갓파_발생플래그 = 90
+#DIM CONST 갓파_장사한회수 = 91
+#DIM CONST 갓파_안은회수 = 92
+
+;소질 트래이너
+#DIM CONST 소질트래이너_발생플래그 = 100
+
+;섹스 트래이너
+#DIM CONST 섹스트래이너_발생플래그 = 110
+
+;촉수 트래이너
+#DIM CONST 촉수트래이너_발생플래그 = 120
+
+;최면 레이프
+#DIM CONST 악마의최면술 = 130
+#DIM CONST 최면술경험치 = 131
+#DIM CONST 시스터 = 132
+
+;사관 요구
+#DIM CONST 사관요구_발생금지카운터 = 150
+#DIM CONST 사관요구_도둑베어버리기플래그 = 151
+
+;자금원조 요구
+#DIM CONST 자금원조요구_발생금지카운터 = 160
+
+;도둑 토벌
+#DIM CONST 도둑토벌_발생플래그 = 200
+
+;도둑 몸값
+#DIM CONST 도둑몸값요구_발생플래그 = 210
+
+;도둑 봉기
+#DIM CONST 도둑_봉기카운터 = 220
+
+;암습
+#DIM CONST 암습제안_발생플래그 = 300
+
+;수간
+#DIM CONST 수간_발생플래그 = 310
+
+;현상범 토벌
+#DIM CONST 현상금사냥꾼_발생플래그 = 320
+#DIM CONST 현상금사냥꾼_토벌플래그,6 = 321,322,323,324,325,326
+
+;가정교사
+#DIM CONST 가정교사_발생플래그 = 340
+#DIM CONST 가정교사_마음에든다ID = 341
+#DIM CONST 가정교사_수업실시회수 = 342
+#DIM CONST 가정교사_밀회플래그 = 343
+
+;사관 농락
+#DIM CONST 마약절임_타겟 = 345
+#DIM CONST 마약절임_공작원ID = 346
+#DIM CONST 마약절임_농락단계 = 347
+
+;음문
+#DIM CONST 음문_발생플래그 = 350
+#DIM CONST 음문_침식치 = 351
+#DIM CONST 음문_침식중캐릭터ID = 352
+#DIM CONST 음문_당신의존 = 353;추가분
+#DIM CONST 음문_당신의존ID = 354;추가분
+
+;외래인 페로몬
+#DIM CONST 페로몬중독_대상ID = 360
+#DIM CONST 페로몬중독_발생회수 = 361
+
+;지붕있는 놀잇배
+#DIM CONST 지붕있는놀잇배_발생플래그 = 370
+
+;종족 사이 항쟁
+#DIM CONST 종족사이항쟁_아가씨반하고플래그 = 390
+#DIM CONST 종족사이항쟁_아가씨의종족 = 391
+#DIM CONST 종족사이항쟁_아가씨2의종족 = 392
+
+;텐구의 밀착 취재
+#DIM CONST 텐구취재_발생플래그 = 400
+#DIM CONST 텐구취재_밤의취재회수 = 401
+#DIM CONST 텐구취재_캐릭터ID = 402;추가분
+#DIM CONST 텐구취재_데이트 = 403;추가분
+
+
+#DIM CONST 암살자_완료플래그 = 410
+
+;최면 트래이너
+#DIM CONST 최면트래이너_발생플래그 = 420
+#DIM CONST 최면트래이너_심도 = 421
+#DIM CONST 최면트래이너_전회대상자ID = 422
+#DIM CONST 최면트래이너_강간회수 = 423
+
+;요정 생활 데일리
+#DIM CONST 요정생활_동거플래그 = 430
+#DIM CONST 요정생활_에로카운트 = 431
+
+;도둑 처형 데일리
+#DIM CONST 도둑처형_소녀부하플래그 = 440
+
+;아르바이트 데일리
+#DIM CONST 아르바이트_발생플래그 = 460
+
+;동물 써 데일리
+#DIM CONST 동물써_발생플래그 = 470
+
+;에로꼬맹이 데일리
+#DIM CONST 에로꼬맹이_발생플래그 = 480
+#DIM CONST 에로꼬맹이_노예ID = 481
+#DIM CONST 에로꼬맹이_조교심도 = 482
+
+;최면 일_상태 관리 플래그 데일리
+#DIM CONST 최면일_조교대상ID = 490
+#DIM CONST 최면일_상태관리플래그 = 491
+#DIM CONST 최면일_진행도 = 492
+
+;토끼촌 데일리
+#DIM CONST 토끼의연회_발생플래그 = 500
+
+;묘지 데일리
+#DIM CONST 묘지의괴_발생플래그 = 510
+
+;마요이가데이리
+#DIM CONST 고양이너무좋아_발생플래그 = 520
+
+;AV촬영 데일리
+#DIM CONST AV촬영_중독진행도 = 530
+#DIM CONST AV촬영_진행도 = 531
+#DIM CONST AV촬영_대상ID = 532
+#DIM CONST AV촬영_발생플래그 = 533
+
+;원조교제_발생 플래그 데일리
+#DIM CONST 원조교제_발생플래그 = 540
+#DIM CONST 원조교제_대상ID = 541
+#DIM CONST 원조교제_노콘섹스허가 = 542
+
+;요괴 야쿠자 데일리
+#DIM CONST 야쿠자_만남 = 550
+#DIM CONST 야쿠자_연결 = 551
+#DIM CONST 야쿠자_일회수 = 552
+#DIM CONST 야쿠자_육변기대상ID = 553
+#DIM CONST 야쿠자_발생플래그 = 554
+#DIM CONST 야쿠자_임신 = 555
+#DIM CONST 야쿠자_면회 = 556
+
+#DIM CONST 관직에오름의권유_비권유남은턴 = 560
+
+;최면 조교 데일리
+#DIM CONST 최면조교_발생플래그 = 570
+#DIM CONST 최면조교_대상ID = 571
+#DIM CONST 최면조교_침공도 = 572
+
+;나카이 데일리
+#DIM CONST 여관_발생플래그 = 580
+#DIM CONST 여관_더부살이중캐릭터ID = 581
+#DIM CONST 여관_기능회수 = 582
+#DIM CONST 여관_서방님에게범해지고회수 = 583
+#DIM CONST 여관_손님에게범해지고회수 = 584
+
+;몽마의 꿈
+#DIM CONST 몽마의꿈_발생플래그 = 590
+#DIM CONST 몽마의꿈그후_발생플래그 = 591
+#DIM CONST 몽마와의밀회플래그 = 592
+#DIM CONST 몽마ID = 593
+
+;서큐버스 퀸의 내방
+#DIM CONST 서큐버스퀸_내방플래그 = 600
+#DIM CONST 서큐버스퀸_정액을바친회수 = 601
+
+;영내 훌쩍 에로의 여행
+#DIM CONST 영내훌쩍에로의여행_유부녀 = 610
+#DIM CONST 영내훌쩍에로의여행_난교파티 = 611
+#DIM CONST 영내훌쩍에로의여행_연애편지 = 612
+#DIM CONST 영내훌쩍에로의여행_헌팅 = 613
+#DIM CONST 영내훌쩍에로의여행_꽃을파는것 = 614
+#DIM CONST 영내훌쩍에로의여행_섹스옥션 = 615
+#DIM CONST 영내훌쩍에로의여행_유곽의창녀 = 616
+#DIM CONST 영내훌쩍에로의여행_슬럼가의창녀 = 617

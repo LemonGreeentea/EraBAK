@@ -1,0 +1,220 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_BANDIT_LOOT_RATE()
+RETURN 30
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_BANDIT_LOOT_DECISION()
+#DIM 도둑
+도둑 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
+SIF 도둑 == -1
+	RETURN 0
+SIF CFLAG:MASTER:소속 == 도둑
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_BANDIT_LOOT_GENRE()
+RETURN 데일리_장르_특수세력
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_BANDIT_LOOT()
+#DIM 도시
+#DIM 금액
+
+CALL DAILY_EVENT_RAND_CITYSELECT(0)
+도시 = RESULT
+SIF 도시 < 0
+	RETURN 0
+	
+금액 = 3000 + (2000 * (DAY / 5))
+
+PRINTFORML 영토내에서 도둑의 집단을 보았다는 소문을 (들)물었다
+PRINTFORML 순회의 군사를 내도 괜찮지만 경비로 해서 돈{금액}가 걸릴 것이다
+PRINTFORML 단순한 잘못봄의 경우는 헛수고가 녹초가 되고 벌이가 되어 버리지만
+PRINTFORMW 어떻게 하지?
+CALL ASK_MULTI_JUDGE("순회 부대를 낸다", MONEY >= 금액,"방치한다", 1)
+IF RESULT == 1
+	PRINTFORML 그러한 보고는 없는, 아마 잘못봄일 것이다
+	PRINTFORMW 방치하기로 했다
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+	IF RAND:2 == 0
+		PRINTFORML 아무것도 일어나지 않았다
+		PRINTFORMW 역시 소문은 믿을 수 없다
+	ELSE
+		PRINTFORML 
+		PRINTFORMW 영내의 촌락이 도둑에게 습격당하고 있다
+		CALL BANDIT_LOOT_RAPE
+		PRINTFORML 도둑은 약탈의 한계를 다해 떠나 갔다
+		CALL MODIFY_CITY_ECONOMY(도시, RAND(10000, 30000) * -1)
+		PRINTFORMW 
+	ENDIF
+	RETURN 1
+ELSE
+ENDIF
+PRINTFORML 소문이라고는 해도 방치는 할 수 없다
+PRINTFORMW 순회 부대를 내기로 했다
+MONEY -= 금액
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+LOCAL:0 = RAND:3
+IF LOCAL:0 == 0
+	PRINTFORML 아무것도 일어나지 않았다
+	PRINTFORMW 역시 소문은 믿을 수 없다
+ELSEIF LOCAL:0 == 1
+	PRINTFORML 순회 부대는 도둑이 촌락을 덮치려고 하는 현장에 조우했다!
+	PRINTFORML 훌륭히 도둑을 타도해, 마을을 구할 수가 있었다
+	PRINTFORMW 순회 부대는 영지민에게 감사받으면서 마을을 뒤로 했다
+	FOR LOCAL, 1, MAX_COUNTRY
+		SIF IS_COUNTRY(LOCAL)
+			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, 50, -50)
+	NEXT
+	CALL COLOR_PRINT(@"도둑을 잡은 일이 평판이 되어 타국의 평가가 올랐다", 칼라_주의)
+	PRINTFORMW 
+ELSE
+	PRINTFORML 순회 부대는 도둑이 촌락을 덮치려고 하는 현장에 조우했다!
+	PRINTFORMW 하지만 도둑은 상상 이상으로 만만치 않고, 부대는 역관광에 있어 버렸다
+	PRINTFORML 
+	PRINTFORMW 마을사람이 도둑들에게 습격당하고 있다
+	CALL BANDIT_LOOT_RAPE
+	PRINTFORMW 도둑은 약탈의 한계를 다해 떠나 갔다
+	LOCAL:1 = RAND(CITY_ECONOMY_LIMIT:(도시) / 100 * 100 / 10 , CITY_ECONOMY_LIMIT:(도시) / 100 * 100 / 10 + 1000)
+	CITY_ECONOMY:도시 -= LOCAL:1
+	CALL MODIFY_CITY_ECONOMY(도시, RAND(10000, 30000) * -1)
+	PRINTFORMW 
+ENDIF
+RETURN 1
+;---------------------------------------------
+;영지민이 범해진다
+;--------------------------------------------
+@BANDIT_LOOT_RAPE
+
+PRINTFORML 
+SELECTCASE RAND:5
+	CASE 0
+		PRINTFORM 주근깨가 있는
+	CASE 1
+		PRINTFORM 아직 천진난만함이 남은
+	CASE 2
+		PRINTFORM 안경을 쓴
+	CASE 3
+		PRINTFORM 눈이 동글동글한
+	CASE 4
+		PRINTFORM 투명한 피부를 가진다
+ENDSELECT
+SELECTCASE RAND:5
+	CASE 0
+		PRINTFORM 땋은머리의 
+	CASE 1
+		PRINTFORM 긴 흑발의 
+	CASE 2
+		PRINTFORM 밤색의 쇼트 헤어의 
+	CASE 3
+		PRINTFORM 선명한 금발의 
+	CASE 4
+		PRINTFORM 트윈테일의 
+ENDSELECT
+PRINTFORML 소녀가 도둑에게 능욕 되고 있다
+SELECTCASE RAND:20
+	CASE 0
+		PRINTFORML 네발로 엎드림의 모습으로 격렬하게 허리를 쳐박혀지면서 그녀는 신음한다
+		PRINTFORML 결합부로부터 순혈이었던 증을 유질시키면서 필사적으로 도움을 부르지만, 거기에 응하는 사람은 아무도 없다
+		PRINTFORMW 이윽고 도둑에게 질내사정을 되면서 그녀는 하복부에 전해지는 열에 반광란으로 울부짖었다
+	CASE 1
+		PRINTFORML 그녀는 양팔을 단단히 묶어진 모습으로 양 다리를 움켜 쥘 수 있어 페니스가 삽입되고 있다
+		PRINTFORML 난폭하게 페니스가 출납될 때에 그녀는 신음해, 눈물을 흘리면서 용서를 빈다
+		PRINTFORMW 하지만 그것이 도둑들의 가학심을 자극해, 보다 한층 격렬하게 범해지는 일이 되었다
+	CASE 2
+		PRINTFORML 한사람의 도둑은 그녀에게 덥치면서 격렬한 피스톤을 문병하고 있다
+		PRINTFORML 전체중으로 덥쳐지고 있는 그녀는 아픔으로 신음하면서 손발을 바동바동 동카시모 금액
+		PRINTFORMW 하지만 도망갈 이유도 없고, 야박하게도 그에게 몇 번이나 씨뿌리기 되는 일이 되었다
+	CASE 3
+		PRINTFORML 그녀는 뒤에 얽매이고 재갈을 된 상태로 말에 실려지면서 범해지고 있다
+		PRINTFORML 마상의 진동으로 페니스에 질육을 후벼파질 때에, 그녀는 신체를 뛰어 흐려진 신음소리를 흘린다
+		PRINTFORMW 그들의 아지트에 도착하는 무렵에는 암컷구멍으로부터 흘러넘칠 정도의 정액을 나와 버리고 있었다
+	CASE 4
+		PRINTFORML 그녀는 도둑의 발밑에 무릎 꿇어 페니스를 입으로 물어 필사적으로 다루고 있다
+		PRINTFORML 얼굴에는 저항해 맞은 딱한 자취가 있어, 그녀는 이제 맞지 않게 열심히 봉사한다
+		PRINTFORMW 입으로의 봉사가 끝나 다시 남자에게 밀어 쓰러트려지면 그녀는 무서워하면서도 저항하지 않고 몸을 열었다
+	CASE 5
+		PRINTFORML 그녀는 왕자지의 도둑의 페니스를 깊숙히 물어져 경련하면서 허덕이고 있다
+		PRINTFORML 질육을 삐걱삐걱 펴넓힐 수 있어 조금 비비어지는 것만으로 그녀의 머릿속에서 번쩍번쩍 불꽃이 튄다
+		PRINTFORMW 완구로서 심하게 농락 당한 그녀가 해방되었을 때에는, 그 암컷구멍은 다 완전히 퍼져 버리고 있었다
+	CASE 6
+		PRINTFORML 두 명의 도둑이 그녀를 거느리면서 전후로부터 범하고 있다
+		PRINTFORML 양구멍으로부터 전해지는 작열의 자극에, 그녀는 말을 발하는 일도 하지 못하고 몹시 놀라 좋아하고 있다
+		PRINTFORMW 두 명 동시에 사정되면, 그녀는 지나친 충격에 몇 번이나 몸을 뛰어 절정 하면서 정신을 잃어 버렸다
+	CASE 7
+		PRINTFORML 전리품의 그녀는전라로 목걸이를 붙여져 아지트까지 연행되고 있다
+		PRINTFORML 그 신체는 이미 몇 번이나 사용되고 있는 것 같아, 여기저기에 잇자국이나 반점이 있어 비밀스런 장소로부터는 정액이 늘어지고 떨어지고 있다
+		PRINTFORMW 아지트에 이끌린 그녀는, 조속히 무수한 도둑들에게 모여지고 계속을 하게 했다
+	CASE 8
+		PRINTFORML 그녀는 뒹구는 도둑 위에서 허리를 흔들면서 양손과 입으로 페니스를 잡아당겨지고 있다
+		PRINTFORML 그녀의 열심인 봉사에 만족한 남자들에게 대량의 정액을 퍼부을 수 있어 백탁으로 질척질척으로 되어 버린다
+		PRINTFORMW 오래간만의 상등품에 흥분하고 있는 도둑들에게, 그녀는 그 뒤도 쉬는 일 없이 계속 사용되었다
+	CASE 9
+		PRINTFORML 그녀는 도둑에게 난폭하게 범해지면서 필사적으로 모친의 이름을 부르고 있다
+		PRINTFORML 하지만 그 소리에 응하는 사람은 있지 않고, 그녀는 절망과 아픔으로 울며 아우성치는 일 밖에할 수 없었다
+		PRINTFORMW 그런 그녀에게도 도둑들이 용서할 리가 없게 웃으면서 소녀를 심하게 다 범했다
+	CASE 10
+		PRINTFORML 그녀는 그들의 기르는 사냥개에게 포상으로서 주어져 범해지고 있다
+		PRINTFORML 맹렬하게 허리를 쳐박혀지면서, 그녀는 축생의 페니스로 범해지는 공포와 고통으로 울부짖고 있다
+		PRINTFORMW 이윽고 반광란으로 저항하는 그녀의 안에, 개의 걸쭉한 정액이 한껏 따라져 버렸다
+	CASE 11
+		PRINTFORML 그녀는 기둥에 동여 맬 수 있어 도둑들의 변소 대신에 사용되고 있다
+		PRINTFORML 번갈아 도둑들에게 범해지고 계속해, 그녀의 신체는 끔찍하게 더러워지고 잘라 그 표정은 공허하게 되어 있다
+		PRINTFORMW 사타구니로부터 늘어지는 대량의 정액을 응시하면서 그녀는 뚝뚝하고 눈물을 흘렸다
+	CASE 12
+		PRINTFORML 그녀는 그들의 연회에서 쇼로서 무수한 도둑들이 보는 앞에서 범해지고 있다
+		PRINTFORML 신체를 움켜 쥐어지고 비밀스런 장소에 페니스가 출입하는 곳을 노출되어, 그녀는 고통과 수치로 신음한다
+		PRINTFORMW 씨받이가 되어 싫어하면서도 범해지며 경련하는 소녀의 치태로 도둑들의 연회는 많이 분위기를 살렸다
+	CASE 13
+		PRINTFORML 도둑의 간부에게 마음에 든 그녀는 그의 전속 성노예로서 길러지는 일이 되었다
+		PRINTFORML 저항할 때에 심하게 혼내줄 수 있어 점차 그녀는 온순하게 그에게 봉사하는 것처럼 되어 있었다
+		PRINTFORMW 지금도 또한 진한정액을 발해져 미운 남자아이를 잉 되는 것을 상상하면서, 절망 중(안)에서 절정 했다
+	CASE 14
+		PRINTFORML 숫처녀의 것이라고 아는 닫고 자른 균열에 향하여 도둑이 남근을 문지르자 그녀는 격렬하게 저항했다
+		PRINTFORML 하지만 도둑이 그래서 멈출 리도 없고, 무자비하게도 하나의 물건이 그녀의 안으로 쑤셔 넣어진다
+		PRINTFORMW 아픔과 공포로 울며 아우성치는 그녀를 억누르면서 도둑들은 마음껏 그 신체를 범했다
+	CASE 15
+		PRINTFORML 심하게 그들에게 범해진 그녀는 이미 저항도 하지 않고 어안이 벙벙히 가로놓여 있다
+		PRINTFORML 그 암컷구멍은 지금도 한사람의 도둑에게 범해지고 있지만, 그녀는 망가진 완구같이 되는 대로다
+		PRINTFORMW 무반응에 질린 도둑들에게 그 자리에 방치된 그녀는 공허한 눈동자로 늘어지고 흐르는 정액을 응시하고 있었다
+	CASE 16
+		PRINTFORML 기모노를 벗겨내면 공공연하게 된 풍만한 육체에 도둑들은 흥분해 그녀에게 모인다
+		PRINTFORML 신체중을 난폭하게 만지작거려지고 물어지고 정액을 토해내져 그녀의 신체는 이윽고 너덜너덜로 되어 버린다
+		PRINTFORMW 하지만 그런데도 능욕은 끝나지 않고, 아지트에 가지고 돌아가진 뒤도 성노예로서 끝없이 범해지는 것이었다
+	CASE 17
+		PRINTFORML 살해당한 가족의 옆에서 도둑의 페니스를 쑤셔 넣어지고 그녀는 눈물을 흘리면서 신음하고 있다
+		PRINTFORML 사에 직면한 암컷의 본능이 쑤셔, 하복부로부터 쾌락이 복받쳐 와 버리는데 그녀는 필사적으로 저항하고 있다
+		PRINTFORMW 하지만 그들의 정액을 태내에 발해지면 그녀는 무심코 교성을 올려 바라지 않는 절정에 이르러 버렸다
+	CASE 18
+		PRINTFORML 그녀는 책상다리를 한 도둑 위에 앉아져 페니스를 깊숙히 쑤셔 넣어지고 있다
+		PRINTFORML 살해당하는 공포를 위해서(때문에) 하복부의 압박감과 열을 참으면서, (듣)묻는 대로 허리를 흔들고 있다
+		PRINTFORMW 그 열심인 봉사를 마음에 든 그녀는 도둑의 질내사정을 몇 번이나 받는 일이 되었다
+	CASE 19
+		PRINTFORML 필사적으로 도망치기 시작한 그녀이지만 어이없게 도둑에게 잡을 수 있는 난폭하게 범해지고 있다
+		PRINTFORML 그녀의 극상의 꿀단지에 도둑은 열중해 페니스를 내던져, 그때마다 그녀는 경련해 신음한다
+		PRINTFORMW 심하게 그녀를 범한 후, 도둑은 그녀를 단단히 묶으면 성노예로서 보금자리로 데리고 돌아갔다
+ENDSELECT
+PRINTFORML 
+
+RETURN

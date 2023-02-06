@@ -1,0 +1,511 @@
+﻿
+;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+; 칼라바 표시용 함수군
+;
+;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+
+
+;================================================================
+; 게이지(비율 칼라바)의 표시 처리.
+;  좌단색으로부터 우단색으로 그라데이션 한다.
+;--------------------------------
+;	nBarVol		: 바 현재가
+;	nBarVolMax	: 바 최대치（0 이하 지정이라고 nBarVol와 동치로서 취급한다）
+;	nScaleNum	: 눈금수（10000(0.01%*10000=100%)을 결론지을 수 있는 수로 지정하는 것을 추천）
+;	nScaleWidht	: 일목성의 폭（PRINT_RECT의 폭의 값）
+;					※ nScaleWidht*nScaleNum가 바의 길이가 된다
+;	colorLeft	: 바의 색(좌단의 메모리의 색)
+;	colorRigth	: 바의 색(우단(100%)의 메모리의 색)
+;	colorEmpty	: 바의 색(Empty 부분)
+;	flgExtra	: 특수 표시 플래그（비트 연산）
+;					0x0001:최대치를 넘어 표시하는, 0x0002:굵은 바, 0x0004:가는 바, 0x0008:매우 굵은 바
+;					0x0010:BOTTOM 표시, 0x0020:TOP 표시
+;					0x0100:,  
+;					0x1000:메모리 서로 단락지어,  
+;--------------------------------
+; 주의점
+;	메모리 단락지어 있는 경우, 메모리폭이 작으면 예쁘게 표시되지 않는 모양.
+;================================================================
+@PRINT_RATE_BAR( nBarVol, nBarVolMax, nScaleNum, nScaleWidht, colorLeft, colorRigth, colorEmpty, flgExtra )
+	#DIM nBarVol
+	#DIM nBarVolMax
+	#DIM nScaleNum
+	#DIM nScaleWidht
+	#DIM colorLeft
+	#DIM colorRigth
+	#DIM colorEmpty
+	#DIM flgExtra
+
+	CALL PRINT_RATE_BAR_EX( nBarVol, nBarVolMax, nScaleNum, nScaleWidht, colorLeft, colorRigth, colorEmpty, flgExtra, 0, 0x000000 )
+
+	RETURN
+
+
+;================================================================
+; 게이지(비율 칼라바)의 표시 처리.
+;  좌단색으로부터 우단색으로 그라데이션 한다.
+;--------------------------------
+;	nBarVol		: 바 현재가
+;	nBarVolMax	: 바 최대치（0 이하 지정이라고 nBarVol와 동치로서 취급한다）
+;	nScaleNum	: 눈금수（10000(0.01%*10000=100%)을 결론지을 수 있는 수로 지정하는 것을 추천）
+;	nScaleWidht	: 일목성의 폭（PRINT_RECT의 폭의 값）
+;					※ nScaleWidht*nScaleNum가 바의 길이가 된다
+;	colorLeft	: 바의 색(좌단의 메모리의 색)
+;	colorRigth	: 바의 색(우단(100%)의 메모리의 색)
+;	colorEmpty	: 바의 색(Empty 부분)
+;	flgExtra	: 특수 표시 플래그（비트 연산）
+;					0x0001:최대치를 넘어 표시하는, 0x0002:굵은 바, 0x0004:가는 바, 0x0008:매우 굵은 바
+;					0x0010:BOTTOM 표시, 0x0020:TOP 표시
+;					0x0100:,  
+;					0x1000:메모리 서로 단락지어,  
+;	nBarVol2	: nBarVol ～ nBarVol2까지의 값을 colorEmpty와는 다른 색으로 처리하기 위해서 사용한다
+;	colorVol2	: 
+;--------------------------------
+; 주의점
+;	메모리 단락지어 있는 경우, 메모리폭이 작으면 예쁘게 표시되지 않는 모양.
+;================================================================
+@PRINT_RATE_BAR_EX( nBarVol, nBarVolMax, nScaleNum, nScaleWidht, colorLeft, colorRigth, colorEmpty, flgExtra, nBarVol2, colorVol2 )
+#LOCALSIZE 4
+	#DIM nBarVol
+	#DIM nBarVolMax
+	#DIM nScaleNum
+	#DIM nScaleWidht
+	#DIM colorLeft
+	#DIM colorRigth
+	#DIM colorEmpty
+	#DIM flgExtra
+	#DIM nBarVol2
+	#DIM colorVol2
+
+	#DIM colorLeft_RGB, 3
+	#DIM colorRigth_RGB, 3
+	#DIM nPointX
+	#DIM nPointY
+	#DIM nHeight
+	#DIM nRate
+	#DIM nLimitOver
+	#DIM nScaleRate
+	#DIM colorMem
+	#DIM nRate2
+
+	colorMem = GETCOLOR()
+
+	; nRate, nScaleRate는 0.1%단위
+	IF flgExtra & 0x0008
+		nHeight = 90
+	ELSEIF flgExtra & 0x0002
+		nHeight = 40
+	ELSEIF flgExtra & 0x0004
+		nHeight = 12
+	ELSE
+		nHeight = 24
+	ENDIF
+	IF flgExtra & 0x1000
+		nPointX = LIMIT( 12, nScaleWidht / 10, nScaleWidht / 3 )
+	ELSE
+		nPointX = 0
+	ENDIF
+	IF flgExtra & 0x0010
+		nPointY = (100 - nHeight) * 4 / 5
+	ELSEIF flgExtra & 0x0020
+		nPointY = (100 - nHeight) * 1 / 5
+	ELSE
+		nPointY = (100 - nHeight) / 2
+	ENDIF
+
+	colorLeft_RGB:0 = colorLeft / 256 / 256
+	colorLeft_RGB:1 = colorLeft / 256 % 256
+	colorLeft_RGB:2 = colorLeft % 256
+	colorRigth_RGB:0 = colorRigth / 256 / 256
+	colorRigth_RGB:1 = colorRigth / 256 % 256
+	colorRigth_RGB:2 = colorRigth % 256
+
+	nLimitOver = ((flgExtra & 0x01) ? 1 # 0)
+
+	IF nBarVolMax > 0
+		nRate = MAX(10000 * nBarVol / nBarVolMax, 0)
+		nRate2 = MAX(10000 * nBarVol2 / nBarVolMax, 0)
+	ELSE
+		nRate = 10000
+		nRate2 = 10000
+	ENDIF
+	IF nLimitOver == 0
+		nRate = LIMIT(nRate, 0, 10000)
+		nRate2 = LIMIT(nRate2, 0, 10000)
+	ENDIF
+
+	; 1 눈금으로 진행되는 퍼센티지를 산출
+	nScaleRate = MAX(10000 / nScaleNum, 1)
+
+	; 게이지의 묘화 루프（1 눈금씩 색을 그라데이션 시키면서 묘화 한다）
+	FOR LOCAL, 0, nScaleNum
+		IF nRate > 0
+			LOCAL:1 = LIMIT( colorLeft_RGB:0 + (colorRigth_RGB:0 - colorLeft_RGB:0) * LOCAL / nScaleNum, 0, 0xFF )
+			LOCAL:2 = LIMIT( colorLeft_RGB:1 + (colorRigth_RGB:1 - colorLeft_RGB:1) * LOCAL / nScaleNum, 0, 0xFF )
+			LOCAL:3 = LIMIT( colorLeft_RGB:2 + (colorRigth_RGB:2 - colorLeft_RGB:2) * LOCAL / nScaleNum, 0, 0xFF )
+			SETCOLOR ((LOCAL:1 * 256 * 256) + (LOCAL:2 * 256) + (LOCAL:3))
+		ELSE
+			IF nRate2 > 0
+				SETCOLOR colorVol2
+			ELSE
+				; 현재가를 넘었으므로 공백의 게이지 표시가 된다
+				SETCOLOR colorEmpty
+			ENDIF
+		ENDIF
+		PRINT_RECT nPointX, nPointY, nScaleWidht - nPointX, nHeight
+		nRate -= nScaleRate
+		nRate2 -= nScaleRate
+	NEXT
+
+	IF nLimitOver
+		; 최대치를 넘어 표시하는 경우의 표시 처리. 이제 색은 바꾸지 않는다
+		WHILE nRate > 0 || nRate2 > 0
+			PRINT_RECT nPointX, nPointY, nScaleWidht - nPointX, nHeight
+			nRate -= nScaleRate
+			nRate2 -= nScaleRate
+		WEND
+	ENDIF
+
+	; 폰트색을 원래대로 되돌린다
+	SETCOLOR colorMem
+
+	RETURN
+
+
+;================================================================
+; RGB 슬라이더의 생성（바 같게 보이지만 실제는 버튼의 집합체）
+;--------------------------------
+;	nBaseColor	: 기준이 되는 칼라치
+;================================================================
+@PRINT_RGB_SLIDER( nBaseColor )
+#LOCALSIZE 4
+	#DIM nBaseColor
+
+	#DIM nColorBuf
+	#DIM color_RGB, 3
+	#DIM nSelectMark
+	#DIM loopColor
+	#DIM loopRGB
+	#DIM colorMem
+	#DIMS strFontMem
+
+	colorMem = GETCOLOR()
+	strFontMem = %GETFONT()%
+	nColorBuf = nBaseColor
+
+	SIF LINEISEMPTY() == 0
+		PRINTFORML
+
+	color_RGB:0 = nColorBuf / 256 / 256
+	color_RGB:1 = nColorBuf / 256 % 256
+	color_RGB:2 = nColorBuf % 256
+
+	SETFONT "MS Gothic"
+	FOR loopRGB, 0, 3
+		SELECTCASE loopRGB
+			CASE 0
+			; R치를 변경
+				PRINTFORM %" Ｒ치: "%
+			CASE 1
+			; G치를 변경
+				PRINTFORM %" Ｇ치: "%
+			CASE 2
+			; B치를 변경
+				PRINTFORM %" Ｂ치: "%
+		ENDSELECT
+		FOR loopColor, 0, 65
+		; 0 x00～0 xFF（0 x04 잘게 썰기）
+			nSelectMark = 0
+			LOCAL:1 = color_RGB:0
+			LOCAL:2 = color_RGB:1
+			LOCAL:3 = color_RGB:2
+			SELECTCASE loopRGB
+				CASE 0
+				; R치를 변경
+					LOCAL:1 = LIMIT(loopColor * 0x04, 0x00, 0xFF)
+					SIF loopColor == ((color_RGB:0 + 3) / 0x04)
+						nSelectMark = 1
+				CASE 1
+				; G치를 변경
+					LOCAL:2 = LIMIT(loopColor * 0x04, 0x00, 0xFF)
+					SIF loopColor == ((color_RGB:1 + 3) / 0x04)
+						nSelectMark = 1
+				CASE 2
+				; B치를 변경
+					LOCAL:3 = LIMIT(loopColor * 0x04, 0x00, 0xFF)
+					SIF loopColor == ((color_RGB:2 + 3) / 0x04)
+						nSelectMark = 1
+			ENDSELECT
+			LOCAL = (LOCAL:1 * 256 * 256) + (LOCAL:2 * 256) + (LOCAL:3)
+			SETCOLOR LOCAL
+			; 반각 사이즈의■버튼. 번호는 그 칼라치를 사용한다
+			IF nSelectMark == 0
+				PRINTBUTTON @"%UNICODE(0x2588)%", LOCAL
+			ELSE
+				PRINTBUTTON @"%UNICODE(0x2593)%", LOCAL
+			ENDIF
+		NEXT
+		PRINTL 
+		RESETCOLOR
+	NEXT
+
+	; 폰트, 색을 원래대로 되돌린다
+	SETCOLOR colorMem
+	SETFONT strFontMem
+
+	RETURN
+
+
+;================================================================
+; HSB 슬라이더의 생성（바 같게 보이지만 실제는 버튼의 집합체）
+;
+; ※ MEMO 같은 위치를 연속으로 압하했을 때에, 압하할 때에 색이 변화해 버리는 일이 있다.
+;		버튼의 집합체로 표현하고 있기 때문에, 중간의 값을 표시 할 수 없는 것이 원인?
+;		（버튼 65개에게, 채도, 명도는 0～255, 색상은 0～360）
+;--------------------------------
+;	nBaseColor	: 기준이 되는 칼라치
+;================================================================
+@PRINT_HSB_SLIDER( nBaseColor )
+#LOCALSIZE 4
+	#DIM nBaseColor
+
+	#DIM nColorBuf
+	#DIM color_RGB, 3
+	#DIM color_RGB_Max
+	#DIM color_RGB_Min
+	#DIM color_HSB, 3
+	#DIM arrBuf_HSB, 3
+	#DIM nSelectMark
+	#DIM loopColor
+	#DIM loopHSB
+	#DIM colorMem
+	#DIMS strFontMem
+	; color_HSB		: 건네받은 색의 HSB치를 보유 한다. [0]:색상, [1]:채도, [2]:명도
+	; color_RGB_Max	: 건네받은 색의 RGB 성분중, 최대의 값을 보유 한다.
+	; color_RGB_Min	: 건네받은 색의 RGB 성분중, 최소의 값을 보유 한다.
+
+	colorMem = GETCOLOR()
+	strFontMem = %GETFONT()%
+	nColorBuf = nBaseColor
+
+	SIF LINEISEMPTY() == 0
+		PRINTFORML
+
+	color_RGB:0 = nColorBuf / 256 / 256
+	color_RGB:1 = nColorBuf / 256 % 256
+	color_RGB:2 = nColorBuf % 256
+	; RGB 성분중, 최대, 최소의 성분을 확인
+	color_RGB_Max = MAX( color_RGB:0, color_RGB:1, color_RGB:2 )
+	color_RGB_Min = MIN( color_RGB:0, color_RGB:1, color_RGB:2 )
+
+	; 색상의 산출
+	IF color_RGB_Max == color_RGB_Min
+		color_HSB:0 = 0
+	ELSE
+		IF (color_RGB_Max == color_RGB:1)
+			color_HSB:0 = 60 * (color_RGB:2 - color_RGB:0) / (color_RGB_Max - color_RGB_Min) + 120
+		ELSEIF (color_RGB_Max == color_RGB:2)
+			color_HSB:0 = 60 * (color_RGB:0 - color_RGB:1) / (color_RGB_Max - color_RGB_Min) + 240
+		ELSEIF (color_RGB_Max == color_RGB:0)
+			color_HSB:0 = 60 * (color_RGB:1 - color_RGB:2) / (color_RGB_Max - color_RGB_Min)
+			SIF color_HSB:0 < 0
+				color_HSB:0 = color_HSB:0 + 360
+		ELSE
+		ENDIF
+	ENDIF
+	color_HSB:0 = LIMIT(color_HSB:0, 0, 359)
+
+	; 채도의 산출
+	IF color_RGB_Max == color_RGB_Min
+		color_HSB:1 = 0
+	ELSE
+		color_HSB:1 = 0xFF * (color_RGB_Max - color_RGB_Min) / color_RGB_Max
+	ENDIF
+
+	; 명도의 산출
+	color_HSB:2 = color_RGB_Max
+
+	SETFONT "MS Gothic"
+	FOR loopHSB, 0, 3
+		SELECTCASE loopHSB
+			CASE 0
+			; 색상을 변경
+				PRINTFORM %" 색상: "%
+			CASE 1
+			; 채도를 변경
+				PRINTFORM %" 채도: "%
+			CASE 2
+			; 명도를 변경
+				PRINTFORM %" 명도: "%
+		ENDSELECT
+		FOR loopColor, 0, 65
+		; 0～255（4 잘게 썰기）
+			nSelectMark = 0
+			arrBuf_HSB:0 = color_HSB:0
+			arrBuf_HSB:1 = color_HSB:1
+			arrBuf_HSB:2 = color_HSB:2
+			SELECTCASE loopHSB
+				CASE 0
+				; 색상을 변경
+					arrBuf_HSB:0 = LIMIT( loopColor * 4 * 360 / 256, 0, 360 )
+					IF loopColor == ((10 * color_HSB:0 * 256 / 360 + 15) / 10 / 4)
+						nSelectMark = 1
+						arrBuf_HSB:0 = color_HSB:0
+					ENDIF
+				CASE 1
+				; 채도를 변경
+					arrBuf_HSB:1 = LIMIT( loopColor * 4, 0x00, 0xFF )
+					IF loopColor == ((color_HSB:1 + 3) / 4)
+						nSelectMark = 1
+						arrBuf_HSB:1 = color_HSB:1
+					ENDIF
+				CASE 2
+				; 명도를 변경
+					arrBuf_HSB:2 = LIMIT( loopColor * 4, 0x00, 0xFF )
+					IF loopColor == ((color_HSB:2 + 3) / 4)
+						nSelectMark = 1
+						arrBuf_HSB:2 = color_HSB:2
+					ENDIF
+			ENDSELECT
+			; 색의 산출식은 색상에 의해 바뀐다
+			color_RGB_Max = LIMIT( arrBuf_HSB:2, 0, 255 )
+			color_RGB_Min = LIMIT( color_RGB_Max - (arrBuf_HSB:1 * color_RGB_Max / 0xFF), 0, 255 )
+			SELECTCASE arrBuf_HSB:0
+				CASE 0 TO 59
+					LOCAL:1 = color_RGB_Max
+					LOCAL:2 = color_RGB_Min + ((color_RGB_Max - color_RGB_Min) * (arrBuf_HSB:0) / 60)
+					LOCAL:3 = color_RGB_Min
+				CASE 60 TO 119
+					LOCAL:1 = color_RGB_Min + ((color_RGB_Max - color_RGB_Min) * (120 - arrBuf_HSB:0) / 60)
+					LOCAL:2 = color_RGB_Max
+					LOCAL:3 = color_RGB_Min
+				CASE 120 TO 179
+					LOCAL:1 = color_RGB_Min
+					LOCAL:2 = color_RGB_Max
+					LOCAL:3 = color_RGB_Min + ((color_RGB_Max - color_RGB_Min) * (arrBuf_HSB:0 - 120) / 60)
+				CASE 180 TO 239
+					LOCAL:1 = color_RGB_Min
+					LOCAL:2 = color_RGB_Min + ((color_RGB_Max - color_RGB_Min) * (240 - arrBuf_HSB:0) / 60)
+					LOCAL:3 = color_RGB_Max
+				CASE 240 TO 299
+					LOCAL:1 = color_RGB_Min + ((color_RGB_Max - color_RGB_Min) * (arrBuf_HSB:0 - 240) / 60)
+					LOCAL:2 = color_RGB_Min
+					LOCAL:3 = color_RGB_Max
+				CASE 300 TO 360
+					LOCAL:1 = color_RGB_Max
+					LOCAL:2 = color_RGB_Min
+					LOCAL:3 = color_RGB_Min + ((color_RGB_Max - color_RGB_Min) * (360 - arrBuf_HSB:0) / 60)
+			ENDSELECT
+			; 같은 위치를 압하해도 색이 변하고는 끝낸다. 완화책으로서 0 x04 단락에 고친다
+			LOCAL:1 = LIMIT( (LOCAL:1 + 3) / 0x04 * 0x04, 0, 255 )
+			LOCAL:2 = LIMIT( (LOCAL:2 + 3) / 0x04 * 0x04, 0, 255 )
+			LOCAL:3 = LIMIT( (LOCAL:3 + 3) / 0x04 * 0x04, 0, 255 )
+			LOCAL = (LOCAL:1 * 256 * 256) + (LOCAL:2 * 256) + (LOCAL:3)
+			SETCOLOR LOCAL
+			; 반각 사이즈의■버튼. 번호는 그 칼라치를 사용한다
+			IF nSelectMark == 0
+				PRINTBUTTON @"%UNICODE(0x2588)%", LOCAL
+			ELSE
+				PRINTBUTTON @"%UNICODE(0x2593)%", LOCAL
+			ENDIF
+		NEXT
+		PRINTL 
+		RESETCOLOR
+	NEXT
+
+	; 폰트, 색을 원래대로 되돌린다
+	SETCOLOR colorMem
+	SETFONT strFontMem
+
+	RETURN
+
+
+
+
+
+
+
+
+
+;================================================================
+; 칼라 슬라이더 2개를 표시해 픽 할 수 있는 무엇인가
+; 샘플은 색의 샘플 리스트 0 x형식에서 콤마 단락
+;================================================================
+@COLOR_PICKER(초기색 = -1, 샘플문자열 = "")
+#DIM 초기색
+#DIM 색
+#DIMS 샘플문자열
+#DIM 샘플, 15
+#DIM 샘플수
+#DIM FIRST_LINE
+
+CALL SINGLE_DRAWLINE()
+
+FIRST_LINE = LINECOUNT
+
+VARSET 샘플수, 0
+
+IF 샘플문자열 != ""
+	SPLIT 샘플문자열, ",", RESULTS
+	샘플수 = RESULT
+	FOR LOCAL, 0, 샘플수
+		샘플:LOCAL = TOINT(RESULTS:LOCAL)
+	NEXT
+ENDIF
+
+색 = 초기색 == -1 ? 0 # 초기색
+
+; 슬라이더 조작 루프
+WHILE 1
+	SIF LINECOUNT > FIRST_LINE
+		CLEARLINE LINECOUNT - FIRST_LINE
+
+	색 = LIMIT( 색, 0x000000, 0xFFFFFF )
+
+	PRINTFORM 현재의 칼라:0x%TOSTR(색, "X6")%
+	SETCOLOR 색
+	PRINTFORML ■
+	RESETCOLOR
+
+	; RGB 슬라이더（실제는 버튼의 집합체）를 표시한다
+	PRINTFORML RGB 슬라이더
+	CALL PRINT_RGB_SLIDER( 색 )
+	PRINTL 
+
+	; HSB 슬라이더（실제는 버튼의 집합체）를 표시한다
+	PRINTFORML HSB 슬라이더
+	CALL PRINT_HSB_SLIDER( 색 )
+	PRINTL 
+
+	IF 샘플수 > 0
+		PRINTFORM 그 외의 색 : 
+		FOR LOCAL, 0, 샘플수
+			LOCAL:1 = 샘플:(LOCAL)
+			SETCOLOR LOCAL:1
+			PRINTBUTTON @"■", LOCAL:1
+			PRINTFORM 　
+			RESETCOLOR
+		NEXT
+		PRINTL 
+	ENDIF
+
+	IF 초기색 != -1
+		PRINTFORML   최초의 색 :
+		SETCOLOR 초기색
+		PRINTBUTTON @"■", 초기색
+		RESETCOLOR
+		PRINTL
+	ENDIF
+
+	PRINTBUTTON "[돌아온다]", -1
+
+	; 입력 대기（RGB 슬라이더, HSB 슬라이더의 버튼의 값이 색을 나타내는 값이 되어 있다）
+	INPUT
+
+	SIF RESULT == -1
+		BREAK
+
+	색 = RESULT
+WEND
+
+RETURN 색

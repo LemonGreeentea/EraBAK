@@ -1,0 +1,313 @@
+﻿;엉엉덩이코키
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME15
+LOCALS:0 = 엉덩이코키
+
+IF MPLY_NUM == 2 && MTAR_NUM == 1
+	LOCALS:0 = Ｗ엉덩이코키
+ELSE
+	LOCALS:0 = 엉덩이코키
+ENDIF
+
+RESULTS:0 = %LOCALS:0%한다
+RESULTS:1 = %LOCALS:0%당한다
+RESULTS:2 = %LOCALS:0%시킨다
+RESULTS:3 = %LOCALS:0%된다
+RESULTS:4 = %LOCALS:0%시킨다
+RESULTS:5 = %LOCALS:0%과시하고
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE15
+;공통 부분
+CALL COM_ABLE_COMMON(15)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 2명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 2
+	RETURN 0
+;타겟은 최대로 1명까지
+SIF MTAR_NUM <= 0 || MTAR_NUM > 1
+	RETURN 0
+
+
+;전플레이어에 대해 판정
+FOR LOCAL:0, 0, MPLY_NUM
+	;행동불능이라면 불가
+	SIF !IS_PLAYABLE(MPLY:(LOCAL:0))
+		RETURN 0
+	;구속중이라면 불가
+	SIF IS_BIND(MPLY:(LOCAL:0))
+		RETURN 0
+	;플레이어가 삽입중이라면 불가
+	SIF IS_INSERT_SINGLE(MPLY:(LOCAL:0), "전")
+		RETURN 0
+	;플레이어가 안면승마중이라면 불가
+	SIF IS_RIDE(MPLY:(LOCAL:0))
+		RETURN 0
+	;도게자중이라면 불가
+	SIF IS_EQUIP_PLAYER(MPLY:(LOCAL:0), 110)
+		RETURN 0
+	;플레이어가Ａ바이브를 장착중이라면 불가
+	SIF IS_EQUIP_TARGET(MPLY:(LOCAL:0), 62)
+		RETURN 0
+	;플레이어와 타겟이 동일한 EQUIP 키스를 공유하고 있다면 불가
+	SIF SEARCH_EQUIP_EITHER(20, MPLY:(LOCAL:0), MTAR:0) >= 0
+		RETURN 0
+	;플레이어가 타겟으로 가슴애무중이라면 불가
+	SIF SEARCH_EQUIP(1, MPLY:(LOCAL:0), MTAR:0) >= 0
+		RETURN 0
+	;플레이어로부터 타겟／타겟으로부터 플레이어에 다리 빨고 안이라면 불가
+	SIF SEARCH_EQUIP_IC(104, MPLY:(LOCAL:0), MTAR:0) >= 0
+		RETURN 0
+NEXT
+
+;타겟으로 장대가 필요
+SIF !HAS_PENIS(MTAR:0)
+	RETURN 0
+;타겟이 삽입중이라면 불가
+SIF IS_INSERT_SINGLE(MTAR:0, "전")
+	RETURN 0
+;타겟의 자지가 메워지고 있으면 안 돼
+SIF IS_P_HOLD(MTAR:0)
+	RETURN 0
+
+
+;타겟이 안면승마중이라면 불가
+SIF IS_RIDE(MTAR:0)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM15
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;대Ｐ봉사계 커맨드의 계속 플래그를 해제
+CALL RELEASE_SERVE_P
+
+;●전플레이어에 대해 판정
+FOR LOCAL:0, 0, MPLY_NUM
+	DOWNBASE:(MPLY:(LOCAL:0)):체력 += 120
+
+	EXP:(MPLY:(LOCAL:0)):성기술경험치 += MAX(MTAR_NUM / 2 + 1, 1)
+
+
+	SOURCE:(MPLY:(LOCAL:0)):노출 = 50
+	SOURCE:(MPLY:(LOCAL:0)):봉사 = SERVE_HOUSHI(MPLY:(LOCAL:0), 300)
+	SOURCE:(MPLY:(LOCAL:0)):접촉 = 150
+	SOURCE:(MPLY:(LOCAL:0)):일탈 = 50
+	SOURCE:(MPLY:(LOCAL:0)):성행동 = 240
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(MPLY:(LOCAL:0), 160, 90)
+
+	;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+	TCVAR:(MPLY:(LOCAL:0)):4 = 1
+
+	;사정 개소와 대상을 세트
+	CALL STACK_SPERM(MTAR:0, MPLY:(LOCAL:0), 사정부위_엉덩이)
+
+	SOURCE:(MTAR:0):쾌Ｐ += SENSE_HOUSHI_P(MPLY:(LOCAL:0), MTAR:0, 1350 + (TALENT:(MPLY:(LOCAL:0)):예쁜엉덩이 || GET_HIPSIZE(MPLY:(LOCAL:0)) >= 1) * 200)
+NEXT
+
+
+;●타겟으로 붙어 판정
+DOWNBASE:(MTAR:0):체력 += 60
+
+SOURCE:(MTAR:0):접촉 = 100
+SOURCE:(MTAR:0):일탈 = 50
+SOURCE:(MTAR:0):성행동 = 180
+
+
+;주도권에 응한 우월·굴종의 소스 추가
+CALL ADD_SOURCE_INITIATIVE_U(MTAR:0, 130, 100)
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = 1
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 5
+
+RETURN 1
+
+;-------------------------------------------------
+;계속 커맨드인가 어떤가를 설정
+;-------------------------------------------------
+@COM_IS_EQUIP15
+RETURN 1
+
+;-------------------------------------------------
+;계속 상태의 처리
+;-------------------------------------------------
+@COM_EQUIP15(ARG:0)
+LOCAL:3 = MEQUIP_TARGET:(ARG:0):0
+
+
+
+
+;●전플레이어에 대해 판정
+FOR LOCAL:0, 0, MEQUIP_PLAYER_NUM:(ARG:0)
+	LOCAL:2 = MEQUIP_PLAYER:(ARG:0):LOCAL
+	;●플레이어에 대해 처리
+	DOWNBASE:(LOCAL:2):체력 += 20
+
+	EXP:(LOCAL:2):성기술경험치 += MAX(MEQUIP_TARGET_NUM:(ARG:0) / 2 + 1, 1)
+
+	SOURCE:(LOCAL:2):노출 += 25
+	SOURCE:(LOCAL:2):봉사 += SERVE_HOUSHI(LOCAL:2, 100)
+	SOURCE:(LOCAL:2):접촉 += 75
+	SOURCE:(LOCAL:2):일탈 += 25
+	SOURCE:(LOCAL:2):성행동 += 80
+
+	;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+	TCVAR:(LOCAL:2):4 = 1
+	SOURCE:(LOCAL:3):쾌Ｐ += SENSE_HOUSHI_P(LOCAL:2, LOCAL:3, 450 + (TALENT:(LOCAL:2):예쁜엉덩이 || GET_HIPSIZE(LOCAL:2) >= 1) * 100)
+
+	;사정 개소와 대상을 세트
+	CALL STACK_SPERM(LOCAL:2, LOCAL:3, 11, 사정부위_엉덩이)
+
+	;도착도 변화 기준치
+	TCVAR:(LOCAL:2):50 += 1
+
+NEXT
+
+;●타겟으로 붙어 처리
+DOWNBASE:(LOCAL:3):체력 += 10
+
+SOURCE:(LOCAL:3):접촉 += 50
+SOURCE:(LOCAL:3):일탈 += 25
+SOURCE:(LOCAL:3):성행동 += 60
+
+;도착도 변화 기준치
+TCVAR:(LOCAL:3):50 += 1
+
+;-------------------------------------------------
+;계속중의 표시
+;-------------------------------------------------
+@EQUIP_MESSAGE15(ARG:0)
+RESULTS = %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"가")% %EQUIP_TARGET_ANAME(ARG:0)%에 엉덩이코키중
+
+;-------------------------------------------------
+;계속중의 지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE_EQUIP15(ARG:0)
+PRINTFORML %조사처리(EQUIP_TARGET_ANAME(ARG:0),"가")% %EQUIP_PLAYER_ANAME(ARG:0)%의 엉덩이로 페니스를 잡아당기고 있다…
+
+;-------------------------------------------------
+;계속을 해제했을 때의 지문
+;-------------------------------------------------
+@COM_TEXT_RELEASE_EQUIP15(ARG:0)
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER15(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 85
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 4)
+CALL COM_ORDER_ELEMENT(ARG:0, @"정애Lv{ABL:(ARG:0):정애}", ABL:(ARG:0):정애 * 1)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 2, 20))
+
+IF TCVAR:(ARG:0):60
+	CALL COM_ORDER_ELEMENT(ARG:0, "미약", 6)
+ENDIF
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -3)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 6)
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -1)
+ENDIF
+IF TALENT:(ARG:0):남성혐오
+	CALL COM_ORDER_ELEMENT(ARG:0, "남성혐오", -7)
+ENDIF
+
+;합의
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -10)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE15
+IF MPLY:0 != MASTER && !TALENT:(MPLY:0):수치심옅음 && ABL:(MPLY:0):노출 <= 1 && ABL:(MPLY:0):주도도Ｕ < 500 && !GETBIT(TALENT:(MPLY:0):음란계, 소질_음란_새드)
+	LOCALS:0 = 조금 부끄러운 듯이 하면서도,
+ENDIF
+
+IF TALENT:(MPLY:0):예쁜엉덩이
+	LOCALS:1 = 아름답고 가지런함
+ELSEIF GET_HIPSIZE(MPLY:0) >= 1
+	LOCALS:1 = 포동포동 고기가 탔다
+ENDIF
+
+
+
+IF MPLY_NUM == 2
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"와")% %ANAME(MPLY:1)%는 %LOCALS:0% %ANAME(MTAR:0)%의 페니스를 %STR_BODY("엉덩이:엉덩이살:장", MPLY:0)%로 찌부러뜨리도록(듯이) 쓸어올려 자극%TARGET_STR("했다", "해 왔다")%…
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %조사처리(ANAME(MPLY:0),"와")% %ANAME(MPLY:1)%의 %STR_BODY("엉덩이:장", MPLY:0)%를 페니스에 강압하게 하면, 엉덩이살의 사이에 장대를 비비게 해 봉사시켰다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %조사처리(ANAME(MPLY:0),"와")% %ANAME(MPLY:1)%에, %ANAME(MTAR:0)%의 페니스를 엉덩이의 사이에 훑도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"와")% %ANAME(MPLY:1)%는 %LOCALS:0% %ANAME(MTAR:0)%의 페니스를 %STR_BODY("엉덩이:엉덩이살:장", MPLY:0)%로 찌부러뜨리도록(듯이)해 쓸어올렸다…
+	ENDSELECT
+ELSE
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %ANAME(MTAR:0)%의 페니스를 %STR_BODY("엉덩이:엉덩이살:장", MPLY:0)%로 찌부러뜨리도록(듯이) 쓸어올려 자극%TARGET_STR("했다", "해 왔다")%…
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 %STR_BODY("엉덩이:장", MPLY:0)%를 페니스에 강압하게 하면, 엉덩이살의 사이에 장대를 비비게 해 봉사시켰다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에, %ANAME(MTAR:0)%의 페니스를 엉덩이의 사이에 훑도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %ANAME(MTAR:0)%의 페니스를 %STR_BODY("엉덩이:엉덩이살:장", MPLY:0)%로 찌부러뜨리도록(듯이)해 쓸어올렸다…
+	ENDSELECT
+ENDIF
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN15
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_15()
+RETURN POWER(2, 성적기호_봉사하고싶다)
+
+@COM_PREFERENCE_TARGET_15()
+RETURN POWER(2, 성적기호_봉사되고싶다)
+

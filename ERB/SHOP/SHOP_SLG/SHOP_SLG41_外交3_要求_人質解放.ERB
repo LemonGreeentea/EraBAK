@@ -1,0 +1,37 @@
+﻿;-------------------------------------------------
+;인질의 해방을 요구한다
+;-------------------------------------------------
+@DIPLOMACY_REQUEST_RELEASE(ARG:0)
+LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+LOCAL:5 = GET_COUNTRY_BOSS(ARG:0)
+
+PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:5)%에게, 무조건으로 인질을 해방하도록(듯이) 요구했다
+
+CALL DIPLOMACY_REQUEST_COMMON(ARG:0, 250)
+LOCAL:2 = RESULT
+SIF LOCAL:2 <= 0
+	RETURN 0
+
+PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% 수네라고 있던 우리 나라의 포로를 전원 해방했다…
+SETCOLOR 칼라_주의
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속 && CFLAG:(LOCAL:0):포로처 == ARG:0
+		CALL CAPTURE(LOCAL:0, 0)
+		PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 해방되었습니다
+	ENDIF
+NEXT
+RESETCOLOR
+WAIT
+
+;쾌락으로 말하는 것을 들려주었을 경우, 포상의 처리
+SIF LOCAL:2 == 2
+	CALL DIPLOMACY_REQUEST_PRIZE(ARG:0)
+;약물로 말하는 것을 들려주었을 경우, 드라그(약품, 마약)의 처리
+SIF LOCAL:2 == 3
+	CALL DIPLOMACY_REQUEST_DRUG(ARG:0)
+;최면으로 말하는 것을 들려주었을 경우, 최면의 처리
+SIF LOCAL:2 == 4
+	CALL DIPLOMACY_REQUEST_HYPNOSIS(ARG:0)
+
+RETURN 1
+

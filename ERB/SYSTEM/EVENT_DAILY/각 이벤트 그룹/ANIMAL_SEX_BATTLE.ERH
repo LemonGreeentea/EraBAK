@@ -1,0 +1,5 @@
+﻿#DIM CONST 종족사이항쟁_여우 = 1
+#DIM CONST 종족사이항쟁_너구리 = 2
+#DIM CONST 종족사이항쟁_토끼 = 3
+#DIM CONST 종족사이항쟁_텐구 = 4
+#DIMS CONST 종족사이항쟁_종류 =  "DUMMY", "여우",  "너구리", "토끼","텐구"

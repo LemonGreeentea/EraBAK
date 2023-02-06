@@ -1,0 +1,735 @@
+﻿;계속 상태나 장착물에 관한 처리
+
+;-------------------------------------------------
+;캐릭터 ARG:0이 커맨드 번호 ARG:1～ARG:10에 대응하는 계속 상태의 플레이어 또는 타겟이라면 1을 돌려주는 함수
+;-------------------------------------------------
+@IS_EQUIP(ARG:0, ARG:1, ARG:2 = -1, ARG:3 = -1, ARG:4 = -1, ARG:5 = -1, ARG:6 = -1, ARG:7 = -1, ARG:8 = -1, ARG:9 = -1, ARG:10 = -1, ARG:11 = -1, ARG:12 = -1, ARG:13 = -1)
+#FUNCTION
+FOR LOCAL:3, 1, 14
+	IF ARG:(LOCAL:3) < 0
+		RETURNF 0
+	ENDIF
+	FOR LOCAL:0, 0, MEQUIP_NUM
+		IF MEQUIP:(LOCAL:0) == ARG:(LOCAL:3)
+			FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+				IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:0
+					RETURNF 1
+				ENDIF
+			NEXT
+			FOR LOCAL:1, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+				IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:1) == ARG:0
+					RETURNF 1
+				ENDIF
+			NEXT
+		ENDIF
+	NEXT
+NEXT
+RETURNF 0
+
+;-------------------------------------------------
+;캐릭터 ARG:0이 커맨드 번호 ARG:1～ARG:8에 대응하는 계속 상태의 플레이어라면 1을 돌려주는 함수
+;-------------------------------------------------
+@IS_EQUIP_PLAYER(ARG:0, ARG:1, ARG:2 = -1, ARG:3 = -1, ARG:4 = -1, ARG:5 = -1, ARG:6 = -1, ARG:7 = -1, ARG:8 = -1, ARG:9 = -1, ARG:10 = -1, ARG:11 = -1, ARG:12 = -1, ARG:13 = -1)
+#FUNCTION
+FOR LOCAL:3, 1, 14
+	IF ARG:(LOCAL:3) < 0
+		RETURNF 0
+	ENDIF
+	FOR LOCAL:0, 0, MEQUIP_NUM
+		IF MEQUIP:(LOCAL:0) == ARG:(LOCAL:3)
+			FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+				IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:0
+					RETURNF 1
+				ENDIF
+			NEXT
+		ENDIF
+	NEXT
+NEXT
+RETURNF 0
+
+;-------------------------------------------------
+;캐릭터 ARG:0이 커맨드 번호 ARG:1～ARG:8에 대응하는 계속 상태의 타겟이라면 1을 돌려주는 함수
+;-------------------------------------------------
+@IS_EQUIP_TARGET(ARG:0, ARG:1, ARG:2 = -1, ARG:3 = -1, ARG:4 = -1, ARG:5 = -1, ARG:6 = -1, ARG:7 = -1, ARG:8 = -1, ARG:9 = -1, ARG:10 = -1, ARG:11 = -1, ARG:12 = -1, ARG:13 = -1)
+#FUNCTION
+FOR LOCAL:3, 1, 14
+	IF ARG:(LOCAL:3) < 0
+		RETURNF 0
+	ENDIF
+	FOR LOCAL:0, 0, MEQUIP_NUM
+		IF MEQUIP:(LOCAL:0) == ARG:(LOCAL:3)
+			FOR LOCAL:1, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+				IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:1) == ARG:0
+					RETURNF 1
+				ENDIF
+			NEXT
+		ENDIF
+	NEXT
+NEXT
+RETURNF 0
+
+;-------------------------------------------------
+;ARG:0의 값에 응해
+;  -1→MPLY를 플레이어, MTAR 「이외」를 타겟으로 한다
+;  -2→MPLY 「이외」를 플레이어, MTAR를 타겟으로 한다
+;  -3→MTAR를 플레이어, MPLY 「이외」를 타겟으로 한다
+;  -4→MTAR 「이외」를 플레이어, MPLY를 타겟으로 한다
+;커맨드 번호 ARG:1～ARG:10에 대응하는 계속 상태가 있으면 1을 돌려주는 함수
+;-------------------------------------------------
+@IS_EQUIP_OTHERS(ARG:0, ARG:1, ARG:2 = -1, ARG:3 = -1, ARG:4 = -1, ARG:5 = -1, ARG:6 = -1, ARG:7 = -1, ARG:8 = -1, ARG:9 = -1, ARG:10 = -1, ARG:11 = -1, ARG:12 = -1, ARG:13 = -1)
+#FUNCTION
+FOR LOCAL:6, 1, 14
+	IF ARG:(LOCAL:6) < 0
+		RETURNF 0
+	ENDIF
+	IF ARG:0 == -1
+		FOR LOCAL:0, 0, MEQUIP_NUM
+			IF MEQUIP:(LOCAL:0) == ARG:(LOCAL:6)
+				FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+					FOR LOCAL:2, 0, MPLY_NUM
+						IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == MPLY:(LOCAL:2)
+							FOR LOCAL:3, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+								FOR LOCAL:4, 0, MTAR_NUM
+									IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:3) != MTAR:(LOCAL:4)
+										RETURNF 1
+									ENDIF
+								NEXT
+							NEXT
+						ENDIF
+					NEXT
+				NEXT
+			ENDIF
+		NEXT
+	ELSEIF ARG:0 == -2
+		FOR LOCAL:0, 0, MEQUIP_NUM
+			IF MEQUIP:(LOCAL:0) == ARG:(LOCAL:6)
+				FOR LOCAL:1, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+					FOR LOCAL:2, 0, MTAR_NUM
+						IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:1) == MTAR:(LOCAL:2)
+							FOR LOCAL:3, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+								FOR LOCAL:4, 0, MPLY_NUM
+									IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:3) != MPLY:(LOCAL:4)
+										RETURNF 1
+									ENDIF
+								NEXT
+							NEXT
+						ENDIF
+					NEXT
+				NEXT
+			ENDIF
+		NEXT
+	ELSEIF ARG:0 == -3
+		FOR LOCAL:0, 0, MEQUIP_NUM
+			IF MEQUIP:(LOCAL:0) == ARG:(LOCAL:6)
+				FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+					FOR LOCAL:2, 0, MTAR_NUM
+						IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == MTAR:(LOCAL:2)
+							FOR LOCAL:3, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+								FOR LOCAL:4, 0, MPLY_NUM
+									IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:3) != MPLY:(LOCAL:4)
+										RETURNF 1
+									ENDIF
+								NEXT
+							NEXT
+						ENDIF
+					NEXT
+				NEXT
+			ENDIF
+		NEXT
+	ELSEIF ARG:0 == -4
+		FOR LOCAL:0, 0, MEQUIP_NUM
+			IF MEQUIP:(LOCAL:0) == ARG:(LOCAL:6)
+				FOR LOCAL:1, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+					FOR LOCAL:2, 0, MPLY_NUM
+						IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:1) == MPLY:(LOCAL:2)
+							FOR LOCAL:3, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+								FOR LOCAL:4, 0, MTAR_NUM
+									IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:3) != MTAR:(LOCAL:4)
+										RETURNF 1
+									ENDIF
+								NEXT
+							NEXT
+						ENDIF
+					NEXT
+				NEXT
+			ENDIF
+		NEXT
+	ELSE
+		RETURNF 0
+	ENDIF
+NEXT
+RETURNF 0
+
+;-------------------------------------------------
+;MEQUIP의 커맨드 번호가 ARG:0, 플레이어가 ARG:1, 타겟이 ARG:2의 계속 상태를 검색해, 존재하면 MEQUIP 번호를 돌려준다
+;존재하지 않는 경우는-1을 돌려준다
+;플레이어·타겟으로-1을 지정하면, 그 플레이어·타겟 지정을 무시해 탐색
+;-------------------------------------------------
+@SEARCH_EQUIP(ARG:0, ARG:1, ARG:2)
+#FUNCTION
+FOR LOCAL:0, 0, MEQUIP_NUM
+	IF MEQUIP:(LOCAL:0) == ARG:0
+		FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+			IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:1 || ARG:1 == -1
+				FOR LOCAL:2, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+					IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:2) == ARG:2 || ARG:2 == -1
+						RETURNF LOCAL:0
+					ENDIF
+				NEXT
+				BREAK
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+RETURNF -1
+
+;-------------------------------------------------
+;MEQUIP의 커맨드 번호가 ARG:0, 플레이어·타겟이 ARG:1·ARG:2의 계속 상태를 검색해, 존재하면 MEQUIP 번호를 돌려준다
+;존재하지 않는 경우는-1을 돌려준다
+;SEARCH_EQUIP와 달라, ARG:1으로 ARG:2가 가환(어느쪽이든 다른 한쪽이 플레이어, 다른 한쪽이 타겟이라면 조건을 채운다)
+;-------------------------------------------------
+@SEARCH_EQUIP_IC(ARG:0, ARG:1, ARG:2)
+#FUNCTION
+FOR LOCAL:0, 0, MEQUIP_NUM
+	IF MEQUIP:(LOCAL:0) == ARG:0
+		FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+			IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:1 || ARG:1 == -1
+				FOR LOCAL:2, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+					IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:2) == ARG:2 || ARG:2 == -1
+						RETURNF LOCAL:0
+					ENDIF
+				NEXT
+				BREAK
+			ENDIF
+			IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:2 || ARG:2 == -1
+				FOR LOCAL:2, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+					IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:2) == ARG:1 || ARG:1 == -1
+						RETURNF LOCAL:0
+					ENDIF
+				NEXT
+				BREAK
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+RETURNF -1
+
+;-------------------------------------------------
+;MEQUIP의 커맨드 번호가 ARG:0, 플레이어·타겟이 ARG:1·ARG:2의 계속 상태를 검색해, 존재하면 MEQUIP 번호를 돌려준다
+;존재하지 않는 경우는-1을 돌려준다
+;SEARCH_EQUIP_IC와 달라, ARG:1으로 ARG:2는 플레이어로도 타겟에서도 좋다(양쪽 모두가 플레이어／양쪽 모두가 타겟에서도 조건을 채운다)
+;-------------------------------------------------
+@SEARCH_EQUIP_EITHER(ARG:0, ARG:1, ARG:2)
+#FUNCTION
+FOR LOCAL:0, 0, MEQUIP_NUM
+	IF MEQUIP:(LOCAL:0) == ARG:0
+		FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+			IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:1 || ARG:1 == -1
+				FOR LOCAL:2, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+					IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:2) == ARG:2 || ARG:2 == -1
+						RETURNF LOCAL:0
+					ENDIF
+				NEXT
+				FOR LOCAL:2, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+					IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:2) == ARG:2
+						RETURNF LOCAL:0
+					ENDIF
+				NEXT
+				BREAK
+			ENDIF
+		NEXT
+		FOR LOCAL:1, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+			IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:1) == ARG:1
+				FOR LOCAL:2, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+					IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:2) == ARG:2 || ARG:2 == -1
+						RETURNF LOCAL:0
+					ENDIF
+				NEXT
+				FOR LOCAL:2, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+					IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:2) == ARG:2
+						RETURNF LOCAL:0
+					ENDIF
+				NEXT
+				BREAK
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+RETURNF -1
+
+;-------------------------------------------------
+;캐릭터 ARG:0이 ARG:1번의 MEQUIP의 플레이어일지 어떨지를 돌려주는 함수
+;-------------------------------------------------
+@IS_MPLY_EQUIP(ARG:0, ARG:1)
+#FUNCTION
+IF ARG:1 >= 0 && ARG:1 < MAX_MEQUIP && MEQUIP:(ARG:1) >= 0
+	FOR LOCAL:0, 0, MAX_MEQUIP_PLAYER
+		IF MEQUIP_PLAYER:(ARG:1):(LOCAL:0) == ARG:0
+			RETURNF 1
+		ENDIF
+	NEXT
+ENDIF
+RETURNF 0
+
+;-------------------------------------------------
+;캐릭터 ARG:0이 ARG:1번의 MEQUIP의 타겟일지 어떨지를 돌려주는 함수
+;-------------------------------------------------
+@IS_MTAR_EQUIP(ARG:0, ARG:1)
+#FUNCTION
+IF ARG:1 >= 0 && ARG:1 < MAX_MEQUIP && MEQUIP:(ARG:1) >= 0
+	FOR LOCAL:0, 0, MAX_MEQUIP_TARGET
+		IF MEQUIP_TARGET:(ARG:1):(LOCAL:0) == ARG:0
+			RETURNF 1
+		ENDIF
+	NEXT
+ENDIF
+RETURNF 0
+
+;-------------------------------------------------
+;ARG:0번의 커맨드의 계속 상태를 설정하는 함수
+;ARG:1에 1을 지정하면 강제적으로 계속시킨다
+;-------------------------------------------------
+@SET_EQUIP(ARG:0, ARG:1 = 0)
+;이미 EQUIP의 수가 한계에 이르고 있다면 돌아온다
+IF MEQUIP_NUM >= 50
+	RETURN
+ENDIF
+
+;계속 커맨드는 아니면 돌아온다
+RESULT = 0
+TRYCALLFORM COM_IS_EQUIP{ARG:0}
+IF !RESULT && !ARG:1
+	RETURN
+ENDIF
+
+;이미 같은 계속 상태가 설정되어 있으면 돌아온다
+FOR LOCAL:0, 0, MEQUIP_NUM
+	IF MEQUIP:(LOCAL:0) == ARG:0
+		LOCAL:5 = 1
+		FOR LOCAL:1, 0, MPLY_NUM
+			;※MPLY도 MEQUIP_PLAYER도 캐릭터 번호의 젊은 순서에 줄지어 있을 것으로, 단순 비교한다
+			IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) != MPLY:(LOCAL:1)
+				LOCAL:5 = 0
+				BREAK
+			ENDIF
+		NEXT
+		IF LOCAL:5
+			FOR LOCAL:1, 0, MTAR_NUM
+				;※MTAR도 MEQUIP_TARGET도 캐릭터 번호의 젊은 순서에 줄지어 있을 것으로, 단순 비교한다
+				IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:1) != MTAR:(LOCAL:1)
+					LOCAL:5 = 0
+					BREAK
+				ENDIF
+			NEXT
+			IF LOCAL:5
+				RETURN
+			ENDIF
+		ENDIF
+	ENDIF
+NEXT
+
+;MEQUIP 배열의 최후미로 지정된 계속 상태를 설정
+LOCAL:0 = MEQUIP_NUM
+
+MEQUIP:(LOCAL:0) = ARG:0
+FOR LOCAL:1, 0, MPLY_NUM
+	MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) = MPLY:(LOCAL:1)
+	SIF IS_INITIATIVE(MPLY:(LOCAL:1))
+		MEQUIP_INITIATIVE:(LOCAL:0) = MPLY:(LOCAL:1)
+NEXT
+FOR LOCAL:1, 0, MTAR_NUM
+	MEQUIP_TARGET:(LOCAL:0):(LOCAL:1) = MTAR:(LOCAL:1)
+	SIF IS_INITIATIVE(MTAR:(LOCAL:1))
+		MEQUIP_INITIATIVE:(LOCAL:0) = MTAR:(LOCAL:1)
+NEXT
+MEQUIP_PLAYER_NUM:(LOCAL:0) = MPLY_NUM
+MEQUIP_TARGET_NUM:(LOCAL:0) = MTAR_NUM
+
+MEQUIP_NUM ++
+
+;-------------------------------------------------
+;EQUIP 해제의 처리  ARG:0=MEQUIP의 배열 번호 ARG:1=역조교중의 해제를 허락할지 어떨지 ARG:2=메세지를 표시할지 어떨지
+;해제를 했을 경우 1을 돌려준다
+;-------------------------------------------------
+@RELEASE_EQUIP(ARG:0, ARG:1 = 0, ARG:2 = 1)
+;역조교중에서 ARG:1이 0이라면 해제 불능
+IF GROUPMATCH(FLAG:조교모드, 4, 5, 7) && !ARG:1
+	RETURN 0
+ENDIF
+
+IF ARG:0 >= 0 && ARG:0 < MEQUIP_NUM
+	LOCAL:5 = MEQUIP:(ARG:0)
+	LOCAL:6 = MEQUIP_PLAYER:(ARG:0):0
+
+	IF ARG:2
+		;커맨드마다의 지문 표시
+		TRYCALLFORM COM_TEXT_RELEASE_EQUIP{MEQUIP:(ARG:0)}(ARG:0)
+	ENDIF
+
+	;삭제하는 MEQUIP의 분, 배열 번호를 채운다
+	FOR LOCAL:0, ARG:0, MEQUIP_NUM - 1
+		MEQUIP:(LOCAL:0) = MEQUIP:(LOCAL:0 + 1)
+		MEQUIP_PLAYER_NUM:(LOCAL:0) = MEQUIP_PLAYER_NUM:(LOCAL:0 + 1)
+		MEQUIP_TARGET_NUM:(LOCAL:0) = MEQUIP_TARGET_NUM:(LOCAL:0 + 1)
+		MEQUIP_INITIATIVE:(LOCAL:0) = MEQUIP_INITIATIVE:(LOCAL:0 + 1)
+		FOR LOCAL:1, 0, MAX_MEQUIP_PLAYER
+			MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) = MEQUIP_PLAYER:(LOCAL:0 + 1):(LOCAL:1)
+		NEXT
+		FOR LOCAL:1, 0, MAX_MEQUIP_TARGET
+			MEQUIP_TARGET:(LOCAL:0):(LOCAL:1) = MEQUIP_TARGET:(LOCAL:0 + 1):(LOCAL:1)
+		NEXT
+		MEQUIP_TURN:(LOCAL:0) = MEQUIP_TURN:(LOCAL:0 + 1)
+	NEXT
+
+	;최후미의 데이터를 클리어
+	LOCAL:2 = MEQUIP_NUM - 1
+	MEQUIP:(LOCAL:2) = -1
+	MEQUIP_PLAYER_NUM:(LOCAL:2) = 0
+	MEQUIP_TARGET_NUM:(LOCAL:2) = 0
+	MEQUIP_INITIATIVE:(LOCAL:2) = -1
+	FOR LOCAL:1, 0, MAX_MEQUIP_PLAYER
+		MEQUIP_PLAYER:(LOCAL:2):(LOCAL:1) = -1
+	NEXT
+	FOR LOCAL:1, 0, MAX_MEQUIP_TARGET
+		MEQUIP_TARGET:(LOCAL:2):(LOCAL:1) = -1
+	NEXT
+	MEQUIP_TURN:(LOCAL:2) = 0
+
+	MEQUIP_NUM --
+
+	RETURN 1
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;EQUIP 해제의 처리  ARG:0=MEQUIP에 대응하는 커맨드 번호 ARG:1=플레이어의 캐릭터 번호 ARG:2=타겟의 캐릭터 번호
+;플레이어·타겟으로-1을 지정하면, 그 플레이어·타겟 지정을 무시해 탐색
+;-------------------------------------------------
+@RELEASE_EQUIP_EX(ARG:0, ARG:1, ARG:2)
+FOR LOCAL:0, 0, MAX_MEQUIP
+	CALL RELEASE_EQUIP(SEARCH_EQUIP(ARG:0, ARG:1, ARG:2), 1, 0)
+	IF !RESULT
+		BREAK
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;캐릭터 ARG:0이 관련되는 EQUIP를 모두 해제하는 함수
+;-------------------------------------------------
+@RELEASE_ALL_EQUIP(ARG:0)
+LOCAL:0 = 0
+LOCAL:2 = MEQUIP_NUM
+WHILE LOCAL:0 < LOCAL:2
+	LOCAL:5 = 0
+	FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+		IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:0
+			LOCAL:5 = 1
+			BREAK
+		ENDIF
+	NEXT
+	IF !LOCAL:5
+		FOR LOCAL:1, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+			IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:1) == ARG:0
+				LOCAL:5 = 1
+				BREAK
+			ENDIF
+		NEXT
+	ENDIF
+	IF LOCAL:5
+		CALL RELEASE_EQUIP(LOCAL:0, 1, 0)
+		LOCAL:2 --
+	ELSE
+		LOCAL:0 ++
+	ENDIF
+WEND
+
+;-------------------------------------------------
+;캐릭터 ARG:0이 기절했을 때의 EQUIP 해제
+;-------------------------------------------------
+@DOWN_RELEASE_EQUIP(ARG:0)
+LOCAL:0 = 0
+LOCAL:2 = MEQUIP_NUM
+WHILE LOCAL:0 < LOCAL:2
+	LOCAL:5 = 0
+	FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+		IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:0
+			IF !GROUPMATCH(MEQUIP:(LOCAL:0), 34, 44, 61, 62, 63, 64, 67, 75, 85, 84, 112, 114)
+				LOCAL:5 = 1
+				BREAK
+			ENDIF
+		ENDIF
+	NEXT
+	IF LOCAL:5
+		CALL RELEASE_EQUIP(LOCAL:0, 1, 0)
+		LOCAL:2 --
+	ELSE
+		LOCAL:0 ++
+	ENDIF
+WEND
+
+;-------------------------------------------------
+;EQUIP를 초기화하는 함수
+;-------------------------------------------------
+@INIT_EQUIP
+VARSET MEQUIP, -1
+MEQUIP_NUM = 0
+VARSET MEQUIP_PLAYER, -1
+VARSET MEQUIP_TARGET, -1
+VARSET MEQUIP_INITIATIVE, -1
+VARSET MEQUIP_PLAYER_NUM, 0
+VARSET MEQUIP_TARGET_NUM, 0
+VARSET MEQUIP_TURN, 0
+
+;--------------------------------------------------------
+;계속 커맨드의 플레이어 명칭을 취득 ARG:0=MEQUIP의 배열 번호
+;--------------------------------------------------------
+@EQUIP_PLAYER_ANAME(ARG:0)
+#FUNCTIONS
+IF MEQUIP_PLAYER_NUM:(ARG:0) >= 3
+	LOCALS:0 = %ANAME(MEQUIP_PLAYER:(ARG:0):0)%들
+ELSE
+	LOCALS:0 = 
+	FOR LOCAL:0, 0, MEQUIP_PLAYER_NUM:(ARG:0)
+		IF LOCAL:0 >= 1
+			LOCALS:0 = %조사처리(LOCALS:0,"와")%
+		ENDIF
+		LOCALS:0 = %LOCALS:0% %ANAME(MEQUIP_PLAYER:(ARG:0):(LOCAL:0))%
+	NEXT
+ENDIF
+RETURNF LOCALS:0
+
+;--------------------------------------------------------
+;계속 커맨드의 타겟 명칭을 취득 ARG:0=MEQUIP의 배열 번호
+;--------------------------------------------------------
+@EQUIP_TARGET_ANAME(ARG:0)
+#FUNCTIONS
+IF MEQUIP_TARGET_NUM:(ARG:0) >= 3
+	LOCALS:1 = %ANAME(MEQUIP_TARGET:(ARG:0):0)%들
+ELSE
+	LOCALS:1 = 
+	FOR LOCAL:0, 0, MEQUIP_TARGET_NUM:(ARG:0)
+		IF LOCAL:0 >= 1
+			LOCALS:1 = %조사처리(LOCALS:1,"와")%
+		ENDIF
+		LOCALS:1 = %LOCALS:1% %ANAME(MEQUIP_TARGET:(ARG:0):(LOCAL:0))%
+	NEXT
+ENDIF
+RETURNF LOCALS:1
+
+;-------------------------------------------------
+;캐릭터 ARG:0의 소스를 일시적으로 퇴피하는 함수
+;-------------------------------------------------
+@PUTOUT_SOURCE(ARG:0)
+FOR LOCAL:0, 0, 100
+	MEMORY_SOURCE:(ARG:0):(LOCAL:0) = SOURCE:(ARG:0):(LOCAL:0)
+	SOURCE:(ARG:0):(LOCAL:0) = 0
+NEXT
+
+;-------------------------------------------------
+;캐릭터 ARG:0의 퇴피한 소스를 다시 가산하는 함수
+;-------------------------------------------------
+@SUM_SOURCE(ARG:0)
+FOR LOCAL:0, 0, 100
+	SOURCE:(ARG:0):(LOCAL:0) += MEMORY_SOURCE:(ARG:0):(LOCAL:0)
+	MEMORY_SOURCE:(ARG:0):(LOCAL:0) = 0
+NEXT
+
+;-------------------------------------------------
+;캐릭터 ARG:0의Ｖ가 메워지고 있는지 어떤지를 판정하는 함수
+;-------------------------------------------------
+@IS_V_HOLD(ARG:0)
+#FUNCTION
+;짝 맞추기 놀, 쌍두바이브
+IF IS_EQUIP_PLAYER(ARG:0, 21) || IS_EQUIP_TARGET(ARG:0, 21) || IS_EQUIP_PLAYER(ARG:0, 22) || IS_EQUIP_TARGET(ARG:0, 22)
+ENDIF
+;성교
+IF IS_EQUIP_TARGET(ARG:0, 30) || IS_EQUIP_TARGET(ARG:0, 31) || IS_EQUIP_TARGET(ARG:0, 32) || IS_EQUIP_TARGET(ARG:0, 33) || IS_EQUIP_TARGET(ARG:0, 34) || IS_EQUIP_TARGET(ARG:0, 35) || IS_EQUIP_TARGET(ARG:0, 36) || IS_EQUIP_TARGET(ARG:0, 37) || IS_EQUIP_TARGET(ARG:0, 38) || IS_EQUIP_TARGET(ARG:0, 39) || IS_EQUIP_TARGET(ARG:0, 52) || IS_EQUIP_TARGET(ARG:0, 55) || IS_EQUIP_TARGET(ARG:0, 57) || IS_EQUIP_TARGET(ARG:0, 160)
+	RETURNF 1
+ENDIF
+;손가락삽입, 꼬리삽입
+IF IS_EQUIP_TARGET(ARG:0, 3) || IS_EQUIP_TARGET(ARG:0, 6)
+	RETURNF 1
+ENDIF
+;바이브, 확장 벌룬, 피스트
+IF IS_EQUIP_TARGET(ARG:0, 61) || IS_EQUIP_TARGET(ARG:0, 65) || IS_EQUIP_TARGET(ARG:0, 87)
+	RETURNF 1
+ENDIF
+;안면승마
+IF IS_EQUIP_PLAYER(ARG:0, 101)
+	RETURNF 1
+ENDIF
+;촉수삽입
+IF IS_EQUIP_TARGET(ARG:0, 201)
+	RETURNF 1
+ENDIF
+;꼬리 셀프 V
+IF IS_EQUIP_PLAYER(ARG:0, 108)
+	RETURNF 1
+ENDIF
+RETURNF 0
+
+;-------------------------------------------------
+;캐릭터 ARG:0의Ａ가 메워지고 있는지 어떤지를 판정하는 함수
+;-------------------------------------------------
+@IS_A_HOLD(ARG:0)
+#FUNCTION
+;Ａ성교
+IF IS_EQUIP_TARGET(ARG:0, 40) || IS_EQUIP_TARGET(ARG:0, 41) || IS_EQUIP_TARGET(ARG:0, 42) || IS_EQUIP_TARGET(ARG:0, 43) || IS_EQUIP_TARGET(ARG:0, 44) || IS_EQUIP_TARGET(ARG:0, 45)  || IS_EQUIP_TARGET(ARG:0, 46) || IS_EQUIP_TARGET(ARG:0, 47) || IS_EQUIP_TARGET(ARG:0, 48) || IS_EQUIP_TARGET(ARG:0, 49) || IS_EQUIP_TARGET(ARG:0, 53) || IS_EQUIP_TARGET(ARG:0, 56) || IS_EQUIP_TARGET(ARG:0, 58) || IS_EQUIP_TARGET(ARG:0, 161)
+	RETURNF 1
+ENDIF
+;애널애무, 꼬리Ａ삽입, 애널핥기
+IF IS_EQUIP_TARGET(ARG:0, 4) || IS_EQUIP_TARGET(ARG:0, 7) || IS_EQUIP_TARGET(ARG:0, 8)
+	RETURNF 1
+ENDIF
+;꼬리, Ａ바이브, 확장 벌룬, Ａ피스트, 관장＆플러그
+IF IS_EQUIP_TARGET(ARG:0, 62) || IS_EQUIP_TARGET(ARG:0, 66) || IS_EQUIP_TARGET(ARG:0, 88) || IS_EQUIP_TARGET(ARG:0, 142)
+	RETURNF 1
+ENDIF
+;Ａ안면승마, Ｗ안면승마
+IF IS_EQUIP_PLAYER(ARG:0, 102) || IS_EQUIP_PLAYER(ARG:0, 105)
+	RETURNF 1
+ENDIF
+;촉수Ａ삽입
+IF IS_EQUIP_TARGET(ARG:0, 202)
+	RETURNF 1
+ENDIF
+;꼬리 셀프 A
+IF IS_EQUIP_PLAYER(ARG:0, 109)
+	RETURNF 1
+ENDIF
+RETURNF 0
+
+;-------------------------------------------------
+;캐릭터 ARG:0의 입이 메워지고 있는지 어떤지를 판정하는 함수
+;-------------------------------------------------
+@IS_M_HOLD(ARG:0)
+#FUNCTION
+;키스
+IF IS_EQUIP(ARG:0, 20, 342)
+	RETURNF 1
+ENDIF
+;페라, 쿤닐링구스, 귀두 페라, 애널핥기, 구슬빨기
+IF IS_EQUIP_PLAYER(ARG:0, 2) || IS_EQUIP_PLAYER(ARG:0, 11) || IS_EQUIP_PLAYER(ARG:0, 107) || IS_EQUIP_PLAYER(ARG:0, 8) || IS_EQUIP_PLAYER(ARG:0, 19)
+	RETURNF 1
+ENDIF
+;유두빨기
+IF IS_EQUIP_PLAYER(ARG:0, 9)
+	RETURNF 1
+ENDIF
+;재갈, 이라마, 촉수펠라
+IF IS_EQUIP_TARGET(ARG:0, 68) || IS_EQUIP_TARGET(ARG:0, 86) || IS_EQUIP_TARGET(ARG:0, 90) || IS_EQUIP_TARGET(ARG:0, 91) || IS_EQUIP_TARGET(ARG:0, 94) || IS_EQUIP_TARGET(ARG:0, 210)
+	RETURNF 1
+ENDIF
+;안면승마, Ａ안면승마, Ｗ안면승마
+IF IS_EQUIP_TARGET(ARG:0, 101) || IS_EQUIP_TARGET(ARG:0, 102) || IS_EQUIP_TARGET(ARG:0, 105)
+	RETURNF 1
+ENDIF
+;다리 빨고
+IF IS_EQUIP_PLAYER(ARG:0, 104) 
+	RETURNF 1
+ENDIF
+;셀프페라
+IF IS_EQUIP_PLAYER(ARG:0, 117)
+	RETURNF 1
+ENDIF
+RETURNF 0
+
+;-------------------------------------------------
+;캐릭터 ARG:0의 페니스가 메워지고 있을까 판단하는 함수
+;성교는 취득하지 않기 때문에 주의!
+;-------------------------------------------------
+@IS_P_HOLD(ARG:0)
+#FUNCTION
+;대딸, 페라, 파이즈리, 스마타, 다리 코키, 오나홀, 꼬리, 머리카락, 귀두 꾸짖어, 전기안마, 촉수오나홀
+IF IS_EQUIP_TARGET(ARG:0, 10, 11, 12, 13, 14, 15, 16, 17, 18, 106, 107, 103,205)
+	RETURNF 1
+ENDIF
+;이라마, 셀프 오나홀, 셀프페라
+IF IS_EQUIP_PLAYER(ARG:0, 90, 108, 109, 116, 117)
+	RETURNF 1
+ENDIF
+RETURNF 0
+
+
+;-------------------------------------------------
+;캐릭터 ARG:0이 구속 상태에 있을지 어떨지를 판정하는 함수
+;-------------------------------------------------
+@IS_BIND(ARG:0)
+#FUNCTION
+;밧줄·촉수긴박
+IF IS_EQUIP_TARGET(ARG:0, 85, 208)
+	RETURNF 1
+ENDIF
+RETURNF 0
+
+;-------------------------------------------------
+;캐릭터 ARG:0이 안면승마중인가 어떤가를 판정하는 함수 ARG:1에 타겟을 지정 가능
+;-------------------------------------------------
+@IS_RIDE(ARG:0, ARG:1 = -1)
+#FUNCTION
+IF ARG:1 < 0
+	IF IS_EQUIP_PLAYER(ARG:0, 101) || IS_EQUIP_PLAYER(ARG:0, 102) || IS_EQUIP_PLAYER(ARG:0, 105)
+		RETURNF 1
+	ENDIF
+ELSE
+	IF SEARCH_EQUIP(101, ARG:0, ARG:1) >= 0 || SEARCH_EQUIP(102, ARG:0, ARG:1) >= 0 || SEARCH_EQUIP(105, ARG:0, ARG:1) >= 0
+		RETURNF 1
+	ENDIF
+ENDIF
+RETURNF 0
+
+;-------------------------------------------------
+;캐릭터 ARG:0이 안면승마 되고 있는지 어떤지를 판정하는 함수 ARG:1에 플레이어를 지정 가능
+;-------------------------------------------------
+@IS_RIDDEN(ARG:0, ARG:1 = -1)
+#FUNCTION
+IF ARG:1 < 0
+	IF IS_EQUIP_TARGET(ARG:0, 101) || IS_EQUIP_TARGET(ARG:0, 102) || IS_EQUIP_TARGET(ARG:0, 105)
+		RETURNF 1
+	ENDIF
+ELSE
+	IF SEARCH_EQUIP(101, ARG:1, ARG:0) >= 0 || SEARCH_EQUIP(102, ARG:1, ARG:0) >= 0 || SEARCH_EQUIP(105, ARG:1, ARG:0) >= 0
+		RETURNF 1
+	ENDIF
+ENDIF
+RETURNF 0
+
+;--------------------------------------------------------
+;대Ｐ봉사계 커맨드의 계속 플래그를 해제하는 함수
+;--------------------------------------------------------
+@RELEASE_SERVE_P
+FOR LOCAL:0, 0, MPLY_NUM
+	FOR LOCAL:1, 0, MTAR_NUM
+		CALL RELEASE_EQUIP_EX(10, MPLY:(LOCAL:0), MTAR:(LOCAL:1))
+		CALL RELEASE_EQUIP_EX(11, MPLY:(LOCAL:0), MTAR:(LOCAL:1))
+		CALL RELEASE_EQUIP_EX(12, MPLY:(LOCAL:0), MTAR:(LOCAL:1))
+		CALL RELEASE_EQUIP_EX(13, MPLY:(LOCAL:0), MTAR:(LOCAL:1))
+		CALL RELEASE_EQUIP_EX(14, MPLY:(LOCAL:0), MTAR:(LOCAL:1))
+		CALL RELEASE_EQUIP_EX(15, MPLY:(LOCAL:0), MTAR:(LOCAL:1))
+		CALL RELEASE_EQUIP_EX(16, MPLY:(LOCAL:0), MTAR:(LOCAL:1))
+		CALL RELEASE_EQUIP_EX(17, MPLY:(LOCAL:0), MTAR:(LOCAL:1))
+		CALL RELEASE_EQUIP_EX(18, MPLY:(LOCAL:0), MTAR:(LOCAL:1))
+		CALL RELEASE_EQUIP_EX(91, MPLY:(LOCAL:0), MTAR:(LOCAL:1))
+		CALL RELEASE_EQUIP_EX(94, MPLY:(LOCAL:0), MTAR:(LOCAL:1))
+		CALL RELEASE_EQUIP_EX(103, MPLY:(LOCAL:0), MTAR:(LOCAL:1))
+		CALL RELEASE_EQUIP_EX(106, MPLY:(LOCAL:0), MTAR:(LOCAL:1))
+		CALL RELEASE_EQUIP_EX(107, MPLY:(LOCAL:0), MTAR:(LOCAL:1))
+		CALL RELEASE_EQUIP_EX(108, MPLY:(LOCAL:0), MTAR:(LOCAL:1))
+		CALL RELEASE_EQUIP_EX(109, MPLY:(LOCAL:0), MTAR:(LOCAL:1))
+		CALL RELEASE_EQUIP_EX(90, MTAR:(LOCAL:0), MPLY:(LOCAL:1))
+	NEXT
+NEXT
+
+;--------------------------------------------------------
+;구상의 호환성을 취하기 위한 함수／구가 막히고 있는지 어떤지를 체크한다
+;--------------------------------------------------------
+@IS_EQUIP_CONTINUE(ARG:0, ARGS:1)
+#FUNCTION
+IF ARGS:1 == "입장착"
+	;재갈·이라마치오
+	IF IS_EQUIP_TARGET(ARG:0, 86) || IS_EQUIP_TARGET(ARG:0, 90)
+	ENDIF
+ENDIF
+
+RETURNF 0

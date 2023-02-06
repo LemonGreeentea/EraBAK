@@ -1,0 +1,252 @@
+﻿;위협한다
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME80
+RESULTS:0 = 위협한다
+RESULTS:3 = 위협해진다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE80
+;공통 부분
+CALL COM_ABLE_COMMON(80)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 1명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 1
+	RETURN 0
+;타겟은 최대로 1명까지
+SIF MTAR_NUM <= 0 || MTAR_NUM > 1
+	RETURN 0
+;플레이어가 행동불능이라면 불가
+SIF !IS_PLAYABLE(MPLY:0)
+	RETURN 0
+;플레이어의 입이 막히고 있다면 불가
+SIF IS_M_HOLD(MPLY:0)
+	RETURN 0
+;플레이어가 구속중이라면 불가
+SIF IS_BIND(MPLY:0)
+	RETURN 0
+;타겟이 실신중·이탈중이라면 불가
+SIF TCVAR:(MTAR:0):52 || TCVAR:(MTAR:0):53
+	RETURN 0
+;플레이어에 주도권이 없으면 불가
+SIF IS_INITIATIVE_SETTING(MPLY:0) == 0
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM80
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;●플레이어에 대해 처리
+SOURCE:(MPLY:0):기학 = 100
+SOURCE:(MPLY:0):일탈 = 50
+EXP:(MPLY:0):기학경험치 += RAND:2 + 1
+;주도권에 응한 우월·굴종의 소스 추가
+CALL ADD_SOURCE_INITIATIVE_U(MPLY:0, 130, 0)
+
+;●타겟으로 붙어 처리
+LOCAL:0 = EXP:(MTAR:0):트라우마경험
+IF LOCAL:0 < 5
+	TFLAG:17 = 0
+	SOURCE:(MTAR:0):공포 = 50
+	SOURCE:(MTAR:0):불안 = 50
+	SOURCE:(MTAR:0):반감 = 500
+ELSEIF LOCAL:0 < 15
+	TFLAG:17 = 1
+	SOURCE:(MTAR:0):공포 = 200
+	SOURCE:(MTAR:0):불안 = 100
+	SOURCE:(MTAR:0):반감 = 250
+ELSEIF LOCAL:0 < 50
+	TFLAG:17 = 2
+	SOURCE:(MTAR:0):공포 = 400
+	SOURCE:(MTAR:0):불안 = 150
+	SOURCE:(MTAR:0):반감 = 100
+ELSE
+	TFLAG:17 = 3
+	SOURCE:(MTAR:0):공포 = 500
+	SOURCE:(MTAR:0):불안 = 200
+	SOURCE:(MTAR:0):반감 = 50
+ENDIF
+IF GETBIT(TALENT:(MTAR:0):음란계, 소질_음란_마조)
+	SOURCE:(MTAR:0):반감 = 0
+ENDIF
+
+SOURCE:(MTAR:0):일탈 = 150
+EXP:(MTAR:0):피학경험치 += RAND:2 + 1
+
+;주도권에 응한 우월·굴종의 소스 추가
+CALL ADD_SOURCE_INITIATIVE_U(MTAR:0, 0, 50)
+
+;주도도 변화 기준치
+TFLAG:49 = 3
+
+;도착도 변화 기준치
+TFLAG:50 = 2
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 0
+
+RETURN 1
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER80(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 90
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"새드 Lv{ABL:(ARG:0):새드}", ABL:(ARG:0):새드 * 3)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 1, 10))
+
+IF TALENT:(ARG:0):얌전함
+	CALL COM_ORDER_ELEMENT(ARG:0, "얌전함", -3)
+ENDIF
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -2)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 3)
+ENDIF
+IF TALENT:(ARG:0):Ｓ기질
+	CALL COM_ORDER_ELEMENT(ARG:0, "Ｓ기질", 6)
+ENDIF
+
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_새드)
+	CALL COM_ORDER_ELEMENT(ARG:0, "새드", 40)
+ELSE
+	IF ABL:(ARG:0):주도도Ｕ >= 500
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 15)
+	ELSEIF ABL:(ARG:0):주도도Ｕ >= 300
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 10)
+	ELSEIF ABL:(ARG:0):주도도Ｕ >= 100
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 5)
+	ELSEIF ABL:(ARG:0):주도도Ｕ > -100
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 0)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", -5)
+	ENDIF
+
+	IF ABL:(ARG:0):도착도 >= 800
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 20)
+	ELSEIF ABL:(ARG:0):도착도 >= 500
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 15)
+	ELSEIF ABL:(ARG:0):도착도 >= 300
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 10)
+	ELSEIF ABL:(ARG:0):도착도 >= 100
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 5)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 0)
+	ENDIF
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE80
+PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"를")% 말로 위협했다…
+
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST80
+IF MTAR:0 != MASTER
+	LOCAL:2 = CUP:(MTAR:0):포주
+	LOCAL:3 = CUP:(MTAR:0):로주
+
+	SELECTCASE TFLAG:17
+		CASE 0
+			;포로 조교의 메인 타겟
+			IF FLAG:조교모드 == 2 && FINDELEMENT(PRISONER_TARGET, MTAR:0) != -1
+				IF LOCAL:2 >= 500
+					PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 반항적인 태도를 취하고 있지만, 그 몸은 희미하게 떨고 있다
+				ELSE
+					PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 불쾌감을 드러내 %조사처리(ANAME(MPLY:0),"를")% 노려봐 돌려주었다
+				ENDIF
+			ELSE
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 태도에 당황하고 있는 것 같다
+			ENDIF
+		CASE 1
+			;포로 조교의 메인 타겟
+			IF FLAG:조교모드 == 2 && FINDELEMENT(PRISONER_TARGET, MTAR:0) != -1
+				IF LOCAL:2 >= 500
+					PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 말에, 불안에 눈동자를 방황하게 하고 있다
+				ELSE
+					PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 다부진 눈동자로 %조사처리(ANAME(MPLY:0),"를")% 노려봐 돌려주었다
+				ENDIF
+			ELSE
+				IF GETBIT(TALENT:(MTAR:0):음란계, 소질_음란_마조)
+					PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 말에 흥분을 느끼고 있는 것 같다
+				ELSE
+					PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 태도에 당황하고 있는 것 같다
+				ENDIF
+			ENDIF
+		CASE 2
+			;포로 조교의 메인 타겟
+			IF FLAG:조교모드 == 2 && FINDELEMENT(PRISONER_TARGET, MTAR:0) != -1
+				IF LOCAL:2 >= 500
+					PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %조사처리(ANAME(MPLY:0),"로")% 된 행위를 생각해 내, 흠칫 몸을 진동시켰다
+				ELSE
+					PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 희미하게 떨리면서도, 다부지게 %조사처리(ANAME(MPLY:0),"를")% 노려봐 돌려주었다
+				ENDIF
+			ELSE
+				IF GETBIT(TALENT:(MTAR:0):음란계, 소질_음란_마조)
+					PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 말에 흥분을 느끼고 있는 것 같다
+				ELSE
+					PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 말에, 무심코 흠칫 몸을 진동시켰다
+				ENDIF
+			ENDIF
+		CASE 3
+			;포로 조교의 메인 타겟
+			IF FLAG:조교모드 == 2 && FINDELEMENT(PRISONER_TARGET, MTAR:0) != -1
+				IF LOCAL:2 >= 1500
+					PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 덜컹덜컹떨리면서, 겉 모습 따위 신경 쓰지 말고 %ANAME(MPLY:0)%에용서를빈다라고 있다
+				ELSEIF LOCAL:2 >= 500
+					PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %조사처리(ANAME(MPLY:0),"로")% 된 행위를 생각해 내, 덜컹덜컹몸을 진동시키고 있다
+				ELSE
+					PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 희미하게 떨리면서도, 어디까지나 다부진 태도로 %조사처리(ANAME(MPLY:0),"를")% 노려보았다
+				ENDIF
+			ELSE
+				IF GETBIT(TALENT:(MTAR:0):음란계, 소질_음란_마조)
+					PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 말에 흥분을 느끼고 있는 것 같다
+				ELSE
+					PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 말에, 무심코 흠칫 몸을 진동시켰다
+				ENDIF
+			ENDIF
+	ENDSELECT
+ENDIF
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN80
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_80()
+RETURN POWER(2, 성적기호_학대하고싶다)
+
+@COM_PREFERENCE_TARGET_80()
+RETURN POWER(2, 성적기호_시달리고싶다)
+

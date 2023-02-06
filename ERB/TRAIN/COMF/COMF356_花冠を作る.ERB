@@ -1,0 +1,186 @@
+﻿;화화관을만든다
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME356
+RESULTS:0 = 화관을 선물 한다
+RESULTS:1 = 화관을 만들어진다
+RESULTS:2 = 화관을 재배해 받는다
+RESULTS:3 = 화관을 선물 된다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE356
+;공통 부분
+CALL COM_ABLE_COMMON(356)
+SIF RESULT == 0
+	RETURN 0
+;주인공 이외가 실행하는 경우, 호감도가 300이상 필요
+SIF MPLY:0 != MASTER && CFLAG:(MPLY:0):2 < 300
+	RETURN 0
+;꽃밭에서의 데이트 중한정
+SIF GET_PLACENAME(TFLAG:54) != "꽃밭"
+	RETURN 0
+;상처라면 불가
+SIF CFLAG:(MTAR:0):행동불능상태 == 3
+	RETURN 0
+;키스중은 불가
+SIF IS_EQUIP(MPLY:0, 342)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM356
+IF MPLY:0 == MASTER
+	;커맨드의 성공 여부를 TFLAG:18에 세트
+	CALL JUDGE_COM_RESULT(MTAR:0, 5, 5)
+ELSE
+	;커맨드의 성공 여부를 TFLAG:18에 세트
+	CALL JUDGE_COM_RESULT(MPLY:0, 5, 5)
+ENDIF
+
+;고정으로 들어가는 소스
+SOURCE:(MPLY:0):접촉 = 80
+SOURCE:(MTAR:0):접촉 = 80
+
+;친밀하게 응한 환락의 소스 추가
+SOURCE:(MPLY:0):환락 = 10
+SOURCE:(MTAR:0):환락 = 10
+CALL ADD_SOURCE_KANRAKU(MPLY:0, 180)
+CALL ADD_SOURCE_KANRAKU(MTAR:0, 180)
+SOURCE:(MPLY:0):환락 = MAX(SOURCE:(MPLY:0):환락, 0)
+SOURCE:(MTAR:0):환락 = MAX(SOURCE:(MTAR:0):환락, 0)
+
+;친밀하게 응한 애정의 소스 추가
+CALL ADD_SOURCE_AIZYOU(MPLY:0, 60)
+CALL ADD_SOURCE_AIZYOU(MTAR:0, 60)
+
+;타겟이 아이라면 환락이 넉넉하게
+IF TALENT:(MTAR:0):유아 || TALENT:(MTAR:0):유치
+	TIMES SOURCE:(MTAR:0):환락, 1.20
+	TIMES SOURCE:(MTAR:0):애정, 0.70
+;타겟이 남성·남성(후타)라면 효과 감소
+ELSEIF GROUPMATCH(TALENT:(MTAR:0):성별, 0, 3)
+	TIMES SOURCE:(MTAR:0):환락, 0.80
+	TIMES SOURCE:(MTAR:0):애정, 0.80
+ENDIF
+
+;주도권에 응한 소스의 추가
+CALL ADD_SOURCE_INITIATIVE_N(MPLY:0, 50, 50)
+CALL ADD_SOURCE_INITIATIVE_N(MTAR:0, 50, 50)
+
+;실패
+IF TFLAG:18 == -1
+	TIMES SOURCE:(MPLY:0):환락, 0.20
+	TIMES SOURCE:(MPLY:0):애정, 0.20
+	TIMES SOURCE:(MTAR:0):환락, 0.20
+	TIMES SOURCE:(MTAR:0):애정, 0.20
+	SOURCE:(MPLY:0):불만 += 500
+	SOURCE:(MTAR:0):불만 += 500
+	TFLAG:37 -= 5
+
+;성공
+ELSEIF TFLAG:18 == 0
+
+;대성공
+ELSE
+	TIMES SOURCE:(MPLY:0):환락, 2.00
+	TIMES SOURCE:(MPLY:0):애정, 2.00
+	TIMES SOURCE:(MTAR:0):환락, 2.00
+	TIMES SOURCE:(MTAR:0):애정, 2.00
+	TFLAG:37 += 5
+ENDIF
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = -2
+
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE356
+;플레이어가 주인공측
+IF MPLY:0 == MASTER
+	;주도권이 주인공측
+	IF IS_INITIATIVE(MASTER)
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 근처에 나 있는 꽃을 사용해 화관을 재배해, %ANAME(MTAR:0)%의 머리에 씌웠다
+	;주도권이 상대측
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 화관을 재배하게 해 그것을 선물 시켰다
+	ENDIF
+
+	IF TFLAG:18 == 1
+		IF TALENT:(MTAR:0):유아 || TALENT:(MTAR:0):유치
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 화관을 머리에 실은 채로 기쁜듯이 까불며 떠들어 돌았다…
+		ELSEIF GROUPMATCH(TALENT:(MTAR:0):성별, 0, 3)
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 얼굴을 붉게 하면서, 흠칫흠칫 어울릴지 어떨지 (들)물어 왔다…
+		ELSE
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 얼굴을 붉게 하면서도, 기쁜듯이 미소지었다…
+		ENDIF
+	ELSEIF TFLAG:18 == 0
+		IF TALENT:(MTAR:0):유아 || TALENT:(MTAR:0):유치
+			PRINTFORML 화관을 받은 %조사처리(ANAME(MTAR:0),"는")% 기분 좋은 것같이 미소지었다…
+		ELSEIF GROUPMATCH(TALENT:(MTAR:0):성별, 0, 3)
+			PRINTFORML 화관을 받은 %조사처리(ANAME(MTAR:0),"는")% 쓴 웃음 하고 있다…
+		ELSE
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 조금 수줍으면서도, %ANAME(MPLY:0)%에 어울릴지 어떨지 (들)물어 왔다…
+		ENDIF
+	ELSEIF TFLAG:18 == -1
+		IF TALENT:(MTAR:0):유아 || TALENT:(MTAR:0):유치 || TFLAG:45 == 1
+			PRINTFORML ……이지만, %조사처리(ANAME(MTAR:0),"는")% 마음에 들지 않았던 것일까 받은 화관을 되물리쳤다
+		ELSEIF GROUPMATCH(TALENT:(MTAR:0):성별, 0, 3)
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 바보 취급 당한 것처럼 느낀 것 같고, 화관을 뿌리쳐 버렸다…
+		ELSE
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 속셈이기도 하다고 생각했는지, %ANAME(MPLY:0)%에 혐의의 시선을 향하여 있다…
+		ENDIF
+	ENDIF
+
+;플레이어가 상대측
+ELSE
+	;주도권이 주인공측
+	IF IS_INITIATIVE(MASTER)
+		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 근처에 나 있는 꽃을 사용해 화관을 재배하도록(듯이) 요구했다
+
+		IF TFLAG:18 == 1
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 기분 좋게 승낙하면, 정중하게 화관을 재배해 %ANAME(MTAR:0)%의 머리에 실었다
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 잘 어울리고 있다고 해 즐거운 듯이 미소지었다…
+		ELSEIF TFLAG:18 == 0
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 기분 좋게 승낙하면, 정중하게 화관을 재배해 %ANAME(MTAR:0)%의 머리에 실었다…
+		ELSEIF TFLAG:18 == -1
+			PRINTFORML ……이지만, %ANAME(MTAR:0)%에 서로 빼앗아 받을 수 없었다
+		ENDIF
+
+	;주도권이 상대측
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 근처에 나 있는 꽃을 사용해 화관을 재배해, %ANAME(MTAR:0)%의 머리에 씌웠다
+
+		IF TFLAG:18 == 1
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 잘 어울리고 있다고 해 즐거운 듯이 미소지었다…
+		ELSEIF TFLAG:18 == -1
+			PRINTFORML 하지만 성과가 좋지 않았던 것일까, %조사처리(ANAME(MPLY:0),"는")% 좀 더라는 표정이다…
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;-------------------------------------------------
+@COM_TEXT_LAST356
+;일상 커맨드에 공통의 지문
+CALL COM_TEXT_LAST_LIFE
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN356
+RETURN 커맨드_일상

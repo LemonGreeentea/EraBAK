@@ -1,0 +1,244 @@
+﻿;-------------------------------------------------
+;# 「산책」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE_NAME67
+RESULTS:0 '= "산책"
+
+;-------------------------------------------------
+;# 「산책」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE_CHECK67
+
+;소속이 없으면 궁전도 없음
+SIF !CFLAG:MASTER:소속
+	RETURN 0
+;포로시는 안 돼
+SIF CFLAG:MASTER:포로처
+	RETURN 0
+
+RETURN 1
+
+;-------------------------------------------------
+;# 「산책」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA67(ARG:0)
+;각 이벤트측에서 지정
+RETURN 1
+
+;-------------------------------------------------
+;# 「산책」의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY67
+FLAG:요바이 = 0
+RETURN 0
+
+;-------------------------------------------------
+;# 「산책」의 오른쪽 컬럼 버튼 입력치를 캐릭터 번호로 변환하는 처리의 오프 판정
+;  메뉴 버튼을 맵아래에 나열 하거나 버튼을 늘리는 경우
+;  버튼 번호가 부족하게 된다고 생각하므로 일단 오프 판정
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP_COLUMN_RIGHT_CONVERT_CHARANUM_OFF_CHECK67
+
+;-------------------------------------------------
+;# 「산책」의 오른쪽 컬럼 표시 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SHOW67
+#DIM L_COUNTER
+#DIM CHARA_COUNTER
+#DIM DISPCOM_COUNTER
+#DIM POSSIBLE_FLAG
+#DIM CONST SHOP_LIFE67_MAP_궁전 = 1				;맵 Default치
+#DIM CONST SHOP_LIFE67_MAP_궁전_AREA_병사 = 7	;에리어 Default치
+#DIM DISPCOM_FIRSTLINE
+
+;맵 플래그 온
+;조교 개시시의 장소의 설정으로 사용해 다 사용한 곧 오프로 하는 플래그
+SHOP_LIFE_MAP_FLAG = 1
+
+;-------------------------------------------------
+; 타이틀과 설명·라인·라인의 개행
+;-------------------------------------------------
+CALL COLUMN_RIGHT_TITLE("이동처선택", "", "", "1", "0")
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+;-------------------------------------------------
+; 초기화
+;-------------------------------------------------
+;현재 맵 번호가 없으면 
+SIF !SHOP_LIFE_MAP_NUM
+	SHOP_LIFE_MAP_NUM = SHOP_LIFE67_MAP_궁전
+
+;현재 맵의 현재 에리어는 존재할까
+RESULT = 0
+TRYCALLFORM SHOP_LIFE67_MAP{SHOP_LIFE_MAP_NUM}_AREA{SHOP_LIFE_MAP_AREA_NUM}_EXIST
+;없으면 확실히 존재하는 에리어에 리셋트
+SIF !RESULT
+	SHOP_LIFE_MAP_AREA_NUM = SHOP_LIFE67_MAP_궁전_AREA_병사
+
+;-------------------------------------------------
+; 맵의 read와 표시
+;-------------------------------------------------
+;독입·현재 맵의 에리어명
+CALLFORM SHOP_LIFE67_MAP{SHOP_LIFE_MAP_NUM}_LOAD_AREA_NAME
+
+;표시·현재 맵
+CALLFORM SHOP_LIFE67_MAP{SHOP_LIFE_MAP_NUM}
+
+;-------------------------------------------------
+; 라벨
+;-------------------------------------------------
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+PRINTFORM 이동해 행동을 선택  남은시간:
+FOR L_COUNTER, SHOP_TIME, CALC_SHOP_TIME()
+	PRINT ★
+NEXT
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+;-------------------------------------------------
+; 커맨드 버튼 표시
+;-------------------------------------------------
+DISPCOM_FIRSTLINE = LINECOUNT
+VARSET DISPCOM_COUNTER
+FOR L_COUNTER, 1, SHOP_LIFE_MAP_AREA_COM_MAX + 1
+	VARSET POSSIBLE_FLAG
+	;존재 판정
+	RESULT = 0
+	TRYCALLFORM SHOP_LIFE67_MAP{SHOP_LIFE_MAP_NUM}_AREA{SHOP_LIFE_MAP_AREA_NUM}_COM{L_COUNTER}_EXIST
+	SIF !RESULT
+		CONTINUE
+	;명칭 판정
+	RESULTS:0 '= ""
+	TRYCALLFORM SHOP_LIFE67_MAP{SHOP_LIFE_MAP_NUM}_AREA{SHOP_LIFE_MAP_AREA_NUM}_COM{L_COUNTER}_NAME
+	SIF RESULTS:0 == ""
+		CONTINUE
+	;선택 가부 판정
+	RESULT = 0
+	TRYCALLFORM SHOP_LIFE67_MAP{SHOP_LIFE_MAP_NUM}_AREA{SHOP_LIFE_MAP_AREA_NUM}_COM{L_COUNTER}_CHECK
+	SIF !RESULT
+		CONTINUE
+	;캐릭터 존재 판정
+	FOR CHARA_COUNTER, 0, CHARANUM
+		RESULT = 0
+		TRYCALLFORM SHOP_LIFE67_MAP{SHOP_LIFE_MAP_NUM}_AREA{SHOP_LIFE_MAP_AREA_NUM}_COM{L_COUNTER}_CHECKCHARA(CHARA_COUNTER)
+		IF RESULT
+			POSSIBLE_FLAG = 1
+			BREAK
+		ENDIF
+	NEXT
+	IF POSSIBLE_FLAG
+		IF DISPCOM_COUNTER && DISPCOM_COUNTER % 5 == 0
+			CALL COLUMN_RIGHT_PRINTL
+		ELSEIF !DISPCOM_COUNTER
+		ELSE
+			PRINTPLAIN   
+		ENDIF
+		RESULTS:0 '= ""
+		CALLFORM SHOP_LIFE67_MAP{SHOP_LIFE_MAP_NUM}_AREA{SHOP_LIFE_MAP_AREA_NUM}_COM{L_COUNTER}_NAME
+		PRINTBUTTON @"[%RESULTS:0, 14, LEFT%]", L_COUNTER + SHOP_LIFE_LIST2_ADD_INPUT
+		DISPCOM_COUNTER ++
+	ENDIF
+NEXT
+SIF !LINEISEMPTY()
+	CALL COLUMN_RIGHT_PRINTL
+IF DISPCOM_FIRSTLINE + 3 - LINECOUNT > 0
+	FOR L_COUNTER, 0, DISPCOM_FIRSTLINE + 3 - LINECOUNT
+		CALL COLUMN_RIGHT_PRINTL
+	NEXT
+ENDIF
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+;-------------------------------------------------
+; 오른쪽 컬럼 하부 안내
+;-------------------------------------------------
+;맵에 등록되어 있는 명칭을 부른다
+;이 파일의 하부에 있는 래퍼를 사용
+RESULTS:0 '= ""
+CALL SHOP_LIFE_MAP_PLACE(SHOP_LIFE_MAP_NUM, SHOP_LIFE_MAP_AREA_NUM)
+PRINTFORM 현재지:%RESULTS:0% 
+;에리어 안내
+TRYCCALLFORM SHOP_LIFE67_MAP{SHOP_LIFE_MAP_NUM}_AREA{SHOP_LIFE_MAP_AREA_NUM}_DESCRIPTION
+CATCH
+	CALL COLUMN_RIGHT_PRINTL
+ENDCATCH
+
+;나머지는 공행
+CALL COLUMN_RIGHT_CLEAR
+
+RETURN 0
+
+;-------------------------------------------------
+;# 「산책」의 오른쪽 컬럼 버튼의 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP67(ARG:0)
+
+;PRINTFORMW ARG:0 = {ARG:0}
+
+;커맨드 실행
+IF ARG:0 >= SHOP_LIFE_LIST2_ADD_INPUT
+	SHOP_LIFE_MAP_AREA_COM_NUM = ARG:0 - SHOP_LIFE_LIST2_ADD_INPUT
+	;커맨드의 존재 판정이 되어 있으면 타이틀을 표시
+	RESULT = 0
+	TRYCALLFORM SHOP_LIFE67_MAP{SHOP_LIFE_MAP_NUM}_AREA{SHOP_LIFE_MAP_AREA_NUM}_COM{SHOP_LIFE_MAP_AREA_COM_NUM}_EXIST
+	IF RESULT
+		CUSTOMDRAWLINE ─
+		PRINTFORML -%MENUVARS:SHOP_LIFE_MAP_AREA_NUM%-
+		CUSTOMDRAWLINE ─
+	ENDIF
+	;에리어 이벤트가 있으면 부른다
+	RESULT = 0
+	TRYCALLFORM SHOP_LIFE67_MAP{SHOP_LIFE_MAP_NUM}_AREA{SHOP_LIFE_MAP_AREA_NUM}_COM{SHOP_LIFE_MAP_AREA_COM_NUM}_MAIN
+;	IF RESULT
+;		IF CALC_SHOP_TIME() - SHOP_TIME == 0
+;			PRINTL 
+;			PRINTFORMW 슬슬 전장에 향하지 않으면. %조사처리(ANAME(MASTER),"는")% 싸움의 준비를 시작했다…
+;			LINES_SHOP = LINECOUNT
+;			BEGIN TURNEND
+;		ENDIF
+;	ENDIF
+;에리어의 이동
+ELSE
+	;에리어의 존재 판정이 되어 있으면 에리어의 이동
+	RESULT = 0
+	TRYCALLFORM SHOP_LIFE67_MAP{SHOP_LIFE_MAP_NUM}_AREA{ARG:0 - SHOP_LIFE_LIST1_ADD_INPUT}_EXIST
+	IF RESULT
+		SHOP_LIFE_MAP_AREA_NUM = ARG:0 - SHOP_LIFE_LIST1_ADD_INPUT
+	ENDIF
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 「산책」의 맵명 표시（TRAIN_PLACE용）
+;-------------------------------------------------
+@SHOP_LIFE_MAP_PLACE(LOCAL_MAP_NUM, LOCAL_AREA_NUM)
+#DIM LOCAL_MAP_NUM
+#DIM LOCAL_AREA_NUM
+#DIMS RETURN_TEXT
+
+RESULTS:0 '= ""
+TRYCALLFORM SHOP_LIFE67_MAP{LOCAL_MAP_NUM}_NAME
+IF RESULTS:0 != ""
+	RETURN_TEXT '= RESULTS:0
+ENDIF
+
+RESULTS:0 '= ""
+TRYCALLFORM SHOP_LIFE67_MAP{LOCAL_MAP_NUM}_AREA{LOCAL_AREA_NUM}_NAME
+IF RESULTS:0 != ""
+	RETURN_TEXT '= RETURN_TEXT + " " + RESULTS:0
+ENDIF
+
+RESULTS:0 '= ""
+IF RETURN_TEXT != ""
+	RESULTS:0 '= RETURN_TEXT
+ELSE
+	RESULTS:0 '= "궁전안"
+ENDIF
+
+RETURN 1
+

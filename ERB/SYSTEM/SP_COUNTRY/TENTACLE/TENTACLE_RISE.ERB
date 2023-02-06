@@ -1,0 +1,52 @@
+﻿;--------------------------------------
+;봉기 이벤트가 발생할까의 판정
+;--------------------------------------
+@TENTACLE_RISE_RATE()
+;이미 출현하고 있는지, 촉수 없음 설정이라면 발동하지 않는다
+SIF SP_COUNTRY_APPEARED:특수세력_촉수 || !SP_COUNTRY_RANK:(특수세력_촉수)
+	RETURN 0
+
+;가득하면 안 돼
+SIF GET_NEW_COUNTRY() == -1
+	RETURN 0
+
+SIF !CHECK_SP_COUNTRY_RISE()
+	RETURN 0
+RETURN 1
+
+
+;--------------------------------------
+;봉기 이벤트용 메세지 함수
+;출현할 수 있으면 1, 할 수 없으면 0을 돌려준다
+;--------------------------------------
+@TENTACLE_RISE(도시 = 0)
+#DIM 촉수
+#DIM 도시
+;촉수 세력을 작성
+CALL TENTACLE_INIT()
+촉수 = RESULT
+;만들 수 없으면 되돌린다
+SIF 촉수 == 0
+	RETURN 0
+
+CALL SP_COUNTRY_RISE(촉수, 도시)
+
+SIF !RESULT
+	RETURN 0
+
+SP_COUNTRY_APPEARED:특수세력_촉수 = 1
+RETURN 촉수
+
+;---------------------
+;봉기 이벤트용 메세지 함수
+;---------------------
+@TENTACLE_RISE_MSG(세력, 대상)
+#DIM 세력
+#DIM 대상
+CALL SINGLE_DRAWLINE
+SETCOLOR 칼라_경고
+PRINTFORMW 갑자기, 땅의 바닥으로부터 무수한 촉수가 솟아 오르기 시작해 왔습니다!
+PRINTFORMW %CITY_NAME:(대상)%\@ GET_OWN_CITY(세력) > 1 ? 등 # \@가 점령된 것 같습니다
+PRINTFORMW 촉수는 환상향의 인 요를 빼앗아, 부하로 하는 것으로, 그 세력을 강하게 하고 있습니다
+PRINTFORMW 이대로는 위험하다면, 환상향의 각 세력은 격퇴에 나선 것 같습니다……
+RESETCOLOR

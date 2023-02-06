@@ -1,0 +1,292 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_BESTIALITY_RATE()
+RETURN 30
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_BESTIALITY_DECISION()
+
+SIF DVAR:동물써_발생플래그 == 3
+	RETURN 0
+
+LOCAL:1 = 0
+
+;포로나 동료에게 여자가 있을까 판정, 없는 경우는 캔슬
+FOR LOCAL, 0, CHARANUM
+	IF (CFLAG:LOCAL:포로처 == CFLAG:MASTER:소속 && IS_FEMALE(LOCAL)) || (CFLAG:LOCAL:소속 == CFLAG:MASTER:소속 && IS_FEMALE(LOCAL))
+		LOCAL:1 ++
+	ENDIF
+NEXT
+
+SIF LOCAL:1 == 0
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;특정의 조건을 채우는 캐릭터를 랜덤에 선택하는 경우에 이용
+;다른 함수는 필수이지만, 이것만은 없어도 좋다  라고 할까 퍼포먼스에 영향을 주므로 불필요하면 만들어서는 안 된다
+;대상이 존재하지 않고 데일리를 개시 할 수 없는 경우는 0을 돌려주는 것으로 데일리의 발생을 캔슬한다
+;---------------------
+@EVENT_DAILY_BESTIALITY_SETTARGET()
+#DIM 대상
+#DIM 후보, 3000
+#DIM 후보난수, 3000
+#DIM 후보수
+VARSET 후보, -1
+VARSET 후보난수, __INT_MIN__
+VARSET 후보수
+;호감도에 근거해 후보 배열을 준비
+FOR LOCAL, 0, CHARANUM
+	;녀로, 소속이 MASTER와 동일해, 포로가 아니고, 군주가 아닌, 혹은 포로의 캐릭터
+	IF (IS_FEMALE(LOCAL) && CFLAG:LOCAL:소속 == CFLAG:MASTER:소속 && !CFLAG:LOCAL:포로처) || (IS_FEMALE(LOCAL) && CFLAG:LOCAL:포로처 == CFLAG:MASTER:소속) 
+		후보:후보수 = LOCAL
+		후보난수:후보수 = RAND:(MAX(CFLAG:LOCAL:호감도, 100))
+		;연모계라면 난수에 보정이 걸린다（걸려 버려? ）
+		SIF IS_LOVER(LOCAL)
+			후보난수:후보수 += 1000
+		후보수 ++
+	ENDIF
+NEXT
+;후보가 없으면 되돌린다
+SIF 후보수 < 1
+	RETURN 0
+;호감도에 근거해 낸 후보 난수 가운데, 제일 비싼 값을 낸 캐릭터를 대상으로 한다.
+대상 = 후보:(FINDELEMENT(후보난수, MAXARRAY(후보난수, 0, 후보수), 0, 후보수))
+
+SIF 대상 < 0
+	RETURN 0
+
+DAILY_TARGET:0 = 대상
+DAILY_TARGET_NUM = 1
+
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_BESTIALITY_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_BESTIALITY
+#DIM 대상
+#DIM 포로번호, 3000
+
+IF DVAR:동물써_발생플래그 == 0
+	PRINTFORMW 조련사를 자칭하는 남자가 왔다
+	PRINTFORML 그는 수간용의 동물을 조교하는 것을 생업으로 하고 있는 것 같다
+	PRINTFORML 와에에는 조교의 토대로서 안성맞춤의 여자가 있다고 들어 왔다고 고한다
+	PRINTFORMW 남은겁없게웃는다와 동물의 조교를 위해서(때문에) 여자를 사용하게 해 받을 수 있으면 사례를 한다고 해 왔다
+	DVAR:동물써_발생플래그 = 1
+ELSEIF DVAR:동물써_발생플래그 > 0
+	PRINTFORMW 다시 조련사가 왔다
+	IF DVAR:동물써_발생플래그 == 2
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 전회 이 남자로 된 처사를 생각해 내 힘들게 노려본다
+		PRINTFORMW 하지만 그는겁없게웃는다만으로, 또 여자를 조교에 사용시켜 주고라고 말해 왔다
+	ELSEIF DVAR:동물써_발생플래그 == 1
+		PRINTFORMW 그는 변함 없이 겁없게 웃어, 또 여자를 조교에 사용시켜 주고라고 말해 왔다
+	ENDIF
+ENDIF
+PRINTFORML 어떻게 하지?
+CALL ASK_MULTI("거래한다" ,"베어 붙인다" ,"쫓아버린다")
+IF RESULT == 2
+	PRINTFORML 그런 일은 시킬 수 없다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 남자를 쫓아버렸다
+	DVAR:동물써_발생플래그 = 1
+	RETURN
+ELSEIF RESULT == 1
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% 남자를 베어 붙였다!
+	PRINTFORMW 하지만 남자는 화려하게 검을 피하면, 그럼 승부해 결정합시다라고 고하고 걸려 왔다
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+	IF ABL:MASTER:무투 * (RAND:8 + 1) >= 50 * (RAND:9 + 1)
+		PRINTFORMW 이겼다!
+		PRINTFORMW 남은 땅에 엎드리고 있다
+		PRINTFORML 어떻게 하지?
+		CALL ASK_YN("효수에 한다", "국외 추방")
+		IF RESULT == 0
+			PRINTFORMW 두 번 다시 같은 무리가 나오지 않게 목을 쬐었다
+			PRINTFORMW %ANAME(MASTER)%의 행위에 타국의 평판이 올랐다
+			FOR LOCAL, 1, MAX_COUNTRY
+				CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, 20)
+			NEXT
+		ELSEIF RESUlT == 1
+			PRINTFORMW 국외에 추방했다
+			PRINTFORMW 두 번 다시 만날 것도 없을 것이다…
+		ENDIF
+		DVAR:동물써_발생플래그 = 3
+		RETURN 1
+	ELSE
+		대상 = DAILY_TARGET:0
+		PRINTFORMW 져 버렸다…
+		PRINTFORMW 남은 승부의 대상이라고 말하면 %조사처리(ANAME(대상),"를")% 데려 갔다
+		DVAR:동물써_발생플래그 = 2
+	ENDIF
+ELSEIF RESULT == 0
+	PRINTFORMW 거래하기로 했다
+	PRINTFORML 동료와 포로, 어느 쪽을 제공할까?
+	CALL ASK_YN("동료", "포로")
+	IF RESULT == 0
+		PRINTFORML 누구를 사용하게 할까?
+		CALL SELECT_CHARA_LIST_ONLY_LOGIC_SEX("BEASTALITY_A", "BEASTALITY", "BEASTALITY")
+		대상 = RESULT
+		IF RESULT < 0
+			PRINTFORMW 역시 그만두었다
+			DVAR:동물써_발생플래그 = 1
+			RETURN
+		ELSEIF RESULT == MASTER
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 꿀꺽 군침을 마시면, 스스로 자칭하기 나왔다
+		ELSE
+			PRINTFORMW %조사처리(ANAME(대상),"를")% 지정했다
+			IF GETBIT(TALENT:대상:음란계, 소질_음란_암캐)
+				PRINTFORMW %조사처리(ANAME(대상),"는")% 지명되면 입술을 핥으면서 수긍했다
+			ELSEIF GETBIT(TALENT:대상:음란계, 소질_음란_음란)
+				PRINTFORMW %조사처리(ANAME(대상),"는")% 지명되면 놀라면서도 그 눈동자에는 기대의 색이 보였다
+			ELSEIF IS_SLAVE(대상)
+				PRINTFORMW %조사처리(ANAME(대상),"는")% 지명되면 울음 그렇게 되면서도 %ANAME(MASTER)%의 강한 말에 작게 수긍했다
+			ELSE
+				PRINTFORML %조사처리(ANAME(대상),"는")% 지명되면 격렬하게 저항했다
+				PRINTFORMW 하지만 남자는 무리하게 그녀를 질질 끌어 갔다
+				CFLAG:대상:호감도 -= 1000
+			ENDIF
+		ENDIF
+	ELSEIF RESULT == 1
+		PRINTFORML 누구를 사용하게 할까?
+		CALL SELECT_CHARA_LIST_ONLY_LOGIC_SEX("BEASTALITY_B", "NONE", "BEASTALITY")
+		대상 = RESULT
+		IF RESULT < 0
+			PRINTFORMW 역시 그만두었다
+			DVAR:동물써_발생플래그 = 1
+			RETURN
+		ELSE
+			PRINTFORML %조사처리(ANAME(대상),"는")% 지명되면 격렬하게 저항했다
+			PRINTFORMW 하지만 남자는 무리하게 그녀를 질질 끌어 갔다
+			CFLAG:대상:호감도 -= 1000
+		ENDIF
+	ENDIF
+ENDIF
+PRINTFORML 
+PRINTFORM %조사처리(ANAME(대상),"는")%
+SELECTCASE RAND:3
+	CASE 0
+		PRINTFORMW 돼지에 범해지고 있다……
+		SELECTCASE RAND:5
+			CASE 0
+				PRINTFORML 눈이 핏발이 선 돼지가 %ANAME(대상)%에 덮쳐, 울면서 허리를 흔드는
+				PRINTFORML %조사처리(ANAME(대상),"는")% 드릴 자지를 자궁에 쑤셔 넣어져 충격으로 몹시 놀라 경련하고 있다
+				PRINTFORML 돼지가 여차저차 와허리를 흔드는 동안에 자궁내를 페니스로 빨아져 짐승과 같이 허덕여 버린다
+				PRINTFORML %조사처리(ANAME(대상),"는")% 인외의 섹스에 저항하지 못하고 몇 번이나 가게 되어 한껏 씨뿌리기 되어 버렸다
+			CASE 1
+				PRINTFORML 한마리의 돼지가 울면서 %ANAME(대상)% 안에 뷰뷰와 사정하고 있다
+				PRINTFORML 걸쭉 정액으로 자궁의 구석구석까지 범해져 가는 감각에 %조사처리(ANAME(대상),"는")% 눈을 뒤집어 좋아해 미친다
+				PRINTFORML 돼지는 사정하면서 허리를 흔들어, 그 충격에 %조사처리(ANAME(대상),"는")% 보기 흉한 아헤얼굴로 연속 절정 해 버린다
+				PRINTFORML 이윽고 만족한 돼지로부터 해방되었을 때에는, %ANAME(대상)%의 하복부는 볼록 부풀어 오르고 있었다
+			CASE 2
+				PRINTFORML 살찐 돼지가 %ANAME(대상)%의 자궁까지 자지를 쑤셔 넣으면서 힘차게 사정하고 있다
+				PRINTFORML 물컥 대량의 정액을 흘려 넣어져 지나친 열량에 %조사처리(ANAME(대상),"는")% 히익히익 거리며 허덕여진다
+				PRINTFORML 돼지의 사정은 터무니없고 길고, %조사처리(ANAME(대상),"는")% 몇 번이나 절정 당해 버려 오로지 몸부림친다
+				PRINTFORML 간신히 사정이 끝났을 무렵에는 머릿속까지 정액에 담그어진 것 같은 감각에 빠져 있었다
+			CASE 3
+				PRINTFORML 성욕 왕성한 돼지들은 차례차례로 %ANAME(대상)%에 덮쳐서는 드릴 자지를 쑤셔 넣어 온다
+				PRINTFORML 짐승에 씨뿌리기 된 %조사처리(ANAME(대상),"는")% 눈물을 흘려비명을올린다가 돼지들은 가차 없이 교미를 계속한다
+				PRINTFORML %ANAME(대상)%의 배는 벌써 보텍과 부풀어 올라, 비밀스런 장소로부터는 대량의 정액이 새어나오고 있다
+				PRINTFORML 돼지들의 향연은 밤새도록 계속되어 완전히 %ANAME(대상)%에 그들의 냄새가 스며들어 버리고 있었다
+			CASE 4
+				PRINTFORML 위로 향해 된 %ANAME(대상)%에 거대한 돼지가 덮쳐 격렬하게 허리를 흔들고 있다
+				PRINTFORML 자궁까지 꽂힌 페니스의 탓으로 녹에 저항도 하지 못하고 %조사처리(ANAME(대상),"는")% 눈물을 흘려 허덕일 수밖에 없다
+				PRINTFORML 이윽고 돼지가 울면 걸쭉한 정액이 태내에 발해져 %조사처리(ANAME(대상),"는")% 눈물을 흘려 절정 했다
+				PRINTFORML 사정을 끝낸 돼지는 %조사처리(ANAME(대상),"를")% 확실히 임신하게 할 수 있도록 슬라임 상태의 점액으로 비밀스런 장소에 마개를 해 갔다
+		ENDSELECT
+		CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｍ, 수간, 수간, Ｖ성교, Ｖ확장", "처녀상실, 질내사정", GET_SPERM_ID("돼지"), @"돼지의 \@RAND:2 ? 페니스 # 입술\@", @"돼지", "", "조교")
+	CASE 1
+		PRINTFORML 말에 범해지고 있다……
+		SELECTCASE RAND:5
+			CASE 0
+				PRINTFORML 거대한 페니스로 질육을 삐걱삐걱 압박받고 있는 %조사처리(ANAME(대상),"는")% 움찔움찔 경련한다
+				PRINTFORML 일발 찌르기마다 고슨! 고슨! (와)과 자궁이 무너지는 것 같은 스트로크에 %조사처리(ANAME(대상),"는")% 몹시 놀라 허덕인다
+				PRINTFORML %조사처리(ANAME(대상),"를")% 마음에 든 그는 씨뿌리기를 반복해, 그때마다 달굴 수 있는 것 같은 충격으로 의식을 날아가 버린다
+				PRINTFORML 해방되는 무렵에는 사지가 서지 않을만큼 되어 있어 질 구멍은 야무지지 못하게 퍼져 자르고 있었다
+			CASE 1
+				PRINTFORML 구속대에 장착된 %조사처리(ANAME(대상),"는")%, 난폭하게 페니스를 쑤셔 넣어지고 경련하면서 신음한다
+				PRINTFORML 사양 모르고의 야성적인 피스톤에 화가 나올 것 같은 충격을 받아 %조사처리(ANAME(대상),"는")% 미친듯이 자지러지는 신음소리를 내버린다
+				PRINTFORML 갑자기 말이 울함과 동시에 페니스가 부풀어 오르면 강렬한 열과 함께 대량의 정액이 토해내졌다
+				PRINTFORML 자궁 전체에 털어 놓을 수 있는 강렬한 열량에 %조사처리(ANAME(대상),"는")% 의식을 날리면서 절정 당했다
+			CASE 2
+				PRINTFORML %조사처리(ANAME(대상),"는")% 쳐 아이의 말에 붙여진 모습으로 말의 페니스를 쑤셔 넣어지고 있다
+				PRINTFORML 인의 팔정도의 페니스로 자궁까지 암 찔러 되어 일발 찌르기마다 시야에 불꽃이 져 버린다
+				PRINTFORML %ANAME(대상)%의 일 따위 상관 없음의 야성적인 교미에 의해 암컷으로서 예의범절을 가르쳐져 가는 것을 느낀다
+				PRINTFORML 그가 만족할 때까지 끝없이 범해지고 계속해, 자궁의 구석구석까지 말의 정액을 스며들어졌다
+			CASE 3
+				PRINTFORML 오래간만의 교미에 흥분한 말은 %ANAME(대상)%에 말타기가 되어 격렬하게 허리를 흔들고 있다
+				PRINTFORML 거대한 페니스로 체내가 유린되는 충격에 %조사처리(ANAME(대상),"는")% 눈물을 흘려 신음하면서도 필사적으로 용서를 빈다
+				PRINTFORML 하지만 말의 귀에 닿을 리도 없고, 대답 대신에 육욕 맡김의 강렬한 찌르기를 먹어 버린다
+				PRINTFORML 약 1시간이나 그렇게 하고 있으면 완전히 %조사처리(ANAME(대상),"는")% 암컷으로서 예의범절을 가르칠 수 있어 야무지지 못하게 아헤 표정하고 있었다
+			CASE 4
+				PRINTFORML 침대에 위로 향해 고정되고 있는 %ANAME(대상)%의 전에 한마리의 거대한 말이 끌려 온다
+				PRINTFORML 사타구니의 것은 쿨렁쿨렁 맥박치고 있어 가부간의 대답 없고 지금부터 그래서 범해지는 일을 상상해 버린다
+				PRINTFORML 조련사에 촉구받은 말은 %ANAME(대상)%에 걸치면 천천히 즈누누누! (와)과 페니스를 쑤셔 넣어 왔다
+				PRINTFORML 뇌가 녹아, 신체가 달굴 수 있는 것 같은 교미에 의해 %조사처리(ANAME(대상),"는")% 하룻밤 한껏 예의범절을 가르쳐졌다
+		ENDSELECT
+		CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｍ, 수간, 수간, Ｖ성교, Ｖ확장", "처녀상실, 질내사정", GET_SPERM_ID("말"), @"말의 \@RAND:2 ? 페니스 # 입술\@", @"말", "", "조교")
+	CASE 2
+		PRINTFORML 개에게 범해지고 있다……
+		SELECTCASE RAND:5
+			CASE 0
+				PRINTFORML 눈을 핏발이 서게 한 거대한 개가 숨을 거칠게 하면서 %ANAME(대상)%에 걸쳐 격렬하게 허리를 흔드는
+				PRINTFORML 쇠사슬로 연결될 수 있었던 %조사처리(ANAME(대상),"는")% 개처럼 엎드려 있는 자세로 신음하면서 손발을 삐걱삐걱 진동시키고 있다
+				PRINTFORML 조교되고 있을 뿐 있어 개는 적확하게 여자의 약점을 후벼파, %조사처리(ANAME(대상),"는")% 굴욕과 쾌락으로 얼굴을 새빨갛게 해 떨린다
+				PRINTFORML 이윽고 개가 크게 짖음과 동시에 사정하면 %조사처리(ANAME(대상),"는")% 안 되는 것이라고 이해하면서도 절정 해 버렸다
+			CASE 1
+				PRINTFORML 한마리의 개와 연결된 채로 그의 질내사정을 받아 %조사처리(ANAME(대상),"는")% 움찔움찔 허덕인다
+				PRINTFORML 긴 사정은 벌써 몇 분간도 계속되어, 자궁에게 줄 수 있는 강렬한 열로 %조사처리(ANAME(대상),"는")% 몇 번이나 가게 되고 있다
+				PRINTFORML 간신히 사정이 끝나 페니스를 뽑아 내지면, 비밀스런 장소로부터 걸죽한 정액이 대량으로 흘러넘치기 시작했다
+				PRINTFORML 그의 정액은 특제이며 인간이라도 임신하게 되어진다고 설명되어 %조사처리(ANAME(대상),"는")% 공포를 느끼면서 경련하고 있었다
+			CASE 2
+				PRINTFORML 의욕자에게 고정되고 재갈 되면서 범해지고 있는 %조사처리(ANAME(대상),"는")% 비통한 신음소리를 올린다
+				PRINTFORML 축생의 그로테스크한 페니스로 유린되고 있는 사실에 %조사처리(ANAME(대상),"는")% 몸도 마음도 충격으로 소 탈 것 같게 된다
+				PRINTFORML 하지만 그 야성적인 밀어올림으로 일발 찌르기마다 신체를 암컷에 예의범절을 가르칠 수 있는 자궁이 꽉 꽉 쑤셔 버린다
+				PRINTFORML 그는 %조사처리(ANAME(대상),"를")% 마음에 든 것 같아 밤새도록 교미를 계속하고 몇 번이나 그 정액을 안쪽 깊게까지 털어 놓여졌다
+			CASE 3
+				PRINTFORML 개의 무리 중(안)에서 질척질척이 되면서 범해져 아히아히와 야무지지 못하게 혀를 늘어뜨린다
+				PRINTFORML 밤새도록그들에게 윤간된 %조사처리(ANAME(대상),"는")% 완전히 암캐에게 되어 내려 있어 페니스를 받아들이고 있다
+				PRINTFORML 씩씩한 수컷과 교미해 그 타네를 흘러 들어가진다는 암컷의 본능대로 허리를 거절해 절정 해 그리고 씨뿌리기 된다
+				PRINTFORML 이미 어느 쪽이 조교되고 있는지 모르는 채로 %조사처리(ANAME(대상),"는")% 그 뒤도 오로지 범해졌다
+			CASE 4
+				PRINTFORML 목걸이를 붙여진 %조사처리(ANAME(대상),"가")% 다수의 수캐에게 모여져 비명을 올리고 있다
+				PRINTFORML 그들은 번갈아 덮치면 가차 없이 페니스를 쑤셔 넣어 당연과 같이 씨뿌리기 해 나간다
+				PRINTFORML 갖추어져 페니스는 씩씩하고, 짐승 특유의 격렬한 섹스는 가부간의 대답 없고 %조사처리(ANAME(대상),"를")% 느끼게 하고 가게 되어 버린다
+				PRINTFORML 눈치채면 %조사처리(ANAME(대상),"는")% 보기 흉한 신음소리를 올리면서 몸을 진동시켜 야무지지 못한 미소를 띄우고 있었다
+		ENDSELECT
+		CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｍ, 수간, 수간, Ｖ성교, Ｖ확장", "처녀상실, 질내사정", GET_SPERM_ID("개"), @"개의 \@RAND:2 ? 페니스 # 입술\@", @"개", "", "조교")
+ENDSELECT
+PRINTFORML 
+PRINTFORMW 조교를 끝낸 남자는 만족해 돌아갔다
+PRINTFORMW 사례로서 금 5000을 손에 넣었다
+MONEY += 5000
+
+RETURN 1
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_BEASTALITY_A(대상)
+#DIM 대상
+RETURN CFLAG:대상:행동불능상태 != 행동불능_아이 && CFLAG:대상:소속 == CFLAG:MASTER:소속 && !IS_ANIMAL(대상) && !IS_MALE(대상)
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_BEASTALITY_B(대상)
+#DIM 대상
+RETURN CFLAG:대상:행동불능상태 != 행동불능_아이 && CFLAG:대상:소속 != CFLAG:MASTER:소속 && !IS_ANIMAL(대상) && !IS_MALE(대상) && CFLAG:대상:포로처 == CFLAG:MASTER:소속
+
+@SELECT_CHARA_LIST_SELECT_LOGIC_BEASTALITY(대상)
+#DIM 대상
+RETURN CFLAG:대상:포로처 == 0
+
+@SELECT_CHARA_LIST_COLOR_LOGIC_BEASTALITY(대상)
+#DIM 대상
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_음란) || GETBIT(TALENT:대상:음란계, 소질_음란_암캐)
+	RETURN 칼라_핑크
+RETURN GETDEFCOLOR()

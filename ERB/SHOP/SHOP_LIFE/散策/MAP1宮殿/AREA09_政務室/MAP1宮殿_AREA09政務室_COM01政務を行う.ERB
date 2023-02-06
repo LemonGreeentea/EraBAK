@@ -1,0 +1,301 @@
+﻿;-------------------------------------------------
+; 「정무를 실시한다」의 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA9_COM1_EXIST
+RETURN 1
+
+;-------------------------------------------------
+; 「정무를 실시한다」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA9_COM1_NAME
+RESULTS:0 '= "정무를 실시한다"
+RETURN 1
+
+;-------------------------------------------------
+; 「정무를 실시한다」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA9_COM1_CHECK
+RETURN 1
+
+;-------------------------------------------------
+; 「정무를 실시한다」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA9_COM1_CHECKCHARA(ARG:0)
+
+SIF MASTER == ARG:0
+	RETURN 0
+SIF CFLAG:(ARG:0):행동완료
+	RETURN 0
+SIF CFLAG:(ARG:0):포로처
+	RETURN 0
+SIF CFLAG:MASTER:소속 != CFLAG:(ARG:0):소속
+	RETURN 0
+SIF CFLAG:(ARG:0):행동불능상태 == 행동불능_임월
+	RETURN 0
+SIF COOLTIME:(ARG:0):0
+	RETURN 0
+SIF IS_ANIMAL(ARG:0)
+	RETURN 0
+
+RETURN 1
+
+;-------------------------------------------------
+; 「정무를 실시한다」의 메인 처리
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA9_COM1_MAIN
+#DIM L_COUNTER
+#DIM 대상
+
+;리셋트
+CALL COM_AUTO_RANDOMIZED_WEIGHTED_START
+
+;후보 추가
+FOR L_COUNTER, 0, CHARANUM
+	CALL SHOP_LIFE67_MAP1_AREA9_COM1_CHECKCHARA(L_COUNTER)
+	SIF !RESULT
+		CONTINUE
+	CALL COM_AUTO_RANDOMIZED_WEIGHTED_VALUE(L_COUNTER, 10)
+NEXT
+
+;결과 취득
+대상 = COM_AUTO_RANDOMIZED_WEIGHTED_RESULT()
+
+CALL SHOP_LIFE67_MAP1_AREA9_COM1_TEXT_1(대상)
+WAIT
+;CALL LOVE_AT_FIRST_SIGHT(대상)
+;PRINTL 
+CALL SHOP_LIFE67_MAP1_AREA9_COM1_TEXT_2(대상)
+WAIT
+
+LINES_SHOP = LINECOUNT
+
+CFLAG:대상:행동완료 = 1
+SHOP_TIME ++
+BEGIN TURNEND
+
+RETURN 1
+
+;-------------------------------------------------
+; 묘사 1
+;	구상주를 자유롭게 바꿀 수 있도록(듯이)
+;	@KOJO_EVENT_DEFAULT(ARG)로 옮기는 것이 좋을지도
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA9_COM1_TEXT_1(대상)
+#DIM 대상
+#DIM 주인공서투름플래그
+#DIM 대상서투름플래그
+
+IF DISPLAY_SEASON() == "봄"
+	IF WEATHERNUM == 기후_강우
+		PRINTFORM  빗소리가 울려 온다
+	ELSE
+		PRINTFORM  조용한
+	ENDIF
+ELSEIF DISPLAY_SEASON() == "여름"
+	IF WEATHERNUM == 기후_강우
+		PRINTFORM  격렬한 비의 내리는 날에
+	ELSE
+		PRINTFORM  찌는 듯이 덥다
+	ENDIF
+ELSEIF DISPLAY_SEASON() == "가을"
+	IF WEATHERNUM == 기후_강우
+		PRINTFORM  비의 내리는 추운 날에
+	ELSE
+		PRINTFORM  상쾌한 가을날에
+	ENDIF
+ELSE
+	IF WEATHERNUM == 기후_강설
+		PRINTFORM  눈의 내리는 날에
+	ELSE
+		PRINTFORM  발밑의 차가워지는 겨울의
+	ENDIF
+ENDIF
+
+PRINTFORML  집무실에 들어가면 정무를 해내고 있던 %조사처리(ANAME(대상),"가")% 얼굴을 올렸다
+PRINTFORML  %조사처리(ANAME(MASTER),"는")% %ANAME(대상)%의 심부름을 하기로 했다
+
+;-------------------------------------------------
+; 묘사 2
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA9_COM1_TEXT_2(대상)
+#DIM 대상
+#DIM 주인공서투름플래그
+#DIM 대상서투름플래그
+#DIM 능력, 1
+#DIM 경험치, 1
+
+PRINTL 
+대상서투름플래그 = 0
+IF ABL:(대상):정치 < 30
+	PRINTFORML  내용이 어려운 것 같고, %조사처리(ANAME(대상),"는")% 주판으로 놀고 있다
+	PRINTFORMW  %조사처리(ANAME(MASTER),"가")% 심부름을 신청하면, %조사처리(ANAME(대상),"는")% 일의 내용으로부터 가르쳐 주셨으면 한다고 말해 왔다
+	대상서투름플래그 = 2
+ELSEIF ABL:(대상):정치 < 50
+	PRINTFORML  %조사처리(ANAME(대상),"는")% 휘청거린 문자를 장부에 쓰고 있다
+	PRINTFORMW  %조사처리(ANAME(MASTER),"가")% 심부름을 신청하면, %조사처리(ANAME(대상),"는")% 살아났다고 할듯한 표정을 띄웠다
+	대상서투름플래그 = 1
+ELSE
+	대상서투름플래그 = 0
+	PRINTFORML  %조사처리(ANAME(대상),"는")% 술술 장부를 기록해 실수 없이 정무를 해내고 있다
+	PRINTFORMW  %조사처리(ANAME(MASTER),"가")% 심부름을 신청하면, %조사처리(ANAME(대상),"는")% 미처리를 몇인가 건네주었다
+ENDIF
+
+PRINTL 
+IF ABL:(MASTER):정치 < 30
+	주인공서투름플래그 = 2
+	IF 주인공서투름플래그 == 2
+		PRINTFORML  하지만 %ANAME(MASTER)%에도 난해해 손에 감당할 수 있지 못하고 주판을 몰기로 했다…
+	ELSEIF 주인공서투름플래그 == 1
+		PRINTFORML  하지만 %조사처리(ANAME(MASTER),"는")% %ANAME(대상)%에 한 술 더 떠 계산이 늦은 것 같다…
+	ELSE
+		PRINTFORML  하지만 %ANAME(MASTER)%에는 난해하고 어찌할 도리가 없는 것 같다…
+	ENDIF
+ELSEIF ABL:(MASTER):정치 < 50
+	주인공서투름플래그 = 1
+	IF 대상서투름플래그 == 2
+		PRINTFORML  하지만 %ANAME(MASTER)%도 계산이 빠른 것은 같다…
+	ELSEIF 대상서투름플래그 == 1
+		PRINTFORML  하지만 %ANAME(MASTER)%의 문자도 %조사처리(ANAME(대상),"와")% 도토리의 키재기다…
+	ELSE
+		PRINTFORML  계산이 맞지 않는 개소가 있었으므로 %ANAME(대상)%에 확인을 취했다…
+	ENDIF
+ELSE
+	주인공서투름플래그 = 0
+	IF 대상서투름플래그 == 2
+		PRINTFORML  %ANAME(대상)%의 옆에서 장부를 써 진행하면서, 정확한 조언을 할 수가 있었다…
+	ELSEIF 대상서투름플래그 == 1
+		PRINTFORML  %ANAME(대상)%에 정확한 조언을 품질 장부를 써 진행시켜 나간다…
+	ELSE
+		PRINTFORML  모여 있던 장부가 보는 동안에 정리되어 매우 정무가 진전되었다…
+	ENDIF
+ENDIF
+;---------------------------------------------------------------------- 
+;경험치의 표시 대상
+;---------------------------------------------------------------------- 
+PRINTL 
+
+SETCOLOR COLOR("실버")
+PRINTFORML  <%ANAME(대상)%>
+능력 = GETNUM(ABL, "정치")
+경험치 = GETNUM(EXP, "정치경험치")
+IF GETNUM(EXP, "정치경험치")
+CALL PRINT_ADD_EXP(대상, EXPNAME:(경험치), RAND(10, 15))
+ENDIF
+
+;상대보다 자신있는 일을 하고 있으면 존경되어 상대보다 서투른 일을 하고 있으면 걱정된다
+LOCAL:0 = 0
+;무승부
+IF (주인공서투름플래그 == 2 && 대상서투름플래그 == 2) || (주인공서투름플래그 == 1 && 대상서투름플래그 == 1) || (주인공서투름플래그 == 0 && 대상서투름플래그 == 0)
+	LOCAL:0 = 50 + RAND:10
+	CFLAG:(대상):2 += LOCAL:0
+	PRINTFORM  호감도+{LOCAL:0}({CFLAG:(대상):2})
+	PRINT   
+	LOCAL:0 = 25 + RAND:10
+	CFLAG:(대상):3 += LOCAL:0
+	PRINTFORM  의존도+{LOCAL:0}({CFLAG:(대상):3})
+	PRINT   
+	LOCAL:0 = 25 + RAND:10
+	CFLAG:(대상):4 += LOCAL:0
+	PRINTFORM  종속도+{LOCAL:0}({CFLAG:(대상):4})
+	PRINTL 
+;대승리
+ELSEIF 주인공서투름플래그 == 0 && 대상서투름플래그 == 2
+	LOCAL:0 = 90 + RAND:10
+	CFLAG:(대상):2 += LOCAL:0
+	PRINTFORM  호감도+{LOCAL:0}({CFLAG:(대상):2})
+	PRINT   
+	LOCAL:0 = 10 + RAND:10
+	CFLAG:(대상):3 += LOCAL:0
+	PRINTFORM  의존도+{LOCAL:0}({CFLAG:(대상):3})
+	PRINT   
+	LOCAL:0 = 80 + RAND:10
+	CFLAG:(대상):4 += LOCAL:0
+	PRINTFORM  종속도+{LOCAL:0}({CFLAG:(대상):4})
+	PRINTL 
+;승리
+ELSEIF (주인공서투름플래그 == 0 && 대상서투름플래그 == 1) || (주인공서투름플래그 == 1 && 대상서투름플래그 == 2)
+	LOCAL:0 = 50 + RAND:10
+	CFLAG:(대상):2 += LOCAL:0
+	PRINTFORM  호감도+{LOCAL:0}({CFLAG:(대상):2})
+	PRINT   
+	LOCAL:0 = 25 + RAND:10
+	CFLAG:(대상):3 += LOCAL:0
+	PRINTFORM  의존도+{LOCAL:0}({CFLAG:(대상):3})
+	PRINT   
+	LOCAL:0 = 50 + RAND:10
+	CFLAG:(대상):4 += LOCAL:0
+	PRINTFORM  종속도+{LOCAL:0}({CFLAG:(대상):4})
+	PRINTL 
+;패배
+ELSEIF (주인공서투름플래그 == 1 && 대상서투름플래그 == 0) || (주인공서투름플래그 == 2 && 대상서투름플래그 == 1)
+	LOCAL:0 = 25 + RAND:10
+	CFLAG:(대상):2 += LOCAL:0
+	PRINTFORM  호감도+{LOCAL:0}({CFLAG:(대상):2})
+	PRINT   
+	LOCAL:0 = 50 + RAND:10
+	CFLAG:(대상):3 += LOCAL:0
+	PRINTFORM  의존도+{LOCAL:0}({CFLAG:(대상):3})
+	PRINT   
+	LOCAL:0 = 25 + RAND:10
+	CFLAG:(대상):4 += LOCAL:0
+	PRINTFORM  종속도+{LOCAL:0}({CFLAG:(대상):4})
+	PRINTL 
+;대패북
+ELSEIF 주인공서투름플래그 == 2 && 대상서투름플래그 == 0
+	LOCAL:0 = 10 + RAND:10
+	CFLAG:(대상):2 += LOCAL:0
+	PRINTFORM  호감도+{LOCAL:0}({CFLAG:(대상):2})
+	PRINT   
+	LOCAL:0 = 80 + RAND:10
+	CFLAG:(대상):3 += LOCAL:0
+	PRINTFORM  의존도+{LOCAL:0}({CFLAG:(대상):3})
+	PRINT   
+	LOCAL:0 = 10 + RAND:10
+	CFLAG:(대상):4 += LOCAL:0
+	PRINTFORM  종속도+{LOCAL:0}({CFLAG:(대상):4})
+	PRINTL 
+ENDIF
+
+;정신력의 강화
+IF MAXBASE:(대상):정신력 < 3000 || (MAXBASE:(대상):정신력 < 3500 && RAND:5 == 0)
+	MAXBASE:(대상):정신력 += 10 + RAND:2
+ENDIF
+;기력의 강화
+IF MAXBASE:(대상):기력 < 1600
+	MAXBASE:(대상):기력 += 10 + RAND:2
+ELSEIF MAXBASE:(대상):기력 < 2000 && RAND:2 == 0
+	MAXBASE:(대상):기력 += 10 + RAND:2
+ELSEIF MAXBASE:(대상):기력 < 2500 && RAND:6 == 0
+	MAXBASE:(대상):기력 += 10 + RAND:2
+ENDIF
+RESETCOLOR
+CALL TRAIN_AUTO_ABLUP(대상)
+
+;---------------------------------------------------------------------- 
+;경험치의 표시 주인공
+;---------------------------------------------------------------------- 
+PRINTL 
+
+SETCOLOR COLOR("실버")
+PRINTFORML  <%ANAME(MASTER)%>
+능력 = GETNUM(ABL, "정치")
+경험치 = GETNUM(EXP, "정치경험치")
+IF GETNUM(EXP, "정치경험치")
+CALL PRINT_ADD_EXP(MASTER, EXPNAME:(경험치), RAND(10, 15))
+ENDIF
+
+IF MAXBASE:(MASTER):정신력 < 3000 || (MAXBASE:(MASTER):정신력 < 3500 && RAND:5 == 0)
+	MAXBASE:(MASTER):정신력 += 1 + RAND:2
+ENDIF
+IF MAXBASE:(MASTER):기력 < 1600
+	MAXBASE:(MASTER):기력 += 1 + RAND:2
+ELSEIF MAXBASE:(MASTER):기력 < 2000 && RAND:2 == 0
+	MAXBASE:(MASTER):기력 += 1 + RAND:2
+ELSEIF MAXBASE:(MASTER):기력 < 2500 && RAND:6 == 0
+	MAXBASE:(MASTER):기력 += 1 + RAND:2
+ENDIF
+RESETCOLOR
+CALL TRAIN_AUTO_ABLUP(MASTER)
+
+RETURN 0
+

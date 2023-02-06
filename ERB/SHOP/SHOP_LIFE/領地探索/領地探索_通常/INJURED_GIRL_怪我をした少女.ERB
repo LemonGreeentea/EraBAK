@@ -1,0 +1,72 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_INJURED_GIRL_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_INJURED_GIRL_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_INJURED_GIRL(대상)
+#DIM 대상
+
+PRINTFORML 숲속을 걷고 있으면, 사람의 신음소리가 들려 왔다
+PRINTFORML 수풀을 밀어 헤치고 소리의 한 (분)편에 향하면, 소녀가 넘어져 있는 것을 찾아냈다
+PRINTFORML %조사처리(ANAME(대상),"를")% 알아차린 소녀는 일순간 준비했지만, 적의는 없는 것을 나타내면 안심한 것 같다
+PRINTFORML 아무래도 다쳐 움직일 수 없는 것 같지만……
+
+PRINTL
+CALL ASK_MULTI("마을에 옮겨 준다", "값의 물건을 빼앗아 방치한다", "돕는 담보를 요구한다")
+
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 그녀에게 어깨를 빌려 주어 마을에 옮겨 주었다
+		PRINTFORML 가족과 그녀에게 깊게 감사받았다
+		PRINTFORMW 좋은 기분으로 %조사처리(ANAME(대상),"는")% 궁전에 돌아왔다
+		IF 대상 == MASTER
+			IF CFLAG:대상:소속
+				FOR LOCAL, 1, CHARANUM
+					CFLAG:LOCAL:호감도 += 100
+				NEXT
+				CALL COLOR_PRINTL("소문이 퍼져 동료의 호감도가 100올랐다", 칼라_주의)
+			ENDIF
+		ENDIF
+	CASE 1
+		PRINTFORML 다친 소녀를 때려 졸도시킨다
+		PRINTFORML 품으로부터 값의 것을 빼앗아 떠났다
+		PRINTFORML ……그 후 그녀가 어떻게 되었는가는 모른다
+		MONEY += 3000
+		CALL ICPRINT(@"금<3000>을 얻었다", "L", 칼라_주의)
+	CASE 2
+		PRINTFORML 돕는 담보를 받자……
+		CALL ASK_YN("금", "체")
+		IF RESULT == 0
+			PRINTFORML 공짜로 도울 수는 없다
+			PRINTFORML 생명에는 대신할 수 없으면, 그녀는 지갑으로부터 돈을 꺼냈다……
+			MONEY += 3000
+			CALL ICPRINT(@"금<3000>을 얻었다", "L", 칼라_주의)
+		ELSE
+			PRINTFORML 공짜로 도울 수는 없다
+			PRINTFORML 체를 요구하면, 그녀는 단념한 것처럼 의복을 풀어헤쳤다……
+			PRINTFORML 
+			PRINTFORMW 소녀의 풍만한 육체를 마음껏 귀여워해 주면, 이윽고 소녀 쪽도 스스로 신체를 구불거리게 할 수 있는 교성을 미치게 했다
+			IF HAS_PENIS(대상)
+				CALL FUCK(대상, "성기술, 성교, Ｃ, 사정, Ｖ삽입" + (IS_FEMALE(대상) ? ", Ｂ, Ｖ, 레즈" # "") , "동정상실, 키스상실", 0, "상처나고 있던 아가씨의 입술", "", "상처나고 있던 아가씨의 질", "화간")
+			ELSE
+				CALL FUCK(대상, "성기술, 성교, Ｃ, Ｂ, Ｖ, 레즈", "키스상실", 0, "상처나고 있던 아가씨의 입술", "", "", "화간")
+			ENDIF
+			PRINTFORML 
+			PRINTFORML 그 후, 그녀를 껴안아 마을에 옮겨 주었다
+			PRINTFORMW 가족에게 감사받아 떠나려고 하면, 뺨을 물들여 이쪽을 응시해 오는 그녀와 시선이 있었다
+		ENDIF
+ENDSELECT
+RETURN 1

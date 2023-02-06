@@ -1,0 +1,48 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_ATTEND_BANQUET_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_ATTEND_BANQUET_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_ATTEND_BANQUET(대상)
+#DIM 대상
+PRINTFORML 연회에 조우했다
+PRINTFORML 인간과 요괴가 섞여 분위기를 살리고 있다
+PRINTFORML ……술주정꾼의 한사람이 손짓했다
+PRINTL
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "주량"))
+
+CALL ASK_YN("참가한다" ,"그 자리를 뒤로 한다")
+IF RESULT == 1
+	PRINTFORML 그런 기분이 아니다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 그 자리를 뒤로 했다
+	RETURN 1
+ENDIF
+PRINTFORML 모처럼인 것으로 참가하기로 했다
+PRINTFORMW 그들은 %조사처리(ANAME(대상),"를")% 환영해, 즉시 술을 권해 왔다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF ABL:대상:주량 >= 3 + RAND:4
+	PRINTFORML %ANAME(대상)%의 이해에 갈채가 일어났다
+	PRINTFORMW 즐거운 연회는 밤새도록 계속되었다
+ELSE
+	PRINTFORML %조사처리(ANAME(대상),"는")% 취해 무너져 버렸다
+	PRINTFORMW 팡팡 영향을 주는 머리를 움켜 쥐면서 귀로에 들었다
+	CALL ADD_COOLTIME(대상, 1)
+ENDIF
+CALL PRINT_ADD_EXP(대상, "주량경험치", RAND(50, 100), 1)
+
+RETURN 1

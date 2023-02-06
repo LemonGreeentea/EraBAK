@@ -1,0 +1,51 @@
+﻿;통계 정보의 콘피그에 관한 처리
+
+;-------------------------------------------------
+;통계의 설정과 출력
+;-------------------------------------------------
+@STATS_CONFIG
+CALL SINGLE_DRAWLINE
+PRINTL ●통계의 설정과 출력●
+CALL SINGLE_DRAWLINE
+PRINTFORM [ 0] %"통계 관계의 처리", 40, LEFT%
+PRINTFORML %STATS_STOPPED ? "정지" # "실시한다"%
+CALL SINGLE_DRAWLINE
+PRINTFORML [11] 경제력의 기록을 출력한다
+PRINTFORML [12] 국고의 기록을 출력한다
+PRINTFORML [13] 병 수의 기록을 출력한다
+PRINTFORML [21] 동맹의 기록을 출력한다
+PRINTFORML [22] 정전의 기록을 출력한다
+CALL SINGLE_DRAWLINE
+PRINTL [99] 결정
+
+$INPUT_LOOP
+INPUT
+
+IF RESULT == 99
+	RETURN
+ELSEIF RESULT == 0
+	STATS_STOPPED = !STATS_STOPPED
+ELSEIF RESULT == 11
+	PRINTFORML 통계 정보(경제력)를 출력합니다.
+	CALL STATS_OUTPUT(STATS_GDP)
+	WAIT
+ELSEIF RESULT == 12
+	PRINTFORML 통계 정보(국고)를 출력합니다.
+	CALL STATS_OUTPUT(STATS_WEALTH)
+	WAIT
+ELSEIF RESULT == 13
+	PRINTFORML 통계 정보(병수)를 출력합니다.
+	CALL STATS_OUTPUT(STATS_ARMY)
+	WAIT
+ELSEIF RESULT == 21
+	PRINTFORML 현재의 동맹 상황을 출력합니다.
+	CALL TREATY_OUTPUT(1)
+	WAIT
+ELSEIF RESULT == 22
+	PRINTFORML 현재의 정전 상황을 출력합니다.
+	CALL TREATY_OUTPUT(0)
+	WAIT
+ELSE
+	GOTO INPUT_LOOP
+ENDIF
+RESTART

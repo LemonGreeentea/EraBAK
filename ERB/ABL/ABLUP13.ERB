@@ -1,0 +1,40 @@
+﻿;능력 상승 성성기술
+
+;-------------------------------------------------
+;능력 상승에 필요한 경험을 설정
+;-------------------------------------------------
+@ABLUP_EXPNAME13
+RESULTS = 성기술경험치
+
+;-------------------------------------------------
+;능력 상승에 필요한 경험량을 돌려주는 함수
+;-------------------------------------------------
+@CALC_ABLUP_EXP13(ARG:0)
+SELECTCASE ABL:(ARG:0):성기술
+	CASE 0
+		LOCAL:0 = 3
+	CASE 1
+		LOCAL:0 = 10
+	CASE 2
+		LOCAL:0 = 20
+	CASE 3
+		LOCAL:0 = 40
+	CASE 4
+		LOCAL:0 = 80
+	CASEELSE
+		LOCAL:0 = 160 + 80 * (ABL:(ARG:0):성기술 - 5)
+ENDSELECT
+
+IF ARG:0 == MASTER
+	TIMES LOCAL:0, 5.00
+ENDIF
+
+;소질에 의한 보정
+IF TALENT:(ARG:0):습득빠름
+	TIMES LOCAL:0, 0.80
+ENDIF
+IF TALENT:(ARG:0):습득느림
+	TIMES LOCAL:0, 1.20
+ENDIF
+
+RETURN MAX(LOCAL:0, 1)

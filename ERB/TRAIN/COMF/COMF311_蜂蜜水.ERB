@@ -1,0 +1,121 @@
+﻿;벌꿀수
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME311
+RESULTS:0 = 벌꿀수를 건네준다
+RESULTS:1 = 벌꿀수를 건네준다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE311
+;공통 부분
+CALL COM_ABLE_COMMON(311)
+SIF RESULT == 0
+	RETURN 0
+;포로 회화에서는 불가
+SIF FLAG:조교모드 == 6
+	RETURN 0
+;주인공이 플레이어 때 한정
+SIF MPLY:0 != MASTER
+	RETURN 0
+;벌꿀수를 가지고 있을 필요가 있다
+SIF !ITEM:벌꿀수
+	RETURN 0
+;키스중은 불가
+SIF IS_EQUIP(MPLY:0, 342)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM311
+;벌꿀수를 하나 줄인다
+ITEM:벌꿀수 --
+
+;커맨드의 성공 여부를 TFLAG:18에 세트
+CALL JUDGE_COM_RESULT(MTAR:0, 15, 5)
+
+;●타겟측의 처리
+LOCAL:0 = 200
+
+IF TALENT:(MTAR:0):폭주가
+	TIMES LOCAL:0, 0.75
+ENDIF
+
+IF TALENT:(MTAR:0):유아 || TALENT:(MTAR:0):유치
+	TIMES LOCAL:0, 1.50
+	;절대로 실패하지 않는다
+	TFLAG:18 = MAX(TFLAG:18, 0)
+ENDIF
+
+;고정으로 획득하는 소스
+SOURCE:(MTAR:0):환락 = LOCAL:0 / 3
+
+;친밀하게 응한 환락의 소스 추가
+CALL ADD_SOURCE_KANRAKU(MTAR:0, LOCAL:0)
+
+;주도권에 응한 소스의 추가
+CALL ADD_SOURCE_INITIATIVE_N(MPLY:0, 50, 50)
+CALL ADD_SOURCE_INITIATIVE_N(MTAR:0, 50, 50)
+
+;절정·소변욕 한계에 의한 오줌 흘리기의 설정이 유효의 경우
+IF CONFIG:90 == 1
+	IF TCVAR:(MTAR:0):54 < 2900
+		;뇨잔량을 늘린다
+		TCVAR:(MTAR:0):54 += MIN(400, 2900 - TCVAR:(MTAR:0):54)
+	ENDIF
+	;벌꿀수에 의한 소변욕의 가산 기본치를 추가
+	TCVAR:(MTAR:0):64 += 2
+ENDIF
+
+;실패
+IF TFLAG:18 == -1
+	TIMES SOURCE:(MTAR:0):환락, 0.50
+	SOURCE:(MTAR:0):불만 += 200
+	TFLAG:37 -= 5
+;성공
+ELSEIF TFLAG:18 == 0
+	TFLAG:37 += 2
+;대성공
+ELSE
+	TIMES SOURCE:(MTAR:0):환락, 2.00
+	TFLAG:37 += 10
+ENDIF
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = -1
+
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE311
+PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 벌꿀수를 선물 했다
+IF TFLAG:18 == 1
+	PRINTFORML 생각외 기뻐해 주어진 것 같다…
+ELSEIF TFLAG:18 == -1
+	PRINTFORML 너무 달콤한 것을 마시는 기분은 아니었던 것 같다…
+ENDIF
+
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST311
+;일상 커맨드에 공통의 지문
+CALL COM_TEXT_LAST_LIFE
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN311
+RETURN 커맨드_일상

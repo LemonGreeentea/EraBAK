@@ -1,0 +1,134 @@
+﻿;-------------------------------------------------
+; 「기후를 본다」의 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA19_COM1_EXIST
+RETURN 1
+
+;-------------------------------------------------
+; 「기후를 본다」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA19_COM1_NAME
+RESULTS:0 '= "기후를 본다"
+RETURN 1
+
+;-------------------------------------------------
+; 「기후를 본다」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA19_COM1_CHECK(ARG:0)
+RETURN 1
+
+;-------------------------------------------------
+; 「기후를 본다」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA19_COM1_CHECKCHARA(ARG:0)
+
+SIF MASTER == ARG:0
+	RETURN 0
+SIF !TALENT:(ARG:0):연인
+	RETURN 0
+SIF GROUPMATCH(CFLAG:(ARG:0):행동불능상태, 행동불능_임월, 행동불능_상처, 행동불능_아이)
+	RETURN 0
+SIF CFLAG:(ARG:0):행동완료
+	RETURN 0
+SIF CFLAG:(ARG:0):포로처
+	RETURN 0
+SIF CFLAG:MASTER:소속 != CFLAG:(ARG:0):소속
+	RETURN 0
+SIF CFLAG:(ARG:0):행동완료
+	RETURN 0
+SIF COOLTIME:(ARG:0):0
+	RETURN 0
+SIF IS_ANIMAL(ARG:0)
+	RETURN 0
+SIF CFLAG:(ARG:0):호감도 <= 0
+RETURN 0
+
+RETURN 1
+
+;-------------------------------------------------
+; 「기후를 본다」의 메인 처리
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA19_COM1_MAIN
+#DIM L_COUNTER
+#DIM 대상
+
+;리셋트
+CALL COM_AUTO_RANDOMIZED_WEIGHTED_START
+
+;후보 추가
+FOR L_COUNTER, 0, CHARANUM
+	RESULT = 0
+	CALL SHOP_LIFE67_MAP1_AREA19_COM1_CHECKCHARA(L_COUNTER)
+	SIF !RESULT
+		CONTINUE
+	CALL COM_AUTO_RANDOMIZED_WEIGHTED_VALUE(L_COUNTER, CFLAG:L_COUNTER:호감도)
+NEXT
+
+;결과 취득
+대상 = COM_AUTO_RANDOMIZED_WEIGHTED_RESULT()
+
+;조교 초기설정
+CALL TRAIN_TARGET_SETTING(대상)
+
+FLAG:우후후플래그 = 0
+FLAG:조교모드 = 조교_만난다
+
+;행동 개시시의 공통 처리
+CALL START_TRAIN_COMMON
+
+CALL SHOP_LIFE67_MAP1_AREA19_COM1_TEXT(대상)
+WAIT
+
+;묘사를 클리어 하지 않는다
+LINES_SHOP = LINECOUNT
+
+RETURN 1
+
+;-------------------------------------------------
+; 묘사 1
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA19_COM1_TEXT(대상)
+#DIM 대상
+
+PRINTFORML  %조사처리(ANAME(MASTER),"는")% 날씨가 좋다면 산책이라도 하러 갈까하고 엔트렌스에 왔다
+IF DISPLAY_SEASON() == "봄"
+	IF WEATHERNUM == 기후_구름
+		PRINTFORML  화담의 졸려지는 날씨다
+	ELSEIF WEATHERNUM == 기후_강우
+		PRINTFORML  봄비에 공기가 촉촉히 하고 있다
+	ELSE
+		PRINTFORML  화창한 맑은 하늘에서 산책하기 좋은 날씨다
+	ENDIF
+ELSEIF DISPLAY_SEASON() == "여름"
+	IF WEATHERNUM == 기후_구름
+		PRINTFORML  흐려도 여름인것 같고 덥다
+	ELSEIF WEATHERNUM == 기후_강우
+		PRINTFORML  여름의 비로 찌고 있다
+	ELSE
+		PRINTFORML  구름 하나 없는 염천이다
+	ENDIF
+ELSEIF DISPLAY_SEASON() == "가을"
+	IF WEATHERNUM == 기후_구름
+		PRINTFORML  하늘에 약운이 퍼지고 있다
+	ELSEIF WEATHERNUM == 기후_강우
+		PRINTFORML  소나기로 조금 으스스 춥다
+	ELSE
+		PRINTFORML  외는 맑게 개이는 가을의 맑은 날씨다
+	ENDIF
+ELSE
+	IF WEATHERNUM == 기후_구름
+		PRINTFORML  동담으로 손가락이 차가와진다
+	ELSEIF WEATHERNUM == 기후_강설
+		PRINTFORML  함박눈이 내려 쌓이고 있다
+	ELSE
+		PRINTFORML  맑은 하늘에 후우카가 마이는 있다
+	ENDIF
+ENDIF
+PRINTFORML  밖을 바라보고 있으면, 배후로부터 발소리가 접근해 와 말을 걸려졌다
+WAIT
+PRINTL 
+PRINTFORML  연인의 %조사처리(ANAME(대상),"다")%. 나간다면 함께 가고 싶은 것 같다
+PRINTFORML  자, 그럼, 어떻게 하지
+
+RETURN 0
+

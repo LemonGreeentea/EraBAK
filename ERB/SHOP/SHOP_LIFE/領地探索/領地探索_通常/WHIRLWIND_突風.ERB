@@ -1,0 +1,27 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_WHIRLWIND_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_WHIRLWIND_DECISION(대상)
+#DIM 대상
+RETURN IS_FEMALE(대상)
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_WHIRLWIND(대상)
+#DIM 대상
+PRINTFORMW 뷰옥!
+PRINTFORML 교외를 걷고 있으면 돌연 돌풍이 불었다
+PRINTFORML 옷을 걸을 수 있는 것을, 서둘러 억제했다
+PRINTFORML ……지나간 사람에게 보여져 버린 것 같다
+CALL PRINT_ADD_EXP(대상, "노출경험치", 3)
+
+RETURN 1

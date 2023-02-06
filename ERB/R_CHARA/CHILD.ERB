@@ -1,0 +1,589 @@
+﻿;아이의 탄생 관련의 처리
+
+;-------------------------
+;ARG:0을 모친으로서 아이를 생성한다
+;-------------------------
+@CREATE_CHILD(ARG:0)
+;타겟을 퇴피
+LOCAL:0 = TARGET
+
+SIF !CAN_ADD_CHILD()
+	RETURN -1
+
+;캐릭터를 추가
+ADDVOIDCHARA
+
+;작성한 캐릭터를 타겟으로 한다
+TARGET = CHARANUM - 1
+
+;NO의 설정
+NO = FLAG:아이카운트 + MIN_NO_CHILD
+FLAG:아이카운트 ++
+
+;부친·모친의 ID를 설정
+CFLAG:모친 = GET_ID(ARG:0)
+CFLAG:부친 = CFLAG:(ARG:0):아이의부친
+
+;소질과 능력의 결정
+CALL CHILD_SETTING
+
+;초기설정(※소질 결정 후에 실시한다)
+CALL INIT_NEWCHARA(TARGET)
+
+CALL RANDOM_CHARA_SKILL_SETTING
+CALL CHILD_SKILL_SETTING
+CALL RANDOM_CHARA_CLOTH_SETTING()
+CALL CHILD_TAG_SETTING()
+;타겟의 재설정
+TARGET = LOCAL:0
+RETURN CHARANUM - 1
+
+;-------------------------
+;아이가 탄생시의 처리
+;-------------------------
+@CHILD_SETTING
+#DIM EAR
+#DIM TAIL
+
+;부모님의 취득
+LOCAL:5 = ID_TO_CHARA(CFLAG:부친)
+LOCAL:6 = ID_TO_CHARA(CFLAG:모친)
+
+;고정의 소질을 부여
+TALENT:동정 = 1
+TALENT:처녀 = 1
+TALENT:키스미경험 = 1
+TALENT:애널처녀 = 1
+TALENT:유아 = 1
+TALENT:체격 = 체격_아이
+
+;설정된 남성율에 응해 성별을 설정
+IF RAND:100 < CONFIG:4
+	IF RAND:30 == 0
+		TALENT:성별 = 4
+	ELSEIF RAND:30 == 0
+		TALENT:성별 = 3
+	ELSE
+		TALENT:성별 = 0
+	ENDIF
+ELSE
+	IF RAND:20 == 0
+		TALENT:성별 = 2
+	ELSE
+		TALENT:성별 = 1
+	ENDIF
+	CALL SET_BUSTSIZE(TARGET, -2)
+ENDIF
+
+;■BASE치의 결정
+IF (LOCAL:5 >= 0 && RAND:2) || LOCAL:6 < 0
+	MAXBASE:체력 = MAXBASE:(LOCAL:5):체력 + (RAND:5 - 2) * 100
+ELSE
+	MAXBASE:체력 = MAXBASE:(LOCAL:6):체력 + (RAND:5 - 2) * 100
+ENDIF
+MAXBASE:체력 = LIMIT(MAXBASE:체력, 1200, 2500)
+
+IF (LOCAL:5 >= 0 && RAND:2) || LOCAL:6 < 0
+	MAXBASE:기력 = MAXBASE:(LOCAL:5):기력 + (RAND:5 - 2) * 100
+ELSE
+	MAXBASE:기력 = MAXBASE:(LOCAL:6):기력 + (RAND:5 - 2) * 100
+ENDIF
+MAXBASE:기력 = LIMIT(MAXBASE:기력, 1000, 2200)
+
+BASE:체력 = MAXBASE:체력
+BASE:기력 = MAXBASE:기력
+
+;정신력은 가설정
+MAXBASE:정신력 = 500
+BASE:정신력 = MAXBASE:정신력
+
+;■전투계 능력과 성장형의 설정
+LOCAL:7 = RAND:5
+IF LOCAL:5 >= 0 && LOCAL:7 < 2
+	LOCAL:8 = LOCAL:5
+ELSEIF LOCAL:6 >= 0 && LOCAL:7 < 4
+	LOCAL:8 = LOCAL:6
+ELSE
+	LOCAL:8 = -1
+ENDIF
+
+IF LOCAL:8 >= 0
+	TALENT:성장형 = TALENT:(LOCAL:8):성장형
+
+	ABL:무투 = RAND:8 + 1 + ABL:(LOCAL:8):무투 / 10
+	ABL:방위 = RAND:8 + 1 + ABL:(LOCAL:8):방위 / 10
+	ABL:지략 = RAND:8 + 1 + ABL:(LOCAL:8):지략 / 10
+	ABL:정치 = RAND:8 + 1 + ABL:(LOCAL:8):정치 / 10
+	ABL:가창 = RAND:21
+	ABL:요리 = MAX(RAND:11 - 5, 0)
+ELSE
+	TALENT:성장형 = RAND:9
+
+	ABL:무투 = RAND:12 + 1
+	ABL:방위 = RAND:12 + 1
+	ABL:지략 = RAND:12 + 1
+	ABL:정치 = RAND:12 + 1
+	ABL:가창 = RAND:21
+	ABL:요리 = MAX(RAND:11 - 5, 0)
+ENDIF
+
+;■소질의 결정
+;겁쟁이, 꿋꿋함
+CALL CHILD_TALENT_OPPOSE, LOCAL:5, LOCAL:6, 10, 12, 12, 12
+;반항적, 솔직함
+CALL CHILD_TALENT_OPPOSE, LOCAL:5, LOCAL:6, 11, 13, 20, 20
+;얌전함
+CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 14, 7
+;프라이드높음, 프라이드낮음
+CALL CHILD_TALENT_OPPOSE, LOCAL:5, LOCAL:6, 15, 17, 12, 3
+;거만함(솔직함을 가진다면 확률 저하)
+IF TALENT:솔직함
+	CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 16, 3
+ELSE
+	CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 16, 12
+ENDIF
+;츤데레(반항적을 가지는 캐릭터는 고확률·솔직함과 동거(同居) 하지 않는·유전에 의하지 않고 완전 랜덤)
+IF TALENT:반항적
+	CALL RCHARA_TALENT_SINGLE, 18, 23
+ELSEIF !TALENT:솔직함
+	CALL RCHARA_TALENT_SINGLE, 18, 5
+ENDIF
+;쾌감에솔직, 쾌감을부정
+CALL CHILD_TALENT_OPPOSE, LOCAL:5, LOCAL:6, 70, 71, 9, 5
+;자제심(쾌감에솔직과 동거(同居) 하지 않는다)
+IF !TALENT:쾌감에솔직
+	CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 20, 7
+ENDIF
+;호기심, 보수적
+CALL CHILD_TALENT_OPPOSE, LOCAL:5, LOCAL:6, 23, 24, 13, 6
+;낙관적, 비관적
+CALL CHILD_TALENT_OPPOSE, LOCAL:5, LOCAL:6, 25, 26, 11, 7
+;선을넘지않음
+CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 27, 6
+;주목받기원함
+CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 28, 9
+;정조관념, 정조관념없음
+CALL CHILD_TALENT_OPPOSE, LOCAL:5, LOCAL:6, 30, 31, 10, 6
+;억압(일부 소질과 동거(同居) 하지 않는다)
+IF !TALENT:거만함 && !TALENT:호기심 && !TALENT:낙관적 && !TALENT:주목받기원함 && !TALENT:쾌감에솔직
+	CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 32, 6
+ENDIF
+;고고함(솔직함을 가지지 않는 캐릭터 한정)
+IF !TALENT:솔직함
+	CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 34, 6
+ENDIF
+;수줍음, 수치심옅음(주목받기원함을 가진다면 확률 변동)
+IF TALENT:주목받기원함
+	CALL CHILD_TALENT_OPPOSE, LOCAL:5, LOCAL:6, 35, 36, 3, 13
+ELSE
+	CALL CHILD_TALENT_OPPOSE, LOCAL:5, LOCAL:6, 35, 36, 13, 7
+ENDIF
+;무관심(일부 소질과 동거(同居) 하지 않는다)
+IF !TALENT:호기심 && !TALENT:주목받기원함
+	CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 21, 7
+ENDIF
+;감정결핍(일부 소질과 동거(同居) 하지 않는다)
+IF !TALENT:겁쟁이 && !TALENT:거만함 && !TALENT:호기심 && !TALENT:주목받기원함 && !TALENT:수줍음
+	CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 22, 8
+ENDIF
+;해방(동거(同居) 하지 않는 소질 다수)
+IF !TALENT:겁쟁이 && !TALENT:츤데레 && !TALENT:자제심 && !TALENT:감정결핍 && !TALENT:보수적 && !TALENT:비관적
+	IF !TALENT:선을넘지않음 && !TALENT:정조관념 && !TALENT:억압 && !TALENT:고고함 && !TALENT:수줍음 && !TALENT:쾌감을부정
+		CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 33, 12
+	ENDIF
+ENDIF
+;아픔에강함, 아픔에약함
+CALL CHILD_TALENT_OPPOSE, LOCAL:5, LOCAL:6, 41, 40, 5, 4
+;젖기쉬움, 젖기어려움
+CALL CHILD_TALENT_OPPOSE, LOCAL:5, LOCAL:6, 42, 43, 8, 5
+;습득빠름, 습득느림
+CALL CHILD_TALENT_OPPOSE, LOCAL:5, LOCAL:6, 50, 51, 5, 4
+;혀놀림
+CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 52, 5
+;자위하기쉬움
+CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 60, 7
+;악취둔감, 악취민감
+CALL CHILD_TALENT_OPPOSE, LOCAL:5, LOCAL:6, 61, 62, 8, 8
+;헌신적
+CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 63, 9
+;중독하기쉽다
+CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 72, 8
+;도착적
+CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 80, 8
+;바이(여성이 확률 높은)
+IF IS_MALE(TARGET)
+	CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 81, 14
+ELSE
+	CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 81, 8
+ENDIF
+;남성혐오, 여성혐오(이성 한정)
+IF IS_MALE(TARGET)
+	CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 83, 9
+ELSE
+	CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 82, 9
+ENDIF
+;Ｓ기질, Ｍ기질
+CALL CHILD_TALENT_OPPOSE, LOCAL:5, LOCAL:6, 84, 85, 8, 8
+;소악마(여성이 확률 높은)
+IF IS_MALE(TARGET)
+	CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 86, 3
+ELSE
+	CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 86, 10
+ENDIF
+;매혹
+CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 87, 8
+;수수께끼의매력
+CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 88, 2
+;회복빠름, 회복느림
+CALL CHILD_TALENT_OPPOSE, LOCAL:5, LOCAL:6, 111, 112, 5, 4
+;유치
+CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 132, 6
+
+;각선미
+SIF !TALENT:성별 == 0
+	CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 113, 12
+;예쁜엉덩이
+SIF !TALENT:성별 == 0
+	CALL CHILD_TALENT_SINGLE, LOCAL:5, LOCAL:6, 114, 12
+
+;부친이 특수한 경우의 처리
+IF GROUPMATCH(CFLAG:부친, GET_SPERM_ID("개"), GET_SPERM_ID("돼지"), GET_SPERM_ID("말"))
+	TALENT:동물귀 = 1
+	TALENT:꼬리 = 1
+ENDIF
+
+;[패치에 의한 추가]동물귀, 꼬리
+;어느 쪽인지 다른 한쪽만 소지라면 35%, 양쪽 모두 소지라면 70%의 확률로 동물귀·꼬리가 유전
+;잠정적으로 동물귀·꼬리의 유전은 분리해 둔다
+;벌써 소질을 가지고 있다면 처리 날려
+IF TALENT:동물귀 == 0 && TALENT:꼬리 == 0
+	EAR = 0
+	TAIL = 0
+	IF LOCAL:5 >= 0
+		SIF TALENT:(LOCAL:5):동물귀
+			EAR += 35
+		SIF TALENT:(LOCAL:5):꼬리
+			TAIL += 35
+	ENDIF
+
+	IF LOCAL:6 >= 0
+		SIF TALENT:(LOCAL:6):동물귀
+			EAR += 35
+		SIF TALENT:(LOCAL:6):꼬리
+			TAIL += 35
+	ENDIF
+
+	SIF EAR > 0 && RAND:100 < EAR
+		TALENT:동물귀 = 1
+	SIF TAIL > 0 && RAND:100 < TAIL
+		TALENT:꼬리 = 1
+ENDIF
+
+
+;성장 후의[유치]를 퇴피해, 고정으로 유치를 부여
+TALENT:성장후유치 = TALENT:유치
+TALENT:유치 = 1
+
+;■민둔감 소질의 결정(랜덤성 높은)
+LOCAL:1 = RAND:100
+IF LOCAL:5 >= 0 && LOCAL:1 < 30
+	FOR LOCAL:0, 101, 111
+		TALENT:(LOCAL:0) = TALENT:(LOCAL:5):(LOCAL:0)
+	NEXT
+	IF LOCAL:1 < 8
+		LOCAL:2 = RAND:10 + 101
+		TALENT:(LOCAL:2) = 1
+	ELSEIF LOCAL:1 < 25
+		LOCAL:2 = RAND:10 + 101
+		TALENT:(LOCAL:2) = 0
+	ENDIF
+	CALL KILL_INCOMPATIBLE_SENSE()
+ELSEIF LOCAL:6 >= 0 && LOCAL:1 < 60
+	FOR LOCAL:0, 101, 111
+		TALENT:(LOCAL:0) = TALENT:(LOCAL:6):(LOCAL:0)
+	NEXT
+	IF LOCAL:1 < 38
+		LOCAL:2 = RAND:10 + 101
+		TALENT:(LOCAL:2) = 1
+	ELSEIF LOCAL:1 < 55
+		LOCAL:2 = RAND:10 + 101
+		TALENT:(LOCAL:2) = 0
+	ENDIF
+	CALL KILL_INCOMPATIBLE_SENSE()
+ELSE
+	;랜덤에 민둔감 소질을 설정
+	CALL RANDOM_CHARA_SENSE
+ENDIF
+
+;부모님의 정보로부터 가슴크기를 설정
+LOCAL:0 = RAND:100
+IF LOCAL:6 >= 0
+	SELECTCASE GET_BUSTSIZE(LOCAL:6) - CFLAG:(LOCAL:6):임신시가슴크기증가
+		CASE -2
+			TALENT:성장후가슴 = RAND(-2, 1)
+		CASE -1
+			TALENT:성장후가슴 = RAND(-2, 2)
+		CASE 0
+			TALENT:성장후가슴 = RAND(-2, 2)
+		CASE 1
+			TALENT:성장후가슴 = RAND(-1, 2)
+		CASE 2
+			TALENT:성장후가슴 = RAND(-1, 3)
+	ENDSELECT
+ELSE
+	CALL RANDOM_CHARA_BUSTSIZE
+	TALENT:성장후가슴 = GET_BUSTSIZE(TARGET)
+	CALL SET_BUSTSIZE(TARGET, -2)
+ENDIF
+
+LOCAL:0 = RAND:100
+IF LOCAL:6 >= 0
+	SELECTCASE GET_HIPSIZE(LOCAL:6)
+		CASE -2
+			TALENT:성장후엉덩이 = RAND(-2, 1)
+		CASE -1
+			TALENT:성장후엉덩이 = RAND(-2, 2)
+		CASE 0
+			TALENT:성장후엉덩이 = RAND(-2, 2)
+		CASE 1
+			TALENT:성장후엉덩이 = RAND(-1, 2)
+		CASE 2
+			TALENT:성장후엉덩이 = RAND(-1, 3)
+	ENDSELECT
+ELSE
+	CALL RANDOM_CHARA_HIPSIZE
+	TALENT:성장후엉덩이 = GET_HIPSIZE(TARGET)
+	CALL SET_HIPSIZE(TARGET, -2)
+ENDIF
+
+
+
+
+;부모님의 정보로부터 성격을 결정
+LOCAL:0 = RAND:100
+IF LOCAL:5 >= 0 && TALENT:(LOCAL:5):성격 != 0 && LOCAL:0 < 35
+	TALENT:성격 = TALENT:(LOCAL:5):성격
+ELSEIF LOCAL:6 >= 0 && TALENT:(LOCAL:6):성격 != 0 && LOCAL:0 < 70
+	TALENT:성격 = TALENT:(LOCAL:6):성격
+ELSE
+	;성격을 랜덤으로 결정
+	CALL SET_CHARACTER(TARGET)
+ENDIF
+
+;머리색·머리길이의 결정
+CALL SET_HAIR(TARGET)
+
+TALENT:TARGET:Ｖ조임 = GET_DEFAULT_TIGHTNESS("꽉닫힘")
+TALENT:TARGET:Ａ조임 = GET_DEFAULT_TIGHTNESS("꽉닫힘")
+
+
+ABL:야심 = RAND(30, 71)
+
+SIF TALENT:반항적
+	ABL:야심 += 5
+SIF TALENT:꿋꿋함
+	ABL:야심 += 5
+SIF TALENT:프라이드높음
+	ABL:야심 += 7
+SIF TALENT:거만함
+	ABL:야심 += 3
+SIF TALENT:호기심
+	ABL:야심 += 3
+SIF TALENT:고고함
+	ABL:야심 += 15
+SIF TALENT:겁쟁이
+	ABL:야심 -= 5
+SIF TALENT:솔직함
+	ABL:야심 -= 5
+SIF TALENT:얌전함
+	ABL:야심 -= 5
+SIF TALENT:자제심
+	ABL:야심 -= 5
+SIF TALENT:무관심
+	ABL:야심 -= 5
+SIF TALENT:프라이드낮음
+	ABL:야심 -= 10
+SIF TALENT:억압
+	ABL:야심 -= 10
+ABL:야심 = MAX(ABL:야심, 0)
+
+
+;-------------------------
+;아이에게 상반되는 2개의 소질을 부여할까 결정하는 함수
+;인수 0:부친의 캐릭터 번호 1:모친의 캐릭터 번호 2:소질 번호 A 3:소질 번호 B 4:소질 A의 랜덤시의 부가 확률 5:소질 B의 랜덤시의 부가 확률
+;-------------------------
+@CHILD_TALENT_OPPOSE(ARG:0, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5)
+;각 40%로 한쪽 부모에게 의존
+IF RAND:10 < 8
+	IF (ARG:0 >= 0 && RAND:2) || ARG:1 < 0
+		TALENT:(ARG:2) = TALENT:(ARG:0):(ARG:2)
+		TALENT:(ARG:3) = TALENT:(ARG:0):(ARG:3)
+	ELSE
+		TALENT:(ARG:2) = TALENT:(ARG:1):(ARG:2)
+		TALENT:(ARG:3) = TALENT:(ARG:1):(ARG:3)
+	ENDIF
+;20%로 랜덤
+ELSE
+	LOCAL:0 = RAND:100
+	IF LOCAL:0 < ARG:4
+		TALENT:(ARG:2) = 1
+	ELSEIF 99 - LOCAL:0 < ARG:5
+		TALENT:(ARG:3) = 1
+	ENDIF
+ENDIF
+
+;-------------------------
+;아이에게 특정의 소질을 부여할까 결정하는 함수
+;인수 0:부친의 캐릭터 번호 1:모친의 캐릭터 번호 2:소질 번호 3:랜덤시의 부가 확률
+;-------------------------
+@CHILD_TALENT_SINGLE(ARG:0, ARG:1, ARG:2, ARG:3)
+;각 40%로 한쪽 부모에게 의존
+IF RAND:10 < 8
+	IF (ARG:0 >= 0 && RAND:2) || ARG:1 < 0
+		TALENT:(ARG:2) = TALENT:(ARG:0):(ARG:2)
+	ELSE
+		TALENT:(ARG:2) = TALENT:(ARG:1):(ARG:2)
+	ENDIF
+;20%로 랜덤
+ELSE
+	IF RAND:100 < ARG:3
+		TALENT:(ARG:2) = 1
+	ENDIF
+ENDIF
+
+;-------------------------
+;아이에게 스킬을 설정하는 것으로 있는 것 권
+;-------------------------
+@CHILD_SKILL_SETTING
+#DIM 아버지
+#DIM 어머니
+#DIM 장르
+#DIM 스킬ID
+#DIM 시행회수
+#DIM 스킬NO군, SKILL_GENRE_NUM, MAX_SKILL_SLOT * 2
+#DIM 스킬ID군, SKILL_GENRE_NUM, MAX_SKILL_SLOT * 2
+#DIM 스킬레벨군, SKILL_GENRE_NUM, MAX_SKILL_SLOT * 2
+#DIM 스킬수, SKILL_GENRE_NUM
+#DIM 스킬수합계
+#DIM 습득확률
+#DIM 스킬위치
+#DIM 스킬을습득수
+#DIM 스킬을습득중지
+#DIM 스킬레벨
+VARSET 스킬NO군
+VARSET 스킬ID군
+VARSET 스킬레벨군
+VARSET 스킬수
+VARSET 스킬수합계
+아버지 = ID_TO_CHARA(CFLAG:부친)
+어머니 = ID_TO_CHARA(CFLAG:모친)
+
+;발견되지 않으면 캔슬
+SIF 아버지 < 0
+	GOTO FATHER_CANCEL
+
+FOR 장르, 0, SKILL_GENRE_NUM
+	FOR 스킬ID, 0, MAX_SKILL_SLOT
+		SIF 스킬수:장르 >= MAX_SKILLS
+			BREAK
+		SIF SKILL_ID_SLOT:아버지:장르:스킬ID == -1
+			CONTINUE
+		SIF SKILL_NO_SLOT:아버지:장르:스킬ID == -1
+			CONTINUE
+		TRYCCALLFORM SKILL_{SKILL_NO_SLOT:아버지:장르:스킬ID}_%SKILL_GENRE_ENG:장르%_{SKILL_ID_SLOT:아버지:장르:스킬ID}_EXIST
+			스킬NO군:장르:(스킬수:장르) = SKILL_NO_SLOT:아버지:장르:스킬ID
+			스킬ID군:장르:(스킬수:장르) = SKILL_ID_SLOT:아버지:장르:스킬ID
+			CALLFORM SKILL_{SKILL_NO_SLOT:아버지:장르:스킬ID}_%SKILL_GENRE_ENG:장르%_{SKILL_ID_SLOT:아버지:장르:스킬ID}_LEVEL
+			스킬레벨군:장르:(스킬수:장르) = RESULT
+			스킬수:장르 ++
+			스킬수합계 ++
+		CATCH
+		ENDCATCH
+	NEXT
+NEXT
+
+$FATHER_CANCEL
+
+;발견되지 않으면 캔슬（특별히 문제는 없지만 경량화를 위해）
+;후 부친이 NO0의 경우도 캔슬  이것은 범용 스킬 기억해 버리므로
+
+SIF 어머니 < 0
+	GOTO MOTHER_CANCEL
+
+FOR 장르, 0, SKILL_GENRE_NUM
+	FOR 스킬ID, 0, MAX_SKILL_SLOT
+		SIF 스킬수:장르 >= MAX_SKILLS
+			BREAK
+		SIF SKILL_ID_SLOT:어머니:장르:스킬ID == -1
+			CONTINUE
+		SIF SKILL_NO_SLOT:어머니:장르:스킬ID == -1
+			CONTINUE
+		TRYCCALLFORM SKILL_{SKILL_NO_SLOT:어머니:장르:스킬ID}_%SKILL_GENRE_ENG:장르%_{SKILL_ID_SLOT:어머니:장르:스킬ID}_EXIST
+			스킬NO군:장르:(스킬수:장르) = SKILL_NO_SLOT:어머니:장르:스킬ID
+			스킬ID군:장르:(스킬수:장르) = SKILL_ID_SLOT:어머니:장르:스킬ID
+			CALLFORM SKILL_{SKILL_NO_SLOT:어머니:장르:스킬ID}_%SKILL_GENRE_ENG:장르%_{SKILL_ID_SLOT:어머니:장르:스킬ID}_LEVEL
+			스킬레벨군:장르:(스킬수:장르) = RESULT
+			스킬수:장르 ++
+			스킬수합계 ++
+		CATCH
+		ENDCATCH
+	NEXT
+NEXT
+
+$MOTHER_CANCEL
+
+FOR 장르, 0, SKILL_GENRE_NUM
+	스킬을습득수 = 0
+	스킬을습득중지 = 0
+	FOR 스킬레벨, 5, 0, -1
+		SELECTCASE 스킬레벨
+			CASE 5
+				습득확률 = 30
+			CASE 4
+				습득확률 = 50
+			CASE 3
+				습득확률 = 70
+			CASE 1, 2
+				습득확률 = 90
+		ENDSELECT
+		FOR 스킬위치, 0, 스킬수:장르
+			SIF 스킬레벨군:장르:스킬위치 != 스킬레벨
+				CONTINUE
+			SIF 습득확률 <= RAND:100
+				CONTINUE
+			CALL SKILL_LEARN(TARGET, 장르, 스킬NO군:장르:스킬위치, 스킬ID군:장르:스킬위치)
+			스킬을습득수 ++
+			IF 스킬을습득수 >= RAND(1, 6)
+				스킬을습득중지 = 1
+				BREAK
+			ENDIF
+		NEXT
+		SIF 스킬을습득중지
+			BREAK
+	NEXT
+NEXT
+
+;-------------------------
+;아이에게 태그를 설정하는 것으로 있는 것 권
+;-------------------------
+@CHILD_TAG_SETTING
+#DIM 아버지
+#DIM 어머니
+아버지 = ID_TO_CHARA(CFLAG:부친)
+어머니 = ID_TO_CHARA(CFLAG:모친)
+SIF 아버지 < 0
+	GOTO FATHER_CANCEL
+FOR LOCAL, 0, MAX_TAG
+	SIF TAG:아버지:LOCAL != -1 && RAND:2
+		CALL ADD_TAG(TARGET, TAG:아버지:LOCAL)
+NEXT
+
+$FATHER_CANCEL
+
+SIF 어머니 < 0
+	RETURN
+FOR LOCAL, 0, MAX_TAG
+	SIF TAG:어머니:LOCAL != -1 && RAND:2
+		CALL ADD_TAG(TARGET, TAG:어머니:LOCAL)
+NEXT
+

@@ -1,0 +1,31 @@
+﻿@REGISTER_TERRITORY_EVENT(분류, 영명, 이름)
+#DIM 분류
+#DIMS 영명
+#DIMS 이름
+
+TRYCCALLFORM TERRITORY_EVENT_%영명%_EXISTS()
+CATCH
+	THROW 지정한 영지탐색 이벤트%이름%, %영명%의 EXISTS 함수가 존재하지 않습니다
+ENDCATCH
+
+TERRITORY_EVENT_NAME:분류:(TERRITORY_EVENT_NUM:분류) '= 이름
+TERRITORY_EVENT_NAME_ENG:분류:(TERRITORY_EVENT_NUM:분류) '= 영명
+
+TERRITORY_EVENT_NUM:분류 ++
+
+
+@PRINT_ABILITY(대상, 능력번호)
+#DIM 대상
+#DIM 능력번호
+
+PRINTFORM %ANAME(대상)%의 %ABLNAME:능력번호%:
+
+IF GROUPMATCH(능력번호, GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "요술"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창"))
+	LOCAL = 랭크_ＳＬＧ
+ELSE
+	LOCAL = 랭크_그외
+ENDIF
+
+CALL PRINT_ALPHABET_RANK(LOCAL, ABL:대상:능력번호)
+
+PRINTFORML {ABL:대상:능력번호}

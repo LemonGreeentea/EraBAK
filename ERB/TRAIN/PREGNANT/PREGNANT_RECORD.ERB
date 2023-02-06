@@ -1,0 +1,324 @@
+﻿;임신한 아이의 부친을 기록한다
+
+;---------------------------------------------------------
+;모친의 캐릭터 번호와 부친의 ID를 받아, 모친의 임신 기록을 갱신한다
+;P_TIMES는 회수 통상은 1
+;---------------------------------------------------------
+@REFRESH_PREGNANT_RECORD(MOTHER, FATHER_ID, P_TIMES = 1)
+#DIM MOTHER
+#DIM FATHER_ID
+#DIM P_TIMES
+
+IF P_TIMES <= 0
+	RETURN
+ENDIF
+
+;이미 동일한 ID가 기록되고 있을까 조사한다
+FOR LOCAL:0, 0, PREGNANT_RECORD_MAX
+	IF PREGNANT_RECORD_FATHER:MOTHER:(LOCAL:0) == FATHER_ID
+		;동일한 ID가 발견되었을 경우, 그 부친에 의한 임신 회수를 P_TIMES분 늘려 종료
+		PREGNANT_RECORD_TIMES:MOTHER:(LOCAL:0) += P_TIMES
+		RETURN
+	ENDIF
+NEXT
+
+;기존의 기록이 발견되지 않았던 경우, 비어있는 장소에 새롭게 기록
+FOR LOCAL:0, 0, PREGNANT_RECORD_MAX
+	IF PREGNANT_RECORD_FATHER:MOTHER:(LOCAL:0) == 0
+		PREGNANT_RECORD_FATHER:MOTHER:(LOCAL:0) = FATHER_ID
+		PREGNANT_RECORD_TIMES:MOTHER:(LOCAL:0) = P_TIMES
+		RETURN
+	ENDIF
+NEXT
+
+;---------------------------------------------------------
+; ARG:0번의 캐릭터의 임신 기록을 일괄 표시한다
+;---------------------------------------------------------
+@SHOW_PREGNANT_RECORD(ARG:0)
+#DIM 표시회수
+#DIM 그외
+VARSET 표시회수
+VARSET 그외
+VARSET LOCAL, 0
+CALL SINGLE_DRAWLINE
+PRINTFORML ○%ANAME(ARG:0)%의 임신 기록○
+
+;FOR LOCAL:0, 0, PREGNANT_RECORD_MAX
+;	LOCAL:1 = PREGNANT_RECORD_FATHER:(ARG:0):(LOCAL:0)
+;	LOCAL:2 = PREGNANT_RECORD_TIMES:(ARG:0):(LOCAL:0)
+;	;부친이 불명 또는 이미 삭제되고 있는 경우
+;	IF LOCAL:1 == 0 || (LOCAL:1 > 0 && ID_TO_CHARA(LOCAL:1) == -1)
+;		IF LOCAL:2 > 0
+;			;「그 외」의 항목에 회수를 가산한다
+;			그 외 += LOCAL:2
+;		ENDIF
+;	ENDIF
+;NEXT
+
+LOCAL:500 = 0
+
+FOR LOCAL, 0, PREGNANT_RECORD_MAX
+	LOCAL:1 = PREGNANT_RECORD_FATHER:(ARG:0):(LOCAL:0)
+	LOCAL:2 = PREGNANT_RECORD_TIMES:(ARG:0):(LOCAL:0)
+	IF LOCAL:2 > 0
+		LOCAL:3 = 1
+		;부친이 불명 또는 이미 삭제되고 있는 경우, 그 외 취급인 것으로 CONTINUE
+		;SIF LOCAL:1 == 0 || (LOCAL:1 > 0 && ID_TO_CHARA(LOCAL:1) == -1)
+		;	CONTINUE
+		IF LOCAL:500 >= 1
+			IF LOCAL:500 % 4 == 0
+				PRINTL 
+			ELSE
+				PRINT     
+			ENDIF
+		ENDIF
+		LOCAL:500 ++
+		;부친이 캐릭터의 경우
+		SIF ID_TO_CHARA(LOCAL:1) >= 0
+			PRINTFORM %SNAME(ID_TO_CHARA(LOCAL:1)), 18, LEFT%{LOCAL:2, 4, RIGHT}
+		;부친이 특수 정액의 경우
+		SIF ID_TO_CHARA(LOCAL:1) < 0 && GET_SPERM_NAME(LOCAL:1) != ""
+			PRINTFORM %GET_SPERM_NAME(LOCAL:1), 18, LEFT%{LOCAL:2, 4, RIGHT}
+	ENDIF
+NEXT
+
+;표시 건수 제로라면 없음이라고 표시해 둔다
+IF !LOCAL:3
+	PRINTFORML 없음
+ELSE
+	PRINTL
+ENDIF
+
+CALL COLOR_LINE
+PRINTFORML ○%ANAME(ARG:0)%의 씨뿌리기 기록○
+VARSET LOCAL, 0
+FOR LOCAL, 0, CHARANUM
+	FOR LOCAL:1, 0, PREGNANT_RECORD_MAX
+		IF PREGNANT_RECORD_FATHER:(LOCAL:0):(LOCAL:1) == GET_ID(ARG:0)
+			IF LOCAL:500 >= 1
+				IF LOCAL:500 % 4 == 0
+					PRINTL 
+				ELSE
+					PRINT     
+				ENDIF
+			ENDIF
+			LOCAL:500 ++
+			LOCAL:2 = PREGNANT_RECORD_TIMES:(LOCAL:0):(LOCAL:1)
+			PRINTFORM %SNAME(LOCAL:0), 18, LEFT%{LOCAL:2, 4, LEFT}
+			LOCAL:3 ++
+			BREAK
+		ENDIF
+	NEXT
+NEXT
+
+
+;표시 건수 제로라면 없음이라고 표시해 둔다
+IF !LOCAL:3
+	PRINTFORML 없음
+ELSE
+	PRINTL
+ENDIF
+
+CALL SHOW_CHILDREN(ARG:0)
+
+CALL SHOW_SIBLING(ARG:0)
+
+CALL SHOW_WOMB_SEMEN(ARG:0)
+
+;---------------------------------------------------------
+; ARG:0번의 캐릭터의 아이를 일괄 표시한다
+;---------------------------------------------------------
+@SHOW_CHILDREN(ARG:0)
+#DIM 표시회수
+#DIM 친종별
+#DIM 친ID
+#DIM ARG0_ID
+
+ARG0_ID = GET_ID(ARG:0)
+
+FOR 친종별, 0, 2
+	CALL COLOR_LINE
+	표시회수 = 0
+	SELECTCASE 친종별
+		CASE 0
+			PRINTFORML ○%조사처리(ANAME(ARG:0),"를")% 부친에게 가지는 아이○
+		CASE 1
+			PRINTFORML ○%조사처리(ANAME(ARG:0),"를")% 모친에게 가지는 아이○
+	ENDSELECT
+	FOR LOCAL, 0, CHARANUM
+		SELECTCASE 친종별
+			CASE 0
+				친ID = CFLAG:(LOCAL:0):부친
+			CASE 1
+				친ID = CFLAG:(LOCAL:0):모친
+		ENDSELECT
+		IF 친ID == ARG0_ID
+			IF 표시회수 >= 1
+				IF 표시회수 % 4 == 0
+					PRINTL 
+				ELSE
+					PRINT     
+				ENDIF
+			ENDIF
+			표시회수 ++
+			PRINTFORM %SNAME(LOCAL:0), 18, LEFT%
+		ENDIF
+	NEXT
+
+
+	;표시 건수 제로라면 없음이라고 표시해 둔다
+	IF !표시회수
+		PRINTFORML %"없음", 18, LEFT%
+	ELSE
+		PRINTL
+	ENDIF
+NEXT
+
+;---------------------------------------------------------
+; 대상의 형제를 표시한다
+;---------------------------------------------------------
+@SHOW_SIBLING(대상)
+#DIM 대상
+#DIM 아버지ID
+#DIM 어머니ID
+#DIM 상대아버지ID
+#DIM 상대어머니ID
+#DIM 표시회수
+#DIM 표시종별
+
+아버지ID = CFLAG:대상:부친
+어머니ID = CFLAG:대상:모친
+
+IF ALLSAMES(0, 아버지ID, 어머니ID)
+	CALL COLOR_LINE
+	PRINTFORML 〇%ANAME(대상)%의 형제·자매 0
+	PRINTFORML 부모님 모두 불명을 위해서(때문에), 모른다
+	RETURN
+ENDIF
+
+FOR 표시종별, 0, 3
+	CALL COLOR_LINE
+	SELECTCASE 표시종별
+		CASE 0
+			PRINTFORML 〇%ANAME(대상)%의 형제·자매 0
+		CASE 1
+			PRINTFORML 〇%ANAME(대상)%의 배 다른 형제·자매 0
+		CASE 2
+			PRINTFORML 〇%ANAME(대상)%의 아버지가 다른 형제·자매 0
+	ENDSELECT
+	표시회수 = 0
+
+	FOR LOCAL, 0, CHARANUM
+		SIF LOCAL == 대상
+			CONTINUE
+		상대아버지ID = CFLAG:LOCAL:부친
+		상대어머니ID = CFLAG:LOCAL:모친
+
+
+		SIF ALLSAMES(0, 상대아버지ID, 상대어머니ID)
+			CONTINUE
+
+		SELECTCASE 표시종별
+			CASE 0
+				;형제가 아니다 ==아버지와 어머니 어느쪽이든가 다르다  부모 불명은 딴사람으로 간주한다
+				SIF !IS_PURE_BROTHER(대상, LOCAL)
+					CONTINUE
+			CASE 1
+				;배 다른 형제
+				SIF !(HAS_SAME_FATHER(대상, LOCAL) && !HAS_SAME_MOTHER(대상, LOCAL))
+					CONTINUE
+			CASE 2
+				;아버지가 다른 형제
+				SIF !(!HAS_SAME_FATHER(대상, LOCAL) && HAS_SAME_MOTHER(대상, LOCAL))
+					CONTINUE
+		ENDSELECT
+		IF 표시회수 >= 1
+			IF 표시회수 % 4 == 0
+				PRINTL 
+			ELSE
+				PRINT     
+			ENDIF
+		ENDIF
+		표시회수 ++
+		PRINTFORM %SNAME(LOCAL:0), 18, LEFT%
+	NEXT
+
+
+	;표시 건수 제로라면 없음이라고 표시해 둔다
+	IF !표시회수
+		PRINTFORML 없음
+	ELSE
+		PRINTL
+	ENDIF
+NEXT
+
+;ARG:1이 ARG:0의 부친인지 판정한다
+@IS_FATHER(ARG:0, ARG:1)
+#FUNCTION
+RETURNF CFLAG:(ARG:0):부친 == GET_ID(ARG:1)
+
+@IS_MOTHER(ARG:0, ARG:1)
+#FUNCTION
+RETURNF CFLAG:(ARG:0):모친 == GET_ID(ARG:1)
+
+;캐릭터 두 사람의 부친이 동일한가 판정한다
+@HAS_SAME_FATHER(ARG:0, ARG:1)
+#FUNCTION
+#DIM 아버지ID, 2
+SIF ARG:0 == ARG:1
+	RETURNF 0
+아버지ID:0 = CFLAG:(ARG:0):부친
+아버지ID:1 = CFLAG:(ARG:1):부친
+IF 아버지ID:0 == 아버지ID:1 
+	IF 아버지ID:0 > 0 && 아버지ID:1 > 0
+		RETURNF 1
+	ELSEIF 아버지ID:0 < 0 && 아버지ID:1 < 0 && BROTHER_SPERM_FLAG:(아버지ID:0 * -1) == 1
+		RETURNF 1
+	ENDIF
+ENDIF
+RETURNF 0
+
+;캐릭터 두 사람의 모친이 동일한가 판정한다
+@HAS_SAME_MOTHER(ARG:0, ARG:1)
+#FUNCTION
+#DIM 어머니ID, 2
+SIF ARG:0 == ARG:1
+	RETURNF 0
+어머니ID:0 = CFLAG:(ARG:0):모친
+어머니ID:1 = CFLAG:(ARG:1):모친
+IF 어머니ID:0 == 어머니ID:1 
+	IF 어머니ID:0 > 0 && 어머니ID:1 > 0
+		RETURNF 1
+	ELSEIF 어머니ID:0 < 0 && 어머니ID:1 < 0 && BROTHER_SPERM_FLAG:(어머니ID:0 * -1) == 1
+		RETURNF 1
+	ENDIF
+ENDIF
+RETURNF 0
+
+
+;캐릭터 두 사람이 형제인지 판정한다
+@IS_PURE_BROTHER(ARG:0, ARG:1)
+#FUNCTION
+RETURNF HAS_SAME_FATHER(ARG:0, ARG:1) && HAS_SAME_MOTHER(ARG:0, ARG:1)
+
+;---------------------------------------------------------
+; 대상의 자궁내 정액량을 표시한다
+;---------------------------------------------------------
+@SHOW_WOMB_SEMEN(ARG:0)
+#DIM 표시
+#DIM FIRST_LINE
+
+CALL COLOR_LINE
+PRINTFORML 〇%ANAME(ARG:0)%의 자궁내의 정액 0
+
+FIRST_LINE = LINECOUNT
+
+FOR LOCAL:0, 0, WOMB_RECORD_MAX
+	SIF WOMB_SEMEN_ID:(ARG:0):(LOCAL:0) == 0
+		CONTINUE
+	PRINTFORM %GET_SPERM_NAME(WOMB_SEMEN_ID:(ARG:0):(LOCAL:0)), MAX_CHARANAME_LENGTH, LEFT%:
+	PRINTFORML {WOMB_SEMEN_AMOUNT:(ARG:0):(LOCAL:0), 5, RIGHT} ml({WOMB_SEMEN_COUNT:(ARG:0):(LOCAL:0)}발분)
+NEXT
+
+SIF FIRST_LINE == LINECOUNT
+	PRINTFORML 없음

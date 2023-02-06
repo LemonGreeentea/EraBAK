@@ -1,0 +1,87 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_INJURY_IN_MOUNTAIN_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_INJURY_IN_MOUNTAIN_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_INJURY_IN_MOUNTAIN(대상)
+#DIM 대상
+
+PRINTFORMW 산길을 산책중, 잘못해 다리를 미끄러지게 하고 꺾어 버렸다
+IF IS_MALE(대상)
+	PRINTFORML 검을 지팡이 대신에 어떻게든 걷고 있으면 여행자를 만났다
+	PRINTFORMW 그는 짐을 들어 준다고 하지만
+	PRINTFORML 어떻게 하지?
+	PRINTFORML 
+	CALL ASK_YN("후의에 응석부린다" ,"스스로 가진다")
+	IF RESULT == 1
+		PRINTFORML 아니, 스스로 가진다
+		PRINTFORMW 그렇게 말하면 그는 어깨를 움츠려 앞에 가 버렸다
+		PRINTFORML …무사하게 산을 물러날 수 있었지만 무리를 했기 때문인가, 상처는 악화되었다
+		CALL ADD_COOLTIME(대상, 2)
+	ELSEIF RESULT == 0
+		PRINTFORML 후의에 응석부리는 일로 했다
+		IF RAND:3
+			PRINTFORMW 하지만 그는 짐을 받자마자 도망치기 시작했다!
+			PRINTFORML %조사처리(ANAME(대상),"는")% 뒤쫓으려고 했지만 상처를 위해서(때문에) 그 자리에서 굴러 버렸다
+			PRINTFORMW 결국, %조사처리(ANAME(대상),"는")% 상처는 하고는 짐은 잃고는으로 심한 꼴을 당했다…
+			CALL ADD_COOLTIME(대상, 2)
+			LOCAL = MIN(MONEY, 5000)
+			CALL ICPRINT("금<{LOCAL}>를 잃었다", "L", 칼라_주의)
+			MONEY -= LOCAL
+		ELSE
+			PRINTFORMW 그에게 짐을 위탁 모두 산길을 내려 갔다
+			PRINTFORML …무사하게 산을 물러날 수가 있었던 %조사처리(ANAME(대상),"는")% 그에게 예를 고해 헤어졌다
+		ENDIF
+	ENDIF
+	RETURN
+ENDIF
+SELECTCASE RAND:3
+	CASE 0
+		PRINTFORML 곤란해 하고 있으면 텐구가 왔다
+		PRINTFORMW 그는 세력권에의 침입자인 %조사처리(ANAME(대상),"를")% 안아 어딘가에 데려 갔다
+		PRINTFORML 
+		PRINTFORMW 그는 %조사처리(ANAME(대상),"를")% 보금자리에 데리고 들어가면 전용의 씨받이로 할 수 있도록 연일에 걸쳐 조교했다
+		PRINTFORML 장대한 페니스로 일발 찌르기 될 때에 자궁이 차지는 것 같은 충격을 접수 의식이 날아갈 것 같은
+		PRINTFORML 야성적으로 다만 암컷을 임신하게 하기 위한 확실히 짐승의 교미와 같은 행위에 %ANAME(대상)%의 신체도 점차 익숙해져 간다
+		PRINTFORML 밀어올려지면서 가슴을 격렬하게 주물러지면 %조사처리(ANAME(대상),"는")% 무심코 안타까운 한숨을 흘려 버렸다
+		PRINTFORMW 그리고 대량의 정액이 따라지면 %조사처리(ANAME(대상),"는")% 단정치 못한 교성을 미치게 하면서 절정에 이르렀다
+		CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 키스, 펠라티오, 노출, 긴박, 마조, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 질내사정, 키스상실, 장내사정, 구강사정", GET_SPERM_ID("텐구"), @"텐구의 \@RAND:2 ? 페니스 # 입술\@", "텐구", "", "보금자리에서의 조교")
+	CASE 1
+		PRINTFORML 곤란해 하고 있으면 도둑에게 발견되었다
+		PRINTFORMW 그들은 다쳐 움직일 수 없는 %조사처리(ANAME(대상),"를")% 사냥감으로서 잡으면 아지트로 데려 갔다
+		PRINTFORML 
+		PRINTFORMW 도둑의 아지트에 잡힌 %조사처리(ANAME(대상),"는")% 그들의 노리겟감으로서 보내고 있다
+		PRINTFORML 매일 쉬는 일 없고 남들이 와서는 번갈아 %조사처리(ANAME(대상),"를")% 저 좋은 대로 사용해 정액을 토해내 간다
+		PRINTFORML 도망치려고 해도 웃으면서 억누를 수 있어 벌이라고 칭해보다 난폭하게 범해져 버린다
+		PRINTFORML 도망치는 기력도 없게 한 %조사처리(ANAME(대상),"는")% 다만 난폭하게 당하지 않게 온순하게 그들에게 봉사하는 것처럼 되어 있다
+		PRINTFORMW 그들의 성욕에 맞대지고 더럽혀지고 계속된 %ANAME(대상)%의 신체에는 완전히 수컷의 냄새가 배어들고 있었다
+		CALL FUCK(대상, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 키스, 펠라티오, 윤간, 긴박, 마조, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("산적"), @"산적의 \@RAND:2 ? 페니스 # 입술\@", "산적", "", "보금자리에서의 윤간")
+	CASE 2
+		PRINTFORML 곤란해 하고 있으면 부랑자와 조우했다
+		PRINTFORMW 그는 넘어져 있는 %조사처리(ANAME(대상),"를")% 보면 일순간 놀란 후, 천하게 보인 미소를 띄우고 가까워져 왔다
+		PRINTFORML 
+		PRINTFORMW 부랑자에게 심하게 범해진 후, %조사처리(ANAME(대상),"는")% 더러워진 채로 방치되었다
+		PRINTFORML 그런 상황으로 무사할 리는 없고 또 다른 남자나 요괴에 발견되어서는 번갈아 범해진다
+		PRINTFORML 다리의 아픔도 잊을 정도로 난폭하게 마구 범해진 %조사처리(ANAME(대상),"는")% 정액 투성이로 어안이 벙벙히 가로놓인다
+		PRINTFORML 거기에 온 다른 부랑자가 %조사처리(ANAME(대상),"를")% 메면, 서둘러 보금자리로 옮겨 갔다
+		PRINTFORMW 그리고 %조사처리(ANAME(대상),"는")% 그의 보금자리에서 밤새, 추접스러운 노래진 정액으로 가차 없이 씨뿌리기 되어 버렸다
+		CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 키스, 펠라티오, 노출, Ｖ성교, Ａ성교, 윤간", "처녀상실, Ａ처녀상실, 질내사정, 키스상실, 장내사정, 구강사정", GET_SPERM_ID("부랑자"), @"부랑자의 \@RAND:2 ? 페니스 # 입술\@", "부랑자", "", "보금자리에서의 윤간")
+ENDSELECT
+PRINTFORML 
+PRINTFORMW 그 후, %조사처리(ANAME(대상),"는")% 어떻게든 도망치기 시작할 수가 있었다
+CALL ADD_COOLTIME(대상, 2)
+
+RETURN 1

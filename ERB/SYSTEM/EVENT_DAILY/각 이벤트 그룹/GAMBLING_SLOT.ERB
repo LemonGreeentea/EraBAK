@@ -1,0 +1,196 @@
+﻿
+;-----------------------------------
+;사기 룰렛
+;리치 하고 있으면 3개째가 이따금 「미끄러진다」
+;눈"○", "◎", "?", "△", "★", "범", "7"
+;-----------------------------------
+@GAMBLING_SLOT()
+#DIMS 릴, 3, 20
+#DIM 플레이중
+#DIM START_LINE
+#DIM REEL_LINE
+#DIM 라인, 3
+#DIM 회전중, 3
+#DIM 잔회전, 3
+#DIM 리치
+
+VARSET 릴
+VARSET 플레이중
+VARSET 회전중
+VARSET 잔회전
+VARSET 리치
+
+REDRAW 0
+;머신의 셋업
+FOR LOCAL, 0, VARSIZE("릴")
+	;각 릴에는 1개만, 범과 7을 포함하게 한다
+	LOCAL:1 = (RAND:(VARSIZE("릴", 1) - 1))
+	릴:LOCAL:(LOCAL:1) = 7
+	릴:LOCAL:(IFRAND("0TO" + TOSTR(VARSIZE("릴", 1) - 1), 1, "D" + TOSTR(LOCAL:1))) = 범
+	FOR LOCAL:1, 0, VARSIZE("릴", 1)
+		SIF 릴:LOCAL:(LOCAL:1) != ""
+			CONTINUE
+		SELECTCASE RAND:100
+			CASE 0 TO 39
+				릴:LOCAL:(LOCAL:1) = ○
+			CASE 40 TO 59
+				릴:LOCAL:(LOCAL:1) = ✕
+			CASE 60 TO 79
+				릴:LOCAL:(LOCAL:1) = △
+			CASE 80 TO 89
+				릴:LOCAL:(LOCAL:1) = ★
+			CASEELSE
+				릴:LOCAL:(LOCAL:1) = ◎
+		ENDSELECT
+	NEXT
+NEXT
+
+FOR LOCAL, 0, VARSIZE("라인")
+	라인:LOCAL = 1
+NEXT
+
+START_LINE = LINECOUNT
+
+$MAIN
+CALL PRINT_CASINO_SLOT_README()
+CALL PRINTBUTTON_EXL("[플레이 개시]", 999, !플레이중)
+CALL SINGLE_DRAWLINE
+
+REEL_LINE = LINECOUNT
+
+$SHOW_LINES
+
+IF 리치 && 플레이중
+	CALL COLOR_PRINTL("리치!!", 칼라_주의)
+ELSE
+	PRINTFORML
+ENDIF
+
+FOR LOCAL:1, 0, 3
+	SIF LOCAL:1 == 1
+		SETCOLOR 칼라_주의
+	LOCAL:2 = LOCAL:1 - 1
+	PRINTFORM  
+	FOR LOCAL, 0, VARSIZE("릴")
+		PRINTFORM %릴:LOCAL:(라인:LOCAL + LOCAL:2)%
+			SIF LOCAL != VARSIZE("릴") - 1
+				PRINTFORM  - 
+	NEXT
+	RESETCOLOR
+	PRINTL
+NEXT
+
+FOR LOCAL, 0, VARSIZE("회전중")
+	CALL PRINTBUTTON_EX("[○]", LOCAL, 회전중:LOCAL)
+	PRINT  
+NEXT
+
+SIF 플레이중 && MATCH(회전중, 1) == 0 && MATCH(잔회전, 0) == VARSIZE("잔회전")
+	GOTO GAME_END
+
+
+$INPUT
+IF !플레이중
+	INPUT
+ELSE
+	TINPUT 100, -1, 0, ""
+	IF RESULT == -1
+		FOR LOCAL, 0, VARSIZE("라인")
+			IF 회전중:LOCAL || 잔회전:LOCAL
+				라인:LOCAL = ROUND_INCREMENT(라인:LOCAL, 1, VARSIZE("릴", 1) - 2)
+				잔회전:LOCAL = MIN_DECREASE(잔회전:LOCAL, 1, 0)
+			ENDIF
+		NEXT
+		;리치 판정
+		IF MATCH(회전중, 0) == VARSIZE("회전중") - 1
+{
+			IF (회전중:0 == 0 && 회전중:1 == 0 && 잔회전:0 == 0 && 잔회전:1 == 0 && 릴:0:(라인:0) == 릴:1:(라인:1)) || 
+				(회전중:1 == 0 && 회전중:2 == 0 && 잔회전:1 == 0 && 잔회전:2 == 0 && 릴:1:(라인:1) == 릴:2:(라인:2)) || 
+				(회전중:0 == 0 && 회전중:2 == 0 && 잔회전:0 == 0 && 잔회전:2 == 0 && 릴:0:(라인:0) == 릴:2:(라인:2))
+}
+				리치 = 1
+			ELSE
+				리치 = 0
+			ENDIF
+		ENDIF
+		CLEARLINE LINECOUNT - REEL_LINE
+		GOTO SHOW_LINES
+	ENDIF
+ENDIF
+
+;플레이 개시
+IF RESULT == 999 && !플레이중
+	플레이중 = 1
+	VARSET 회전중, 1
+	VARSET 잔회전, 0
+	VARSET 리치, 0
+	CLEARLINE LINECOUNT - START_LINE
+	GOTO MAIN
+ENDIF
+
+;버튼을 눌렀다
+IF INRANGE(RESULT, 0, VARSIZE("릴") - 1)
+	LOCAL:1 = RESULT
+	회전중:(LOCAL:1) = !회전중:(LOCAL:1)
+
+	;잔회전의 발동 판정
+	;리치
+	IF 리치
+		;범 이외로 리치 하고 있어, 이대로 멈추면 갖추어진다는 상황이라면 30%로 「미끄러진다」.
+		;7가 갖추어질 것 같은 경우는 50%가 된다
+		IF ALLSAMES(릴:0:(라인:0), 릴:1:(라인:1), 릴:2:(라인:2)) && 릴:0:(라인:0) != "범" && (30 + (릴:0:(라인:0) == "7" * 20) > RAND:100)
+			잔회전:(LOCAL:1) = RAND(1, 4)
+		ENDIF
+	;비리치
+	ELSE
+		;멈춘 녀석의 저쪽 2개에 「범」이 포함되는 경우,75%
+		;그렇지 않고, 범으로 멈추지 않으면 10%
+		LOCAL:2 = ROUND_INCREMENT(라인:(LOCAL:1), 0, VARSIZE("릴") - 1)
+		LOCAL:3 = ROUND_INCREMENT(LOCAL:2, 0, VARSIZE("릴") - 1)
+		IF GROUPMATCH("범", 릴:(LOCAL:1):(LOCAL:2), 릴:(LOCAL:1):(LOCAL:3)) && RAND:4
+			잔회전:(LOCAL:1) = RAND(1, 3)
+		ELSEIF !RAND:10 && 릴:(LOCAL:1):(라인:(LOCAL:1)) != "범"
+			잔회전:(LOCAL:1) = RAND(1, 3)
+		ENDIF
+	ENDIF
+
+		;리치 판정
+	IF MATCH(회전중, 0) == VARSIZE("회전중") - 1
+{
+		SIF (회전중:0 == 0 && 회전중:1 == 0 && 잔회전:0 == 0 && 잔회전:1 == 0 && 릴:0:(라인:0) == 릴:1:(라인:1)) || 
+			(회전중:1 == 0 && 회전중:2 == 0 && 잔회전:1 == 0 && 잔회전:2 == 0 && 릴:1:(라인:1) == 릴:2:(라인:2)) || 
+			(회전중:0 == 0 && 회전중:2 == 0 && 잔회전:0 == 0 && 잔회전:2 == 0 && 릴:0:(라인:0) == 릴:2:(라인:2))
+}
+			리치 = 1
+	ENDIF
+ENDIF
+
+IF MATCH(회전중, 1) == 0 && MATCH(잔회전, 0) == VARSIZE("잔회전")
+	$GAME_END
+	WAIT
+	IF GROUPMATCH("범", 릴:0:(라인:0), 릴:1:(라인:1), 릴:2:(라인:2))
+		PRINTFORMW 범의 글자가 나와 버렸다……
+		RETURN 2
+	ELSEIF ALLSAMES(릴:0:(라인:0), 릴:1:(라인:1), 릴:2:(라인:2))
+		PRINTFORMW 「축하합니다! 　%릴:0:(라인:0)%가 갖추어졌어요」
+		RETURN 1
+	ELSE
+		PRINTFORMW 「아무것도 모이지 않았군요……」
+		RETURN 0
+	ENDIF
+	플레이중 = 0
+	CLEARLINE LINECOUNT - START_LINE
+	GOTO MAIN
+ENDIF
+
+
+CLEARLINE LINECOUNT - REEL_LINE
+GOTO SHOW_LINES
+
+
+@PRINT_CASINO_SLOT_README()
+CALL SINGLE_DRAWLINE
+PRINTFORML 「일반적인 슬롯입니다」
+PRINTFORML 「뭔가의 도안을 갖추면 %ANAME(MASTER)%님 승리, 그렇지 않으면 이쪽의 승리입니다」
+PRINTFORML 「그리고 『범』의 모양이 하나라도 나왔을 경우……패널티 첨부로, 이쪽의 승리가 됩니다」
+CALL SINGLE_DRAWLINE

@@ -1,0 +1,75 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_GAIRAI_CHILD_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_GAIRAI_CHILD_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_GAIRAI_CHILD(대상)
+#DIM 대상
+
+IF IS_MALE(대상)
+	PRINTFORML 외래인의 소녀와 조우했다
+	PRINTFORML 아무래도 환상향에 헤매었던 바로 직후 같고, 어찌할 바를 몰라하고 있는 것 같다
+	PRINTL
+CALL ASK_MULTI("안전한 곳에 안내한다", "범한다", "방치한다")
+	IF RESULT == 2
+		PRINTFORML 귀찮은 일은 미안이다
+		PRINTFORMW 보고도 못 본 척을 해 떠났다
+	ELSEIF RESULT == 0
+		PRINTFORML 요괴에 습격당할지도 모른다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 그녀를 안전한 장소까지 안내해 주었다
+		PRINTFORMW 그 방면안, 그녀로부터 재미있는 이야기를 다양하게 (들)물었다
+		CALL PRINT_ADD_EXP(대상, "정치경험치", RAND:8 + 1, 1)
+		CALL PRINT_ADD_EXP(대상, "지략경험치", RAND:8 + 1, 1)
+	ELSE
+		PRINTFORML 아는 사람도 없는 외래인이라면 형편상 좋다
+		PRINTFORMW 소녀를 속여 인기척이 없는 그늘로 데리고 들어갔다
+		PRINTFORML 
+		PRINTFORMW 날뛴다그녀에게 재갈을 해 외래인 특유의 살집이 좋은 신체를 다 마음껏 범했다
+		CALL FUCK(대상, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "외래인의 아가씨의 입술", "", "외래인의 아가씨의 질", "강간")
+		PRINTFORML 
+		PRINTFORMW 한껏 소녀의 신체를 즐긴 후, 가로놓이는 소녀를 방치해 떠났다
+	ENDIF
+ELSE
+	PRINTFORML 외래인의 소년과 조우했다
+	PRINTFORML 아무래도 환상향에 헤매었던 바로 직후 같고, 어찌할 바를 몰라하고 있는 것 같다
+	PRINTL
+CALL ASK_MULTI("안전한 곳에 안내한다", "유혹한다", "방치한다")
+	IF RESULT == 2
+		PRINTFORML 귀찮은 일은 미안이다
+		PRINTFORMW 보고도 못 본 척을 해 떠났다
+	ELSEIF RESULT == 0
+		PRINTFORML 요괴에 습격당할지도 모른다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 그를 안전한 장소까지 안내해 주었다
+		PRINTFORMW 그 방면안, 그로부터 재미있는 이야기를 다양하게 (들)물었다
+		CALL PRINT_ADD_EXP(대상, "정치경험치", RAND:8 + 1, 1)
+		CALL PRINT_ADD_EXP(대상, "지략경험치", RAND:8 + 1, 1)
+	ELSE
+		PRINTFORML %조사처리(ANAME(대상),"는")% 안내한다고 고해 소년을 가까이의 그늘로 데리고 들어갔다
+		PRINTFORMW 거기서 소년을 유혹하면 그는 꿀꺽 군침을 마셔%조사처리(ANAME(대상),"를")% 쓰러트렸다
+		PRINTFORML 
+		PRINTFORML 키스를 하면서 상냥하게 옷을 벗게 하면, 사랑스러운 보기에 어울리지 않는 흉악한 페니스에 공공연하게 되었다
+		PRINTFORML 생각하지 않는 씩씩함에 %조사처리(ANAME(대상),"는")% 못박음이 되어, 무심코 자궁이 쑤셔 버리는 것을 느낀다
+		PRINTFORML 인내 할 수 없게 된 %조사처리(ANAME(대상),"는")% 스스로 균열을 갈라지고 열어, 우뚝 솟는 그의 페니스를 이끌었다
+		PRINTFORML 소년이 일발 찌르기로 근원까지 페니스를 쑤셔 넣으면 지나친 충격에 %조사처리(ANAME(대상),"는")% 일순간기분이 날아가 버린다
+		PRINTFORML 질육의 조임에 흥분한 소년이 젊음에 맡겨 허리를 쳐박으면, %ANAME(대상)%도 거기에 맞추어 좋아해 미친다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 그의 페니스와에 열중해, 몇 번이나 절정 당하고 교성을 미치게 했다
+		CALL FUCK(대상, "욕망, 봉사, 성기술, 성교, Ｖ, Ｍ, 키스, 펠라티오, Ｖ확장, Ｖ성교", "처녀상실, 키스상실, 질내사정, 구강사정", GET_SPERM_ID("아이"), @"소년의 \@RAND:2 ? 페니스 # 입술\@", "소년", "", "화간")
+		PRINTFORML 
+		PRINTFORMW 소년과 충분히 섹스를 즐긴 후, 안전한 곳에 안내해 주었다
+	ENDIF
+ENDIF
+
+RETURN 1

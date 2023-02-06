@@ -1,0 +1,134 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_SUCCUBUS_PROMISCUITY_RATE()
+RETURN 55
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_SUCCUBUS_PROMISCUITY_DECISION()
+#DIM 서큐버스
+서큐버스 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_서큐버스))
+SIF 서큐버스 == -1
+	RETURN 0
+SIF CFLAG:MASTER:소속 == 서큐버스
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_SUCCUBUS_PROMISCUITY_GENRE()
+RETURN 데일리_장르_특수세력
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_SUCCUBUS_PROMISCUITY
+#DIM 대상
+#DIM 서큐버스
+#DIM 병수
+
+서큐버스 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_서큐버스))
+
+PRINTFORML 영내에서 서큐버스의 목격 정보가 빈발하고 있다
+PRINTFORML 동시에 복수의 젊은 남녀가 밤마다 돌아 다니고 있는 것 같다
+PRINTFORMW 하지만 현재 뭔가 해가 있는 것 같아도 없는 같지만…
+PRINTFORML 어떻게 하지?
+CALL ASK_MULTI(@"조사한다" ,"순회를 강화한다(금 소비)" ,"방치한다")
+IF RESULT == 2
+	PRINTFORMW 방치했다
+	$HOUTI_LOOP
+	병수 = 1000 + (RAND:10 + DAY / 5) * 500
+	COUNTRY_SOLDIER:서큐버스 += 병수
+	CALL COLOR_PRINTW(@"서큐버스들에게 사람이 모여, 병수가 {병수}인 증가한 것 같다", 칼라_주의)
+ELSEIF RESULT == 1
+	PRINTFORML 피해가 일어나고 나서는 늦다
+	PRINTFORMW 금은 들지만 야간의 순회의 강화를 명했다
+	LOCAL = 3000 + (RAND:10 + DAY / 5) * 500
+	병수 = 1000 + (RAND:10 + DAY / 5) * 500
+	IF MONEY >= LOCAL
+		CALL COLOR_PRINTW(@"금{LOCAL}를 소비했다", 칼라_주의)
+		MONEY -= LOCAL
+	ELSE
+		PRINTFORMW …하지만 금이 충분하지 않고 능숙하게 가지 않았다
+		CALL COLOR_PRINTW(@"서큐버스들에게 사람이 모여, 병수가 {병수}인 증가한 것 같다", 칼라_주의)
+	ENDIF
+ELSEIF RESULT == 0
+	PRINTFORML 방치는 할 수 없다
+	PRINTFORMW 조사하는 일로 했다
+	PRINTFORML 누구를 선택할까?
+	CALL SELECT_CHARA_LIST_SLG()
+	대상 = RESULT
+	IF RESULT < 0
+		PRINTFORMW 역시 그만두었다
+		GOTO HOUTI_LOOP
+	ELSEIF 대상 == MASTER
+		PRINTFORMW %ANAME(대상)%스스로 조사하는 일로 했다
+	ELSE
+		PRINTFORMW %ANAME(대상)%에 맡기는 일로 했다
+	ENDIF
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+	PRINTFORML 조사를 진행시키면, 젊은이들의 집회를 찾아냈다
+	PRINTFORMW 무려 그것은 서큐버스 주최의 난교 파티였다
+	PRINTFORMW %조사처리(ANAME(대상),"를")% 눈치챈 그녀는 연회에 참가시킬 수 있도록 음기를 날려 유혹했다!
+	PRINTFORML 
+	IF (MAXBASE:대상:정신력 / 100) * (RAND:10 + 1) >= (10 + DAY / 8) * (RAND:10 + 1) && !GETBIT(TALENT:대상:음란계, 소질_음란_음란) && !GETBIT(TALENT:대상:음란계, 소질_음란_정액변소)
+		PRINTFORMW 하지만 %조사처리(ANAME(대상),"는")% 어떻게든 견뎌 보였다!
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 당황하는 서큐버스에게 달려들어, 훌륭히 타도하는 것을 성공했다!
+		FOR LOCAL, 1, MAX_COUNTRY
+			IF IS_COUNTRY(LOCAL) && LOCAL != 서큐버스
+				CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:대상:소속, 50, -50)
+			ELSE
+				CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:대상:소속, -200, 200)
+			ENDIF
+		NEXT
+		CALL COLOR_PRINTL(@"%ANAME(대상)%의 활약은 타국에 널리 알려져 평가가 올랐다", 칼라_주의)
+		CALL COLOR_PRINTW("하지만 서큐버스들로부터는 야유하는 소리가 올랐다", 칼라_주의)
+	ELSE
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 서큐버스의 음기에 저항할 수 없었다…
+		PRINTFORML 순식간에 머릿속이 섹스의 일로 가득 되어 버린다
+		PRINTFORML 서큐버스는 힐쭉 웃어, %ANAME(대상)%의 귓전으로 함께 즐깁시다와 속삭였다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 완전히 임무의 일도 잊어, 본능대로 눈앞의 연회에 섞였다…
+		IF IS_MALE(대상) || (HAS_PENIS(MASTER) && RAND:2) || (HAS_PENIS(MASTER) && TALENT:MASTER:남성혐오)
+			PRINTFORML %조사처리(ANAME(대상),"는")% 다수의 여자들과 짐승과 같이 교접하고 있다
+			PRINTFORML 그녀들은 한결같게 다 번창한 표정을 하고 있어, %ANAME(대상)%의 자지를 요구해 신체를 걸어 온다
+			PRINTFORMW 어느 아이도 흠뻑 젖음의 비밀스런 장소를 실룩거리게 한 전신으로부터 말할 길 없는 암컷의 냄새를 감돌게 한다
+			PRINTFORML %조사처리(ANAME(대상),"는")% 본능대로 닥치는 대로 여자를 쓰러트려는 터질듯한 하나의 물건을 쑤셔 넣는다
+			PRINTFORML 어느 여자도 극상의 암컷구멍이 되어 있어, %조사처리(ANAME(대상),"는")% 교성을 올려 흐트러지는 그녀들을 생각하지만 대로 맛보았다
+			PRINTFORMW 여자의 안쪽 깊이 자식을 추방해서는 또 다음의 여자를 잡아, 혹은 잡을 수 있어 즉석에서 교접한다
+			PRINTFORML 그 모양은 정말로 본능 인 채의 짐승의 교미이며, 서큐버스는 기쁜듯이 그것을 바라보고 있었다
+			PRINTFORMW 하지만 %조사처리(ANAME(대상),"는")% 그녀의 시선도 신경쓰지 않고, 그저 단순히 탐내는 것처럼 육욕에 빠져 갔다…
+			CALL FUCK(대상, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "난교")
+			CALL FUCK(대상, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "난교")
+			CALL FUCK(대상, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "난교")
+		ELSE
+			PRINTFORML %조사처리(ANAME(대상),"는")% 다수의 남자들과 짐승과 같이 교접하고 있다
+			PRINTFORML 그들은 확실히 짐승의 양상으로, %ANAME(대상)%의 일 따위 상관없이 쓰러트려 벌응개를 쑤셔 넣어 온다
+			PRINTFORMW 음기의 영향인가, %ANAME(대상)%의 암컷구멍은 최초부터 완성되고 있고 난폭한 삽입도 받아들이고 가볍게 가 버린다
+			PRINTFORML 육욕대로 자궁까지 영향을 주는 것 같은 격렬한 피스톤에 %조사처리(ANAME(대상),"는")% 참지 못하고 좋아해, 신체를 뛰게 한다
+			PRINTFORML 씩씩한 남근으로 관철해진 %ANAME(대상)%의 표정은 암컷의 기쁨으로 가득 차 있어 스스로 그에게 매달려 자식을 조른다
+			PRINTFORMW 물론그들도 피임 따위 생각하지 않고, %ANAME(대상)%의 안쪽 깊고, 태내에 직접 그 욕망 모두를 내던져 왔다
+			PRINTFORML 사정을 끝낸 남자가 물러나면 질방편과 절정의 여운에 잠기는 사이도 없고, 다음의 페니스가 쑤셔 넣어져 온다
+			PRINTFORML 남자들은 %ANAME(대상)%의 신체에 열중해 모여, 무수한 페니스에 둘러싸이고 수컷 수상함에 머리가 어질 어질한다
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 이키 미치면서도 사랑스러운 남근들을 전신을 사용해 잡아당겨, 차례차례로 그 욕망을 퍼부을 수 있었다
+			PRINTFORML 그 모양은 정말로 본능 인 채의 짐승의 교미이며, 서큐버스는 기쁜듯이 그것을 바라보고 있었다
+			PRINTFORMW 하지만 %조사처리(ANAME(대상),"는")% 그녀의 시선도 신경쓰지 않고, 그저 단순히 탐내는 것처럼 육욕에 빠져 갔다…
+			CALL FUCK(대상, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, Ｖ성교, 키스, 펠라티오, 윤간", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("지나가는 남자"), @"지나가는 남자의 \@RAND:2 ? 페니스 # 입술\@", "지나가는 남자", "", "난교")
+			CALL FUCK(대상, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, Ｖ성교, 키스, 펠라티오, 윤간", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("지나가는 남자"), @"지나가는 남자의 \@RAND:2 ? 페니스 # 입술\@", "지나가는 남자", "", "난교")
+			CALL FUCK(대상, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, Ｖ성교, 키스, 펠라티오, 윤간", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("지나가는 남자"), @"지나가는 남자의 \@RAND:2 ? 페니스 # 입술\@", "지나가는 남자", "", "난교")
+		ENDIF
+		PRINTFORML 
+		PRINTFORML 눈치채면 궁전의 전까지 돌아오고 있었다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 좀 더 조금 전까지의 기억이 애매한 그대로, 문을 빠져 나갔다…
+		병수 = (1000 + (RAND:10 + DAY / 5) * 500) * 2
+		COUNTRY_SOLDIER:서큐버스 += 병수
+		CALL COLOR_PRINTW(@"서큐버스들에게 사람이 모여, 병수가 {병수}인 증가한 것 같다", 칼라_주의)
+	ENDIF
+ENDIF
+
+RETURN 1

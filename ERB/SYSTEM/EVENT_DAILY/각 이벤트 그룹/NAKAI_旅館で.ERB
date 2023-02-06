@@ -1,0 +1,141 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_NAKAI_RATE()
+RETURN 40
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_NAKAI_DECISION()
+
+SIF DVAR:여관_발생플래그 < 0
+	RETURN 0
+SIF DVAR:여관_더부살이중캐릭터ID
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;특정의 조건을 채우는 캐릭터를 랜덤에 선택하는 경우에 이용
+;다른 함수는 필수이지만, 이것만은 없어도 좋다  라고 할까 퍼포먼스에 영향을 주므로 불필요하면 만들어서는 안 된다
+;대상이 존재하지 않고 데일리를 개시 할 수 없는 경우는 0을 돌려주는 것으로 데일리의 발생을 캔슬한다
+;---------------------
+@EVENT_DAILY_NAKAI_SETTARGET()
+#DIM 대상
+#DIM 후보, 3000
+#DIM 후보난수, 3000
+#DIM 후보수
+VARSET 후보, -1
+VARSET 후보난수, __INT_MIN__
+VARSET 후보수
+대상 = ID_TO_CHARA(DVAR:부호_마음에든다ID)
+;벌써 마음에든다가 되어 있는 아가씨가 있어, 그 녀석이 기본적인 조건을 채우고 있는 채로, 한편 80%라면, 계속해 지명한다
+IF 대상 != -1 && IS_FEMALE(대상) && CFLAG:대상:소속 == CFLAG:MASTER:소속 && !CFLAG:대상:포로처 && RAND:5 
+ELSE
+	;호감도에 근거해 후보 배열을 준비
+	FOR LOCAL, 0, CHARANUM
+		;녀로, 소속이 MASTER와 동일해, 포로가 아니고, 군주가 아니고, 이미 이 데일리의 소질을 가지고 있지 않다
+		IF lOCAL != MASTER && IS_FEMALE(LOCAL) && CFLAG:LOCAL:소속 == CFLAG:MASTER:소속 && !CFLAG:LOCAL:포로처 && GET_COUNTRY_BOSS(CFLAG:LOCAL:1) != LOCAL && CFLAG:LOCAL:행동불능상태 != 행동불능_아이 && !(GETBIT(TALENT:LOCAL:데일리계, 소질_데일리_여관의전용변기)) && !(GETBIT(TALENT:LOCAL:데일리계, 소질_데일리_소문난간판변기))
+			후보:후보수 = LOCAL
+			후보난수:후보수 = RAND:(MAX(CFLAG:LOCAL:호감도, 100))
+			;연모계라면 난수에 보정이 걸린다（걸려 버려? ）
+			SIF IS_LOVER(LOCAL)
+				후보난수:후보수 += 1000
+			후보수 ++
+		ENDIF
+	NEXT
+	;후보가 없으면 되돌린다
+	SIF 후보수 < 1
+		RETURN 0
+	;호감도에 근거해 낸 후보 난수 가운데, 제일 비싼 값을 낸 캐릭터를 대상으로 한다.
+	대상 = 후보:(FINDELEMENT(후보난수, MAXARRAY(후보난수, 0, 후보수), 0, 후보수))
+ENDIF
+
+SIF 대상 < 0
+	RETURN 0
+
+DAILY_TARGET:0 = 대상
+DAILY_TARGET_NUM = 1
+
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_NAKAI_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_NAKAI
+#DIM 대상
+
+대상 = DAILY_TARGET:0
+
+IF GETBIT(TALENT:MASTER:데일리계, 소질_데일리_여관의전용변기) || GETBIT(TALENT:MASTER:데일리계, 소질_데일리_소문난간판변기)
+	PRINTFORML 서방님이 궁전까지 왔다
+	PRINTFORMW 아무래도 여관이 일손부족인것 같다
+	PRINTFORML 서방님은 %조사처리(ANAME(대상),"를")% 나카이로서 일하게 하도록(듯이) 요구했다
+	PRINTFORMW 거절할 수 있을 리도 없고 적당한 이유를 날조해 그녀를 여관에 더부살이로 일하게 하기로 했다
+ELSE
+	PRINTFORMW 있는 여관에 묵었을 때, 불합리한 숙박 요금이 요구되었다
+	PRINTFORMW 서방님으로 불리는 남자는 %ANAME(MASTER)%의 항의에게 끈적 압력을 가해 온다
+	PRINTFORML 어떻게 하지?
+	PRINTFORML 소지금:{MONEY}/요금:100000G
+	CALL ASK_MULTI_JUDGE("단호히 거절한다", 1,"일해 돌려준다", 1,"솔직하게 지불한다", MONEY >= 100000)
+	IF RESULT == 2
+		PRINTFORMW 일을 거칠게 하고 싶지 않았던 %조사처리(ANAME(MASTER),"는")% 솔직하게 지불했다
+		MONEY -= 100000
+		CALL ICPRINT("금<100000>을 지불했다", "L", 칼라_주의)
+		RETURN
+	ELSEIF RESULT == 0
+		PRINTFORMW 단호히 거절했다
+		PRINTFORMW 하면 여관의 주인은 경호원을 보내 왔다!
+		PRINTFORML ·
+		PRINTFORML ·
+		PRINTFORMW ·
+		IF LIMIT(ABL:MASTER:무투, 30, 80) > RAND:100
+			PRINTFORML 역관광으로 해 주면 여관의 주인은 땅에 엎드려 조아림했다
+			PRINTFORMW 대신에 돈을 요구하면 그는 얌전하게 내몄다
+			PRINTFORMW 금을 수취 이제 두 번 다시 하지 않는다고 맹세하게 해 여관을 뒤로 했다
+			MONEY += 10000
+			CALL ICPRINT("금<10000>을 받았다", "L", 칼라_주의)
+			DVAR:여관_발생플래그 = -1
+			RETURN
+		ENDIF
+		PRINTFORMW 하지만 비겁한 손으로 당해 버렸다…
+		PRINTFORMW 여관의 주인은 %조사처리(ANAME(MASTER),"를")% 내려다 봐, 몸으로 돌려주어 받으려고 고했다
+	ELSE
+		PRINTFORMW 그의 압력에 밀리는 것에 %조사처리(ANAME(MASTER),"는")%, 일해 돌려준다고 약속 당했다
+	ENDIF
+	PRINTFORMW 여관의 주인은 %조사처리(ANAME(대상),"를")% 나카이로서 일하게 하도록(듯이) 요구했다
+	IF IS_FEMALE(MASTER)
+		PRINTFORML 어떻게 하지?
+		CALL ASK_YN("동의 한다" ,"자신이 대신에 일한다")
+		IF RESULT == 0
+			PRINTFORMW 거절하는 이유도 떠오르지 않고, 동의 할 수밖에 없었다
+		ELSE
+			PRINTFORMW 자신이 대신에 일한다
+			PRINTFORMW 그렇게 말하면 그는 흘깃 %조사처리(ANAME(MASTER),"를")% 바라본 뒤로 동의 했다
+			대상 = MASTER
+		ENDIF
+	ELSE
+		PRINTFORMW 거절하는 이유도 떠오르지 않고, 동의 할 수밖에 없었다
+	ENDIF
+ENDIF
+PRINTFORML 
+PRINTFORMW 지금부터 %조사처리(ANAME(대상),"는")% 나카이로서 더부살이로 일하는 일이 되었다
+IF 대상 == MASTER
+	PRINTFORMW %ANAME(MASTER)% 자신의 불상사의 책임을 다른 아이에게 받게 할 수도 없다…
+ELSE
+	PRINTFORMW %ANAME(MASTER)%에 그렇게 전해들은 그녀는 불안한 듯한 표정을 보였지만 맡아 주었다…
+ENDIF
+PRINTFORML 
+PRINTFORML 여관의 주인은 나카이의 제복으로 갈아입은 %조사처리(ANAME(대상),"를")% 봐 추잡한 미소를 띄운다
+PRINTFORMW 그 빠는 것 같은 시선에 혐오감을 느낀 %조사처리(ANAME(대상),"였")%지만, 훨씬 참고 인사했다…
+
+DVAR:여관_더부살이중캐릭터ID = GET_ID(대상)
+
+RETURN

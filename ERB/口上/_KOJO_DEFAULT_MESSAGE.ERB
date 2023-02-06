@@ -1,0 +1,1550 @@
+﻿;-------------------------------------------------
+;공통으로 발생시키는 지문
+;-------------------------------------------------
+@KOJO_EVENT_DEFAULT(ARG)
+
+;-------------------------------------------------
+;퍼스트 키스
+;-------------------------------------------------
+IF ARG == 1
+
+;-------------------------------------------------
+;고백 성공
+;-------------------------------------------------
+ELSEIF ARG == 2
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(TARGET)%에 자신의 생각을 고했다
+
+	IF IS_SAMESEX(MASTER, TARGET) && !TALENT:바이
+		PRINTFORMW %조사처리(ANAME(MASTER),"를")% 연애의 대상으로 해 보지 않았었던 %조사처리(ANAME(TARGET),"는")% 돌연의 고백에 놀라고 있는 것 같다…
+		PRINTFORMW 조금 당황하면서도, %조사처리(ANAME(TARGET),"는")% %ANAME(MASTER)%의 생각을 받아들였다
+	ELSEIF GET_INITIATIVE_RATE(TARGET) <= 0
+		PRINTFORMW ……%조사처리(ANAME(TARGET),"는")%, 웃는 얼굴로 그 생각을 받아들였다
+	ELSE
+		PRINTFORMW ……%조사처리(ANAME(TARGET),"는")%, 조금 얼굴을 붉게 하면서 그 생각을 받아들였다
+	ENDIF
+
+	IF TALENT:키스미경험
+		PRINTFORMW 연인이 된 %조사처리(ANAME(MASTER),"와")% %조사처리(ANAME(TARGET),"는")%, 길고, 뜨거운 입맞춤을 주고 받았다
+	ENDIF
+
+;-------------------------------------------------
+;고백 실패
+;-------------------------------------------------
+ELSEIF ARG == 3
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(TARGET)%에 자신의 생각을 고했다
+
+	IF IS_SAMESEX(MASTER, TARGET) && !TALENT:바이
+		PRINTFORMW %조사처리(ANAME(MASTER),"를")% 연애의 대상으로 해 보지 않았었던 %조사처리(ANAME(TARGET),"는")% 돌연의 고백에 놀라고 있는 것 같다…
+		PRINTFORMW 결국 단순한 농담이라고 생각되어, 가볍게 다루어져 버렸다
+	ELSEIF GET_INITIATIVE_RATE(TARGET) <= 0
+		IF TALENT:연모
+			PRINTFORMW ……%조사처리(ANAME(TARGET),"는")% 얼굴을 새빨갛게 해 도망치기 시작해 버렸다
+		ELSE
+			PRINTFORMW ……%조사처리(ANAME(TARGET),"는")% 곤란한 것 같은 표정을 띄우면, 완곡하게 거절의 의사를 전해 왔다
+		ENDIF
+	ELSE
+		IF TALENT:연모
+			PRINTFORMW ……%조사처리(ANAME(TARGET),"는")% 얼굴을 새빨갛게 해 당황하면서 거부했다
+		ELSE
+			PRINTFORMW ……%ANAME(TARGET)%에 단호히거절당해 버렸다
+		ENDIF
+	ENDIF
+
+;-------------------------------------------------
+;쓰러트리기 성공(합의는 얻을 수 없다)
+;-------------------------------------------------
+ELSEIF ARG == 4
+	IF ABL:성지식 == 0
+		PRINTFORML %조사처리(ANAME(MASTER),"가")% %ANAME(TARGET)%의 옷에 손을 걸면, %조사처리(ANAME(TARGET),"는")% 이상할 것 같은 얼굴을 했다
+		PRINTFORMW 아무래도, 지금부터 무엇을 할까 잘 모르고 있는 것 같다…
+	ELSE
+		PRINTFORMW 완전히 취기가 돈 %조사처리(ANAME(TARGET),"는")%, %조사처리(ANAME(MASTER),"가")% %ANAME(TARGET)%의 옷에 손을 걸어도 저항하지 않고 하는대로다…
+	ENDIF
+
+;-------------------------------------------------
+;쓰러트리기 성공(합의를 취득)
+;-------------------------------------------------
+ELSEIF ARG == 5
+	IF ABL:성지식 == 0
+		PRINTFORML %조사처리(ANAME(MASTER),"가")% %ANAME(TARGET)%의 옷에 손을 걸면, %조사처리(ANAME(TARGET),"는")% 이상할 것 같은 얼굴을 했다
+		PRINTFORMW 아무래도, 지금부터 무엇을 할까 잘 모르고 있는 것 같다…
+	ELSEIF TALENT:츤데레
+		PRINTFORML %조사처리(ANAME(MASTER),"가")% 옷을 벗게 하려고 하면, %조사처리(ANAME(TARGET),"는")% %조사처리(ANAME(MASTER),"를")% 격렬하게 매도해 왔다
+		PRINTFORMW ……이지만, 저항할 생각은 없는 것 같다
+	ELSEIF TALENT:정조관념
+		PRINTFORML %조사처리(ANAME(MASTER),"가")% 옷을 벗게 하려고 하면, %조사처리(ANAME(TARGET),"는")% 솔직하게 받아들이면서도
+		PRINTFORMW 책임을 집어 주도록 강요하고 있다
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")% 옷을 벗게 하려고 하면, %조사처리(ANAME(TARGET),"는")% 솔직하게 받아들였다
+	ENDIF
+
+;-------------------------------------------------
+;쓰러트리기 실패
+;-------------------------------------------------
+ELSEIF ARG == 6
+	IF TALENT:합의
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")% 옷을 벗게 하려고 하면, %조사처리(ANAME(TARGET),"는")% 지금은 그런 기분은 아니라고 말해 거절했다
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")% 옷을 벗게 하려고 하면, %조사처리(ANAME(TARGET),"는")% 격렬하게 저항했다
+	ENDIF
+
+;-------------------------------------------------
+;쓰러트리기 성공(이미 합의 있어)
+;-------------------------------------------------
+ELSEIF ARG == 7
+
+;-------------------------------------------------
+;본명을 허락하는 이벤트
+;-------------------------------------------------
+ELSEIF ARG == 10
+	;수간을 실시했을 경우
+	IF TFLAG:8
+		PRINTFORMW 아무래도 %조사처리(NAME,"는")% %조사처리(ANAME(MASTER),"가")% 간호해 주었다고 마음 먹고 있는 것 같고, %ANAME(MASTER)%에 감사의 말을 말했다
+		PRINTFORMW %조사처리(NAME,"는")% %ANAME(MASTER)%에 대해, 지금부터는 본명의 %조사처리(CALLNAME,"로")% 부르도록 말했다
+	ELSE
+		PRINTFORMW 아무래도 충분히 %NAME%의 신뢰를 얻을 것 같다…
+		PRINTFORMW %조사처리(NAME,"는")% %ANAME(MASTER)%에 대해, 지금부터는 본명의 %조사처리(CALLNAME,"로")% 부르도록 말했다
+	ENDIF
+
+;-------------------------------------------------
+;분노의 한계에서 되돌려 보내진다
+;-------------------------------------------------
+ELSEIF ARG == 13
+	IF FLAG:우후후플래그 || ABL:무투 < 60
+		PRINTFORML %조사처리(ANAME(TARGET),"는")% 격렬한 험악한 얼굴로 고함치면서\@ FLAG:조교모드 != 조교_포로조교 ? %조사처리(ANAME(MASTER),"를")% 되돌려 보낸… # 돌아간… \@
+	ELSE
+		PRINTFORML %조사처리(ANAME(TARGET),"는")% 격앙해 %ANAME(MASTER)%에 베기 시작해 왔다…
+	ENDIF
+
+;-------------------------------------------------
+;슬픔의 한계에서 되돌려 보내진다
+;-------------------------------------------------
+ELSEIF ARG == 14
+	PRINTFORML %조사처리(ANAME(TARGET),"는")% 혼자 두었으면 좋겠다고 말해 %조사처리(ANAME(MASTER),"를")% 되돌려 보냈다…
+
+;-------------------------------------------------
+;분노의 한계에서 멋대로 돌아간다
+;-------------------------------------------------
+ELSEIF ARG == 15
+	PRINTFORML %조사처리(ANAME(TARGET),"는")% 화내 돌아가 버렸다…
+
+;-------------------------------------------------
+;슬픔의 한계에서 멋대로 돌아간다
+;-------------------------------------------------
+ELSEIF ARG == 16
+	PRINTFORML %조사처리(ANAME(TARGET),"는")% 그 자리로부터 달려가 돌아가 버렸다…
+
+;-------------------------------------------------
+;행동 종료시에 저쪽에서 키스
+;-------------------------------------------------
+ELSEIF ARG == 20
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% 돌아가려고 하면, 돌연 %ANAME(TARGET)%에 불러 세울 수 있었다
+	IF GROUPMATCH(TALENT:성별, 0, 3)
+		IF TALENT:소악마
+			PRINTFORMW 되돌아 보면, 그 순간, %조사처리(ANAME(TARGET),"는")% 억지로 %ANAME(MASTER)%의 입술을 빼앗았다
+			PRINTFORMW 입술을 떼어 놓으면, %조사처리(ANAME(TARGET),"는")% 아무 일도 없었는지같이 %ANAME(MASTER)%의 손을 잡아 걷기 시작했다…
+			PRINTL 
+		ELSEIF TALENT:츤데레
+			PRINTFORMW 되돌아 보면, 그 순간, %조사처리(ANAME(TARGET),"는")% 억지로 %ANAME(MASTER)%의 입술을 빼앗았다
+			PRINTFORMW 입술을 떼어 놓으면, %조사처리(ANAME(TARGET),"는")% 착각 하지 마 라고 해, 노골적으로 기분이 안좋을 것 같은 모습으로 얼굴을 돌렸다…
+			PRINTL 
+		ELSE
+			PRINTFORMW 되돌아 보면, 거기에는 긴장한 표정의 %조사처리(ANAME(TARGET),"가")% 서 있었다
+			IF GET_INITIATIVE_RATE(TARGET) <= 0
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% 살그머니 %조사처리(ANAME(MASTER),"를")% 껴안아, 어색한 움직임으로 입맞춤했다
+				PRINTL 
+			ELSE
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% 억지로 %조사처리(ANAME(MASTER),"를")% 껴안으면, 조금 난폭하게 입맞춤해 왔다
+				PRINTL 
+			ENDIF
+		ENDIF
+	ELSE
+		IF TALENT:소악마
+			PRINTFORMW 되돌아 보면, 그 순간, %조사처리(ANAME(TARGET),"가")% 껴안아 와 %ANAME(MASTER)%의 입술을 빼앗았다
+			PRINTFORMW 입술을 떼어 놓으면, %조사처리(ANAME(TARGET),"는")% 장난스레 %ANAME(MASTER)%에 미소지었다…
+			PRINTL 
+		ELSEIF TALENT:츤데레
+			PRINTFORMW 되돌아 보면, 그 순간, %조사처리(ANAME(TARGET),"는")% 억지로 %ANAME(MASTER)%의 입술을 빼앗았다
+			PRINTFORMW 입술을 떼어 놓으면, %조사처리(ANAME(TARGET),"는")% 착각 하지 마 라고 해, 노골적으로 기분이 안좋을 것 같은 모습으로 얼굴을 돌렸다…
+			PRINTL 
+		ELSE
+			PRINTFORMW 되돌아 보면, 거기에는 얼굴을 새빨갛게한 %조사처리(ANAME(TARGET),"가")% 숙여 서 있었다
+			IF GET_INITIATIVE_RATE(TARGET) <= 0
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")%, 천천히 가까워져 와, 살그머니 %ANAME(MASTER)%에 입맞춤했다
+				PRINTL 
+			ELSE
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")%, %조사처리(ANAME(MASTER),"를")% 근처에 불러내면, 조금 난폭하게 입맞춤해 왔다
+				PRINTL 
+			ENDIF
+		ENDIF
+	ENDIF
+
+;-------------------------------------------------
+;행동 종료시에 저쪽에서 고백
+;키스미경험의 경우, 이 타이밍에 함께 퍼스트 키스도 한다
+;-------------------------------------------------
+ELSEIF ARG == 21
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% 돌아가려고 하면, 돌연 %ANAME(TARGET)%에 불러 세울 수 있었다
+	;1회째
+	IF CFLAG:44 == 0
+		PRINTFORMW 되돌아 보면, 거기에는 얼굴을 새빨갛게한 %조사처리(ANAME(TARGET),"가")% 숙여 서 있었다
+		IF GET_INITIATIVE_RATE(TARGET) <= 0
+			PRINTFORMW 그리고 %조사처리(ANAME(TARGET),"는")%, 부끄러워하면서, %조사처리(ANAME(MASTER),"을")% 좋아한다고 전해 왔다
+			PRINTL  
+		ELSE
+			PRINTFORMW 그리고 %조사처리(ANAME(TARGET),"는")%, 조금 난폭한 어조로, %조사처리(ANAME(MASTER),"을")% 좋아한다고 전해 왔다
+			PRINTL  
+		ENDIF
+	;2회째 이후
+	ELSE
+		IF GET_INITIATIVE_RATE(TARGET) <= 0
+			PRINTFORMW %조사처리(ANAME(TARGET),"는")% 진지한 표정으로, 다시 %ANAME(MASTER)%에 생각을 전해 왔다
+			PRINTL  
+		ELSE
+			PRINTFORMW %조사처리(ANAME(TARGET),"는")%, 적당히 생각을 받아들였으면 좋겠다고 %ANAME(MASTER)%에 강요했다
+			PRINTL  
+		ENDIF
+	ENDIF
+
+	CALL ASK_YN("받아들인다", "거절한다")
+
+	IF RESULT == 0
+		IF GROUPMATCH(TALENT:성별, 0, 3)
+			PRINTFORMW %조사처리(ANAME(MASTER),"가")% %ANAME(TARGET)%의 생각을 받아들이면, %조사처리(ANAME(TARGET),"는")% 기쁜듯이 %조사처리(ANAME(MASTER),"를")% 껴안아 왔다
+		ELSE
+			PRINTFORMW %조사처리(ANAME(MASTER),"가")% %ANAME(TARGET)%의 생각을 받아들이면, %조사처리(ANAME(TARGET),"는")% 기쁜듯이 %ANAME(MASTER)%에 껴안아 왔다
+		ENDIF
+		PRINTFORMW ……연인이 된 %조사처리(ANAME(MASTER),"와")% %조사처리(ANAME(TARGET),"는")%, 길고, 뜨거운 입맞춤을 주고 받았다
+		PRINTL 
+		;고백 성공시는 TFLAG:4에 1을 대입
+		TFLAG:4 = 1
+
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(TARGET)%의 고백을 거절했다……
+		PRINTL  
+		;고백 성공시는 TFLAG:4에 0을 대입
+		TFLAG:4 = 0
+	ENDIF
+
+;-------------------------------------------------
+;상대로부터 밀어 쓰러트려진다(합의 없음)
+;-------------------------------------------------
+ELSEIF ARG == 22
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% %조사처리(ANAME(TARGET),"와")% 일단 헤어지려고 해 되돌아 보면, 돌연 %ANAME(TARGET)%에 밀어 쓰러트려져 버렸다
+	PRINTFORMW 초조해 하는 %ANAME(MASTER)%의 옷을 %조사처리(ANAME(TARGET),"는")% 상기 한 얼굴로 차례차례로 벗겨 간다…
+	PRINTFORMW 그리고 완전하게 %ANAME(MASTER)%의 옷을 벗긴 %조사처리(ANAME(TARGET),"는")%, 스스로도 한가닥의 실 감기지 않는 모습이 되었다
+	PRINTFORMW ……아무래도 이것은 각오를 결정하지 않으면 안 되는 것 같다
+
+;-------------------------------------------------
+;상대로부터 밀어 쓰러트려진다(합의 이루어＆취한 기세)
+;-------------------------------------------------
+ELSEIF ARG == 23
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% %조사처리(ANAME(TARGET),"와")% 일단 헤어지려고 해 되돌아 보면, 돌연 %ANAME(TARGET)%에 밀어 쓰러트려져 버렸다
+	PRINTFORMW 초조해 하는 %ANAME(MASTER)%의 옷을 %조사처리(ANAME(TARGET),"는")% 상기 한 얼굴로 차례차례로 벗겨 간다…
+	PRINTFORMW 그리고 완전하게 %ANAME(MASTER)%의 옷을 벗긴 %조사처리(ANAME(TARGET),"는")%, 스스로도 한가닥의 실 감기지 않는 모습이 되었다
+	PRINTFORMW ……아무래도 %조사처리(ANAME(TARGET),"는")% 꽤 취하고 있는 것 같다
+	PRINTFORMW 여기는 각오를 결정할 수밖에 없을 것이다
+
+;-------------------------------------------------
+;상대로부터 밀어 쓰러트려진다(합의 있어)
+;-------------------------------------------------
+ELSEIF ARG == 24
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% %조사처리(ANAME(TARGET),"와")% 일단 헤어지려고 하면, %ANAME(TARGET)%에 억지로 밀어 쓰러트려져 버렸다…
+
+;-------------------------------------------------
+;상대로부터 밀어 쓰러트려진다(합의 있어＆취한 기세)
+;-------------------------------------------------
+ELSEIF ARG == 25
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% %조사처리(ANAME(TARGET),"와")% 일단 헤어지려고 하면, 취한 %ANAME(TARGET)%에 억지로 밀어 쓰러트려져 버렸다…
+
+;-------------------------------------------------
+;상대로부터 졸라대진다(합의 없음)
+;-------------------------------------------------
+ELSEIF ARG == 26
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% %조사처리(ANAME(TARGET),"와")% 일단 헤어지려고 하면, %ANAME(TARGET)%에 만류할 수 있었다
+	IF TALENT:츤데레
+		PRINTFORMW %조사처리(ANAME(TARGET),"는")% 시선을 방황하게 하면서, %ANAME(MASTER)%에 자신을 안으라고 요구했다…
+	ELSE
+		PRINTFORMW %조사처리(ANAME(TARGET),"는")% 열을 띤 눈동자로 %조사처리(ANAME(MASTER),"를")% 응시하면서, %ANAME(MASTER)%에 안았으면 좋겠다고 졸랐다…
+	ENDIF
+
+;-------------------------------------------------
+;상대로부터 졸라대진다(합의 이루어＆취한 기세)
+;-------------------------------------------------
+ELSEIF ARG == 27
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% %조사처리(ANAME(TARGET),"와")% 일단 헤어지려고 하면, %ANAME(TARGET)%에 만류할 수 있었다
+	PRINTFORMW 꽤 취한 모습의 %조사처리(ANAME(TARGET),"는")%, 열을 띤 눈동자로 %조사처리(ANAME(MASTER),"를")% 응시하면서, %ANAME(MASTER)%에 안았으면 좋겠다고 졸랐다…
+
+;-------------------------------------------------
+;상대로부터 졸라대진다(합의 있어)
+;-------------------------------------------------
+ELSEIF ARG == 28
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% %조사처리(ANAME(TARGET),"와")% 일단 헤어지려고 하면, %조사처리(ANAME(TARGET),"는")% %ANAME(MASTER)%에 안았으면 좋겠다고 졸라 왔다
+
+;-------------------------------------------------
+;취기 한계에서 넘어진다
+;-------------------------------------------------
+ELSEIF ARG == 32
+	PRINTFORML %조사처리(ANAME(TARGET),"는")% 완전히 취기가 돌아 털썩 넘어져 버렸다…
+
+;-------------------------------------------------
+;임신 발각
+;-------------------------------------------------
+ELSEIF ARG == 40
+	;붕괴
+	IF TALENT:붕괴
+	;포로 조교
+	ELSEIF CFLAG:9 == CFLAG:MASTER:1
+		;부친 불명
+		IF CFLAG:23 == 0
+			IF ABL:출산 >= 3
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% 부친이 누군가도 모르는 아이를 임신해 기쁨에 쳐 떨고 있다…
+			ELSE
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% 부친이 누군가도 모르는 아이를 임신한 공포에 떨고 있다…
+			ENDIF
+		;주인공인 아이를 임신했다
+		ELSEIF CFLAG:23 == GET_ID(MASTER)
+			IF TALENT:친애 || TALENT:예속 || TALENT:소유자
+				PRINTFORMW %ANAME(MASTER)%의 아이를 품은 %조사처리(ANAME(TARGET),"는")% 행복하게 배를 어루만졌다…
+			ELSEIF TALENT:연모 || TALENT:복종 || TALENT:친구 || TALENT:주인
+				PRINTFORMW %ANAME(MASTER)%의 아이를 품은 %조사처리(ANAME(TARGET),"는")% 기쁜듯이 하고 있다…
+			ELSEIF TALENT:연인 || TALENT:낙인
+				PRINTFORMW %ANAME(MASTER)%의 아이를 품은 %조사처리(ANAME(TARGET),"는")% 원망스러운 듯이 %조사처리(ANAME(MASTER),"를")% 노려보았다…
+			ELSE
+				IF ABL:출산 >= 3
+					PRINTFORMW %ANAME(MASTER)%에 임신당한 %조사처리(ANAME(TARGET),"는")%, 원망스러운 듯이 하면서도 암컷의 열락에 얼굴을 느슨해지게 해 버리고 있다…
+				ELSEIF CFLAG:붕괴 < 1000
+					PRINTFORMW %ANAME(MASTER)%에 임신당한 %조사처리(ANAME(TARGET),"는")% 살의를 담아 %조사처리(ANAME(MASTER),"를")% 노려보았다…
+				ELSE
+					PRINTFORMW %ANAME(MASTER)%에 임신당한 %조사처리(ANAME(TARGET),"는")% 격렬한 쇼크를 받고 있는 것 같다…
+				ENDIF
+			ENDIF
+		;촉수의 아이를 임신했다
+		ELSEIF CFLAG:23 == GET_SPERM_ID("촉수")
+			;★
+		;다른 사관인 아이를 임신했다
+		ELSE
+			;★
+		ENDIF
+	;포로 조교 이외
+	ELSE
+		;부친 불명
+		IF CFLAG:23 == 0
+			IF ABL:출산 >= 3
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% 부친이 누군가도 모르는 아이를 임신해 기쁨에 쳐 떨고 있다…
+			ELSE
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% 부친을 누군가 모르고 불안한 듯하다…
+			ENDIF
+		;주인공인 아이를 임신했다
+		ELSEIF CFLAG:23 == GET_ID(MASTER)
+			IF TALENT:친애 || TALENT:예속 || TALENT:소유자
+				PRINTFORMW %ANAME(MASTER)%의 아이를 품은 %조사처리(ANAME(TARGET),"는")% 행복하게 배를 어루만졌다…
+			ELSEIF TALENT:연모 || TALENT:복종 || TALENT:친구
+				PRINTFORMW %ANAME(MASTER)%의 아이를 품은 %조사처리(ANAME(TARGET),"는")% 기쁜듯이 하고 있다…
+			ELSEIF TALENT:연인 || TALENT:낙인
+				PRINTFORMW %ANAME(MASTER)%의 아이를 품은 %조사처리(ANAME(TARGET),"는")% 조금 곤혹하고 있는 것 같다…
+			ELSE
+				PRINTFORMW %ANAME(MASTER)%의 아이를 품은 %조사처리(ANAME(TARGET),"는")%\@ RAND:2 == 0 ? 무책임한 # 원망스러운 듯이 \@%조사처리(ANAME(MASTER),"를")% 노려보았다…
+			ENDIF
+		;촉수의 아이를 임신했다
+		ELSEIF CFLAG:23 == GET_SPERM_ID("촉수")
+			;★
+		;다른 사관인 아이를 임신했다
+		ELSE
+			;★
+		ENDIF
+	ENDIF
+
+;-------------------------------------------------
+;임월에 접어들었다
+;-------------------------------------------------
+ELSEIF ARG == 41
+	PRINTFORML %조사처리(ANAME(TARGET),"는")% 임월에 접어들었습니다
+	PRINTFORMW 잠시동안은 안정이 필요합니다
+
+;-------------------------------------------------
+;아이를 출산했다
+;-------------------------------------------------
+ELSEIF ARG == 42
+	;부친의 캐릭터 번호를 취득
+	LOCAL:0 = ID_TO_CHARA(CFLAG:23)
+
+	IF LOCAL:0 == MASTER && CFLAG:소속 == CFLAG:MASTER:소속
+		PRINTFORM %ANAME(MASTER)%에 지켜봐지면서,
+	ENDIF
+	PRINTFORMW %조사처리(ANAME(TARGET),"는")% 무사하게 출산을 끝냈습니다
+
+;-------------------------------------------------
+;주인공에게 자신의 자식을 낳게 했다
+;-------------------------------------------------
+ELSEIF ARG == 43
+	SIF CFLAG:소속 == CFLAG:MASTER:소속
+		PRINTFORM %ANAME(TARGET)%에 지켜봐지면서,
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 무사하게 출산을 끝냈습니다
+
+;-------------------------------------------------
+;촉수의 아이를 출산했다
+;-------------------------------------------------
+ELSEIF ARG == 44
+	
+	IF CFLAG:1 >= 1 && CFLAG:1 == CFLAG:MASTER:1 && ITEM:촉수의방
+	;동일 세력으로 촉수의방이 있다
+		PRINTFORM 촉수 분만실이라고 쓰여진 방에서 %조사처리(ANAME(TARGET),"는")%
+		SELECTCASE RAND:13
+		CASE 0
+			PRINTL 촉수들에 의지해 좌위가 되어 있었다……
+			PRINTFORML 팔과 다리에는 느슨하게 촉수가 휘감기고 있어 때때로 신경쓰도록(듯이) 신체를 어루만지고 있다
+		CASE 1
+			PRINTL 위로돌리고인 채, 촉수들에게 마사지를 받고 있었다……
+			PRINTFORML 촉수들은 %ANAME(TARGET)%의 배를 정성스럽게 더듬어, 출산을 재촉하고 있다
+		CASE 2
+			PRINTL 촉수들이 낸 생식액의 연못에 포복이 되어 잠기고 있었다……
+			PRINTFORML 흰 생식액에는, , 라는 소리와 함께 파문이 서 있다
+		CASE 3
+			PRINTL 앉은 채로 촉수에 더듬어지고 있었다……
+			PRINTFORML 편하게 출산할 수 있도록 촉수들은 %ANAME(TARGET)%의 비부를 자극해, 때때로 좌우에 열리거나 하고 있다
+		CASE 4
+			PRINTL 촉수의 요람 중(안)에서 흔들어지고 있었다……
+			PRINTFORML 신체에는 촉수가 상냥하게 휘감기고 있어 필요에 따라서 %ANAME(TARGET)%의 자세를 변화시키고 있다
+		CASE 5
+			PRINTL 촉수에 의지해 무릎서기가 되어 있었다……
+			PRINTFORML 팔은 촉수를 잡아 위에 매달아지고 있어 중력에 맡겨 출산을 할 수 있는 형태이다
+		CASE 6
+			PRINTL 촉수가 만든 화관을 카시라에 실어, 서 무릎이 되어 있었다……
+			PRINTFORML 촉수들은 %조사처리(ANAME(TARGET),"가")% 손을 잡도록(듯이)해 잡아, %ANAME(TARGET)%의 자세를 안정시키고 있다
+		CASE 7
+			PRINTL 촉수에 안아 올려져, 좌위의 몸의 자세를 공중에서 잡고 있었다……
+			PRINTFORML 공중으로 촉수들은 %ANAME(TARGET)%의 신체를 더듬어, 자극을 계속 주고 있다
+		CASE 8
+			PRINTL 근처를 촉수에 둘러싸여 지켜봐지고 있었다……
+			PRINTFORML 엔을 만들도록(듯이)해 촉수들은 %조사처리(ANAME(TARGET),"를")% 둘러싸, 새로운 동료의 탄생을 지켜보고 있다
+		CASE 9
+			PRINTL 출산 보조용의 촉수에 둘러싸지고 있었다……
+			PRINTFORML %ANAME(TARGET)%의 배꼽의 구멍을 촉수들은 빨고 풀어, 긴장을 완화시키려고 하고 있다
+		CASE 10
+			PRINTL 순백의 마타니티드레스를 입어 주저앉고 있었다……
+			PRINTFORML 근처에는 메이드 요정들에 의해, 이성을 날리는 아로마가 피워지고 있다
+		CASE 11
+			PRINTL 순백의 시트 위에서 위로 향해 되어 있었다……
+			PRINTFORML 손발에는 굵은 촉수가 감아 다해 새롭게 태어나는 촉수가 나오기 쉽게 %ANAME(TARGET)%의 자세를 정돈하고 있다
+		CASE 12
+			PRINTL 손발을 촉수에 얽어매지고 있었다……
+			PRINTFORML %ANAME(TARGET)%의 비부로부터는 안에 있는 촉수의 아이가 분비한, 끈기의 강한 미약이 질척질척 흘러내리고 있다
+		ENDSELECT
+	ELSEIF CFLAG:1 >= 1 && CFLAG:1 == CFLAG:MASTER:1
+	;동일 세력
+		PRINTFORM 분만실이라고 쓰여진 방에서 %조사처리(ANAME(TARGET),"는")%
+		SELECTCASE RAND:4
+		CASE 0
+			PRINTL 궁녀들에게 출산 마사지를 받고 있었다……
+		CASE 1
+			PRINTL 흰 침대에 가로놓여 있었다……
+		CASE 2
+			PRINTL 양손 양무릎을 붙어 숨을 거칠게 하고 있었다……
+		CASE 3
+			PRINTL 준비된 출산용 풀에 잠기고 있었다……
+		CASE 4
+			PRINTL 좌위의 자세가 되어, 배를 비비고 있었다……
+		ENDSELECT
+	ELSEIF CFLAG:9 == CFLAG:MASTER:1 && ITEM:촉수의방
+	;포로로 촉수의방이 있다
+		PRINTFORM 촉수의방의 중앙에서 %조사처리(ANAME(TARGET),"는")%
+		SELECTCASE RAND:13
+		CASE 0
+			PRINTL 촉수들에게 잡아져 구속되고 있었다……
+			PRINTFORML 손발에는 촉수가 휘감기고 있어 격렬하게 움직이는 %조사처리(ANAME(TARGET),"를")% 억누르고 있다
+		CASE 1
+			PRINTL 위로돌리고인 채, 촉수들이 억눌려지고 있었다……
+			PRINTFORML 촉수들은 %ANAME(TARGET)%의 배를 돌리듯이 어루만지며 지압해, 출산을 재촉하고 있다
+		CASE 2
+			PRINTL 촉수들이 낸 생식액의 연못에 잠겨져 있는……
+			PRINTFORML 흰 생식액에는, , 라는 소리와 함께 파문이 서 있다
+		CASE 3
+			PRINTL 앉게 하고라고 촉수에 더듬어지고 있었다……
+			PRINTFORML 촉수들은 %ANAME(TARGET)%의 손발을 구속하고비부를 자극해, 때때로 좌우에 열리거나 하고 있다
+		CASE 4
+			PRINTL 촉수의 요람에 잡히고 있었다……
+			PRINTFORML 신체는 촉수에 의해 굴레로 되어 전신이 지압되고 있다
+		CASE 5
+			PRINTL 촉수에 얽어매져 무릎서기로 몰리고 있었다……
+			PRINTFORML 팔은 촉수를 잡아 위에 매달아지고 있어 %ANAME(TARGET)%의 사타구니로부터는 뚝뚝하고 체액이 새고 있다
+		CASE 6
+			PRINTL 촉수가 만든 화관을 카시라에 실어, 자리등 당하고 있었다……
+			PRINTFORML 촉수들은 %ANAME(TARGET)%의 손발을 확실히 묶어, %조사처리(ANAME(TARGET),"를")% 억누르고 있다
+		CASE 7
+			PRINTL 촉수의 덩어리에 매달아 올려져 천정 가까이 괴로운 놓치고 있었다……
+			PRINTFORML 공중으로 촉수들은 %ANAME(TARGET)%의 가랑이를 억지로 열게 해 출산을 재촉하고 있다
+		CASE 8
+			PRINTL 생식액에 채워진 출산용의 촉수우리에 붙잡히고 있었다……
+			PRINTFORML , 라는 소리를 울려지면서, 촉수우리 중(안)에서는 새로운 생명이 탄생하고 있었다
+		CASE 9
+			PRINTL 가 있는 촉수에 둘러싸지고 있었다……
+			PRINTFORML 촉수들은 %ANAME(TARGET)%의 배꼽의 구멍을 빨고 풀어, 부풀어 오른 배에 자극을 주고 있다
+		CASE 10
+			PRINTL 목걸이에 연결될 수 있어 주저앉고 있었다……
+			PRINTFORML 근처에는 똑같이 촉수를 품은 것 같은 요정들이 달콤한 소리를 내 촉수를 출산하고 있다
+		CASE 11
+			PRINTL 육질의 지면에 손발을 파묻혀 구속되고 있었다……
+			PRINTFORML 굵은 촉수가 정기적으로 허벅다리에 매달려, 촉수가 나오기 쉽게 최음액을 흘려 넣고 있다
+		CASE 12
+			PRINTL 손발을 촉수에 구속되고 있었다……
+			PRINTFORML 비부로부터는 안에 있는 촉수의 아이가 분비한, 끈기의 강한 미약이 질척질척 흘러내리고 있다
+		ENDSELECT
+	ELSEIF CFLAG:9 == CFLAG:MASTER:1
+	;포로
+		IF CFLAG:(TARGET):연금중 == 0
+		;감옥
+			PRINTFORM 어둡게 빛이 떨어진 감옥의 한 방으로, %조사처리(ANAME(TARGET),"는")%
+		ELSE
+		;연금
+			PRINTFORM 밝은 연금용의 방에서 %조사처리(ANAME(TARGET),"는")%
+		ENDIF
+		
+		SELECTCASE RAND:7
+		CASE 0
+			PRINTL 손발이 고정된 채로 궁녀들에게 조산을 받고 있었다……
+		CASE 1
+			PRINTL 침대에 목걸이와 쇠사슬으로 고정 당하고 있었다……
+		CASE 2
+			PRINTL 양손 양무릎을 속박된 상태로 숨을 거칠게 하고 있었다……
+		CASE 3
+			PRINTL 준비된 출산용 풀안에 얽매이고 있었다……
+		CASE 4
+			PRINTL 알몸에 쇠사슬을 붙인 모습으로 허리를 매달아 올리고 있었다……
+		CASE 5
+			PRINTL 손발을 철구로 고정 당하고 있었다……
+		CASE 6
+			PRINTL 촉수 출산용의 의자에 앉아지고 있었다……
+		ENDSELECT
+	ELSE
+	;다른 장소의 아이
+		PRINTFORM %조사처리(ANAME(TARGET),"는")% 자기 방에서
+		SELECTCASE RAND:5
+		CASE 0
+			PRINTL 위로돌리고인 채, 눈물을 머금고 있었다……
+		CASE 1
+			PRINTL 마루에 주저앉아 숨을 거칠게 하고 있었다……
+		CASE 2
+			PRINTL 무릎서기가 되어, 부들부들 떨고 있었다……
+		CASE 3
+			PRINTL 난폭한 숨결을 붙어, 침대에 넘어져 있었다……
+		CASE 4
+			PRINTL 좌위의 몸의 자세로, 힘껏 힘주고 있었다……
+		ENDSELECT
+	ENDIF
+	
+	
+	
+	IF TALENT:(LOCAL:1):공허 || TALENT:(LOCAL:1):붕괴
+		PRINTL %조사처리(ANAME(TARGET),"는")% 이마에 비지땀을 띄우면서,
+	ELSEIF ABL:(TARGET):촉수 >= 5
+		SELECTCASE RAND:8
+		CASE 0
+			PRINTFORM 촉수에 개발 된 %조사처리(ANAME(TARGET),"는")% 쾌락에 번민눈물을 흘리면서,
+		CASE 1
+			PRINTFORM 촉수에 개발 된 %조사처리(ANAME(TARGET),"는")% 얼굴을 주홍색에 물들이면서,
+		CASE 2
+			PRINTFORM 촉수에 개발 된 %조사처리(ANAME(TARGET),"는")% 입가로부터 군침을 흘리면서,
+		CASE 3
+			PRINTFORM 촉수에 개발 된 %조사처리(ANAME(TARGET),"는")% 허리를 삐걱삐걱 진동시키면서,
+		CASE 4
+			PRINTFORM 촉수에 개발 된 %조사처리(ANAME(TARGET),"는")% 강한 쾌락의 분류를 느끼면서,
+		CASE 5
+			PRINTFORM 촉수에 개발 된 %조사처리(ANAME(TARGET),"는")% 헐떡거림 소리를 높이면서,
+		CASE 6
+			PRINTFORM 촉수에 개발 된 %조사처리(ANAME(TARGET),"는")% 애액을 흘리면서,
+		CASE 7
+			PRINTFORM 촉수에 개발 된 %조사처리(ANAME(TARGET),"는")% 달콤한 숨을 누설하면서,
+		ENDSELECT
+	ELSEIF ABL:(TARGET):촉수 >= 3
+		SELECTCASE RAND:3
+		CASE 0
+			PRINTFORM %조사처리(ANAME(TARGET),"는")% 이마에 비지땀을 띄우면서,
+		CASE 1
+			PRINTFORM %조사처리(ANAME(TARGET),"는")% 눈을 크게 열어 신음하면서,
+		CASE 2
+			PRINTFORM %조사처리(ANAME(TARGET),"는")% 오열을 누설하면서,
+		ENDSELECT
+	ELSE
+		SELECTCASE RAND:3
+		CASE 0
+			PRINTFORM %조사처리(ANAME(TARGET),"는")% 울부짖으면서,
+		CASE 1
+			PRINTFORM %조사처리(ANAME(TARGET),"는")% 부정하는 말을 반복하면서,
+		CASE 2
+			PRINTFORM %조사처리(ANAME(TARGET),"는")% 비명을 올리면서,
+		ENDSELECT
+	ENDIF
+	
+	IF CFLAG:55 >= 1
+		IF CFLAG:56 >= 1
+			;양구멍에 낳을 수 있다
+			SELECTCASE RAND:14
+			CASE 0
+				PRINTL 양쪽 모두의 구멍에서 몇 마리의 촉수의 아이를 낳고 있다…
+			CASE 1
+				PRINTL 양쪽 모두의 구멍에서 긴 촉수를 낳고 있다…
+			CASE 2
+				PRINTL 양쪽 모두의 구멍에서 둥글게 된 촉수를 낳고 있다…
+			CASE 3
+				PRINTL 양구멍에서 큰 촉수의 수정란을 낳고 있다…
+			CASE 4
+				PRINTL 양구멍에서 부푼 소촉수를 몇 마리나 낳고 있다…
+			CASE 5
+				PRINTL 양구멍에서 분비액 투성이가 된 촉수의 아이를 낳고 있다…
+			CASE 6
+				PRINTL 양쪽 모두의 구멍에서 반투명인 촉수의 아이를 낳고 있다…
+			CASE 7
+				PRINTL 양쪽 모두의 구멍에서 건강이 좋은 촉수를 낳고 있다…
+			CASE 8
+				PRINTL 양쪽 모두의 구멍에서 만장의 촉수를 낳고 있다…
+			CASE 9
+				PRINTL 양쪽 모두의 구멍에서 야단이 대한 촉수를 낳고 있다…
+			CASE 10
+				PRINTL 양쪽 모두의 구멍에서 그로테스크한 촉수를 낳고 있다…
+			CASE 11
+				PRINTL 양쪽 모두의 구멍에서 신선한 촉수를 낳고 있다…
+			CASE 12
+				PRINTL 양쪽 모두의 구멍에서 꿈틀거리는 촉수를 낳고 있다…
+			CASE 13
+				PRINTL 양구멍에서 팔정도의 굵기의 촉수를 낳고 있다…
+			ENDSELECT
+			LOCALS:0 = 질과 애널
+		ELSE
+			;질에 낳을 수 있다
+			SELECTCASE RAND:14
+			CASE 0
+				PRINTL 몇 마리의 촉수의 아이를 낳고 있다…
+			CASE 1
+				PRINTL 긴 촉수를 낳고 있다…
+			CASE 2
+				PRINTL 둥글게 된 촉수를 낳고 있다…
+			CASE 3
+				PRINTL 큰 촉수의 수정란을 낳고 있다…
+			CASE 4
+				PRINTL 부푼 소촉수를 몇 마리나 낳고 있다…
+			CASE 5
+				PRINTL 분비액 투성이가 된 촉수의 아이를 낳고 있다…
+			CASE 6
+				PRINTL 반투명인 촉수의 아이를 낳고 있다…
+			CASE 7
+				PRINTL 건강이 좋은 촉수를 낳고 있다…
+			CASE 8
+				PRINTL 만장의 촉수를 낳고 있다…
+			CASE 9
+				PRINTL 야단이 대한 촉수를 낳고 있다…
+			CASE 10
+				PRINTL 그로테스크한 촉수를 낳고 있다…
+			CASE 11
+				PRINTL 신선한 촉수를 낳고 있다…
+			CASE 12
+				PRINTL 꿈틀거리는 촉수를 낳고 있다…
+			CASE 13
+				PRINTL 팔정도의 굵기의 촉수를 낳고 있다…
+			ENDSELECT
+			LOCALS:0 = 질
+		ENDIF
+	ELSE
+		;애널에 낳을 수 있다
+		SELECTCASE RAND:14
+		CASE 0
+			PRINTL 엉덩이 구멍으로 몇 마리의 촉수의 아이를 낳고 있다…
+		CASE 1
+			PRINTL 엉덩이 구멍으로 긴 촉수를 낳고 있다…
+		CASE 2
+			PRINTL 엉덩이 구멍으로 둥글게 된 촉수를 낳고 있다…
+		CASE 3
+			PRINTL 엉덩이 구멍으로 큰 촉수의 수정란을 낳고 있다…
+		CASE 4
+			PRINTL 엉덩이 구멍으로 부푼 소촉수를 몇 마리나 낳고 있다…
+		CASE 5
+			PRINTL 엉덩이 구멍으로 분비액 투성이가 된 촉수의 아이를 낳고 있다…
+		CASE 6
+			PRINTL 엉덩이 구멍으로 반투명인 촉수의 아이를 낳고 있다…
+		CASE 7
+			PRINTL 엉덩이 구멍으로 건강이 좋은 촉수를 낳고 있다…
+		CASE 8
+			PRINTL 엉덩이 구멍으로 만장의 촉수를 낳고 있다…
+		CASE 9
+			PRINTL 엉덩이 구멍으로 야단이 대한 촉수를 낳고 있다…
+		CASE 10
+			PRINTL 엉덩이 구멍으로 그로테스크한 촉수를 낳고 있다…
+		CASE 11
+			PRINTL 엉덩이 구멍으로 신선한 촉수를 낳고 있다…
+		CASE 12
+			PRINTL 엉덩이 구멍으로 우글거리는 촉수를 낳고 있다…
+		CASE 13
+			PRINTL 엉덩이 구멍으로 팔정도의 굵기의 촉수를 낳고 있다…
+		ENDSELECT
+		LOCALS:0 = 애널
+	ENDIF
+
+
+	IF ABL:출산 >= 3 || ABL:(TARGET):촉수 >= 5
+		IF (ABL:Ｖ감 >= 5 && CFLAG:촉수산란실행자 >= 1) || (ABL:Ａ감 >= 5 && CFLAG:촉수Ａ산란실행자 >= 1)
+			SELECTCASE RAND:6
+			CASE 0
+				PRINTFORML %조사처리(ANAME(TARGET),"는")% 출산의 기쁨에 떨리면서, %조사처리(LOCALS:0,"를")% 펴넓힐 수 있는 강렬한 절정감에
+				PRINTFORMW 짐승과 같은 외침을 올려 번민 미치고 있다
+			CASE 1
+				PRINTFORMW %조사처리(LOCALS:0,"를")% 촉수가 통과할 때마다 %조사처리(ANAME(TARGET),"는")% 절정 해, 몇 번이나 염이 있는 교성을 계속 올렸다
+			CASE 2
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% 임신하고 있던 촉수의 아이에게 안쪽으로부터 %조사처리(LOCALS:0,"를")% 범해져 활과 같이 신체를 뛰게 했군 무늬 출산했다
+			CASE 3
+				PRINTFORML %조사처리(ANAME(TARGET),"는")% 이형이 신체로부터 기어나오고 있다는데, 입을 느슨해지게 해 흐트러지고 미쳐 있어
+				PRINTFORMW %조사처리(LOCALS:0,"로")%부터 한마리, 또 한마리 촉수를 낳을 때마다 요염한 소리를 높였다
+			CASE 4
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% 허리를 몇 번이나 세게 튀기고 절정 하면서, 녹은 얼굴을 해 %조사처리(LOCALS:0,"로")%부터 촉수를 계속 낳았다
+			CASE 5
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% %조사처리(LOCALS:0,"를")% 촉수가 비비는 것을 의한 쾌락에 몸부림쳐, 불은 미소를 띄우면서 음 소리를 높였다
+			ENDSELECT
+		ELSE
+			SELECTCASE RAND:6
+			CASE 0
+				PRINTFORML %조사처리(ANAME(TARGET),"는")% %조사처리(LOCALS:0,"를")% 펴넓힐 수 있어 고통인 나머지 의식을 날릴 것 같게 되면서도,
+				PRINTFORMW 출산의 기쁨에 어딘가 행복한 표정을 띄우고 있다
+			CASE 1
+				PRINTFORMW 촉수가 %조사처리(LOCALS:0,"를")% 통과하는 것을 %조사처리(ANAME(TARGET),"는")% 비명을 올렸지만, 모든 촉수를 낳아 끝내면 어렴풋이 미소를 띄웠다
+			CASE 2
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% 임신하고 있던 촉수의 아이에게 안쪽으로부터 %조사처리(LOCALS:0,"를")% 범해져 몇번이나 의식을 날리면서도 무사하게 출산을 끝냈다
+			CASE 3
+				PRINTFORMW 강하게 눈을 감은 %조사처리(ANAME(TARGET),"는")%, 괴로운 것 같으면서도 힘껏 힘을 집중해 임신해진 촉수를 낳았다
+			CASE 4
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% 망가진 것처럼 허리를 몇 번이나 세게 튀기면서도, 무사하게 %조사처리(LOCALS:0,"로")%부터 촉수를 낳아 끝냈다
+			CASE 5
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% %조사처리(LOCALS:0,"를")% 촉수가 비비는 타는 것 같은 감각에 몸부림쳐, 불은 미소를 띄워 정신을 잃었다
+			ENDSELECT
+		ENDIF
+	ELSE
+		IF (ABL:Ｖ감 >= 5 && CFLAG:촉수산란실행자 >= 1) || (ABL:Ａ감 >= 5 && CFLAG:촉수Ａ산란실행자 >= 1) 
+			SELECTCASE RAND:6
+			CASE 0
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% 억지로 %조사처리(LOCALS:0,"를")% 펴넓힐 수 있을 때마다, 강렬한 절정감을 맛봐 짐승과 같은 외침을 올렸다
+			CASE 1
+				PRINTFORMW 촉수가 %조사처리(LOCALS:0,"를")% 통과할 때마다 %조사처리(ANAME(TARGET),"는")% 몇 번이나 절정 해, 교성을 계속 올리고 있다
+			CASE 2
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% 임신하고 있던 촉수의 아이에게 안쪽으로부터 %조사처리(LOCALS:0,"를")% 범해져 음성을 흘리면서 출산했다
+			CASE 3
+				PRINTFORMW %조사처리(LOCALS:0,"로")%부터 한마리, 또 한마리 촉수를 낳을 때마다, %조사처리(ANAME(TARGET),"는")% 요염한 비명을 올렸다
+			CASE 4
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% 허리를 몇 번이나 세게 튀겨 절정 하면서, %조사처리(LOCALS:0,"로")%부터 촉수를 계속 낳았다
+			CASE 5
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% %조사처리(LOCALS:0,"를")% 촉수가 비비는 것을 의한 쾌락에 절정 해, 음 소리를 높였다
+			ENDSELECT
+		ELSEIF ABL:(TARGET):촉수 >= 1
+			SELECTCASE RAND:5
+			CASE 0
+				PRINTFORMW 너무나 강한 자극에 %조사처리(ANAME(TARGET),"는")% 눈을 크게 열어 비명을 올려, 모든 촉수를 낳아 끝내면 힘 없게 붕괴되었다
+			CASE 1
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% 임신하고 있던 촉수의 아이에게 안쪽으로부터 %조사처리(LOCALS:0,"를")% 범해져 너덜너덜 울면서 출산을 계속했다
+			CASE 2
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% 뭉글뭉글의 얼굴로 아우성치면서, 길게 계속되는 출산에 계속 참았다
+			CASE 3
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% 망가진 것처럼 허리를 몇 번이나 세게 튀기면서, 필사적으로 %조사처리(LOCALS:0,"로")%부터 촉수를 낳았다
+			CASE 4
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% %조사처리(LOCALS:0,"를")% 촉수가 비비는 타는 것 같은 감각에 견딜 수 있지 못하고, 정신을 잃어 버렸다
+			ENDSELECT
+		ELSE
+			PRINTFORMW %조사처리(ANAME(TARGET),"는")% 고통인 나머지 의식이 날고 있는지, 공허한 표정으로 엉뚱한 방향을 응시하고 있다
+		ENDIF
+	ENDIF
+
+;-------------------------------------------------
+;모친이 자신을 육아중에 임신 발각되었다
+;-------------------------------------------------
+ELSEIF ARG == 45
+	PRINTFORMW %ANAME(ID_TO_CHARA(CFLAG:TARGET:모친))%에 길러지고 있는 %조사처리(ANAME(TARGET),"는")% 자신도 조금 전까지는 이렇게 (해) 태안에 있었다는 것을 이상함과 놀라움을 느끼고 있는 것 같다
+
+;-------------------------------------------------
+;모친이 자신을 육아중에 임월이 되었다
+;-------------------------------------------------
+ELSEIF ARG == 46
+	PRINTFORMW %ANAME(ID_TO_CHARA(CFLAG:TARGET:모친))%에 길러지고 있었던 %조사처리(ANAME(TARGET),"는")% 어머니가 육아의 한중간에 임월이 되는 것을 놀라면서도 컨디션을 걱정하고 있다
+
+;-------------------------------------------------
+;충성을맹세하게한다/성공
+;-------------------------------------------------
+ELSEIF ARG == 50
+	;자국의 포로의 경우
+	IF CFLAG:(MTAR:0):포로처 == CFLAG:MASTER:1
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")%, %ANAME(TARGET)%에 우리 나라의 사관이 되어 충성을 맹세하도록 말했다
+		IF TALENT:복종
+			PRINTFORMW ……%조사처리(ANAME(TARGET),"는")%, 어딘가 공허한 표정으로, 기쁜듯이 %ANAME(MASTER)%에의 공순을 맹세했다
+		ELSE
+			PRINTFORMW ……%조사처리(ANAME(TARGET),"는")%, %ANAME(MASTER)%의 말에 힘 없게 수긍했다
+		ENDIF
+		SIF !TALENT:낙인
+			PRINTFORMW 충성을 맹세한 증거로 삼아, %조사처리(ANAME(MASTER),"는")% %ANAME(TARGET)%의 몸에 사라지지 않는 낙인을 담금질
+	;그 이외
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(TARGET)%에 대해, %ANAME(MASTER)%에 복종해 충성을 맹세하도록 말했다
+		IF TALENT:복종
+			PRINTFORMW ……%조사처리(ANAME(TARGET),"는")%, 어딘가 공허한 표정으로, 기쁜듯이 %ANAME(MASTER)%에의 공순을 맹세했다
+		ELSE
+			PRINTFORMW ……%조사처리(ANAME(TARGET),"는")%, %ANAME(MASTER)%의 말에 힘 없게 수긍했다
+		ENDIF
+		SIF !TALENT:낙인
+			PRINTFORMW 충성을 맹세한 증거로 삼아, %조사처리(ANAME(MASTER),"는")% %ANAME(TARGET)%의 몸에 사라지지 않는 낙인을 담금질
+	ENDIF
+
+;-------------------------------------------------
+;충성을맹세하게한다/실패
+;-------------------------------------------------
+ELSEIF ARG == 51
+	;자국의 포로의 경우
+	IF CFLAG:(MTAR:0):포로처 == CFLAG:MASTER:1
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")%, %ANAME(TARGET)%에 우리 나라의 사관이 되어 충성을 맹세하도록 말했다
+		IF TALENT:복종
+			PRINTFORMW ……%조사처리(ANAME(TARGET),"는")% 조금 생각한 다음에, 슬픈 듯이 고개를 저었다
+		ELSE
+			PRINTFORMW ……이지만, %조사처리(ANAME(TARGET),"는")% %조사처리(ANAME(MASTER),"를")% 강력하게 노려봐 돌려주어, 거부했다
+		ENDIF
+		PRINTFORMW 아직 조교가 부족한 것 같다…
+	;그 이외
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(TARGET)%에 대해, %ANAME(MASTER)%에 복종해 충성을 맹세하도록 말했다
+		IF TALENT:복종
+			PRINTFORMW ……%조사처리(ANAME(TARGET),"는")% 조금 생각한 다음에, 슬픈 듯이 고개를 저었다
+		ELSE
+			PRINTFORMW ……이지만, %ANAME(TARGET)%에 차가운 눈으로 보여져 버렸다
+		ENDIF
+	ENDIF
+
+;-------------------------------------------------
+;자국으로 이끈다/성공
+;-------------------------------------------------
+ELSEIF ARG == 52
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")%, %ANAME(TARGET)%에 우리 나라에 왔으면 좋겠다고 부탁했다
+	PRINTFORMW ……%조사처리(ANAME(TARGET),"는")% 한동안 고민한 끝에, %ANAME(MASTER)%의 제안을 받아들였다
+
+;-------------------------------------------------
+;자국으로 이끈다/실패
+;-------------------------------------------------
+ELSEIF ARG == 53
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")%, %ANAME(TARGET)%에 우리 나라에 왔으면 좋겠다고 부탁했다
+	PRINTFORMW ……이지만, %조사처리(ANAME(TARGET),"는")% 목을 옆에 흔들었다
+
+;-------------------------------------------------
+;자국으로 이끈다/성공(포로 회화의 경우)
+;-------------------------------------------------
+ELSEIF ARG == 54
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")%, %ANAME(TARGET)%에 함께 우리 나라에 왔으면 좋겠다고 부탁했다
+	PRINTFORMW ……%조사처리(ANAME(TARGET),"는")% 한동안 고민한 끝에, %조사처리(ANAME(MASTER),"와")% 함께 이 나라를 떠날 각오를 결정한 것 같다
+
+;-------------------------------------------------
+;자국으로 이끈다/실패(포로 회화의 경우)
+;-------------------------------------------------
+ELSEIF ARG == 55
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")%, %ANAME(TARGET)%에 함께 우리 나라에 왔으면 좋겠다고 부탁했다
+	PRINTFORMW ……이지만, %조사처리(ANAME(TARGET),"는")% 기가 막힌 모습으로 거절했다
+
+;-------------------------------------------------
+;[연모]취득
+;-------------------------------------------------
+ELSEIF ARG == 60
+	PRINTFORMW %ANAME(TARGET)%의 이쪽을 보는 눈이 이상하다…
+	IF TALENT:친구
+		PRINTFORMW %조사처리(ANAME(TARGET),"가")% %ANAME(MASTER)%에 안고 있던 우정은 연애 감정으로 바뀐 것 같다
+	ELSEIF TALENT:연인
+		PRINTFORMW %조사처리(ANAME(TARGET),"는")% %ANAME(MASTER)%에의 연정을 마침내 자각한 것 같다
+	ELSE
+		PRINTFORMW %조사처리(ANAME(TARGET),"는")% %조사처리(ANAME(MASTER),"로")% 사랑 애태우게 되었다
+	ENDIF
+
+;-------------------------------------------------
+;[친구]취득
+;-------------------------------------------------
+ELSEIF ARG == 61
+	PRINTFORMW %ANAME(TARGET)%의 이쪽을 보는 눈이 바뀌었다…
+	PRINTFORMW %조사처리(ANAME(TARGET),"는")% %조사처리(ANAME(MASTER),"와")%의 사이에 강한 인연을 느끼고 있는 것 같다
+
+;-------------------------------------------------
+;[친애]취득
+;-------------------------------------------------
+ELSEIF ARG == 62
+	PRINTFORMW %ANAME(TARGET)%의 이쪽을 보는 눈이 바뀌었다…
+	PRINTFORMW %조사처리(ANAME(TARGET),"는")% %ANAME(MASTER)%에 진심으로의 애정을 느끼고 있는 것 같다
+
+;-------------------------------------------------
+;[복종]취득
+;-------------------------------------------------
+ELSEIF ARG == 63
+	PRINTFORMW %ANAME(TARGET)%의 이쪽을 보는 눈이 이상하다…
+	PRINTFORMW %조사처리(ANAME(TARGET),"는")% %ANAME(MASTER)%에 완전히 의존해 버리고 있는 것 같다
+
+;-------------------------------------------------
+;[예속]취득
+;-------------------------------------------------
+ELSEIF ARG == 64
+	PRINTFORMW %ANAME(TARGET)%의 이쪽을 보는 눈이 바뀌었다…
+	PRINTFORMW %조사처리(ANAME(TARGET),"는")% %ANAME(MASTER)%에 따르는 것을 진심으로의 기쁨을 느끼고 있는 것 같다
+
+;-------------------------------------------------
+;[음란]취득
+;-------------------------------------------------
+ELSEIF ARG == 65
+	PRINTFORMW %ANAME(TARGET)%의 이쪽을 보는 눈이 이상하다…
+	PRINTFORMW %조사처리(ANAME(TARGET),"는")% 육체의 쾌락에 빠지고 있는 것 같다
+
+;-------------------------------------------------
+;[주인]취득
+;-------------------------------------------------
+ELSEIF ARG == 80
+	PRINTFORMW %ANAME(MASTER)%의 모습이 이상하다…
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(TARGET)%에 완전히 의존해 버리고 있다
+
+;-------------------------------------------------
+;[소유자]취득
+;-------------------------------------------------
+ELSEIF ARG == 81
+	PRINTFORMW %ANAME(MASTER)%의 %조사처리(ANAME(TARGET),"를")% 보는 눈이 바뀌었다…
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(TARGET)%에 따르는 것을 진심으로의 기쁨을 느끼고 있다
+
+
+;-------------------------------------------------
+;[폭주가]취득
+;-------------------------------------------------
+ELSEIF ARG == 74
+	PRINTFORMW %ANAME(TARGET)%의 모습이 이상하다…
+	PRINTFORMW %조사처리(ANAME(TARGET),"는")% 술을 마시는 쾌감에 눈을 뜬 것 같다
+
+;-------------------------------------------------
+;[오줌싸개]취득
+;-------------------------------------------------
+ELSEIF ARG == 76
+	PRINTFORMW %ANAME(TARGET)%의 모습이 이상하다…
+	PRINTFORML 남의 앞에서 몇 번이나 오줌 흘리기를 반복한 %ANAME(TARGET)%의 마음과 몸에는,
+	PRINTFORMW 무의식 중에 오줌 흘리기를 하는 버릇이 새겨져 버린 것 같다
+
+;-------------------------------------------------
+;[공허]취득
+;-------------------------------------------------
+ELSEIF ARG == 78
+	PRINTFORMW %ANAME(TARGET)%의 모습이 이상하다…
+	PRINTFORMW 거듭되는 스트레스에 의해 %ANAME(TARGET)%의 마음은 몹시 피폐 하고 있는 것 같다
+
+;-------------------------------------------------
+;[붕괴]취득
+;-------------------------------------------------
+ELSEIF ARG == 79
+	PRINTFORMW %ANAME(TARGET)%의 모습이 이상하다…
+	PRINTFORMW 거듭되는 스트레스에 의해 %ANAME(TARGET)%의 마음은 망가져 버린 것 같다
+
+;-------------------------------------------------
+;혼인의식(선택시)
+;-------------------------------------------------
+ELSEIF ARG == 90
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(TARGET)%에 혼인을 신청했다
+	PRINTFORM %조사처리(ANAME(TARGET),"는")% 놀란 나머지 일순간 굳어져 버렸지만,
+	IF TALENT:친애
+		PRINTFORMW 곧바로 울컥거리는 행복하게 웃음지어, %조사처리(ANAME(MASTER),"를")% 껴안았다
+	ELSEIF TALENT:예속
+		PRINTFORMW %ANAME(MASTER)%에 혼인의 대상이라고 보여지고 있다고 생각하지 않았었던 %조사처리(ANAME(TARGET),"는")%, 기쁜 나머지 울기 시작해 버렸다…
+	ELSEIF TALENT:연인
+		PRINTFORMW 조금 수줍은 것처럼 미소지으면서, %ANAME(MASTER)%의 의사표현을 받아들였다
+	ELSE
+		PRINTFORMW 살그머니 %ANAME(MASTER)%의 수를 잡아 공손하게 고개를 숙여, 의사표현을 받아들였다
+	ENDIF
+
+;-------------------------------------------------
+;혼인의식(이벤트)
+;-------------------------------------------------
+ELSEIF ARG == 91
+	PRINTFORMW 시종 긴장 기색의 %조사처리(ANAME(TARGET),"였")%지만, 무사하게 식을 끝낼 수가 있었다
+
+;-------------------------------------------------
+;조르기에게 「보류」를 선택
+;-------------------------------------------------
+ELSEIF ARG == 103
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(TARGET)%의 권유를 거절해, 갖고 싶어하는 것 같은 표정을 띄우는 %조사처리(ANAME(TARGET),"를")% 방치해 떠났다…
+
+;-------------------------------------------------
+;유혹 성공(합의는 얻을 수 없다)
+;-------------------------------------------------
+ELSEIF ARG == 104
+
+;-------------------------------------------------
+;유혹 성공(합의를 취득)
+;-------------------------------------------------
+ELSEIF ARG == 105
+
+;-------------------------------------------------
+;유혹 실패
+;-------------------------------------------------
+ELSEIF ARG == 106
+	IF TALENT:합의
+		PRINTFORMW 이지만, %ANAME(TARGET)%에 지금은 그런 기분은 아니라고 들어 거절당해 버렸다
+	ELSEIF ABL:성지식 == 0
+		PRINTFORMW 이지만, %조사처리(ANAME(TARGET),"는")% %ANAME(MASTER)%의 의도를 이해하지 못하고, 이상한 것 같게 고개를 갸웃했다
+	ELSE
+		PRINTFORMW 이지만, %ANAME(TARGET)%에 무시되어 버렸다
+	ENDIF
+
+;-------------------------------------------------
+;유혹 성공(이미 합의 있어)
+;-------------------------------------------------
+ELSEIF ARG == 107
+
+;-------------------------------------------------
+;취해 무너진 곳에서 장난
+;-------------------------------------------------
+ELSEIF ARG == 110
+	IF TFLAG:54
+		IF TFLAG:54 == 1
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 자고 있는 %조사처리(ANAME(TARGET),"를")% 다다미방에 데리고 들어가면, %ANAME(TARGET)%의 옷을 벗게 해 갔다…
+		ELSEIF TFLAG:54 == 7
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 자고 있는 %조사처리(ANAME(TARGET),"를")% 목욕통의 인연에 앉게 하면, %ANAME(TARGET)%의 가랑이를 열게 했다…
+		ELSE
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 자고 있는 %조사처리(ANAME(TARGET),"를")% 그늘에 데리고 들어가면, %ANAME(TARGET)%의 옷을 벗게 해 갔다…
+		ENDIF
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(TARGET),"가")% 완전하게 자고 있는 것을 확인하면, %ANAME(TARGET)%의 옷을 벗게 해 갔다…
+	ENDIF
+
+;-------------------------------------------------
+;주인공이 실신해도 조교 계속
+;-------------------------------------------------
+ELSEIF ARG == 111
+
+;-------------------------------------------------
+;주인공이 피로해도 조교 계속
+;-------------------------------------------------
+ELSEIF ARG == 112
+
+;-------------------------------------------------
+;관장＆플러그를 실행 후, 플러그를 뽑아 낸다
+;-------------------------------------------------
+ELSEIF ARG == 151
+	PRINTFORML %ANAME(TARGET)%의 엉덩이 구멍으로부터, 천한 소리와 함께 갈색빛 나게 탁해진 액체가 토해내졌다…
+
+;-------------------------------------------------
+;밤이벤트(곁잠)
+;-------------------------------------------------
+ELSEIF ARG == 200
+	PRINTFORMW %조사처리(ANAME(TARGET),"는")% %ANAME(MASTER)%에, 함께 자고 싶다고 해 왔다
+
+;-------------------------------------------------
+;밤이벤트(저녁 반주)
+;-------------------------------------------------
+ELSEIF ARG == 201
+	PRINTFORMW %조사처리(ANAME(TARGET),"는")% 가져온 술병을 %ANAME(MASTER)%에 보여, 함께 마시지 않을까 권해 왔다
+
+;-------------------------------------------------
+;밤이벤트(담소)
+;-------------------------------------------------
+ELSEIF ARG == 202
+	PRINTFORMW %조사처리(ANAME(TARGET),"는")% %조사처리(ANAME(MASTER),"와")% 조금 이야기를 하고 싶은 것 같다
+
+;-------------------------------------------------
+;요바이 봉사(통상)
+;-------------------------------------------------
+ELSEIF ARG == 210
+	PRINTFORML %조사처리(ANAME(TARGET),"는")% %ANAME(MASTER)%의 침상에 비집고 들어가면,
+	PRINTFORM 기분좋게해줘 준다고 해
+	IF HAS_PENIS(MASTER)
+		PRINTFORMW %ANAME(MASTER)%의 페니스를 꺼내 봉사하기 시작했다…
+	ELSE
+		PRINTFORMW %ANAME(MASTER)%의 몸에 덮어씌웠다…
+	ENDIF
+
+;-------------------------------------------------
+;요바이 봉사(가학)
+;-------------------------------------------------
+ELSEIF ARG == 211
+	PRINTFORML %조사처리(ANAME(TARGET),"는")% %조사처리(ANAME(MASTER),"를")% 억지로 쓰러트리고 
+	IF HAS_PENIS(MASTER)
+		PRINTFORMW %ANAME(MASTER)%의 페니스를 짓밟으면서, 기학적인 표정으로 채찍을 지었다…
+	ELSE
+		PRINTFORMW %ANAME(MASTER)%의 몸을 단단히 묶어, 기학적인 표정으로 채찍을 지었다…
+	ENDIF
+
+;-------------------------------------------------
+;요바이 애무(통상)
+;-------------------------------------------------
+ELSEIF ARG == 212
+	PRINTFORML %조사처리(ANAME(TARGET),"는")% 상기 한 표정으로 %조사처리(ANAME(MASTER),"를")% 응시하면,
+	PRINTFORMW 완전히 달아오른 몸을 맡겨, 기분좋게해줘 갖고 싶으면 간원 했다…
+
+;-------------------------------------------------
+;요바이 애무(피학)
+;-------------------------------------------------
+ELSEIF ARG == 213
+	PRINTFORML %조사처리(ANAME(TARGET),"는")% 상기 한 표정으로 %조사처리(ANAME(MASTER),"를")% 응시하면,
+	PRINTFORMW 완전히 달아오른 몸을 맡겨, 마음껏 괴롭혔으면 좋겠다고 간원 했다…
+
+;-------------------------------------------------
+;요바이 성교(대상의Ｖ에 삽입)
+;-------------------------------------------------
+ELSEIF ARG == 220
+	PRINTFORMW %조사처리(ANAME(TARGET),"는")% %ANAME(MASTER)%에 몸을 맡기면, 뭔가를 기대하도록(듯이) 물기를 띤 눈동자로 응시해 왔다
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% %ANAME(TARGET)%의 옷을 벗게 하면, 이미 그 비순은 기대에 젖고 있었다…
+
+;-------------------------------------------------
+;요바이 성교(대상의Ａ에 삽입)
+;-------------------------------------------------
+ELSEIF ARG == 221
+	PRINTFORMW %조사처리(ANAME(TARGET),"는")% %ANAME(MASTER)%에 몸을 맡기면, 뭔가를 기대하도록(듯이) 물기를 띤 눈동자로 응시해 왔다
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% %ANAME(TARGET)%의 옷을 벗게 하면, 이미 그 비순은 기대에 젖고 있었다…
+
+;-------------------------------------------------
+;요바이 성교(주인공의Ｖ에 삽입)
+;-------------------------------------------------
+ELSEIF ARG == 222
+	PRINTFORMW %조사처리(ANAME(TARGET),"는")% %조사처리(ANAME(MASTER),"를")% 굶은 짐승과 같은 눈동자로 응시해 안게 했으면 좋겠다고 간원 했다
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% 승낙하면, %조사처리(ANAME(TARGET),"는")% 욕망에 맡겨 난폭하게 %조사처리(ANAME(MASTER),"를")% 쓰러트렸다…
+
+;-------------------------------------------------
+;요바이 성교(주인공의Ａ에 삽입)
+;-------------------------------------------------
+ELSEIF ARG == 223
+	PRINTFORMW %조사처리(ANAME(TARGET),"는")% %조사처리(ANAME(MASTER),"를")% 굶은 짐승과 같은 눈동자로 응시해 안게 했으면 좋겠다고 간원 했다
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% 승낙하면, %조사처리(ANAME(TARGET),"는")% 욕망에 맡겨 난폭하게 %조사처리(ANAME(MASTER),"를")% 쓰러트렸다…
+
+;-------------------------------------------------
+;요바이 성교(레즈 섹스)
+;-------------------------------------------------
+ELSEIF ARG == 224
+	PRINTFORMW %조사처리(ANAME(TARGET),"는")% %ANAME(MASTER)%에 몸을 맡기면, 뭔가를 기대하도록(듯이) 물기를 띤 눈동자로 응시해 왔다
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% %ANAME(TARGET)%의 옷을 벗게 하면, 이미 그 비순은 기대에 젖고 있었다…
+
+;-------------------------------------------------
+;밤이벤트/주인공이 임월 때의 병문안(확정 부친)
+;-------------------------------------------------
+ELSEIF ARG == 230
+	PRINTFORMW %조사처리(ANAME(MASTER),"와")% %조사처리(ANAME(TARGET),"는")% 태어나는 아이의 일에 대해 이야기를 주고받았다…
+
+;-------------------------------------------------
+;밤이벤트/주인공이 임월 때의 병문안(부친 이외)
+;-------------------------------------------------
+ELSEIF ARG == 231
+	PRINTFORMW 완전히 커진 %ANAME(MASTER)%의 배를, %조사처리(ANAME(TARGET),"는")% 흥미로운 것 같게 응시하고 있다…
+
+;-------------------------------------------------
+;밤이벤트/주인공이 육아중 때의 병문안(확정 부친)
+;-------------------------------------------------
+ELSEIF ARG == 232
+	;아이의 캐릭터 번호를 취득
+	LOCAL:0 = ID_TO_CHARA(CFLAG:MASTER:육아대상)
+
+	IF LOCAL:0 >= 0
+		IF TALENT:(LOCAL:0):솔직함
+			PRINTFORMW %조사처리(ANAME(LOCAL:0),"는")% 완전히 %ANAME(TARGET)%에 따르고 있는 것 같아, %조사처리(ANAME(TARGET),"를")% 꽤 놓자면 하지 않았다…
+		ELSEIF TALENT:(LOCAL:0):반항적 || TALENT:(LOCAL:0):거만함
+			PRINTFORMW 응석부리는 %조사처리(ANAME(LOCAL:0),"는")%, 부친인 %ANAME(TARGET)%에 반항적인 태도를 취하고 있다…
+		ELSE
+			PRINTFORMW %조사처리(ANAME(LOCAL:0),"는")% 부친인 %조사처리(ANAME(TARGET),"가")% 와 준 것을 솔직하게 기뻐하고 있다…
+		ENDIF
+	ENDIF
+
+;-------------------------------------------------
+;밤이벤트/주인공이 육아중 때의 병문안(부친 이외)
+;-------------------------------------------------
+ELSEIF ARG == 233
+	;아이의 캐릭터 번호를 취득
+	LOCAL:0 = ID_TO_CHARA(CFLAG:MASTER:육아대상)
+
+	IF LOCAL:0 >= 0
+		IF TALENT:(LOCAL:0):수줍음 || TALENT:(LOCAL:0):겁쟁이
+			PRINTFORMW %조사처리(ANAME(LOCAL:0),"는")% 낯가림하고 있는 것 같아, %ANAME(MASTER)%의 옷의 옷자락을 잡은 채로 꽤%조사처리(ANAME(TARGET),"와")% 막역하려고 하지 않았다…
+		ELSEIF TALENT:(LOCAL:0):거만함 || TALENT:(LOCAL:0):프라이드높음
+			PRINTFORMW %조사처리(ANAME(TARGET),"는")% %ANAME(LOCAL:0)%의 놀이에 억지로 교제해져 쓴웃음 짓고 있었다…
+		ELSE
+			PRINTFORMW %조사처리(ANAME(TARGET),"는")% %조사처리(ANAME(LOCAL:0),"를")% 권해, 함께 놀러 나갔습니다…
+		ENDIF
+	ENDIF
+
+;-------------------------------------------------
+;밤이벤트/주인공이 중상 때의 병문안
+;-------------------------------------------------
+ELSEIF ARG == 234
+	;PRINTFORMW 
+
+;-------------------------------------------------
+;아침 이벤트/스스로 성지식을 배운다
+;-------------------------------------------------
+ELSEIF ARG == 240
+	PRINTFORMW %조사처리(ANAME(TARGET),"는")%, %조사처리(ANAME(MASTER),"를")% 위해서(때문에) 스스로 성지식을 배우고 있는 것 같다…
+
+;-------------------------------------------------
+;아침 이벤트/스스로 성지식을 배운다(역조교)
+;-------------------------------------------------
+ELSEIF ARG == 241
+	PRINTFORMW %조사처리(ANAME(TARGET),"는")% %조사처리(ANAME(MASTER),"를")% 조교하기 위한 성지식을 배우고 있는 것 같다…
+
+;-------------------------------------------------
+;촉수 처형된다(포로 조교 화면으로부터)
+;-------------------------------------------------
+ELSEIF ARG == 343
+	;※촉수의방의 관리자(=촉수 처형의 실행자)의 캐릭터 번호는 FLAG:촉수의방 관리자에게 격납
+	
+	CALL SINGLE_DRAWLINE
+	PRINTFORML 어떠한 형태로 처형합니까?
+	PRINTL [0] 촉수에 몸도 마음도 바쳐 받는다
+	PRINTL [1] 촉수와 공존시켜 사회적으로 사라져 받는다
+	PRINTL [2] 기억을 지워 촉수의방의 부관리인이 되어 받는다
+	PRINTL [3] 애물단지는 가두어 무기 징역
+	PRINTL [4] 자유를 빼앗아 출하한다
+	PRINTL [5] 이세계 보내
+	INPUT
+
+	IF RESULT == 0
+	
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 감옥차례의 병사에, %조사처리(ANAME(TARGET),"를")% 단단히 묶어 촉수의방에 던져 넣도록 명령했다…
+		PRINTW …………
+		PRINTFORML 병사들이 구속된 %조사처리(ANAME(TARGET),"를")% 촉수의방의 안에 차기 시작해 문을 닫으면,
+		PRINTFORMW 기다리고 있었습니다라는 듯이 방안의 촉수가 %ANAME(TARGET)%의 몸 목표로 해 쇄도한다
+		PRINTFORML 촉수는 눈 깜짝할 순간에 %ANAME(TARGET)%의 전신을 삼키면,
+		IF HAS_PENIS(TARGET)
+			PRINTFORMW 전신의 구멍이라는 구멍을 범하면서 페니스에 휘감겨 정액을 짜려고 꿈틀거렸다
+			LOCALS:0 = 몇 번이나 정액을 토해내면서
+		ELSE
+			PRINTFORMW 전신의 구멍이라는 구멍을 범하면서 체내를 애무해 나간다
+			LOCALS:0 = 몇 번이나 절정 해 삐걱삐걱 몸을 진동시키면서
+			ENDIF
+
+		IF TALENT:붕괴
+			PRINTFORMW 이미 마음의 망가진 %조사처리(ANAME(TARGET),"는")% 저항할 것도 없고,
+			PRINTFORMW %LOCALS:0%촉수에 삼켜져 갔다…
+		ELSEIF TALENT:공허
+			PRINTFORMW 이미 피폐 나누었던 %조사처리(ANAME(TARGET),"는")% 거의 저항할 수도 있지 않고,
+			PRINTFORMW %LOCALS:0%촉수에 삼켜져 갔다…
+		ELSE
+			IF ABL:촉수 >= 5
+				PRINTFORML 완전히 촉수의 포로가 된 %조사처리(ANAME(TARGET),"는")%, 덤벼 드는 폭력적인 쾌감과 고통에 몸을 맡겨,
+				IF HAS_PENIS(TARGET)
+					PRINTFORMW 격렬하게 경련하면서 여러번 절정 해 정액을 토해내 간다…
+				ELSE
+					PRINTFORMW 격렬하게 경련하면서 여러번 절정 해 나간다…
+				ENDIF
+				IF TALENT:임신
+					PRINTFORMW 더욱 촉수는 %ANAME(TARGET)%의 체내에 머문 작은 생명까지 다 탐낼 수 있도록
+					PRINTFORMW %ANAME(TARGET)%의 자궁입구를 물어 찢어, 배를 불퉁불퉁 변형시킬 정도로 내용을 유린하지만
+					PRINTFORMW 이미 심신 모두 촉수의 먹이로 완성되어버린 %ANAME(TARGET)%에는, 그 무서운 행위에조차 쾌감을 기억해 절정을 반복한다…
+				ENDIF
+				PRINTFORML 촉수들은 %조사처리(ANAME(TARGET),"가")% 저항하지 않는 것을 확인하면, %ANAME(TARGET)%의 몸을 안쪽으로 끌어들여,
+				PRINTFORMW 지상의 쾌락을 주면서 자신들의 일부로 동화시켜 갔다…
+			ELSE
+				PRINTFORML %조사처리(ANAME(TARGET),"는")% 폭력적인 고통과 쾌감을 강제적으로 주어져
+				IF HAS_PENIS(TARGET)
+					PRINTFORMW 어찌할 바를 모르고 여러번 절정 하면서 정액을 짜내져 간다…
+				ELSE
+					PRINTFORMW 어찌할 바를 모르고 여러번 절정 당해 버린다…
+				ENDIF
+				IF TALENT:임신
+					PRINTFORMW 더욱 촉수는 %ANAME(TARGET)%의 체내에 머문 작은 생명까지 다 탐낼 수 있도록
+					PRINTFORMW %ANAME(TARGET)%의 자궁입구를 물어 찢어, 배를 불퉁불퉁 변형시킬 정도로 내용을 유린해 나간다
+					PRINTFORMW 그 무서운 행위에 반광란이 된 %조사처리(ANAME(TARGET),"는")%, 적어도 배의 아이만은 구하려고 마지막 힘을 쥐어짜는 것도
+					PRINTFORMW 허무한 저항은 촉수로부터의 무자비한 제재에 의해 비틀어 잡아져 버린다…
+				ENDIF
+				PRINTFORML 이윽고, 끊임없는 절정에서 힘이 다하고 축 늘어진 %ANAME(TARGET)%의 몸을 촉수가 한층 더 안쪽으로 끌어들여,
+				PRINTFORMW 지상의 쾌락을 주면서 자신들의 일부로 동화시켜 갔다…
+			ENDIF
+		ENDIF
+
+	ELSEIF RESULT == 1
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 조교계의 궁녀들에게, %조사처리(ANAME(TARGET),"를")% 촉수의방에 던져 넣도록 명령했다…
+		PRINTW …………
+		PRINTFORML 궁녀들들은 %조사처리(ANAME(TARGET),"를")% 해방한다고 하면, 촉수의방에 안내해 딱딱하게 열쇠를 잠그었다
+		PRINTFORMW 놀라 되돌아 보는 %ANAME(TARGET)%의 신체에 촉수들은 감아 다해 책형과 같이해 구속하고
+		PRINTFORMW 근처 일면에는 새로운 공존자를 환영하는 촉수들로 흘러넘치고 있다…
+
+		IF TALENT:임신
+			PRINTFORML 촉수는 %ANAME(TARGET)%의 몸을 더듬으면, 음파 탐지기같이 체내에 머문 작은 생명을 감지했다
+			PRINTFORMW ……생각하지 않는 수확에 기뻐한 촉수들은, %ANAME(TARGET)%의 머리를 어루만지고 있다
+		ELSEIF TALENT:처녀 && HAS_VAGINA(TARGET)
+			PRINTFORML 촉수가 %ANAME(TARGET)%의 질을 관철하면, 처녀의 증거인 피가 흘러넘쳐 왔다
+			PRINTFORMW ……생각하지 않는 상등품에 기뻐한 촉수들은, %ANAME(TARGET)%의 머리를 어루만지고 있다
+		ELSE
+		ENDIF
+
+		IF HAS_VAGINA(TARGET)
+			PRINTFORMW 촉수들은 %ANAME(TARGET)%의 몸을 범해, 중독성의 높은 점액을 충분히 쏟았다……
+			PRINTFORML 한층 더 촉수들은 신체의 여기저기를 뚫어, 세포 인자를 편성 신경을 동화시켜 갔다
+			PRINTFORMW %조사처리(ANAME(TARGET),"는")% 촉수를 몸에 머물지 않으면 살 수 없게 신체를 새로 짜넣어져 버렸다!
+			PRINTFORML 그녀는 지금부터 쭉 촉수들에게 길러져 범해져 새로운 촉수를 낳는 생활을 하는 일이 된다
+			PRINTFORMW 점차 생명체로서 변화해 나가, 이윽고는 새로운 요괴가 될 것이다……
+		ELSE
+			PRINTFORML 촉수들은 %ANAME(TARGET)%의 몸에 기어들어, 세포 인자를 편성 신경을 동화시켜 갔다
+			PRINTFORMW %조사처리(ANAME(TARGET),"는")% 촉수를 몸에 머물지 않으면 살 수 없게 신체를 새로 짜넣어져 버렸다!
+			PRINTFORML 그는 지금부터 쭉 촉수들에게 길러져 거부권을 빼앗겨 촉수를 배양하는 생활을 보내는 일이 된다
+			PRINTFORMW 점차 생명체로서 변화해 나가, 이윽고는 새로운 요괴가 될 것이다……
+		ENDIF
+
+		PRINTFORMW ………………
+			
+		IF TALENT:임신
+			PRINTFORML 배에 머문 생명은 촉수에 집어올려져, 같은 촉수를 낳는 존재가 되는 것 같다
+			PRINTFORMW 외를 알지 못하고 여기서 촉수들에게 길러지면 출생한 아이는 불행이라고 느끼지 않을지도 모른다……
+		ENDIF
+
+		PRINTFORML 정들면 고향이라고 말하듯이, 여기에 익숙하는 날이 올지도 모른다
+		PRINTFORMW 하지만 %조사처리(ANAME(TARGET),"라")%는 존재는, 벌써 죽었다도 당연했다……
+
+	ELSEIF RESULT == 2
+		PRINTFORMW %조사처리(ANAME(TARGET),"는")% 흰 침대 위에서 눈을 떴다…
+		PRINTW …………
+		PRINTFORML 옷차림을 정돈해, 시종옷으로 갈아입으면 아침을 개시했다
+		PRINTFORMW 우선 촉수의방에 가 새롭게 출생한 촉수가 어느 정도인가의 확인
+		PRINTFORML 그것이 끝나면 미사용의 방의 청소, 위생면에 신경을 써 흘러넘친 체액은 확실히 닦아낸다
+		PRINTFORMW 다음에 새롭게 온 아이가 분명하게 기분 좋게 될 수 있도록(듯이) 촉수들도 잘 조사해 둔다
+
+		PRINTFORML 석시에는 끝나는 일이지만, 여기까지의 사이에 건강이 없는 촉수를 보기 시작했으므로
+		PRINTFORMW 근친이 되어 카운셀링을 실시해 주지 않으면 안 된다.
+
+		IF HAS_VAGINA(TARGET)
+			PRINTFORMW 다행히도 %조사처리(ANAME(TARGET),"는")% 여성이었으므로, 촉수를 위해서(때문에) 자신의 신체를 사용하기로 했다
+			IF TALENT:임신
+				PRINTFORML 임신하고 있으므로 태내는 사용하게 해 주는 것은 할 수 없었지만,
+				PRINTFORMW 대신에 밤까지 엉덩이를 멋대로 범하게 해, 자신을 가지게 했다
+				PRINTFORMW %조사처리(ANAME(TARGET),"를")% 범해 쓰러트린 촉수는 완전히 건강을 되찾은 것 같다
+			ELSEIF TALENT:처녀 && HAS_VAGINA(TARGET)
+				PRINTFORML 촉수와 %조사처리(ANAME(TARGET),"가")% 연결되면, 붉은 물방울이 흘러 떨어졌다. 촉수는 태내로 침입한 것 같다
+				PRINTFORML ……이 일에 종사했을 때로부터 흥미는 있던 것이라고, %조사처리(ANAME(TARGET),"는")% 걱정하는 촉수에 자유롭게 움직이도록 지시했다
+				PRINTFORMW 촉수는 %ANAME(TARGET)%의 시작해를 받아 자신을 가진 것 같다
+			ELSE
+				PRINTFORML 촉수의 머리에 슬쩍 입을 대어, 타액이 적시고 나서 질구로 이끌어 주었다……
+				IF ABL:촉수 >= 10
+					PRINTFORML 건강이 없는 촉수가 응석부리게 해지고 있는 것을 봐, 다른 촉수도 모여 와 버렸다
+					PRINTFORMW 어쩔 수 없기에 손이나 다리로 동글동글 쓸어올려, 입으로 물어 혀로 어루만진다
+					PRINTFORML ……일제히 정자를 토해내졌다. 청소의 재시도와 같다
+				ELSE
+				PRINTFORMW 태내 니챠 응과 기어든 것을 확인해, 밤까지 함께 연결되고 있어 주는 일로 했다
+				PRINTFORMW %조사처리(ANAME(TARGET),"를")% 범해 쓰러트린 촉수는 완전히 건강을 되찾은 것 같다
+				ENDIF
+			ENDIF
+		ELSE
+			PRINTFORMW 만일의 경우에 움직일 수 없는 것 같은 것은 범해진 측도 범한 측도 행복하게 될 수 없을 것이다
+			PRINTFORMW 밤까지 교제해 주어, 자신을 되찾도록(듯이) 지도를 실시했다……
+		ENDIF
+
+		PRINTFORMW ………………
+		PRINTFORML 깨달았을 때에는 아무것도 기억하지 않았던 몸이지만, 일도 있고 촉수들도 있다.
+		PRINTFORMW 과거은 아무래도 좋다. 그렇게 생각해 밤은 침대에 돌아온다
+		PRINTFORMW 그것이 자신의 이름조차도 잊었던 %ANAME(TARGET)%의 새로운 생활이 되었다……
+
+	ELSEIF RESULT == 3
+		PRINTFORMW %조사처리(ANAME(TARGET),"는")% 지하 깊고에 봉할 수 있었다…
+		PRINTW …………
+		PRINTFORMW 질척질척 음미로운 소리가, 그치지 않고 울려 퍼지고 있다
+		PRINTFORML 몇의 촉수들이 %ANAME(TARGET)%의 신체를 범하고 있었다
+		PRINTFORMW 무슨방법이 걸려 있는지, %ANAME(TARGET)%의 신체는 쭉 왔을 때 그대로를 유지하고 있다
+		PRINTFORMW 성장도 하지 않는 늙음도 하지 않는, 배도 고파지지 않고 머리카락도 성장하지 못하고 감각도 쇠약해지지 않는다……
+		PRINTFORML 아침이나 낮도 없게 시간이 멈춘 세계에서 쭉 촉수들에게 범해지고 계속하고 있다
+
+		PRINTFORMW 이미 어느 정도의 시간이 경과했는가 %ANAME(TARGET)%에는 몰랐다
+
+		IF TARGET:0 == NAME_TO_CHARA("토요히메") || TARGET:0 == NAME_TO_CHARA("요리히메") || TARGET:0 == NAME_TO_CHARA("사구메") || TARGET:0 == NAME_TO_CHARA("달레이센") || TARGET:0 == NAME_TO_CHARA("세이란") || TARGET:0 == NAME_TO_CHARA("링고")
+			PRINTFORMW 느끼는 것은 달의 궁전의 그리운 기억과 마음을 태울 정도로 신체를 침식해 가는 쾌락 뿐이다
+		ELSEIF TARGET:0 == NAME_TO_CHARA("렌코") || TARGET:0 == NAME_TO_CHARA("마에리베리") || TARGET:0 == NAME_TO_CHARA("스미레코") 
+			PRINTFORMW 느끼는 것은 밖의 세계의 그리운 기억과 마음을 태울 정도로 신체를 침식해 가는 쾌락 뿐이다
+		ELSE
+			PRINTFORMW 느끼는 것은 환상향의 그리운 기억과 마음을 태울 정도로 신체를 침식해 가는 쾌락 뿐이다
+		ENDIF
+
+		PRINTFORMW 누군가가 도우러 오는 것은 훨씬 전에 단념해 버렸다
+
+		IF TALENT:임신
+			PRINTFORML 배에 누군가의 아이를 몸에 머물고 있던 기억은 있지만, 그것도 이미 아무래도 좋은 것이다
+			PRINTFORMW 이 공간에서는 출생해 오는 일도 없어지는 일도 없는 것이다
+		ENDIF
+
+		IF HAS_VAGINA(TARGET)
+			PRINTFORML 큰 촉수가 사타구니에 주어졌다. %조사처리(ANAME(TARGET),"는")% 신체를 반 글자 굽히고 넣는데 부자연 없게 조정했다
+			PRINTFORMW 촉수는 진입해 질구를 쳐박아 대량의 정액을 쏟았다
+		ELSE
+			PRINTFORML 큰 촉수가 사타구니에 주어졌다. %조사처리(ANAME(TARGET),"는")% 신체를 반 글자 굽히고 넣는데 부자연 없게 조정했다
+			PRINTFORMW 촉수는 진입해 애널을 쳐박아 대량의 정액을 쏟았다
+		ENDIF
+
+		IF ABL:촉수 >= 5
+			PRINTFORMW %조사처리(ANAME(TARGET),"는")% 그것을 받아들이면, 촉수들에게 향해 다음을 졸라댔다……
+			PRINTFORMW 이 절망으로부터 해방되기 위해서(때문에), 좀 더 쾌락을 느끼기 위해서(때문에)……
+		ELSEIF TALENT:처녀 && HAS_VAGINA(TARGET)
+			PRINTFORML 촉수가 뽑아지면, %조사처리(ANAME(TARGET),"로")%부터 빨강과 흰색의 뒤섞인 액체가 흘러 떨어졌다
+			PRINTFORMW 이 공간에서는 곧바로 막은 재생한다. 영원과 순결을 흩뜨려지고 계속한다
+			PRINTFORMW 몸을 녹이는 것 같은 아픔에 대해, %조사처리(ANAME(TARGET),"는")% 정신나간 눈으로 배를 문질렀다……
+		ELSE
+			PRINTFORMW 전혀 익숙해지는 일을 할 수 없는 감각에, %조사처리(ANAME(TARGET),"는")% 등을 따라 절정 했다……
+		ENDIF
+
+	ELSEIF RESULT == 4
+		PRINTFORMW %조사처리(ANAME(TARGET),"는")%전라인 채 구속되어 작은 우리안에 갇혔다…
+		PRINTW …………
+		PRINTFORMW 우리의 틈새를 다녀, %조사처리(ANAME(TARGET),"로")% 촉수들이 쇄도했다
+		PRINTFORML 가능한 한 높은 번식력을 가지는 촉수로부터, 차례차례에 %조사처리(ANAME(TARGET),"를")% 범해 간다
+		PRINTFORMW 촉수에 몰아세울 수 있는 소리가 울릴 때에, 재갈을 물린 %조사처리(ANAME(TARGET),"는")% 신음소리를 올리고 있었지만
+		PRINTFORML 쉬는 일도 없게 덤벼 드는 촉수를 상대로 하는 동안에,\@ RAND:2 ? 눈을 크게 연 채로 # 고개를 숙임눈을 숙여 \@얌전해졌다
+		IF TALENT:임신
+			PRINTFORMW , 라고 %ANAME(TARGET)%의 엉덩이 구멍으로부터는 엄청난 양의 정액이 새어나오고 있다
+			PRINTFORMW ………………
+			PRINTFORMW %ANAME(TARGET)%의 몸에는 몇의 종자가 심어졌다
+		ELSE
+			IF TALENT:처녀 && HAS_VAGINA(TARGET)
+				PRINTFORMW 걸죽, 라고 처녀를 잃은 %ANAME(TARGET)%의 균열로부터는 피가 뒤섞인 정액이 새어나오고 있다
+				PRINTFORMW ………………
+				PRINTFORMW 야단이 대한 촉수가 %ANAME(TARGET)%의 몸을 체크해, 착상을 확인했다
+			ELSEIF HAS_VAGINA(TARGET)
+				PRINTFORMW , 라고 %ANAME(TARGET)%의 암컷구멍으로부터는 엄청난 양의 정액이 새어나오고 있다
+				PRINTFORMW ………………
+				PRINTFORMW 야단이 대한 촉수가 %ANAME(TARGET)%의 몸을 체크해, 착상을 확인했다
+			ELSE
+				PRINTFORMW 하지만 %ANAME(TARGET)%의 체내의 혈관은 떠올라, 거절반응을 일으키고 있다
+				PRINTFORMW ………………
+				PRINTFORMW 잠시 하면 %조사처리(ANAME(TARGET),"와")% 촉수는 무사히 일체화한 것 같다, 페니스에는 기생한 촉수가 착 달라붙고 있다
+			ENDIF
+		ENDIF
+		PRINTFORML 도중의 생명 유지용의 촉수가 우리에 탑승하면, 우리의 주위는 얼마 10의 종이로 휩싸여졌다
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")% 취급해 주의라는 라벨과 필요한 정보를 쓴 종이를 붙이면
+
+		SELECTCASE RAND:9
+		CASE 0
+			PRINTFORML 여행의 준비를 한 우리 군의 병사들이 우리를 회수해 갔다
+			PRINTFORMW %조사처리(ANAME(TARGET),"는")% 행선지에서 전력을 낳기 위해서(때문에) 활약해 받는 일이 된다
+			PRINTFORMW 행선지에서 콜로니를 생기면 %ANAME(LOCAL:35)%의 힘도 또 늘어날 것이다
+		CASE 1
+			PRINTFORML 근처의 방에서 기다리게 하고 있던 요정들이 그것을 회수해 갔다
+			PRINTFORMW %조사처리(ANAME(TARGET),"는")% 행선지에서 속은 요정을 말려들게 하면서, 촉수를 번영시키는 일이 된다
+			PRINTFORMW 촉수가 증가하면 %ANAME(LOCAL:35)%의 힘도 또 늘어날 것이다
+		CASE 2
+			PRINTFORML 강인한 귀들이 가볍게 그것을 들어 올리고 회수해 갔다
+			PRINTFORMW %조사처리(ANAME(TARGET),"는")% 행선지에서 바뀐 구경거리로서 사용되는 일이 될 것이다
+			PRINTFORMW 오니로부터 받은 도구로 %ANAME(LOCAL:35)%의 힘도 또 늘어날 것이다
+		CASE 3
+			PRINTFORML 뒷거래를 한 진영의 병사가 우리를 회수해 갔다
+			PRINTFORMW %조사처리(ANAME(TARGET),"는")% 저쪽의 나라의, 아마는 촉수 관련의 시설에 어떠한 공헌을 완수하는 일이 된다
+			PRINTFORMW 대상으로 해서 손에 넣은 노하우로 %ANAME(LOCAL:35)%의 힘도 또 늘어날 것이다
+		CASE 4
+			PRINTFORML 이상한 얼굴을 한 상인이 그것을 회수해 갔다
+			PRINTFORMW %조사처리(ANAME(TARGET),"는")% 상인들에게 하나의 상품으로서 다루어지게 된다
+			PRINTFORMW 예로서 받은 술구로 %ANAME(LOCAL:35)%의 힘도 또 늘어날 것이다
+		CASE 5
+			PRINTFORML 로브에 몸을 감긴 마법사가 우리를 회수해 갔다
+			PRINTFORMW %조사처리(ANAME(TARGET),"는")% 마술의 매체인가, 실험대인가, 아마 그쯤 사용되는 일이 된다
+			PRINTFORMW 교환으로 받은 요술서로 %ANAME(LOCAL:35)%의 힘도 또 늘어날 것이다
+		CASE 6
+			PRINTFORML Anazon와 옷에 쓰여진 업자가 그것을 회수해 갔다.
+			PRINTFORMW %조사처리(ANAME(TARGET),"는")% 아직 보지 않는 신천지로 도착되어 거기서 종을 반영시키는 일이 된다
+			PRINTFORMW 세계에 촉수가 가득 차면 %ANAME(LOCAL:35)%의 힘도 증가할 것이다
+		CASE 7
+			PRINTFORML 지면에 매직 스퀘어가 떠올라, 거기에서 나온 낙지와 같은 촉수가 우리를 회수해 갔다
+			PRINTFORMW %조사처리(ANAME(TARGET),"는")% 알려지지 않는 사악한 사람의 공물이 되었다. 운이 좋다면 한 쌍에 사용될지도 모른다
+			PRINTFORML 그들로부터 받은 귀중한 서적으로 %ANAME(LOCAL:35)%의 힘도 또 늘어날 것이다
+		CASE 8
+			PRINTFORML 외의 세계로부터 잠입한 과학자들이 그것을 회수해 갔다.
+			PRINTFORMW %조사처리(ANAME(TARGET),"는")% 샘플로서 활용되어 여러가지 실험에 사용되는 일이 된다
+			PRINTFORMW 보수라고 받은 밖의 기술로 %ANAME(LOCAL:35)%의 힘도 또 늘어날 것이다
+		ENDSELECT
+		PRINTFORMW ………비인도적인 일이지만, 이것도 싸움에 이기기 때문에(위해)이다
+
+	ELSE
+		PRINTFORMW %조사처리(ANAME(TARGET),"는")% 돌연 지면에 비어있던 구멍에 떨어져 갔다…
+		PRINTW …………
+		PRINTFORML 눈을 뜨면 일견 어딘가의 동굴과 같은 장소에 %조사처리(ANAME(TARGET),"는")% 있었다
+		PRINTFORMW 동굴의 여기저기에는 촉수가 보일듯 말듯 하고 있어, 여기가 보통이 아닌 것을 방문하게 한다.
+		PRINTFORMW 발밑을 조사하면 한 개의 곤봉이 떨어지고 있었다……. 이것으로 어떻게 하라는 것인가
+
+		IF TALENT:붕괴 || TALENT:공허
+			PRINTFORMW 공허한 눈으로 근처를 응시하는 %ANAME(TARGET)%의 머리 위로부터 촉수가 덤벼 들었다!
+			PRINTFORMW 이미 마음이 접히고 있었던 %조사처리(ANAME(TARGET),"는")% 어안이 벙벙히 우두커니 선 채로 거기에 잡혀 버렸다……
+			PRINTFORMW ………………
+		ELSEIF TALENT:임신
+			PRINTFORMW 곤혹하는 %ANAME(TARGET)%의 머리 위로부터 촉수가 덤벼 들었다!
+			PRINTFORML 재빠르게 옆에 피해, 능력으로 응전하려고 하는 %조사처리(ANAME(TARGET),"였")%지만
+			PRINTFORMW 입덧에 습격당해 주저앉아 버렸다……!
+			PRINTFORMW ………………
+		ELSE
+			PRINTFORMW 곤혹하는 %ANAME(TARGET)%의 머리 위로부터 촉수가 덤벼 들었다!
+			PRINTFORML 재빠르게 옆에 피해, 능력으로 응전하려고 하는 %조사처리(ANAME(TARGET),"였")%지만
+			PRINTFORMW 무려, 힘을 발휘하는 것이 할 수 없었다……!
+			PRINTFORMW ………………
+		ENDIF
+
+		IF HAS_VAGINA(TARGET)
+			IF TALENT:임신
+				PRINTFORMW ……동굴의 안쪽에서 %조사처리(ANAME(TARGET),"는")% 물엿과 같은 생물에 붙잡히고 있었다
+				PRINTFORMW 촉수들에게 패배한 후 얼마나 지났는지, %조사처리(ANAME(TARGET),"는")% 긴 시간 범해지고 계속하고 있다
+				PRINTFORMW 한사람의 그림자가 거기에 가까워져 왔다. 얼굴은 자주(잘)%조사처리(ANAME(TARGET),"를")% 닮아 있었다
+				PRINTFORMW 일찍이 배에 있던 아이는, 촉수에 집어올려지고 미궁의 일원으로서 훌륭하게 하고 있는 것 같다
+				PRINTFORMW 이 앞%ANAME(TARGET)%들이 어떻게 되는지, 그것은 이제(이미/벌써/더는/정말) 이쪽의 세계에는 관계없는 것일 것이다……
+			ELSEIF TALENT:붕괴 || TALENT:공허
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% 동굴의 안쪽에 데리고 가져 촉수의 다발과 같은 생물에게 짜넣어졌다
+				PRINTFORMW 이세계의 생물중은 액체로 채워지고 있어 %조사처리(ANAME(TARGET),"는")% 거기서 범해지고 계속하고 있다
+				PRINTFORMW 이 앞, %조사처리(ANAME(TARGET),"는")% 촉수의 모판으로서 사는 일이 된다. 이쪽의 세계로 돌아오는 일은 없을 것이다……
+			ELSEIF ABL:촉수 >= 10
+				PRINTFORMW ……수시간 후, 거기에는 촉수로부터 정액을 다 짜낸 %ANAME(TARGET)%의 모습이 있었다
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% 익숙해진 손놀림으로 촉수들에게 봉사해, 환경에 용해하는 것을 성공한 것 같다!
+				PRINTFORMW 이세계의 촉수와 공존 관계를 쌓아 올린 %조사처리(ANAME(TARGET),"는")%, 촉수들의 여왕으로서 군림하는 일이 되었다……
+			ELSEIF ABL:촉수 >= 8
+				PRINTFORMW 촉수에 패배한 %조사처리(ANAME(TARGET),"는")% 동굴의 안쪽에 데리고 사라져 버렸다……
+				PRINTFORMW 그리고, 동굴의 안쪽에서는 무려%조사처리(ANAME(TARGET),"와")% 쏙 빼닮은 인물이 촉수에 범해지고 있었다!
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% 촉수에 깔아눌러져 또 한사람의 %조사처리(ANAME(TARGET),"와")% 얼싸안게 하고라고 촉수를 돌진해졌다!
+				PRINTFORMW ……이 후, 두 명의 %조사처리(ANAME(TARGET),"는")% 오래도록 촉수의 원으로 사는 일이 되었다
+			ELSEIF ABL:촉수 >= 6
+				PRINTFORMW ……%조사처리(ANAME(TARGET),"는")%, 촉수의 교묘한 움직임에 이기지 못하고 패배해 버렸다
+				PRINTFORMW 그리고 동굴의 안쪽에 데리고 가져 옆쪽에서 벽에 파묻혀 버렸다!
+				PRINTFORMW 동굴의 시설이 된 %조사처리(ANAME(TARGET),"는")% 대인기로, 제대로 관리되어 하반신은 매일 촉수가 모이고 있다……
+				PRINTFORMW 사랑 받고 있는 것 같은 것으로 죽는 일은 없을 것이지만, 이쪽의 세계로 돌아오는 일도 없을 것이다……
+			ELSEIF ABL:촉수 >= 4 
+				PRINTFORMW 필사적으로 곤봉으로 응전한 %조사처리(ANAME(TARGET),"는")% 무사히 끝났다.
+				PRINTFORMW 쓰러트린 촉수는 %ANAME(TARGET)%의 평상복과 같은 옷을 떨어뜨려 갔다……
+				PRINTFORMW 투옥되어 착실한 옷을 입지 않았었던 %조사처리(ANAME(TARGET),"는")%, 이상하다고 생각하면서도 그것을 몸에 익혀 버렸다!
+				PRINTFORMW 옷에 의태 하고 있던 촉수는 돌연 꿈틀거림이고, 제대로 %ANAME(TARGET)%의 몸에 밀착해 범하기 시작했다!
+				PRINTFORMW 몸부림치는 %조사처리(ANAME(TARGET),"는")% 무사 이 미궁을 탈출할 수 있을까. 그것은 이제(이미/벌써/더는/정말) 이쪽의 세계에는 관계없는 것일 것이다……
+			ELSEIF ABL:촉수 >= 2
+				PRINTFORMW 필사적으로 곤봉으로 응전한 %조사처리(ANAME(TARGET),"는")% 무사히 끝났다.
+				PRINTFORMW 한숨을 돌린 %조사처리(ANAME(TARGET),"는")% 공중에 들어 올려진, 보면 새와 같은 도깨비가 자신을 들어 올리고 있다……
+				PRINTFORMW 새와 같은 도깨비는 둥지까지 날자, 곧바로 페니스에 기생한 촉수로 %조사처리(ANAME(TARGET),"를")% 범하기 시작했다!
+				PRINTFORMW 불의를 붙어진 %조사처리(ANAME(TARGET),"는")% 이 후, 이세계의 촉수를 임신할 때까지 범해지는 일이 되지만
+				PRINTFORMW 이미 이쪽의 세계에는 관계없는 것일 것이다……
+			ELSE
+				PRINTFORMW %조사처리(ANAME(TARGET),"는")% 필사적으로 곤봉으로 응전해 무사히 끝났다
+				PRINTFORMW 비상식적으로 정도가 있는 상황이지만, 반드시 여기로부터 탈출해 보인다!
+				PRINTFORMW 그렇게 마음에 맹세한 %조사처리(ANAME(TARGET),"는")% 동굴로 나아갔다. ……여기가 이세계이다 따위라고 알지 못하고
+			ENDIF
+		ELSE
+			PRINTFORMW %조사처리(ANAME(TARGET),"는")% 필사적으로 곤봉으로 응전해 무사히 끝났다
+			PRINTFORMW 비상식적으로 정도가 있는 상황이지만, 반드시 여기로부터 탈출해 보인다!
+			PRINTFORMW 그렇게 마음에 맹세한 %조사처리(ANAME(TARGET),"는")% 동굴로 나아갔다. ……여기가 이세계이다 따위라고 알지 못하고
+		ENDIF
+	ENDIF
+
+;-------------------------------------------------
+;등용에 응한다(방랑 이벤트)
+;-------------------------------------------------
+ELSEIF ARG == 350
+	PRINTFORMW %조사처리(NAME,"는")% 생각한 끝에, 우리 나라에의 관직에 오름을 결정한 것 같습니다
+
+;-------------------------------------------------
+;충성을맹세하게한다(역조교)
+;-------------------------------------------------
+ELSEIF ARG == 450
+	LOCAL:5 = GET_COUNTRY_BOSS(CFLAG:1)
+	IF LOCAL:5 == TARGET
+		IF ABL:주도도Ｕ >= 500 || GETBIT(TALENT:음란계, 소질_음란_새드)
+			PRINTFORML %조사처리(ANAME(TARGET),"는")% %ANAME(MASTER)%에게, 자신의 부하가 되도록(듯이) 강한 어조로 명령했다
+		ELSE
+			PRINTFORML %조사처리(ANAME(TARGET),"는")% %ANAME(MASTER)%에게, 자신의 부하가 되도록(듯이) 타일렀다
+		ENDIF
+	ELSE
+		IF ABL:주도도Ｕ >= 500 || GETBIT(TALENT:음란계, 소질_음란_새드)
+			PRINTFORML %조사처리(ANAME(TARGET),"는")% %ANAME(MASTER)%에게, %ANAME(LOCAL:5)%에 임관한다야 게 강한 어조로 명령했다
+		ELSE
+			PRINTFORML %조사처리(ANAME(TARGET),"는")% %ANAME(MASTER)%에게, %ANAME(LOCAL:5)%에 임관한다야 게 타일렀다
+		ENDIF
+	ENDIF
+
+;-------------------------------------------------
+;충성을맹세하게한다(역조교)/성공
+;-------------------------------------------------
+ELSEIF ARG == 451
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% 수긍하면, %조사처리(ANAME(TARGET),"는")% 만족한 것 같게 미소를 띄워, %ANAME(MASTER)%의 밧줄을 풀었다…
+
+;-------------------------------------------------
+;충성을맹세하게한다(역조교)/실패
+;-------------------------------------------------
+ELSEIF ARG == 452
+	PRINTFORMW %조사처리(ANAME(TARGET),"는")% 유감스러운 듯이 고개를 저으면, 새로운 조교를 더하기 위해서(때문에)%ANAME(MASTER)%에 다시 향했다
+
+ENDIF
+
+RETURN 1

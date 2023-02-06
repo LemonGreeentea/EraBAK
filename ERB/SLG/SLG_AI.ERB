@@ -1,0 +1,742 @@
+﻿;주의점
+;이 함수 자체 루프내에서 불리는 전제인 것으로, 루프를 사용하면 O(n^2)가 된다. TMP화할 수 있는 것은 TMP를 이용하는 것.
+@AI_ACTION(세력)
+#DIM 세력
+#DIM 공격병수
+#DIM 도시
+#DIM 부대
+#DIM 캐릭터
+#DIM USETIME
+SETCOLOR COUNTRY_COLOR:세력
+PRINTFORML %ANAME(GET_COUNTRY_BOSS(세력))%사고중……
+RESETCOLOR
+
+;랜덤 캐릭터를 사용하고 있는 경우
+IF FLAG:랜덤캐릭터사용
+	;사관수가 부족하면 사관을 모집
+	CALL RECRUIT_AI(세력)
+ENDIF
+
+;외교의 처리
+SIF DAY >= SLG_PP:0 && !IS_SP_COUNTRY(세력)
+	CALL SLG_AI_DIPLOMACY(세력)
+
+
+;도시를 갖지 않다（도둑 따위）라면 스킵 한다
+SIF TMP_OWN_CITY:세력 < 1
+	GOTO NORMAL_AI_THINK_ENDED
+
+;국화등처 군사인 것으로 군사 개시하고 있지 않으면 스킵
+SIF DAY < SLG_PP:1
+	GOTO NORMAL_AI_THINK_ENDED
+
+CALL AI_DEPLOY_ARMY(세력)
+
+;방위를 모두 해제
+FOR 도시, 1, GET_CITY_NUM() + 1
+	IF CITY_OWNER:도시 == 세력
+		;적부대가 있는 도시는 해제 불가
+		IF !TMP_IS_STAY_ENEMY_UNIT(도시, 세력)
+			COUNTRY_SOLDIER:세력 += CITY_SOLDIER:도시
+			CITY_SOLDIER:도시 = 0
+			CITY_COMMANDER:도시 = 0
+		ENDIF
+	ENDIF
+NEXT
+
+;방침의 설정
+CALL SLG_AI_SETDOCTRINE(세력)
+
+;기존 부대 가운데, 이상한 상황에 빠져 버리고 있는 것을 해체한다
+CALL SLG_AI_FORCE_CLEAR_UNIT(세력)
+
+;이 턴 공격에 찢는 병력과 방어에 찢는 병력을 결정한다
+CALL SLG_AI_DECIDE_SOLDIER_NUM(세력)
+공격병수 = RESULT:0
+
+;기존 부대에 병력을 보충한다
+CALL SLG_AI_REPLENISH_SOLDIER_TO_UNIT(세력, 공격병수)
+공격병수 = RESULT
+
+;구출
+CALL SLG_AI_RESCUE(세력, 공격병수)
+공격병수 = RESULT
+
+;부대의 침공 판정
+FOR 부대, 0, MAX_UNIT
+	;기존 부대의 경우, 이동 할 수 없는 무리는 파견한다
+	IF UNIT_SOLDIER:세력:부대 > 0
+		;적이 있다면 날린다
+		SIF TMP_IS_STAY_ENEMY_UNIT(UNIT_POSITION:세력:부대, 세력)
+			CONTINUE
+		;벌써 목적지가 있다면 날린다
+		SIF UNIT_TARGET:세력:부대
+			CONTINUE
+		;적의 토지에 있다면 날린다
+		SIF TMP_COUNTRY_RELATION:세력:(CITY_OWNER:(UNIT_POSITION:세력:부대)) == 0
+			CONTINUE
+		;허용 피로도를 넘고 있으면 해체
+		;잉여 병력은 공격에 배분한다
+		IF UNIT_TIRED_COUNT:세력:부대 > AI_ARMY_PROPERTY:(COUNTRY_AI_TYPE:세력):AI_허용피로도
+			;DEBUGPRINTFORML  %ANAME(GET_COUNTRY_BOSS(세력))%의{부대}부대  피로도 한계 너머에 대해 해체 피로도:{UNIT_TIRED_COUNT:세력:부대} 허용:{AI_ARMY_PROPERTY:(COUNTRY_AI_TYPE:세력):AI_허용 피로도}
+			공격병수 += UNIT_SOLDIER:세력:부대
+			CALL CLEAR_UNIT(세력, 부대)
+			CONTINUE
+		ENDIF
+	;기존 부대는 아니면, 부대의 작성을 시도한다
+	ELSEIF UNIT_SOLDIER:세력:부대 <= 0
+		CALL SLG_AI_CREATE_UNIT(세력, 부대, 공격병수)
+		;만들 수 없으면 날린다
+		SIF 공격병수 == RESULT
+			CONTINUE
+		공격병수 = RESULT
+	ENDIF
+	;공격처의 결정
+	CALL SLG_AI_INVASION_SETTARGET(세력, 부대)
+NEXT
+
+;;#;FOR 부대, 0, MAX_UNIT
+;;#;	SIF UNIT_SOLDIER:세력:부대 > 0
+;;#;			DEBUGPRINTFORML %ANAME(GET_COUNTRY_BOSS(세력))%의{부대}부대 병수{UNIT_SOLDIER:세력:부대} 현재지 %GET_CITYNAME(UNIT_POSITION:세력:부대)% 목적지 %GET_CITYNAME(UNIT_TARGET:세력:부대)%
+;;#;NEXT
+
+
+CALL SLG_AI_DEFENSE(세력)
+;통상의 AI사고 종료
+$NORMAL_AI_THINK_ENDED
+
+
+;쿨 타임 감소 처리와 이 턴에 할당한 플래그 삭제 처리
+IF 세력 != CFLAG:MASTER:소속
+	FOR 캐릭터, 0, CHARANUM
+		IF CFLAG:캐릭터:소속 == 세력
+			COOLTIME:캐릭터:0 = MAX(COOLTIME:캐릭터:0 - 1 , 0)
+			ASSIGNED_THIS_TURN:캐릭터:0 = 0
+		ENDIF
+	NEXT
+ENDIF
+
+CALL SINGLE_EMPTY_LINE()
+
+;-----------------------------------------------
+;잔존병수에 있어서의, 공격병에게 돌리는 병수·방어에 돌리는 병수를 결정하는 처리
+;-----------------------------------------------
+@SLG_AI_DECIDE_SOLDIER_NUM(세력)
+#DIM 세력
+#DIM 도시
+#DIM 공격스코아합계
+#DIM 방위스코아합계
+#DIM 비율
+#DIM 공격병수
+#DIM 방위병수
+VARSET 공격스코아합계
+VARSET 방위스코아합계
+FOR 도시, 1, GET_CITY_NUM() + 1
+	;거기가 적의 도시에서, 한편 자세력과 접속하고 있다면, 공격 스코아에 가산
+	;방위 스코아와 비교하면, 산출 방법의 균형으로 10000배 정도해 똑똑(공격 스코아는 경제/방위배율, 방위 스코아는 경제 * 방위배율)
+	IF TMP_IS_INVADABLE:세력:도시
+		공격스코아합계 += TMP_OFFENSIVE_IMPORTANCE:세력:도시 * 10000
+	ENDIF
+	;거기가 자세력의 도시에서, 적으로부터 맞을 수 있는이라면, 방위 스코아에 가산
+	SIF CITY_OWNER:도시 == 세력 && TMP_CITY_RISK:세력:도시 >= 2
+		방위스코아합계 += TMP_DEFFENSIVE_IMPORTANCE:세력:도시
+NEXT
+
+;공격 스코아가 0이라면 공격해야 할 장소가 없기에, 모두 방위에 돌려 둔다
+;유일 인접하고 있는 세력과 정전했을 경우, 이것이 없으면 에러 초월한다
+IF 공격스코아합계 == 0
+	RETURN 0, COUNTRY_SOLDIER:세력
+ENDIF
+
+
+;DEBUGPRINTFORML %ANAME(GET_COUNTRY_BOSS(세력))%의 공격 스코아{공격 스코아 합계} 방위 스코아{방위 스코아 합계}
+비율 = 공격스코아합계 * 1000 / (공격스코아합계 + 방위스코아합계)
+
+공격병수 = MIN(COUNTRY_SOLDIER:세력 * 비율 / 1000, COUNTRY_SOLDIER:세력)
+방위병수 = COUNTRY_SOLDIER:세력 - 공격병수
+;DEBUGPRINTFORML %ANAME(GET_COUNTRY_BOSS(세력))%의 비율{비율}
+;DEBUGPRINTFORML %ANAME(GET_COUNTRY_BOSS(세력))%의 공격병{공격병수} 방위병{방위병수} 병 수{COUNTRY_SOLDIER:세력}
+RETURN 공격병수, 방위병수
+
+;-----------------------------------------------
+;기존 부대에 군사를 보충한다
+;-----------------------------------------------
+@SLG_AI_REPLENISH_SOLDIER_TO_UNIT(세력, 공격병수)
+#DIM 세력
+#DIM 부대
+#DIM 항번
+#DIM 공격병수
+#DIM 보충병수
+#DIM 나머지보충병수
+#DIM 보충량
+#DIM 부대능력합계
+#DIM 부대능력, MAX_UNIT
+#DIM 최강능력
+VARSET 부대능력합계
+VARSET 부대능력, __INT_MIN__
+
+;부대 능력을 합계해 나간다
+FOR 부대, 0, MAX_UNIT
+	SIF UNIT_SOLDIER:세력:부대 <= 0
+		CONTINUE
+	;적이 있다면 보충하지 않는다
+	SIF TMP_IS_STAY_ENEMY_UNIT(UNIT_POSITION:세력:부대, 세력) == 1
+		CONTINUE
+	;아군의 세력이 아니어도 보충하지 않는다
+	SIF TMP_COUNTRY_RELATION:세력:(CITY_OWNER:(UNIT_POSITION:세력:부대)) == 0
+		CONTINUE
+	;확정병수 넘어도 보충하지 않는다
+	SIF UNIT_SOLDIER:세력:부대 >= AI_ARMY_PROPERTY:(COUNTRY_AI_TYPE:세력):AI_확정병수
+		CONTINUE
+	CALL GET_COMMANDER_ALL(세력, 부대)
+	CALL SET_BATTLE_MIRROR_VAL(0, RESULT:0, RESULT:1, RESULT:2)
+	CALL BATTLE_PREPARE_VARS_EACH(0, 0)
+	부대능력:부대 = BATTLE_ATK:0 + BATTLE_DEF:0 + BATTLE_INT:0
+	부대능력합계 += 부대능력:부대
+	;DEBUGPRINTFORML %ANAME(GET_COUNTRY_BOSS(세력))%의{부대}부대 부대 능력{부대 능력:부대}
+NEXT
+
+;하는 김에 지금 만들 수 있는 최강의 부대를 봐 둔다
+CALL CHECK_UNIT_COMMANDER_BEST(세력)
+CALL SET_BATTLE_MIRROR_VAL(0, UNIT_COMMANDER_BEST:0, UNIT_COMMANDER_BEST:1, UNIT_COMMANDER_BEST:2)
+CALL BATTLE_PREPARE_VARS_EACH(0, 0)
+최강능력 = BATTLE_ATK:0 + BATTLE_DEF:0 + BATTLE_INT:0
+
+;보충에 사용하는 병수를 결정한다
+;현존 하는 최강의 부대의, 지금 만들 수 있는 최강의 부대에 대한 비율
+부대 = FINDELEMENT(부대능력, MAXARRAY(부대능력))
+SIF 부대능력:부대 == __INT_MIN__
+	RETURN 공격병수
+보충병수 = MIN(공격병수 * 부대능력:부대 / MAX(최강능력, 1), 공격병수 * 70 / 100)
+나머지보충병수 = 보충병수
+;DEBUGPRINTFORML %ANAME(GET_COUNTRY_BOSS(세력))%의 공격병수{공격병수} 최강 능력{최강 능력} 현존 최강 부대 능력{부대 능력:부대} 보충병수{보충병수}
+
+FOR 항번, 0, MAX_UNIT
+	부대 = FINDELEMENT(부대능력, MAXARRAY(부대능력))
+	;이제 부대가 없는 경우, 빠진다
+	SIF 부대능력:부대 == __INT_MIN__
+		BREAK
+
+	;보충병수로부터, （보충 가능한 부대에 습기차는 자부대의 능력의 비율）만큼만 보충한다
+	;다만, 최저병수 나누고 있으면 최저병수만큼만 보충하려고 한다
+	;어쨌든, 남아있는 보충병수이상으로 보충 할 수 없는 것은 당연
+	IF UNIT_SOLDIER:세력:부대 < AI_ARMY_PROPERTY:(COUNTRY_AI_TYPE:세력):AI_최저병수
+		보충량 = AI_ARMY_PROPERTY:(COUNTRY_AI_TYPE:세력):AI_최저병수 - UNIT_SOLDIER:세력:부대
+	ELSE
+		보충량 = 보충병수 * 부대능력:부대 / 부대능력합계
+	ENDIF
+	보충량 = MIN(보충량, 나머지보충병수)
+	;DEBUGPRINTFORML %ANAME(GET_COUNTRY_BOSS(세력))%의{부대}부대에 보충 보충 전{UNIT_SOLDIER:세력:부대}  보충량{보충량} 보충 후{UNIT_SOLDIER:세력:부대 + 보충량}
+	;DEBUGPRINTFORML 나머지 보충병수{나머지 보충병수 - 보충량}
+	UNIT_SOLDIER:세력:부대 += 보충량
+	COUNTRY_SOLDIER:세력 -= 보충량
+	나머지보충병수 -= 보충량
+	공격병수 -= 보충량
+	부대능력:부대 = __INT_MIN__
+NEXT
+
+RETURN 공격병수
+
+
+;-----------------------------------------------
+;이상한 것이 되고 있는 부대를 해체한다
+;-----------------------------------------------
+@SLG_AI_FORCE_CLEAR_UNIT(세력)
+#DIM 세력
+#DIM 부대
+
+FOR 부대, 0, MAX_UNIT
+	SIF UNIT_SOLDIER:세력:부대 <= 0
+		CONTINUE
+	;현재지가 정전 대상이라면 해산
+	SIF TMP_COUNTRY_RELATION:세력:(CITY_OWNER:(UNIT_POSITION:세력:부대)) == 1
+		CALL CLEAR_UNIT(세력, 부대)
+	;목적지가 적이 아니면 해산
+	SIF TMP_COUNTRY_RELATION:세력:(CITY_OWNER:(UNIT_TARGET:세력:부대)) != 0
+		CALL CLEAR_UNIT(세력, 부대)
+	;부대의 현재 위치가 중계지점 또한 이동처를 잃고 있으면 해산한다
+	SIF !UNIT_TARGET:세력:부대 && CITY_TYPE:(UNIT_POSITION:세력:부대) == 1
+		CALL CLEAR_UNIT(세력, 부대)
+NEXT
+
+;-----------------------------------------------
+;부대를 구출한다
+;-----------------------------------------------
+@SLG_AI_RESCUE(세력, 공격병수)
+#DIM 세력
+#DIM 도시
+#DIM 부대
+#DIM 공격병수
+#DIM 도시보유자
+#DIM 방위후보도시, MAX_CITY
+#DIM 방위스코아, MAX_CITY
+#DIM 방위스코아합계
+#DIM 구원후보
+#DIM 도시상부대
+#DIM 적세력
+#DIM 적부대
+#DIM 적병수, 20
+#DIM 적부대능력, 20
+#DIM 가상적병수
+#DIM 가상적능력
+#DIM 부대능력
+#DIM 필요병수
+#DIM 보충병수
+#DIM 포지션
+VARSET 방위스코아
+VARSET 방위후보도시
+VARSET 방위스코아합계
+
+;방위 스코아의 합계를 산출한다
+FOR 도시, 1, GET_CITY_NUM() + 1
+	도시보유자 = CITY_OWNER:도시
+	;적이 없으면 구원하지 않는다
+	SIF !TMP_IS_STAY_ENEMY_UNIT(도시, 세력)
+		CONTINUE
+	;도울 필요가 없는 곳이라면 방치
+	SIF !(IS_COUNTRY(도시보유자) && GROUPMATCH(TMP_COUNTRY_RELATION:세력:도시보유자, 2, 3, 4, 5))
+		CONTINUE
+	방위스코아:도시 = TMP_DEFFENSIVE_IMPORTANCE:세력:도시 * (TMP_COUNTRY_RELATION:세력:도시보유자 == 5 ? 10 # 7) / 10
+	방위스코아합계 += 방위스코아:도시
+	;자국 영토에서도 뚝 떨어진 영토는 방폐 하기 십상
+	SIF 도시보유자 == 세력
+		방위스코아:도시 = 방위스코아:도시 * TMP_ENCLAVE_SIZE:세력:도시 / TMP_MAX_ENCLAVE_SIZE:세력
+NEXT
+
+SIF 방위스코아합계 == 0
+	RETURN 공격병수
+
+;DEBUGPRINTFORML 방위 스코아 합계:{방위 스코아 합계}
+WHILE 1
+	;가장 방위 스코아의 높은 곳을 구원하러 간다
+	구원후보 = FINDELEMENT(방위스코아, MAXARRAY(방위스코아))
+	;DEBUGPRINTFORML 구원 후보:%GET_CITYNAME(구원 후보)% 방위 스코아:{방위 스코아:구원 후보}
+	;10% 없는, 없고 방위 스코아 0이라면 돕지 않는다
+	SIF 방위스코아:구원후보 < 방위스코아합계 / 10 || 방위스코아:구원후보 == 0
+		BREAK
+
+	VARSET 적부대능력
+	VARSET 적병수
+	;존재하는 적부대의 능력을 계산
+	FOR 도시상부대, 0, 20
+		적세력 = TMP_UNIT_ONCITY_CNT:구원후보:도시상부대
+		적부대 = TMP_UNIT_ONCITY_NUM:구원후보:도시상부대
+		SIF !IS_COUNTRY(적세력) || TMP_COUNTRY_RELATION:세력:적세력 != 0
+			CONTINUE
+		적병수:도시상부대 = UNIT_SOLDIER:적세력:적부대
+		CALL GET_COMMANDER_ALL(적세력, 적부대)
+		CALL SET_BATTLE_MIRROR_VAL(0, RESULT:0, RESULT:1, RESULT:2)
+		CALL BATTLE_PREPARE_VARS_EACH(0, 0)
+		적부대능력:도시상부대 = BATTLE_ATK:0 + BATTLE_DEF:0 + BATTLE_INT:0
+	NEXT
+
+	;적중에서 「무엇보다 많은 병수」 「무엇보다 강한 능력」을 겸비하는 부대를 가상적으로 한다
+	가상적병수 = 적병수:FINDELEMENT(적병수, MAXARRAY(적병수))
+	가상적능력 = 적부대능력:FINDELEMENT(적부대능력, MAXARRAY(적부대능력))
+
+	;기존의 부대를 사용한다
+	FOR 부대, 0, MAX_UNIT
+		SIF UNIT_SOLDIER:세력:부대 <= 0
+			CONTINUE
+		SIF UNIT_TARGET:세력:부대
+			CONTINUE
+		SIF TMP_IS_STAY_ENEMY_UNIT(UNIT_POSITION:세력:부대, 세력) == 1
+			CONTINUE
+		SIF TMP_COUNTRY_RELATION:세력:(CITY_OWNER:(UNIT_POSITION:세력:부대)) == 0
+			CONTINUE
+		CALL GET_COMMANDER_ALL(세력, 부대)
+		CALL SET_BATTLE_MIRROR_VAL(0, RESULT:0, RESULT:1, RESULT:2)
+		CALL BATTLE_PREPARE_VARS_EACH(0, 0)
+		부대능력 = BATTLE_ATK:0 + BATTLE_DEF:0 + BATTLE_INT:0
+		필요병수 = 가상적병수 * (부대능력 >= 가상적능력 ? 80 # 120) / 100
+		;적부대의 능력의 80%없으면, 우선 이길 수 없기에 단념한다
+		SIF 부대능력 < 가상적능력 * 4 / 5
+			CONTINUE
+		;공격병수와 부대병수 더해 가상적의(능력으로 이기고 있다면 80%, 지고 있다면 120%）없으면, 우선 이길 수 없기에 단념한다
+		SIF 공격병수 + UNIT_SOLDIER:세력:부대 < 필요병수
+			CONTINUE
+		;보충
+		IF UNIT_SOLDIER:세력:부대 < 필요병수
+			보충병수 = MIN(필요병수 - UNIT_SOLDIER:세력:부대, 공격병수)
+			UNIT_SOLDIER:세력:부대 += 보충병수
+			공격병수 -= 보충병수
+			COUNTRY_SOLDIER:세력 -= 보충병수
+		ENDIF
+		CALL MOVE_UNIT(세력, 부대, 구원후보, 1)
+		GOTO DONE
+		BREAK
+	NEXT
+
+	;파견하고 있지 않으면 신규부대를 검토
+	FOR 부대, 0, MAX_UNIT
+		SIF UNIT_SOLDIER:세력:부대 > 0
+			CONTINUE
+		CALL CHECK_UNIT_COMMANDER_BEST(세력)
+		CALL SET_BATTLE_MIRROR_VAL(0, UNIT_COMMANDER_BEST:0, UNIT_COMMANDER_BEST:1, UNIT_COMMANDER_BEST:2)
+		CALL BATTLE_PREPARE_VARS_EACH(0, 0)
+		부대능력 = BATTLE_ATK:0 + BATTLE_DEF:0 + BATTLE_INT:0
+		필요병수 = 가상적병수 * (부대능력 >= 가상적능력 ? 80 # 120) / 100
+		SIF 부대능력 < 가상적능력 * 4 / 5
+			CONTINUE
+		SIF 공격병수 < 필요병수
+			CONTINUE
+		UNIT_SOLDIER:세력:부대 = 필요병수
+		공격병수 -= 필요병수
+		COUNTRY_SOLDIER:세력 -= 필요병수
+		FOR 포지션, 0, MAX_UNIT_COMMANDER
+			SIF UNIT_COMMANDER_BEST:포지션 == -1
+				BREAK
+			CALL SET_UNIT_COMMANDER(세력, 부대, 포지션, UNIT_COMMANDER_BEST:포지션)
+			;IS_FREE_MAP를 직접 고쳐 쓰는 편이 빠르다
+			TMP_IS_FREE:(UNIT_COMMANDER_BEST:포지션):0 = 1
+		NEXT
+		;PRINTFORML 구출 부대 작성 병수{UNIT_SOLDIER:세력:부대}
+		CALL MOVE_UNIT(세력, 부대, 구원후보, 1)
+	NEXT
+
+	$DONE
+	방위스코아:구원후보 = 0
+WEND
+
+RETURN 공격병수
+
+;-------------------------------------------------
+;국고를 소비해 징병을 실시할까의 판정
+;-------------------------------------------------
+@AI_DEPLOY_ARMY(세력)
+#DIM 세력
+#DIM 고용레이트
+#DIM 고용병수한계
+#DIM 고용병수
+#DIM 병수한계
+#DIM 유보액
+고용레이트 = SLG_EXTRA_DRAFT_CALC_RATE(세력)
+;고용병수는 최대에서도(국고-잔재와 구분)/고용 레이트
+;세력이 뒤떨어지고 있는 경우, 유보액은 작아진다（징병에 힘을 쏟는다）
+유보액 = MONEY:세력 * AI_DEPLOY:(COUNTRY_AI_TYPE:세력):(TMP_COUNTRY_STARS:세력 > 2 ? 1 # 2) / 100
+고용병수한계 = (MONEY:세력 - 유보액) / 고용레이트
+;병 수한계는 징병에 의한 한계에, 세력마다의 특색을 더한 것
+병수한계 = TMP_SUM_ECONOMY:세력 / 10 * AI_DEPLOY:(COUNTRY_AI_TYPE:세력):0 / 100
+
+;（고용할 수 있는 수＋현재의 병력）가 경제력 베이스의 병수한계를 넘고 있어, 한편★3이상의 세력이라면, 병수한계를 넘지 않게 징병
+IF 고용병수한계 + TMP_SUM_SOLDIER:세력 > 병수한계 && TMP_COUNTRY_STARS:세력 > 2
+	고용병수 = 병수한계 - TMP_SUM_SOLDIER:세력 
+;상기 조건을 채우지 않으면, 고용 가능한 한 고용한다
+ELSE
+	고용병수 = 고용병수한계
+ENDIF
+
+SIF 고용병수 <= 0
+	RETURN
+
+MONEY:세력 -= 고용레이트 * 고용병수
+COUNTRY_SOLDIER:세력 += 고용병수
+TMP_SUM_SOLDIER:세력 += 고용병수
+
+
+;DEBUGPRINTFORML {DAY, 3}【긴급 동원（\@ARG:1? 방 # 공 \@）】%ANAME(GET_COUNTRY_BOSS(ARG:0))%:지불{SELECTOR:5}/{ECONOMY/100}→징병{SELECTOR:4}/{MILITARY_LIMIT}
+SIF 세력 == CFLAG:MASTER:소속 || FLAG:관전모드
+		PRINTFORML %ANAME(GET_COUNTRY_BOSS(세력))%는 {고용레이트 * 고용병수}의 자금을 지불해 군사를 {고용병수}동원했습니다
+
+
+;-------------------------------------------------
+;부대를 생성한다
+;-------------------------------------------------
+@SLG_AI_CREATE_UNIT(세력, 부대, 공격병수)
+#DIM 세력
+#DIM 부대
+#DIM 공격병수
+#DIM 출병난이도, 2
+#DIM 병수후보
+#DIM 최저병수
+#DIM 확정병수
+#DIM 출병수
+#DIM 포지션
+#DIM AI_TYPE
+
+
+AI_TYPE = COUNTRY_AI_TYPE:세력
+최저병수 = AI_ARMY_PROPERTY:AI_TYPE:AI_최저병수 / MAX(6 - TMP_OWN_CITY:세력, 1)
+확정병수 = MIN(AI_ARMY_PROPERTY:AI_TYPE:AI_확정병수, TMP_SUM_ECONOMY:세력 * 10)
+;DEBUGPRINTFORML %ANAME(GET_COUNTRY_BOSS(세력))%의 부대 작성 시행 공격병수{공격병수} 최저병수{최저병수} 확정병수{확정병수}
+
+;병 수가 최저 나누고 있으면 부대는 만들지 않는다
+SIF 공격병수 < 최저병수
+	RETURN 공격병수
+
+;병 수가 확정병수를 나누고 있다면, 확정병수에 대한 공격병수의 비율%로 출병한다
+;다만 도시수가 적으면 적극적
+IF 공격병수 < 확정병수
+	SIF 공격병수 * 100 / 확정병수 < RAND:(100 - MAX((6 - TMP_OWN_CITY:세력) * 10, 0))
+		RETURN 공격병수
+ENDIF
+
+CALL CHECK_UNIT_COMMANDER_BEST(세력)
+;DEBUGPRINTFORML 부대 작성 RESULT:0 {UNIT_COMMANDER_BEST:0} RESULT:1 {UNIT_COMMANDER_BEST:1} RESULT:2 {UNIT_COMMANDER_BEST:2}
+
+
+최저병수 *= MIN(MAX(MATCH(UNIT_COMMANDER_BEST, -1) * 3, 1), 확정병수 - 1)
+;DEBUGPRINTFORML 보정 후 최저병수{최저병수} 확정병수{확정병수}
+;무장
+;SIF MATCH(무장 후보, -1) == 3
+;	RETURN 공격병수
+
+;부대에 편성하는 병수를 결정
+IF 공격병수 >= 확정병수
+	출병수 = 확정병수
+ELSE
+	출병수 = MIN(RAND(최저병수, 확정병수), 공격병수)
+ENDIF
+
+UNIT_SOLDIER:세력:부대 = 출병수
+COUNTRY_SOLDIER:세력 -= 출병수
+공격병수 -= 출병수
+FOR 포지션, 0, MAX_UNIT_COMMANDER
+	SIF UNIT_COMMANDER_BEST:포지션 == -1
+		CONTINUE
+	CALL SET_UNIT_COMMANDER(세력, 부대, 포지션, UNIT_COMMANDER_BEST:포지션)
+	;IS_FREE_MAP를 직접 고쳐 쓰는 편이 빠르다
+	TMP_IS_FREE:(UNIT_COMMANDER_BEST:포지션):0 = 1
+NEXT
+
+;DEBUGPRINTFORML 부대 작성 병수{UNIT_SOLDIER:세력:부대}
+
+RETURN 공격병수
+
+;-------------------------------------------------
+;부대의 공격처를 결정한다
+;-------------------------------------------------
+@SLG_AI_INVASION_SETTARGET(세력, 부대)
+#DIM 세력
+#DIM 부대, 2
+#DIM 도시
+#DIM 공격후보스코아, MAX_CITY
+#DIM 다음의스코아
+#DIM 관계성
+#DIM 군주
+#DIM 도시보유세력
+#DIM 도시보유군주
+#DIM 공격후보
+#DIM 현재스코아
+#DIM 자부대능력, 3
+#DIM 적부대능력, 3
+#DIM 후보
+
+VARSET 공격후보스코아, __INT_MIN__
+군주 = GET_COUNTRY_BOSS(세력)
+
+CALL GET_UNIT_COMMANDER_ALL(세력, 부대)
+CALL SET_BATTLE_MIRROR_VAL(0, RESULT:0, RESULT:1, RESULT:2)
+CALL BATTLE_PREPARE_VARS_EACH(0, 0)
+자부대능력:0 = BATTLE_ATK:0
+자부대능력:1 = BATTLE_DEF:0
+자부대능력:2 = BATTLE_INT:0
+
+;스코아를 계산
+FOR 도시, 1, GET_CITY_NUM() + 1
+	SIF !TMP_IS_INVADABLE:세력:도시
+		CONTINUE
+
+	도시보유세력 = CITY_OWNER:도시
+	도시보유군주 = GET_COUNTRY_BOSS(도시보유세력)
+
+	공격후보스코아:도시 = TMP_OFFENSIVE_IMPORTANCE:세력:도시 * RAND(80, 120)
+
+	;관계가 나쁠 정도(수록) 노려지기 쉽다
+	관계성 = IS_COUNTRY(도시보유세력) ? 1500 + REL_HATE:군주:도시보유군주 + DIPLOMACY_HATE:도시보유세력 * 50 - REL_LIKE:군주:도시보유군주 # 3000
+	관계성 = MAX(관계성 * 100 / 3000, 1)
+	공격후보스코아:도시 = 공격후보스코아:도시 * 관계성 / 100
+
+	;직접 연결되지 않으면 2/3
+	공격후보스코아:도시 = 공격후보스코아:도시 * (TMP_CONNECTED_TO_US:세력:도시 + 2) / 3
+	;최대의 뚝 떨어진 영토에 대한 공격원의 뚝 떨어진 영토 사이즈의 비
+	공격후보스코아:도시 = 공격후보스코아:도시 * MAX(TMP_ENCLAVE_SIZE:세력:(TMP_IS_INVADABLE:세력:도시), 1) / TMP_MAX_ENCLAVE_SIZE:세력
+
+	;자국 쪽이 크면, 도시수의 차이 1에 대해 10%노리기 쉽게 한다
+	;자국 쪽이 작으면, 도시수의 차이 1에 대해 6%노리기 쉽게 한다
+	IF IS_COUNTRY(도시보유세력)
+		IF TMP_OWN_CITY:세력 > TMP_OWN_CITY:도시보유세력
+			공격후보스코아:도시 = 공격후보스코아:도시 + 공격후보스코아:도시 * (TMP_OWN_CITY:세력 - TMP_OWN_CITY:도시보유세력) * 10 / 100
+		ELSE
+			공격후보스코아:도시 = 공격후보스코아:도시 + 공격후보스코아:도시 * (TMP_OWN_CITY:도시보유세력 - TMP_OWN_CITY:세력) * 6 / 100
+		ENDIF
+		;도시 세력이 연합의 토벌대상이라면 공격 후보 스코아를 5배에
+		SIF TMP_COUNTRY_UNION_TARGET:세력 == 도시보유세력
+			공격후보스코아:도시 *= 5
+	;무소속 도시는 우선적으로 노린다
+	ELSE
+		공격후보스코아:도시 *= 2
+	ENDIF
+
+	;주인공의 도시에 대해서는 난이도 보정
+	SIF 도시보유세력 == CFLAG:MASTER:소속
+		공격후보스코아:도시 = 공격후보스코아:도시 * GET_DIFFICULTY_CORRECTION() / 100
+
+	;동맹이나 정전하고 싶은 상대의 도시라면 1/3에
+	SIF GROUPMATCH(CHECK_AI_DIPLOMACY_PLAN(세력, 도시보유세력), AI_외교계획_정전, AI_외교계획_동맹)
+		공격후보스코아:도시 /= 3
+
+	;특수 세력끼리는 바이어스가 걸린다	
+	SIF IS_SP_COUNTRY(세력) && IS_SP_COUNTRY(도시보유세력)
+		공격후보스코아:도시 /= 3
+
+	;중계지점을 경유하는 경우는 경시한다
+	SIF TMP_IS_BYPASS:세력:도시
+		공격후보스코아:도시 /= 2
+
+	;특히 초반은 고정되기 십상인 것으로 요동하게 한다
+	공격후보스코아:도시 = 공격후보스코아:도시 * RAND(80, 120) / 100
+NEXT
+
+;후보 상위 10개를 본다
+FOR 후보, 0, 10
+
+	공격후보 = FINDELEMENT(공격후보스코아, MAXARRAY(공격후보스코아))
+
+	;DEBUGPRINTFORML 공격 후보 %GET_CITYNAME(공격 후보)% 스코아{공격 후보 스코아:공격 후보}
+
+	;공격 후보가 아닌 것이라면 되돌린다
+	SIF 공격후보스코아:공격후보 == __INT_MIN__
+		BREAK
+
+	현재스코아 = 공격후보스코아:공격후보
+	공격후보스코아:공격후보 = __INT_MIN__
+
+	다음의스코아 = MAXARRAY(공격후보스코아)
+	;벌써 거기를 노리고 있는 부대를 찾는다
+	FOR 부대:1, 0, MAX_UNIT
+		SIF UNIT_SOLDIER:세력:(부대:1) <= 0
+			CONTINUE
+		SIF 부대:1 == 부대
+			CONTINUE
+		SIF UNIT_TARGET:세력:(부대:1) != 공격후보 && UNIT_POSITION:세력:(부대:1) != 공격후보
+			CONTINUE
+		;DEBUGPRINTFORML 벌써 노려지고 있다
+		다음의스코아 = 다음의스코아 * 15 / 10
+		;DEBUGPRINTFORML 현재 스코아{현재 스코아} 다음의 스코아{다음의 스코아}
+		;벌써 거기는 노려지고 있을까 자부대가 있어, 스코아가 다음의 녀석의 부대 하나에 대해 1.5배 없으면 되돌린다
+		SIF 현재스코아 < 다음의스코아
+			GOTO CANCEL
+	NEXT
+
+	도시보유세력 = CITY_OWNER:공격후보
+	도시보유군주 = GET_COUNTRY_BOSS(도시보유세력)
+
+	IF IS_COUNTRY(도시보유세력)
+		CALL CHECK_CITY_COMMANDER_BEST(공격후보, 1)
+		CALL SET_BATTLE_MIRROR_VAL(1, CITY_COMMANDER_BEST:0, CITY_COMMANDER_BEST:1, -1)
+		CALL BATTLE_PREPARE_VARS_EACH(1, 공격후보)
+	ELSE
+		CALL SET_BATTLE_MIRROR_VAL(1, -1, -1)
+		CALL BATTLE_PREPARE_VARS_EACH(1, 공격후보)
+	ENDIF
+
+	;이기고 있는 요소를 카운트
+	;카운트 = 0
+	;적부대 능력:0 = BATTLE_ATK:1
+	;적부대 능력:1 = BATTLE_DEF:1
+	;적부대 능력:2 = BATTLE_INT:1
+	;카운트 += (UNIT_SOLDIER:세력:부대 > CITY_SOLDIER:공격 후보)
+	;FOR LOCAL:1, 0, 3
+	;	카운트 +=자부대 능력:(LOCAL:1) > 적부대 능력:(LOCAL:1)
+	;NEXT
+
+	;;이기고 있는 요소가 일정 없으면 캔슬
+	;SIF 카운트 < 2
+	;	GOTO CALCEL
+	CALL MOVE_UNIT(세력, 부대, TMP_IS_INVADABLE:세력:공격후보, 1)
+	UNIT_TARGET:세력:부대 = 공격후보
+
+	;DEBUGPRINTFORML 공격 지점을 %GET_CITYNAME(UNIT_TARGET:세력:부대)%에 확정
+	;DEBUGPRINTFORML 출발 지점을 %GET_CITYNAME(UNIT_POSITION:세력:부대)%에 확정
+	BREAK
+	$CANCEL
+NEXT
+;DEBUGPRINTFORML 침공처:%GET_CITYNAME(UNIT_TARGET:세력:부대)% 위치:{UNIT_POSITION:세력:부대}
+$DONE
+;-----------------------------------------------
+;방위
+;-----------------------------------------------
+@SLG_AI_DEFENSE(세력)
+#DIM 세력
+#DIM 부대
+#DIM 방위스코아, MAX_CITY
+#DIM 방위스코아합계
+#DIM 초기병수
+#DIM 배분병수
+#DIM 도시수
+#DIM 도시
+#DIM 무장수
+#DIM 부대방위플래그, MAX_UNIT
+#DIM 포지션
+#DIM 항번
+VARSET 방위스코아합계
+VARSET 방위스코아, __INT_MIN__
+VARSET 부대방위플래그
+
+
+초기병수 = COUNTRY_SOLDIER:세력
+무장수 = TMP_GET_IS_FREE_NUM(세력)
+
+도시수 = 0
+;우선 스코아를 기록
+FOR 도시, 1, GET_CITY_NUM() + 1
+	;거기가 자세력의 도시에서, 적과 접속하고 있다면, 방위 스코아에 가산
+	;최대 뚝 떨어진 영토가 아니면, 최대 뚝 떨어진 영토에 대한 뚝 떨어진 영토 사이즈의 비만 경감된다
+	IF CITY_OWNER:도시 == 세력 && TMP_CITY_RISK:세력:도시 >= 2
+		;적이 있는 도시는 안 돼
+		SIF TMP_IS_STAY_ENEMY_UNIT(도시, 세력) == 1
+			CONTINUE
+		방위스코아:도시 = TMP_DEFFENSIVE_IMPORTANCE:세력:도시 * TMP_ENCLAVE_SIZE:세력:도시 / TMP_MAX_ENCLAVE_SIZE:세력
+		방위스코아합계 += 방위스코아:도시
+		도시수 ++
+	ENDIF
+NEXT
+
+SIF 도시수 == 0
+	RETURN
+;병력 배분＋무장 배분
+;무장 배분의 상황, 큰 순서에 취득합니다
+FOR 항번, 0, 도시수
+	도시 = FINDELEMENT(방위스코아, MAXARRAY(방위스코아))
+	SIF 방위스코아:도시 == __INT_MIN__
+		BREAK
+	SIF COUNTRY_SOLDIER:세력 <= 0
+		CONTINUE
+	;전체에 대한 스코아의 비율로
+	배분병수 = 초기병수 * 방위스코아:도시 / 방위스코아합계
+	CITY_SOLDIER:도시 = MIN(배분병수, COUNTRY_SOLDIER:세력)
+	COUNTRY_SOLDIER:세력 = MAX(COUNTRY_SOLDIER:세력 - 배분병수, 0)
+	;DEBUGPRINTFORML COUNTRY_SOLDIER:{COUNTRY_SOLDIER:세력}
+	;기존 부대의 배치
+	FOR 부대, 0, MAX_UNIT
+		SIF UNIT_SOLDIER:세력:부대 <= 0
+			CONTINUE
+		SIF UNIT_TARGET:세력:부대
+			CONTINUE
+		SIF TMP_IS_STAY_ENEMY_UNIT(UNIT_POSITION:세력:부대, 세력) == 1
+			CONTINUE
+		SIF TMP_COUNTRY_RELATION:세력:(CITY_OWNER:(UNIT_POSITION:세력:부대)) == 0
+			CONTINUE
+		SIF 부대방위플래그:부대
+			CONTINUE
+		CALL MOVE_UNIT(세력, 부대, 도시, 1)
+		부대방위플래그:부대 = 1
+		BREAK
+	NEXT
+	;무장 배치
+	;여유가 있으면 2명 배치
+	IF 무장수
+		CALL CHECK_CITY_COMMANDER_BEST(도시, TMP_GET_IS_FREE_NUM(세력) >= 도시수 + 1)
+		FOR 포지션, 0, VARSIZE("MAX_CITY_COMMANDER")
+			SIF CITY_COMMANDER_BEST:포지션 == -1
+				CONTINUE
+			무장수 --
+			;CREATE_IS_FREE_MAP를 부르는 편이 안전하지만, 여기서 부르기에는 늦다. IS_FREE_MAP를 직접 고쳐 쓰는 편이 빠르다
+			TMP_IS_FREE:(CITY_COMMANDER_BEST:포지션):0 = 2
+			CALL SET_CITY_COMMANDER(도시, 포지션, CITY_COMMANDER_BEST:포지션)
+		NEXT
+	ENDIF
+	방위스코아:도시 = __INT_MIN__
+	;DEBUGPRINTFORML %GET_CITYNAME(도시)%의 방위병 {CITY_SOLDIER:도시}
+NEXT

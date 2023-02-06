@@ -1,0 +1,107 @@
+﻿;-------------------------------------------------
+; 「소파에서 선잠」의 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA14_COM1_EXIST
+RETURN 1
+
+;-------------------------------------------------
+; 「소파에서 선잠」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA14_COM1_NAME
+RESULTS:0 '= "소파에서 선잠"
+RETURN 1
+
+;-------------------------------------------------
+; 「소파에서 선잠」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA14_COM1_CHECK(ARG:0)
+RETURN 1
+
+;-------------------------------------------------
+; 「소파에서 선잠」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA14_COM1_CHECKCHARA(ARG:0)
+
+SIF MASTER == ARG:0
+	RETURN 0
+SIF !TALENT:(ARG:0):주인 ;&& !TALENT:(ARG:0):각인
+	RETURN 0
+SIF CFLAG:(ARG:0):행동완료
+	RETURN 0
+SIF COOLTIME:(ARG:0):0
+	RETURN 0
+SIF IS_ANIMAL(ARG:0)
+	RETURN 0
+SIF CFLAG:(ARG:0):지배도 <= 0
+	RETURN 0
+;침실호출의 선택 가부 판정
+RESULT = 0
+CALL SHOP_LIFE_CHECKCHARA_NEYA(ARG:0)
+IF !RESULT
+	RETURN 0
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+; 「소파에서 선잠」의 메인 처리
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA14_COM1_MAIN
+#DIM L_COUNTER
+#DIM 대상
+
+;리셋트
+CALL COM_AUTO_RANDOMIZED_WEIGHTED_START
+
+;후보 추가
+FOR L_COUNTER, 0, CHARANUM
+	RESULT = 0
+	CALL SHOP_LIFE67_MAP1_AREA14_COM1_CHECKCHARA(L_COUNTER)
+	SIF !RESULT
+		CONTINUE
+	CALL COM_AUTO_RANDOMIZED_WEIGHTED_VALUE(L_COUNTER, CFLAG:L_COUNTER:지배도)
+NEXT
+
+;결과 취득
+대상 = COM_AUTO_RANDOMIZED_WEIGHTED_RESULT()
+
+CALL TRAIN_TARGET_SETTING(대상)
+
+FLAG:조교모드 = 조교_역조교통상
+FLAG:침실역조교 = 1
+FLAG:우후후플래그 = 1
+
+;행동 개시시의 공통 처리
+CALL START_TRAIN_COMMON
+
+CALL SHOP_LIFE67_MAP1_AREA14_COM1_TEXT(대상)
+WAIT
+
+LINES_SHOP = LINECOUNT
+
+RETURN 1
+
+;-------------------------------------------------
+; 묘사 1
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA14_COM1_TEXT(대상)
+#DIM 대상
+
+PRINTFORML  %조사처리(ANAME(MASTER),"가")% 소파에서 선잠 하고 있으면, 누군가에게 흔들어 깨워졌다
+WAIT
+PRINTL 
+PRINTFORML  일으켜 준 것은 %조사처리(ANAME(대상),"였")%다
+PRINTFORML  서려고 했지만 손발이 움직이지 않고, 보면 완전히 단단히 묶어지고 있었다
+PRINTFORML  %조사처리(ANAME(대상),"는")% 오락이 될 것 같은 『완구』를 손에 넣었다고 할듯한 웃는 얼굴이다
+WAIT
+PRINTL 
+IF GET_COUNTRY_BOSS(CFLAG:MASTER:소속) == MASTER
+	PRINTFORML  그러고 보니 오늘 아침, 청소를 위해서(때문에) 열쇠를 빌려 주었으면 좋겠다고 들어 맡기고 있었지만
+	PRINTFORML  계획적인 범행이었을까…
+ELSE
+	PRINTFORML  열쇠는 잠그어 있는 것 같다
+	PRINTFORML  청소를 위해서(때문에) 차 해 나오는 일이 있지만…
+ENDIF
+
+RETURN 0
+

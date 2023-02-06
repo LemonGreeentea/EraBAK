@@ -1,0 +1,680 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_TENTACLE_SOLDIERS_RATE()
+RETURN 20
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_TENTACLE_SOLDIERS_DECISION()
+;촉수의방이 필요
+SIF !ITEM:촉수의방
+	RETURN 0
+RETURN DAY >= 10
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_TENTACLE_SOLDIERS_GENRE()
+RETURN 데일리_장르_에로
+
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_TENTACLE_SOLDIERS()
+#DIM 병수
+#DIM 병수2
+
+
+CALL COLOR_PRINT(@"기르고 있는 촉수를 번식기를 향해지고 있습니다", 칼라_주의)
+PRINTFORML
+PRINTFORMW 오늘은 기르고 있는 촉수의 상태가 좋은 것 같다……
+PRINTFORMW 꼭 좋은 여성을 주면 그들의 아이로 증병이 믿을 수 있을지도 모른다
+PRINTL 
+CALL COLOR_PRINT(@"적당한 여성을 잡아 촉수의방에게 줄 수가 있습니다", 칼라_초록)
+PRINTFORML
+CALL COLOR_PRINT(@"일로 출생한 촉수를 사용해 병수를 늘릴 수가 있습니다만", 칼라_초록)
+PRINTFORML
+CALL COLOR_PRINT(@"비도인 행위인 것으로 주위의 평판이 내립니다", 칼라_초록)
+PRINTFORML
+PRINTFORML
+
+CALL ASK_YN("적당한 여자를 던져 넣는다", "그만둔다")
+IF RESULT == 0
+	;실행 코스트
+	FOR LOCAL:0, 0, MAX_COUNTRY
+		CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -20, 20)
+	NEXT
+	;적당한 여자를 던져 넣는다(촉수 제비
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 병사에 명해, 적당한 여자를 데려 초래하게 했다
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+				;인간이라고 상한이 높은, 요괴라면 하한이 높다
+				;요정은 상한도 하한도 낮지만 평판이 내리기 어렵다
+		SELECTCASE RAND:13
+			CASE 0
+				;사토아가씨
+				PRINTFORML 아직 어린, 흑발의 예쁜 사토아가씨를 병사는 데려 왔다
+				PRINTFORMW 무서워하고 있는 사토아가씨를 촉수의방에 던져 넣으면, 눈 깜짝할 순간에 촉수가 모였다
+				PRINTFORML 무섭다! 싫다아! (와)과 고통인 절규를 올리는 사토아가씨의 처녀는, 큰 촉수에 의해 일순간으로 찢어졌다
+				PRINTFORML 아픔에 떨리는 발밑에는 빨강과 흰색이 섞인 액체가, 뚝뚝 흘러 얼룩을 만들고 있다……
+				PRINTFORMW 
+				PRINTFORML 그 후 사토아가씨는 매일 범해지고 계속해, 깨끗한 흑발은 토해내진 정자로 데코레이트 되어 갔다
+				PRINTFORMW 몇 번이나 촉수를 임신해, 절정을 반복한 사토아가씨는, 촉수의 번식기가 끝나는 무렵은 전신을 성감대에 개발 되고 있었다……
+				PRINTFORML ·
+				PRINTFORML ·
+				PRINTFORMW ·
+				SELECTCASE RAND:5
+				CASE 0 TO 2
+					병수 = RAND(2000, 5000)
+					PRINTFORML 촉수의 번식기가 끝나, 사토아가씨는 해방된 것 같다
+					PRINTFORM 사토아가씨는 기간중에
+					CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 낳았습니다!
+				CASEELSE
+					병수 = RAND(3000, 8000)
+					PRINTFORML 준 사토아가씨와 촉수의 궁합이 좋고, 강인한 촉수가 출생한 것 같다
+					PRINTFORM 사토아가씨는 기간중에
+					CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 낳았습니다!!
+				ENDSELECT
+				PRINTFORML 
+				SELECTCASE RAND:5
+				CASE 0 TO 2
+					PRINTFORML 사토아가씨에게는 촉수에 의해 확실히 여자의 행복을 느끼게 하고 나서 집에 돌아가 주었습니다
+					PRINTFORM 당연히 %ANAME(MASTER)%의 세력의
+					CALL COLOR_PRINT(@"평판이 내렸습니다", 칼라_주의)
+					PRINTFORMW
+					FOR LOCAL:0, 0, MAX_COUNTRY
+						SIF IS_COUNTRY(LOCAL)
+							CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -150, 100)
+					NEXT
+				CASEELSE
+					병수2 = RAND(1000, 3500)
+					COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수2
+					PRINTFORML 사토아가씨는 해방된 뒤도 욱신거림이 멈추지 않고, 촉수의방에 다니게 된 것 같습니다
+					PRINTFORM 추가로
+					CALL COLOR_PRINT(@"병{병수2}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 사토아가씨는 낳았습니다!!
+				ENDSELECT
+			CASE 1
+				;사토아가씨
+				PRINTFORML 궁핍한 것 같은, 주근깨가 있는 사토아가씨를 병사는 데려 왔다
+				PRINTFORMW 무서워하고 있는 사토아가씨를 촉수의방에 던져 넣으면, 눈 깜짝할 순간에 촉수가 모였다
+				PRINTFORML 촉수들은 사토아가씨의 손발을 단단히 구속하고라고로부터, 정액으로 젖은 굵은 촉봉을 질에 주어
+				PRINTFORML 여기에서 내! (와)과 눈물을 흘려 저항을 하는 호리호리한 몸매를 한껏 범 끝까지 해냈다……
+				PRINTFORMW 
+				PRINTFORML 며칠 후, 생명의 소를 며칠 밤에 걸쳐 쏟아진 사토아가씨의 복부는 작게 부풀고 있었다
+				PRINTFORMW 새로운 생명을 낳기 위해서(때문에) 궁상스러웠던 신체는 촉수에 정돈되어 소리도 신체도 요염하게 되어 있었다……
+				PRINTFORML ·
+				PRINTFORML ·
+				PRINTFORMW ·
+				SELECTCASE RAND:5
+				CASE 0 TO 2
+					병수 = RAND(2000, 5000)
+					PRINTFORML 촉수의 번식기가 끝나, 사토아가씨는 해방된 것 같다
+					PRINTFORM 사토아가씨는 기간중에
+					CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 낳았습니다!
+				CASEELSE
+					병수 = RAND(3000, 8000)
+					PRINTFORML 촉수와 준 사토아가씨의 궁합이 좋고, 강인한 촉수가 출생한 것 같다
+					PRINTFORM 사토아가씨는 기간중에
+					CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 낳았습니다!!
+				ENDSELECT
+				PRINTFORML 
+				SELECTCASE RAND:5
+				CASE 0 TO 2
+					PRINTFORML 사토아가씨는 촉수의 힘으로 건강한 몸으로 하고 나서 집에 돌아가 주었습니다
+					PRINTFORM 하지만 유감스럽게도 %ANAME(MASTER)%의 세력의
+					CALL COLOR_PRINT(@"평판이 내렸습니다", 칼라_주의)
+					PRINTFORMW
+					FOR LOCAL:0, 0, MAX_COUNTRY
+						SIF IS_COUNTRY(LOCAL)
+							CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -150, 100)
+					NEXT
+				CASEELSE
+					병수2 = RAND(1000, 3500)
+					COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수2
+					PRINTFORML 사토아가씨는 촉수에 매료되어 해방된 뒤도 방에 다니게 된 것 같습니다
+					PRINTFORM 추가로
+					CALL COLOR_PRINT(@"병{병수2}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 사토아가씨는 낳았습니다!!
+				ENDSELECT
+			CASE 2
+				;사토아가씨(심기앵)
+				PRINTFORML 가슴의 큰, 판매원 모습의 사토아가씨를 병사는 데려 왔다
+				PRINTFORMW 어안이 벙벙히 하는 사토아가씨를 촉수의방에 던져 넣으면, 눈 깜짝할 순간에 촉수가 모였다
+				PRINTFORML 닫혀진 문을 두드리는 사냥감의 옷으로 촉수는 비집고 들어가, 미약을 분비하면서 훌륭한 가슴이나 엉덩이를 반죽해 돌렸다
+				PRINTFORML 그리고 대여섯 시간에 걸쳐 절정을 계속 시킨 뒤로, 주륵주륵의 질을 촉수가 단번에 관철해 갔다……
+				PRINTFORMW 
+				PRINTFORML 그 후 사토아가씨는 쭉 촉수에 껴안을 수 있어 몇 번이나 범해져 자식을 부어 넣어지고 계속했다
+				PRINTFORMW 그리고 며칠 후, 촉수의 성욕이 들어가는 무렵에는 스스로 정자를 갖고 싶어하는 것처럼 되어 있었다……
+				PRINTFORML ·
+				PRINTFORML ·
+				PRINTFORMW ·
+				SELECTCASE RAND:5
+				CASE 0 TO 2
+					병수 = RAND(2000, 5000)
+					PRINTFORML 촉수의 번식기가 끝나, 사토아가씨는 해방된 것 같다
+					PRINTFORM 사토아가씨는 기간중에
+					CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 낳았습니다!
+				CASEELSE
+					병수 = RAND(3000, 8000)
+					PRINTFORML 촉수와 준 사토아가씨의 궁합이 좋고, 강인한 촉수가 출생한 것 같다
+					PRINTFORM 사토아가씨는 기간중에
+					CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 낳았습니다!!
+				ENDSELECT
+				PRINTFORML 
+				SELECTCASE RAND:5
+				CASE 0 TO 2
+					PRINTFORML 사토아가씨는 촉수에 의해 봉사의 마음이 교육되고 나서 집에 돌아가 주었습니다
+					PRINTFORM 하지만 주위의 접수가 좋지 않았던 것일까%ANAME(MASTER)%의 세력의
+					CALL COLOR_PRINT(@"평판이 내렸습니다", 칼라_주의)
+					PRINTFORMW
+					FOR LOCAL:0, 0, MAX_COUNTRY
+						SIF IS_COUNTRY(LOCAL)
+							CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -150, 100)
+					NEXT
+				CASEELSE
+					병수2 = RAND(1000, 3500)
+					COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수2
+					PRINTFORML 사토아가씨는 해방된 뒤도 욱신거림이 멈추지 않고, 촉수의방에 다니게 된 것 같습니다
+					PRINTFORM 추가로
+					CALL COLOR_PRINT(@"병{병수2}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 사토아가씨는 낳았습니다!!
+				ENDSELECT
+			CASE 3
+				;가정부
+				PRINTFORML 최근 미스가 많은 가정부를 병사는 데려 왔다
+				PRINTFORMW 가정부를 촉수의방에 던져 넣으면, 눈 깜짝할 순간에 촉수가 모였다
+				PRINTFORML 촉수는 울어 용서를 비는 가정부의 옷을 찌릿찌릿 찢으면서, 대자에 사지를 열게 하면
+				PRINTFORML 클리와 유두를 계속 켠 채로, 녹진녹진 꿀의 새는 암컷구멍을 차분히 탐냈다……
+				PRINTFORMW 
+				PRINTFORML 촉수의방에 있는 동안, 가정부는 신음소리를 올리면서 격렬하게 흐트러지고 계속 미쳤다
+				PRINTFORMW 촉수에 눌러 범해진 자세로, 한층 더 쾌락의 분류를 요구해 스스로 움직여 본능대로 성교를 계속했다……
+				PRINTFORML ·
+				PRINTFORML ·
+				PRINTFORMW ·
+				SELECTCASE RAND:5
+				CASE 0 TO 2
+					병수 = RAND(2000, 5000)
+					PRINTFORML 촉수의 번식기가 끝을 맞이한 것 같습니다
+					PRINTFORM 가정부는 기간중에
+					CALL COLOR_PRINT(@"병{병수}에 상당한다", 칼라_초록)
+					PRINTFORMW 촉수를 낳았습니다!
+					PRINTFORML 
+				CASEELSE
+					병수 = RAND(3000, 8000)
+					PRINTFORML 촉수와 준 가정부의 궁합이 좋고, 강인한 촉수가 출생한 것 같다
+					PRINTFORM 가정부는 기간중에
+					CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 낳았습니다!!
+				ENDSELECT
+				PRINTFORML 
+				SELECTCASE RAND:5
+				CASE 0 TO 2
+					PRINTFORML 가정부는 불쌍히 여긴 동료의 안내로 방으로부터 탈주한 것 같습니다
+					PRINTFORM 소문이 퍼져 %ANAME(MASTER)%의 세력의
+					CALL COLOR_PRINT(@"평판이 내렸습니다", 칼라_주의)
+					PRINTFORMW
+					FOR LOCAL:0, 0, MAX_COUNTRY
+						SIF IS_COUNTRY(LOCAL)
+							CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -150, 100)
+					NEXT
+				CASEELSE
+					병수2 = RAND(1000, 3500)
+					COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수2
+					PRINTFORML 가정부는 촉수에 마음이 사로잡혀 종종 방에 다니게 된 것 같습니다
+					PRINTFORM 추가로
+					CALL COLOR_PRINT(@"병{병수2}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 가정부는 낳았습니다!!
+				ENDSELECT
+			CASE 4
+				;녀 밀정
+				PRINTFORML 궁내에 잠복하고 있던 적국의 여자 밀정을 병사는 데려 왔다
+				PRINTFORMW 노려보고 있는 밀정을 촉수의방에 던져 넣으면, 눈 깜짝할 순간에 촉수가 모였다
+				PRINTFORML 멈추어라! 차라리 죽여라! 라고 외치는 여자 밀정을 촉수는 상냥하게 공중에 안아 올리면
+				PRINTFORML 점액투성이의 촉수로 유두나 비부의 돌기를 애무하면서, 몇 번이나 교미를 반복했다……
+				PRINTFORMW 
+				PRINTFORML 밀정은 첫날은 강인한 정신력으로 쾌락을 누르고 있었지만, 아침저녁 계속해 자식을 따라지는 동안에 고가 빗나감
+				PRINTFORMW 가혹한 임무를 찾고 있던 반동인가, 최종적으로는 가련한 소리를 내 촉수에 응석부리게 되어 갔다……
+				PRINTFORML ·
+				PRINTFORML ·
+				PRINTFORMW ·
+				SELECTCASE RAND:5
+				CASE 0 TO 2
+					병수 = RAND(2000, 5000)
+					PRINTFORML 촉수의 번식기가 끝을 맞이한 것 같습니다
+					PRINTFORM 여자 밀정은 기간중에
+					CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 낳았습니다!
+				CASEELSE
+					병수 = RAND(3000, 8000)
+					PRINTFORML 촉수와 준 여자 밀정의 궁합이 좋고, 강인한 촉수가 출생한 것 같다
+					PRINTFORM 여자 밀정은 기간중에
+					CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 낳았습니다!!
+				ENDSELECT
+				PRINTFORML 
+				SELECTCASE RAND:5
+				CASE 0 TO 2
+					PRINTFORML 적국에 의해 어느 사이에인가 여자 밀정은 방으로부터 데리고 나가져 있어
+					PRINTFORM 정보를 흐르게 된 것 같아 %ANAME(MASTER)%의 세력의
+					CALL COLOR_PRINT(@"평판이 내렸습니다", 칼라_주의)
+					PRINTFORMW
+					FOR LOCAL:0, 0, MAX_COUNTRY
+						SIF IS_COUNTRY(LOCAL)
+							CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -150, 100)
+					NEXT
+				CASEELSE
+					병수2 = RAND(1000, 3500)
+					COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수2
+					PRINTFORML 적국은 정보 조작을 실시해 밀정의 존재를 비벼 지운 것 같습니다
+					PRINTFORM 갈 곳을 없앤 밀정은 촉수에 위로받아 추가로
+					CALL COLOR_PRINT(@"병{병수2}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 임신했습니다!!
+				ENDSELECT
+			CASE 5
+				;외래인(여자)
+				PRINTFORML 어딘가에서인가 헤맨 외래인의 소녀를 병사는 데려 왔다
+				PRINTFORMW 아우성치는 소녀를 촉수의방에 던져 넣으면, 눈 깜짝할 순간에 촉수가 모였다
+				PRINTFORML 미지의 공포에무서워한다소녀를 촉수는 안으면, 점액을 날리면서 촉봉을 몇 번이나 질에 쳐박았다
+				PRINTFORML 촉수는 서로 달라붙는 정액을 일제히 사정해, 외래인의 염기도 자궁도 희게 염색해 내 이성을 빼앗아 간다……
+				PRINTFORMW 
+				PRINTFORML 인외에 대한 내성이 없는 소녀는 촉수의 음기에 충당되어 눈 깜짝할 순간에 모랄이 망가져 버린 것 같다
+				PRINTFORMW 소녀는 며칠도 하지 않는 동안에 촉수에 길러 말해져 얼굴을 녹게 하면서 촉수에 범해지고 계속했다……
+				PRINTFORML ·
+				PRINTFORML ·
+				PRINTFORMW ·
+				SELECTCASE RAND:5
+				CASE 0 TO 2
+					병수 = RAND(2000, 5000)
+					PRINTFORML 촉수의 번식기가 끝을 맞이한 것 같습니다
+					PRINTFORM 외래인의 소녀는 기간중에
+					CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 낳았습니다!
+				CASEELSE
+					병수 = RAND(3000, 8000)
+					PRINTFORML 촉수와 준 외래인의 궁합이 좋고, 강인한 촉수가 출생한 것 같다
+					PRINTFORM 외래인은 기간중에
+					CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 낳았습니다!!
+				ENDSELECT
+				PRINTFORML 
+				SELECTCASE RAND:5
+				CASE 0 TO 1
+					PRINTFORML 어느 날 확인하면 외래인의 소녀는 촉수의방으로부터 없게 되고 있었습니다
+					PRINTFORM 데리고 나간 사람이 이야기를 넓혔는가 %ANAME(MASTER)%의 세력의
+					CALL COLOR_PRINT(@"조금 평판이 내렸습니다", 칼라_주의)
+					PRINTFORMW
+					FOR LOCAL:0, 0, MAX_COUNTRY
+						SIF IS_COUNTRY(LOCAL)
+							CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -150, 100)
+					NEXT
+				CASEELSE
+					병수2 = RAND(1000, 3500)
+					COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수2
+					PRINTFORML 촉수는 외래인의 소녀를 마음에 들어, 방에서 둘러싸 공동 생활을 시작하기로 한 것 같습니다 
+					PRINTFORM 촉수에 시집가기한 외래인은, 더욱
+					CALL COLOR_PRINT(@"병{병수2}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 임신했습니다!!
+				ENDSELECT
+			CASE 6
+				;--여기로부터 요괴--
+				;모브 갓파 abc(가시나무 명인)
+				SELECTCASE RAND:3
+				CASE 0
+					PRINTFORML 그쯤 잠복하고 있던 흑발의 갓파아가씨를 병사는 데려 왔다
+				CASE 1
+					PRINTFORML 그쯤 잠복하고 있던 안경의 갓파아가씨를 병사는 데려 왔다
+				CASE 2
+					PRINTFORML 그쯤 잠복하고 있던 금발의 갓파아가씨를 병사는 데려 왔다
+				ENDSELECT
+				PRINTFORMW 항의하는 갓파아가씨를 촉수의방에 던져 넣으면, 눈 깜짝할 순간에 촉수가 모였다
+				PRINTFORML 갓파아가씨는 도구를 사용해 날뛰었지만, 다리를 잡아지고 나서 단번에 호장의 촉수에 끌어들여지고
+				PRINTFORML 미약성분을 가지는 점액류중(안)에서 쿨렁쿨렁 라는 소리를 내면서 양구멍을 범해지고 계속했다……
+				PRINTFORMW 
+				PRINTFORML 그리고의 그녀의 생활은 아침에 미약의 풀에서 빠져, 낮으로밖에 나와서는 쑤시는 신체를 농락해라
+				PRINTFORMW 밤에는 완성된 신체로 촉수를 대접해, 그 몸에 자식을 따라진다는 것이 되었다……
+				PRINTFORML ·
+				PRINTFORML ·
+				PRINTFORMW ·
+				SELECTCASE RAND:5
+				CASE 0 TO 2
+				병수 = RAND(3000, 4000)
+					PRINTFORML 촉수의 번식기가 끝을 맞이한 것 같습니다
+					PRINTFORM 갓파아가씨는 기간중에
+					CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 출산했습니다!
+				CASEELSE
+				병수 = RAND(4000, 7000)
+					COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수2
+					PRINTFORML 갓파아가씨는 강한 요력을 가지는 요괴였던 것 같고, 강인한 촉수가 출생한 것 같다
+					PRINTFORM 갓파아가씨는
+					CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 출산했습니다!!
+				ENDSELECT
+				PRINTFORML 
+				SELECTCASE RAND:5
+				CASE 0 TO 2
+					PRINTFORML 어느 날 확인하면 방의 문이 부수어져 갓파아가씨는 탈주하고 있었습니다
+					PRINTFORM 환상향에 소문이 퍼져 %ANAME(MASTER)%의 세력의
+					CALL COLOR_PRINT(@"평판이 내렸습니다", 칼라_주의)
+					PRINTFORMW
+					FOR LOCAL:0, 0, MAX_COUNTRY
+						SIF IS_COUNTRY(LOCAL)
+							CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -150, 100)
+					NEXT
+				CASEELSE
+					병수2 = RAND(1500, 2500)
+					COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수2
+					PRINTFORML 동료를 구해 내려고 했는지, 두 명정도 갓파가 촉수에 잡히고 있었습니다
+					PRINTFORM 촉수는 세 명의 갓파와 사이 좋게 난교해,
+					CALL COLOR_PRINT(@"병{병수2}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 임신하게 했습니다!!
+				ENDSELECT
+			CASE 7
+				;변하고 여우(가시나무 명인)
+				PRINTFORML 궁내에서 가족으로 변하고 있던 호낭을 병사는 데려 왔다
+				PRINTFORMW 구속된 호낭을 촉수의방에 던져 넣으면, 눈 깜짝할 순간에 촉수가 모였다
+				PRINTFORML 촉수는 눈물을 머금은 호낭의 다리를 잡아 거꾸로 매달아 올리면, 천정으로부터 촉수를 질에 찔러,
+				PRINTFORML 콜! 콜! 그렇다는 소리와 함께 맥동 해, 달라붙는 정액을 호낭의 자궁에 쏟았다……
+				PRINTFORMW 
+				PRINTFORML 며칠 후, 호낭은 몇번이나 촉수를 임신해도 이성을 유지해 작게 저항을 하고 있었다
+				PRINTFORMW 하지만 그것은 강한 개체를 남기고 싶다고 생각하는 촉수를 자극한 것 같아, 촉수의 번식기는 보다 긴 것이 되었다……
+				PRINTFORML ·
+				PRINTFORML ·
+				PRINTFORMW ·
+				SELECTCASE RAND:5
+				CASE 0 TO 2
+				병수 = RAND(3000, 4000)
+					PRINTFORML 촉수의 번식기가 끝을 맞이한 것 같습니다
+					PRINTFORM 호낭은 기간중에
+					CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 출산했습니다!
+				CASEELSE
+				병수 = RAND(4000, 7000)
+					COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수2
+					PRINTFORML 호낭은 강한 요력을 가지는 요괴였던 것 같고, 강인한 촉수가 출생한 것 같다
+					PRINTFORM 호낭은
+					CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 출산했습니다!!
+				ENDSELECT
+				PRINTFORML 
+				SELECTCASE RAND:5
+				CASE 0 TO 2
+					PRINTFORML 어느 날 확인하면 호낭은 연기와 사라지고 있었습니다
+					PRINTFORM 환상향에 소문이 퍼져 %ANAME(MASTER)%의 세력의
+					CALL COLOR_PRINT(@"평판이 내렸습니다", 칼라_주의)
+					PRINTFORMW
+					FOR LOCAL:0, 0, MAX_COUNTRY
+						SIF IS_COUNTRY(LOCAL)
+							CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -150, 100)
+					NEXT
+				CASEELSE
+					병수2 = RAND(1500, 2500)
+					COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수2
+					PRINTFORML 촉수는 호낭을 마음에 들어, 동거(同棲) 하는 일로 한 것 같습니다
+					PRINTFORM 방의 거주자가 된 호낭은 촉수와 사랑을 길러, 추가로
+					CALL COLOR_PRINT(@"병{병수2}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 임신했습니다!!
+				ENDSELECT
+			CASE 8
+				;요괴토끼
+				PRINTFORML 함정에 빠지고 있던 요괴토끼의 아가씨를 병사는 데려 왔다
+				PRINTFORMW 저항하는 토낭을 촉수의방에 던져 넣으면, 눈 깜짝할 순간에 촉수가 모였다
+				PRINTFORML 촉수는 암컷구멍을 관철해 단번에 자궁까지 침입하면, 뜨거운 아양 물약을 대량으로 방출했다
+				PRINTFORML 그리고 복부로부터 발정한 요괴토끼를 몇 번이나 뛰게 해 그대로 정자를 흘려 넣어 갔다……
+				PRINTFORMW 
+				PRINTFORML 원래 성욕이 높은 토끼는 눈 깜짝할 순간에 모판 생활의 쾌락에 빠져 버린 것 같다
+				PRINTFORMW 번식기의 사이, 촉수의방으로부터는 아침부터 밤까지 핑크색의 사랑스러운 신음소리가 새고 영향을 주고 있었다……
+				PRINTFORML ·
+				PRINTFORML ·
+				PRINTFORMW ·
+				SELECTCASE RAND:5
+				CASE 0 TO 2
+				병수 = RAND(3000, 4000)
+					PRINTFORML 촉수의 번식기가 끝을 맞이한 것 같습니다
+					PRINTFORM 요괴토끼의 아가씨는 기간중에
+					CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 출산했습니다!
+				CASEELSE
+				병수 = RAND(4000, 7000)
+					COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수2
+					PRINTFORML 요괴토끼의 아가씨는 강한 요력을 가지는 개체였던 것 같고, 강인한 촉수가 출생한 것 같다
+					PRINTFORM 요괴토끼의 아가씨는
+					CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 출산했습니다!!
+				ENDSELECT
+				PRINTFORML 
+				SELECTCASE RAND:5
+				CASE 0 TO 2
+					PRINTFORML 어느 날 확인하면 많은 발자국과 함께 요괴토끼는 탈주하고 있었습니다
+					PRINTFORM 환상향에 소문이 퍼져 %ANAME(MASTER)%의 세력의
+					CALL COLOR_PRINT(@"평판이 내렸습니다", 칼라_주의)
+					PRINTFORMW
+					FOR LOCAL:0, 0, MAX_COUNTRY
+						SIF IS_COUNTRY(LOCAL)
+							CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -150, 100)
+					NEXT
+				CASEELSE
+					병수2 = RAND(1500, 2500)
+					COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수2
+					PRINTFORML 동료를 구해 내려고 했는지, 수필의 토낭이 촉수에 잡히고 있었습니다
+					PRINTFORM 촉수는 새롭게 잡은 토낭과도 교미를 실시해,
+					CALL COLOR_PRINT(@"병{병수2}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 임신하게 했습니다!!
+				ENDSELECT
+			CASE 9
+				;좌부동자(가시나무 명인)
+				PRINTFORML 외의 세계 물들고 한 좌부동자를 병사는 데려 왔다
+				PRINTFORMW 싫어한다좌부동자를 촉수의방에 던져 넣으면, 눈 깜짝할 순간에 촉수가 모였다
+				PRINTFORML 촉수들은 앞 다투어 균열에 쇄도해, 얽혀 페니스의 형태를 취하면 억지로 질내에 비집고 들어간다
+				PRINTFORML 파과의 아픔에 좌부동자는 비명을 올렸지만, 촉수들은 상관도 하지 않고 페니스를 쳐박고 정자를 털어 놓았다……
+				PRINTFORMW 
+				PRINTFORML 며칠 후, 좌부동자는 촉수들은 서로 겹쳐 완성된 거인에게 튼튼 껴안겨지고 있었다
+				PRINTFORMW 복수의 촉수가 합쳐져 할 수 있던 거인은 외침과 같이 죽는 소리를 해, 흐느껴 우는 좌부동자를 계속 범했다……
+				PRINTFORML ·
+				PRINTFORML ·
+				PRINTFORMW ·
+				SELECTCASE RAND:5
+				CASE 0 TO 2
+					병수 = RAND(3000, 4000)
+					PRINTFORML 촉수의 번식기가 끝을 맞이한 것 같습니다
+					PRINTFORM 좌부동자는 기간중에
+					CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 출산했습니다!
+				CASEELSE
+					병수 = RAND(4000, 7000)
+					PRINTFORML 촉수와 준 좌부동자의 궁합이 좋고, 강인한 촉수가 출생한 것 같다
+					PRINTFORM 좌부동자는 기간중에
+					CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 낳았습니다!!
+				ENDSELECT
+				PRINTFORML 
+				SELECTCASE RAND:5
+				CASE 0 TO 2
+					PRINTFORML 어느 날 확인하면 좌부동자는 어느 사이에인가 없게 되고 있었습니다
+					PRINTFORM 좌부동자의 능력의 영향인 것인가 %ANAME(MASTER)%의 세력의
+					CALL COLOR_PRINT(@"굉장히 평판이 내렸습니다", 칼라_경고)
+					PRINTFORMW
+					FOR LOCAL:0, 0, MAX_COUNTRY
+						SIF IS_COUNTRY(LOCAL)
+							CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -150, 100)
+					NEXT
+				CASEELSE
+					병수2 = RAND(1500, 2500)
+					COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수2
+					PRINTFORML 촉수는 좌부동자를 마음에 들어, 방 안에서 기르는 일로 한 것 같습니다
+					PRINTFORM 방의 거주자가 된 좌부동자는 촉수와 사이 좋게 살아, 추가로
+					CALL COLOR_PRINT(@"병{병수2}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 임신했습니다!!
+				ENDSELECT
+			CASE 10
+				;--여기로부터 요정--
+				;요정's
+				병수 = RAND(500, 1000)
+				PRINTFORML 그쯤 있던 몇 마리의 요정들을 병사는 데려 왔다
+				PRINTFORMW 요정들을 모아 촉수의방에 던져 넣으면, 눈 깜짝할 순간에 촉수가 모였다
+				PRINTFORML 필사적으로 도망치는 요정을 촉수는 한쪽 끝을 범해 가 달라붙는 정액을 신체로 뿌리고 있다
+				PRINTFORML 요정들이 비명을 올려, 정신을 잃어도 번식기 한가운데의 촉수의 움직임은 멈추는 일은 없었다……
+				PRINTFORMW 
+				PRINTFORML 며칠 후, 요정들의 작은 신체는 방안의 촉수에 희롱해져 암컷으로서 감성을 개발 되고 있었다
+				PRINTFORMW 몇시 밖에 비명은 교성으로 바뀌고 있어 방에는 사랑스러운 코러스가 울려 퍼지고 있었다……
+				PRINTFORML ·
+				PRINTFORML ·
+				PRINTFORMW ·
+				PRINTFORML 촉수의 번식기가 끝을 맞이한 것 같습니다
+				PRINTFORM 요정들은 기간중에
+				CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+				PRINTFORMW 를 낳았습니다!
+				PRINTFORML 
+				SELECTCASE RAND:4
+				CASE 0
+					병수2 = RAND(500, 1000)
+					COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수2
+					PRINTFORML 더욱 발정한 요정들은 스스로 촉수를 사용해 서로 범해를 하고 있어 
+					PRINTFORM 추가로
+					CALL COLOR_PRINT(@"병{병수2}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 요정들은 임신했습니다!
+				CASE 1
+					PRINTFORML 요정은 어느새인가 한 번휴식이 되어 사라지고 있었습니다
+					PRINTFORM 부활한 뒤로 범해진 원한만은 기억하고 있던 것 같고,
+					CALL COLOR_PRINT(@"조금 평판이 내렸습니다", 칼라_주의)
+					PRINTFORMW
+					FOR LOCAL:0, 0, MAX_COUNTRY
+						SIF IS_COUNTRY(LOCAL)
+							CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -150, 100)
+					NEXT
+				CASE 2
+					PRINTFORML 요정은 어느새인가 한 번휴식이 되어 사라지고 있었습니다
+					PRINTFORMW 부활한 뒤는 범해진 원한을 잊어 버린 것 같습니다
+				CASE 3
+				;요정만 초라한 것도 유감인 것으로 로망 맞아 넣어 둔다
+					병수2 = RAND(5000, 8000)
+					COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수2
+					PRINTFORM 자연의 구현인 요정의 태내로부터 출생한 촉수는
+					CALL COLOR_PRINT(@"돌연변이", 칼라_초록)
+					PRINTFORML 를 일으킨 것 같습니다!!
+					PRINTFORM 출생한 촉수는 나중에
+					CALL COLOR_PRINT(@"병{병수2}에 상당하는 힘", 칼라_초록)
+					PRINTFORMW 를 발휘하게 되었습니다!!!
+				ENDSELECT
+			CASE 11
+				;메이드 요정
+				병수 = RAND(500, 1000)
+				PRINTFORML 금발의 메이드의 모습을 한 요정을 병사는 데려 왔다
+				PRINTFORMW 메이드 요정을 촉수의방에 던져 넣으면, 눈 깜짝할 순간에 촉수가 모였다
+				PRINTFORML 거절하는 메이드 요정의 균열은 가는 몇도 촉수 잡아져 육벽을 좌우에 열렸다
+				PRINTFORML 그리고 자궁두가 뻔히 보임이 된 암컷구멍에 향해, 수십개의 촉수가 요정을 임신하게 할 수 있도록 능욕을 개시했다……
+				PRINTFORMW 
+				PRINTFORML 며칠 후, 촉수의방의 중앙넌더리나고와 복부가 부푼 메이드 요정이 자리잡고 있었다
+				PRINTFORMW 단순한 요정으로 있던 그녀는 촉수를 낳는 것을 행복을 기억해, 새로운 생명의 탄생을 계속 기다리고 있었다……
+				PRINTFORML ·
+				PRINTFORML ·
+				PRINTFORMW ·
+				PRINTFORML 촉수의 번식기가 끝을 맞이한 것 같습니다
+				PRINTFORM 메이드 요정은 기간중에
+				CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+				PRINTFORMW 를 낳았습니다!
+				PRINTFORML 
+				SELECTCASE RAND:4
+				CASE 0
+					병수2 = RAND(500, 1000)
+					COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수2
+					PRINTFORML 메이드 요정은 촉수의 포로가 되어 방에 정착한 것 같다
+					PRINTFORM 추가로
+					CALL COLOR_PRINT(@"병{병수2}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 메이드 요정은 임신했습니다!
+				CASE 1
+					PRINTFORML 메이드 요정은 어느새인가 한 번휴식이 되어 사라지고 있었습니다
+					PRINTFORM 부활한 뒤로 범해진 원한만은 기억하고 있던 것 같고,
+					CALL COLOR_PRINT(@"조금 평판이 내렸습니다", 칼라_주의)
+					PRINTFORMW
+					FOR LOCAL:0, 0, MAX_COUNTRY
+						SIF IS_COUNTRY(LOCAL)
+							CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -150, 100)
+					NEXT
+				CASE 2
+					PRINTFORML 메이드 요정은 어느새인가 한 번휴식이 되어 사라지고 있었습니다
+					PRINTFORMW 부활한 뒤는 범해진 원한을 잊어 버린 것 같습니다
+				CASE 3
+				;요정만 초라한 것도 유감인 것으로 로망 맞아 넣어 둔다
+					병수2 = RAND(5000, 8000)
+					COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수2
+					PRINTFORM 자연의 구현인 요정의 태내로부터 출생한 촉수는
+					CALL COLOR_PRINT(@"돌연변이", 칼라_초록)
+					PRINTFORML 를 일으킨 것 같습니다!!
+					PRINTFORM 출생한 촉수는 나중에
+					CALL COLOR_PRINT(@"병{병수2}에 상당하는 힘", 칼라_초록)
+					PRINTFORMW 를 발휘하게 되었습니다!!!
+				ENDSELECT
+			CASE 12
+				;해바라기 요정
+				병수 = RAND(500, 1000)
+				PRINTFORML 해바라기를 껴안은 요정을 병사는 데려 왔다
+				PRINTFORMW 바동바동 할 틈 깨어 요정을 촉수의방에 던져 넣으면, 눈 깜짝할 순간에 촉수가 모였다
+				PRINTFORML 촉수는 작은 암컷구멍에 비집고 들어가, 움츠러들 틈 깨어 요정을 힘이 나는 것에 범해
+				PRINTFORML 주위의 촉수는 비같이 점착질인 정자를 새하얀 드레스에 계속 뿌렸다……
+				PRINTFORMW 
+				PRINTFORML 며칠 후, 주위의 요기를 들이마셔 촉수에 변질한 해바라기에 요정은 휘감겨지고 있었다
+				PRINTFORMW 흰 드레스를 흉하로부터 찢어져 노출한 볼록 작은 배를 해바라기는 사랑스럽게 더듬었다……
+				PRINTFORML ·
+				PRINTFORML ·
+				PRINTFORMW ·
+				PRINTFORML 촉수의 번식기가 끝을 맞이한 것 같습니다
+				PRINTFORM 해바라기 요정은 기간중에
+				CALL COLOR_PRINT(@"병{병수}에 상당하는 촉수", 칼라_초록)
+				PRINTFORMW 를 낳았습니다!
+				PRINTFORML 
+				SELECTCASE RAND:4
+				CASE 0
+					병수2 = RAND(500, 1000)
+					COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수2
+					PRINTFORML 해바라기 요정은 촉수의 포로가 되어 방에 정착한 것 같다
+					PRINTFORM 추가로
+					CALL COLOR_PRINT(@"병{병수2}에 상당하는 촉수", 칼라_초록)
+					PRINTFORMW 를 해바라기 요정은 임신했습니다!
+				CASE 1
+					PRINTFORML 해바라기 요정은 어느새인가 한 번휴식이 되어 사라지고 있었습니다
+					PRINTFORM 부활한 뒤로 범해진 원한만은 기억하고 있던 것 같고,
+					CALL COLOR_PRINT(@"조금 평판이 내렸습니다", 칼라_주의)
+					PRINTFORMW
+					FOR LOCAL:0, 0, MAX_COUNTRY
+						SIF IS_COUNTRY(LOCAL)
+							CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -150, 100)
+					NEXT
+				CASE 2
+					PRINTFORML 해바라기 요정은 어느새인가 한 번휴식이 되어 사라지고 있었습니다
+					PRINTFORMW 부활한 뒤는 범해진 원한을 잊어 버린 것 같습니다
+				CASE 3
+				;요정만 초라한 것도 유감인 것으로 로망 맞아 넣어 둔다
+					병수2 = RAND(5000, 8000)
+					COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수2
+					PRINTFORM 자연의 구현인 요정의 태내로부터 출생한 촉수는
+					CALL COLOR_PRINT(@"돌연변이", 칼라_초록)
+					PRINTFORML 를 일으킨 것 같습니다!!
+					PRINTFORM 출생한 촉수는 나중에
+					CALL COLOR_PRINT(@"병{병수2}에 상당하는 힘", 칼라_초록)
+					PRINTFORMW 를 발휘하게 되었습니다!!!
+				ENDSELECT
+			ENDSELECT
+	COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수
+ELSEIF RESULT == 1
+	PRINTFORMW 그만두었다
+ENDIF
+RETURN 1

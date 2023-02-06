@@ -1,0 +1,148 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_DOCTOR_DRUG_RATE()
+RETURN 40
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_DOCTOR_DRUG_DECISION()
+;일행력 소속으로 포로가 아닌 약물의존(CFLAG 쪽) 소지자
+LOCAL:1 = 0
+FOR LOCAL:0, 0, CHARANUM
+	SIF (CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속 && !CFLAG:(LOCAL:0):포로처) && (CFLAG:(LOCAL:0):약물의존)
+		LOCAL:1 ++
+NEXT
+SIF LOCAL:1 < 1
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_DOCTOR_DRUG_GENRE()
+RETURN 데일리_장르_트래이너
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_DOCTOR_DRUG()
+#DIM 대상
+
+CALL COLOR_PRINT(@"외계의 의사가 방문해 왔습니다", 칼라_주의)
+PRINTFORML
+PRINTFORMW 「여어」
+PRINTFORMW 「약에 손낸 녀석이 있다 라고 (들)물었기 때문에 왔다. 나는 의사다」
+PRINTFORMW 「인생 붕괴하기 전에, 저런 것과는 빨리 인연을 잘라 버려라」
+PRINTFORMW 「나의 치료법이라면, 약에의 의존을 끊을 수가 있다」
+PRINTFORMW 「뭐, 미인가인 방식이지만. 어때?」
+PRINTL 
+CALL SINGLE_DRAWLINE
+
+CALL SELECT_CHARA_LIST_ONLY_LOGIC_SEX("DOCTOR_DRUG", "DEFAULT", "DOCTOR_DRUG")
+
+;치료하지 않는다
+IF RESULT == -1
+	REDRAW 1
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% 치료를 거절했다
+	PRINTFORMW 「그런가. ……뭐, 어쩔 수 없구나」
+	RETURN 1
+ENDIF
+
+대상 = RESULT
+
+IF !IS_FEMALE(대상) || 15 < RAND:100
+	IF (대상)  != MASTER
+		PRINTFORMW 「%ANAME(대상)%씨를치료한다의 것인가?   좋아 알았다」
+		PRINTFORMW 「조금 제외하고 있어 줘. 곧 끝난다」
+	ELSE
+		PRINTFORMW 「너자신을치료한다의 것인가?   좋아 알았다」
+		PRINTFORMW 「조금 여기에 와 줘. 곧 끝난다」
+	ENDIF
+	PRINTFORML
+	PRINTFORML
+	PRINTFORML
+	SETCOLOR 칼라_주의
+	IF GETBIT(TALENT:(대상):음란계, 소질_음란_약물중독)
+		PRINTFORMW %조사처리(ANAME(대상),"는")%<약물 중독>을 잃었다
+	ELSE
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 약물에의 의존심을 끊었다
+	ENDIF
+	RESETCOLOR
+	PRINTFORML
+	PRINTFORML
+	PRINTFORML
+	CLEARBIT TALENT:(대상):음란계, 소질_음란_약물중독
+	CFLAG:(대상):약물의존 = 0
+	PRINTFORMW 「이것으로 이제 괜찮다. ……이제(이미/벌써/더는/정말) 두 번 다시 손을 대지 마?」
+	PRINTFORMW 의사는 떠나 갔다……
+	RETURN 1
+ENDIF
+
+	IF 대상  != MASTER
+		PRINTFORMW 「%ANAME(대상)%씨를치료한다의 것인가?   좋아 알았다」
+		PRINTFORMW 「조금 제외하고 있어 줘. 곧 끝난다」
+		PRINTFORMW 의심하면서도, %조사처리(ANAME(MASTER),"는")% 자리를 제외했다……
+	ELSE
+		PRINTFORMW 「너자신을치료한다의 것인가?   좋아 알았다」
+		PRINTFORMW 「조금 여기에 와 줘. 곧 끝난다」
+		PRINTFORMW 의심하면서도, %조사처리(ANAME(MASTER),"는")% 붙어있었다……
+	ENDIF
+	PRINTFORML
+	PRINTFORML
+	PRINTFORML
+	PRINTFORMW 「하읏, 설마 저런 간단하게 속다고는 말야」
+	PRINTFORMW 의사라고 자칭하고 있던 남자는 옷을 벗어 던져, 진찰대 위에서 사납게 허리를 흔들고 있다
+	PRINTFORMW 그 아래에서는, 치료를 받고 있어야 할%조사처리(ANAME(대상),"가")%, 같은 한가닥의 실 휘감지 않은 모습으로 가로놓여 있다
+	PRINTFORMW 격렬하게 육봉이 출납되는 비부로부터는, 이미 몇 발과 발해진 백탁이 늘어지고 떨어지고 있다
+	PRINTFORMW 견딜 수 없다고 말할듯한 소리를 질러 허덕이는 %조사처리(ANAME(대상),"이지만")%, 그 눈동자는 어딘가 공허함
+	PRINTFORMW 「저런 것으로 속일 수 있기에, 아주 쉬운 것이다……욱」
+	PRINTFORMW 남이 신음해, %ANAME(대상)%의 제일 깊은 곳으로 정액을 풀면, %조사처리(ANAME(대상),"는")% 스스로 그에게 껴안으면서 절정 했다
+	PRINTFORMW 「오오, 사랑스럽다 너, 조임도 좋고, 나전용의 변기로 해 주어도 괜찮아?   그렇게 하면, 약도 쳐 마음껏이다」
+	PRINTFORMW 「이봐요, 추가의 오크스리다. 이 녀석도 효과가 있군?」
+	PRINTFORMW 좋으면서, 남자는 교성을 흘려 보내는 %ANAME(대상)%의 혀 위에 정제를 실었다. %조사처리(ANAME(대상),"는")% 온순하게 그것을 삼킨다
+	PRINTFORMW 두 명의 주위에는, 사용이 끝난 주사기나 약의 상자가 산란하고 있다. %ANAME(대상)%에 쳐박아진, 각성제나 마약의 종류가……
+	PRINTFORMW 「웃, 슬슬 마감 시간이다. 오라 빨리 옷 입어라. ……어이쿠, 그 속옷은 넘겨라」
+	PRINTFORMW 「쿠쿡, 정액 투성이의 보지 쬔 그대로, 동료와 대면해라」
+	PRINTFORMW 빨고 썩은 요구에도, %조사처리(ANAME(대상),"는")% 얼빠진 얼굴로 수긍한다……
+	CALL FUCK_RAPE(대상, GET_SPERM_ID("의사"), @"어둠 의사의 \@RAND:2 ? 페니스 # 입술\@", "어둠 의사")
+	PRINTFORML
+	PRINTFORML
+	PRINTFORM
+	IF 대상 != MASTER
+		PRINTFORMW 「미안하지만, %ANAME(대상)%씨의 치료는 완전하게는 끝나지 않았던 것이다」
+		PRINTFORMW 의사에 그렇게 말해져, %조사처리(ANAME(MASTER),"는")% 낙담한다. 뭐, 애당초 어려운 이야기일 것이고, 꾸짖는 것은 가혹함
+		PRINTFORMW 「만약 좋았으면, 향후도 초래하게 해 받는다. %ANAME(대상)%씨은 무료로 "치료"한다」
+		PRINTFORMW 더 바랄 나위 없는 것이다. %조사처리(ANAME(MASTER),"는")% 물론이라고 수긍했다
+		PRINTFORMW 떠나 가는 의사에게, %조사처리(ANAME(대상),"는")% 매우 깊숙히 고개를 숙이고 있었다……
+	ELSE
+		PRINTFORMW 「미안하지만, %ANAME(대상)%씨의 치료는 완전하게는 끝나지 않았던 것이다」
+		PRINTFORMW 의사는 그야말로 미안한 듯이, 부하들에게 설명한다
+		PRINTFORMW 그가 치료 때문에 분명하게 노력했다고 믿고 있는 부하들은, 낙담 할지언정, 그의 설명을 의심하는 일은 없었다
+		PRINTFORMW 「만약 좋았으면, 향후도 초래하게 해 받는다. %ANAME(대상)%씨은 무료로 "치료"한다」
+		PRINTFORMW 부하들로 보이지 않는 각도로, %ANAME(대상)%의 엉덩이를 더듬으면서, 의사는 말한다
+		PRINTFORMW 떠나 가는 의사에게, %조사처리(ANAME(대상),"는")% 깊숙히 고개를 숙였다……
+	ENDIF
+	CFLAG:(대상):약물의존 += RAND(50, 100)
+	WAIT
+RETURN 1
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_DOCTOR_DRUG(대상)
+#DIM 대상
+CALL SELECT_CHARA_LIST_SHOW_LOGIC_DEFAULT(대상)
+RETURN RESULT && CFLAG:대상:약물의존 > 0
+
+@SELECT_CHARA_LIST_COLOR_LOGIC_DOCTOR_DRUG(대상)
+#DIM 대상
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_약물중독)
+	RETURN 칼라_경고
+RETURN GETDEFCOLOR()

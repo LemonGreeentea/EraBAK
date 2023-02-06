@@ -1,0 +1,633 @@
+﻿;-------------------------------------------------
+;# 맡김시의 플레이어 선택
+;-------------------------------------------------
+@COM_AUTOSELECT_DECIDE_PLAYER
+#DIM L_COUNTER
+#DIM RETURN_CHARA_NUM
+#DIM DECIDE_REFERENCE_VALUE					;중량감의 기준
+#DIM MULTI_SITUATION_DECIDE_REFERENCE_VALUE	;상황에 의한 중량감의 곱셈 보정
+#DIM CHECK_BEING_IAN_SERVE_FEMALE
+#DIM CHECK_BEING_IAN_GUEST_FEMALE
+
+DEBUGPRINTFORML 
+DEBUGPRINTFORML   DEBUG 메인 플레이어 선택 
+
+;-------------------------------------------------
+; 리셋트
+;-------------------------------------------------
+CALL COM_AUTO_RANDOMIZED_WEIGHTED_START
+
+;-------------------------------------------------
+; 위안시의 캐릭터 성별 체크
+;	FOR문 경량화를 위해 먼저 확인해 대입해 둔다
+;-------------------------------------------------
+IF FLAG:조교모드 == 조교_위안
+	;위안서비스 측에녀는 있을까
+	CHECK_BEING_IAN_SERVE_FEMALE = BEING_IAN_SERVE_FEMALE()
+	;위안손님 측에녀는 있을까
+	CHECK_BEING_IAN_GUEST_FEMALE = BEING_IAN_GUEST_FEMALE()
+ENDIF
+
+;-------------------------------------------------
+; 후보 설정
+;-------------------------------------------------
+FOR L_COUNTER, 0, CHARANUM
+	;---------------------------------------------
+	; # 불가 후보
+	;---------------------------------------------
+	;참가자는 아니다
+	SIF !CFLAG:L_COUNTER:조교참가플래그
+		CONTINUE
+	;행동 불가능
+	SIF !IS_AUTOSELECT(L_COUNTER)
+		CONTINUE
+	;위안모드, 이 캐릭터가 남자 위안손님, 서비스 측에 행동 가능한 여성이 없는, 손님에게 행동 가능한 여성이 있다
+	SIF FLAG:조교모드 == 조교_위안 && IS_IAN_GUEST_MALE(L_COUNTER) && !CHECK_BEING_IAN_SERVE_FEMALE && CHECK_BEING_IAN_GUEST_FEMALE
+		CONTINUE
+	;---------------------------------------------
+	; # 중량감의 기준
+	;	주도도Ｕ플러스량을 바탕으로 10～100 +1은 0 제산 회피용
+	;---------------------------------------------
+	DECIDE_REFERENCE_VALUE = MAX((1000 + ABL:L_COUNTER:주도도Ｕ + 1) / 20, 10)
+
+	;---------------------------------------------
+	; # 상황의 보정
+	;---------------------------------------------
+	;위안이 아닐 때는 주인공에게 삽입하고 있는·되고 있는 캐릭터를 우선
+	IF FLAG:조교모드 != 조교_위안 && IS_INSERT_MUTUAL(MASTER, L_COUNTER) >= 1
+		MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 100
+	;삽입중이 아닌 캐릭터
+	ELSE
+		MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 50
+	ENDIF
+
+	;---------------------------------------------
+	; # 중량감의 계산
+	;---------------------------------------------
+	DECIDE_REFERENCE_VALUE = DECIDE_REFERENCE_VALUE * MULTI_SITUATION_DECIDE_REFERENCE_VALUE
+
+	;---------------------------------------------
+	; # 후보의 추가
+	;---------------------------------------------
+	CALL COM_AUTO_RANDOMIZED_WEIGHTED_VALUE(L_COUNTER, DECIDE_REFERENCE_VALUE)
+	DEBUGPRINTFORML      %ANAME(L_COUNTER), MAX_CHARANAME_LENGTH, LEFT%  %TOSTR_SEX(TALENT:L_COUNTER:성별), 6%  중량감 {DECIDE_REFERENCE_VALUE, 10}
+NEXT
+
+;-------------------------------------------------
+; 결과 취득
+;-------------------------------------------------
+RETURN_CHARA_NUM = COM_AUTO_RANDOMIZED_WEIGHTED_RESULT()
+IF RETURN_CHARA_NUM < 0
+	PRINTFORML ※맡김 실행자가 발견되지 않았습니다
+	PRINTFORML ※로그를 스레에 에러 보고해 받을 수 있으면 살아납니다
+	PRINTFORML ※@COM_AUTOSELECT_DECIDE_PLAYER @COM_AUTO_RANDOMIZED_WEIGHTED_RESULT 
+	RETURN -1
+ENDIF
+
+RETURN RETURN_CHARA_NUM
+
+;-------------------------------------------------
+;# 맡김시의 타겟 선택
+;-------------------------------------------------
+@COM_AUTOSELECT_DECIDE_TARGET(플레이어)
+#DIM L_COUNTER
+#DIM 플레이어
+#DIM RETURN_CHARA_NUM
+#DIM DECIDE_REFERENCE_VALUE					;중량감의 기준
+#DIM MULTI_SEX_DECIDE_REFERENCE_VALUE		;성별에 의한 중량감의 곱셈 보정
+#DIM MULTI_VIRGIN_DECIDE_REFERENCE_VALUE	;처녀성에 의한 중량감의 곱셈 보정
+#DIM MULTI_SITUATION_DECIDE_REFERENCE_VALUE	;상황에 의한 중량감의 곱셈 보정
+
+DEBUGPRINTFORML 
+DEBUGPRINTFORML   DEBUG 메인 타겟 선택 
+
+;-------------------------------------------------
+; 리셋트
+;-------------------------------------------------
+CALL COM_AUTO_RANDOMIZED_WEIGHTED_START
+
+;-------------------------------------------------
+; 후보 설정
+;-------------------------------------------------
+FOR L_COUNTER, 0, CHARANUM
+	;---------------------------------------------
+	; # 불가 후보
+	;---------------------------------------------
+	;참가자는 아니다  MASTER가 조교참가플래그 설정되는 것은 위안계만과 같은 것으로 MASTER를 제외
+	SIF !CFLAG:L_COUNTER:조교참가플래그 && !( FLAG:조교모드 != 조교_위안 && L_COUNTER == MASTER )
+		CONTINUE
+	;실행자
+	SIF L_COUNTER == 플레이어
+		CONTINUE
+
+	;---------------------------------------------
+	; # 중량감의 기준
+	;	주도도Ｕ마이너스량을 바탕으로 10～100
+	;---------------------------------------------
+	DECIDE_REFERENCE_VALUE = MAX((2000 - (1000 + ABL:L_COUNTER:주도도Ｕ)) / 20, 10)
+
+	;---------------------------------------------
+	; # 성별조의 보정
+	;---------------------------------------------
+	;대상이 당신으로 실행이 바람기버릇 소지
+	IF L_COUNTER == MASTER && GETBIT(TALENT:플레이어:음란계, 소질_음란_바람기버릇)
+		MULTI_SEX_DECIDE_REFERENCE_VALUE = 15
+	;대상이 당신으로 실행이 함락완료
+	ELSEIF L_COUNTER == MASTER && ( TALENT:플레이어:연모 || TALENT:플레이어:복종 || TALENT:플레이어:주인 )
+		MULTI_SEX_DECIDE_REFERENCE_VALUE = 100
+	;바이 or실행 후타나리 or대상 후타나리
+	ELSEIF TALENT:플레이어:바이 || (HAS_PENIS(플레이어) && HAS_VAGINA(플레이어)) || (HAS_PENIS(L_COUNTER) && HAS_VAGINA(L_COUNTER))
+		MULTI_SEX_DECIDE_REFERENCE_VALUE = 70
+	;이성
+	ELSEIF (HAS_PENIS(플레이어) && HAS_VAGINA(L_COUNTER)) || (HAS_VAGINA(플레이어) && HAS_PENIS(L_COUNTER))
+		MULTI_SEX_DECIDE_REFERENCE_VALUE = 70
+	;동성
+	ELSE
+		MULTI_SEX_DECIDE_REFERENCE_VALUE = 1
+	ENDIF
+
+	;---------------------------------------------
+	; # 처녀계의 보정
+	;---------------------------------------------
+	;마스터가 대상으로 처녀계 소질을 가질 때
+	IF L_COUNTER == MASTER && (TALENT:MASTER:키스미경험 || (HAS_VAGINA(MASTER) && TALENT:MASTER:처녀) || (HAS_PENIS(MASTER) && TALENT:MASTER:동정)) && !GETBIT(TALENT:플레이어:음란계, 소질_음란_바람기버릇)
+		MULTI_VIRGIN_DECIDE_REFERENCE_VALUE = 100
+	;플레이어가 처녀계 소질을 가질 때
+	ELSEIF TALENT:플레이어:키스미경험 || (HAS_VAGINA(플레이어) && TALENT:플레이어:처녀) || (HAS_PENIS(플레이어) && TALENT:플레이어:동정)
+		MULTI_VIRGIN_DECIDE_REFERENCE_VALUE = 100
+	;어느쪽이나 처녀계는 가지지 않을 때
+	ELSE
+		MULTI_VIRGIN_DECIDE_REFERENCE_VALUE = 1
+	ENDIF
+
+	;---------------------------------------------
+	; # 상황의 보정
+	;---------------------------------------------
+	;역조교의 주인공
+	IF L_COUNTER == MASTER && GROUPMATCH(FLAG:조교모드, 조교_역조교특수, 조교_역조교통상, 조교_위안) && !GETBIT(TALENT:플레이어:음란계, 소질_음란_바람기버릇)
+		MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 100
+	;역조교 이외의 주인공
+	ELSEIF L_COUNTER == MASTER && !GETBIT(TALENT:플레이어:음란계, 소질_음란_바람기버릇)
+		MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 70
+	;포로 조교의 타겟
+	ELSEIF FLAG:조교모드 == 조교_포로조교 && FINDELEMENT(PRISONER_TARGET, L_COUNTER)
+		MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 70
+	;위안모드로 주도자가 위안손님 때 위안손님은 확률 저하
+	ELSEIF FLAG:조교모드 == 조교_위안 && (TALENT:플레이어:위안모브 || CFLAG:플레이어:위안참가자) && (TALENT:L_COUNTER:위안모브 || CFLAG:L_COUNTER:위안참가자)
+		MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 1
+	;위안모드로 주도자가 서비스측 때 서비스측은 확률 저하
+	ELSEIF FLAG:조교모드 == 조교_위안 && !TALENT:플레이어:위안모브 && !CFLAG:플레이어:위안참가자 && !TALENT:L_COUNTER:위안모브 && !CFLAG:L_COUNTER:위안참가자
+		MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 1
+	;그 이외
+	ELSE
+		MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 30
+	ENDIF
+
+	;---------------------------------------------
+	; # 중량감의 계산
+	;---------------------------------------------
+	DECIDE_REFERENCE_VALUE = DECIDE_REFERENCE_VALUE * MULTI_SEX_DECIDE_REFERENCE_VALUE * MULTI_VIRGIN_DECIDE_REFERENCE_VALUE * MULTI_SITUATION_DECIDE_REFERENCE_VALUE
+
+	;---------------------------------------------
+	; # 후보의 추가
+	;---------------------------------------------
+	CALL COM_AUTO_RANDOMIZED_WEIGHTED_VALUE(L_COUNTER, DECIDE_REFERENCE_VALUE)
+	DEBUGPRINTFORML      %ANAME(L_COUNTER), MAX_CHARANAME_LENGTH, LEFT%  %TOSTR_SEX(TALENT:L_COUNTER:성별), 6%  중량감 {DECIDE_REFERENCE_VALUE, 10}
+NEXT
+
+;-------------------------------------------------
+; 결과 취득
+;-------------------------------------------------
+RETURN_CHARA_NUM = COM_AUTO_RANDOMIZED_WEIGHTED_RESULT()
+IF RETURN_CHARA_NUM < 0
+	PRINTFORML ※맡김 대상자가 발견되지 않았습니다
+	PRINTFORML ※로그를 스레에 에러 보고해 받을 수 있으면 살아납니다
+	PRINTFORML ※@COM_AUTOSELECT_DECIDE_TARGET @COM_AUTO_RANDOMIZED_WEIGHTED_RESULT
+	RETURN -1
+ENDIF
+
+RETURN RETURN_CHARA_NUM
+
+;-------------------------------------------------
+;# 제삼자의 참가를 결정한다
+;-------------------------------------------------
+@AUTO_SET_THIRD_PERSON(주도자, 대상자, 커맨드)
+#DIM L_COUNTER
+#DIM CHARA_COUNTER
+#DIM 커맨드
+#DIM 주도자
+#DIM 대상자
+#DIM 이번후보
+#DIM DECIDE_REFERENCE_VALUE							;후보 취득의 중량감
+#DIM PLAYER_DECIDE_REFERENCE_VALUE					;하는 측에 도는 중량감의 기준
+#DIM PLAYER_MULTI_SEX_DECIDE_REFERENCE_VALUE		;하는 측에 도는 성별에 의한 중량감의 곱셈 보정
+#DIM PLAYER_MULTI_SITUATION_DECIDE_REFERENCE_VALUE	;하는 측에 도는 상황에 의한 중량감의 곱셈 보정
+#DIM TARGET_DECIDE_REFERENCE_VALUE					;되는 측에 도는 중량감의 기준
+#DIM TARGET_MULTI_SEX_DECIDE_REFERENCE_VALUE		;되는 측에 도는 성별에 의한 중량감의 곱셈 보정
+#DIM TARGET_MULTI_SITUATION_DECIDE_REFERENCE_VALUE	;되는 측에 도는 상황에 의한 중량감의 곱셈 보정
+#DIM CONST ASSIST_PLAYER_ID = 1						;후보 식별용·이 번호가 선택되면 실행자
+#DIM CONST ASSIST_TARGET_ID = 2						;후보 식별용·이 번호가 선택되면 대상자
+#DIM ASSIST_ID_RESULT								;하는 측으로 여겨지는 측 어느 쪽이 선택되었는지 받는다
+
+DEBUGPRINTFORML 
+DEBUGPRINTFORML   DEBUG 제３ 참가자 선택
+
+;후보 취득과 실행 가부 체크를 반복한다
+FOR L_COUNTER, 0, 5
+	SIF RAND:100 > 20
+		CONTINUE
+	DEBUGPRINTFORML      
+	DEBUGPRINTFORML      제삼자의 참가 체크 {L_COUNTER + 1}주목
+
+	;---------------------------------------------
+	; 이번 후보 캐릭터 선택
+	;---------------------------------------------
+
+	;---------------------------------------------
+	; # 리셋트
+	;---------------------------------------------
+	이번후보 = -1
+	CALL COM_AUTO_RANDOMIZED_WEIGHTED_START
+
+	;---------------------------------------------
+	; # 후보 설정
+	;---------------------------------------------
+	FOR CHARA_COUNTER, 0, CHARANUM
+		DECIDE_REFERENCE_VALUE = 0
+		;불가 후보 행동 할 수 없는지, 이미 실행자 혹은 대상자
+		SIF !IS_AUTOSELECT(CHARA_COUNTER) || IS_MPLY(CHARA_COUNTER) || IS_MTAR(CHARA_COUNTER)
+			CONTINUE
+		;CHARA_COUNTER가 함락완료로 대상이 당신
+		IF 대상자 == MASTER && ( TALENT:CHARA_COUNTER:연모 || TALENT:CHARA_COUNTER:복종 || TALENT:CHARA_COUNTER:주인 )
+			DECIDE_REFERENCE_VALUE = 100
+		;CHARA_COUNTER가 바이, 혹은 양성이 있다
+		ELSEIF TALENT:CHARA_COUNTER:바이 || (HAS_PENIS(CHARA_COUNTER) && HAS_VAGINA(CHARA_COUNTER)) || (HAS_PENIS(주도자) && HAS_VAGINA(주도자)) || (HAS_PENIS(대상자) && HAS_VAGINA(대상자))
+			DECIDE_REFERENCE_VALUE = 70
+		;CHARA_COUNTER의 이성이 있다
+		ELSEIF (HAS_PENIS(CHARA_COUNTER) && HAS_VAGINA(주도자)) || (HAS_VAGINA(CHARA_COUNTER) && HAS_PENIS(주도자)) || (HAS_PENIS(CHARA_COUNTER) && HAS_VAGINA(대상자)) || (HAS_VAGINA(CHARA_COUNTER) && HAS_PENIS(대상자))
+			DECIDE_REFERENCE_VALUE = 70
+		;바이도 없고 전원 동성이라면 소극 참가
+		ELSE
+			DECIDE_REFERENCE_VALUE = 1
+		ENDIF
+		;후보 추가
+		CALL COM_AUTO_RANDOMIZED_WEIGHTED_VALUE(CHARA_COUNTER, DECIDE_REFERENCE_VALUE)
+		DEBUGPRINTFORML      %ANAME(CHARA_COUNTER), MAX_CHARANAME_LENGTH, LEFT%  %TOSTR_SEX(TALENT:CHARA_COUNTER:성별), 6%  중량감 {DECIDE_REFERENCE_VALUE, 10}
+	NEXT
+
+	;-----------------------------------------
+	; # 결과 취득
+	;-----------------------------------------
+	이번후보 = COM_AUTO_RANDOMIZED_WEIGHTED_RESULT()
+	IF RESULT < 0 || 이번후보 == -1
+		DEBUGPRINTFORML      후보가 될 수 있는 캐릭터가 없기에 빠진다
+		BREAK
+	ENDIF
+
+	;---------------------------------------------
+	; 하는 측 되는 측 어느 쪽을 바랄까
+	;---------------------------------------------
+
+	;---------------------------------------------
+	; # 리셋트
+	;---------------------------------------------
+	CALL COM_AUTO_RANDOMIZED_WEIGHTED_START
+
+	;---------------------------------------------
+	; # 중량감의 기준
+	;---------------------------------------------
+	;MPLY에 참가하는 욕구
+	PLAYER_DECIDE_REFERENCE_VALUE = MAX((1000 + ABL:이번후보:주도도Ｕ) / 20, 10)
+	;MTAR에 참가하는 욕구
+	TARGET_DECIDE_REFERENCE_VALUE = MAX((2000 - (1000 + ABL:이번후보:주도도Ｕ)) / 20, 10)
+
+	;---------------------------------------------
+	; # 성별조의 보정
+	;---------------------------------------------
+	;MPLY에 참가하는 욕구 성별조보정
+	PLAYER_MULTI_SEX_DECIDE_REFERENCE_VALUE = 0
+	;MTAR에 참가하는 욕구 성별조보정
+	TARGET_MULTI_SEX_DECIDE_REFERENCE_VALUE = 0
+
+	;주도자가 실행
+	IF IS_MPLY(주도자) && IS_MTAR(대상자)
+		;상대가 당신으로 이번 후보가 함락완료
+		IF 대상자 == MASTER && ( TALENT:이번후보:연모 || TALENT:이번후보:복종 || TALENT:이번후보:주인 )
+			PLAYER_MULTI_SEX_DECIDE_REFERENCE_VALUE = 100
+		;이번 후보가 바이, 혹은 이번 후보나 상대의 어느 쪽인지가 양성
+		ELSEIF TALENT:이번후보:바이 || (HAS_PENIS(이번후보) && HAS_VAGINA(이번후보)) || (HAS_PENIS(대상자) && HAS_VAGINA(대상자))
+			;남 바이나 남자 후타나리는 공격측으로 돌기 쉽다
+			IF IS_MALE(이번후보)
+				PLAYER_MULTI_SEX_DECIDE_REFERENCE_VALUE = 70
+			;녀 바이나 여자 후타나리는 받는편으로 돌기 쉽다
+			ELSE
+				PLAYER_MULTI_SEX_DECIDE_REFERENCE_VALUE = 30
+			ENDIF
+		;상대가 이성이라면 하는 측에 소극적
+		ELSEIF (HAS_PENIS(이번후보) && HAS_VAGINA(대상자)) || (HAS_VAGINA(이번후보) && HAS_PENIS(대상자))
+			PLAYER_MULTI_SEX_DECIDE_REFERENCE_VALUE = 70
+		;상대가 동성이라면 하는 측에 소극적
+		ELSE
+			PLAYER_MULTI_SEX_DECIDE_REFERENCE_VALUE = 1
+		ENDIF
+		;상대가 당신으로 이번 후보가 함락완료
+		IF 대상자 == MASTER && ( TALENT:이번후보:연모 || TALENT:이번후보:복종 || TALENT:이번후보:주인 )
+			TARGET_MULTI_SEX_DECIDE_REFERENCE_VALUE = 50
+		;이번 후보가 바이, 혹은 이번 후보나 상대의 어느 쪽인지가 양성
+		ELSEIF TALENT:이번후보:바이 || (HAS_PENIS(이번후보) && HAS_VAGINA(이번후보)) || (HAS_PENIS(주도자) && HAS_VAGINA(주도자))
+			;남 바이나 남자 후타나리는 공격측으로 돌기 쉽다
+			IF IS_MALE(이번후보)
+				TARGET_MULTI_SEX_DECIDE_REFERENCE_VALUE = 30
+			;녀 바이나 여자 후타나리는 받는편으로 돌기 쉽다
+			ELSE
+				TARGET_MULTI_SEX_DECIDE_REFERENCE_VALUE = 70
+			ENDIF
+		;상대가 이성이라면 되는 측에 소극적
+		ELSEIF (HAS_PENIS(이번후보) && HAS_VAGINA(주도자)) || (HAS_VAGINA(이번후보) && HAS_PENIS(주도자))
+			TARGET_MULTI_SEX_DECIDE_REFERENCE_VALUE = 70
+		;상대가 동성이라면 되는 측에 소극적
+		ELSE
+			TARGET_MULTI_SEX_DECIDE_REFERENCE_VALUE = 1
+		ENDIF
+	;주도자가 대상
+	ELSE
+		;이번 후보가 바이, 혹은 이번 후보나 대상의 어느 쪽인지가 양성
+		IF TALENT:이번후보:바이 || (HAS_PENIS(이번후보) && HAS_VAGINA(이번후보)) || (HAS_PENIS(주도자) && HAS_VAGINA(주도자))
+			;남 바이나 남자 후타나리는 공격측으로 돌기 쉽다
+			IF IS_MALE(이번후보)
+				PLAYER_MULTI_SEX_DECIDE_REFERENCE_VALUE = 70
+			;녀 바이나 여자 후타나리는 받는편으로 돌기 쉽다
+			ELSE
+				PLAYER_MULTI_SEX_DECIDE_REFERENCE_VALUE = 30
+			ENDIF
+		;대상이 이성이라면 하는 측에 소극적
+		ELSEIF (HAS_PENIS(이번후보) && HAS_VAGINA(주도자)) || (HAS_VAGINA(이번후보) && HAS_PENIS(주도자))
+			PLAYER_MULTI_SEX_DECIDE_REFERENCE_VALUE = 70
+		;대상이 동성이라면 하는 측에 소극적
+		ELSE
+			PLAYER_MULTI_SEX_DECIDE_REFERENCE_VALUE = 1
+		ENDIF
+		;이번 후보가 바이, 혹은 이번 후보나 주도의 어느 쪽인지가 양성
+		IF TALENT:이번후보:바이 || (HAS_PENIS(이번후보) && HAS_VAGINA(이번후보)) || (HAS_PENIS(대상자) && HAS_VAGINA(대상자))
+			;남 바이나 남자 후타나리는 공격측으로 돌기 쉽다
+			IF IS_MALE(이번후보)
+				TARGET_MULTI_SEX_DECIDE_REFERENCE_VALUE = 30
+			;녀 바이나 여자 후타나리는 받는편으로 돌기 쉽다
+			ELSE
+				TARGET_MULTI_SEX_DECIDE_REFERENCE_VALUE = 70
+			ENDIF
+		;상대가 이성이라면 되는 측에 소극적
+		ELSEIF (HAS_PENIS(이번후보) && HAS_VAGINA(대상자)) || (HAS_VAGINA(이번후보) && HAS_PENIS(대상자))
+			TARGET_MULTI_SEX_DECIDE_REFERENCE_VALUE = 70
+		;주도자가 동성이라면 되는 측에 소극적
+		ELSE
+			TARGET_MULTI_SEX_DECIDE_REFERENCE_VALUE = 1
+		ENDIF
+	ENDIF
+
+	;---------------------------------------------
+	; # 상황의 보정
+	;---------------------------------------------
+	;MPLY에 참가하는 욕구 상황 보정
+	PLAYER_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 0
+	;MTAR에 참가하는 욕구 상황 보정
+	TARGET_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 0
+
+	;포로 조교의 타겟은 동료의 보조로 돌기 쉽다
+	IF FLAG:조교모드 == 조교_포로조교 && FINDELEMENT(PRISONER_TARGET, 이번후보)
+		;주도자가 동료로 실행자
+		IF FINDELEMENT(PRISONER_TARGET, 주도자) && IS_MPLY(주도자)
+			PLAYER_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 100
+			TARGET_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 1
+		;대상자가 동료로 실행자
+		ELSEIF FINDELEMENT(PRISONER_TARGET, 대상자) && IS_MPLY(대상자)
+			PLAYER_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 100
+			TARGET_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 1
+		;주도자가 동료로 대상자
+		ELSEIF FINDELEMENT(PRISONER_TARGET, 주도자) && IS_MTAR(주도자)
+			PLAYER_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 1
+			TARGET_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 100
+		;대상자가 동료로 대상자
+		ELSEIF FINDELEMENT(PRISONER_TARGET, 대상자) && IS_MTAR(대상자)
+			PLAYER_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 1
+			TARGET_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 100
+		;외
+		ELSE
+			PLAYER_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 1
+			TARGET_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 100
+		ENDIF
+	;위안서비스측은 동료의 보조로 돌기 쉽다
+	ELSEIF FLAG:조교모드 == 조교_위안 && (!TALENT:이번후보:위안모브 || !CFLAG:이번후보:위안참가자)
+		;위안자로 주도자가 동료로 실행자
+		IF !TALENT:주도자:위안모브 && !CFLAG:주도자:위안참가자 && IS_MPLY(주도자)
+			PLAYER_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 100
+			TARGET_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 1
+		;위안자로 대상자가 동료로 실행자
+		ELSEIF !TALENT:대상자:위안모브 && !CFLAG:대상자:위안참가자 && IS_MPLY(대상자)
+			PLAYER_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 100
+			TARGET_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 1
+		;위안자로 주도자가 동료로 대상자
+		ELSEIF !TALENT:주도자:위안모브 && !CFLAG:주도자:위안참가자 && IS_MTAR(주도자)
+			PLAYER_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 1
+			TARGET_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 100
+		;위안자로 대상자가 동료로 대상자
+		ELSEIF !TALENT:대상자:위안모브 && !CFLAG:대상자:위안참가자 && IS_MTAR(대상자)
+			PLAYER_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 1
+			TARGET_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 100
+		;외
+		ELSE
+			PLAYER_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 1
+			TARGET_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 100
+		ENDIF
+	;위안손님은 동료의 보조로 돌기 쉽다
+	ELSEIF FLAG:조교모드 == 조교_위안 && (TALENT:이번후보:위안모브 || CFLAG:이번후보:위안참가자)
+		;위안손님으로 주도자가 동료로 실행자
+		IF (TALENT:주도자:위안모브 || CFLAG:주도자:위안참가자) && IS_MPLY(주도자)
+			PLAYER_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 100
+			TARGET_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 1
+		;위안손님으로 대상자가 동료로 실행자
+		ELSEIF (TALENT:대상자:위안모브 || CFLAG:대상자:위안참가자) && IS_MPLY(대상자)
+			PLAYER_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 100
+			TARGET_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 1
+		;위안손님으로 주도자가 동료로 대상자
+		ELSEIF (TALENT:주도자:위안모브 || CFLAG:주도자:위안참가자) && IS_MTAR(주도자)
+			PLAYER_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 1
+			TARGET_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 100
+		;위안손님으로 대상자가 동료로 대상자
+		ELSEIF (TALENT:대상자:위안모브 || CFLAG:대상자:위안참가자) && IS_MTAR(대상자)
+			PLAYER_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 1
+			TARGET_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 100
+		;외
+		ELSE
+			PLAYER_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 100
+			TARGET_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 1
+		ENDIF
+	;그 이외
+	ELSE
+		PLAYER_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 1
+		TARGET_MULTI_SITUATION_DECIDE_REFERENCE_VALUE = 1
+	ENDIF
+
+	;---------------------------------------------
+	; # 중량감의 계산
+	;---------------------------------------------
+	PLAYER_DECIDE_REFERENCE_VALUE = PLAYER_DECIDE_REFERENCE_VALUE * PLAYER_MULTI_SEX_DECIDE_REFERENCE_VALUE * PLAYER_MULTI_SITUATION_DECIDE_REFERENCE_VALUE
+	TARGET_DECIDE_REFERENCE_VALUE = TARGET_DECIDE_REFERENCE_VALUE * TARGET_MULTI_SEX_DECIDE_REFERENCE_VALUE * TARGET_MULTI_SITUATION_DECIDE_REFERENCE_VALUE
+
+	;---------------------------------------------
+	; # 보정 성별 제한
+	;---------------------------------------------
+	IF TOSTR_SEX(TALENT:이번후보:성별) == "남성"
+		IF PLAYER_DECIDE_REFERENCE_VALUE > 3 && GROUPMATCH(커맨드, ADD_NUM_대상이실행 + GET_TRAINNUM("가슴애무"), ADD_NUM_대상이실행 + GET_TRAINNUM("유두빨기"), GET_TRAINNUM("펠라치오"), ADD_NUM_대상이실행 + GET_TRAINNUM("이라마치오"), GET_TRAINNUM("파이즈리"), GET_TRAINNUM("거품춤"), GET_TRAINNUM("스마타"), GET_TRAINNUM("엉덩이코키"), GET_TRAINNUM("귀두고문대딸"), GET_TRAINNUM("귀두고문페라"), GET_TRAINNUM("도게자"), GET_TRAINNUM("조르기"), ADD_NUM_대상이실행 + GET_TRAINNUM("페니스밴드재갈"))
+			PLAYER_DECIDE_REFERENCE_VALUE /= 3
+		ENDIF
+		IF TARGET_DECIDE_REFERENCE_VALUE > 3 && GROUPMATCH(커맨드, GET_TRAINNUM("가슴애무"), GET_TRAINNUM("유두빨기"), ADD_NUM_대상이실행 + GET_TRAINNUM("펠라치오"), GET_TRAINNUM("이라마치오"), ADD_NUM_대상이실행 + GET_TRAINNUM("파이즈리"), ADD_NUM_대상이실행 + GET_TRAINNUM("거품춤"), ADD_NUM_대상이실행 + GET_TRAINNUM("스마타"), ADD_NUM_대상이실행 + GET_TRAINNUM("엉덩이코키"), ADD_NUM_대상이실행 + GET_TRAINNUM("귀두고문대딸"), ADD_NUM_대상이실행 + GET_TRAINNUM("귀두고문페라"), ADD_NUM_대상이실행 + GET_TRAINNUM("도게자"), ADD_NUM_대상이실행 + GET_TRAINNUM("조르기"), GET_TRAINNUM("페니스밴드재갈"))
+			TARGET_DECIDE_REFERENCE_VALUE /= 3
+		ENDIF
+	ENDIF
+
+	;---------------------------------------------
+	; # 제외 차례로삽입
+	;---------------------------------------------
+	;여성이라면 문답 무용으로 받는편
+	IF IS_FEMALE(이번후보) && GROUPMATCH(커맨드, GET_TRAINNUM("차례로삽입"), GET_TRAINNUM("차례로Ａ삽입"))
+		PLAYER_DECIDE_REFERENCE_VALUE = 0
+	ENDIF
+
+	;---------------------------------------------
+	; # 제외 남성의Ａ를 노리는 행위
+	;---------------------------------------------
+	IF TOSTR_SEX(TALENT:이번후보:성별) == "남성" && !GETBIT(CONFIG:11, COM_AUTO_FILTER_남성의Ａ를노리는행위를허가)
+		;카테고리로 죽이는 것
+		IF GROUPMATCH(COM_AUTO_COM_CATEGORY:커맨드, COM_AUTO_CATEGORY_NUM_성교한다, COM_AUTO_CATEGORY_NUM_피임한다, COM_AUTO_CATEGORY_NUM_윤활추가한다)
+			TARGET_DECIDE_REFERENCE_VALUE = 0
+		ELSEIF GROUPMATCH(COM_AUTO_COM_CATEGORY:커맨드, COM_AUTO_CATEGORY_NUM_성교시킨다, COM_AUTO_CATEGORY_NUM_피임시킨다, COM_AUTO_CATEGORY_NUM_윤활추가시킨다)
+			PLAYER_DECIDE_REFERENCE_VALUE = 0
+		ENDIF
+		;커맨드로 죽이는 것
+		IF 커맨드 < ADD_NUM_대상이실행
+			IF GROUPMATCH(커맨드, GET_TRAINNUM("애널핥기"), GET_TRAINNUM("셀프Ａ삽입"), GET_TRAINNUM("애널애무"), GET_TRAINNUM("애널바이브"), GET_TRAINNUM("Ａ확장벌룬"), GET_TRAINNUM("애널피스트"), GET_TRAINNUM("촉수Ａ삽입"), GET_TRAINNUM("촉수Ａ산란"))
+				TARGET_DECIDE_REFERENCE_VALUE = 0
+			ELSEIF GROUPMATCH(커맨드, GET_TRAINNUM("Ａ안면승마"), GET_TRAINNUM("안면승마"), GET_TRAINNUM("Ｗ안면승마"))
+				PLAYER_DECIDE_REFERENCE_VALUE = 0
+			ENDIF
+		ELSE
+			IF GROUPMATCH(커맨드 - ADD_NUM_대상이실행, GET_TRAINNUM("애널핥기"), GET_TRAINNUM("셀프Ａ삽입"), GET_TRAINNUM("애널애무"), GET_TRAINNUM("애널바이브"), GET_TRAINNUM("Ａ확장벌룬"), GET_TRAINNUM("애널피스트"), GET_TRAINNUM("촉수Ａ삽입"), GET_TRAINNUM("촉수Ａ산란"))
+				PLAYER_DECIDE_REFERENCE_VALUE = 0
+			ELSEIF GROUPMATCH(커맨드 - ADD_NUM_대상이실행, GET_TRAINNUM("Ａ안면승마"), GET_TRAINNUM("안면승마"), GET_TRAINNUM("Ｗ안면승마"))
+				TARGET_DECIDE_REFERENCE_VALUE = 0
+			ENDIF
+		ENDIF
+	ENDIF
+
+	;---------------------------------------------
+	; # 후보 추가
+	;---------------------------------------------
+	SIF PLAYER_DECIDE_REFERENCE_VALUE > 0
+		CALL COM_AUTO_RANDOMIZED_WEIGHTED_VALUE(ASSIST_PLAYER_ID, PLAYER_DECIDE_REFERENCE_VALUE)
+	SIF TARGET_DECIDE_REFERENCE_VALUE > 0
+		CALL COM_AUTO_RANDOMIZED_WEIGHTED_VALUE(ASSIST_TARGET_ID, TARGET_DECIDE_REFERENCE_VALUE)
+	IF PLAYER_DECIDE_REFERENCE_VALUE <= 0 && TARGET_DECIDE_REFERENCE_VALUE <= 0
+		DEBUGPRINTFORML      %ANAME(이번후보), MAX_CHARANAME_LENGTH, LEFT%  %TOSTR_SEX(TALENT:이번후보:성별), 6%  실행자의 보좌도 대상자의 보좌도 희망하지 않았다
+		BREAK
+	ENDIF
+
+	;---------------------------------------------
+	; # 결과 취득
+	;---------------------------------------------
+	ASSIST_ID_RESULT = COM_AUTO_RANDOMIZED_WEIGHTED_RESULT()
+	IF ASSIST_ID_RESULT != ASSIST_PLAYER_ID && ASSIST_ID_RESULT != ASSIST_TARGET_ID
+		DEBUGPRINTFORML      %ANAME(이번후보), MAX_CHARANAME_LENGTH, LEFT%  %TOSTR_SEX(TALENT:이번후보:성별), 6%  실행자의 보좌도 대상자의 보좌도 희망하지 않았다
+		BREAK
+	ELSEIF ASSIST_ID_RESULT == ASSIST_PLAYER_ID
+		CALL ADD_MPLY(이번후보)
+		DEBUGPRINTFORM      %ANAME(이번후보), MAX_CHARANAME_LENGTH, LEFT%  %TOSTR_SEX(TALENT:이번후보:성별), 6%
+		IF IS_MPLY(주도자)
+			DEBUGPRINTFORML   주도자%ANAME(주도자)%의 보좌·실행을 희망했다
+		ELSEIF IS_MPLY(대상자)
+			DEBUGPRINTFORML   대상자%ANAME(대상자)%의 보좌·실행을 희망했다
+		ENDIF
+	ELSEIF ASSIST_ID_RESULT == ASSIST_TARGET_ID
+		CALL ADD_MTAR(이번후보)
+		DEBUGPRINTFORM      %ANAME(이번후보), MAX_CHARANAME_LENGTH, LEFT%  %TOSTR_SEX(TALENT:이번후보:성별), 6%
+		IF IS_MTAR(주도자)
+			DEBUGPRINTFORML   주도자%ANAME(주도자)%의 보좌·대상을 희망했다
+		ELSEIF IS_MTAR(대상자)
+			DEBUGPRINTFORML   대상자%ANAME(대상자)%의 보좌·대상을 희망했다
+		ENDIF
+	ENDIF
+
+	;---------------------------------------------
+	; 실행 가부의 판정
+	;---------------------------------------------
+	;커맨드 판정 플래그 ON
+	COM_ENABLE = 1
+
+	RESULT = 0
+	TRYCALLFORM COM_ABLE{커맨드 % 1000}
+	IF !RESULT
+		;안 되면 플레이어／타겟을 제외한다
+		IF 커맨드 < ADD_NUM_대상이실행
+			CALL DEL_MPLY(이번후보)
+			CALL DEL_MTAR(이번후보)
+		ELSE
+			CALL DEL_MTAR(이번후보)
+			CALL DEL_MPLY(이번후보)
+		ENDIF
+		;커맨드 판정 플래그 OFF
+		COM_ENABLE = 0
+		DEBUGPRINTFORML      판정에 실패했으므로 끝낸다
+		BREAK
+	ENDIF
+
+	;커맨드 판정 플래그 OFF
+	COM_ENABLE = 0
+NEXT
+
+RETURN 0
+
+;-------------------------------------------------
+;# 제삼자 명령
+;desc  :자동 조교시, 주도자가 제삼자에게 명하는 형태가 되도록(듯이)하는 처리
+;param :주도자:그 회에 있어서의 메인 행동자
+;PARAM :대상자:그 회에 있어서의 메인 대상자
+;-------------------------------------------------
+@AUTO_SET_REMOVE_MAIN(주도자, 대상자, 커맨드)
+#DIM 주도자
+#DIM 대상자
+#DIM 커맨드
+#DIM MTAR플래그
+
+;위안으로 주도자가 위안손님이라면 7할
+IF FLAG:조교모드 == 조교_위안 && (TALENT:주도자:위안모브 || CFLAG:주도자:위안참가자) && RAND:100 < 30
+	RETURN 0
+;위안이외라면 3할
+ELSEIF RAND:100 < 70
+	RETURN 0
+ENDIF
+
+IF IS_MTAR(주도자) && MTAR_NUM > 1 && RAND:100 < 50
+	CALL DEL_MTAR(주도자)
+	MTAR플래그 = 1
+ELSEIF IS_MPLY(주도자) && MPLY_NUM > 1 && RAND:100 < 50
+	CALL DEL_MPLY(주도자)
+	MTAR플래그 = 0
+ENDIF
+
+;커맨드 판정 플래그 ON
+COM_ENABLE = 1
+
+RESULT = 0
+TRYCALLFORM COM_ABLE{커맨드 % 1000}
+IF !RESULT
+	;안 되면 플레이어／타겟을 되돌린다
+	IF MTAR플래그
+		CALL ADD_MTAR(주도자)
+	ELSE
+		CALL ADD_MPLY(주도자)
+	ENDIF
+ENDIF
+
+;커맨드 판정 플래그 OFF
+COM_ENABLE = 0
+

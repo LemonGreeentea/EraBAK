@@ -1,0 +1,42 @@
+﻿;-------------------------------------------------
+;조교 함수 존재 판정
+;-------------------------------------------------
+@SUCCUBUS_DOES_TRAIN()
+
+;-------------------------------------------------
+;조교 함락시 메세지
+;-------------------------------------------------
+@SUCCUBUS_FALLEN_MSG(대상)
+#DIM 대상
+IF !GETBIT(TALENT:대상:특수세력함락계, 특수세력_서큐버스)
+	PRINTFORMW 서큐버스들에게 심하게 희롱해져 %ANAME(대상)%의 마음은 꿈의 세계에 녹아 갔다
+	PRINTFORMW 눈치챘을 무렵에는, %조사처리(ANAME(대상),"는")% 한마리의 몽마로 다시 태어나고 있었다……
+	IF TALENT:대상:낙인
+		PRINTFORML %조사처리(ANAME(대상),"가")% %ANAME(MASTER)%전용인 것을 나타내는 낙인은,
+		PRINTFORMW 어느새인가 사라지고 있었다
+		TALENT:대상:낙인 = 0
+	ENDIF
+ELSE
+	PRINTFORMW 서큐버스들에게 심하게 희롱해져 %ANAME(대상)%의 의식은 다시 꿈의 세계로 돌아갔다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 다시, 몽마로서 다시 태어났다……
+ENDIF
+
+
+;-------------------------------------------------
+;조교 함락시에 피어싱 하거나 하는 경우의 처리
+;-------------------------------------------------
+@SUCCUBUS_FALLEN_LEAVE_MARK(대상)
+#DIM 대상
+SELECTCASE RAND:10
+	CASE IS < 4
+		CALL SET_PIERCE_RANDOM(대상, 0)
+		SIF RESULT != -1
+			CALL COLOR_PRINTW(@"%ANAME(대상)%의 %GET_PIERCE_NAME(RESULT)%에는, 음마인 것을 나타내는 피어스가 장착되고 있었다……", 칼라_핑크)
+	CASEELSE
+		IF GET_INMOU(대상) != 음모_백보지
+			CALL COLOR_PRINTW(@"%ANAME(대상)%의 음모는, 추잡한 본성을 나타내는 것 같은 하트형에 정돈되고 있었다……", 칼라_핑크)
+			TALENT:대상:음모목표치 = 음모_하트형
+			TALENT:대상:음모현재치 = 음모_하트형
+		ENDIF
+ENDSELECT
+

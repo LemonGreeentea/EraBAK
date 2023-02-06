@@ -1,0 +1,363 @@
+﻿;주지육림
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME51
+LOCALS:0 = 주지육림
+RESULTS:0 = %LOCALS:0%
+RESULTS:1 = %LOCALS:0%
+RESULTS:2 = %LOCALS:0%
+RESULTS:3 = %LOCALS:0%
+RESULTS:4 = %LOCALS:0%
+RESULTS:5 = %LOCALS:0%
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE51
+;공통 부분
+CALL COM_ABLE_COMMON(51)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 1명, MASTER
+SIF MPLY:0 != MASTER || MPLY_NUM != 1
+	RETURN 0
+
+;플레이어가 행동불능이라면 불가
+SIF !IS_PLAYABLE(MPLY:0)
+	RETURN 0
+
+;노출플레이중이 아니면 안 돼
+SIF TFLAG:54 !=  8
+	RETURN 0
+
+;모브가 어느 정도 없으면 안 돼
+SIF TFLAG:104 < 2
+	RETURN 0
+
+;모든 플레이어에 대해 판정
+FOR LOCAL:0, 0, MPLY_NUM
+	;안면승마 되고 있다면 불가
+	SIF IS_RIDDEN(MPLY:(LOCAL:0))
+		RETURN 0
+	;구가 막히고 있으면 안 돼
+	SIF IS_M_HOLD(MPLY:(LOCAL:0))
+		RETURN 0
+	;구속되고 있다면 불가
+	SIF IS_BIND(MPLY:(LOCAL:0))
+		RETURN 0
+NEXT
+
+LOCAL:1 = 0
+;보지와 자지 양쪽 모두 없으면 안 돼
+FOR LOCAL:0, 0, CHARANUM
+	SIF IS_PARTICIPATE_TRAIN(LOCAL) && HAS_VAGINA(LOCAL)
+		SETBIT LOCAL:1, 1
+	SIF IS_PARTICIPATE_TRAIN(LOCAL) && HAS_PENIS(LOCAL)
+		SETBIT LOCAL:1, 2
+NEXT
+
+RETURN GETBIT(LOCAL:1, 1) && GETBIT(LOCAL:1, 2)
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM51
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+PRINTFORML %조사처리(ANAME(MPLY:0),"는")%, 노출플레이에 참가한 무리를 섞어 난교를 실시하기로 했다……
+PRINTFORMW 그 누구라도 저 좋은 대로 사귀어서는 상대를 바꾸어, 술을 마신다거나 해서 야던 법석이 시작되었다……
+PRINTFORMW ·
+PRINTFORMW ·
+PRINTFORMW ·
+
+LOCAL:2 = 0
+FOR LOCAL, 0, CHARANUM
+	SIF IS_PARTICIPATE_TRAIN(LOCAL) && IS_FEMALE(LOCAL)
+		LOCAL:2 ++
+NEXT
+
+;전원 시합으로 FUCK 한다
+FOR LOCAL:0, 0, CHARANUM
+	SIF !IS_PARTICIPATE_TRAIN(LOCAL)
+		CONTINUE
+	SIF !IS_FEMALE(LOCAL)
+		CONTINUE
+	SIF GROUPMATCH(TCVAR:LOCAL:53, 5, 6)
+		CONTINUE
+	FOR LOCAL:1, 0, CHARANUM
+		SIF !IS_PARTICIPATE_TRAIN(LOCAL:1)
+			CONTINUE
+		SIF LOCAL == LOCAL:1
+			CONTINUE
+		SIF GROUPMATCH(TCVAR:(LOCAL:1):53, 5, 6)
+			CONTINUE
+		;아야장표시는 확률
+		SIF RAND:MAX(LOCAL:2 / 2, 1) == 0
+			CALL COM51_ORGY(LOCAL, LOCAL:1)
+		;표시되지 않았던 경우도, 질내사정이라든지는 되었던 것에 한다
+		IF HAS_PENIS(LOCAL:1) && HAS_VAGINA(LOCAL)
+			FOR LOCAL:2, 0, 5
+				CALL RECORD_INJECTION(LOCAL, GET_ID(LOCAL:1), RAND(3, 7))
+				CUM_GET_COUNT:LOCAL:사정부위_질내 += RAND(3, 7)
+				CUM_GET_COUNT:LOCAL:사정부위_애널 += RAND(3, 7)
+				CUM_GET_COUNT:LOCAL:사정부위_손 += RAND(3, 7)
+				CUM_GET_COUNT:LOCAL:사정부위_입 += RAND(3, 7)
+				CUM_GET_COUNT:LOCAL:사정부위_가슴 += RAND(3, 7)
+				CUM_GET_COUNT:LOCAL:사정부위_다리 += RAND(3, 7)
+				CUM_GET_COUNT:LOCAL:사정부위_머리카락 += RAND(3, 7)
+				CUM_GET_COUNT:LOCAL:사정부위_엉덩이 += RAND(3, 7)
+				CUM_TO_COUNT:(LOCAL:1):사정부위_질내 += RAND(3, 7)
+				CUM_TO_COUNT:(LOCAL:1):사정부위_애널 += RAND(3, 7)
+				CUM_TO_COUNT:(LOCAL:1):사정부위_손 += RAND(3, 7)
+				CUM_TO_COUNT:(LOCAL:1):사정부위_입 += RAND(3, 7)
+				CUM_TO_COUNT:(LOCAL:1):사정부위_가슴 += RAND(3, 7)
+				CUM_TO_COUNT:(LOCAL:1):사정부위_다리 += RAND(3, 7)
+				CUM_TO_COUNT:(LOCAL:1):사정부위_머리카락 += RAND(3, 7)
+				CUM_TO_COUNT:(LOCAL:1):사정부위_엉덩이 += RAND(3, 7)
+			NEXT
+		ENDIF
+		CALL COM51_ADD_SOURCE(LOCAL)
+		CALL COM51_ADD_SOURCE(LOCAL:1)
+	NEXT
+NEXT
+
+PRINTFORMW ·
+PRINTFORMW ·
+PRINTFORMW ·
+PRINTFORMW 술을 마신다거나 해서 야던 법석은 간신히 끝난 것 같다
+
+;주도도 변화 기준치
+TFLAG:49 = 5
+
+;도착도 변화 기준치
+TFLAG:50 = 10
+
+TFLAG:55 = TFLAG:56
+
+;후의 커맨드의 실행을 저지한다
+CALL INIT_EQUIP
+
+RETURN 1
+
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER51(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 120
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 4)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 1, 10))
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -2)
+ENDIF
+IF TALENT:(ARG:0):수치심옅음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수치심옅음", 5)
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN51
+RETURN 커맨드_우후후
+
+;-------------------------------------------------
+;난교 파트  좋은 표현이 생각나지 않아 받고 공격은 하고 있지만 접수측의 캐릭터가 공격하는 분기도 있어
+;남은 접수 측에 들어오지 않는 전제
+;-------------------------------------------------
+@COM51_ORGY(접수, 공격)
+#DIM 접수
+#DIM 공격
+
+;남→녀/후타, 또는 후타→녀/후타
+IF IS_MALE(공격) || (HAS_PENIS(공격) && RAND:100 < 20)
+	SELECTCASE RAND:5
+		CASE 0
+			PRINTFORML %ANAME(접수)%의 %STR_BODY("질:욕정", 접수)%를, %조사처리(ANAME(공격),"가")% 사납게 관철하고 있다
+			PRINTFORML %조사처리(ANAME(접수),"는")% 견딜 수 없다는 소리를 지르면서가는 있다……
+		CASE 1
+			PRINTFORML 이미 몇 발도 종을 받아 들인 %조사처리(ANAME(접수),"는")%, 황홀한 표정을 띄우고 %ANAME(공격)%의 육봉을 물고 있다
+			PRINTFORML 줄줄 귀두를 핥아대져 %조사처리(ANAME(공격),"는")% 무심코 정액을 풀었다……
+		CASE 2
+			PRINTFORML %ANAME(접수)%의 양구멍을 %조사처리(ANAME(공격),"가")% 집요하게 찌르고 있다
+			PRINTFORML 육봉을 쑤셔 넣어질 때, %조사처리(ANAME(접수),"는")% 견딜 수 없다는 소리를 질러 좋아한다……
+		CASE 3
+			PRINTFORML %조사처리(ANAME(공격),"는")% 드러누워, %ANAME(접수)%에 기승위로 허리를 흔들게 하고 있다
+			PRINTFORML %STR_BODY("질:감도", 접수)%로 페니스를 물었던 %조사처리(ANAME(접수),"는")%, 허리를 흔드는여행 요염한 소리를 지르고 있다……
+		CASE 4
+			PRINTFORML %조사처리(ANAME(공격),"는")% %조사처리(ANAME(접수),"를")% 깔아눌러, 난폭하게 마구 찌르고 있다
+			PRINTFORML 양구멍을 후벼파져 %조사처리(ANAME(접수),"는")% 짐승 같아 보인 소리를 질러 좋아하고 있다……
+	ENDSELECT
+	CALL FUCK(공격, "욕망, 성교, 성기술, 사정, Ｃ, Ｍ, Ｖ삽입, Ａ삽입, 키스", "동정상실, 키스상실", -1, @"%ANAME(접수)%의 입술", "", @"%ANAME(공격)%의 질", "난교")
+{
+	CALL FUCK(접수, "욕망, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, Ｖ확장, Ａ확장, 성교, 자위, 정애, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교",
+	    		    "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정, 구강사정",
+					GET_ID(공격),
+					@"%ANAME(공격)%의 페니스",
+					@"%ANAME(공격)%",
+					"",
+					"난교")
+}
+;후타→후타
+ELSEIF HAS_PENIS(공격) && HAS_PENIS(접수)
+	SELECTCASE RAND:5
+		CASE 0
+			PRINTFORML %조사처리(ANAME(공격),"와")% %조사처리(ANAME(접수),"는")% 서로의 페니스를 서로 빨고
+			PRINTFORML 서로의 입에 충분히 사정한 후, 곧바로 「2회전」이 시작되었다……
+		CASE 1
+			PRINTFORML %조사처리(ANAME(공격),"는")% %ANAME(접수)%의 %STR_BODY("질:욕정", 접수)%를 관철하고 있다
+			PRINTFORML 충분히 종을 붙인 후, 이번은 %조사처리(ANAME(접수),"가")% %조사처리(ANAME(공격),"를")% 관철했다……
+		CASE 2
+			PRINTFORML %조사처리(ANAME(공격),"와")% %조사처리(ANAME(접수),"는")% 서로 입맞춤하면서, 페니스를 맞대고 비비고 있다
+			PRINTFORML 점차 인내 할 수 없게 되었는지, %조사처리(ANAME(공격),"가")% %조사처리(ANAME(접수),"를")% 쓰러트렸다……
+		CASE 3
+			PRINTFORML 백탁 투성이가 된 %조사처리(ANAME(공격),"와")% %조사처리(ANAME(접수),"가")% 서로를 서로 관철하고
+			PRINTFORML 사정해서는 사정되는 모양은, 성욕이 무한하게 되었는지와 같다……
+		CASE 4
+			PRINTFORML %조사처리(ANAME(공격),"는")% %조사처리(ANAME(접수),"를")% 관철하면서, %ANAME(접수)%의 육봉을 잡아당기고 있다
+			PRINTFORML %조사처리(ANAME(공격),"가")% 질내사정 하는 것과 동시에, %ANAME(접수)%도 정액을 풀었다……
+	ENDSELECT
+{
+	CALL FUCK(접수, "욕망, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, Ｖ확장, Ａ확장, 성교, 자위, 정애, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교, Ｖ삽입, Ａ삽입, 레즈",
+	    		    "키스상실, 처녀상실, Ａ처녀상실, 동정상실, 질내사정, 장내사정, 구강사정",
+					GET_ID(공격),
+					@"%ANAME(공격)%의 페니스",
+					@"%ANAME(공격)%",
+					@"%ANAME(공격)%의 질",
+					"난교")
+}
+{
+	CALL FUCK(공격, "욕망, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, Ｖ확장, Ａ확장, 성교, 자위, 정애, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교, Ｖ삽입, Ａ삽입, 레즈",
+	    		    "키스상실, 처녀상실, Ａ처녀상실, 동정상실, 질내사정, 장내사정, 구강사정",
+					GET_ID(접수),
+					@"%ANAME(접수)%의 페니스",
+					@"%ANAME(접수)%",
+					@"%ANAME(접수)%의 질",
+					"난교")
+}
+;후타→녀
+ELSEIF HAS_PENIS(공격) && !HAS_PENIS(접수)
+	SELECTCASE RAND:5
+		CASE 0
+			PRINTFORML %조사처리(ANAME(공격),"가")% %조사처리(ANAME(접수),"를")% 관철하고 있다
+			PRINTFORML 원이 여자이니까개 그 정확한 고문에, %조사처리(ANAME(접수),"는")% 눈물을 개수대면서가……
+		CASE 1
+			PRINTFORML %조사처리(ANAME(공격),"는")% %ANAME(접수)%에 입으로 봉사시키고 있다
+			PRINTFORML 구에 사정한 후, %조사처리(ANAME(공격),"는")% %조사처리(ANAME(접수),"를")% 쓰러트렸다……
+		CASE 2
+			PRINTFORML %조사처리(ANAME(접수),"가")% %ANAME(공격)%의 페니스를 청소 페라하고 있다
+			PRINTFORML 정중하게 육봉을 맑게 한 후, 2회전이 시작되었다……
+		CASE 3
+			PRINTFORML %조사처리(ANAME(공격),"가")% %ANAME(접수)%의 양구멍을 후벼파고 있다
+			PRINTFORML 원이 여자이니까개 그 정확한 고문에, %조사처리(ANAME(접수),"는")% 눈물을 개수대면서가……
+		CASE 4
+			PRINTFORML %조사처리(ANAME(공격),"가")% %조사처리(ANAME(접수),"와")% 입맞춤을 주고 받고 있다
+			PRINTFORML 점차 인내 할 수 없게 되었는지, %조사처리(ANAME(공격),"가")% %조사처리(ANAME(접수),"를")% 쓰러트렸다……
+	ENDSELECT
+	CALL FUCK(공격, "욕망, 성교, 성기술, 사정, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, Ｖ삽입, Ａ삽입, 키스, 레즈", "동정상실, 키스상실", -1, @"%ANAME(접수)%의 입술", "", @"%ANAME(접수)%의 질", "난교")
+{
+	CALL FUCK(접수, "욕망, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, Ｖ확장, Ａ확장, 성교, 자위, 정애, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교, 레즈",
+	    		    "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정, 구강사정",
+					GET_ID(공격),
+					@"%ANAME(공격)%의 페니스",
+					@"%ANAME(공격)%",
+					"",
+					"난교")
+}
+;그 외
+;녀→녀, 또는 여자→후타
+ELSE
+	SELECTCASE RAND:5
+		CASE 0
+			PRINTFORML %조사처리(ANAME(공격),"가")% %조사처리(ANAME(접수),"와")% 얽히고 있다
+			PRINTFORML 서로 서로의 신체에 키스를 세례를 퍼부어지고 있다……
+		CASE 1
+			PRINTFORML 백탁 투성이가 된 %조사처리(ANAME(공격),"와")% %조사처리(ANAME(접수),"가")% 얽히고 있다
+			PRINTFORML 서로의 신체에 부착한 정액을 서로 빨고……
+		CASE 2
+			PRINTFORML %조사처리(ANAME(공격),"가")% %조사처리(ANAME(접수),"와")% 조개맞대기 하고 있다
+			PRINTFORML 점차 행위는 격렬해져, 높은 소리를 질러 절정 했다……
+		CASE 3
+			PRINTFORML %조사처리(ANAME(공격),"와")% %조사처리(ANAME(접수),"가")% 서로의 %STR_BODY("질", 공격)%를 서로 애무하고
+			PRINTFORML 서로 서로 높여, 나가는 두 명 동시에 절정을 맞이했다……
+		CASE 4
+			PRINTFORML %조사처리(ANAME(공격),"가")% %조사처리(ANAME(접수),"를")% 깔아눌러, 애무하고 있다
+			PRINTFORML 그러던 중 공수가 바뀌어, %조사처리(ANAME(접수),"가")% %조사처리(ANAME(공격),"를")% 허덕이게 하기 시작한다……
+	ENDSELECT
+	IF HAS_PENIS(접수)
+{
+		CALL FUCK(공격, "욕망, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, Ｖ확장, Ａ확장, 성교, 자위, 정애, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교, 레즈",
+						"키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정, 구강사정",
+						GET_ID(접수),
+						@"%ANAME(접수)%의 페니스",
+						@"%ANAME(접수)%",
+						"",
+						"난교")
+}
+		CALL FUCK(접수, "욕망, 성교, 성기술, 사정, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, Ｖ삽입, Ａ삽입, 키스, 레즈", "동정상실, 키스상실", -1, @"%ANAME(공격)%의 입술", "", @"%ANAME(공격)%의 질", "난교")
+	ELSE
+		CALL FUCK(공격, "욕망, 성교, 성기술, 사정, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 키스, 레즈", "키스상실", -1, @"%ANAME(접수)%의 입술", "", @"%ANAME(접수)%의 질", "난교")
+		CALL FUCK(접수, "욕망, 성교, 성기술, 사정, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 키스, 레즈", "키스상실", -1, @"%ANAME(공격)%의 입술", "", @"%ANAME(공격)%의 질", "난교")
+	ENDIF
+ENDIF
+PRINTFORMW 
+
+;-------------------------------------------------
+;절정 했던 것에 한다
+;-------------------------------------------------
+@COM51_ADD_SOURCE(대상)
+#DIM 대상
+SIF HAS_PENIS(대상)
+	SOURCE:대상:쾌Ｐ += 500
+SIF HAS_VAGINA(대상)
+	SOURCE:대상:쾌Ｖ += 500
+
+SOURCE:대상:쾌Ａ += 500
+SOURCE:대상:쾌Ｂ += 500
+SOURCE:대상:쾌Ｍ += 500
+SOURCE:대상:쾌Ｃ += 500
+
+SOURCE:대상:노출 += 200
+SOURCE:대상:봉사 += 30
+SOURCE:대상:접촉 += 30
+SOURCE:대상:성행동 += 200
+SOURCE:대상:일탈 += 30
+SOURCE:대상:고통 += 50
+
+EX:대상:Ｃ절정 += MIN(MIN(ABL:대상:Ｃ감, RAND:10), RAND(100, 120))
+SIF HAS_VAGINA(대상)
+	EX:대상:Ｖ절정 += MIN(MIN(ABL:대상:Ｖ감, RAND:10), RAND(100, 120))
+EX:대상:Ａ절정 += MIN(MIN(ABL:대상:Ａ감, RAND:10), RAND(100, 120))
+EX:대상:Ｂ절정 += MIN(MIN(ABL:대상:Ｂ감, RAND:10), RAND(100, 120))
+EX:대상:Ｍ절정 += MIN(MIN(ABL:대상:Ｍ감, RAND:10), RAND(100, 120))
+
+SIF HAS_PENIS(대상)
+	EX:대상:사정 += MIN(MIN(ABL:대상:사정, RAND:10), RAND(100, 120))
+SIF TALENT:대상:모유체질
+	EX:대상:분유 += MIN(MIN(ABL:대상:분유, RAND:10), RAND(100, 120))
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_51()
+RETURN POWER(2, 성적기호_성교하고싶다)
+
+@COM_PREFERENCE_TARGET_51()
+RETURN POWER(2, 성적기호_성교되고싶다) + POWER(2, 성적기호_윤간되고싶다)
+

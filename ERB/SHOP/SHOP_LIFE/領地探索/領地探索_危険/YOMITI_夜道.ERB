@@ -1,0 +1,117 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_YOMITI_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_YOMITI_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_YOMITI(대상)
+#DIM 대상
+#DIM 금액
+
+PRINTFORML 탐색이 오래 끌어 밤이 되어 버렸다
+PRINTFORML 밤길을 걷고 있으면 길가에 우두커니 숙소가 서 있었다
+PRINTFORML 그 밖에 손님은 없는 것 같아 점원도 점주가 한사람만의 같다
+PRINTFORMW 가까이의 취락까지 아직 많이 있어, 도중 깜깜하다고 말한다
+PRINTFORML 어떻게 하지?
+PRINTL
+CALL ASK_YN("묵어 간다" ,"밤길로 나아간다")
+IF RESULT == 1
+	PRINTFORML 이상한 듯한 여인숙이다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 숙소를 무시해 밤길로 나아갔다
+	PRINTFORML 
+	SELECTCASE RAND:3
+		CASE 0
+			PRINTFORMW 아무 일도 없게 취락까지 간신히 도착할 수 있었다
+		CASE 1
+			PRINTFORMW 도중에 다리를 미끄러지게 하고 다쳐 버렸다…
+			CALL ADD_COOLTIME(대상, 2)
+		CASE 2
+			PRINTFORMW 강도에 조우했다!
+			IF LIMIT(ABL:대상:무투, 30, 80) > RAND:100
+				PRINTFORML 역관광으로 했다
+				PRINTFORMW 강도는 도망쳐 갔지만 지갑을 잃어버려 갔다
+				MONEY += 2000
+				CALL ICPRINT("금<2000>을 손에 넣었다", "W", 칼라_주의)
+			ELSE
+				PRINTFORMW 저항했지만 당해 버렸다……
+				IF IS_MALE(대상)
+					PRINTFORMW 지갑을 내밀면 어떻게든 놓쳐 받을 수 있었다
+					금액 = 2000 + (RAND:200 + 1) * 100
+					SIF 금액 > MONEY
+						금액 = MONEY
+					MONEY -= 금액
+					CALL ICPRINT(@"금<{금액}>를 빼앗겼다…", "W", 칼라_주의)
+				ELSE
+					PRINTFORMW 그는 지면에 넘어진 %조사처리(ANAME(대상),"를")% 보면 천하게 보인 미소를 띄우고 수풀에 끌어들였다
+					PRINTFORML 
+					PRINTFORML 너덜너덜로 된 %조사처리(ANAME(대상),"는")% 그에게 덥쳐져 격렬한 씨뿌리기 프레스를 받으면서 신음하고 있다
+					PRINTFORML 격렬하게 페니스를 쳐박아지면서 손가락과 혀로 여자의 약점을 빨아지면 신체가 반응해 움찔움찔 경련해 버린다
+					PRINTFORMW 어떻게든 질방편만은 막으려고 필사적으로 몸을 구불거리게 할 수 있어도 피할 수 있지 못하고, 비명을 올리려고 하면 입술을 막혔다
+					PRINTFORML 구 섹스 하면서 격렬하게 페니스를 빼고 꽂기 되면 강간되고 있는데 몸이 뜨거워져 버린다
+					PRINTFORML 용서 없는 피스톤에 %ANAME(대상)%의 신체는 완전히 굴복 당해 추잡하게 졸라대는 것처럼 달라붙고 있다
+					PRINTFORMW 쾌락으로 머리가 정신나가 버린 %조사처리(ANAME(대상),"는")% 이미 저항하지 못하고 자궁에 그의 열을 느끼면서 되는 대로였다……
+					CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, Ａ, 키스, 펠라티오, Ｖ성교, Ａ성교", "처녀상실, 질내사정, 키스상실, 구강사정, Ａ처녀상실, 장내사정", GET_SPERM_ID("불량배"), @"불량배의 \@RAND:2 ? 페니스 # 입술\@", "불량배", "", "패배한 끝의 강간")
+					PRINTFORML 
+					PRINTFORMW 새벽무렵, 너덜너덜로 질척질척이 된 %조사처리(ANAME(대상),"가")% 수풀의 안쪽에 남아 있었다
+				ENDIF
+			ENDIF
+	ENDSELECT
+	RETURN
+ENDIF
+PRINTFORMW 밤길은 위험한 것으로 묵는 일로 했다
+PRINTFORML 
+SELECTCASE RAND:3
+	CASE 0
+		PRINTFORMW 하룻밤 푹 잘 수 있었다
+	CASE 1
+		PRINTFORML 한밤중, 추위에 눈을 뜨면 밭의 한가운데에 눕고 있었다
+		PRINTFORML 아무래도 여우에 속여진 것 같다…
+		PRINTFORMW 감기에 걸려 버렸다
+		CALL ADD_COOLTIME(대상, 2)
+	CASE 2
+		PRINTFORMW 꽤 밥도 맛있고, 입맛을 쳤다
+		IF LIMIT(ABL:대상:방위, 30, 80) > RAND:100
+			PRINTFORMW 하지만 뭔가 맛이 이상하다…무려 시비레약이 들어가 있다!
+			PRINTFORML 점주를 캐물은 곳, 여행자에게 약을 가지고 강도하고 있던 것을 인정했다
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 점주를 잡으면 가게의 돈을 반대로 빼앗아, 관헌에 내밀었다
+			MONEY += 2000
+			CALL ICPRINT("금<2000>을 손에 넣었다", "W", 칼라_주의)
+		ELSE
+			PRINTFORMW 하지만 뭔가 맛이 이상하다…무려 시비레약이 들어가 있었다!
+			IF IS_MALE(대상)
+				PRINTFORMW 깨달았을 때에는 이미 늦고, 점주에게 지갑을 빼앗겨 내던져졌다…
+				금액 = 2000 + (RAND:200 + 1) * 100
+				SIF 금액 > MONEY
+					금액 = MONEY
+				MONEY -= 금액
+				CALL ICPRINT(@"금<{금액}>를 빼앗겼다…", "W", 칼라_주의)
+			ELSE
+				PRINTFORMW 점주는 보기 흉하게 넘어진 %조사처리(ANAME(대상),"를")% 보면 천하게 보인 미소를 띄우고 침실에 데리고 들어갔다
+				PRINTFORML 
+				PRINTFORML 침대에 밀어 쓰러트려진 %조사처리(ANAME(대상),"는")% 끈적 전신이 애무된 후 가차 없이 범해졌다
+				PRINTFORML 엉덩이를 움켜잡음으로 되어 격렬하게 페니스를 빼고 꽂기 되어 가부간의 대답 없게 신체를 암컷으로서 예의범절을 가르쳐져 버린다
+				PRINTFORMW 시비레약의 탓으로 변변히 저항도 하지 못하고, 필사적으로 베개에 얼굴을 묻어 소리가 새지 않도록 할 수밖에 없었다
+				PRINTFORML 하지만 그 반응은 그를 더욱 더 그를 흥분시킨 것 같아 한층 더 격렬한 피스톤을 휩쓸리는 일이 된다
+				PRINTFORML 페니스를 자궁입구에 강압할 수 있을 때에 넋을 잃을 것 같은 쾌락이 달려, 참지 못하고 신음소리를 흘려 버린다
+				PRINTFORMW 일발, 안에 추방해지면 이성이 날아가 버려, 뒤는 이제(이미/벌써/더는/정말) 그로 되는 대로 미친듯이 자지러지는 소리를 낼 뿐이었다……
+				CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, Ａ, 키스, 펠라티오, Ｖ성교, Ａ성교", "처녀상실, 질내사정, 키스상실, 구강사정, Ａ처녀상실, 장내사정", GET_SPERM_ID("강도 점주"), @"강도 점주의 \@RAND:2 ? 페니스 # 입술\@", "강도 점주", "", "약을 섞어진 강간")
+				PRINTFORML 
+				PRINTFORML 며칠의 사이, 그의 성노예로서 희롱해진 후, 어떻게든 빈틈을 찔러 탈출할 수 있었다
+				PRINTFORMW 하지만 몸안에 언제까지나 그의 페니스가 삽입된 것 같은 감각이 남아 있었다
+			ENDIF
+		ENDIF
+ENDSELECT
+
+RETURN 1

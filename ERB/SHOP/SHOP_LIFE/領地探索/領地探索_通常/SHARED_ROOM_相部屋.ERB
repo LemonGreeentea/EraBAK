@@ -1,0 +1,77 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_SHARED_ROOM_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_SHARED_ROOM_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_SHARED_ROOM(대상)
+#DIM 대상
+
+PRINTFORMW 늦어져 버렸으므로, 숙소에 묵기로 했다
+PRINTFORMW 하지만 공교롭게도 손님이 많아, 같은 방 밖에 비어있지 않은 것 같다
+PRINTFORML 
+CALL ASK_MULTI("단념한다", "같은 방으로 한다")
+
+IF RESULT == 0
+	PRINTFORML 숙소는 단념할 수밖에 없을 것이다
+	PRINTFORMW 거점에 돌아오는 무렵에는, 완전히 심야가 되어 버리고 있었다
+	RETURN 1
+ENDIF
+
+PRINTFORMW 하룻밤 정도라면 뭐 좋을 것이다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+IF IS_MALE(대상) || (HAS_PENIS(대상) && RAND:2)
+	PRINTFORMW 동실이 된 것은 아름다운 여성이었다
+	PRINTFORMW 회화가 활기를 띠어, 좋은 분위기가 되었지만……
+	PRINTFORML 
+	CALL ASK_YN("손을 댄다", "잔다")
+	IF RESULT == 1
+		PRINTFORMW 내일도 빠르다
+		PRINTFORML 솔직하게 자기로 했다
+		RETURN 1
+	ENDIF
+	PRINTFORMW 여성을 껴안으면, 그녀도 그것을 기다리고 있었다고 하도록(듯이) 옷을 풀어헤쳤다……
+	PRINTFORMW 
+	PRINTFORML 실내에 교성이 영향을 주고 있다
+	PRINTFORML %조사처리(ANAME(대상),"와")% 그녀는 신체의 궁합이 좋고, 이미 몇 번이나 정액을 발하고 있다
+	PRINTFORMW 피스톤의 여행, 다 들어가지 않았던 자식이 질 구멍으로부터 흘러넘치고 있다
+	PRINTFORMW %조사처리(ANAME(대상),"가")% 낮게 신음소리를 냄과 동시에 여자 안쪽 깊고로 사정하면, 그녀는 한층 더 큰 교성을 올려 몸을 뒤로 젖혔다
+	CALL FUCK(대상, "성기술, 성교, Ｃ, 사정, Ｖ삽입" + (IS_FEMALE(대상) ? ", 레즈, Ｂ, Ｖ" # ""), "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "화간")
+	PRINTFORML 
+	PRINTFORMW 이튿날 아침, 그녀와 입맞춤을 주고 받아 헤어졌다
+ELSE
+	PRINTFORMW 동실이 된 것은 날쌔고 용맹스러운 남성이었다
+	PRINTFORMW 회화가 활기를 띠어, 좋은 분위기가 되었지만……
+	PRINTFORML 
+	CALL ASK_YN("권한다", "잔다")
+	IF RESULT == 1
+		PRINTFORMW 내일도 빠르다
+		PRINTFORML 솔직하게 자기로 했다
+		RETURN 1
+	ENDIF
+	PRINTFORMW 남성으로 하고 눈사태 걸리면, 그도 그것을 기다리고 있었다고 하도록(듯이)%ANAME(대상)%의 옷을 벗게 했다……
+	PRINTFORMW 
+	PRINTFORML 오두막의 안으로부터 교성이 영향을 주고 있다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 남자에게 단단하게 깔아눌러져 %STR_BODY("신체", 대상)%를 능숙 되고 있다
+	PRINTFORML 머릿속은 쾌락으로 다 메워져, %STR_BODY("가슴:감도:감촉", 대상)%를 진동시켜 섹스에 열중하고 있다
+	PRINTFORMW 남이 낮게 신음소리를 냄과 동시에 %ANAME(대상)%의 안쪽 깊고로 사정하면, %조사처리(ANAME(대상),"는")% 한층 더 큰 교성을 올려 몸을 뒤로 젖혔다
+	CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("지나가는 남자"), @"지나가는 남자의 \@RAND:2 ? 페니스 # 입술\@", "지나가는 남자", "", "화간")
+	PRINTFORML 
+	PRINTFORMW 이튿날 아침, 그와 입맞춤을 주고 받아 헤어졌다
+ENDIF
+RETURN 1

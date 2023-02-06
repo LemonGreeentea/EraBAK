@@ -1,0 +1,295 @@
+﻿;피피어싱
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME113
+LOCALS:0 = 체모관리
+
+RESULTS:0 = %LOCALS:0%한다
+RESULTS:1 = %LOCALS:0%당한다
+RESULTS:2 = %LOCALS:0%시킨다
+RESULTS:3 = %LOCALS:0%된다
+RESULTS:4 = %LOCALS:0%시킨다
+RESULTS:5 = %LOCALS:0%과시하고
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE113
+;공통 부분
+CALL COM_ABLE_COMMON(113)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 1명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 1
+	RETURN 0
+;타겟은 최대로 1명까지
+SIF MTAR_NUM <= 0 || MTAR_NUM > 1
+	RETURN 0
+SIF ITEM:면도칼 <= 0
+	RETURN 0
+;플레이어가 행동불능이라면 불가
+SIF !IS_PLAYABLE(MPLY:0)
+	RETURN 0
+;플레이어가 구속중이라면 불가
+SIF IS_BIND(MPLY:0)
+	RETURN 0
+;플레이어가 안면승마 되고 있다면 불가
+SIF IS_RIDDEN(MPLY:0)
+	RETURN 0
+;플레이어와 타겟이 삽입되고 있다면 불가
+SIF IS_INSERT_SINGLE(MPLY:0, "전") || IS_INSERT_SINGLE(MTAR:0, "전")
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM113
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+
+PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 털을 관리하기로 했다……
+PRINTFORML
+PRINTFORML 음모를
+FOR LOCAL, 0, 11
+	CALL PRINTBUTTON_EXL(@"[{LOCAL:0}] %GET_INMOU_NAME(LOCAL:0)%에 시킨다", LOCAL:0, 1, TALENT:(MTAR:0):음모현재치 == LOCAL:0)
+NEXT
+
+PRINTFORML 겨드랑이털을
+FOR LOCAL, 100, 110
+	CALL PRINTBUTTON_EXL(@"[{LOCAL:0}] %GET_ARMPIT_NAME(LOCAL:0 - 100)%에 시킨다", LOCAL:0, 1, TALENT:(MTAR:0):겨드랑이털현재치 == LOCAL:0 - 100)
+NEXT
+
+PRINTFORML [99] 돌아온다
+$INPUT_LOOP
+INPUT
+IF RESULT == 99
+	PRINTFORML 역시 그만두었다
+	RETURN 0
+ELSEIF (INRANGE_INMOU(RESULT) && TALENT:(MTAR:0):음모현재치 != RESULT)
+	LOCAL:0 = RESULT
+	LOCAL:1 = 0
+	IF LOCAL:0 == 10
+		LOCAL:1 = 1
+		LOCAL:0 = 음모_표준
+	ENDIF
+	PRINTFORML %ANAME(MTAR:0)%에, 음모를\@ LOCAL:1 == 1 ? 하트형 # %GET_INMOU_NAME(LOCAL:0)% \@로 하도록(듯이) 전했다
+	IF GET_INMOU(MTAR:0) > LOCAL:0
+		PRINTFORML %ANAME(MTAR:0)%의 음모는, %조사처리(ANAME(MPLY:0),"가")% 전한 이상보다 좀많다……
+		PRINTFORML 차라리 이 장소에서 깎습니까?
+		CALL ASK_YN
+		IF RESULT == 0
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"를")% 누르면, 그 가랑이에 면도칼을 기게 하기 시작했다……
+			PRINTFORML 당신의 음부가 깎아져 가는 것을, %조사처리(ANAME(MTAR:0),"는")% 얼굴을 붉히고 바라보고 있었다……
+			TALENT:(MTAR:0):음모현재치 = LOCAL:0
+			SIF LOCAL:1
+				TALENT:(MTAR:0):음모현재치 = 음모_하트형
+		ELSE
+			PRINTFORML 다음에 스스로 처리시키기로 했다
+		ENDIF
+	ENDIF
+	TALENT:(MTAR:0):음모목표치 = LOCAL:0
+	SIF LOCAL:1
+		TALENT:(MTAR:0):음모목표치 = 음모_하트형
+
+	DOWNBASE:(MTAR:0):체력 += 80
+	SOURCE:(MTAR:0):일탈 = 80
+	SOURCE:(MTAR:0):노출 = 100
+	SOURCE:(MTAR:0):불안 = 30
+	;주도도 변화 기준치
+	TFLAG:49 = 5
+
+	;도착도 변화 기준치
+	TFLAG:50 = 7
+
+	;레즈·ＢＬ경험기준치
+	TFLAG:51 = 7
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:2, 160, 80)
+ELSEIF INRANGE_ARMPIT(RESULT - 100) && TALENT:(MTAR:0):겨드랑이털현재치 != RESULT - 100
+	LOCAL:0 = RESULT - 100
+	LOCAL:1 = 0
+	IF LOCAL:0 == 10
+		LOCAL:1 = 1
+		LOCAL:0 = 겨드랑이털_보통
+	ENDIF
+	PRINTFORML %ANAME(MTAR:0)%에, 겨드랑이털을 %GET_ARMPIT_NAME(LOCAL:0)%로 하도록(듯이) 전했다
+	IF GET_INMOU(MTAR:0) > LOCAL:0
+		PRINTFORML %ANAME(MTAR:0)%의 겨드랑이털은, %조사처리(ANAME(MPLY:0),"가")% 전한 이상보다 좀많다……
+		PRINTFORML 차라리 이 장소에서 깎습니까?
+		CALL ASK_YN
+		IF RESULT == 0
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"를")% 누르면, 그 겨드랑이에 면도칼을 기게 하기 시작했다……
+			PRINTFORML 당신의 겨드랑이털이 깎아져 가는 것을, %조사처리(ANAME(MTAR:0),"는")% 얼굴을 붉히고 바라보고 있었다……
+			TALENT:(MTAR:0):겨드랑이털현재치 = LOCAL:0
+		ELSE
+			PRINTFORML 다음에 스스로 처리시키기로 했다
+		ENDIF
+	ENDIF
+	TALENT:(MTAR:0):겨드랑이털목표치 = LOCAL:0
+
+	DOWNBASE:(MTAR:0):체력 += 80
+	SOURCE:(MTAR:0):일탈 = 120
+	SOURCE:(MTAR:0):노출 = 100
+	SOURCE:(MTAR:0):불안 = 50
+	;주도도 변화 기준치
+	TFLAG:49 = 5
+
+	;도착도 변화 기준치
+	TFLAG:50 = 7
+
+	;레즈·ＢＬ경험기준치
+	TFLAG:51 = 7
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:2, 160, 80)
+ELSE
+	GOTO INPUT_LOOP
+ENDIF
+
+
+
+RETURN 1
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER113(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 110
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 4)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 1, 10))
+
+IF TALENT:(ARG:0):얌전함
+	CALL COM_ORDER_ELEMENT(ARG:0, "얌전함", -3)
+ENDIF
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -2)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 3)
+ENDIF
+IF TALENT:(ARG:0):Ｓ기질
+	CALL COM_ORDER_ELEMENT(ARG:0, "Ｓ기질", 6)
+ENDIF
+
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_새드)
+	CALL COM_ORDER_ELEMENT(ARG:0, "새드", 15)
+ELSE
+	IF ABL:(ARG:0):주도도Ｕ >= 500
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 15)
+	ELSEIF ABL:(ARG:0):주도도Ｕ >= 300
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 10)
+	ELSEIF ABL:(ARG:0):주도도Ｕ >= 100
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 5)
+	ELSEIF ABL:(ARG:0):주도도Ｕ > -100
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 0)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", -5)
+	ENDIF
+
+	IF ABL:(ARG:0):도착도 >= 800
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 20)
+	ELSEIF ABL:(ARG:0):도착도 >= 500
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 15)
+	ELSEIF ABL:(ARG:0):도착도 >= 300
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 10)
+	ELSEIF ABL:(ARG:0):도착도 >= 100
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 5)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 0)
+	ENDIF
+ENDIF
+
+RETURN 1
+
+
+;-------------------------------------------------
+;고유의 실행 판정(타겟측)
+;-------------------------------------------------
+@COM_ORDER_TARGET113(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 120
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 3)
+CALL COM_ORDER_ELEMENT(ARG:0, @"노출 Lv{ABL:(ARG:0):노출}", ABL:(ARG:0):노출 * 3)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 1, 10))
+
+IF TALENT:(ARG:0):얌전함
+	CALL COM_ORDER_ELEMENT(ARG:0, "얌전함", 3)
+ENDIF
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -5)
+ENDIF
+IF TALENT:(ARG:0):해방
+	CALL COM_ORDER_ELEMENT(ARG:0, "해방", 6)
+ENDIF
+
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_노출광)
+	CALL COM_ORDER_ELEMENT(ARG:0, "노출광", 15)
+ELSE
+	IF ABL:(ARG:0):주도도Ｕ <= -500
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 15)
+	ELSEIF ABL:(ARG:0):주도도Ｕ <= -300
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 10)
+	ELSEIF ABL:(ARG:0):주도도Ｕ <= -100
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 5)
+	ELSEIF ABL:(ARG:0):주도도Ｕ < 100
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 0)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", -5)
+	ENDIF
+
+	IF ABL:(ARG:0):도착도 >= 800
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 20)
+	ELSEIF ABL:(ARG:0):도착도 >= 500
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 15)
+	ELSEIF ABL:(ARG:0):도착도 >= 300
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 10)
+	ELSEIF ABL:(ARG:0):도착도 >= 100
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 5)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 0)
+	ENDIF
+ENDIF
+
+RETURN 
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE113
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN113
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_113()
+RETURN POWER(2, 성적기호_욕보이고싶다)
+
+@COM_PREFERENCE_TARGET_113()
+RETURN POWER(2, 성적기호_욕보여지고싶다)
+

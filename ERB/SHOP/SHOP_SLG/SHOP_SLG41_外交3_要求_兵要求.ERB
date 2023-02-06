@@ -1,0 +1,33 @@
+﻿;-------------------------------------------------
+;병을 요구한다
+;-------------------------------------------------
+@DIPLOMACY_REQUEST_SOLDIER(ARG:0)
+LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+LOCAL:5 = GET_COUNTRY_BOSS(ARG:0)
+
+PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:5)%에게, 군사를 넘기라고 요구했다
+
+CALL DIPLOMACY_REQUEST_COMMON(ARG:0, 200)
+LOCAL:2 = RESULT
+SIF LOCAL:2 <= 0
+	RETURN 0
+
+LOCAL:11 = MIN(GET_SUM_ECONOMY(ARG:0) * 8 / 1000, GET_SUM_SOLDIER(ARG:0) * 2 / 3)
+
+;상대로부터 자국에 LOCAL:11만 군사를 이동
+CALL SHIFT_SOLDIER(ARG:0, CFLAG:MASTER:소속, LOCAL:11)
+
+PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% %ANAME(LOCAL:4)%에 군사{LOCAL:11}를 「제공」했다…
+
+;쾌락으로 말하는 것을 들려주었을 경우, 포상의 처리
+SIF LOCAL:2 == 2
+	CALL DIPLOMACY_REQUEST_PRIZE(ARG:0)
+;약물로 말하는 것을 들려주었을 경우, 드라그(약품, 마약)의 처리
+SIF LOCAL:2 == 3
+	CALL DIPLOMACY_REQUEST_DRUG(ARG:0)
+;최면으로 말하는 것을 들려주었을 경우, 최면의 처리
+SIF LOCAL:2 == 4
+	CALL DIPLOMACY_REQUEST_HYPNOSIS(ARG:0)
+
+RETURN 1
+

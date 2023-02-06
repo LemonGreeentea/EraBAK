@@ -1,0 +1,66 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_STRANGE_RESTAURANT_DANGER_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_STRANGE_RESTAURANT_DANGER_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------    
+@TERRITORY_EVENT_STRANGE_RESTAURANT_DANGER(대상)
+#DIM 대상
+
+PRINTFORML 상점가를 걷고 있으면 신경이 쓰인다 음식점을 보기 시작했다
+PRINTFORML 일견 단순한 요리집으로 보이지만……
+PRINTFORML 
+CALL ASK_YN("들어가 본다", "그만둔다")
+
+IF RESULT == 1 
+	PRINTFORML 배도 고파지지 않았다
+	PRINTFORML 그만두었다
+	RETURN 1
+ENDIF
+
+PRINTFORML 막 배가 고프고 있던 곳이다
+PRINTFORMW 들어가 보기로 했다
+PRINTFORML 
+PRINTFORML 점안은 어슴푸레하고, 묘한 분위기였다
+PRINTFORML 점원도 어딘가 쌀쌀한 분위기를 조성하기 시작하고 있다
+PRINTFORMW 의심스러워 하면서 주문하면, 나온 요리는 매우 맛있었다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+IF IS_MALE(대상) || (HAS_PENIS(대상) && RAND:2)
+	PRINTFORML 공허한 눈동자의 %ANAME(대상)%에, 점원이었던 여자가 걸쳐 허리를 흔들고 있다
+	PRINTFORML 요리에 혼합할 수 있었던 약으로 방심한 %조사처리(ANAME(대상),"는")%, 여자가 되는 대로 되어 있다
+	PRINTFORMW 여자가 추잡하게 허덕여, %ANAME(대상)%에 입맞춤하면, %조사처리(ANAME(대상),"는")% 신음소리를 지른다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 여자에게 명해지는 대로, 그녀의 질내에 정액을 풀었다……
+	CALL FUCK(대상, "성기술, 봉사, 성교, Ｃ, Ｍ, 사정" + (IS_FEMALE(대상) ? ", Ｂ, Ｖ, 레즈" # ""), "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "최면을 걸친 강간")
+	PRINTFORML 
+	PRINTFORMW 눈치챘을 때에는 요리는 내려지고 있었다
+	PRINTFORMW 어느새 다 먹었는지 의심스러워 하면서도 가게를 뒤로 했다
+	CFLAG:대상:약물의존 += RAND(20, 40)
+ELSE
+	PRINTFORMW 요리에 혼합할 수 있었던 약에 의해 %조사처리(ANAME(대상),"는")% 실신 해, 점원을 가장하고 있던 건달이 좋은 대로 되어 있다
+	PRINTFORMW "주인님"에 요구되는 대로 허리를 흔들어, 눈을 하트로 해 그와 사귀고 있다
+	PRINTFORML 몇 번이나 범해지고 %STR_BODY("질:Ｖ삽입:질내사정", 대상)%를 뒤로부터 찔려 %STR_BODY("엉덩이:성교:후배위", 대상)%를 얻어맞아 %조사처리(ANAME(대상),"는")% 등을 뒤로 젖히고 느낀다
+	PRINTFORMW %STR_BODY("유두:감도", 대상)%를 집어지면서 질내에 사정되어 %조사처리(ANAME(대상),"는")% 스스로 기쁨의 소리를 질렀다……
+	CALL FUCK(대상, "욕망, 봉사, 성교, 성기술, Ｖ, Ｖ성교", "처녀상실, 질내사정", GET_SPERM_ID("건달"), @"건달의 \@RAND:2 ? 페니스 # 입술\@", "건달", "", "최면중의 강간")
+	PRINTFORML 
+	PRINTFORMW 눈치챘을 때에는 요리는 내려지고 있었다
+	PRINTFORMW 어느새 다 먹었는지 의심스러워 하면서도 가게를 뒤로 했다
+	PRINTFORMW ……음순으로부터 흘러넘치는 백탁에, %조사처리(ANAME(대상),"는")% 눈치채지 않았었다
+	CFLAG:대상:약물의존 += RAND(20, 40)
+ENDIF
+
+RETURN 1

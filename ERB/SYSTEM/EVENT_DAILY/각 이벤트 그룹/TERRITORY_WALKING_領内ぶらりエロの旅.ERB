@@ -1,0 +1,1139 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_TERRITORY_WALKING_RATE()
+RETURN 50
+
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_TERRITORY_WALKING_DECISION()
+
+;세력에 소속하지 않은가 포로라면 안 돼
+SIF CFLAG:MASTER:소속 == 0 || CFLAG:MASTER:포로처 != 0
+	RETURN 0
+	
+SIF DAY < 7
+	RETURN 0
+	
+SIF !HAS_PENIS(MASTER)
+	RETURN 0
+	
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_TERRITORY_WALKING_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;특정의 조건을 채우는 캐릭터를 랜덤에 선택하는 경우에 이용
+;다른 함수는 필수이지만, 이것만은 없어도 좋다  라고 할까 퍼포먼스에 영향을 주므로 불필요하면 만들어서는 안 된다
+;대상이 존재하지 않고 데일리를 개시 할 수 없는 경우는 0을 돌려주는 것으로 데일리의 발생을 캔슬한다
+;---------------------
+@EVENT_DAILY_TERRITORY_WALKING_SETTARGET()
+;만남 캐릭터의 선출, 해당 캐릭터가 발견되지 않는 경우는 캔슬
+FOR LOCAL, 0, CHARANUM
+	;일행력에 소속해 있는 캐릭터
+	IF LOCAL != MASTER && CFLAG:(LOCAL):소속 == CFLAG:MASTER:소속 && !CFLAG:(LOCAL):포로처 && !IS_ANIMAL(LOCAL)
+		DAILY_TARGET:DAILY_TARGET_NUM = LOCAL
+		DAILY_TARGET_NUM ++
+	ENDIF
+NEXT
+SIF DAILY_TARGET_NUM < 1
+	RETURN 0
+
+RETURN 1
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_TERRITORY_WALKING()
+#DIM 대상
+
+대상 = DAILY_TARGET:(RAND:DAILY_TARGET_NUM)
+
+PRINTFORMW 어떤일. 특별히 하는 일도 없고 지루한 휴일이다……
+PRINTFORMW %조사처리(ANAME(MASTER),"는")% 시간 때우기도 겸해, 시찰겸 영내를 훌쩍과 돌아보기로 했다
+PRINTFORMW 그런데, 어디에 가자……
+PRINTFORML 
+CALL ASK_MULTI("술집", "환락가", "온 마을을 흔들흔들", "밤의 번화가", "유곽", "슬럼가", "그만둔다")
+SELECTCASE RESULT
+	;술집（유부녀 루트）
+	CASE 0
+		PRINTFORMW 술집에 가 보자
+		PRINTFORML …
+		PRINTFORMW ……
+		;1/4로 술집에서 마시고 있는 캐릭터와 만남
+		IF ! RAND:4
+			PRINTFORMW 술집에 도착하면, 가게의 안쪽에서 %조사처리(ANAME(대상),"가")% 마시고 있었다
+			SIF CFLAG:대상:안면 == 0
+				CFLAG:대상:안면 = 1
+			PRINTFORMW …글쎄. 분명히 %조사처리(ANAME(대상),"는")% 지금, 근무중일 것으로는……
+			PRINTFORML %조사처리(ANAME(대상),"가")% %ANAME(MASTER)%의 모습을 찾아내면
+			PRINTFORMW 여기에 와, 이라는 듯이 손짓함 된다
+			PRINTFORML 아무래도 완전하게 몹시 취하고 있는 것 같다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(대상)%의 관련술에 교제해졌다……
+			CALL PRINT_ADD_EXP(MASTER, "주량경험치", RAND(5, 15), 1)
+			CALL PRINT_ADD_EXP(대상, "주량경험치", RAND(10, 30), 1)
+			CALL TRAIN_AUTO_ABLUP(MASTER)
+			CALL TRAIN_AUTO_ABLUP(대상)
+			CFLAG:대상:호감도 += 80
+			RETURN
+		ENDIF
+		;애인화 이후
+		IF DVAR:영내훌쩍에로의여행_유부녀 >= 4
+			PRINTFORML %ANAME(MASTER)%의 애인이 된 유부녀가, 오늘도 마시고 있었다
+			PRINTFORMW 말을 걸어 보면, 그녀는 매우 기쁜 듯한 얼굴로 %조사처리(ANAME(MASTER),"를")% 맞이해 주었다
+			PRINTFORML 잠깐 그녀와의 시시한 회화를 즐겼다…
+			PRINTFORMW 그리고 해가 떨어지기 시작했을 무렵에, 그녀는 %ANAME(MASTER)%에 껴안아,   또 자신을 안으면 좋겠다  와 열정적이게 속삭여 왔다
+			PRINTFORML 아무래도 %ANAME(MASTER)%에 안기는 것을 기대해, 매일 여기서 기다리고 있던 것 같다
+			PRINTFORML 그렇게 기특한 그녀의 요망에 응할 수 있도록, %조사처리(ANAME(MASTER),"는")% 그녀를 껴안아, 남녀동반 숙소에서 서로 사랑하기로 했다
+			PRINTFORMW 그리고 %조사처리(ANAME(MASTER),"과")%의 행위의 전에, 그녀는 약지의 링을 제외했다……
+			PRINTFORML 
+			SELECTCASE RAND:4
+				CASE 0
+					PRINTFORMW %ANAME(MASTER)%들은, 숙소의 한 방으로 침대를 삐걱거리게 하면서 짐승과 같이 격렬하게 서로 사랑하고 있다
+					PRINTFORML 그녀는 눈동자에♥를 띄우면서 격렬하게 허리를 흔들어, %ANAME(MASTER)%의 이름을 몇 번이나 불러 요구해 온다
+					PRINTFORMW 격렬하고 교묘한 허리자세에 하나의 물건을 자극 받으며, 무심코 그녀의 허리를 강하게 잡아 깊고 고기단지를 후벼판다
+					PRINTFORML 녀로서의 기쁨을 채워 주는 %ANAME(MASTER)%의 것과 섹스에, 그녀는 행복을 느끼고 있는 것 같아
+					PRINTFORMW 막상 사정의 순간, 그녀는 %ANAME(MASTER)%에 꼬옥 하고 껴안아, %ANAME(MASTER)%의 자식을 자궁으로 받아 들였다……
+				CASE 1
+					PRINTFORMW %ANAME(MASTER)%들은, 숙소의 한 방으로 서로 입술을 깊게 사귀게 하면서 격렬하게 서로 사랑하고 있다
+					PRINTFORML 자신을 여자로서 보지 않았던 남자보다, 자신의 추잡한 본성을 채워 주는 %조사처리(ANAME(MASTER),"과")%의 섹스에,
+					PRINTFORMW 그녀는 지상의 행복을 느껴 그 행복감이 육체를 한층 더 민감하게 해 나간다
+					PRINTFORMW %ANAME(MASTER)%도 또한, 한사람의 여자가 남편보다 자신을 선택했다는 배덕적인 사실에 육봉이 팽배해 그녀를 한층 더 요구해 간다
+					PRINTFORMW 두 명은 서로 서로 요구하는 대로, 몇 번이나 허리를 쳐박고 배덕의 쾌락을 탐냈다……
+				CASE 2
+					PRINTFORMW %ANAME(MASTER)%들은, 숙소의 한 방에서 침대를 삐걱거리게 하면서 기승위로 격렬하게 서로 사랑하고 있다
+					PRINTFORML 그녀는 사랑하는 %ANAME(MASTER)%의 배에 손을 둬, 상스럽고 신음소리를 흘리면서 격렬하게 허리를 상하에 쳐박는다
+					PRINTFORMW 자신의 추잡한 암컷의 본성을 받아 들여 주는 %조사처리(ANAME(MASTER),"과")%의 섹스가 그녀의 마음을 행복해 채워 간다
+					PRINTFORMW 그 얼굴은 쾌감에 다 녹고 있어 남편은 아니고 %ANAME(MASTER)%의 이름을 몇 번이나 부르면서 몇 번이나 절정 한다
+					PRINTFORMW 그 뒤도 %ANAME(MASTER)%에 걸쳐 정열적인 키스를 주고 받으면서, 두 명은 더욱 격렬하게 사귀어 간다……
+				CASE 3
+					PRINTFORMW %ANAME(MASTER)%들은, 숙소의 한 방에서 정상위로 격렬하게 서로 사랑하고 있다
+					PRINTFORML 그녀는 %조사처리(ANAME(MASTER),"과")%의 섹스에 행복을 느끼고 있는 것 같아, 사랑하는 사람 밖에 하지 않는 정열적인 키스를 주고 받는다
+					PRINTFORMW 여자로서의 상스러운 욕구를 채워 주는 %조사처리(ANAME(MASTER),"를")%, 그녀는 진심으로 사랑하고 있는 것 같다
+					PRINTFORML %조사처리(ANAME(MASTER),"가")% 페니스를 돌진할 때, 그녀는 다리를%ANAME(MASTER)%의 허리에 걸어, 보다 질내 깊게까지 페니스를 맞이한다
+					PRINTFORMW 그리고 절정의 순간, 그녀는 %ANAME(MASTER)%에 힘껏 껴안아 밀착해, 그 자식을 자궁으로 받아 들였다……
+			ENDSELECT
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실, Ｖ삽입", 0, "애인의 여자의 입술", "", "애인의 여자의 질", "화간")
+			PRINTFORML 
+			PRINTFORML 충분히 즐긴 후, 새벽전에 숙소를 나왔다
+			PRINTFORMW 그녀는 %ANAME(MASTER)%에 긴 키스를 해 「또, 나를 안아 주세요」라고 고해, 손을 흔들어 %조사처리(ANAME(MASTER),"를")% 보류했다……
+
+		;4회째로 애인이 된다
+		ELSEIF DVAR:영내훌쩍에로의여행_유부녀 == 3
+			PRINTFORML 몇번이나 관계를 가진 유부녀가, 오늘도 마시고 있었다
+			PRINTFORMW 말을 걸어 보면, 그녀는 기쁜 듯한 얼굴로 %조사처리(ANAME(MASTER),"를")% 맞이해 주었다
+			PRINTFORML 이번 취기 정도인 것 같아, 온화한 회화를 즐겼다…
+			PRINTFORMW 즐거운 한때가 끝나면, 그녀는 %ANAME(MASTER)%에 껴안아,   자신을 안아 줘  와 열정적이게 속삭여 왔다
+			PRINTFORML
+			PRINTFORML 사정, %조사처리(ANAME(MASTER),"과")% 관계를 가지고 나서 육체의 욕구 불만이 채워진 덕분인가,
+			PRINTFORMW 남편과의 싸움도 제법 적게 되어, 공식상의 관계는 양호하게 되었다
+			PRINTFORMW 에서도, 자신을 여자로서 안아 주는 것은 %ANAME(MASTER)% 뿐이다. 자신을 채워 주는 것은 %ANAME(MASTER)%의 (분)편이다
+			PRINTFORMW 이니까 자신을, %ANAME(MASTER)%의 여자로 하면 좋겠다  와……
+			PRINTFORML
+			PRINTFORMW 그녀는 물기를 띤 눈동자로 %조사처리(ANAME(MASTER),"를")% 올려본다. 그 표정은 사랑하는 아가씨 그 자체였다
+			PRINTFORML …
+			PRINTFORMW 이런 매력적인 여성이, 여자로서 볼 수 없다는 것은 잔혹한 일이다
+			PRINTFORMW 소망 대로, 그녀를 자신의 여자로 해 주자
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀를 껴안아, 남녀동반 숙소에서 서로 사랑하기로 했다
+			PRINTFORMW 그리고 %조사처리(ANAME(MASTER),"과")%의 행위의 전에, 그녀는 약지의 링을 제외했다……
+			PRINTFORML 
+			SELECTCASE RAND:4
+				CASE 0
+					PRINTFORMW %ANAME(MASTER)%들은, 숙소의 한 방으로 침대를 삐걱거리게 하면서 짐승과 같이 격렬하게 서로 사랑하고 있다
+					PRINTFORML 그녀는 눈동자에♥를 띄우면서 격렬하게 허리를 흔들어, %ANAME(MASTER)%의 이름을 몇 번이나 불러 요구해 온다
+					PRINTFORMW 격렬하고 교묘한 허리자세에 하나의 물건을 자극 받으며, 무심코 그녀의 허리를 강하게 잡아 깊고 고기단지를 후벼판다
+					PRINTFORML 녀로서의 기쁨을 채워 주는 %ANAME(MASTER)%의 것과 섹스에, 그녀는 행복을 느끼고 있는 것 같아
+					PRINTFORMW 막상 사정의 순간, 그녀는 %ANAME(MASTER)%에 꼬옥 하고 껴안아, %ANAME(MASTER)%의 자식을 자궁으로 받아 들였다……
+				CASE 1
+					PRINTFORMW %ANAME(MASTER)%들은, 숙소의 한 방으로 서로 입술을 깊게 사귀게 하면서 격렬하게 서로 사랑하고 있다
+					PRINTFORML 자신을 여자로서 보지 않았던 남자보다, 자신의 추잡한 본성을 채워 주는 %조사처리(ANAME(MASTER),"과")%의 섹스에,
+					PRINTFORMW 그녀는 지상의 행복을 느껴 그 행복감이 육체를 한층 더 민감하게 해 나간다
+					PRINTFORMW %ANAME(MASTER)%도 또한, 한사람의 여자가 남편보다 자신을 선택했다는 배덕적인 사실에 육봉이 팽배해 그녀를 한층 더 요구해 간다
+					PRINTFORMW 두 명은 서로 서로 요구하는 대로, 몇 번이나 허리를 쳐박고 배덕의 쾌락을 탐냈다……
+				CASE 2
+					PRINTFORMW %ANAME(MASTER)%들은, 숙소의 한 방에서 침대를 삐걱거리게 하면서 기승위로 격렬하게 서로 사랑하고 있다
+					PRINTFORML 그녀는 사랑하는 %ANAME(MASTER)%의 배에 손을 둬, 상스럽고 신음소리를 흘리면서 격렬하게 허리를 상하에 쳐박는다
+					PRINTFORMW 자신의 추잡한 암컷의 본성을 받아 들여 주는 %조사처리(ANAME(MASTER),"과")%의 섹스가 그녀의 마음을 행복해 채워 간다
+					PRINTFORMW 그 얼굴은 쾌감에 다 녹고 있어 남편은 아니고 %ANAME(MASTER)%의 이름을 몇 번이나 부르면서 몇 번이나 절정 한다
+					PRINTFORMW 그 뒤도 %ANAME(MASTER)%에 걸쳐 정열적인 키스를 주고 받으면서, 두 명은 더욱 격렬하게 사귀어 간다……
+				CASE 3
+					PRINTFORMW %ANAME(MASTER)%들은, 숙소의 한 방에서 정상위로 격렬하게 서로 사랑하고 있다
+					PRINTFORML 그녀는 %조사처리(ANAME(MASTER),"과")%의 섹스에 행복을 느끼고 있는 것 같아, 사랑하는 사람 밖에 하지 않는 정열적인 키스를 주고 받는다
+					PRINTFORMW 녀로서의 상스러운 욕구를 채워 주는 %조사처리(ANAME(MASTER),"를")%, 그녀는 진심으로 사랑하고 있는 것 같다
+					PRINTFORML %조사처리(ANAME(MASTER),"가")% 페니스를 돌진할 때, 그녀는 다리를%ANAME(MASTER)%의 허리에 걸어, 보다 질내 깊게까지 페니스를 맞이한다
+					PRINTFORMW 그리고 절정의 순간, 그녀는 %ANAME(MASTER)%에 힘껏 껴안아 밀착해, 그 자식을 자궁으로 받아 들였다……
+			ENDSELECT
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실, Ｖ삽입", 0, "애인의 여자의 입술", "", "애인의 여자의 질", "화간")
+			PRINTFORML 
+			PRINTFORML 충분히 즐긴 후, 새벽전에 숙소를 나왔다
+			PRINTFORMW 그녀는 %ANAME(MASTER)%에 긴 키스를 해 「또, 나를 안아 주세요」라고 고해, 손을 흔들어 %조사처리(ANAME(MASTER),"를")% 보류했다……
+			PRINTFORMW 유부녀는 %ANAME(MASTER)%의 애인이 되었다
+			DVAR:영내훌쩍에로의여행_유부녀 += 1
+			
+		;2회째 이후	
+		ELSEIF DVAR:영내훌쩍에로의여행_유부녀 >= 1
+			PRINTFORMW 그러고 보니, 전에 관계를 가진 유부녀가 연락처를 건네주었다
+			PRINTFORML 거기에 쓰여져 있는 술집에 가 보면, 그녀는 거기서 마시고 있었다
+			PRINTFORML 오늘도 함께 마실까하고, 조금 말을 걸어 보았다
+			PRINTFORMW 이번도 이미 몹시 취하고 있어 또 다시 관련되어 술에 맞대졌다
+			PRINTFORML 이전의 %조사처리(ANAME(MASTER),"과")%의 섹스로, 신체를 겹치는 쾌감을 재확인했다고이지만
+			PRINTFORML 그녀의 남편은 밤의 생활에 관심이 적은 것 같아, 섹스레스 기색으로 불만이 쌓여 있는 것 같아
+			PRINTFORMW 오늘도 싸움을 해 홧술을 하고 있는 것, 이라는 일이다
+			PRINTFORMW 만취하는 그녀에게 껴안아진%조사처리(ANAME(MASTER),"는")%, 이번도 함께 마시는 일로 했다
+			PRINTFORML …
+			PRINTFORMW …
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 취기가 돈 그녀에게 이번도 요구되어 흐르게 되는 대로 남녀동반 숙소에서 신체를 겹치기로 했다……
+			PRINTFORML 
+			SELECTCASE RAND:4
+				CASE 0
+					PRINTFORML %ANAME(MASTER)%들은, 숙소의 한 방으로 침대를 삐걱거리게 하면서 짐승과 같이 서로 같이 사귀고
+					PRINTFORMW 그녀는 머리카락을 흩뜨리면서 격렬하게 허리를 흔들어, %ANAME(MASTER)%의 이름을 불러 요구해 온다
+					PRINTFORMW 격렬하고 교묘한 허리자세에 하나의 물건을 자극 받으며, 참지 못하고 그녀의 허리를 강하게 잡아 버린다
+					PRINTFORMW 참지 못하고 그녀에게 요구되는 대로 허리를 쳐박아, 몇 번이나 그 중에 정액을 발했다……
+				CASE 1
+					PRINTFORML %ANAME(MASTER)%들은, 숙소의 한 방으로 서로 키스가 세례를 퍼부으면서 서로 격렬하게 사귀고
+					PRINTFORMW 남편을 그대로 둬, 다른 남자를 유혹해 안긴다는 불의가, 그녀에게 강한 흥분을 가져와, 신체의 감도를 올려 간다
+					PRINTFORMW %ANAME(MASTER)%도 또한, 유부녀를 안고 있다는 배덕감에 만취해, 금단의 흥분이 육봉을 한층 더 팽배하다
+					PRINTFORMW 두 명은 서로 서로 요구하는 대로, 몇 번이나 허리를 쳐박고 배덕의 쾌락을 탐냈다……
+				CASE 2
+					PRINTFORMW %ANAME(MASTER)%들은, 숙소의 한 방에서 침대를 삐걱거리게 하면서 기승위로 서로 격렬하게 사귀고 있다
+					PRINTFORMW 그녀는 %ANAME(MASTER)%의 배에 손을 둬, 스스로 격렬하게 허리를 상하에 쳐박는다
+					PRINTFORMW 그 얼굴은 쾌감에 다 녹고 있어 남편은 아니고 %ANAME(MASTER)%의 이름을 몇 번이나 부르면서 절정 한다
+					PRINTFORMW 스스로의 추잡한 본성을 받아 들여 주는 행복을 느끼면서, 두 명은 더욱 격렬하게 사귀어 간다……
+				CASE 3
+					PRINTFORML %ANAME(MASTER)%들은, 숙소의 한 방에서 정상위로 서로 격렬하게 사귀고
+					PRINTFORMW 그녀는 %조사처리(ANAME(MASTER),"과")%의 섹스를 즐기고 있는 모습으로, 사랑하는 인으로 하는 것 같은 정열적인 키스를 주고 받는다
+					PRINTFORMW 남편이 채워 주지 않는 여자로서의 욕구를, 대신에 채워 주는 %조사처리(ANAME(MASTER),"을")% 사랑하기 시작한 것 같다
+					PRINTFORMW 그녀는 절정의 순간, %ANAME(MASTER)%에 껴안도록(듯이) 밀착해, 그 정액을 안쪽 깊게까지 이끌었다……
+			ENDSELECT
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", "스침의 여자의 질", "화간")
+			PRINTFORML 
+			PRINTFORMW 충분히 즐긴 후, 새벽전에 숙소를 나왔다
+			PRINTFORMW 그녀는 마지막에 %ANAME(MASTER)%에 키스를 해 「또, 만납시다」라고 고해, 돌아갔다……
+			DVAR:영내훌쩍에로의여행_유부녀 += 1
+			
+		;1회째
+		ELSE
+			PRINTFORMW 술집에서 한사람 마시고 있는 여성과 서로 이웃
+			PRINTFORML 어떻게 하지?
+			PRINTL
+			CALL ASK_YN("말을 건다" , "방치한다")
+			IF RESULT == 1
+				PRINTFORML 아무래도 꽤 취하고 있는 것 같다
+				PRINTFORMW 귀찮게 안 되게 떨어졌다
+				RETURN
+			ENDIF
+			PRINTFORMW 한사람술도 무엇인 것으로, 조금 말을 걸어 보았다
+			PRINTFORMW 하지만 그녀는 꽤 몹시 취하고 있는 것 같고, 관련술에 맞대졌다
+			PRINTFORML 그녀는 남편과의 관계가 차가워지고 있는 것 같다
+			PRINTFORMW 오늘도 싸움을 해 홧술을 하고 있다라는 일이다
+			PRINTFORMW 만취하는 그녀에게 껴안아진%조사처리(ANAME(MASTER),"는")% 어쩔 수 없이 함께 마시는 일로 했다
+			PRINTFORML …
+			PRINTFORMW …
+			PRINTFORMW %ANAME(MASTER)%들은 숙소의 한 방으로 침대를 삐걱거리게 하면서 짐승과 같이 서로 같이 탐내고 있다
+			PRINTFORML 그 후%조사처리(ANAME(MASTER),"는")% 완전히 만취한 그녀에게 요구되는 대로 남녀동반 숙소에 들어갔다
+			PRINTFORMW 그녀는 머리카락을 흩뜨리면서 격렬하게 허리를 흔들어, %ANAME(MASTER)%의 이름을 불러 요구해 온다
+			PRINTFORMW 격렬하고 교묘한 허리자세에 하나의 물건을 자극 받으며, 참지 못하고 그녀의 허리를 강하게 잡아 버린다
+			PRINTFORMW 참지 못하고 그녀에게 요구되는 대로 허리를 쳐박아, 몇 번이나 그 중에 정액을 발했다……
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", "스침의 여자의 질", "화간")
+			PRINTFORML 
+			PRINTFORMW 충분히 즐긴 후, 새벽전에 숙소를 나왔다
+			PRINTFORMW 그녀는 마지막에 %ANAME(MASTER)%에 키스를 해 연락처를 건네주면 빠른 걸음에 떠나 갔다
+			DVAR:영내훌쩍에로의여행_유부녀 = 1
+		ENDIF
+	;환락가（난교 파티)
+	CASE 1
+		PRINTFORMW 환락가에 가 보자
+		PRINTFORML …
+		PRINTFORMW ……
+		;1/4로 환락가에서 놀고 있는 캐릭터와 만남
+		IF ! RAND:4
+			PRINTFORMW 환락가에서 %조사처리(ANAME(대상),"과")% 정면충돌했다
+			SIF CFLAG:대상:안면 == 0
+				CFLAG:대상:안면 = 1
+			PRINTFORML 아무래도 %ANAME(대상)%도, 한가한 휴일을 주체 못하고 있는 것 같다
+			PRINTFORMW 여기도 한가했다고 무렵이다. 함께 흔들거리려고 제안해, %ANAME(대상)%도 거기에 탔다
+			PRINTFORMW 둘이서 바득바득 말하면서 환락가를 산책했다……
+			CFLAG:대상:호감도 += 50
+			RETURN
+		ENDIF
+		IF DVAR:영내훌쩍에로의여행_난교파티 >= 1
+			PRINTFORMW 환락가를 산책중, 이전 말을 걸어 온 이상한 남자가 %ANAME(MASTER)%에 다가왔다
+			PRINTFORML 또 예의 연회가 있지만 함께 어떻겠는가, 라고다
+			PRINTFORMW ……이 앞의 가게에서의, 또 난교 파티가 있는 것 같다
+			PRINTFORMW 거절할 이유도 없기에, 남자의 유혹에 넘어갔다
+			PRINTFORMW 승낙하면, 남자는 천하게 보인 미소를 띄워%조사처리(ANAME(MASTER),"를")% 다시 가게의 지하에 안내했다
+			PRINTFORML …
+			PRINTFORMW …
+			SELECTCASE RAND:5
+				CASE 0
+					PRINTFORMW 그곳에서는 다시 또, 무수한 알몸의 남녀가 흐트러지고 있었다
+					PRINTFORML 대음량으로 흐르는 음악과 함께, 방안에 추잡한 미츠네와 신음소리가 영향을 주고 있다
+					PRINTFORMW 숨이 막히도록(듯이) 충만한 수컷과 암컷의 냄새가 전의 연회를 생각나게 해 %ANAME(MASTER)%도 신체가 달아올라 버린다
+					PRINTFORMW 전회, %조사처리(ANAME(MASTER),"과")% 사귄 소녀가, 다시 %ANAME(MASTER)%찾아내, 껴안아 왔다. 애무와 함께 옷을 벗겨 온다
+					PRINTFORML 완전히 고조된%ANAME(MASTER)%도 그녀의 입술을 난폭하게 막아, 혀를 얽히게 되어지면서 알몸이 되었다
+				CASE 1
+					PRINTFORMW 무수한 남녀가 흐트러지는 연회에, %ANAME(MASTER)%도 참가했다
+					PRINTFORML 숨이 막히도록(듯이) 충만한 수컷과 암컷의 냄새와 대음량으로 흐르는 음악이, 이 공간의 비일상감을 부추긴다
+					PRINTFORMW %ANAME(MASTER)%도 또한옷을 벗어 던져, 한마리의 수컷화해 눈앞의 암컷에 달라붙는다
+					PRINTFORMW 밝은 다갈색의 피부를 한 소녀는 기쁜 듯이 허덕여, %조사처리(ANAME(MASTER),"과")%의 교제를 즐기고 있다
+					PRINTFORML 그 사랑스러운 신음소리와 신선한 피부의 의욕이, %ANAME(MASTER)%의 흥분을 높여 간다
+				CASE 2
+					PRINTFORMW 다시의 난교 파티를, %조사처리(ANAME(MASTER),"는")% 마음껏 즐기고 있다
+					PRINTFORML 욕망을 해방한 여자들중에 있어, 한층 더 눈을 끄는 복장의 여자가 있었다
+					PRINTFORMW 주렁주렁의 꼬리가 있어, 머리에 즉각 선 수 미미가 도착해 있었다. 아무래도 여우의 요괴아가씨인 것 같다
+					PRINTFORML 아무래도 이 파티는, 평상시 의기양양 해 남자를 덮칠 수는 없는 요괴아가씨들이
+					PRINTFORMW 공공연하게 마그 깨어 버무리는 만남의 이벤트로도 되어 있는 것 같다
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 즉시 그녀에게 말을 걸어, 복실복실의 꼬리와 요괴 보지를 마음껏 즐겼다
+				CASE 3
+					PRINTFORMW 다시의 난교 파티를, %조사처리(ANAME(MASTER),"는")% 마음껏 즐기고 있다
+					PRINTFORML 욕망을 해방한 여자들중에 있어, 한층 더 신음소리가 큰 소녀들이 있었다
+					PRINTFORMW 주무르는 느낌이 좋은 것 같은 둥실 작은 꼬리가 있어, 머리에 큰 수 미미가 도착해 있었다. 겉모습으로부터 해 토끼의 요괴아가씨인 것 같다
+					PRINTFORML 아무래도 발정을 억제할 수 없는 아가씨들이, 이 난교 파티에서 남자낚시를 하러 온 것 같다
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 즉시 그녀들에게 말을 걸어, 요괴토끼들과의 복수 플레이에 이르렀다
+					PRINTFORMW 몸매는 작은데 깊숙히 육봉을 삼켜, 게걸스럽게 허리를 흔드는 탐욕스러움은 과연 요괴토끼라는 곳이다
+				CASE 4
+					PRINTFORMW 알몸의 남녀가 서로 흐트러지는 쾌락의 연회에, %조사처리(ANAME(MASTER),"는")% 다시 참가했다
+					PRINTFORML 숨이 막히는 수컷과 암컷의 냄새와 대음량의 음악이, 마치 일상으로부터 떼어내진 이세계같이 느끼게 한다
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 지금, 두 명의 소녀와 마그 서로 깨고
+					PRINTFORML 두 사람 모두 실로 살집이 좋은 풍만한 육체로, %조사처리(ANAME(MASTER),"를")% 몰아세우고 즐기고 있다
+					PRINTFORMW 아무래도 이 파티의 단골답고, 더블 키스나 더블 페라, 더블 파이즈리 따위로 정액을 짜낸다
+					PRINTFORMW 그 부드러운 살갗과 향기로운 테크닉에, %조사처리(ANAME(MASTER),"는")% 뼈 없음[骨拔き]으로 되어 간다…
+			ENDSELECT
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 밤새 그녀들과 함께 육욕의 연회에 빠져 졸라대지는 대로 몇 번이나 섹스를 반복했다…
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실, Ｖ삽입", 0, "스침의 소녀의 입술", "", "스침의 소녀의 질", "난교")
+			PRINTFORML 
+			PRINTFORMW 완전히 만족한 %조사처리(ANAME(MASTER),"는")%, 다음의 파티에도 권하면 좋겠다고 고해 헤어졌다
+		;1회째
+		ELSE
+			PRINTFORMW 환락가를 산책중, 그야말로 이상한 낯선 남자가 다가왔다
+			PRINTFORML 좋은 일을 하고 있지만 함께 어때, 라고다
+			PRINTFORMW 신경이 쓰인 %조사처리(ANAME(MASTER),"는")% 상세를 (들)물어 보았다
+			PRINTFORMW 이 앞의 가게의 지하에서 남녀가 모여, 마다없는 일을 하고 있는 것이라고 한다
+			PRINTFORMW ……즉, 난교 파티의 참가자를 모으고 있는 것 같다
+			PRINTFORMW 환락가라고는 해도 대낮 당당 그런 권유를 받는다고는 생각하지 않았지만……
+			PRINTFORML
+			CALL ASK_MULTI("참가해 본다", "남자를 잡는다", "그만둔다")
+			IF RESULT == 2
+				PRINTFORML 흥미는 없다
+				PRINTFORML 남을 다루어 떠났다……
+				RETURN
+			ELSEIF RESULT == 1
+				PRINTFORML 그런 발칙한 일을 하고 있는 것은 허락할 수 없다!
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 신분을 밝혀 남자를 잡아, 병사에 내밀었다……
+				RETURN
+			ELSE
+				PRINTFORML 흥미가 있다
+				PRINTFORMW 남의 유혹에 넘어가 보기로 했다
+				PRINTFORMW 승낙하면, 남자는 천하게 보인 미소를 띄워%조사처리(ANAME(MASTER),"를")% 어떤점의 지하에 안내했다
+				PRINTFORML 
+				PRINTFORMW 그곳에서는 무수한 알몸의 남녀가 흐트러지고 있었다
+				PRINTFORML 대음량으로 흐르는 음악과 함께, 방안에 추잡한 미츠네와 신음소리가 영향을 주고 있다
+				PRINTFORMW 숨이 막히는 것 같은 수컷과 암컷의 냄새가 충만하고 있어, %ANAME(MASTER)%도 신체가 달아올라 버리는 것을 느꼈다
+				PRINTFORMW 한사람의 알몸의 소녀가 %ANAME(MASTER)%에 껴안아, 애무와 함께 옷을 벗겨 온다
+				PRINTFORML 완전히 고조된%ANAME(MASTER)%도 그녀의 입술을 난폭하게 막아, 혀를 얽히게 되어지면서 알몸이 되었다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 밤새 그녀들과 함께 육욕의 연회에 빠져 졸라대지는 대로 몇 번이나 섹스를 반복했다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실, Ｖ삽입", 0, "스침의 소녀의 입술", "", "스침의 소녀의 질", "난교")
+				PRINTFORML 
+				PRINTFORMW 완전히 만족한 %조사처리(ANAME(MASTER),"는")%, 다음의 파티에도 권하면 좋겠다고 고해 헤어졌다
+				DVAR:영내훌쩍에로의여행_난교파티 = 1
+			ENDIF
+		ENDIF
+		
+	;온 마을을 흔들흔들（복수 패턴 있어）
+	CASE 2
+		PRINTFORMW 온 마을을 흔들거리자
+		PRINTFORML …
+		PRINTFORML ……
+		;1/4로 마을을 흔들거리고 있는 캐릭터와 만남
+		IF ! RAND:4
+			PRINTFORMW 거리를 걷고 있으면, %조사처리(ANAME(대상),"과")% 우연히 정면충돌했다
+			SIF CFLAG:대상:안면 == 0
+				CFLAG:대상:안면 = 1
+			PRINTFORML 아무래도 점심밥을 어디의 가게에서 먹을까, 흔들거리고 있던 것 같다
+			PRINTFORMW …그러고 보니 자신도 배가 고파져 왔다
+			PRINTFORML 그 다음에인 것로 %ANAME(MASTER)%도 함께 점심을 먹기로 했다
+			PRINTFORML …
+			PRINTDATAW
+			DATAFORM %조사처리(ANAME(대상),"과")% 함께, 튀김 소바에 입맛을 다셨다
+			DATAFORM %조사처리(ANAME(대상),"과")% 함께 유부초밥을 먹었다
+			DATAFORM %조사처리(ANAME(대상),"과")% 찻집에서 여러가지 경단을 먹었다
+			DATAFORM %조사처리(ANAME(대상),"과")% 함께 여우 우동을 먹었다
+			DATAFORM 멋진 카페에서, %조사처리(ANAME(대상),"과")% 점심식사를 즐겼다
+			ENDDATA
+			PRINTFORMW 점심식사를 끝내, %ANAME(대상)%에 손을 흔들어 헤어졌다……
+			CFLAG:대상:호감도 += 70
+			RETURN
+		ENDIF
+		SELECTCASE RAND:3
+			;연애 편지
+			CASE 0
+				IF DVAR:영내훌쩍에로의여행_연애편지 >= 4
+					PRINTFORMW 고백을 받아, 개여 연인이 된 소녀의 곳에 놀러 갔다
+					PRINTFORML 가까지 나가면, %ANAME(MASTER)%의 얼굴을 본 그녀가 만면의 미소가 되었다
+					PRINTFORMW 오늘도 함께 데이트 하려고 제안한다
+					PRINTFORMW 그녀는 두말 할 것 없이 찬성해, 함께 나가는 일이 되었다
+					PRINTFORML 두 명은 즐거운 한때를 보냈다……
+					PRINTFORMW …
+					PRINTFORML 이윽고 그녀의 집까지 보내면, 그녀는 얼굴을 붉히면서도 %ANAME(MASTER)%의 손을 잡고, 물기를 띤 눈동자를 향하여,
+					PRINTFORMW 오늘은 부모님이 부재중이야  라고 고한다
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀의 의사를 짜 그녀를 껴안아, 안내되어 그녀의 방에 들어갔다……
+					PRINTFORML
+					SELECTCASE RAND:3
+						CASE 0
+							PRINTFORML 그녀의 몸은 변함 없이 튀도록(듯이) 부드럽고, 실로 %ANAME(MASTER)% 기호의 육체가 되었다
+							PRINTFORMW %ANAME(MASTER)%에 예의범절을 가르칠 수 있어 완전히 감도도 더욱 좋아져, 사랑스럽게 몸을 뛰게 해 이쪽의 눈을 즐겁게 한다
+							PRINTFORMW 응석부리도록(듯이) 달라붙는 그녀와 연인으로서의 키스를 주고 받아, 소망 대로 그녀의 안쪽에 자식을 추방했다……
+						CASE 1
+							PRINTFORML 그녀는 %ANAME(MASTER)%의 애무에 교성을 올려, 쾌감에 신체를 튀게 하고 있다
+							PRINTFORMW %ANAME(MASTER)%에 안기고 나서, 그렇지 않아도 좋았던 감도는 한층 더 올라 암컷의 신음소리를 미치게 해 준다
+							PRINTFORMW 그리고 %조사처리(ANAME(MASTER),"는")%, 그녀의 밀 단지의 안쪽 깊이 자신의 여자가 된 증거로 삼은 정액을 발했다……
+						CASE 2
+							PRINTFORML 그녀는 %ANAME(MASTER)%의 페니스에, 녹은 표정으로 애정을 담은 봉사를 하고 있다
+							PRINTFORMW %조사처리(ANAME(MASTER),"과")%의 나날의 덕분인가, 지금은 목 안까지 물어 정액을 짜내는 시말이다
+							PRINTFORMW 구에 나온 정액을 맛있을 것 같게 삼키는 그녀의 머리를 어루만져, 이번은 노장[怒張]이 들어가지 않는 육봉으로 기쁘게 해 주기로 했다……
+					ENDSELECT
+					CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "연인이 된 소녀의 입술", "", "연인이 된 소녀의 질", "화간")
+					PRINTFORML 
+					PRINTFORMW …밤 늦게까지, 충분히 서로 사랑했다
+					PRINTFORMW 그리고 이별할 때, 두 명은 정열적인 긴 키스를 주고 받아, 또 만나러 올 것을 맹세했다……
+					
+				ELSEIF DVAR:영내훌쩍에로의여행_연애편지 >= 2
+					PRINTFORMW 전에 고백을 받은 소녀의 곳에 놀러 갔다
+					PRINTFORML ……
+					PRINTFORMW 온 마을을 걸어, %ANAME(MASTER)%에 연애 편지를 건네준 소녀의 집까지 왔다
+					PRINTFORML 호출하면, 얼굴을 붉게 한 그녀가 모습을 나타냈다
+					PRINTFORMW 오늘도 서로를 잘 알기 위해서(때문에) 데이트 하려고 제안한다
+					PRINTFORMW 그녀는 두말 할 것 없이 찬성해, 함께 나가는 일이 되었다
+					PRINTFORML 두 명은 즐거운 한때를 보냈다……
+					PRINTFORMW …
+					PRINTFORMW 이윽고 남녀동반 숙소의 앞을 지나면, 그녀는 얼굴을 붉히면서도 %ANAME(MASTER)%에 껴안아 물기를 띤 눈동자를 향한다
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀의 요망에 응해, 어깨를 안아 숙소에 들어갔다……
+					PRINTFORML
+					SELECTCASE RAND:3
+						CASE 0
+							PRINTFORML 그녀의 몸은 변함 없이 튀도록(듯이) 부드럽고, 실로 %ANAME(MASTER)%기호의 육체였다
+							PRINTFORMW 조금 전까지 숫처녀였다고는 생각되지 않을 정도 감도도 자주(잘), 사랑스럽게 몸을 뛰게 해 이쪽의 눈을 즐겁게 한다
+							PRINTFORMW 응석부리도록(듯이) 달라붙는 소녀에게, %ANAME(MASTER)%의 존재를 새겨 사랑해 주었다……
+						CASE 1
+							PRINTFORML 그녀는 %ANAME(MASTER)%의 애무에 교성을 올려, 쾌감에 신체를 튀게 하고 있다
+							PRINTFORMW 조금 전까지 숫처녀였다고는 생각되지 않을 정도 감도도 자주(잘), 사랑스럽게 허덕여 이쪽의 귀를 즐겁게 해 준다
+							PRINTFORMW %조사처리(ANAME(MASTER),"는")% 응석부리도록(듯이) 달라붙는 소녀의 비밀의 틈[秘裂]에 모창을 뚫어, 여자의 기쁨을 가르쳐 주었다……
+						CASE 2
+							PRINTFORML 그녀는 %ANAME(MASTER)%의 페니스에, 더듬거리게도 성의를 담은 봉사를 하고 있다
+							PRINTFORMW 조금 전까지 숫처녀였다고는 생각되지 않을 정도 기억이 좋고, 남자가 느끼는 곳을 빨아 온다
+							PRINTFORMW 그녀의 봉사에 감동한 %조사처리(ANAME(MASTER),"는")% 그녀의 머리를 어루만져, 이번은 이쪽이 기분 좋게 해 주기로 했다……
+					ENDSELECT
+					DVAR:영내훌쩍에로의여행_연애편지 += 1
+					CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "화간")
+					PRINTFORML 
+					PRINTFORMW 보다 깊고, 서로를 알려졌다…
+					SIF DVAR:영내훌쩍에로의여행_연애편지 == 4
+						PRINTFORML 두 명은 신체를 겹치는 것으로 서로를 알게 되어, 개여 연인이 되었다
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 재회의 약속을 해, 그녀와 헤어졌다
+					PRINTFORMW 그녀는 얼굴을 붉히면서, %ANAME(MASTER)%의 모습이 안보이게 될 때까지 손을 흔들고 전송해 주었다
+					
+				;연애 편지를 받았을 경우
+				ELSEIF DVAR:영내훌쩍에로의여행_연애편지 == 1
+					PRINTFORMW 그러고 보니, 전에 연애 편지를 받고 있었다
+					PRINTFORML 그 대답을 하러 가자
+					PRINTFORML ……
+					PRINTFORMW 온 마을을 걸어, %ANAME(MASTER)%에 연애 편지를 건네준 소녀의 집까지 왔다
+					PRINTFORML 호출하면, 얼굴을 붉게 한 그녀가 모습을 나타냈다
+					PRINTFORMW 그녀는 결과가 어떻게 되는지, 머뭇머뭇 하면서 기다리고 있다…
+					PRINTFORML 그리고 편지를 읽은 %조사처리(ANAME(MASTER),"는")%, 서로를 잘 모르는 채로는 교제하는 것도 아무것도 없다고 전했다
+					PRINTFORMW 어떻게 하면, 이라고 멍청히 하는 그녀에게, 서로 붙어 좀 더 알려고 제안했다
+					PRINTFORMW 말의 의미를 헤아린 그녀는, 얼굴을 붉히면서 %조사처리(ANAME(MASTER),"과")% 따랐다고 숙소에 들어갔다……
+					PRINTFORMW
+					PRINTFORML 그녀의 몸은 튀도록(듯이) 부드럽고, %ANAME(MASTER)%기호였다
+					PRINTFORMW 숫처녀면서 감도도 자주(잘), 사랑스럽게 몸을 뛰게 해 이쪽의 눈을 즐겁게 한다
+					PRINTFORMW 응석부리도록(듯이) 달라붙는 소녀에게, %ANAME(MASTER)%의 존재를 새겨 주었다……
+					CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "화간")
+					PRINTFORML 
+					PRINTFORMW 재회의 약속을 해, 그녀와 헤어졌다
+					DVAR:영내훌쩍에로의여행_연애편지 += 1
+					
+				;1회째
+				ELSE
+					PRINTFORMW 온 마을을 걷고 있으면, 돌연 한사람의 소녀가 큰 소리로 %조사처리(ANAME(MASTER),"를")% 불러 세웠다
+					PRINTFORML 무슨 일일까하고 준비하는 %ANAME(MASTER)%에, 편지를 보내 온다
+					PRINTFORMW 아무래도 연애 편지인 것 같다
+					PRINTFORMW 상대는 얼굴을 새빨갛게 하고 있지만……
+					PRINTFORML 
+					CALL ASK_MULTI("일단 받는다", "거절한다", "숙소에 데리고 들어간다")
+					IF RESULT == 2
+						PRINTFORML 너무나 돌연의 일로 곧바로 대답은 할 수 없지만, 우선 받고 나서 대답을 한다
+						PRINTFORMW 그렇게 전하면, 그녀는 작고 수긍 빠른 걸음을 떠나 갔다
+						DVAR:영내훌쩍에로의여행_연애편지 = 1
+					ELSEIF RESULT == 1
+						PRINTFORML 유감이지만 생각에는 따를 수 없다
+						PRINTFORMW 그렇게 전하면, 그녀는 어깨를 떨어뜨려 떠났다
+					ELSE
+						PRINTFORML 편지를 읽은 %조사처리(ANAME(MASTER),"는")%, 서로를 모르는 채로는 교제하는 것도 아무것도 없다고 전했다
+						PRINTFORMW 어떻게 하면, 이라고 멍청히 하는 그녀에게, 서로 붙어 좀 더 알려고 제안했다
+						PRINTFORMW 말의 의미를 헤아린 그녀는, 얼굴을 붉히면서 %조사처리(ANAME(MASTER),"과")% 따랐다고 숙소에 들어갔다……
+						PRINTFORMW
+						PRINTFORML 그녀의 몸은 튀도록(듯이) 부드럽고, %ANAME(MASTER)%기호였다
+						PRINTFORMW 숫처녀면서 감도도 자주(잘), 사랑스럽게 몸을 뛰게 해 이쪽의 눈을 즐겁게 한다
+						PRINTFORMW 응석부리도록(듯이) 달라붙는 소녀에게, %ANAME(MASTER)%의 존재를 새겨 주었다……
+						CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "화간")
+						PRINTFORML 
+						PRINTFORMW 재회의 약속을 해, 그녀와 헤어졌다
+						DVAR:영내훌쩍에로의여행_연애편지 = 2
+					ENDIF
+				ENDIF
+			;역헌팅[逆ナン]파
+			CASE 1
+				IF DVAR:영내훌쩍에로의여행_헌팅 >= 4
+					PRINTFORMW 그러고 보니 이 근처에, 헌팅되어 섹스프렌드가 된 그녀가 있었을 것이다
+					PRINTFORMW 모처럼이고, 또 만나러 가 보자
+					PRINTFORML …
+					PRINTFORMW ……
+					PRINTFORMW 연락처의 장소에 그녀가 있었다. 변함 없이 %ANAME(MASTER)%기호가 좋은 여자다
+					PRINTFORML 그녀는 모습을 보인 %조사처리(ANAME(MASTER),"를")% 확인하면, 키스를 날려%조사처리(ANAME(MASTER),"를")% 권해 온다
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 상대의 유혹에 넘어가, 그녀와 팔짱을 껴 그녀의 자택으로 들어갔다…
+					PRINTFORMW 
+					SELECTCASE RAND:3
+						CASE 0
+							PRINTFORMW 두 명의 신체의 궁합은 역시 발군으로, 침대 위에서 서로를 서로 격렬하게 요구한다
+							PRINTFORML 질내의 고기 주름이, 페니스와 떨어지기 어려운과 같이 칼리목에 착 달라붙어, 전후의 여행 %ANAME(MASTER)%에 전류와 같은 쾌감이 달린다
+							PRINTFORMW 그녀도 또, 질이 %ANAME(MASTER)%의 페니스의 형태 그대로 피트해, 자궁입구를 톡톡 얻어맞을 때 행복의 소리를 높인다
+							PRINTFORMW 두 명은 서로 몇 번이나 절정 하면서 밤새 섹스를 즐겼다……
+						CASE 1
+							PRINTFORMW 그녀의 방의 침대상에서, 두 명은 서로의 신체를 서로 격렬하게 탐내고
+							PRINTFORML 그녀는 %ANAME(MASTER)%의 얼굴에 걸쳐, 스스로의 비밀스런 장소를 쬐면서 %ANAME(MASTER)%의 육봉을 입으로 물고 있다
+							PRINTFORMW %ANAME(MASTER)%도 지지 않으려고, 그녀의 비밀의 틈[秘裂]을 혀로 맛본다
+							PRINTFORMW 혀로 고기 빌라를 훑어, 클리토리스에 키스를 하면, %ANAME(MASTER)%의 것을 요구해 바기나가 추잡하게 꿈틀거린다
+							PRINTFORMW 서로의 봉사를 즐긴 곳에서, 두 명은 실전이라는 듯이 몇 번이나 사귀어, 밤새 섹스를 즐겼다……
+						CASE 2
+							PRINTFORMW 두 명은 침대 위에서, 주위의 집에 목소리가 들리는 것도 상관하지 않고 서로 격렬하게 사귀고
+							PRINTFORMW %조사처리(ANAME(MASTER),"는")% 후배위의 몸의 자세로 그녀의 허리를 잡아, 놓치지 않는다라는 듯이 강하게 허리를 쳐박는다
+							PRINTFORMW 그녀도 쾌감에 군침을 늘어뜨리면서, 페니스의 공격에 맞추어 허리를 스트로크 시키고 쾌감을 싱크로 시킨다
+							PRINTFORML 격렬하게 범해져 좋아하는 암컷의 신음소리를 마음껏 미치게 하면서
+							PRINTFORMW 두 명은 서로 몇 번이나 절정 하면서 격렬하게 상대를 계속 요구했다……
+					ENDSELECT
+					CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "섹스프렌드의 여자의 입술", "", "섹스프렌드의 여자의 질", "화간")
+					PRINTFORML
+					IF DVAR:영내훌쩍에로의여행_헌팅 == 4
+						PRINTFORMW 격렬한 섹스를 끝낸 후, 드물게 그녀로부터  또 만나러 왔으면 좋겠다  라고 말해졌다
+						PRINTFORML 이 정도 신체의 성격이 잘 맞은 상대는 없었다. %조사처리(ANAME(MASTER),"과")%의 교제는 자신의 마음을 채워 주기 때문…과
+						PRINTFORMW 그 말을 (들)물어, %조사처리(ANAME(MASTER),"는")% 그녀를 껴안아, 그저 깊고 농후한 키스를 주고 받는다
+						PRINTFORMW 서로의 맛을 상대에게 새기는것같이, 이별의 시간간이 올 때까지 쭉 얼싸안아, 쭉 입술을 계속 거듭했다……
+						RETURN
+					ENDIF
+					PRINTFORMW 격렬한 서로 사랑해를 끝낸 두 명은 마지막에 농후한 키스를 주고 받아, 재회의 약속을 해 헤어졌다……
+					
+				ELSEIF DVAR:영내훌쩍에로의여행_헌팅 >= 1
+					PRINTFORMW 그러고 보니, 이전 여기서 헌팅되어 연락처를 건네준 여성이 있었다
+					PRINTFORMW 모처럼이고, 또 만나러 가 보자
+					PRINTFORML …
+					PRINTFORMW ……
+					PRINTFORMW 연락처의 장소에 그녀가 있었다. 변함 없이 %ANAME(MASTER)%기호가 좋은 여자다
+					PRINTFORML 그녀는 또 와 준 %조사처리(ANAME(MASTER),"를")% 보면, 요염하게 몸을 구불거리게 해, %조사처리(ANAME(MASTER),"를")% 권해 온다
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 상대의 유혹에 넘어가, 그녀와 팔짱을 껴 가까이의 여인숙으로 들어갔다…
+					PRINTFORMW 
+					SELECTCASE RAND:3
+						CASE 0
+							PRINTFORMW 두 명의 신체의 궁합은 역시 발군으로, 침대 위에서 서로를 서로 격렬하게 요구한다
+							PRINTFORML 질내의 고기 주름이, 페니스와 떨어지기 어려운과 같이 칼리목에 착 달라붙어, 전후의 여행 %ANAME(MASTER)%에 전류와 같은 쾌감이 달린다
+							PRINTFORMW 그녀도 또, 질이 %ANAME(MASTER)%의 페니스의 형태를 확실히 익히는 만큼 피트해, 자궁입구를 톡톡 얻어맞을 때 교성을 올린다
+							PRINTFORMW 두 명은 서로 몇 번이나 절정 하면서 밤새 섹스를 즐겼다……
+						CASE 1
+							PRINTFORMW 두 명은 값싼 여인숙의 침대 위에서, 서로의 신체를 서로 격렬하게 탐내고
+							PRINTFORML 그녀는 %ANAME(MASTER)%의 얼굴에 걸쳐, 스스로의 비밀스런 장소를 쬐면서 %ANAME(MASTER)%의 육봉을 입으로 물고 있다
+							PRINTFORMW %ANAME(MASTER)%도 지지 않으려고, 그녀의 비밀의 틈[秘裂]을 혀로 맛본다
+							PRINTFORMW 혀로 고기 빌라를 훑어, 클리토리스에 키스를 하면, %ANAME(MASTER)%의 것을 요구해 바기나가 추잡하게 꿈틀거린다
+							PRINTFORMW 서로의 봉사를 즐긴 곳에서, 두 명은 실전이라는 듯이 몇 번이나 사귀어, 밤새 섹스를 즐겼다……
+						CASE 2
+							PRINTFORMW 두 명은 침대 위에서, 근처에 목소리가 들리는 것도 상관하지 않고 서로 격렬하게 사귀고
+							PRINTFORMW %조사처리(ANAME(MASTER),"는")% 서 백의 몸의 자세로 그녀의 허리를 잡아, 놓치지 않는다라는 듯이 강하게 허리를 쳐박는다
+							PRINTFORMW 그녀도 또 벽에 손을 찔러, 페니스의 공격에 맞추어 허리를 스트로크 시키고 쾌감을 싱크로 시킨다
+							PRINTFORML 격렬하게 범해져 좋아하는 암컷의 신음소리를 마음껏 미치게 하면서
+							PRINTFORMW 두 명은 서로 몇 번이나 절정 하면서 격렬하게 상대를 계속 요구했다……
+					ENDSELECT
+					DVAR:영내훌쩍에로의여행_헌팅 += 1
+					CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "화간")
+					PRINTFORML
+					SIF DVAR:영내훌쩍에로의여행_헌팅 == 4
+						PRINTFORML 두 명은 완전히, 서로의 신체를 서로 요구하는 섹스프렌드로서의 관계를 확립했다
+					PRINTFORMW 행위를 끝낸 두 명은, 말 대신에 농후한 키스를 주고 받아 헤어졌다
+				;1회째
+				ELSE
+					PRINTFORMW 온 마을을 산책중, 말을 걸려졌다
+					PRINTFORML %ANAME(MASTER)% 기호의 여성이다
+					PRINTFORMW 요염하게 몸을 구불거리게 해, %조사처리(ANAME(MASTER),"를")% 권해 온다
+					PRINTFORMW 어떻게 하지?
+					PRINTFORML
+					CALL ASK_YN("유혹에 넘어간다", "권유를 거절한다")
+					IF RESULT == 1
+						PRINTFORML 공교롭게도 그런 기분은 아니다
+						PRINTFORMW 끈질긴 상대를 소매에 털어 산책을 계속했다……
+						RETURN
+					ENDIF
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 상대의 유혹에 넘어가, 팔짱을 껴 가까이의 여인숙으로 들어갔다
+					PRINTFORML 
+					PRINTFORMW 상대와의 신체의 궁합은 발군으로, 서로 몇 번이나 절정 하면서 밤새 섹스를 즐겼다
+					CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "화간")
+					PRINTFORML 
+					PRINTFORMW 상대와 연락처를 서로 가르쳐, 말 대신에 농후한 키스를 주고 받아 헤어졌다
+					DVAR:영내훌쩍에로의여행_헌팅 = 1
+				ENDIF
+			;꽃을 파는 것의 소녀
+			CASE 2
+				IF DVAR:영내훌쩍에로의여행_꽃을파는것>= 1
+					PRINTFORMW 마을을 흔들거리고 있으면, 전에 신체를 산 꽃을 파는 것 소녀에게 말을 걸려졌다
+					PRINTFORML 또 나를 사 주지 않겠습니까?   라고 말해, 얼굴을 붉혀 머뭇머뭇 하고 있다…
+					PRINTFORML
+					CALL ASK_MULTI_JUDGE("그녀를 산다", MONEY >= 1000, "그만둔다", 1)
+					IF RESULT == 1
+						PRINTFORML 오늘은 조금 그러한 기분은 아니다
+						PRINTFORML 거절하면, 소녀는 슬픈 듯이 돌아갔다……
+						RETURN
+					ENDIF
+					PRINTFORMW 군을 사자
+					PRINTFORML 그렇게 고하면 소녀는 부끄러워하면서도, 조금 기쁜듯이 하고 있었다
+					PRINTFORMW 소녀는 %ANAME(MASTER)%의 손을 잡아 당겨, 자신의 집에 안내했다
+					PRINTFORML 
+					SELECTCASE RAND:3
+						CASE 0
+							PRINTFORMW 소녀는 익숙해진 모습으로 %ANAME(MASTER)%에 봉사를 시작했다
+							PRINTFORML 어리면서 적확하게 봉사하는 모양은 %ANAME(MASTER)%의 정욕을 자극한다
+							PRINTFORMW %조사처리(ANAME(MASTER),"는")% 충분히 시간을 들여, 신선한 지체를 즐겼다……
+						CASE 1
+							PRINTFORMW 소녀는 손에 익은 모습으로 %ANAME(MASTER)%의 육봉에 봉사하고 있다
+							PRINTFORML 작은 입으로 육봉을 물어, 혀끝에서 요도구멍을 간질인다. 그 테크닉은 창녀 무색함이다
+							PRINTFORMW 딱딱 발기한 페니스로, 이번은 그녀의 질 구멍을 즐기기로 했다……
+						CASE 3
+							PRINTFORMW 그녀의 방에서, 두 명은 짐승과 같이 사귀고 있다
+							PRINTFORML %조사처리(ANAME(MASTER),"는")% 후배위로 그녀의 허리를 잡아, 단번에 페니스를 돌진해 정액을 발한다
+							PRINTFORMW 자궁까지 닿을 정도의 사정을 받아, 그녀는 교성을 올려 절정 했다……
+					ENDSELECT
+					CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입" + (IS_FEMALE(MASTER) ?", Ｂ, Ｖ, 레즈" # ""), "동정상실, 키스상실", 0, "꽃을 파는 것의 소녀의 입술", "", "꽃을 파는 것의 소녀의 질", "화간")
+					PRINTFORML
+					PRINTFORMW 이별할 때에, 소녀는 %ANAME(MASTER)%에 입맞춤해 왔다
+					DVAR:영내훌쩍에로의여행_꽃을파는것 += 1
+					CALL ICPRINT("금<1000>을 지불했다", "L", 칼라_주의)
+					MONEY -= 1000
+				;1회째
+				ELSE
+					PRINTFORMW 마을을 흔들거리고 있으면, 소녀에게 말을 걸려졌다
+					PRINTFORML 이치린금 10으로 꽃을 사 주지 않겠습니까?   라고 한다
+					PRINTFORML
+					CALL ASK_MULTI_JUDGE("산다", MONEY >= 10, "그녀마다 산다", MONEY >= 1000, "필요없다", 1)
+					IF RESULT == 1
+						PRINTFORML 모처럼이고 받기로 하자
+						PRINTFORML 이치린 샀다
+						CALL ICPRINT("금<10>을 지불했다", "L", 칼라_주의)
+						MONEY -= 10
+						PRINTFORML 소녀는 예를 말해 떠났다
+					ELSEIF RESULT == 1
+						PRINTFORMW 군 마다 사자
+						PRINTFORML 그렇게 고하면 소녀는 얼굴을 붉히지만, 거부는 하지 않았다
+						PRINTFORMW 소녀는 %ANAME(MASTER)%의 손을 잡아 당겨, 자신의 집에 안내했다
+						PRINTFORML 
+						PRINTFORMW 소녀는 이러한 일에 익숙해 있는 것 같다
+						PRINTFORMW 어리면서 적확하게 봉사하는 모양은 %ANAME(MASTER)%의 정욕을 자극한다
+						PRINTFORMW %조사처리(ANAME(MASTER),"는")% 충분히 시간을 들여, 신선한 지체를 즐겼다
+						CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입" + (IS_FEMALE(MASTER) ?", Ｂ, Ｖ, 레즈" # ""), "동정상실, 키스상실", 0, "꽃을 파는 것의 소녀의 입술", "", "꽃을 파는 것의 소녀의 질", "화간")
+						PRINTFORML
+						PRINTFORMW 이별할 때에, 소녀는 %ANAME(MASTER)%에 입맞춤해 왔다
+						DVAR:영내훌쩍에로의여행_꽃을파는것 = 1
+						CALL ICPRINT("금<1000>을 지불했다", "L", 칼라_주의)
+						MONEY -= 1000
+					ELSE
+						PRINTFORML 별로 필요없다, 라고 거절했다
+						PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그대로 온 마을을 흔들거렸다……
+					ENDIF
+				ENDIF
+		ENDSELECT
+	;밤의 번화가
+	CASE 3
+		PRINTFORMW 밤이 되어 떠들썩한 번화가에 가자
+		PRINTFORML …
+		PRINTFORMW ……
+		;1/4로 번화가를 배회하는 캐릭터와 만남
+		IF ! RAND:4
+			PRINTFORMW 
+			SIF CFLAG:대상:안면 == 0
+				CFLAG:대상:안면 = 1
+			PRINTFORMW 번화가를 흔들거리고 있으면, 업무상 꾸중의 %조사처리(ANAME(대상),"과")% 정면충돌했다
+			PRINTFORML %ANAME(대상)%도 군것질하면서 흔들거리고 있는 것 같다
+			PRINTFORMW 모처럼인 것으로 함께 흔들거리기로 했다
+			PRINTFORMW ……모두 떠들썩한 번화가의 소란을 즐겼다……
+			CFLAG:대상:호감도 += 50
+			RETURN
+		ENDIF
+		IF DVAR:영내훌쩍에로의여행_섹스옥션 >= 3
+			PRINTFORMW 그러고 보니, 일전에 섹스 옥션으로 알게 된 아가씨에게 특별한 연락처를 건네받고 있었다
+			PRINTFORMW 만나러 가 볼까?
+			PRINTFORML
+			CALL ASK_YN("가 본다" , "그만둔다")
+			IF RESULT == 1
+				PRINTFORMW 오늘은 멈추어 둘까
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 떠들썩한 번화가를 흔들흔들 걷고 즐겼다……
+				RETURN
+			ENDIF
+			PRINTFORMW 모처럼이고, 연락처에 쓰여진 장소로 향해 가 보기로 했다
+			IF DVAR:영내훌쩍에로의여행_섹스옥션 == 3
+				PRINTFORMW 연락처에 쓰여져 있던 장소는 지금까지와 같은 건물은 아니고, 보통 집과 같이 보였다
+				PRINTFORML 호출해 보면 그녀가 나왔다. 여기는 그녀의 자택인 것 같다
+				PRINTFORMW 그녀는 %ANAME(MASTER)%의 모습을 보면, 기쁜듯이 웃어 방에 불렀다
+				PRINTFORML 이야기를 들으면, 섹스 옥션은 벌써 그만둔 것 같다
+				PRINTFORMW 그리고, %조사처리(ANAME(MASTER),"과")% 「개인적인 교제」를 하고 싶어서 연락처를 건네준 것 같다
+				PRINTFORMW …그런 일이라면, 지금부터 얼마든지 바래 대로의 교제를 하자
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 그렇게 속삭이면 그녀를 상냥하게 껴안는다
+			ELSEIF DVAR:영내훌쩍에로의여행_섹스옥션 >= 4
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀의 집까지 향했다
+				PRINTFORMW 그녀는 %ANAME(MASTER)%의 모습을 보면, 기쁜듯이 웃어 방에 불렀다
+				PRINTFORML 아주 조금만 담소하고 있으면, 그녀 쪽으로부터 신체를 접대어 온다
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀의 기대를 헤아려 상냥하게 껴안는다
+			ENDIF
+			PRINTFORMW 그녀는 그것을, 기다리고 있었습니다  이라는 듯이 기쁜듯이 껴안아 돌려준다. 그녀도 상당한 좋아물인 것 같다
+			PRINTFORMW 발정한 것 같은 그녀의 허리를 안으면서 그녀의 침대에서 「개인적인 교제」를 시작한다…
+			PRINTFORML
+			SELECTCASE RAND:3
+				CASE 0
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀를 껴안으면서, 탄력이 있는 부드러운 살갗에 달라붙었다
+					PRINTFORML 유두를 살짝 깨물기 하면 그녀는 기쁜듯이 허덕여 몸을 구불거리게 할 수 있어 %ANAME(MASTER)%에 꼬옥 하고 껴안는다
+					PRINTFORMW 서로 참지 못하고 침대에 쓰러지면, %조사처리(ANAME(MASTER),"는")% 이미 녹진녹진의 비밀스런 장소로 하나의 물건을 쑤셔 넣었다
+					PRINTFORMW 「앙♥앙♥안 돼애♥격렬해♥앙♥」
+					PRINTFORML 격렬하게 허리를 쳐박으면 그녀는 요염하게 꾸중 미쳐, 휘감기는 밀육[蜜肉]이 육봉을 자극한다
+					PRINTFORMW 허리를 돌려 꾸욱 질내를 후벼파면, 그녀는 크게 뒤로 젖혀 삐걱삐걱 전신을 진동시키고 교성을 미치게 했다
+					PRINTFORMW 그녀에게 졸라지는 것처럼 해 몇 번이나 몇 번이나 교접해, 요금 이상의 극락을 만끽되어 받았다
+				CASE 1
+					PRINTFORMW 격렬한 섹스로 질척질척이 된 두 명은, 샤워를 해 잠시 쉼 하기로 했다
+					PRINTFORML …라는데 그녀는 신체를 거품이 일게 하면 %ANAME(MASTER)%에 밀착해, 황홀해 하면서 신체를 접맞추어 온다
+					PRINTFORMW 「아…♥이것, 유두가 스쳐…♥좋은…♥」
+					PRINTFORMW 키스를 하면서 서로의 성기를 서로 하고 있으면, 두 사람 모두 인내를 할 수 없게 되어 섹스가 시작된다
+					PRINTFORMW 결국 샤워를 하면서 격렬하게 교접해, 그녀의 질의 안쪽까지 한껏 정액을 따랐다
+				CASE 2
+					PRINTFORMW 그녀는 %ANAME(MASTER)%의 페니스를 깊숙히 문 채로, 대면좌위로 껴안아 쭉쭉 허리를 흔들고 있다
+					PRINTFORML 딱 딱하고 자궁입구를 귀두로 자극 받으며, 그녀는 참지 못하고 군침을 늘어뜨리면서 큰 소리로 허덕인다
+					PRINTFORMW 「앙♥앗♥좋앗♥이것좋아♥」
+					PRINTFORMW 신체를 밀착시킨 농후한 섹스는 계속되어, 두 명의 흥분은 한계 근처까지 끝까지 올라 간다
+					PRINTFORMW 이윽고 요도구와 자궁입구를 밀착시키면서의 사정을 맞이해, 두 명은 머리가 튀는 것 같은 절정을 맛보았다
+			ENDSELECT
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀와의 개인적인 섹스를 마음껏 즐겼다……
+			DVAR:영내훌쩍에로의여행_섹스옥션 += 1
+			PRINTFORML
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "섹스프렌드의 소녀의 입술", "", "섹스프렌드의 소녀의 질", "화간")
+			PRINTFORMW 그녀는 이별할 때, %ANAME(MASTER)%에 키스를 하며, 또 만나러 와, 라고 기쁜듯이 말했다
+			
+		ELSEIF DVAR:영내훌쩍에로의여행_섹스옥션 >= 1
+			PRINTFORMW 그러고 보니, 일전에 섹스 옥션으로 경락시킨 아가씨에게 연락처를 건네받고 있었다
+			PRINTFORMW 만나러 가 볼까?
+			PRINTFORML
+			CALL ASK_YN("가 본다" , "그만둔다")
+			IF RESULT == 1
+				PRINTFORMW 오늘은 멈추어 둘까
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 떠들썩한 번화가를 흔들흔들 걷고 즐겼다……
+				RETURN
+			ENDIF
+			PRINTFORMW 모처럼이고, 연락처에 쓰여진 장소로 향해 가 보기로 했다
+			PRINTFORMW 연락처에 쓰여져 있던 건물에 들어가면, 거기서도 섹스 옥션을 하고 있었다
+			PRINTFORML 아무래도 특정의 가게에서만 하고 있는 것은 아니고, 빈번하게 회장이 되는 가게를 바꾸고 있는 것 같다
+			PRINTFORMW 플레이트를 목으로부터 내린 알몸의 여성들이 마이대 위에 줄선다
+			PRINTFORML 그 중에, 전회%조사처리(ANAME(MASTER),"가")% 경락시킨 그녀가 있었다
+			PRINTFORMW 그녀는 %ANAME(MASTER)%의 모습을 찾아내면, 기쁜듯이 키스를 날렸다
+			PRINTFORML …역시 %ANAME(MASTER)% 기호가 좋은 신체다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 이번도 그 아이를 낙찰하는 일로 결정했다
+			PRINTFORMW 
+			PRINTFORML …경매는 최고조에 달했지만, 무사히 그녀를 손에 넣을 수가 있었다
+			PRINTFORMW 뺨을 붉히고 팔을 걸어 오는 그녀의 허리를 안으면서 준비된 독실에 향했다…
+			PRINTFORML
+			SELECTCASE RAND:3
+				CASE 0
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 방에 들어가면 조속히 그녀에게 껴안아 전신에 달라붙었다
+					PRINTFORML 탄력이 있는 부드러운 살갗을 주무르면 그녀는 기쁜듯이 허덕여 몸을 구불거리게 할 수 있어 %조사처리(ANAME(MASTER),"를")% 유혹했다
+					PRINTFORMW 서로 참지 못하고 침대에 쓰러지면, %조사처리(ANAME(MASTER),"는")% 이미 녹진녹진의 비밀스런 장소로 하나의 물건을 쑤셔 넣었다
+					PRINTFORMW 「앙♥앙♥안 돼애♥격렬해♥앙♥」
+					PRINTFORML 격렬하게 허리를 쳐박으면 그녀는 요염하게  미친듯이 자지러지는 신음소리를 내며, 휘감기는 밀육[蜜肉]이 남근을 자극했다
+					PRINTFORMW 허리를 돌려 꾸욱 질내를 후벼파면, 그녀는 크게 뒤로 젖혀 삐걱삐걱 전신을 진동시키고 교성을 미치게 했다
+					PRINTFORMW 그녀에게 졸라지는 것처럼 해 몇 번이나 몇 번이나 교접해, 요금 이상의 극락을 만끽되어 받았다……
+				CASE 1
+					PRINTFORMW 격렬한 섹스로 질척질척이 된 두 명은, 샤워를 해 잠시 쉼 하기로 했다
+					PRINTFORML …라는데 그녀는 신체를 거품이 일게 하면 %ANAME(MASTER)%에 밀착해, 황홀해 하면서 신체를 접맞추어 온다
+					PRINTFORMW 「아…♥이것, 유두가 스쳐…♥좋은…♥」
+					PRINTFORMW 키스를 하면서 서로의 성기를 서로 하고 있으면, 두 사람 모두 인내를 할 수 없게 되어 섹스가 시작된다
+					PRINTFORMW 결국 샤워를 하면서 격렬하게 교접해, 그녀의 질의 안쪽까지 한껏 정액을 따랐다……
+				CASE 2
+					PRINTFORMW 그녀는 %ANAME(MASTER)%의 페니스를 깊숙히 문 채로, 립 정도로 껴안아허리를 흔들고 있다
+					PRINTFORML 딱 딱하고 자궁입구를 귀두로 자극 받으며, 그녀는 참지 못하고 군침을 늘어뜨리면서 큰 소리로 허덕인다
+					PRINTFORMW 「앙♥앗♥좋앗♥그것좋아♥」
+					PRINTFORMW 신체를 밀착시킨 농후한 섹스는 계속되어, 두 명의 흥분은 한계 근처까지 끝까지 올라 간다
+					PRINTFORMW 이윽고 요도구와 자궁입구를 밀착시키면서의 사정을 맞이해, 두 명은 머리가 튀는 것 같은 절정을 맛보았다……
+			ENDSELECT
+			PRINTFORML
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀와의 섹스를 마음껏 즐겼다
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", "상품의 소녀의 질", "화간")
+			DVAR:영내훌쩍에로의여행_섹스옥션 += 1
+			IF DVAR:영내훌쩍에로의여행_섹스옥션 == 3
+				PRINTFORMW 회장을 나올 때, 그녀에게 「이번은 여기에 와」라고 특별한 연락처를 건네받았다
+			ELSE
+				PRINTFORMW 회장을 뒤로 할 때, 또 그녀에게 남몰래 연락처를 쓴 메모를 건네받았다
+			ENDIF
+		;1회째
+		ELSE
+			PRINTFORMW 밤의 번화가를 흔들거리고 있으면 남자가 말을 걸려졌다
+			PRINTFORML 이 앞의 가게에서 재미있는 구경거리를 하고 있다고 한다
+			PRINTFORMW 어떻게 하지?
+			PRINTFORML
+			CALL ASK_YN("가 본다" , "떠난다")
+			IF RESULT == 1
+				PRINTFORMW 이상하기 때문에 무시해 떠났다
+				RETURN
+			ENDIF
+			PRINTFORML 호기심에 져 가 보는 일로 했다
+			PRINTFORMW 남에 안내되는 대로 지하의 바에 들어갔다
+			PRINTFORML 
+			PRINTFORMW 무려 그곳에서는 섹스 옥션을 하고 있었다
+			PRINTFORML 플레이트를 목으로부터 내린 알몸의 여성들이 마이대 위에 줄서
+			PRINTFORMW 손님이 그것을 천하게 보인 시선으로 바라보면서 한사람씩 경락시켜 간다
+			PRINTFORMW 조금 전의 남자가 살그머니 %ANAME(MASTER)%도 참가하지 않을까 귀엣말했다
+			PRINTFORML 어떻게 하지?
+			PRINTL
+			CALL ASK_YN("참가한다" , "떠난다")
+			IF RESULT == 1
+				PRINTFORML 이런 악취미인 구경거리에 참가할 수 없다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 빠른 걸음을 떠났다
+				RETURN
+			ENDIF
+			PRINTFORMW 참가시켜 받는 일로 했다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 차분히 소녀들을 평가한다
+			PRINTFORMW 그 중에 한사람, 기호의 아가씨를 찾아낸 %조사처리(ANAME(MASTER),"는")% 그 아이를 낙찰하는 일로 결정했다
+			PRINTFORML …경매는 최고조에 달했지만, 무사히 그녀를 손에 넣을 수가 있었다
+			PRINTFORMW 뺨을 붉히고 숨을 거칠게 하는 그녀의 허리를 안으면서 준비된 독실에 향했다
+			PRINTFORML 
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 방에 들어가면 조속히 그녀에게 껴안아 전신에 달라붙었다
+			PRINTFORML 탄력이 있는 부드러운 살갗을 주무르면 그녀는 기쁜듯이 허덕여 몸을 구불거리게 할 수 있어 %조사처리(ANAME(MASTER),"를")% 유혹했다
+			PRINTFORMW 서로 참지 못하고 침대에 쓰러지면, %조사처리(ANAME(MASTER),"는")% 이미 녹진녹진의 비밀스런 장소로 하나의 물건을 쑤셔 넣었다
+			PRINTFORMW 「앙♥앙♥안 돼애♥격렬해♥앙♥」
+			PRINTFORML 격렬하게 허리를 쳐박으면 그녀는 요염하게 미친듯이 자지러지는 신음소리를 내며, 휘감기는 밀육[蜜肉]이 남근을 자극했다
+			PRINTFORMW 허리를 돌려 꾸욱 질내를 후벼파면, 그녀는 크게 뒤로 젖혀 삐걱삐걱 전신을 진동시키고 교성을 미치게 했다
+			PRINTFORMW 그녀에게 졸라지는 것처럼 해 몇 번이나 몇 번이나 교접해, 요금 이상의 극락을 만끽되어 받았다……
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", "상품의 소녀의 질", "매춘")
+			PRINTFORML 
+			PRINTFORMW 회장을 뒤로 할 때, 그녀에게 남몰래 연락처를 쓴 메모를 건네받았다
+			DVAR:영내훌쩍에로의여행_섹스옥션 = 1
+		ENDIF
+	;유곽
+	CASE 4
+		PRINTFORMW 유곽에라도 가 보자
+		PRINTFORML …
+		PRINTFORML ……
+		;1/7로 유곽에 있는 캐릭터를 발견
+		IF ! RAND:7
+			PRINTFORMW 유곽을 흔들거리고 있으면, 창녀가 사용하는 숙소의 앞에서 %ANAME(대상)%의 모습을 찾아냈다
+			PRINTFORML 이쪽의 모습은 눈치채지지 않는 것 같다. 정면충돌해도 거북하기 때문에 그늘에 숨었다
+			PRINTFORMW …%조사처리(ANAME(대상),"는")% 그대로 숙소에 들어갔다…
+			PRINTFORML 설마%조사처리(ANAME(대상),"가")%!?   라고 생각하고 있자, 곧바로 얼굴을 붉게 하면서 나왔다
+			PRINTFORMW …아무래도 여기가 유곽이라고 눈치채지 않았던 것 같다……
+			RETURN
+		ENDIF
+		IF DVAR:영내훌쩍에로의여행_유곽의창녀 >= 4
+			PRINTFORMW 유곽을 걷고 있으면, %ANAME(MASTER)%의 전속 창녀가 된 여자가 불렀다
+			PRINTFORMW 특별 가격으로 하기 때문에, 또 나를 안으면 좋겠다  와다
+			PRINTFORML 
+			CALL ASK_YN("상대를 해 받는다", "그만둔다")
+			IF RESULT == 1
+				PRINTFORML 지금은 그런 기분은 아니기 때문에 거절했다
+				PRINTFORMW 그녀는, 쾅, 이라고 쇼크를 받은 모습으로 %조사처리(ANAME(MASTER),"를")% 보류했다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 유곽의 활기를 바라보면서 빈둥빈둥 했다……
+				RETURN
+			ENDIF
+			PRINTFORML 지금까지의, 그녀와의 밤을 생각해 낸다
+			PRINTFORMW 기량도 기량도 더할 나위 없고, 육체도 완전히 %ANAME(MASTER)%기호가 된 그녀다. 또 상대를 해 받자
+			PRINTFORMW %조사처리(ANAME(MASTER),"가")% 수긍하면, 그녀는 %PRONOUN(MASTER)%를 가까이의 숙소에 데리고 들어갔다
+			PRINTFORML …
+			SELECTCASE RAND:5
+				CASE 0
+					PRINTFORMW 그녀는 넋을 잃은 표정으로 %ANAME(MASTER)%의 팔안에 안기고 있다
+					PRINTFORMW 몇 번이나 %ANAME(MASTER)%에 안겨 몇 번이나 절정 당한 그녀는 헤롱헤롱이 되어 버렸다
+					PRINTFORML 당연히 몇 번이나 질 내 되어 그 비밀스런 장소로부터는 걸죽 정액이 늘어지고 흐르고 있다
+					PRINTFORMW 다시 %ANAME(MASTER)%에 요구되면, 그녀는 스스로 비밀스런 장소를 갈라지고 열림 자궁입구를 실룩거리게 해 씨뿌리기를 졸랐다……
+				CASE 1
+					PRINTFORMW 방으로 들어가자 몇 번이나 교접한 두 명은 얼싸안으면서 한숨 돌리고 있다
+					PRINTFORML 오로지 질내사정 된 하복부를 %ANAME(MASTER)%에게 어루만져지면, 그녀는 난소가 뜨끔 쑤시는 것을 느꼈다
+					PRINTFORMW 임신하면 어떻게 해?   하고 %ANAME(MASTER)%에 속삭여지면, 그녀는 %ANAME(MASTER)%의 아이를 임신하는 일을 상상해 무심코 간들거린다
+					PRINTFORMW 그리고 %ANAME(MASTER)% 페니스를 물어, 아직도 합시다?   와 졸라대면서 허리를 흔들기 시작했다……
+				CASE 2
+					PRINTFORMW 그녀는 %ANAME(MASTER)%에 안기는 것을 열중하고 있다
+					PRINTFORMW 몇 번이나 안은 만큼, 신체의 상태는 발군으로, 페니스가 출입할 때, 서로 전류와 같은 쾌감이 뛰어 돌아다닌다
+					PRINTFORML 그녀는 히히허덕이면서 %ANAME(MASTER)%에게 껴안아 추잡한 말을 늘어 놓아 한층 더 쾌락을 졸라
+					PRINTFORMW %ANAME(MASTER)%도 또한 그녀의 음호에 무아지경으로 허리를 흔들어, 둘이서 육욕에 계속 빠졌다……
+				CASE 3
+					PRINTFORMW 그녀는 %ANAME(MASTER)%에 허리를 잡아져 격렬하게 범해지고 있다
+					PRINTFORML 일발 찌르기 될 때마다 하복부로부터 복받쳐 오는 쾌락에, 그녀는 몸부림 하고 기뻐한다
+					PRINTFORMW 그것은 창녀로서는 굴욕이었을 지도 모른다. 하지만 지금은, %ANAME(MASTER)%에 안기는 단순한 여자로서의 행복에 가득 차 있었다
+					PRINTFORML %조사처리(ANAME(MASTER),"가")% 얼굴을 접근하고 혀를 내밀면, 그녀는 거기에 반응개처럼 야무지지 못하게 혀를 늘어뜨려 혀를 얽히게 할 수 있다
+					PRINTFORMW 이미%조사처리(ANAME(MASTER),"과")%의 섹스 밖에 생각할 수 없게 된 그녀는, 그 뒤도 신체를 계속 겹쳤다……
+				CASE 4
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀와의 연인같이 달콤한 섹스를 즐기고 있다
+					PRINTFORML 두 명은 양손을 서로 제대로 꽉 쥐면서 허리를 서로 쳐, 쾌락을 공유한다
+					PRINTFORMW 그녀는 %ANAME(MASTER)%의 자식을 요구해 질을 조르면서 허리를 구불거리게 해, 페니스를 보다 깊이 유도한다
+					PRINTFORMW 한계를 맞이한 %조사처리(ANAME(MASTER),"는")% 그녀를 임신하게 하려고 특농의 정액을 발해, 그녀는 자궁입구를 열어 그것을 받아들였다……
+			ENDSELECT
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "전속 창녀의 입술", "", "전속 창녀의 입술", "화간")
+			LOCAL = MIN(MONEY, 1500)
+			MONEY -= LOCAL
+			CALL ICPRINT(@"금<{LOCAL}>를 지불했다", "L", 칼라_주의)
+			PRINTFORML 
+			PRINTFORML 두 명은 밤새, 사랑 있는 섹스를 즐겼다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 전속 창녀가 된 그녀와의 하룻밤에, 만열[滿悅]으로 귀로에 도착했다……
+		ELSEIF DVAR:영내훌쩍에로의여행_유곽의창녀 >= 1
+			PRINTFORMW 유곽을 걷고 있으면, 전에 안은 창녀에 이끌렸다
+			PRINTFORMW 또 나와 하룻밤 어때?   와다
+			PRINTFORML 
+			CALL ASK_YN("상대를 해 받는다", "그만둔다")
+			IF RESULT == 1
+				PRINTFORML 지금은 그런 기분은 아니기 때문에 거절했다
+				PRINTFORMW 그녀는, 유감, 이라고 말하고 싶은 듯이 어깨를 움츠려%조사처리(ANAME(MASTER),"를")% 보류했다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 유곽의 활기를 바라보면서 빈둥빈둥 했다……
+				RETURN
+			ENDIF
+			PRINTFORML 전회의, 그녀와의 밤을 생각해 낸다
+			PRINTFORMW 기량 뿐만이 아니라, 기량도 굉장한 물건이었다. 또 상대를 해 받자
+			PRINTFORMW %조사처리(ANAME(MASTER),"가")% 수긍하면, 그녀는 %PRONOUN(MASTER)%를 가까이의 숙소에 데리고 들어갔다
+			PRINTFORML 
+			SELECTCASE RAND:4
+				CASE 0
+					PRINTFORMW 그녀의 육체와 기술은 훌륭하고, %조사처리(ANAME(MASTER),"는")% 몇 번이나 정액을 발하고 있다
+					PRINTFORMW 일발 찌르기 할 때 마다 그녀는 견딜 수 없다고 하도록(듯이) 소리를 질러 요염하게 신체를 구불거리게 할 수 있다
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 짐승과 같이 그녀와 계속 사귀었다……
+				CASE 1
+					PRINTFORMW 그녀는 침대에 뒹군%ANAME(MASTER)%에 걸쳐 허리를 흔들고 있다
+					PRINTFORML 허리를 상하할 때에 페니스가 그녀 안쪽 깊게를 후벼파, 그녀는 교성을 올려 경련한다
+					PRINTFORMW 섹스에 열중하고 있는 %조사처리(ANAME(MASTER),"는")% 한층 더 쾌락을 얻으려고 그녀의 허리를 잡아 밀어올린다
+					PRINTFORMW 그녀도 거기에 응해 격렬하게 허리를 쳐박아, 둘이서 밤새도록 농후한 섹스를 맛보았다……
+				CASE 2
+					PRINTFORML 그녀는 %ANAME(MASTER)%의 가랑이의 사이에 무릎 꿇어, 그 하나의 물건을 입 가득 가득 넣고 있다
+					PRINTFORML 혀로 요도구멍을 자극하면서 장대를 빨아 올리면, %조사처리(ANAME(MASTER),"는")% 기분 좋은 것같이 신음소리 페니스가 경련한다
+					PRINTFORML 그녀는 거기서 일단 봉사를 중단해, 구슬을 비비면서 심술궂은 것 같게%조사처리(ANAME(MASTER),"를")% 올려본다
+					PRINTFORMW 그리고 장대의 근원을 누르면서, 요염한 허리사용으로 %ANAME(MASTER)%의 육봉을 스스로의 비밀의 틈[秘裂]에 맞아들였다……
+				CASE 3
+					PRINTFORML 몇 번째인가의 절정을 맞이한 두 명은 얼싸안으면서 침대에 쓰러졌다
+					PRINTFORML 그녀는 숨을 거칠게 하면서 %ANAME(MASTER)%의 가슴판에 다가붙어, 황홀로 한 표정으로 몸을 진동시키고 있다
+					PRINTFORML 기분 좋았는가 하고 물으면, 창녀로서의 프라이드가 있을 것이다. 수줍으면서도 부끄러워하면서 수긍했다
+					PRINTFORMW 잠깐 쉰 후, 어느 쪽으로부터랄 것도 없게 입맞춤을 주고 받으면, 다시 격렬한 교제를 재개했다……
+			ENDSELECT
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "창녀의 입술", "", "창녀의 질", "화간")
+			DVAR:영내훌쩍에로의여행_유곽의창녀 += 1
+			LOCAL = MIN(MONEY, 3000)
+			MONEY -= LOCAL
+			CALL ICPRINT(@"금<{LOCAL}>를 지불했다", "L", 칼라_주의)
+			PRINTFORML 
+			SIF DVAR:영내훌쩍에로의여행_유곽의창녀 == 4
+				PRINTFORMW 그녀는 완전히 %ANAME(MASTER)%의 마음에든다가 되어, 지금부터 전속 창녀로서 상대를 해 주는 것 같다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 일류 창녀의 테크닉에 만열[滿悅]으로 귀로에 도착했다……
+		;1회째
+		ELSE
+			PRINTFORMW 유곽을 걷고 있으면, 창녀에 이끌렸다
+			PRINTFORMW 하룻밤 어때?   와다
+			PRINTFORML 
+			CALL ASK_YN("상대를 해 받는다", "그만둔다")
+			IF RESULT == 1
+				PRINTFORML 그런 기분은 아니기 때문에 거절했다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 유곽의 활기를 바라보면서 빈둥빈둥 했다……
+				RETURN
+			ENDIF
+			PRINTFORMW 그녀는 상당한 기량이다
+			PRINTFORMW %조사처리(ANAME(MASTER),"가")% 수긍하면, 그녀는 %PRONOUN(MASTER)%를 가까이의 숙소에 데리고 들어갔다
+			PRINTFORML 
+			PRINTFORMW 그녀의 육체와 기술은 훌륭하고, %조사처리(ANAME(MASTER),"는")% 몇 번이나 정액을 발하고 있다
+			PRINTFORMW 일발 찌르기 할 때 마다 그녀는 견딜 수 없다고 하도록(듯이) 소리를 질러 요염하게 신체를 구불거리게 할 수 있다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 짐승과 같이 그녀와 계속 사귀었다……
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "창녀의 입술", "", "창녀의 질", "화간")
+			LOCAL = MIN(MONEY, 3000)
+			MONEY -= LOCAL
+			CALL ICPRINT(@"금<{LOCAL}>를 지불했다", "L", 칼라_주의)
+			DVAR:영내훌쩍에로의여행_유곽의창녀 = 1
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 일류 창녀의 테크닉에 만열[滿悅]으로 귀로에 도착했다……
+		ENDIF
+		
+	;슬럼가
+	CASE 5
+		PRINTFORML 그러고 보니 최근, 슬럼가의 치안이 문제가 되고 있는 것 같다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 슬럼가를 순회하는 일로 했다
+		PRINTFORML …
+		PRINTFORML ……
+		;1/4로 순찰중의 캐릭터와 만남
+		IF ! RAND:4
+			PRINTFORMW 슬럼가에 도착하면, 순찰중의 %조사처리(ANAME(대상),"과")% 정면충돌했다
+			SIF CFLAG:대상:안면 == 0
+				CFLAG:대상:안면 = 1
+			PRINTFORML %ANAME(대상)%도 이 지구의 치안을 신경쓰고 있던 것 같아, 돌아보러 온 것 같다
+			PRINTFORMW 그 다음에인 것으로 함께 돌아보고 있으면, 강도의 현장에 조우했다!
+			PRINTFORML 두 명은 즉석에서 사태의 진압하러 달렸다!
+			PRINTFORML
+			PRINTFORMW …
+			PRINTFORML
+			PRINTFORMW 무사, 강도의 진압에 성공했다
+			PRINTFORML %ANAME(MASTER)%등은 강도들을 병사들에게 인도
+			PRINTFORMW 그것을 보며 있던 슬럼가의 소녀들은, 감사의 말을 걸어 주었다……
+			CFLAG:대상:호감도 += 70
+			RETURN
+		ENDIF
+		;4회째 이후
+		IF DVAR:영내훌쩍에로의여행_슬럼가의창녀 >= 4
+			PRINTFORMW 추잡한 의복의 여성이 나란히 서 있는 골목에 나왔다
+			PRINTFORML 전에 소녀를 산, 슬럼가의 창녀들이 모이는 장소다
+			PRINTFORMW 그리고, 마음에 드는 소녀가 %조사처리(ANAME(MASTER),"를")% 기다리고 있었다
+			PRINTFORMW 그녀는 요염하게 웃음을 띄워, %조사처리(ANAME(MASTER),"를")% 권하도록(듯이) 응시해 온다…
+			PRINTFORMW 그 행동에 두근이라고 한 %조사처리(ANAME(MASTER),"는")%, 또 그녀를 사 안기로 했다
+			;1/3로 로리하렘프레이에
+			IF ! RAND:3
+				PRINTFORML 막상일에 이르기 전에, 그녀에게 제안을 된다
+				PRINTFORMW 오늘은 나 뿐이 아니고, 모두가 기분 좋게 해 준다  와…
+				PRINTFORML 그 말을 기다리고 있었는지같이, 다수의 소녀들이 나타나, %ANAME(MASTER)%에 껴안아 왔다
+				PRINTFORMW 모두, 그녀같이 어린 몸매면서도, 한결같게 남자를 유혹하는 것 같은 추잡한 행동으로 %조사처리(ANAME(MASTER),"를")% 유혹한다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 다수의 유창녀에 둘러싸여, 가까이의 판잣집에 들어갔다…
+				PRINTFORML …
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORMW 소녀들은 모두, 해에 어울리지 않는 테크닉으로 %ANAME(MASTER)%의 신체를 희롱해, 탐욕에 정액을 짜내고 있다
+						PRINTFORML 그녀들은, 위로 향해 된%ANAME(MASTER)%에 부드러운 살갗을 문지르도록(듯이) 모여,
+						PRINTFORMW 질척질척 추잡한 소리를 내면서, %ANAME(MASTER)%의 전신에 추잡한 꿀물[愛蜜]을 발라 온다…
+						PRINTFORMW 그 나머지 음탕한 행위는 %ANAME(MASTER)%의 이성을 부수어, 어린 창녀들의 질에 주저함 없게 사정시킨다
+						PRINTFORML 뜨거운 정액을 나오면 그녀들은 교성을 올려, 다음은 나도!   이라는 듯이 육봉의 쟁탈전이 된다
+						PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀들과의 이모럴 섹스에 빠져 갔다……
+					CASE 1
+						PRINTFORMW 소녀들은 혀로 %ANAME(MASTER)%의 전신을인 체하며 허덕이게 하고 있다
+						PRINTFORML 페니스는 물론, 유두, 애널, 겨드랑이, 배꼽, 귀. 모든 부위에 소녀의 혀가 긴다
+						PRINTFORMW 신체는 작아도 보고프로의 창녀다. 교묘한 혀놀림으로 %ANAME(MASTER)%의 약한 곳을 적확하게 몰아세운다
+						PRINTFORML 군침으로 빠지는 것 같은 복수의 딥키스를 받으면서, 소녀의 입에 자식을 토해낸다
+						PRINTFORMW 작은 입으로 정액을 받은 소녀는, %ANAME(MASTER)%의 앞에서 보란 듯이, 황홀한 표정으로 자식을 삼킨다
+						PRINTFORMW 그 모양을 봐 다시 육봉이 팽배하다. %조사처리(ANAME(MASTER),"는")% 그녀들에게 몇 번이나 정액을 토해냈다……
+					CASE 2
+						PRINTFORMW 소녀들은 %ANAME(MASTER)%의 전에 엉덩이를 내밀도록(듯이) 줄서, 삽입을 기다려 바라는것같이 흔들고 있다
+						PRINTFORML 추잡하게 엉덩이를 흔드는 그 모양은, 어려도 그녀들은 프로의 창녀라는 일을 확신할 수 있다
+						PRINTFORMW 한사람의 분홍 엉덩이를 잡아, 그 작은 질 구멍을 밀어 헤치도록(듯이) 페니스를 꽂아 넣는다
+						PRINTFORML 좁은 고기단지는 정액을 짜내려고 탐욕에 페니스에 휘감긴다
+						PRINTFORMW 그 추잡한 고기단지의 안쪽에 마음껏 정액을 토해내 주면, 소녀는 교성을 올려 절정 했다
+						PRINTFORML 그리고  다음은 나를 사용해  와 다른 소녀들이 빠짐없이 %ANAME(MASTER)%의 페니스를 요구한다
+						PRINTFORMW %조사처리(ANAME(MASTER),"는")% 바래 대로에 전원을 끼우고 쓰러트려, 배덕적인 하렘을 즐겼다……
+				ENDSELECT
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", "로리 창녀의 질", "매춘")
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", "로리 창녀의 질", "매춘")
+				DVAR:영내훌쩍에로의여행_슬럼가의창녀 += 1
+				PRINTFORML 
+				LOCAL = MIN(MONEY, 4500)
+				MONEY -= LOCAL
+				CALL ICPRINT(@"금<{LOCAL}>를 그녀들에게 지불했다", "L", 칼라_주의)
+			;통상 플레이
+			ELSE
+				PRINTFORML …
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORMW 그녀의 기량은 변함 없이 프로의 물건으로, 교묘하게%조사처리(ANAME(MASTER),"를")% 쾌감으로 몰아세운다
+						PRINTFORML 약간 좁은 질 구멍은 딱 하나의 물건에 휘감겨, 그녀의 허리의 움직임에 맞추어 극상의 자극을 주어 온다
+						PRINTFORMW 군침을 늘어뜨리면서 쾌락을 즐기고 있으면, 그녀는 혀를 기 조생%ANAME(MASTER)%의 군침을 맛있을 것 같게 빨고 취한다
+						PRINTFORML 이윽고 %조사처리(ANAME(MASTER),"가")% 한계를 맞이할 것 같게 되면, 그 장대의 근원을 꼬옥 하고 손가락으로 단단히 조인다
+						PRINTFORMW 그리고 귀에 입술이 들러붙을수록 근처에서 속삭인다  추가 요금 주면, 가득 질내사정시켜 주는♥  와…
+						PRINTFORMW 완전히 열중하게하게 한 %조사처리(ANAME(MASTER),"는")% 추가 요금을 지불해, 밤새 그녀와의 섹스에 빠졌다……
+					CASE 1
+						PRINTFORMW 그녀는 양손다리로 %ANAME(MASTER)%에 매달리면서, 끈적한 키스 끼우고를 해 온다
+						PRINTFORML 어린 신체면서, 프로의 창녀도 압도하는 허리사용으로 %조사처리(ANAME(MASTER),"를")% 허덕이게 하고 있다
+						PRINTFORMW 응석부리도록(듯이) 껴안아, %ANAME(MASTER)%의 육봉을 작은 질 구멍으로 꼬옥 하고 단단히 조인다
+						PRINTFORMW 그녀는 열정적인 소리로  추가 요금 주면, 얼마든지 질내사정해도 좋으니까♥  하고 %ANAME(MASTER)%에 속삭인다
+						PRINTFORMW %조사처리(ANAME(MASTER),"는")%, 너를 위해서라면 얼마든지 지불한다, 라고 고해 그녀의 안에 몇 번이나 몇 번이나 자식을 따랐다……
+					CASE 2
+						PRINTFORMW 그녀는 %ANAME(MASTER)%에 걸쳐 페니스를 고기단지로 물어, 질척질척 추잡한 소리를 내면서 허리를 흔든다
+						PRINTFORML 그 움직임은 격렬하지는 않지만, %ANAME(MASTER)%의 약점을 적확하게 몰아세우는 것이었다
+						PRINTFORMW %ANAME(MASTER)%의 입으로부터 빠지는 신음소리는, 그 테크닉이 프로의 창녀 압도하는 것이라는 증거다
+						PRINTFORML 그 쾌감에 녹고 있으면, 갑자기 그녀가 움직임을 멈춘다. 이제(이미/벌써/더는/정말) 시간이 왔다, 라고 %ANAME(MASTER)%에 고한다
+						PRINTFORMW 반죽임으로 된%ANAME(MASTER)%에, 그녀는  추가 요금 주면 연장 해 주는♥  와 속삭여 귀에 키스를 한다
+						PRINTFORML %조사처리(ANAME(MASTER),"는")% 시도 반대도 없게 그녀에게 계속을 간원 한다. 그것이 그녀에게 오슬오슬 하는 것 같은 감각을 기억하게 한다
+						PRINTFORMW 그녀는 자기보다 큰 남자를 쾌락으로 지배하는 유열을 느끼면서, %ANAME(MASTER)%의 정액을 계속 짜냈다……
+				ENDSELECT
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", "로리 창녀의 질", "매춘")
+				DVAR:영내훌쩍에로의여행_슬럼가의창녀 += 1
+				PRINTFORML 
+				LOCAL = MIN(MONEY, 2500)
+				MONEY -= LOCAL
+				CALL ICPRINT(@"금<{LOCAL}>를 그녀에게 지불했다", "L", 칼라_주의)
+			ENDIF
+			PRINTFORMW 행위가 끝나면, 그녀는 %ANAME(MASTER)%에 귓전으로 요염하게 속삭인다
+			PRINTFORML 가득 돈을 가지고, 또 나를 안으러 와…♥  와…
+			PRINTFORMW 절대 또 오는 것을 고하면, 소녀는 요염한 미소를 띄워%ANAME(MASTER)%에 깊은 키스를 보냈다……
+		;2회째 이후
+		ELSEIF DVAR:영내훌쩍에로의여행_슬럼가의창녀 >= 1
+			PRINTFORMW 추잡한 의복의 여성이 나란히 서 있는 골목에 나왔다
+			PRINTFORML 전에 소녀를 산, 슬럼가의 창녀들이 모이는 장소다
+			PRINTFORMW 그리고, 전에 산 소녀가 또 있었다
+			PRINTFORMW 그녀는 얼굴을 붉혀 %조사처리(ANAME(MASTER),"를")% 응시해 온다…
+			PRINTFORML 어떻게 하지?
+			CALL ASK_YN("그녀를 산다" , "떠난다")
+			IF RESULT == 1
+				PRINTFORMW 하지만 지금은 그런 기분이 아니다. %조사처리(ANAME(MASTER),"는")% 그 자리를 떠났다
+				RETURN
+			ENDIF
+			PRINTFORMW 그 행동에 뜨끔 온%조사처리(ANAME(MASTER),"는")%, 또 그녀를 사 안기로 했다
+			PRINTFORML …
+			SELECTCASE RAND:3
+				CASE 0
+					PRINTFORMW 소녀는 어리면서 과연 프로의 창녀인것 같고 교묘하게%조사처리(ANAME(MASTER),"를")% 즐겁게 해 주었다
+					PRINTFORML 약간 좁은 질 구멍은 끈적 하나의 물건에 휘감겨 그녀의 허리의 움직임에 맞추어 기분 좋은 자극을 주어 온다
+					PRINTFORMW 가슴을 비비어 주면 그녀는 사랑스러운 소리를 흘려 신체를 구불거리게 해, 응석부리는 것처럼 껴안아 왔다
+					PRINTFORMW 완전히 열중하게하게 한 %조사처리(ANAME(MASTER),"는")% 연장 요금을 지불해 밤새 그녀와의 밀회[逢瀨]를 즐겁게 해 받았다……
+				CASE 1
+					PRINTFORMW 그녀는 양손다리로 %ANAME(MASTER)%에 매달리면서, 끈적한 키스 끼우고를 하고 있다
+					PRINTFORML 어린 신체면서, 프로의 창녀인것 같고 교묘한 허리사용으로 %조사처리(ANAME(MASTER),"를")% 즐겁게 해 주었다
+					PRINTFORMW 응석부리도록(듯이) 껴안아, %ANAME(MASTER)%의 육봉을 작은 질 구멍으로 꼬옥 하고 단단히 조인다
+					PRINTFORML 그녀는 열정적인 소리로  추가 요금으로 질내사정시켜 준다  하고 %ANAME(MASTER)%에 속삭인다
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 얼마든지 지불해 준다, 라고 고해 그녀의 안에 몇 번이나 정액을 따랐다……
+				CASE 2
+					PRINTFORMW 그녀는 %ANAME(MASTER)%에 걸쳐 페니스를 고기단지로 물어, 질척질척 추잡한 소리를 내면서 허리를 흔든다
+					PRINTFORML 그 움직임은 격렬하지는 않지만, %ANAME(MASTER)%의 약점을 적확하게 몰아세우는 것이었다
+					PRINTFORMW %ANAME(MASTER)%의 입으로부터 빠지는 신음소리는, 그 테크닉이 프로의 창녀 압도하는 것이라는 증거다
+					PRINTFORML 그 쾌감에 녹고 있으면, 갑자기 그녀가 움직임을 멈춘다. 이제(이미/벌써/더는/정말) 시간이 왔다, 라고 %ANAME(MASTER)%에 고한다
+					PRINTFORMW 반죽임으로 된%ANAME(MASTER)%에, 그녀는  추가 요금으로 연장 해 준다  와 귀에 키스를 하면서 속삭인다
+					PRINTFORML %조사처리(ANAME(MASTER),"는")% 시도 반대도 없게 그녀에게 계속을 간원 한다
+					PRINTFORMW 그녀는 자기보다 큰 남자를 쾌락으로 지배하는 유열을 느끼면서, %ANAME(MASTER)%의 정액을 자궁으로 받아 들였다……
+			ENDSELECT
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", "로리 창녀의 질", "매춘")
+			DVAR:영내훌쩍에로의여행_슬럼가의창녀 += 1
+			PRINTFORML 
+			LOCAL = MIN(MONEY, 2000)
+			MONEY -= LOCAL
+			CALL ICPRINT(@"금<{LOCAL}>를 그녀에게 지불했다", "L", 칼라_주의)
+			PRINTFORMW 또 오는 것을 전하면, 소녀는 나이에 어울리지 않는 요염한 미소로 %조사처리(ANAME(MASTER),"를")% 보류했다……
+			;4회째로 로리 창녀에 빠진다
+			SIF DVAR:영내훌쩍에로의여행_슬럼가의창녀 == 4
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 완전히 그녀와의 행위에 빠져 버렸다……
+		;1회째
+		ELSE
+			PRINTFORMW 추잡한 의복의 여성이 나란히 서 있는 골목에 나왔다
+			PRINTFORML 여기는 부랑자가 이용하는 창녀들의 입장소인것 같다
+			PRINTFORMW 모두 좋은 신체를 하고 있는 것이 옷의 위로부터도 안다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_YN("한사람 산다" , "떠난다")
+			IF RESULT == 1
+				PRINTFORMW 하지만 그런 기분이 아니다. %조사처리(ANAME(MASTER),"는")% 그 자리를 떠났다
+				RETURN
+			ENDIF
+			PRINTFORMW 불끈불끈 하고 있던%조사처리(ANAME(MASTER),"는")% 한사람의 소녀를 샀다
+			PRINTFORML 
+			PRINTFORMW 소녀는 어리면서 과연 프로의 창녀인것 같고 교묘하게%조사처리(ANAME(MASTER),"를")% 즐겁게 해 주었다
+			PRINTFORML 약간 좁은 질 구멍은 끈적 하나의 물건에 휘감겨 그녀의 허리의 움직임에 맞추어 기분 좋은 자극을 주어 온다
+			PRINTFORMW 가슴을 비비어 주면 그녀는 사랑스러운 소리를 흘려 신체를 구불거리게 해, 응석부리는 것처럼 껴안아 왔다
+			PRINTFORMW 완전히 열중하게하게 한 %조사처리(ANAME(MASTER),"는")% 연장 요금을 지불해 밤새 그녀와의 밀회[逢瀨]를 즐겁게 해 받았다……
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", "로리 창녀의 질", "매춘")
+			PRINTFORML 
+			LOCAL = MIN(MONEY, 500)
+			MONEY -= LOCAL
+			CALL ICPRINT(@"금<{LOCAL}>를 그녀에게 지불했다", "L", 칼라_주의)
+			PRINTFORMW 또 오는 것을 전하면 소녀는 뺨을 붉히고 부끄러워했다……
+			DVAR:영내훌쩍에로의여행_슬럼가의창녀 = 1
+		ENDIF
+	;멈춘다
+	CASE 6
+		PRINTFORMW …아니, 역시 이대로 질질 하고 있자
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 오늘 하루, 자신의 방에서 질질 하기로 했다……
+ENDSELECT
+
+RETURN 0

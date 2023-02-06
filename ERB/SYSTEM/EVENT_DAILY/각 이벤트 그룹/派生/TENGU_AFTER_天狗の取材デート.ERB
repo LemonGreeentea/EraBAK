@@ -1,0 +1,213 @@
+﻿;---------------------
+;대응하는 데일리의 DISABLE를 돌려준다. 설정하지 않는 경우, 이벤트는 발생하지 않는다.
+;---------------------
+@EVENT_DAILY_DERIVATION_TENGU_AFTER_DISABLE()
+RETURN DAILY_GET_DISABLE_CONFIG("REPAYMENT")
+
+;---------------------
+;발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;대응하는 데일리의 DISABLE 체크를 규약으로서 필수로 한다
+;---------------------
+@EVENT_DAILY_DERIVATION_TENGU_AFTER_DECISION()
+#DIM 대상
+
+대상 = ID_TO_CHARA(DVAR:텐구취재_캐릭터ID)
+
+SIF 대상 < 0
+	RETURN 0
+	
+SIF DVAR:텐구취재_캐릭터ID < 0
+	RETURN 0
+	
+;페니스를 가지고 있지 않으면 안 돼
+SIF !HAS_PENIS(MASTER)
+	RETURN 0
+	
+;대상이 여자가 아니면 안 돼
+SIF !IS_FEMALE(대상)
+	RETURN 0
+	
+;호감도가 1500이상
+SIF MAX(CFLAG:대상:호감도) < 1500
+	RETURN 0
+
+;소속이 함께로, 대상이 포로가 되어 있지 않고, 사망하고 있지 않다
+SIF !(CFLAG:대상:소속 == CFLAG:MASTER:소속 && !CFLAG:대상:포로처 && CFLAG:대상:특수상태 != 특수상태_사망)
+	RETURN 0
+	
+;15％로 발생	
+RETURN RAND:100 < 15
+
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_DERIVATION_TENGU_AFTER()
+#DIM 대상
+#DIM 아야
+#DIM 하타테
+
+대상 = ID_TO_CHARA(DVAR:텐구취재_캐릭터ID)
+아야 = NAME_TO_CHARA("아야")
+하타테 = NAME_TO_CHARA("하타테")
+
+SELECTCASE DVAR:텐구취재_데이트
+	CASE 0
+		PRINTFORML 「아, %ANAME(MASTER)%. 안녕하세요!」
+		PRINTFORMW %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%의 권유로 우리 군에 들어가, 홍보잡지를 만드는 것을 종사하고 있다
+		PRINTFORML …기세로 군으로 이끌어 버렸지만, 여기서 제대로 되어지고 있을까
+		PRINTFORMW 「아하하, 확실히 불안도 있었습니다만…. 해 보면 의외로 갈 수 있는 것이군요」
+		PRINTFORML 그렇게 말하는 그녀의 표정은 너무 좋지 않다. 뭔가 트러블이 있을까?
+		PRINTFORMW 「아, 아니, 그런 것이 아니라!」
+		PRINTFORMW 「홍보잡지은 순조롭습니다만,……중요한 자신의 신문용의 재료가, 조금 막히고 있어…」
+		IF CFLAG:아야:소속 == CFLAG:MASTER:소속 &&  !(MASTER == NAME_TO_CHARA("아야"))
+			PRINTFORML 「샤메이마루씨는, 재료 찾기에 빈번하게 날아다니고 있는데……」
+			PRINTFORMW 「자신은 최근, 시간이 잡히지 않아서……. 꽤 취재라든지에도 갈 수 있고 없습니다」
+		ELSEIF CFLAG:하타테:소속 == CFLAG:MASTER:소속 &&  !(MASTER == NAME_TO_CHARA("하타테"))
+			PRINTFORML 「히메카이도씨는, 최근 좋게 날아다녀 연사에 의지하지 않고 취재하고 있는데……」
+			PRINTFORMW 「자신은 꽤 시간이 잡히지 않아서……. 재료 찾기라든지에도 갈 수 있고 없습니다」
+		ELSE
+			PRINTFORMW 「특히 최근에는 시간이 잡히지 않아서……. 꽤, 재료 찾기의 취재라든지에도 갈 수 있고 없습니다」
+		ENDIF
+		PRINTFORMW 그렇게 말하면 %조사처리(ANAME(대상),"는")% 괴로운 듯이 팔짱을 껴, 왜 그러는 것일까 하고 고민하고 있다
+		PRINTFORML 오늘까지 훌륭하게 일해 주고 있는 그녀다. 가끔씩은 리프레쉬를 위해서(때문에) 휴일을 올리는 것도 좋을 것이다
+		PRINTFORMW %조사처리(ANAME(대상),"는")%, 이번 휴일에, 둘이서 취재하러 가지 않겠는가, 라고 그녀에게 제안했다
+		PRINTFORML 「에!?   정말입니까!?   했다―!  감사합니다, %ANAME(MASTER)%♪」
+		PRINTFORMW 그 제안을 (들)물어, %조사처리(ANAME(대상),"는")% 팟 표정을 밝게 했다. %조사처리(ANAME(MASTER),"와")% 함께 나갈 수 있는 것이 매우 기쁜 것 같다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀와 이번 함께 취재 여행하러 간다고 할 약속을 얻어냈다
+		PRINTL
+		DVAR:텐구취재_데이트 = 1
+	CASE IS >= 1
+		IF DVAR:보은_데이트 == 1
+			PRINTFORML 「아,%ANAME(MASTER)%. 안녕하세요!   오늘은 잘 부탁드려요♪」
+		ELSE
+			PRINTFORML 「아,%ANAME(MASTER)%. 안녕하세요!   오늘도 취재에 협력해 주세요!」
+			PRINTFORML %조사처리(ANAME(대상),"는")% 그 뒤도, 그녀의 신문의 재료 찾기를 위해서(때문에), 종종 취재에 이끌리는 일이 되었다
+		ENDIF
+		PRINTFORMW 오늘은 함께 취재에 교제할 약속의 날. %조사처리(ANAME(대상),"는")% 실로 기쁜듯이 인사했다
+		PRINTFORML 근처에 서자마자, 곧바로 팔을 걸어 온다. 취재라는 것보다 데이트에 가는 것 같은 느낌이다
+		PRINTFORML 「후후후. 뭐 좋지 않습니까. 기자 특권이라는 녀석이에요」
+		PRINTFORMW 「그러면 오늘도 의욕에 넘쳐 갑시다!」
+		PRINTFORML ·
+		PRINTFORML ·
+		PRINTFORMW ·
+		SELECTCASE RAND:15
+			CASE 0
+				PRINTFORML 「앗♥  앙읏♥  좀 더♥  좀 더 안쪽까지 찔러♥」
+				PRINTFORML 취재도 하는 둥 마는 둥, %조사처리(ANAME(MASTER),"와")% %조사처리(ANAME(대상),"는")% 방 안에서 서로 격렬하게 요구했다
+				PRINTFORML 「응앗♥  좋으니까, 오늘 밤은 밤새, 범해 주세욧♥」
+				PRINTFORML 물론 거절하는 이유 따위 있을 리도 없고, %조사처리(ANAME(MASTER),"는")% 깊숙히 페니스를 꽂아 응했다
+				PRINTFORMW 뜨끔뜨끔 안타깝게 우는 암컷구멍에, %조사처리(ANAME(MASTER),"는")% 한껏 종을 붙였다……
+			CASE 1
+				PRINTFORML 취재 도중에 갑자기 불끈불끈이라고 한 %조사처리(ANAME(MASTER),"는")%, %ANAME(대상)%에 뒷골목에 데리고 들어갔다
+				PRINTFORML 그녀는 %ANAME(MASTER)%의 발밑에 무릎 꿇어, 입술과 혀로 열심히 페니스에 봉사하고 있다
+				PRINTFORML 「응……하아♥  변함 없이 딱딱하고 뜨겁네요……♥  기분이 좋습니까♥」
+				PRINTFORML 대답 대신에 %조사처리(ANAME(MASTER),"는")% 그녀의 머리를 움켜잡음으로 하면, 목을 오나홀 대신에 해 피스톤 했다
+				PRINTFORML 「응♥  ″♥  오″♥  오″♥  ～～～～♥♥♥」
+				PRINTFORMW 목 안에 퓻퓻 하고 뜨거운 정액을 흘려 넣어져, 그녀는 그것만으로 달하게 되었다……
+			CASE 2
+				PRINTFORML 「아읏♥  , 주인님♥  주인님♥  미안해요♥」
+				PRINTFORML 오늘은 메이드을 체험 취재할 것이었지만, 왜일까 그러한 플레이를 하는 일이 되어 버렸다
+				PRINTFORML 「네♥  내 주세욧♥  불할 수 있고음란 메이드에게 벌 해 주세욧♥
+				PRINTFORML   주인님의 특농정액으로♥  주인님 전용의 메이드 보지를 예의범절을 가르쳐 주세요♥♥♥」
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 사랑스러운 메이드 텐구안에 충분히 사정해, 그 뒤도 밤새 계속 예의범절을 가르쳤다……
+			CASE 3
+				PRINTFORML 자세력내에 있는 온천숙소에, 숙박으로 취재하러 가는 일이 되었다
+				PRINTFORML 「아이참♥  식사가 끝나자마자 섹스이라니, 조금은 경치를 즐깁시다……♥」
+				PRINTFORML 가족탕에 둘이서 잠기면서, 천천히 교접을 즐겼다
+				PRINTFORML 「그런데 이 온천은 자식의 뜨거운 물이라고 (듣)묻고 있는 것 같아요……♥
+				PRINTFORMW   아♥  조금♥  갑자기, 벗길 수 있는 쉿♥  , 진심으로 임신하게 할 생각입니까, 이제(이미/벌써/더는/정말) ♥♥♥」
+			CASE 4
+				PRINTFORML 갓빠로부터 새로운 발명품의 리뷰-를 부탁받았다는 것으로, 협력하기로 했다
+				PRINTFORML 「히 있고″♥  ♥  이것♥  용서해 관♥  , 위험합니닷♥
+				PRINTFORML   ″♥  엉덩이의 구멍, 바보가 되어 버린닷♥  바보가 되어 버리는♥」
+				PRINTFORML 엎드린 자세로 된 그녀의 애널로, 갓빠표의 매우 굵은 바이브가 휘익휘익 꿈틀거리고 있다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그 모습을 관찰해 리포트하면서, 구입하는 것을 검토했다……
+			CASE 5
+				PRINTFORML 「아″아″♥♥♥  아″♥  오″♥  응응″″″″♥
+				PRINTFORML   있고 꼬옥♥♥♥  ♥♥♥  있고 히♥  힛힛히 좋아아-♥♥♥」
+				PRINTFORML 영원정으로부터 새로운 미약의 리뷰-를 부탁받은 것이지만, 아무래도 효과가 너무 강한 같다
+				PRINTFORML 쓰는 말하는 %ANAME(MASTER)%도 발기가 들어가지 않고, 몇번 내도 전혀 쇠약해지는 기색을 보이지 않는다
+				PRINTFORMW 결국 효과가 끊어지는 무렵에는, 그녀의 배는 임신했는지같이 부풀어 오르고 있었다……
+			CASE 6
+				PRINTFORML 「네……네, 치즈♥」
+				PRINTFORML %ANAME(MASTER)%에 아래로부터 관철해진 자세인 채, 그녀는 셀프타이머로 자신의 모습을 촬영 당했다
+				PRINTFORML 「우웃, 일도구인데……이런 사진누구에게도 보여지지 않아요
+				PRINTFORML   네?   다음은 질내사정되어 가고 있는 곳을 찍어?   빗나가고 벌, 앗♥  아♥  아″♥」
+				PRINTFORMW 그 후, %조사처리(ANAME(MASTER),"는")% 그녀의 치태를 마음껏 촬영해 주었다……
+			CASE 7
+				PRINTFORML 「이, 이제(이미/벌써/더는/정말)!   정말로 어쩔 수 없는 사람이군요……♥」
+				PRINTFORML 오늘은 밥리포트에 나갔지만, 도중에 무심코 므흣한 %조사처리(ANAME(MASTER),"는")%, %조사처리(ANAME(대상),"를")% 뒷골목에 데리고 들어가 입으로 봉사시켰다
+				PRINTFORML 「아뭇♥  츗♥  , 응붓, 쥬룻, 쥬루루읏♥
+				PRINTFORML   야♥  등 히라고 구등있고♥  맛있는 정액, 거쳐♥♥♥」
+				PRINTFORMW 그 뒤도 몇 건인가 돌았지만, 입안의 정액의 맛이 남아 있었기 때문에, 착실한 취재가 되지 않았던 것 같다……
+			CASE 8
+				PRINTFORML 「아긋♥  아운♥  아♥  아♥  만나는♥  아앙읏♥」
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(대상)%에 덮어씌우면서, 깊은 곳까지 질육을 맛보고 있다.
+				PRINTFORML 그녀는 기쁨으로 흐느껴 울면서 삐걱삐걱 신체를 진동시켜 %ANAME(MASTER)%에 사랑 받는 행복하게 만취하고 있다
+				PRINTFORML 「좋아앗, 좋아합니닷♥  이렇게 햇, 안쪽까지♥　%ANAME(MASTER)%에, 해 받는 것♥♥♥」
+				PRINTFORMW 필사적으로 매달리면서 사랑스럽게 신음하는 그녀에게, %조사처리(ANAME(MASTER),"는")% 키스 하면서 장황히 정액을 쏟았다……
+			CASE 9
+				PRINTFORML 「앗♥  응♥  , 안쪽까지 와 있어요♥  동글동글은♥」
+				PRINTFORML %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%에 걸쳐, 자신으로부터 허리를 흔들어 자궁입구를 후벼파는 기쁨에 빠지고 있다
+				PRINTFORML 완전히 %ANAME(MASTER)%에 예의범절을 가르쳐진 질육은, 다른 살아있는 생물인 듯 꾸불꾸불해, 페니스에 달라붙어 온다
+				PRINTFORML 「아핫♥  기분이 좋습니까♥  좋은, 이에요♥  함께, 좀 더, 기분 좋고♥  자주(잘) ♥」
+				PRINTFORMW 더욱 더 열렬하게 허리를 구불거리게 할 수 있는 그녀에게, %조사처리(ANAME(MASTER),"가")% 참지 못하고 사정하면, 그녀도 또 교성을 올려 절정 했다……
+			CASE 10
+				PRINTFORML 「춋♥  히, 이런 것 누군가에게 발각되면, 어떻게 합니까♥」
+				PRINTFORML 자세력내의 돌아보러 나온 두 명이었지만, 무심코 도중에 므흣 와 버려, 망루 위에서 %ANAME(대상)%에 덤벼 들었다……
+				PRINTFORML 「히♥  , 부탁♥  아무도 눈치채지 마아♥  볼 수 있으면, 부끄러워서 죽어 버린다아♥
+				PRINTFORML   들키면 ♥  아앙읏♥  들키면, 내가 신문에 실려 버립니다아아아-……♥♥♥」
+				PRINTFORMW 이상한 상황에 흥분해 뜨끔뜨끔 단단히 조여 오는 고기구멍에, %조사처리(ANAME(MASTER),"는")% 만족 갈 때까지 정액을 쏟았다……
+			CASE 11
+				PRINTFORML 오늘은 세력내에서 열리고 있는 축제에, %조사처리(ANAME(대상),"를")% 수반해 가 보았다.
+				PRINTFORML 그녀의 유카타 모습에 두근두근 하면서도 취재를 끝내 조금 쉬고 있었지만, 그 정도중의 수풀로부터 남녀의 신음소리가 들린다……
+				PRINTFORML 「아, 아니여러분번성한 일로……♥  로, 그, 그렇게, 취재의 일환으로서, 군요……, 우리들도, 합니까?」
+				PRINTFORML 슬쩍 유카타의 옷자락을 걷어 붙여 부끄러운 듯이 권하는 그녀에게, %조사처리(ANAME(MASTER),"는")% 두말 할 것 없이 덤벼 들었다
+				PRINTFORMW 그리고 기쁜 듯이 꺄―♥(와)과비명을올린다그녀를 쓰러트리고, 주위의 커플에게 지지 않을 정도(수록) 통곡하게 해 주었다……
+			CASE 12
+				PRINTFORML 취재중, 돌연의 비를 맞아 버린 %조사처리(ANAME(MASTER),"와")% %조사처리(ANAME(대상),"는")%, 어쩔 수 없이 근처에 있던 야도에 뛰어들었다
+				PRINTFORML 「그렇지만, 이것은 어떻게 봐도……남녀동반 숙소군요……♥」
+				PRINTFORML 그 대로다. 그리고 모처럼 들어간 것이라면 즐겨야 한다. 그렇게 생각한 %조사처리(ANAME(MASTER),"는")% 그녀를 쓰러트렸다
+				PRINTFORML 「아-이제(이미/벌써/더는/정말) ♥  알고 있었습니다만!   라고 할까 원래 최초부터 알고 있어 데리고 들어간 것은……♥
+				PRINTFORMW   아♥  째, 말대답하지 않기 때문에♥  거기♥  안 됏♥  나, 앗♥  아♥  아″♥♥♥」
+			CASE 13
+				PRINTFORML 있는 숙소에서 뒷거래를 하고 있다는 정보를 잡은 %조사처리(ANAME(MASTER),"와")% %조사처리(ANAME(대상),"는")%, 잠입 수사를 실시하는 일이 되었다
+				PRINTFORML 하지만 거기는 커플 납품업자의 비밀의 남녀동반 숙소……부득이, %ANAME(MASTER)%들은 연인끼리로서 숙소에 잠입했다
+				PRINTFORML 「그, 그렇게♥  이것은 수사를 위해서(때문에) 어쩔 수 없는 것입니다♥  연인끼리의 연기를♥  하지 않으면♥
+				PRINTFORML   아♥  아♥  좋아♥  좀 더 사랑해 주세욧♥　%ANAME(MASTER)%의 자식♥  많이 주세요♥」
+				PRINTFORMW 그 후, 연인 짓거리에 너무 빠져 무심코 거래 현장을 놓치기 시작했지만, 어떻게든 범인들을 잡을 수가 있었다……
+			CASE 14
+				PRINTFORML 불끈불끈 하고 있었던 %조사처리(ANAME(MASTER),"는")%, 오늘은 일도 취재도 내던져 %조사처리(ANAME(대상),"와")% 섹스 하기로 했다
+				PRINTFORML 「앗♥  , 그런 것으로 괜찮습니까♥  해, 일은, 성실하게, 하지 않으면♥  안 됩니다, 여어♥」
+				PRINTFORML 그런 일은 관계없는, 지금은 다만 너의 신체를 다 맛보고 싶으면 %조사처리(ANAME(MASTER),"는")% 고했다
+				PRINTFORML 「……읏♥♥♥  두, 간사해요♥  그런 일 말해지면 ♥  나도♥  인내♥  할 수 없게 되어 버립니닷♥
+				PRINTFORMW   응♥  응♥  가득 시라고 주세욧♥　%ANAME(MASTER)%의 자식♥  를 좋아할 뿐(만큼) 나의 안에 내 주세요……♥♥♥」
+		ENDSELECT 
+		CALL FUCK_MAKELOVE(대상, GET_ID(MASTER), @"%ANAME(MASTER)%의 입술", @"%ANAME(MASTER)%")
+		CALL FUCK(MASTER, "Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, @"%ANAME(대상)%의 입술", "", @"%ANAME(대상)%의 질")
+		PRINTFORML ·
+		PRINTFORML ·
+		PRINTFORMW ·
+		PRINTFORML 「하아…오늘도 이러니 저러니 해도 시있었어요…♥」
+		PRINTFORMW 취재라는 몸의 데이트를 끝내, 두 명은 사이 좋게 귀로의 도중이다
+		PRINTFORML 「이번도 취재에 교제해 주세요!」
+		PRINTDATAW
+			DATA 「다음은 최근, 화제의 데이트 장소에 대한 취재 예정이 있어서…」
+			DATA 「다음은 마을에서 최근 화제의 창작 스위트의 취재입니다. 소문에서는 『ＪＫ』되는 사람이 어드바이저가 되어 있다든가…」
+			DATA 「최근 만들어졌다는, 갓빠의 신공장에 도착해 잠입 취재를 할까하고 생각하고 있어…」
+			DATA 「이번은, 대량으로 유통하고 있는 마약의 제조에 관한 취재입니다. 이것은 사회파예요!」
+			DATA 「실은 최근, 알몸의 목없음녀가 밤마다 나타나 배회하고 있다는 소문이 있어서…」
+			DATA 「실은 어떤 유곽에, 어떤 남자도 뼈 없음으로 하는 마성의 창녀가 있다는 소문이 있어서…」
+			DATA 「잡아도 잡아도 굉장히 바뀌는 밤도둑의 두령은, 실은 진정한 두령인 수수께끼의 미녀가 그림자로부터 조종하고 있다는 소문이 있어서…」
+			DATA 「전의 신문, 문장씨랑 하타테씨의 것보다 매상이 좋아서…미안한 기분과 함께 묘한 우월감이 끓어 와서…」
+		ENDDATA
+		PRINTFORML 다음의 취재 예정을 즐거운 듯이 지껄여대는 그녀의 머리를, %조사처리(ANAME(MASTER),"는")% 상냥하게 어루만진다
+		PRINTFORMW 어차피 이번도, 취재는 하는 둥 마는 둥 또 신체를 겹치는 일이 될 것이지만…, 과는 입에는 내지 않았다
+		SIF DVAR:보은_데이트 == 1
+			DVAR:보은_데이트 = 2
+		PRINTL
+ENDSELECT
+
+RETURN 1

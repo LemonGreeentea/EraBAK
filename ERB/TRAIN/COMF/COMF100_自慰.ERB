@@ -1,0 +1,432 @@
+﻿;자위
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME100
+LOCALS:0 = 
+IF TFLAG:70 == 1
+	LOCALS:0 = 촬영
+ELSEIF TFLAG:103 == 2
+	LOCALS:0 = 공개
+ELSEIF TFLAG:54 == 8
+	LOCALS:0 = 야외
+ENDIF
+
+IF IS_EQUIP_TARGET(MPLY:0, 61) && IS_EQUIP_TARGET(MPLY:0, 62)
+	LOCALS:0 '= LOCALS:0 + "양구멍 바이브"
+ELSEIF IS_EQUIP_TARGET(MPLY:0, 61)
+	LOCALS:0 '= LOCALS:0 +"바이브"
+ELSEIF IS_EQUIP_TARGET(MPLY:0, 62)
+	LOCALS:0 '= LOCALS:0 +"애널바이브"
+ENDIF
+
+LOCALS:0 '= LOCALS:0 + "자위"
+
+RESULTS:0 = %조사처리(LOCALS:0,"를")% 과시한다
+RESULTS:1 = %LOCALS:0%당한다
+RESULTS:2 = %LOCALS:0%시킨다
+RESULTS:3 = %조사처리(LOCALS:0,"를")% 보게 된다
+RESULTS:4 = %LOCALS:0%시킨다
+RESULTS:5 = %LOCALS:0%과시하고
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE100
+;공통 부분
+CALL COM_ABLE_COMMON(100)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 1명 이상
+SIF MPLY_NUM <= 0
+	RETURN 0
+;타겟은 1명 이상
+SIF MTAR_NUM <= 0
+	RETURN 0
+;플레이어가 행동불능이라면 불가
+SIF !IS_PLAYABLE(MPLY:0)
+	RETURN 0
+;모든 플레이어에 대해 판정
+FOR LOCAL:0, 0, MPLY_NUM
+	;구속중이라면 불가
+	SIF IS_BIND(MPLY:(LOCAL:0))
+		RETURN 0
+	;페니스를 삽입중이라면 불가
+	SIF HAS_PENIS(MPLY:(LOCAL:0)) && IS_INSERT_SINGLE(MPLY:(LOCAL:0), "Ｐ")
+		RETURN 0
+	;페니스에의 봉사를 받고 있다면 불가
+	SIF !HAS_VAGINA(MPLY:(LOCAL:0)) && (IS_EQUIP_TARGET(MPLY:(LOCAL:0), 10, 11, 12, 13, 14, 15, 16, 17) || IS_EQUIP_TARGET(MPLY:(LOCAL:0), 103, 106, 107, 205, 206))
+		RETURN 0
+	;페니스가 없고, 클리에의 봉사를 받고 있다면 불가
+	SIF !HAS_PENIS(MPLY:(LOCAL:0)) && (IS_EQUIP_PLAYER(MPLY:(LOCAL:0), 101) || IS_EQUIP_TARGET(MPLY:(LOCAL:0), 2, 60, 203))
+		RETURN 0
+NEXT
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM100
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;각 플레이어의 관련되는 자위·촉수자위의 계속 상태를 해제
+FOR LOCAL:0, 0, MPLY_NUM
+	CALL RELEASE_EQUIP_EX(100, MPLY:(LOCAL:0), -1)
+	CALL RELEASE_EQUIP_EX(211, MPLY:(LOCAL:0), -1)
+NEXT
+
+;●모든 플레이어에 대해 처리
+FOR LOCAL:0, 0, MPLY_NUM
+	LOCAL:2 = MPLY:(LOCAL:0)
+
+	EXP:(LOCAL:2):자위경험치 += 3
+
+	SOURCE:(LOCAL:2):노출 = 1300
+	SOURCE:(LOCAL:2):일탈 = 100
+	SOURCE:(LOCAL:2):성행동 = 240
+
+	LOCAL:3 = 500
+
+	SELECTCASE ABL:(LOCAL:2):자위
+		CASE 0
+			TIMES LOCAL:3, 1.00
+		CASE 1
+			TIMES LOCAL:3, 1.20
+		CASE 2
+			TIMES LOCAL:3, 1.50
+		CASE 3
+			TIMES LOCAL:3, 1.80
+		CASE 4
+			TIMES LOCAL:3, 2.00
+		CASEELSE
+			LOCAL:3 = LOCAL:3 * (420 + (ABL:(LOCAL:2):자위 - 5)) / 200
+	ENDSELECT
+
+	IF HAS_PENIS(LOCAL:2)
+		SOURCE:(LOCAL:2):쾌Ｐ = SENSE_HOUSHI_P(LOCAL:2, LOCAL:2, LOCAL:3 * 3 / 2)
+	ELSE
+		SOURCE:(LOCAL:2):쾌Ｃ = SENSE_HOUSHI(LOCAL:2, LOCAL:2, LOCAL:3)
+		SOURCE:(LOCAL:2):쾌Ｂ = SENSE_HOUSHI(LOCAL:2, LOCAL:2, LOCAL:3 / 2)
+	ENDIF
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:2, 60, 120)
+
+	FOR LOCAL:1, 0, MTAR_NUM
+		;사정 개소와 대상을 세트
+		CALL STACK_SPERM(LOCAL:2, MTAR:(LOCAL:1), IFRAND(@"{사정부위_낭비}", 1, @"{사정부위_얼굴}", RAND:100 < 50, @"{사정부위_머리카락}", RAND:100 < 50))
+	NEXT
+NEXT
+
+;주도권의 소재를 취득
+LOCAL:11 = GET_COM_INITIATIVE()
+
+;●모든 타겟으로 붙어 처리
+FOR LOCAL:0, 0, MTAR_NUM
+	LOCAL:1 = MTAR:(LOCAL:0)
+
+	SOURCE:(LOCAL:1):성행동 = 120
+
+	;타겟으로 주도권
+	IF LOCAL:11 == 1 || LOCAL:11 == 2
+		SOURCE:(LOCAL:1):기학 = 60
+	;타겟으로 주도권이 없다
+	ELSE
+		SOURCE:(LOCAL:1):일탈 = 60
+		SOURCE:(LOCAL:1):공포 = MAX(100 - 30 * ABL:(LOCAL:1):욕망, 0)
+	ENDIF
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:1, 80, 80)
+NEXT
+
+;주도도 변화 기준치
+TFLAG:49 = 3
+
+;도착도 변화 기준치
+TFLAG:50 = 1
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 1
+
+RETURN 1
+
+;-------------------------------------------------
+;계속 커맨드인가 어떤가를 설정
+;-------------------------------------------------
+@COM_IS_EQUIP100
+RETURN 1
+
+;-------------------------------------------------
+;계속 상태의 처리
+;-------------------------------------------------
+@COM_EQUIP100(ARG:0)
+;●전플레이어에 대해 처리
+FOR LOCAL:0, 0, MEQUIP_PLAYER_NUM:(ARG:0)
+	LOCAL:2 = MEQUIP_PLAYER:(ARG:0):(LOCAL:0)
+
+	EXP:(LOCAL:2):자위경험치 += 1
+
+	SIF IS_EQUIP_TARGET(LOCAL:2, 61)
+		EXP:(LOCAL:2):자위경험치 += 1
+
+	SIF IS_EQUIP_TARGET(LOCAL:2, 62)
+		EXP:(LOCAL:2):자위경험치 += 1
+
+	SOURCE:(LOCAL:2):노출 += 600
+	SOURCE:(LOCAL:2):일탈 += 50
+	SOURCE:(LOCAL:2):성행동 += 80
+
+	LOCAL:3 = 500
+
+	SELECTCASE ABL:(LOCAL:2):자위
+		CASE 0
+			TIMES LOCAL:3, 1.00
+		CASE 1
+			TIMES LOCAL:3, 1.20
+		CASE 2
+			TIMES LOCAL:3, 1.50
+		CASE 3
+			TIMES LOCAL:3, 1.80
+		CASE 4
+			TIMES LOCAL:3, 2.00
+		CASEELSE
+			LOCAL:3 = LOCAL:3 * (420 + (ABL:(LOCAL:2):자위 - 5)) / 200
+	ENDSELECT
+
+	IF HAS_PENIS(LOCAL:2)
+		SOURCE:(LOCAL:2):쾌Ｐ += SENSE_HOUSHI_P(LOCAL:2, LOCAL:2, LOCAL:3 * 3 / 2)
+	ELSE
+		SOURCE:(LOCAL:2):쾌Ｃ += SENSE_HOUSHI(LOCAL:2, LOCAL:2, LOCAL:3)
+		SOURCE:(LOCAL:2):쾌Ｂ += SENSE_HOUSHI(LOCAL:2, LOCAL:2, LOCAL:3 / 2)
+	ENDIF
+
+	FOR LOCAL:1, 0, MEQUIP_TARGET_NUM:(ARG:0)
+		;사정 개소와 대상을 세트(덧쓰기하지 않는다)
+		CALL STACK_SPERM(MEQUIP_TARGET:(ARG:0):(LOCAL:1), LOCAL:2, IFRAND(@"{사정부위_낭비}", 1, @"{사정부위_얼굴}", RAND:100 < 50, @"{사정부위_머리카락}", RAND:100 < 50), 0)
+	NEXT
+NEXT
+
+;●전 타겟으로 붙어 처리
+FOR LOCAL:0, 0, MEQUIP_TARGET_NUM:(ARG:0)
+	LOCAL:2 = MEQUIP_TARGET:(ARG:0):(LOCAL:0)
+
+	SOURCE:(LOCAL:2):성행동 += 40
+NEXT
+
+;-------------------------------------------------
+;계속중의 표시
+;-------------------------------------------------
+@EQUIP_MESSAGE100(ARG:0)
+
+LOCALS:0 = 
+IF TFLAG:70 == 1
+	LOCALS:0 = 촬영
+ELSEIF TFLAG:103 == 2
+	LOCALS:0 = 공개
+ELSEIF TFLAG:54 == 8
+	LOCALS:0 = 야외
+ENDIF
+
+IF IS_EQUIP_TARGET(MEQUIP_PLAYER:(ARG:0):0, 61) && IS_EQUIP_TARGET(MEQUIP_PLAYER:(ARG:0):0, 62)
+	LOCALS:0 '= LOCALS:0 + "양구멍 바이브"
+ELSEIF IS_EQUIP_TARGET(MEQUIP_PLAYER:(ARG:0):0, 61)
+	LOCALS:0 '= LOCALS:0 +"바이브"
+ELSEIF IS_EQUIP_TARGET(MEQUIP_PLAYER:(ARG:0):0, 62)
+	LOCALS:0 '= LOCALS:0 +"애널바이브"
+ENDIF
+LOCALS:0 '= LOCALS:0 + "자위"
+
+RESULTS = %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"가")% %LOCALS:0%중
+
+;-------------------------------------------------
+;계속중의 지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE_EQUIP100(ARG:0)
+LOCAL:1 = 1
+FOR LOCAL:0, 0, MEQUIP_PLAYER_NUM:(ARG:0)
+	IF !HAS_PENIS(MEQUIP_PLAYER:(ARG:0):(LOCAL:0))
+		LOCAL:1 = 0
+	ENDIF
+NEXT
+
+;전원에게 페니스가 있다
+IF LOCAL:1
+	PRINTFORML %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"는")% 스스로의 손가락으로 페니스를 쓸어올리고 있다…
+ELSE
+	PRINTFORML %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"는")% 스스로의 손가락으로 쾌락을 탐내고 있다…
+ENDIF
+
+;-------------------------------------------------
+;계속을 해제했을 때의 지문
+;-------------------------------------------------
+@COM_TEXT_RELEASE_EQUIP100(ARG:0)
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER100(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 80
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 3)
+CALL COM_ORDER_ELEMENT(ARG:0, @"노출 Lv{ABL:(ARG:0):노출}", ABL:(ARG:0):노출 * 4)
+CALL COM_ORDER_ELEMENT(ARG:0, @"자위 Lv{ABL:(ARG:0):자위}", ABL:(ARG:0):자위 * 4)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 3, 30))
+
+IF TCVAR:(ARG:0):60
+	CALL COM_ORDER_ELEMENT(ARG:0, "미약", 6)
+ENDIF
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -12)
+ENDIF
+IF TALENT:(ARG:0):수치심옅음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수치심옅음", 8)
+ENDIF
+IF TALENT:(ARG:0):자제심
+	CALL COM_ORDER_ELEMENT(ARG:0, "자제심", -6)
+ENDIF
+IF TALENT:(ARG:0):주목받기원함
+	CALL COM_ORDER_ELEMENT(ARG:0, "주목받기원함", 6)
+ENDIF
+IF TALENT:(ARG:0):자위하기쉬움
+	CALL COM_ORDER_ELEMENT(ARG:0, "자위하기쉬움", 10)
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -2)
+ENDIF
+
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -10)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE100
+LOCALS:3 = 
+
+;플레이어가 장대 있어·장대 없음 혼합인가 어떤가를 판정
+LOCAL:1 = 0
+FOR LOCAL:0, 1, MPLY_NUM
+	IF HAS_PENIS(MPLY:(LOCAL:0)) != HAS_PENIS(MPLY:0)
+		LOCAL:1 = 1
+		BREAK
+	ENDIF
+NEXT
+
+;플레이어가 장대 있어·장대 없음 혼합의 경우
+IF LOCAL:1
+	LOCALS:0 = 스스로의 손으로 쾌락을 탐\@ GET_COM_INITIATIVE() != 0 ? # \@
+;플레이어가 전원장대 있는 경우
+ELSEIF HAS_PENIS(MPLY:0)
+	LOCALS:0 = 자신의 손가락으로 페니스를 쓸어올림
+;플레이어가 전원장대 없음의 경우
+ELSE
+	LOCALS:0 = 자신의 손가락으로 자신의 몸을 농락해라
+ENDIF
+
+IF MTAR_NUM == 1
+	LOCALS:1 = %ANAME(MTAR:0)%
+ELSEIF MTAR_NUM == 2
+	LOCALS:1 = %조사처리(ANAME(MTAR:0),"와")% %ANAME(MTAR:1)%
+ELSE
+	LOCALS:1 = %ANAME(MTAR:0)%들
+ENDIF
+
+IF MPLY_NUM == 1
+	LOCALS:2 = %ANAME(MPLY:0)%
+ELSEIF MPLY_NUM == 2
+	LOCALS:2 = %조사처리(ANAME(MPLY:0),"와")% %ANAME(MPLY:1)%
+ELSE
+	LOCALS:2 = %ANAME(MPLY:0)%들
+ENDIF
+
+IF TFLAG:70 == 1
+	LOCALS:3 = 카메라로 보이도록(듯이),
+ELSEIF TFLAG:103 == 2
+	LOCALS:3 = 모두가 보고 있는 앞에서,
+ELSEIF TFLAG:54 == 8
+	LOCALS:3 = 누구에게 보여지고 있다고도 모르는 가운데,
+ELSE
+	LOCALS:3 = 
+ENDIF
+
+SELECTCASE GET_COM_INITIATIVE()
+	;플레이어에 주도권
+	CASE 0
+		IF LOCAL:1
+			PRINTFORMW %조사처리(LOCALS:2,"는")% %LOCALS:3% %LOCALS:1%의 눈앞에서 %LOCALS:0% 모습을 과시%TARGET_STR("했다", "해 왔다")%…
+		ELSEIF HAS_PENIS(MPLY:0)
+			PRINTFORMW %조사처리(LOCALS:2,"는")% %LOCALS:3% %LOCALS:1%의 코끝에 페니스를 내밀어, 자신의 손가락으로 장대를 훑는 모습을 과시%TARGET_STR("했다", "해 왔다")%…
+		ELSE
+			PRINTFORMW %조사처리(LOCALS:2,"는")% %LOCALS:3% %LOCALS:1%에 나체를 과시하면서, 손가락으로 자신의 클리토리스나 가슴을 만지작거려 돌려 자위 했다…
+		ENDIF
+	;타겟으로 주도권
+	CASE 1
+		PRINTFORML %조사처리(LOCALS:1,"는")% %LOCALS:2%에, 그 자리에서 자위 하도록(듯이) 명령했다
+		PRINTFORMW %조사처리(LOCALS:2,"는")% (듣)묻는 대로, %LOCALS:3% %LOCALS:1%의 눈앞에서 %LOCALS:0%…
+	;제삼자에게 주도권
+	CASEELSE
+		PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %LOCALS:2%에게, %LOCALS:1%의 앞에서 자위 하도록(듯이) 명령했다
+		PRINTFORMW %조사처리(LOCALS:2,"는")% (듣)묻는 대로, %LOCALS:3% %LOCALS:1%의 눈앞에서 과시하도록(듯이)%LOCALS:0%…
+ENDSELECT
+
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST100
+FOR LOCAL:0, 0, MPLY_NUM
+	LOCAL:1 = MPLY:(LOCAL:0)
+
+	IF LOCAL:1 != MASTER && !CFLAG:(LOCAL:1):TEXT_LAST비표시 && IS_INITIATIVE(LOCAL:1)
+		IF ABL:(LOCAL:1):자위 >= 5
+			PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 완전히 자위에 몰두해, 격렬하게 손가락을 움직여 스스로 쾌감을 탐내고 있다
+		ELSEIF ABL:(LOCAL:1):노출 >= 5
+			PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 볼 수 있는 것으로 흥분하고 있는지, 상기 한 얼굴로 손가락을 움직이고 있다
+		ELSEIF ABL:(LOCAL:1):자위 >= 2
+			;포로 조교의 메인 타겟
+			IF FLAG:조교모드 == 2 && FINDELEMENT(PRISONER_TARGET, MTAR:0) != -1
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 굴욕에 얼굴을 비뚤어지게 하면서도, 스스로 쾌감을 추구해 손가락을 움직여 버리고 있다
+			ELSE
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 부끄러운 듯이 하고 있지만, 무의식 중에 쾌감을 추구하도록(듯이) 손가락을 움직이고 있다
+			ENDIF
+		ELSE
+			;포로 조교의 메인 타겟
+			IF FLAG:조교모드 == 2 && FINDELEMENT(PRISONER_TARGET, MTAR:0) != -1
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 굴욕에 참으면서, 불안한 손놀림으로 자신의 몸에 손가락을 기게 했다
+			ELSE
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 부끄러운 나머지 눈을 피하면서, 불안한 손놀림으로 자신의 몸에 손가락을 기게 했다
+			ENDIF
+		ENDIF
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN100
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_100()
+RETURN POWER(2, 성적기호_욕보여지고싶다) + POWER(2, 성적기호_노출하고싶다)
+
+@COM_PREFERENCE_TARGET_100()
+RETURN POWER(2, 성적기호_욕보이고싶다)
+

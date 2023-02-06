@@ -1,0 +1,136 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_LENDER_RATE()
+	RETURN 20
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_LENDER_DECISION()
+SIF DVAR:대금업자_발생플래그 == -1
+	RETURN 0
+
+SIF DAY < 15
+	RETURN 0
+
+;반제기간이 있다（빌리고 있다）또는 현재액이 있다（반제중）라면 스킵
+SIF !(DVAR:대금업자_반제기간 == 0 && DVAR:대금업자_나머지융자액 == 0) 
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_LENDER_GENRE()
+RETURN 데일리_장르_에로
+
+
+@EVENT_DAILY_LENDER()
+#DIM LCOUNT, 3
+#DIM 융자액
+#DIM 반제액
+#DIM 반제기간
+#DIM 담보
+VARSET 융자액
+VARSET 반제액
+VARSET 반제기간
+
+;빌리지 않은 패턴
+IF DVAR:대금업자_반제기간 == 0 && DVAR:대금업자_나머지융자액 == 0 && DVAR:대금업자_융자총액 == 0
+	;융자액과 반제기간의 계산
+	;융자액은 현재 자금의 10% + 봉급 * 기한일분
+	;반제액은 그 2 할증
+	반제기간 = RAND(5, 10)
+	융자액 = MONEY / 10 + GET_SUM_ECONOMY(CFLAG:MASTER:소속) * (ABL:MASTER:무투 + ABL:MASTER:방위 + ABL:MASTER:지략 + ABL:MASTER:정치 + 100) / 40000 * (반제기간)
+	반제액 = 융자액 * 12 / 10
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% 일을 하고 있으면, 시종이 손님을 고했다
+	PRINTFORMW 뭐든지 「풍채가 좋은 사람이 좋은 것 같은 중년이 왔다」의라고 한다
+	PRINTFORMW 무슨 용무일까하고 의심하면서, %조사처리(ANAME(MASTER),"는")%, 만나기로 해 보았다
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW 「아무래도, 처음 뵙겠습니다. %ANAME(MASTER)%같습니다. 만남 할 수 있어 영광입니다」
+	PRINTFORMW 비비어 수를 하면서 나타난 것은, 과연 매우 포근한, 그야말로 사람의 것내림인 중년남이다
+	PRINTFORMW 그 옷차림이라고 해, 결코 낮지 않은 사회적 입장에 있는 것을 안다. 위세도 좋을 것 같다
+	PRINTFORMW 「나, 대금업자를 하고 있어서. 이번에 %ANAME(MASTER)%님의 거들기를 하도록 해 받고 싶고」
+	PRINTFORMW 즉, 자금원조의 의사표현일 것이다. 그렇다고 해도 대금업자다. 당연, 융자라는 형태가 되겠지만……
+	PRINTFORM 「그렇습니다, 돈
+	CALL COLOR_PRINT(@"{융자액}", 칼라_주의)
+	PRINTFORM 의 융자로, 반제액은
+	CALL COLOR_PRINT(@"{반제액}", 칼라_주의)
+	PRINTFORM , 반제 시기는
+	CALL COLOR_PRINT(@"{반제기간}기", 칼라_주의)
+	PRINTFORMW 로 어떻습니까?」
+	PRINTFORMW 「%ANAME(MASTER)%님도, 뭔가 비용이지요?」
+	PRINTFORMW 그 대로다. 징병에 훈련, 외교, 무슨 일에도 돈은 필요함
+	PRINTFORMW 빚은 그다지 하고 싶지 않지만, 살아 남기 위해서(때문에) 수단은 선택해 있을 수 있을 리 없다
+	PRINTFORMW 자, 그럼, 어떻게 하지……
+	CALL SINGLE_DRAWLINE
+	PRINTFORML 현재의 돈:{MONEY}
+	CALL ASK_MULTI(@"금{융자액}를 빌린다", "그만둔다", "짜증나기 때문에 벤다")
+	IF RESULT == 1
+		PRINTFORMW 「흠. 필요하지 않다고 말씀하신다면, 어쩔 수 없습니다」
+		PRINTFORMW 「그럼 나는 이 근처에. 또 묻겠습니다」
+		PRINTFORMW 남은 조속히 떠나 갔다……
+		RETURN 1
+	ELSEIF RESULT == 0
+		PRINTFORMW 「계약 성립입니다」
+		PRINTFORM 「반제액은
+		CALL COLOR_PRINT(@"{반제액}", 칼라_주의)
+		PRINTFORM , 반제기간은
+		CALL COLOR_PRINT(@"{반제기간}기", 칼라_주의)
+		PRINTFORMW 이기 때문에. 틀림없게」
+		PRINTFORMW 여러 가지의 서류에 기입시킨 뒤, 남자는 떠나 갔다……
+		PRINTFORM 금
+		CALL COLOR_PRINT(@"{융자액}", 칼라_주의)
+		PRINTFORMW 를 손에 넣었다
+		MONEY += 융자액
+		DVAR:대금업자_반제기간 = 반제기간
+		DVAR:대금업자_나머지융자액 = 반제액
+		DVAR:대금업자_융자총액 = 반제액
+		RETURN 1
+	ELSEIF RESULT == 2
+		융자액 = RAND(100000, 300000)
+		PRINTFORMW 「이런이런!    같은걸 하십니다!   다치면 곤란하겠지요」
+		PRINTFORMW 베기 시작한 %조사처리(ANAME(MASTER),"이지만")%, 남자는 겉모습으로부터 상상 붙지 않는 준민(재주와 슬기가 뛰어남)함으로 주고 받아 보였다
+		PRINTFORM 「전혀 믿을 수 없는 (분)편이다. 위자료로서 돈
+		CALL COLOR_PRINT(@"{융자액}", 칼라_주의)
+		PRINTFORMW 를 지불해 받습니까?
+		VARSET DAILY_TARGET
+		VARSET DAILY_TARGET_NUM
+		CALL EVENT_DAILY_DERIVATION_LENDER_REPAYMENT_SETTARGET()
+		IF DAILY_TARGET_NUM > 0
+			담보 = DAILY_TARGET:(RAND:DAILY_TARGET_NUM)
+		ELSE
+			담보 = -1
+		ENDIF
+		DVAR:대금업자_발생플래그 = 1
+		IF MONEY >= 융자액
+			PRINTFORM 남은 정말로, 돈
+			CALL COLOR_PRINT(@"{융자액}", 칼라_주의)
+			PRINTFORMW 를 갖고 있고는 끝냈다……
+			MONEY -= 융자액
+			RETURN 1
+		ELSEIF 담보 != -1 && !CONFIG:200
+			PRINTFORMW 「……뭐?   금이 부족해?」
+			PRINTFORMW 「그럼%ANAME(담보)%를 우리 가게에서 일하도록 해 받을까요」
+			PRINTFORMW 「뭐, 분명하게 이마 만큼 일하면 답례하기 때문에……」
+			PRINTFORMW 남은 그렇게 말해, %ANAME(담보)%를 데려 가 버렸다……
+			DVAR:대금업자_반제기간 = -1
+			DVAR:대금업자_어깨ID = GET_ID(담보)
+			DVAR:대금업자_융자총액 = 융자액
+			DVAR:대금업자_나머지융자액 = 융자액
+			CALL CHANGE_COUNTRY(담보, 0)
+			CFLAG:담보:특수상태 = 0
+			RETURN 1
+		ELSE
+			PRINTFORMW 「……뭐?   금이 부족해?」
+			PRINTFORMW 「어쩔 수 없는, 이번은 불문이라는 일로 해 드립시다」
+			PRINTFORMW 「하지만, 다음은 없기에!」
+			PRINTFORMW 남은 떠나 갔다……
+			RETURN 1
+		ENDIF
+	ENDIF
+ENDIF

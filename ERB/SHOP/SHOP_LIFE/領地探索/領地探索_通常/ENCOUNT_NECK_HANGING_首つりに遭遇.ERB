@@ -1,0 +1,65 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_ENCOUNT_NECK_HANGING_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_ENCOUNT_NECK_HANGING_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_ENCOUNT_NECK_HANGING(대상)
+#DIM 대상
+
+PRINTFORML 시골길을 걷고 있으면, 한사람의 남자를 목격했다
+PRINTFORML 이런 변두리의 장소에서 무엇을 하고 있을까 의아해 잘 보면, 목에 밧줄을 걸려고 하고 있다
+PRINTFORMW 자살이다!
+PRINTFORML %조사처리(ANAME(대상),"는")% 당황해 남자의 바탕으로 달려들면, 그에게 달려들어 자살을 저지했다
+PRINTFORML 어떻게든 설득해 사정을 알아내는 것에, 아무래도 사업에 실패해, 고액의 빚을 낸 것 같다……
+
+PRINTL
+CALL ASK_MULTI_JUDGE("경제적으로 원조한다", MONEY >= 3000, "여자라도 사게 한다", 1, "안게 해 준다", IS_FEMALE(대상), "떠난다", 1)
+
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 생명에는 대신할 리 없다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 남자의 빚을 대납하고 하기로 했다……
+		PRINTFORMW 
+		PRINTFORML ……그 후, 남자는 다시 일으킨 사업으로 대성공한 것 같다
+		PRINTFORML 색을 칠해 빚을 갚으러 왔다
+		CALL ICPRINT("금<5000>을 손에 넣었다", "L", 칼라_주의)
+		MONEY += 5000
+	CASE 1
+		PRINTFORML 여자라도 안으면, 기분도 시원해질 것이다
+		PRINTFORML 그렇게 생각한 %조사처리(ANAME(대상),"는")%, 남자를 유녀 오두막에 집어넣었다……
+		PRINTFORMW
+		PRINTFORML ……수시간 후, 굉장히 상쾌한 얼굴로 나왔다
+		PRINTFORML 목을 매달 생각은 이제 없어진 것 같다
+	CASE 2
+		PRINTFORML ……마음은 내키지 않지만, 여자라도 안으면 시원해질 것이다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 그를 불러, 숙소로 데리고 들어갔다
+		PRINTFORML 
+		PRINTFORML %조사처리(ANAME(대상),"가")% 옷을 벗어, %STR_BODY("가슴:애무", 대상)%를 쬐면, 남자는 두말 할 것 없이 달라붙어서 놓지 않았다
+		PRINTFORML 서투르면서도 정열적인 성교에, %ANAME(대상)%도 점차 흥이 올라 온다
+		PRINTFORML 이윽고 남자가 신음해 정액을 쏟으면, %ANAME(대상)%도 교성을 내며 절정 했다……
+		CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("지나가는 남자"), @"지나가는 남자의 \@RAND:2 ? 페니스 # 입술\@", "지나가는 남자", "", "화간")
+		PRINTFORML 
+		PRINTFORML 상쾌한 모습의 남자와 헤어졌다
+		PRINTFORML ……그 후, 남자는 다시 일으킨 사업으로 대성공한 것 같다
+		PRINTFORML 일부러 답례를 하러 왔다
+		CALL ICPRINT("금<5000>을 손에 넣었다", "L", 칼라_주의)
+		MONEY += 5000
+	CASE 3
+		PRINTFORML 미안하지만 어떻게 하는 일도 할 수 없다
+		PRINTFORML 빨리 떠났다
+ENDSELECT
+
+RETURN 1

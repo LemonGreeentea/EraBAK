@@ -1,0 +1,80 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_GAMBLE_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_GAMBLE_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_GAMBLE(대상)
+#DIM 대상
+
+PRINTFORML 술집에서 마시고 있으면, 손님의 한사람에게 카드 게임에서의 승부를 꺼낼 수 있었다
+IF IS_MALE(대상)
+	PRINTFORML 이쪽이 이기면 몸을 내미므로, 지면 금 5000을 보내라고 말한다
+ELSE
+	PRINTFORML 이쪽이 이기면 금 10000, 지면 몸을 보내라고 말한다
+ENDIF
+PRINTL
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "지략"))
+
+CALL ASK_MULTI_JUDGE("탄다", IS_FEMALE(대상) || (IS_MALE(대상) && MONEY >= 5000), "거절한다", 1)
+
+IF RESULT == 1
+	PRINTFORML 흥미가 없다
+	PRINTFORML 혼자서 마시기로 했다
+	RETURN 1
+ENDIF
+
+PRINTFORML 탔다!
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+IF LIMIT(ABL:대상:지략, 50, 90) > RAND:100
+	PRINTFORML 이겼다!
+	IF IS_MALE(대상)
+		PRINTFORML 질 리가 없다고 생각하고 있었는지, 여자는 충격을 받은 얼굴로 풀썩 어깨를 떨어뜨려 고개 숙이고 있다
+		PRINTFORMW 여자에 내기의 이행을 강요하면 그녀는 마지못해 수긍했다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 여자의 허리를 안아, 그녀를 가까이의 숙소로 데리고 들어갔다
+		PRINTFORML 
+		PRINTFORML 즉시 기모노를 벗겨내면, 여자는 가슴팍과 비부를 손으로 숨긴다
+		PRINTFORML 스레태도와는 정반대로 순진하고 같아서, 얼굴을 붉히며 숙여 버렸다
+		PRINTFORML 흥을 돋워진 %조사처리(ANAME(대상),"는")%무서워한다그녀에게 덤벼 들어, 밤새 그 몸의 민감한 부분을 정중하게 개발 해 갔다
+		PRINTFORML 그 보람 있어, 숫처녀같이 부끄러워할 뿐이었던 그녀도, 지금은 암컷으로서의 기쁨에 몸을 진동시키고 교성을 올리고 있다
+		PRINTFORMW %조사처리(ANAME(대상),"와")% 여자는 그대로, 서로의 체력이 없어져 잠에 떨어질 때까지 성욕을 서로 탐냈다
+		CALL FUCK(대상, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "술집의 여자의 입술", "", "술집의 여자의 질", "화간")
+	ELSE
+		PRINTFORML 약속대로 내기금을 받았다
+		CALL ICPRINT(@"금<10000>을 받았다", "L", 칼라_주의)
+		MONEY += 10000
+	ENDIF
+ELSE
+	PRINTFORML 졌다……
+	IF IS_FEMALE(대상)
+		PRINTFORML 남은 %ANAME(대상)%의 허리에 손을 쓰면, 하룻밤 교제해 왔다
+		PRINTFORMW 약속은 약속이다. %조사처리(ANAME(대상),"는")% 점잖게 따랐다
+		PRINTFORML 
+		PRINTFORML 남의 교묘한 손놀림에 의해, %조사처리(ANAME(대상),"는")% 곧바로 정신나간 표정이 되었다
+		PRINTFORML 씩씩한 페니스를 매료 시키고 붙일 수 있으면, %조사처리(ANAME(대상),"는")% 주저하는 일 없이 스스로 %STR_BODY("질", 대상)%는 것을 쬐어 졸라댔다
+		PRINTFORMW 몹시 거칠게도 교묘한 허리 사용에 %조사처리(ANAME(대상),"는")% 몇 번이나 절정에 달해, 질내사정을 되어도 저항하지 않아 받아들였다
+		CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("불량배"), @"불량배의 \@RAND:2 ? 페니스 # 입술\@", "불량배", "", "화간")
+		PRINTFORML 
+		PRINTFORMW 밤도 희어지는 무렵에 간신히 해방된 %조사처리(ANAME(대상),"는")%, 하복부를 억제하면서 휘청거린 발걸음으로 귀로에 들었다
+	ELSE
+		PRINTFORML 약속대로금을 지불했다
+		CALL ICPRINT("금<5000>을 잃었다", "L", 칼라_주의)
+		MONEY -= 5000
+	ENDIF
+ENDIF
+

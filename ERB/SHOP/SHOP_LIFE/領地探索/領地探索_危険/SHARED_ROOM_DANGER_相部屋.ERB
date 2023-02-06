@@ -1,0 +1,66 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_SHARED_ROOM_DANGER_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_SHARED_ROOM_DANGER_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_SHARED_ROOM_DANGER(대상)
+#DIM 대상
+
+PRINTFORMW 늦어져 버렸으므로, 숙소에 묵기로 했다
+PRINTFORMW 하지만 공교롭게도 손님이 많아, 같은 방 밖에 비어있지 않은 것 같다
+PRINTFORML 
+CALL ASK_MULTI("단념한다", "같은 방으로 한다")
+
+IF RESULT == 0
+	PRINTFORML 숙소는 단념할 수밖에 없을 것이다
+	PRINTFORMW 거점에 돌아오는 무렵에는, 완전히 심야가 되어 버리고 있었다
+	RETURN 1
+ENDIF
+
+PRINTFORMW 하룻밤 정도라면 뭐 좋을 것이다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+IF IS_MALE(대상) || (HAS_PENIS(대상) && RAND:2)
+	PRINTFORMW 동실이 된 것은 아름다운 여성이었다
+	PRINTFORMW 인사하면, 그 눈이 요염한 색을 임신했다
+	PRINTFORMW 
+	PRINTFORMW ……심야, 잠으로부터 깨면, 꼼짝 못하는 것에 눈치챈다
+	PRINTFORMW 알몸으로 되어 단단히 묶어지고 있다!
+	PRINTFORML 게다가 같은 방이 된 여성이 %ANAME(대상)% 위에 걸쳐, 허리를 흔들고 있는 것이 아닌가
+	PRINTFORML 피하려고 발버둥 치는 %조사처리(ANAME(대상),"이지만")%, 그녀의 성기술의 전에 굴해 버린다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 그대로, 그녀에게 몇 번이나 정액을 짜내졌다……
+	CALL FUCK(대상, "성기술, 성교, Ｃ, 사정, Ｖ삽입" + (IS_FEMALE(대상) ? ", 레즈, Ｂ, Ｖ" # ""), "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "강간")
+	PRINTFORML 
+	PRINTFORMW %조사처리(ANAME(대상),"가")% 해방된 것은, 해가 뜨고 나서였다
+ELSE
+	PRINTFORMW 동실이 된 것은 중년의 남성이었다
+	PRINTFORMW 인사하면, 그 눈에 추잡한 것이 떠올랐다
+	PRINTFORMW 가까워 진 표시로라고 권유받은 술을, %조사처리(ANAME(대상),"는")% 의문에도 무심코 말했다……
+	PRINTFORMW 
+	PRINTFORMW 한밤 중의 방에, 피부와 피부가 서로 치는 소리와 %ANAME(대상)%의 신음소리가 영향을 주고 있다
+	PRINTFORMW 술에 약을 섞어져 %조사처리(ANAME(대상),"는")% 인사불성에 빠져 있었다
+	PRINTFORMW 밧줄로 단단히 묶었던 %ANAME(대상)%에 남자는 덥쳐, 스스로의 육봉을 집요하게 쳐박고 있다
+	PRINTFORMW 쾌락의 일 밖에 머릿속에 없게 된 %ANAME(대상)%도, 행동이 제한되면서도 스스로 허리를 구불거리게 되어지고 있었다
+	PRINTFORMW %STR_BODY("질:처녀 확인:시간 경과:Ｖ삽입:질내사정", 대상)%로부터는, 일발 찌르기 마다 애액이 분출하고 있다
+	PRINTFORMW 이윽고 남자가 %ANAME(대상)%의 가장 안쪽에서 사정하면, %PRONOUN(대상)%도 절정 해, 그의 자식을 한 방울 남김없이 자궁으로 받아 들였다
+	CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("지나가는 남자"), @"지나가는 남자의 \@RAND:2 ? 페니스 # 입술\@", "지나가는 남자", "", "강간")
+	PRINTFORML 
+	PRINTFORMW ……늦잠잔 것 같고, 일어났을 무렵에는 남성은 없어지고 있었다
+	PRINTFORMW 푹 잤을 것인데 피로가 빠지지 않지만, 무슨 일이 있었을까……
+ENDIF
+RETURN 1

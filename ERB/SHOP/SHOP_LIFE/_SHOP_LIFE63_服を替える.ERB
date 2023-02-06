@@ -1,0 +1,36 @@
+﻿;-------------------------------------------------
+;「옷을 바꾼다」의 선택 가부
+;-------------------------------------------------
+;@SHOP_LIFE_CHECK63
+;SIF CFLAG:MASTER:포로처
+;	RETURN 0
+;RETURN 1
+
+;-------------------------------------------------
+;「옷을 바꾼다」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+;@SHOP_LIFE_CHECKCHARA63(ARG:0)
+;비주인공(주인공은 별처리), 동일 세력 or자국의 포로
+;RETURN ARG:0 != MASTER && (CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속 || CFLAG:(ARG:0):포로처 == CFLAG:MASTER:소속) && ! IS_ANIMAL(ARG:0)
+
+;-------------------------------------------------
+;「옷을 바꾼다」의 오른쪽 컬럼 표시 처리
+;-------------------------------------------------
+;@SHOP_LIFE_EVENTBUY_SHOW63
+;CALL COLUMN_RIGHT_TITLE("대상자 선택, "", "", "", "", "")
+;CALL PRINTBUTTON_SHOP(6, "[능력일람 표시]", 20)
+;CALL COLUMN_RIGHT_PRINTL
+;CALL COLUMN_RIGHT_LINE
+;CALL COLUMN_RIGHT_PRINTL
+;CALL PRINT_PARTNER_DATA(MASTER, 0, 0, SHOP_LIFE_LIST1_ADD_INPUT, 1, 1)
+;CALL COLUMN_RIGHT_PRINTL
+;CALL COLUMN_RIGHT_CHARALIST
+;RETURN 0
+
+;-------------------------------------------------
+;「옷을 바꾸는 것 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+;@SHOP_LIFE_EVENTBUY63
+;FLAG:거점 페이즈페이지 = 1
+;RETURN 0
+

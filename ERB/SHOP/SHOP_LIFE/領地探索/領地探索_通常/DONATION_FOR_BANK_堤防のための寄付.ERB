@@ -1,0 +1,58 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_DONATION_FOR_BANK_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_DONATION_FOR_BANK_DECISION(대상)
+#DIM 대상
+RETURN IS_COUNTRY(CFLAG:대상:소속)
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_DONATION_FOR_BANK(대상)
+#DIM 대상
+#DIM 대상도시
+
+CALL DAILY_EVENT_RAND_CITYSELECT(0)
+대상도시 = RESULT
+SIF 대상도시 < 0
+	RETURN 0
+PRINTFORML %CITY_NAME:대상도시%를 산책하고 있으면, 하천의 범람으로 고민하고 있는 마을에 간신히 도착했다
+PRINTFORML 제방을 만들 수 있으면 마을은 살아날지도 모르지만, 성공한다고도 할 수 없다
+PRINTL
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "정치"))
+CALL ASK_MULTI_JUDGE("금 5000으로 제방을 만든다", MONEY >= 5000, "방치한다",1)
+
+IF RESULT == 1
+	PRINTFORML 나쁘지만 지금은 돈이 아깝다
+	PRINTFORMW 아무것도 말하지 않고 마을로부터 떠났다
+	RETURN 1
+ENDIF
+
+PRINTFORML 금을 아끼고 있을 때는 아니다
+PRINTFORMW %조사처리(ANAME(대상),"는")% 조속히 기술자들을 불러들여, 제방 제작에 착수하게 했다
+CALL COLOR_PRINTW("금 5000을 지불했다", 칼라_주의)
+MONEY -= 5000
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF LIMIT(ABL:대상:정치, 50, 100) > RAND:100
+	PRINTFORML 했다!
+	PRINTFORMW 무사하게 튼튼한 제방을 생겼다
+	CITY_GUARD:대상도시 += 15
+	PRINTFORMW 마을사람들에게 감사받았다
+	CALL ICPRINT(@"%CITY_NAME:대상도시%의 방위율이<15>상승해,<{CITY_GUARD:대상도시}>가 되었다", "W", 칼라_주의)
+ELSE
+	PRINTFORML 실패했다!
+	PRINTFORML 제방을 능숙하게 만드는 것은 할 수 없었다
+	PRINTFORMW 어깨를 떨어뜨리는 영지민들로부터 도망치듯이 떠났다
+ENDIF
+RETURN 1
+

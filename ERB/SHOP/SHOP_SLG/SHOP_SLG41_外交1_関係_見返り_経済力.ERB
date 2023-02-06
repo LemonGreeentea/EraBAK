@@ -1,0 +1,29 @@
+﻿;-------------------------------------------------
+;경제력의 요구의 처리
+;ARG:0은 상대의 세력 번호, ARG:1은 요구의 무게. 요구를 마시면 1, 거절하면 0을 돌려준다
+;-------------------------------------------------
+@DIPLOMACTY_REQUESTED_ECONOMY(ARG:0, ARG:1)
+;상대 세력의 군주의 캐릭터 번호를 취득
+LOCAL:5 = GET_COUNTRY_BOSS(ARG:0)
+
+LOCAL:12 = GET_SUM_ECONOMY(CFLAG:MASTER:소속)
+IF ARG:1 == 0
+	LOCAL:11 = LOCAL:12 / 80 / 100 * 100
+ELSEIF ARG:1 == 1
+	LOCAL:11 = LOCAL:12 / 20 / 100 * 100
+ELSE
+	LOCAL:11 = LOCAL:12 / 7 / 100 * 100
+ENDIF
+PRINTFORML %조사처리(ANAME(LOCAL:5),"는")%, 이쪽의 제안을 마시는 대신에 경제력{LOCAL:11 / 100}를 요구했다
+PRINTFORML 현재의 경제력:{LOCAL:12 / 100}
+WAIT
+CALL ASK_YN("받아들인다", "거절한다")
+IF RESULT != 0
+	RETURN 0
+ENDIF
+
+;경제력의 이동 처리
+CALL SHIFT_ECONOMY(CFLAG:MASTER:소속, ARG:0, LOCAL:11)
+
+RETURN 1
+

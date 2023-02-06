@@ -1,0 +1,337 @@
+﻿;-------------------------------------------------
+;시나리오 7
+;요정사국지
+;-------------------------------------------------
+@SCENARIO_NAME_7
+RESULTS = 요정사국지
+RETURN
+
+@SCENARIO_INTRO_7
+PRINTFORML
+PRINTFORMW 다시 또 일어난 요정들 대싸움
+PRINTFORMW 그것을 보며 있던 요괴들은 민폐인 놀이를 생각해 냈다.
+PRINTFORMW 요정들을 신위 가마로 해 전력의 전쟁을 해 보자고 한다.
+PRINTFORMW 각 세력이 제각각의 요정을 옹립 한다…
+PRINTFORMW 자 너는 어느 요정을 옹립 해?
+PRINTL
+
+;랜덤 캐릭터는 선택에 맡긴다
+FLAG:OP랜덤캐릭터사용 = 0
+
+
+@SCENARIO_PLACEMENT_7
+
+;세력 설정
+COUNTRY_BOSS:0 = 0
+COUNTRY_COLOR:0 = GETDEFCOLOR()
+
+
+
+;;--------빛의 3 요정파;--------
+COUNTRY_BOSS:1 = GET_ID(NAME_TO_CHARA("서니밀크"))
+COUNTRY_COLOR:1 = 0xFF0000
+;
+CITY_OWNER:GET_CITYNUMBER("하쿠레이 신사") = 1
+CITY_OWNER:GET_CITYNUMBER("하쿠레이 대결계") = 1
+CITY_OWNER:GET_CITYNUMBER("미즈나라의 나무") = 1
+CITY_OWNER:GET_CITYNUMBER("신사 뒤쪽의 연못") = 1
+CITY_OWNER:GET_CITYNUMBER("마가트로이드관") = 1
+CFLAG:(NAME_TO_CHARA("서니밀크")):1 = 1
+CFLAG:(NAME_TO_CHARA("루나차일드")):1 = 1
+CFLAG:(NAME_TO_CHARA("스타사파이어")):1 = 1
+;레이 마리
+;도 직접 도와 달라고 졸라졌고-같은 김
+CFLAG:(NAME_TO_CHARA("레이무")):1 = 1
+CFLAG:(NAME_TO_CHARA("마리사")):1 = 1
+CFLAG:(NAME_TO_CHARA("앨리스")):1 = 1
+CFLAG:(NAME_TO_CHARA("샹하이인형")):1 =1
+CFLAG:(NAME_TO_CHARA("호라이인형")):1 = 1
+CFLAG:(NAME_TO_CHARA("오오에도인형")):1 = 1
+CFLAG:(NAME_TO_CHARA("골리아테인형")):1 = 1
+CFLAG:(NAME_TO_CHARA("신묘마루")):1 = 1
+CFLAG:(NAME_TO_CHARA("겐지")):1 = 1
+;야쿠모가
+;미즈나라의 나무의 친분
+CITY_OWNER:GET_CITYNUMBER("키리사메 마법상점") = 1
+CITY_OWNER:GET_CITYNUMBER("야쿠모 저택") = 1
+CITY_OWNER:GET_CITYNUMBER("마요이가") = 1
+CFLAG:(NAME_TO_CHARA("유카리")):1 = 1
+CFLAG:(NAME_TO_CHARA("란")):1 = 1
+CFLAG:(NAME_TO_CHARA("첸")):1 = 1
+
+;월인 s
+;모두 더러워져 있지만 달의 요정 있고 뭐이 녀석들로 좋아
+CITY_OWNER:GET_CITYNUMBER("영원정") = 1
+CITY_OWNER:GET_CITYNUMBER("흰 토끼의 취락") = 1
+CITY_OWNER:GET_CITYNUMBER("달의 궁전") = 1
+CITY_OWNER:GET_CITYNUMBER("도원향") = 1
+CITY_OWNER:GET_CITYNUMBER("달토끼 거리") = 1
+CITY_OWNER:GET_CITYNUMBER("와타츠키노 저택") = 1
+CITY_OWNER:GET_CITYNUMBER("약도장") = 1
+
+CFLAG:(NAME_TO_CHARA("에이린")):1 = 1
+CFLAG:(NAME_TO_CHARA("테위")):1 = 1
+CFLAG:(NAME_TO_CHARA("레이센")):1 = 1
+CFLAG:(NAME_TO_CHARA("카구야")):1 = 1
+CFLAG:(NAME_TO_CHARA("요리히메")):1 = 1
+CFLAG:(NAME_TO_CHARA("토요히메")):1 = 1
+CFLAG:(NAME_TO_CHARA("달레이센")):1 = 1
+CFLAG:(NAME_TO_CHARA("링고")):1 = 1
+CFLAG:(NAME_TO_CHARA("세이란")):1 = 1
+CFLAG:(NAME_TO_CHARA("사구메")):1 = 1
+
+
+;교수＋교수＆비봉연합
+;우선 무녀 있는 곳 선택할까
+CITY_OWNER:GET_CITYNUMBER("몽환유적") = 1
+CITY_OWNER:GET_CITYNUMBER("오카자키 연구실") = 1
+
+CFLAG:(NAME_TO_CHARA("치유리")):1 = 1
+CFLAG:(NAME_TO_CHARA("유메미")):1 = 1
+CFLAG:(NAME_TO_CHARA("루코토 ")):1 = 1
+CFLAG:(NAME_TO_CHARA("스미레코")):1 = 1
+CFLAG:(NAME_TO_CHARA("렌코")):1 = 1
+CFLAG:(NAME_TO_CHARA("마에리베리")):1 = 1
+;마계
+;앨리스짱 있고
+CITY_OWNER:GET_CITYNUMBER("세계의 끝") = 1
+CITY_OWNER:GET_CITYNUMBER("마계청") = 1
+CITY_OWNER:GET_CITYNUMBER("마계 대도시") = 1
+CITY_OWNER:GET_CITYNUMBER("마계여행사") = 1
+
+CFLAG:(NAME_TO_CHARA("사라")):1 = 1
+CFLAG:(NAME_TO_CHARA("루이즈")):1 = 1
+CFLAG:(NAME_TO_CHARA("유키")):1 = 1
+CFLAG:(NAME_TO_CHARA("마-이")):1 = 1
+CFLAG:(NAME_TO_CHARA("유메코")):1 = 1
+CFLAG:(NAME_TO_CHARA("신키")):1 = 1
+
+
+;--------호수의 빙정파--------
+COUNTRY_BOSS:2 = GET_ID(NAME_TO_CHARA("치르노"))
+COUNTRY_COLOR:2 = 0x00FFF7
+CITY_OWNER:GET_CITYNUMBER("안개의 호수") = 2
+CITY_OWNER:GET_CITYNUMBER("안개의 호수 근처") = 2
+CFLAG:(NAME_TO_CHARA("치르노")):1 = 2
+CFLAG:(NAME_TO_CHARA("대요정")):1 = 2
+
+;들연합
+CITY_OWNER:GET_CITYNUMBER("미혹의 죽림 서부") = 2
+CITY_OWNER:GET_CITYNUMBER("칠성장어구이 포장마차") = 2
+CITY_OWNER:GET_CITYNUMBER("미혹의 죽림 동부") = 2
+CITY_OWNER:GET_CITYNUMBER("미혹의 죽림 남부") = 2
+CITY_OWNER:GET_CITYNUMBER("큰 두꺼비 연못") = 2
+
+CFLAG:(NAME_TO_CHARA("루미아")):1 = 2
+CFLAG:(NAME_TO_CHARA("리글")):1 = 2
+CFLAG:(NAME_TO_CHARA("미스티아")):1 = 2
+CFLAG:(NAME_TO_CHARA("이터니티라바")):1 = 2
+
+CFLAG:(NAME_TO_CHARA("레티")):1 = 2
+CFLAG:(NAME_TO_CHARA("와카사기히메")):1 = 2
+CFLAG:(NAME_TO_CHARA("세키반키")):1 = 2
+CFLAG:(NAME_TO_CHARA("카게로")):1 = 2
+CFLAG:(NAME_TO_CHARA("벤벤")):1 = 2
+CFLAG:(NAME_TO_CHARA("야츠하시")):1 = 2
+CFLAG:(NAME_TO_CHARA("라이코")):1 = 2
+CFLAG:(NAME_TO_CHARA("오렌지")):1 = 2
+CFLAG:(NAME_TO_CHARA("토키코")):1 = 2
+
+;텐구 갓파조
+;제일 재료가 될 것 같은 요정
+CITY_OWNER:GET_CITYNUMBER("요괴의 산 기슭") = 2
+CITY_OWNER:GET_CITYNUMBER("요괴의 산 정상") = 2
+CITY_OWNER:GET_CITYNUMBER("요괴의 산 수해") = 2
+CITY_OWNER:GET_CITYNUMBER("미답의 계곡") = 2
+CITY_OWNER:GET_CITYNUMBER("현무의 늪") = 2
+CITY_OWNER:GET_CITYNUMBER("구천폭포") = 2
+
+CFLAG:(NAME_TO_CHARA("아야")):1 = 2
+CFLAG:(NAME_TO_CHARA("니토리")):1 = 2
+CFLAG:(NAME_TO_CHARA("모미지")):1 = 2
+CFLAG:(NAME_TO_CHARA("하타테")):1 = 2
+;텐시 이쿠
+;정열적인 것은 매력이라고 말했다
+CITY_OWNER:GET_CITYNUMBER("도원") = 2
+CITY_OWNER:GET_CITYNUMBER("천인의 수도") = 2
+CITY_OWNER:GET_CITYNUMBER("유정천") = 2
+CITY_OWNER:GET_CITYNUMBER("용궁의 사용인 전용 숙소") = 2
+CITY_OWNER:GET_CITYNUMBER("히나나이 저택") = 2
+
+CFLAG:(NAME_TO_CHARA("텐시")):1 = 2
+CFLAG:(NAME_TO_CHARA("이쿠")):1 = 2
+;절
+;한 번 설법 들으러 와 주었고
+CITY_OWNER:GET_CITYNUMBER("명련사") = 2
+CITY_OWNER:GET_CITYNUMBER("묘지") = 2
+CITY_OWNER:GET_CITYNUMBER("법계") = 2
+
+CFLAG:(NAME_TO_CHARA("쿄코")):1 = 2
+CFLAG:(NAME_TO_CHARA("나즈린")):1 = 2
+CFLAG:(NAME_TO_CHARA("코가사")):1 = 2
+CFLAG:(NAME_TO_CHARA("이치린")):1 = 2
+CFLAG:(NAME_TO_CHARA("운잔")):1 = 2
+CFLAG:(NAME_TO_CHARA("미나미츠")):1 = 2
+CFLAG:(NAME_TO_CHARA("쇼우")):1 = 2
+CFLAG:(NAME_TO_CHARA("뱌쿠렌")):1 = 2
+CFLAG:(NAME_TO_CHARA("마미조")):1 = 2
+CFLAG:(NAME_TO_CHARA("누에")):1 = 2
+
+;--------하루츠게정파--------
+COUNTRY_BOSS:3 = GET_ID(NAME_TO_CHARA("릴리화이트"))
+COUNTRY_COLOR:3 = 0xF5A9F2
+
+CFLAG:(NAME_TO_CHARA("릴리화이트")):1 = 3
+CFLAG:(NAME_TO_CHARA("릴리블랙")):1 = 3
+;홍 마&경단
+;봄을 우리만의 것으로 하는거야! 같은 김
+CITY_OWNER:GET_CITYNUMBER("홍마관") = 3
+CITY_OWNER:GET_CITYNUMBER("지하도서관") = 3
+CITY_OWNER:GET_CITYNUMBER("백옥루") = 3
+CITY_OWNER:GET_CITYNUMBER("칠천계단") = 3
+CITY_OWNER:GET_CITYNUMBER("사이쿄우 아야카시") = 3
+CITY_OWNER:GET_CITYNUMBER("폐양관") = 3
+CFLAG:(NAME_TO_CHARA("레밀리아")):1 = 3
+CFLAG:(NAME_TO_CHARA("메이링")):1 = 3
+CFLAG:(NAME_TO_CHARA("사쿠야")):1 = 3
+CFLAG:(NAME_TO_CHARA("소악마")):1 = 3
+CFLAG:(NAME_TO_CHARA("파츄리")):1 = 3
+CFLAG:(NAME_TO_CHARA("플랑도르")):1 = 3
+CFLAG:(NAME_TO_CHARA("유유코")):1 = 3
+CFLAG:(NAME_TO_CHARA("리리카")):1 = 3
+CFLAG:(NAME_TO_CHARA("메를랑")):1 = 3
+CFLAG:(NAME_TO_CHARA("루나사")):1 = 3
+CFLAG:(NAME_TO_CHARA("요우키")):1 = 3
+CFLAG:(NAME_TO_CHARA("레이라")):1 = 3
+CFLAG:(NAME_TO_CHARA("카나")):1 = 3
+CFLAG:(NAME_TO_CHARA("요우무")):1 = 3
+CFLAG:(NAME_TO_CHARA("반령")):1 = 3
+;신＋신선＋인간
+;리리화는 인간에게 제일 우호적인 요정
+CITY_OWNER:GET_CITYNUMBER("모리야 신사") = 3
+CITY_OWNER:GET_CITYNUMBER("풍신의 호수") = 3
+CITY_OWNER:GET_CITYNUMBER("간헐천 지하센터") = 3
+CITY_OWNER:GET_CITYNUMBER("몽전대사묘") = 3
+CITY_OWNER:GET_CITYNUMBER("신령묘") = 3
+CITY_OWNER:GET_CITYNUMBER("아큐저택") = 3
+CITY_OWNER:GET_CITYNUMBER("영나암") = 3
+CITY_OWNER:GET_CITYNUMBER("인간마을 주택가") = 3
+CITY_OWNER:GET_CITYNUMBER("인간마을의 밭") = 3
+CITY_OWNER:GET_CITYNUMBER("키리사메 상점") = 3
+CITY_OWNER:GET_CITYNUMBER("서당") = 3
+CITY_OWNER:GET_CITYNUMBER("모코우 집") = 3
+
+CFLAG:(NAME_TO_CHARA("사나에")):1 = 3
+CFLAG:(NAME_TO_CHARA("스와코")):1 =3
+CFLAG:(NAME_TO_CHARA("카나코")):1 = 3
+CFLAG:(NAME_TO_CHARA("시즈하")):1 = 3
+CFLAG:(NAME_TO_CHARA("미노리코")):1 = 3
+CFLAG:(NAME_TO_CHARA("히나")):1 = 3
+CFLAG:(NAME_TO_CHARA("미코")):1 = 3
+CFLAG:(NAME_TO_CHARA("요시카")):1 = 3
+CFLAG:(NAME_TO_CHARA("청아")):1 = 3
+CFLAG:(NAME_TO_CHARA("후토")):1 = 3
+CFLAG:(NAME_TO_CHARA("토지코")):1 = 3
+CFLAG:(NAME_TO_CHARA("코코로")):1 = 3
+CFLAG:(NAME_TO_CHARA("케이네")):1 = 3
+CFLAG:(NAME_TO_CHARA("모코우")):1 = 3
+CFLAG:(NAME_TO_CHARA("아큐")):1 = 3
+CFLAG:(NAME_TO_CHARA("코스즈")):1 = 3
+CFLAG:(NAME_TO_CHARA("코토히메")):1 = 3
+CFLAG:(NAME_TO_CHARA("리카코")):1 = 3
+CFLAG:(NAME_TO_CHARA("엘렌")):1 = 3
+
+;--------순화 요정파--------
+COUNTRY_BOSS:4 = GET_ID(NAME_TO_CHARA("클라운피스"))
+COUNTRY_COLOR:4 = 0xE1D200
+CITY_OWNER:GET_CITYNUMBER("고요의 바다") = 4
+CITY_OWNER:GET_CITYNUMBER("풍요로운 바다") = 4
+CITY_OWNER:GET_CITYNUMBER("달의 표면") = 4
+CFLAG:(NAME_TO_CHARA("클라운피스")):1 = 4
+CFLAG:(NAME_TO_CHARA("순호")):1 = 4
+CFLAG:(NAME_TO_CHARA("헤카티아")):1 = 4
+
+;순화는 굉장함
+CITY_OWNER:GET_CITYNUMBER("휘침성") = 4
+CITY_OWNER:GET_CITYNUMBER("무명의 언덕") = 4
+CFLAG:(NAME_TO_CHARA("세이자")):1 = 4
+CFLAG:(NAME_TO_CHARA("메디슨")):1 = 4
+
+;신구 지옥조
+;력이야말로 정의
+CITY_OWNER:GET_CITYNUMBER("피안") =4
+CITY_OWNER:GET_CITYNUMBER("시비곡직청") = 4
+CITY_OWNER:GET_CITYNUMBER("나룻배 타는곳") = 4
+CITY_OWNER:GET_CITYNUMBER("지령전") = 4
+CITY_OWNER:GET_CITYNUMBER("작열지옥터") = 4
+CITY_OWNER:GET_CITYNUMBER("옛 도시 온천가") = 4
+CITY_OWNER:GET_CITYNUMBER("옛 도시 환락가") = 4
+CITY_OWNER:GET_CITYNUMBER("옛 지옥 큰길") = 4
+CITY_OWNER:GET_CITYNUMBER("건너는 발길이 끊어진 다리") = 4
+CITY_OWNER:GET_CITYNUMBER("카센의 저택") = 4
+CITY_OWNER:GET_CITYNUMBER("무연총") = 4
+CITY_OWNER:GET_CITYNUMBER("중유의 길") = 4
+CITY_OWNER:GET_CITYNUMBER("피연못지옥") = 4
+CITY_OWNER:GET_CITYNUMBER("삼도천") = 4
+
+CFLAG:(NAME_TO_CHARA("시키에이키")):1 = 4
+CFLAG:(NAME_TO_CHARA("코마치")):1 = 4
+CFLAG:(NAME_TO_CHARA("사토리")):1 = 4
+CFLAG:(NAME_TO_CHARA("오린")):1 = 4
+CFLAG:(NAME_TO_CHARA("우츠호")):1 = 4
+CFLAG:(NAME_TO_CHARA("코이시")):1 = 4
+CFLAG:(NAME_TO_CHARA("스이카")):1 = 4
+CFLAG:(NAME_TO_CHARA("카센")):1 = 4
+CFLAG:(NAME_TO_CHARA("키스메")):1 = 4
+CFLAG:(NAME_TO_CHARA("야마메")):1 = 4
+CFLAG:(NAME_TO_CHARA("파르시")):1 = 4
+CFLAG:(NAME_TO_CHARA("유우기")):1 = 4
+CFLAG:(NAME_TO_CHARA("콘가라")):1 = 4
+CFLAG:(NAME_TO_CHARA("키쿠리")):1 = 4
+CFLAG:(NAME_TO_CHARA("마간")):1 = 4
+;합격해 란드
+;역시 순화의 힘목적
+CITY_OWNER:GET_CITYNUMBER("몽환관") = 4
+CITY_OWNER:GET_CITYNUMBER("몽환문") = 4
+CITY_OWNER:GET_CITYNUMBER("몽환계") = 4
+CITY_OWNER:GET_CITYNUMBER("태양의 밭") = 4
+CITY_OWNER:GET_CITYNUMBER("뒷산의 호수") = 4
+CFLAG:(NAME_TO_CHARA("무게츠")):1 = 4
+CFLAG:(NAME_TO_CHARA("겐게츠")):1 = 4
+CFLAG:(NAME_TO_CHARA("유카")):1 = 4
+CFLAG:(NAME_TO_CHARA("쿠루미")):1 = 4
+CFLAG:(NAME_TO_CHARA("에리")):1 = 4
+
+;미마님 한가닥
+;미마님 「쇼우 탄막에 꺄는은…너절대 마리사일 것이다!!!」
+;메이라 「자, 과연은 미마님. 거기를 알아차린다고는 확실히 천재…(흰색 눈)」
+;리카 「…(노망 노인을 보는 눈)」
+CITY_OWNER:GET_CITYNUMBER("영마전") = 4
+CITY_OWNER:GET_CITYNUMBER("환몽계") = 4
+CFLAG:(NAME_TO_CHARA("미마")):1 = 4
+CFLAG:(NAME_TO_CHARA("메이라")):1 = 4
+CFLAG:(NAME_TO_CHARA("리카")):1 = 4
+
+
+
+
+;지정되지 않았던 캐릭터는 방랑 「당신」는 제외（MASTER 바꿔 넣었을 때에 방랑하는 것을 막는다）.
+FOR LOCAL:0, 1, CHARANUM
+	SIF CFLAG:(LOCAL:0):1 == 0  && CSTR:(LOCAL:0):99 != "당신"
+		CFLAG:(LOCAL:0):특수상태 = 특수상태_방랑
+NEXT
+
+;병력의 초기 배치
+CALL INIT_ARMY
+
+;무소속 도시의 병수는 경제의 7.5%
+FOR LOCAL:0, 0, MAX_CITY
+	SIF CITY_OWNER:(LOCAL:0) == 0
+		CITY_SOLDIER:(LOCAL:0) = CITY_ECONOMY:(LOCAL:0) * 75 / 1000
+NEXT
+
+;■관계 설정
+CALL SHARED_SETTING_RELATION
+
+
+

@@ -1,0 +1,54 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_FLOWER_VENDOR_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_FLOWER_VENDOR_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_FLOWER_VENDOR(대상)
+#DIM 대상
+PRINTFORML 소녀에게 말을 걸려졌다
+PRINTFORML 이치린금 10으로 꽃을 사 주지 않겠습니까?   라고 한다
+PRINTL
+CALL ASK_MULTI_JUDGE("산다", MONEY >= 10, "그녀마다 산다", MONEY >= 1000, "필요없다", 1)
+
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 모처럼이고 받기로 하자
+		PRINTFORML 이치린 샀다
+		CALL ICPRINT("금<10>을 지불했다", "L", 칼라_주의)
+		MONEY -= 10
+		PRINTFORML 소녀는 예를 말해 떠났다
+	CASE 1
+		PRINTFORML 군 마다 사자
+		PRINTFORML 그렇게 고하면 소녀는 얼굴을 세키가, 거부는 하지 않았다
+		PRINTFORML 소녀는 %ANAME(대상)%의 손을 잡아 당겨, 자신의 집에 안내했다
+		PRINTFORML 
+		PRINTFORML 소녀는 이러한 일에 익숙해 있는 것 같다
+		PRINTFORML 어리면서 적확하게 봉사하는 모양은 %ANAME(대상)%의 정욕을 자극한다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 충분히 시간을 들여, 신선한 지체를 즐겼다
+		IF HAS_PENIS(대상)
+			CALL FUCK(대상, "성기술, 성교, Ｃ, 사정, Ｖ삽입" + (IS_FEMALE(대상) ? ", Ｂ, Ｖ, 레즈" # "") , "동정상실, 키스상실", 0, "꽃을 파는 것의 소녀의 입술", "", "꽃을 파는 것의 소녀의 질", "화간")
+		ELSE
+			CALL FUCK(대상, "성기술, 성교, Ｃ, Ｂ, Ｖ, 레즈", "키스상실", 0, "꽃을 파는 것의 소녀의 입술", "", "", "화간")
+		ENDIF
+		PRINTFORML
+		PRINTFORML 이별할 때에, 소녀는 %ANAME(대상)%에 입맞춤해 왔다
+		CALL ICPRINT("금<1000>을 지불했다", "L", 칼라_주의)
+		MONEY -= 1000
+	CASE 2
+		PRINTFORML 별로 필요없다
+		PRINTFORML 거절했다
+ENDSELECT
+RETURN 1

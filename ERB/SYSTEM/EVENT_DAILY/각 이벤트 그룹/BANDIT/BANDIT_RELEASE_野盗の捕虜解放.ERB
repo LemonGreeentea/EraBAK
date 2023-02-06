@@ -1,0 +1,259 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_BANDIT_RELEASE_RATE()
+;대상 캐릭터에게 의존하므로 여기에서는 절대로 통해 둔다
+RETURN 1000
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_BANDIT_RELEASE_DECISION()
+#DIM 도둑
+도둑 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_도둑))
+SIF 도둑 == -1
+	RETURN 0
+SIF CFLAG:MASTER:소속 == 도둑
+	RETURN 0
+RETURN 1
+
+;---------------------
+;특정의 조건을 채우는 캐릭터를 랜덤에 선택하는 경우에 이용
+;다른 함수는 필수이지만, 이것만은 없어도 좋다  라고 할까 퍼포먼스에 영향을 주므로 불필요하면 만들어서는 안 된다
+;대상이 존재하지 않고 데일리를 개시 할 수 없는 경우는 0을 돌려주는 것으로 데일리의 발생을 캔슬한다
+;---------------------
+@EVENT_DAILY_BANDIT_RELEASE_SETTARGET()
+#DIM 도둑
+도둑 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_도둑))
+
+FOR LOCAL, 1, CHARANUM
+	IF CFLAG:LOCAL:소속 == CFLAG:MASTER:소속 && CFLAG:LOCAL:포로처 == 도둑 && IS_FEMALE(LOCAL) && SP_TRAIN_COUNT:LOCAL:특수세력_도둑 * 10 > RAND:100
+		DAILY_TARGET:DAILY_TARGET_NUM = LOCAL
+		DAILY_TARGET_NUM ++
+	ENDIF
+NEXT
+
+SIF DAILY_TARGET_NUM < 1
+	RETURN 0
+RETURN 1
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_BANDIT_RELEASE_GENRE()
+RETURN 데일리_장르_특수세력
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_BANDIT_RELEASE()
+#DIM 대상
+#DIM 도둑
+
+도둑 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_도둑))
+
+
+대상 = DAILY_TARGET:(RAND:DAILY_TARGET_NUM)
+
+CALL BANDIT_RELEASE_MSG(대상)
+
+RETURN 1
+
+@BANDIT_RELEASE_MSG(대상)
+#DIM 대상
+PRINTFORML 도둑에게 잡히고 있었던 %조사처리(ANAME(대상),"가")% 해방된 것 같다!
+PRINTFORML 그것을 (들)물었던 %조사처리(ANAME(MASTER),"는")%, 몹시 당황하며 맞이하러 갔다……
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORML ·
+IF CONFIG:200
+	PRINTFORML 긴 감금 생활이, %ANAME(대상)%의 실력을 무디어지게 되어져 버린 것 같다……
+	SETCOLOR 칼라_주의
+	PRINTFORM %ANAME(대상)%의 무투와 방위와 지략과 정치가, 각각 내렸다
+	RESETCOLOR
+	ABL:대상:무투 = MAX(ABL:대상:무투 - (5 + RAND:5), 1)
+	ABL:대상:방위 = MAX(ABL:대상:방위 - (5 + RAND:5), 1)
+	ABL:대상:지략 = MAX(ABL:대상:지략 - (5 + RAND:5), 1)
+	ABL:대상:정치 = MAX(ABL:대상:정치 - (5 + RAND:5), 1)
+	RESETCOLOR
+	PRINTW
+	RETURN
+ENDIF
+
+SELECTCASE RAND:16
+	CASE 0
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 생명이야말로 무사했던 것 같지만, 보는 것도 끔찍한님이 되어 있었다
+		PRINTFORMW 의복이 빼앗기고 있는 것은 물론, 목걸이나 쇠사슬, 족쇄를 끼워지고 있다
+		PRINTFORMW 여섯에 목욕탕에도 넣어 받을 수 없었던 것일까, 전신으로부터 농후한 정액 냄새가 감돌고 있다
+		PRINTFORMW 어떻게 다루어지고 있었는가는, 상상에 딱딱하지 않았다
+		PRINTFORMW 어떻게 말을 건 것일까하고 %조사처리(ANAME(MASTER),"가")% 고민하고 있으면, %조사처리(ANAME(대상),"는")% 당치 않게, 그 눈앞에서 자위 행위를 시작했다
+		PRINTFORMW 추잡한 말을 늘어놓으면서, %ANAME(MASTER)%에 행위를 조르고 있다
+		PRINTFORMW 아무래도 도둑들의 조교에 의해, 완전히 색광으로 되어 버린 것 같다……
+	CASE 1
+		PRINTFORMW 모랄이 없는 무리에게 잡힌 것이다, 상당히 심한 꼴을 당해졌을 것이다
+		PRINTFORMW 그렇게 생각해 각오 하고 있었던 %조사처리(ANAME(MASTER),"이지만")%, 방에서 기다리고 있었던 %조사처리(ANAME(대상),"는")%, 의외로 보통 모습이었다
+		PRINTFORMW 안도하면서 %조사처리(ANAME(MASTER),"가")% 말을 걸면, %조사처리(ANAME(대상),"는")% 공허한 눈동자로 이쪽을 본다
+		PRINTFORMW 그리고 당치 않게, %ANAME(MASTER)%의 음부를 노출시켜, 무슨 주저도 없게 빨기 시작했다
+		PRINTFORMW 무슨 일일까하고 말리는 %조사처리(ANAME(MASTER),"이지만")%, %조사처리(ANAME(대상),"는")% 이해 할 수 없다는 얼굴을 띄운다
+		PRINTFORMW 내가 뭔가 도달하지 않았습니까, 죄송합니다 라고 %조사처리(ANAME(대상),"는")% 땅에 머리를 붙이고 사죄한다
+		PRINTFORMW 그 이상한 모습으로부터, %조사처리(ANAME(MASTER),"는")% 그녀가 무엇을 되었는지를 헤아려, 절구 했다……
+	CASE 2
+		PRINTFORMW 방의 문을 열든지, 농후한 성의 냄새가 %ANAME(MASTER)%의 코를 찔렀다
+		PRINTFORMW 보면, %조사처리(ANAME(대상),"가")%, 병사들과 사귀고 있는 것이 아닌가
+		PRINTFORMW 무슨 일일까하고 눈을 의심하는 %조사처리(ANAME(MASTER),"를")% 뒷전으로, %ANAME(대상)%의 질내에 백탁이 쏟아진다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 몸을 진동시켜 견딜 수 없다고 말할듯한 교성을 준다
+		PRINTFORMW 도둑들에게 심신 모두 조교되어 버린 %조사처리(ANAME(대상),"는")%, 해방되어 더 남자를 요구하는 음란한 암캐에든지는이라고라고 끝낸 것이다……
+	CASE 3
+		PRINTFORMW 도둑 따위에 잡힌 것이다, 깊은 마음의 상처를 입는 것 같은 일을 되고 있을지도 모른다
+		PRINTFORMW 각오 하고 있었던 %조사처리(ANAME(MASTER),"이지만")%, %조사처리(ANAME(대상),"는")% 의외로 보통 모습이었다
+		PRINTFORMW ……가, 그 날부터, %조사처리(ANAME(대상),"가")% 밤의 거리에서 몸을 팔고 있다는 소문이 퍼지기 시작했다
+		PRINTFORMW 의심스럽게 생각해 밤의 거리를 순회하면, 당치 않게 %조사처리(ANAME(대상),"가")% 창관에 있었다
+		PRINTFORMW 도둑들에게 창녀로서 일해지고 있었을 때의 쾌감을 잊을 수 없는 것이라고 한다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 게다가 자신을 사지 않을까?   와까지 말하기 시작했다
+		IF RAND:2
+			PRINTFORMW 안 된다고 생각하면서도, %ANAME(대상)%의 요염한 모습에, 눈은 못박음이 되어 버린다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 유혹을 끊지 않고, %조사처리(ANAME(대상),"와")% 손님과 창녀로서의 밤을 보냈다……
+		ELSE
+			PRINTFORMW 그 매력적인 지체에 군침을 삼키면서도, %조사처리(ANAME(MASTER),"는")% 어떻게든 유혹을 끊었다
+			PRINTFORMW 창관을 떠나는 %ANAME(MASTER)%의 등에, 무기력한 사람, 라는 말이 떨어져 있었다……
+		ENDIF
+	CASE 4
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")% 그녀의 방을 방문하면, 농후한 성의 냄새가 코를 찔렀다
+		PRINTFORMW 무슨 일일까하고 생각해 보면, %조사처리(ANAME(대상),"가")% 격렬하게 자위를 하고 있었다
+		PRINTFORMW 은밀한 장소가, 아이의 팔(정도)만큼은 있으리라 말하는 장형을 삼키고 있다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 괴로워하기는 커녕, 젖은 요염한 소리를 내뱉으며라고 있다
+		PRINTFORMW 이윽고 %조사처리(ANAME(대상),"는")% 절정을 맞이했지만, 그토록 격렬한 자위였다고 말하는데, 전혀 만족 되어 있지 않은 것 같다
+		PRINTFORMW 그리고 또 자위를 시작하는 것처럼, %조사처리(ANAME(MASTER),"는")% 그녀가 바뀌어 버린 것이라고 눈치챈다
+		PRINTFORMW 도둑들에 의한 능욕의 쾌락을, 잊을 수 없이 있다……
+	CASE 5
+		PRINTFORMW 돌아온 %조사처리(ANAME(대상),"는")%, %조사처리(ANAME(MASTER),"를")% 보자마자 도게자했다
+		PRINTFORMW 무슨 일일까하고 곤혹하는 %조사처리(ANAME(MASTER),"를")% 뒷전으로, %조사처리(ANAME(대상),"는")% 구상을 말한다
+		PRINTFORMW 나는 범해지는 것을 기대해 가랑이를 적시는 음란한 암캐입니다, 부디 주인님의 은혜를 주십시오……
+		PRINTFORMW 계속해서 %조사처리(ANAME(대상),"는")% 옷을 벗어, 한가닥의 실 휘감지 않은 모습이 된다
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")% 그 지체의 눈부심에 넋을 잃고 보고 있는 동안에, 그녀는 %ANAME(MASTER)%의 음부를 노출시킨다
+		PRINTFORMW 그리고, 몹시 숙련 한 기술로 가지고, 입봉사를 실시하기 시작했다……
+		PRINTFORMW 거기까지 말해 %조사처리(ANAME(MASTER),"는")% 이해한, %ANAME(대상)%의 정신은, 성노예로서 새로 만들어져 버린 것이다……
+	CASE 6
+		PRINTFORMW 돌아온 %조사처리(ANAME(대상),"는")%, 분명하게 착실하지 않았다
+		PRINTFORMW 네에들 네에들과 웃으면서, 눈동자는 허공을 응시하고 있다
+		PRINTFORMW 전신에는 백탁이 달라붙어, 심한 냄새가 감돌고 있다
+		PRINTFORMW 그런데도 더 그녀는, 스스로의 양구멍을 스스로의 손가락으로 질척질척 휘젓는 것을 그만두지 않는다
+		PRINTFORMW 도둑들에게 이상한 듯한 약을 한껏 사용된 것이라고 %조사처리(ANAME(MASTER),"가")% 눈치채기까지, 그렇게 긴 시간은 걸리지 않았다……
+		CFLAG:대상:약물의존 += 80
+	CASE 7
+		PRINTFORMW 돌아온 %ANAME(대상)%의 모습은, 끔찍한 것이었다
+		PRINTFORMW 귀에 코나 양유두, 배꼽에 음부와 딱한 피어스를 끼워지고 있다
+		PRINTFORMW 그 목에는 가축용의 목걸이, 그리고 귀의 피어스에 장착된 태그에는, 관리 번호가 붙여져 있다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 어두운 표정으로, 「가축」으로서 「사육」되고 있던 사실을, 툭툭하고 말하기 시작한다
+		PRINTFORMW 그들의 능욕의 쾌락을 완전히 기억해 버린 그녀의 신체는, 발정해, 음렬으로부터 국물을 넘치게 하고 있었다……
+	CASE 8
+		PRINTFORMW 도둑이 두고 갔다는 그녀의 모습은, 끔찍한 것이었다
+		PRINTFORMW 눈가리개에 재갈을 되어 입고 있는 것이라고 하면 비부 모든 것을 드러내, 그녀를 경고하는 본디지
+		PRINTFORMW 유두나 비부에는 피어스를 댈 수 있어 양구멍에는 코브포함의 매우 굵은 바이브가 쑤셔 넣어지고 있다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 당황해, 적어도 눈가리개와 재갈만이라도라고 제외해 준다
+		PRINTFORMW 하면 %조사처리(ANAME(대상),"는")%, 당치 않게, 아첨한 소리로 범하면 좋겠다고 조르기 시작했다
+		PRINTFORMW 그녀가 받은 조교의 처참함을, %조사처리(ANAME(MASTER),"는")% 깨달았다……
+	CASE 9
+		PRINTFORMW 거기에 그녀의 모습은 없었다. 그 대신에, 사람이 푹 들어올 것 같을 정도큰 상자가 놓여져 있었다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 싫은 예감을 느끼면서 상자를 연다. 그리고, 눈을 의심했다
+		PRINTFORMW 상자안에는, %조사처리(ANAME(대상),"가")% 들어가 있었다
+		PRINTFORMW 그 %STR_BODY("신체:수식", 대상)%육체는 밧줄에 의해 경고할 수 있어 눈가리개에 재갈, 쇠사슬 족쇄, 목걸이, 딱한 피어스, 양구멍에는 굵은 장형……
+		PRINTFORMW 전신은 희게 더럽혀져 양구멍으로부터는 애액과 정액이 섞인 것이 질척질척 흘러 떨어지고 있었다
+		PRINTFORMW 장형의 자극에, %조사처리(ANAME(대상),"는")% 흐려진 요염한 소리를 지르고 있다
+		PRINTFORMW 자주(잘) 보면, 상자안에는 메모가 동고 되고 있었다
+		PRINTFORMW 「느슨해지기 시작했고 질렸기 때문에 돌려주네요☆  후는 잘 부탁드립니다!」라고 쓰여져 있다
+		PRINTFORMW 선물의 생각인가, %ANAME(대상)%의 머리에는, 랩핑리본이 장착되고 있었다……
+	CASE 10
+		PRINTFORMW %조사처리(ANAME(대상),"가")% 있다는 장소에 향한 %조사처리(ANAME(MASTER),"이지만")%, 그녀의 모습은 눈에 띄지 않는다
+		PRINTFORMW 대신에, 남자들이 나무에 모이고 있다
+		PRINTFORMW 싫은 예감이 해, %조사처리(ANAME(MASTER),"가")% 그들을 쫓아버리면, 과연 %조사처리(ANAME(대상),"가")% 나타났다
+		PRINTFORMW 나무에 동여 맬 수 있었던 그녀는 백탁이나 오줌 투성이가 되어 심한 상태다
+		PRINTFORMW 그녀에게 질린 도둑들은, 여기에 그녀를 변기로서 설치한 것이다……
+		PRINTFORMW 심하게 성처리에 사용된 %ANAME(대상)%의 양구멍으로부터는, 흰 것이 끝 없게 흘러넘치고 있었다
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")% 가까워지면, %조사처리(ANAME(대상),"는")% 부디 이 변기를 사용해 주세요라고 말하기 시작했다
+		PRINTFORMW 오랜 세월에 걸치는 조교로, 완전히 윤간의 쾌락에 눈을 떠 버린 것 같다……
+	CASE 11
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 무사하게 돌아왔다. 하지만, 그녀는 어딘가 불만인 것 같았다
+		PRINTFORMW 반드시 마음의 상처를 입고 있을 것이라고 %조사처리(ANAME(MASTER),"는")% 살그머니 해 둔 것이지만, 어느 날 그녀는 자취을 감추었다
+		PRINTFORMW 당황해 찾아 도는 %조사처리(ANAME(MASTER),"는")%, 그녀의 방에서 메모 쓰기를 찾아냈다
+		PRINTFORMW 도둑들로 되었던 것(적)이 잊을 수 없다. 또 그들에게 갔다온다. 그러한 취지가 못 쓰고 남겨지고 있었다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 간신히, 그녀의 마음이 도둑 모두 붙잡힌 채였던 일을 깨달았다. 하지만 이제(이미/벌써/더는/정말), 뒤늦음이다……
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 스스로 도둑에게 붙잡혔습니다
+		RESETCOLOR
+		RETURN
+	CASE 12
+		PRINTFORMW 도둑에게 잡히고 있던 것이다, %조사처리(ANAME(대상),"는")% 상당히 심한 일을 되었는지도 모른다
+		PRINTFORMW 각오 하고 있었던 %조사처리(ANAME(MASTER),"였")%지만, %조사처리(ANAME(대상),"는")% 의외로 보통이었다
+		PRINTFORMW 가슴을 쓸어내리는 %ANAME(MASTER)%의 눈앞에서, %조사처리(ANAME(대상),"는")% 돌연옷을 벗기 시작한다
+		PRINTFORMW 오싹 해, 옷을 입도록(듯이) 말하는 %조사처리(ANAME(MASTER),"였")%지만, %조사처리(ANAME(대상),"는")% (듣)묻지 않는다
+		PRINTFORMW 「그 사람들」로 되었던 것(적)이 잊을 수 있지 못하고, 신체가 쑤셔 어쩔 수 없다. %조사처리(ANAME(MASTER),"로")% 좋으니까 진정시켜 주라고 말하기 시작했다
+		PRINTFORMW %ANAME(대상)%의 아랫배에는, 그녀가 되어 온 것을 단적으로 나타내는, 「성노예」의 3문자가 담금질라고 있었다……
+	CASE 13
+		PRINTFORMW %조사처리(ANAME(대상),"가")% 해방되었다는 장소에 향한 %조사처리(ANAME(MASTER),"였")%지만, 거기에는 대량의 도둑이 있었다!
+		PRINTFORMW 저항하는 %조사처리(ANAME(MASTER),"였")%지만, 과연 다수의 의견이 힘이 있어, 눈 깜짝할 순간에 붙잡혀 버린다
+		PRINTFORMW 발버둥 치는 %ANAME(MASTER)%의 앞에서, 그들은 데리고 와서 있었던 %조사처리(ANAME(대상),"를")% 범하기 시작한다
+		IF RAND:2
+			PRINTFORMW 처음은 싫어하고 있었던 %조사처리(ANAME(대상),"였")%지만, 오랜 세월에 걸치는 조교 생활은, 그녀의 신체를, 마음을, 확실히 새로 만들고 있었다
+			PRINTFORMW 그 신체는 조금 만지작거려진 것 뿐으로 준비를 갖추어, 눈 깜짝할 순간에 가랑이를 적셔 버린다
+			PRINTFORMW 도둑이 그 젖은 비밀스런 구멍에 페니스를 쑤셔 넣으면, %조사처리(ANAME(대상),"는")% 얼굴을 녹여, 스스로 허리를 흔들기 시작했다……
+			PRINTFORMW 능욕극은 도둑들이 한 바탕 그녀에게 종을 심을 때까지, %ANAME(MASTER)%의 눈앞에서 행해졌다……
+		ELSE
+			PRINTFORMW 처음은 싫어하고 있었던 %조사처리(ANAME(대상),"였")%지만, %조사처리(ANAME(MASTER),"를")% 죽이겠어와 속삭여져 마지못해서 성행위를 하게 한다
+			PRINTFORMW %ANAME(MASTER)%의 생명을 국물에, 추잡한 말을 늘어놓아, 스스로 허리를 흔들어 페니스에 봉사하는 것을 강요받는다
+			PRINTFORMW 또 질내사정을 졸라, 그들의 노예가 되는 것을 선언하도록(듯이) 강제당했다……
+			PRINTFORMW 남자들 전원이 %조사처리(ANAME(대상),"를")% 사용할 때까지, %조사처리(ANAME(MASTER),"는")% 그 모양을 보게 되어졌다……
+		ENDIF
+		PRINTFORMW 이윽고 %조사처리(ANAME(MASTER),"는")% 해방되었지만, 도둑들은 또%조사처리(ANAME(대상),"를")% 데리고 가 버렸다……
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 다시 도둑에게 붙잡혔습니다
+		RESETCOLOR
+		RETURN
+	CASE 14
+		PRINTFORMW 돌아온 %조사처리(ANAME(대상),"는")%, 이거 정말 심한 상태였다
+		PRINTFORMW 전신 흰 것으로 더럽혀져 모든 구멍에서 종이 걸죽 흘러넘치고 있다
+		PRINTFORMW 또 그 신체의 도처에, 「무료」라든가 「음란」이라든가♥마크라든가와 추잡한 낙서가 기입해지고 있다
+		PRINTFORMW 절구 하는 %조사처리(ANAME(MASTER),"이지만")%, 한층 더 귀를 의심하는 것 같은 말을 얘기한다
+		PRINTFORMW %조사처리(ANAME(대상),"는")%, 스스로 허리를 구불거리게 해, 음부를 손가락으로 나누어 열어, 남근을 조르는 말을 늘어놓은 것이다……
+		PRINTFORMW 그 말로부터 %조사처리(ANAME(MASTER),"는")%, 그녀가 처참한 능욕을 받은 것, 그것에 의해 마음도 신체도 새로 만들어져 버린 것을 깨달았다……
+	CASE 15
+		PRINTFORMW 현장에 향한 %조사처리(ANAME(MASTER),"는")%, 거기서 믿을 수 없는 것을 보았다
+		PRINTFORMW 무려, %조사처리(ANAME(대상),"가")%, 떠돌이 개와 사귀면서 허리를 흔들고 있는 것이 아닌가
+		PRINTFORMW 도둑놈들, 너무나 비열한 흉내를 이라고 분개하면서 %조사처리(ANAME(MASTER),"가")% 떠돌이 개를 쫓아버리면, %조사처리(ANAME(대상),"는")% 불만기분인 소리를 높였다
+		PRINTFORMW 무려 그녀는, 스스로 바래 개와 사귀고 있던 것이라고 한다
+		PRINTFORMW 그는 중요한 「서방님」다, 그 밖에도 돼지나 소에도 「신부」로 해 받은, 등이라고 말하기 시작했다……
+		PRINTFORMW 도둑들은, 그녀의 인격을, 이미 수복 할 수 없을만큼 부수어 간 것이다……
+		EXP:대상:수간경험 += 10
+ENDSELECT
+SETCOLOR 칼라_경고
+IF !GETBIT(TALENT:대상:음란계, 소질_음란_음란)
+	PRINTFORML %조사처리(ANAME(대상),"는")%＜음란＞을 얻었다
+ENDIF
+CALL TALENT_LOSE_PRIDE(대상, 1)
+CALL TALENT_LOSE_TEISOU(대상, 1)
+IF !TALENT:대상:합의
+	PRINTFORML %ANAME(대상)%의＜합의＞를 얻었다
+ENDIF
+RESETCOLOR
+CALL CAPTURE(대상, 0)
+CFLAG:대상:종속도 = MAX(CFLAG:대상:종속도, 700)
+CFLAG:대상:의존도 = MAX(CFLAG:대상:의존도, 50)
+SETBIT TALENT:대상:음란계, 소질_음란_음란
+TALENT:대상:합의 = 1
+TALENT:대상:쵸로인 = 1
+PRINTFORML 긴 조교 생활이, %ANAME(대상)%의 실력을 무디어지게 되어져 버린 것 같다……
+SETCOLOR 칼라_주의
+PRINTFORM %ANAME(대상)%의 무투와 지략과 정치가, 각각 5씩 내렸다
+RESETCOLOR
+ABL:대상:무투 = MAX(ABL:대상:무투 - 5, 1)
+ABL:대상:지략 = MAX(ABL:대상:지략 - 5, 1)
+ABL:대상:정치 = MAX(ABL:대상:정치 - 5, 1)
+RESETCOLOR
+PRINTW

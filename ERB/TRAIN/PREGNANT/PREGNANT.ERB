@@ -1,0 +1,1319 @@
+﻿;임신 관련의 이벤트
+
+;---------------------------------------------------------
+;ARG:0번의 캐릭터의 임신 체크
+;---------------------------------------------------------
+@CHECK_PREGNANT(ARG:0)
+;성별적으로 질이 없는 경우는 특수한 약을 사용하지 않으면 임신하지 않는다
+SIF !HAS_VAGINA(ARG:0) && !TALENT:(ARG:0):잉태가능
+	RETURN
+
+;질내사정량의 계산／질내사정 이력의 작성
+LOCAL:2 = 0
+FOR LOCAL:0, 0, WOMB_RECORD_MAX
+	SIF WOMB_SEMEN_ID:(ARG:0):LOCAL == 0
+		CONTINUE
+	LOCAL:2 += WOMB_SEMEN_AMOUNT:(ARG:0):LOCAL
+NEXT
+
+SIF IS_SP_CHARA(ARG:0)
+	RETURN
+
+SIF CFLAG:(ARG:0):행동불능상태 == 행동불능_아이
+	RETURN
+
+;이미 임신 상태라면 판정 스킵
+IF CFLAG:(ARG:0):임신기간 >= 1
+	RETURN
+ENDIF
+
+SIF CFLAG:(ARG:0):피임약남은턴
+	RETURN
+
+;콘피그에 의한 임신 억제가 있으면 돌아온다
+IF CONFIG:1 == 1
+	RETURN
+ENDIF
+
+;질내사정량이 0 이하라면 임신 판정에 들어가지 않는다
+SIF LOCAL:2 <= 0
+	RETURN 
+
+;질내사정량이 1이상의 경우
+
+;임신 판정에 사용하는 난수의 기본 최대치
+LOCAL:5 = 1200
+
+;임신하고 싶어해 소지라면 지극히 임신하기 쉽다
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_임신하고싶어함)
+	IF TCVAR:(ARG:0):65
+		LOCAL:5 = 100
+	ELSE
+		LOCAL:5 = 300
+	ENDIF
+;짐승 변화중은 확률 상승
+ELSEIF TALENT:(ARG:0):동물귀 || TALENT:(ARG:0):꼬리
+	;배란유발제 사용중은 확률 상승
+	IF TCVAR:(ARG:0):65
+		LOCAL:5 = 80
+	ELSE
+		LOCAL:5 = 400
+	ENDIF
+;배란유발제 사용중은 확률 상승
+ELSEIF TCVAR:(ARG:0):65
+	LOCAL:5 = 150
+ENDIF
+
+;위험일이라면 배율 돈
+SIF IS_OVULATION(ARG:0)
+	LOCAL:5 /= 2
+
+;양질모태라면 한층 더 드돈
+SIF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_양질모태)
+	LOCAL:5 /= 2
+
+;★디버그용(100% 임신)
+;LOCAL:5 = 1
+
+IF RAND:(LOCAL:5) < SQRT(LOCAL:2 * 100 + 300)
+	;누구의 아이인지를 판정
+	LOCAL:3 = RAND:(LOCAL:2)
+	FOR LOCAL:0, 0, WOMB_RECORD_MAX
+		SIF WOMB_SEMEN_ID:(ARG:0):(LOCAL:0) == 0
+			CONTINUE
+		LOCAL:3 -= WOMB_SEMEN_AMOUNT:(ARG:0):(LOCAL:0)
+		IF LOCAL:3 <= 0
+			;임신기간을 1으로 설정
+			;할 수 있던 아이의 부친을 씨뿌리기 이력으로부터 예측해 기록한다
+			;여러 사람으로부터 종을 받고 있으면 누가 부모일까 모르게 되거나 하는 처리를 한다
+			CALL RECORD_FATHER_FROM_CREAMPIE_HISTORY(ARG:0)
+			;임신 발각
+			CALL DETECT_PREGNANCY(ARG:0)
+			BREAK
+		ENDIF
+	NEXT
+ENDIF
+
+
+;---------------------------------------------------------
+;임신 관계의 메세지를 표시할지 어떨지 ARG:0=임신한 캐릭터의 번호
+;※직전에 TMP_CREATE_RELATION_MAP의 호출이 필요
+;---------------------------------------------------------
+@IS_PREGNANT_MSG(ARG:0)
+#FUNCTION
+;관전 모드가 아니고, 포로내지 방랑중의 경우, 주인공 이외는 모른다
+SIF (CFLAG:MASTER:포로처 != 0 || CFLAG:MASTER:소속 == 0) && !FLAG:관전모드 && ARG:0 != MASTER
+	RETURNF 0
+RETURNF 1
+
+;---------------------------------------------------------
+;턴 엔드시에 실시하는 임신 출산 관련의 처리
+;---------------------------------------------------------
+@TURNEND_PREGNANT_CHECK
+#DIM 관직에오름시키지않는플래그
+;국가 관계 맵의 작성
+CALL TMP_CREATE_RELATION_MAP
+;모친의 체크를 한다
+FOR LOCAL:0, 0, CHARANUM
+	;사망한 캐릭터, 미등장의 캐릭터는 처리하지 않는다
+	IF CFLAG:(LOCAL:0):특수상태 == 특수상태_사망
+		CONTINUE
+	ELSEIF !IS_APPEAR(LOCAL:0)
+		CONTINUE
+	ENDIF
+	CALL TURNEND_PREGNANT_CHECK_MOTHER(LOCAL:0)
+NEXT
+
+;아이의 처리를 한다
+FOR LOCAL:0, 0, CHARANUM
+	;사망한 캐릭터는 처리하지 않는다
+	IF CFLAG:(LOCAL:0):특수상태 == 특수상태_사망
+		CONTINUE
+	ENDIF
+	CALL TURNEND_PREGNANT_CHECK_CHILD(LOCAL:0)
+NEXT
+
+;---------------------------------------------------------
+;턴 엔드시에 실시하는 임신 출산 관련의 처리의 모친계의 처리
+;---------------------------------------------------------
+@TURNEND_PREGNANT_CHECK_MOTHER(ARG:0)
+
+;출산후
+IF CFLAG:(ARG:0):육아기간 >= 1
+	;출산후 기간을 진행시킨다
+	CFLAG:(ARG:0):육아기간 ++
+
+	;육아대상의 캐릭터 번호를 취득
+	LOCAL:5 = ID_TO_CHARA(CFLAG:(ARG:0):육아대상)
+
+	;육아중 또한 모친이 주인공 이외로 소속이 같음, 포로가 아니면 자동으로 기른다
+	SIF LOCAL:5 >= 0 && ARG:0 != MASTER && CFLAG:(ARG:0):소속 == CFLAG:(LOCAL:5):소속 && !CFLAG:(LOCAL:5):포로처 && !CFLAG:(LOCAL:5):행동완료 && !CFLAG:(ARG:0):포로처
+		CALL MOTHER_AUTO_REARING(ARG:0, LOCAL:5, CFLAG:(ARG:0):육아기간)
+
+	;출산후 기간이 8에 이르렀다
+	IF CFLAG:(ARG:0):육아기간 >= 7
+		;출산후의 각종 초기화 처리
+		CALL RESET_MOTHER_STATE(ARG:0, 1)
+	ENDIF
+ENDIF
+
+;임신하고 있지 않다
+IF TALENT:(ARG:0):임신 == 0
+	CALL UPDATE_CREAMPIE_HISTORY(ARG:0)
+	CALL CHECK_PREGNANT(ARG:0)
+;임신중
+ELSE
+	;임신 7기째
+	IF CFLAG:(ARG:0):임신기간 >= (GETBIT(TALENT:(ARG:0):음란계, 소질_음란_양질모태) ? 3 # 7)
+		;7기에 출산한다
+		CALL BIRTH_CHILD(ARG:0)
+		RETURN 1
+	;임신 5기째
+	ELSEIF CFLAG:(ARG:0):임신기간 >=  (GETBIT(TALENT:(ARG:0):음란계, 소질_음란_양질모태) ? 2 # 5) && CFLAG:(ARG:0):행동불능상태 != 행동불능_임월
+		;4기 경과하면 임월이 되어 통상의 활동을 할 수 없게 된다
+		IF IS_PREGNANT_MSG(ARG:0)
+			CALL KOJO_EVENT(ARG:0, 41)
+			SIF CFLAG:(ARG:0):행동불능상태 == 행동불능_육아
+				CALL KOJO_EVENT(ID_TO_CHARA(CFLAG:(ARG:0):육아대상), 46)
+			CALL SINGLE_EMPTY_LINE()
+		ENDIF
+
+		;임월 상태로 설정
+		CFLAG:(ARG:0):행동불능상태 = 행동불능_임월
+	ENDIF
+	;임신기간을 진행시킨다
+	CFLAG:(ARG:0):임신기간 ++
+ENDIF
+
+
+;---------------------------------------------------------
+;임신이 발각되었을 때의 처리를 정리하는 함수
+;---------------------------------------------------------
+@DETECT_PREGNANCY(ARG:0)
+#DIM BUSTSIZE
+TALENT:(ARG:0):임신 = 1
+CFLAG:(ARG:0):임신기간 = 1
+
+;이와가미노 비약의 효과를 지운다
+TALENT:(ARG:0):잉태가능 = 0
+
+IF IS_PREGNANT_MSG(ARG:0)
+	IF FLAG:화상설정
+		CALL PRINT_IMAGE_ANIMATION("애정", 0, 7, 2, 1)
+;		CALL PRINT_IMAGE_ANIMATION("애정", 0, 3, 1, 0)
+		CALL PRINT_IMAGE_ANIMATION("애정", 0, 12, 1, 0)
+		CALL PRINT_IMAGE("애정11")
+	ENDIF
+	IF ARG:0 == MASTER
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 몸의 변조를 느꼈다…
+	ELSE
+		PRINTFORML %ANAME(ARG:0)%의 모습이 이상하다…
+	ENDIF
+	PRINTFORM 아무래도 %조사처리(ANAME(ARG:0),"는")% 
+	IF GET_SPERM_NAME(CFLAG:(ARG:0):아이의부친) != "불명"
+		PRINTFORM %GET_SPERM_NAME(CFLAG:(ARG:0):아이의부친)%의 
+	ELSE
+		PRINTFORM 이름도 모르는 누군가의 
+	ENDIF
+	PRINTFORML 아이를 임신한 것 같다
+	SETCOLOR 칼라_주의
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")% [임신]했습니다
+	RESETCOLOR
+ENDIF
+
+;컨디션이 변화해 모유가 출 낸다
+IF !TALENT:(ARG:0):모유체질
+	IF IS_PREGNANT_MSG(ARG:0)
+		SETCOLOR 칼라_주의
+		PRINTFORMW %ANAME(ARG:0)%의 가슴으로부터 모유가 나오게 되었습니다
+		RESETCOLOR
+	ENDIF
+	TALENT:(ARG:0):모유체질 = 1
+	;임신에 의한 일시적인 모유체질의 플래그
+	CFLAG:(ARG:0):일시적모유체질 = 1
+ENDIF
+
+;여성이 임신했을 때 벌써 임신으로 가슴이 커지고 있는 경우, 혹은 이제 커지지 않는 경우를 제외해 가슴이 커진다
+IF IS_FEMALE(ARG:0) && GET_BUSTSIZE(ARG:0) != 2 && CFLAG:(ARG:0):임신시가슴크기증가 == 0
+	BUSTSIZE = GET_BUSTSIZE(ARG:0)
+	CFLAG:(ARG:0):임신시가슴크기증가 = 1
+	IF IS_PREGNANT_MSG(ARG:0) && BUSTSIZE < 2
+		SETCOLOR 칼라_주의
+		PRINTFORMW 임신에 의해 %ANAME(ARG:0)%의 가슴의 사이즈가 1단계 커졌습니다
+		RESETCOLOR
+	ENDIF
+	SIF BUSTSIZE != 2
+		CALL SET_BUSTSIZE(ARG:0, BUSTSIZE + 1)
+ENDIF
+
+
+IF IS_PREGNANT_MSG(ARG:0)
+	CALL KOJO_EVENT(ARG:0, 40)
+	;육아중에 임신하면 아이가 거기에 리액션을 하는 이벤트를 꽂아넣는다
+	SIF CFLAG:(ARG:0):행동불능상태 == 행동불능_육아 && ID_TO_CHARA(CFLAG:(ARG:0):육아대상) > 0 && CFLAG:(ID_TO_CHARA(CFLAG:(ARG:0):육아대상)):소속 == CFLAG:(ARG:0):소속
+		CALL KOJO_EVENT(ID_TO_CHARA(CFLAG:(ARG:0):육아대상), 45)
+ENDIF
+
+;당신 이외는 상황에 의해 붕괴하는 경우가 있다
+IF ARG:0 != MASTER
+	;부친 불명해 출산이 Lv2 이하라면 붕괴치가 증가
+	IF CFLAG:(ARG:0):아이의부친 == 0 && ABL:(ARG:0):출산 <= 2
+		IF CFLAG:(ARG:0):포로처 == CFLAG:MASTER:소속
+			CFLAG:(ARG:0):붕괴 += 1200
+			CALL TALENT_CHECK(ARG:0)
+		ELSE
+			CFLAG:(ARG:0):붕괴 += 600
+			CALL TALENT_CHECK(ARG:0)
+		ENDIF
+	;부친이 주인공, 출산이 Lv2 이하, 포로 조교,[연모][복종][친구][연인][낙인]없음이라면 붕괴치가 증가
+	ELSEIF CFLAG:(ARG:0):아이의부친 == GET_ID(MASTER) && ABL:(ARG:0):출산 <= 2 && CFLAG:(ARG:0):포로처 >= 1 && CFLAG:(ARG:0):포로처 == CFLAG:MASTER:소속
+		IF !TALENT:(ARG:0):연모 && !TALENT:(ARG:0):복종 && !TALENT:(ARG:0):친구 && !TALENT:(ARG:0):연인 && !TALENT:(ARG:0):낙인
+			CFLAG:(ARG:0):붕괴 += 1200
+			CALL TALENT_CHECK(ARG:0)
+		ENDIF
+	ENDIF
+ENDIF
+
+EXP:(ARG:0):임신경험 ++
+
+SIF ID_TO_CHARA(CFLAG:(ARG:0):아이의부친) != -1
+	EXP:(ID_TO_CHARA(CFLAG:(ARG:0):아이의부친) ):임신시킨경험 ++
+
+SIF IS_PREGNANT_MSG(ARG:0)
+	CALL SINGLE_EMPTY_LINE()
+
+;---------------------------------------------------------
+;중이고 이력으로부터 부친을 취득해 기록하는 함수
+;부친 후보가 복수 소치 아이와 모친으로 기록의 방법이 별도인 일을 흡수한다
+;---------------------------------------------------------
+@RECORD_FATHER_FROM_CREAMPIE_HISTORY(ARG:0)
+#DIM FATHER_CANDIDATE
+;부친 후보의 ID를 취득한다
+;복수 후보가 있는 경우 0이 돌아오는 것을 유의
+FATHER_CANDIDATE = GET_FATHER_CANDIDATE_FROM_CREAMPIE_HISTORY(ARG:0)
+
+;아이의 부친의 기록과 모친의 부친의 기록으로 룰이 다른 것을 흡수하는 처리
+;아이의 부친에게는 개인명만이 들어가는데 대해, 모친의 상대는 종족, 그룹 따위에서도 부친으로서 기록된다
+;복수의 부친 후보가 있는 경우
+IF FATHER_CANDIDATE == 0
+	;부친 불명하게 한다
+	CFLAG:(ARG:0):아이의부친 = 0
+	;부친의 기록을 적는다(부친 불명)
+	CALL REFRESH_PREGNANT_RECORD(ARG:0, 0)
+;부친 후보가 특정의 캐릭터
+ELSE
+	;부친의 ID를 기록
+	CFLAG:(ARG:0):아이의부친 = FATHER_CANDIDATE
+	;부친의 기록을 적는다
+	CALL REFRESH_PREGNANT_RECORD(ARG:0, FATHER_CANDIDATE)
+	;특수 정액이라면, 사토코 플래그를 세운다
+	;SIF FATHER_CANDIDATE < 0
+	;	CFLAG:(ARG:0):사토코 플래그 = 1
+ENDIF
+
+;---------------------------------------------------------
+;아이를 출산하는 처리를 실시하는 함수
+;---------------------------------------------------------
+@BIRTH_CHILD(ARG:0)
+#DIM 관직에오름시키지않는플래그
+#DIM 아이
+
+IF IS_CONFISCATE_CHILD(ARG:0)
+	SETCOLOR 칼라_주의
+	PRINTFORMW 슬슬 %ANAME(ARG:0)%의 아이가 출생할 것 같습니다
+	RESETCOLOR
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")% 무사하게 출산을 끝냈습니다
+	PRINTFORMW 태어난 아이는 몰수되어 버린 것 같다……
+	관직에오름시키지않는플래그 = 1
+ELSE
+	;보통 때의 처리는 길기 때문에 절이고
+	;관직에 오름 시키지 않는 경우는-1, 그렇지 않으면 아이의 번호가 돌아간다
+	CALL NORMAL_BIRTH_CHILD(ARG:0)
+	IF RESULT == -1
+		관직에오름시키지않는플래그 = 1
+	ELSE
+		관직에오름시키지않는플래그 = 0
+		아이 = RESULT
+	ENDIF
+ENDIF
+;출산시 상태에 맞춘 공통 처리
+IF 관직에오름시키지않는플래그
+	;관직에 오름 시키지 않을 때
+	;관직에 오름 시키지 않을 때는 임신 휴가 종료
+	CFLAG:(ARG:0):행동불능상태 = 0
+	;육아를 하지 않으면 휴가 종료
+	;가슴크기와 모유체질을 되돌린다
+	CFLAG:(ARG:0):행동불능상태 = 0
+	CFLAG:(ARG:0):임신기간 = 0
+	CFLAG:(ARG:0):아이의부친 = 0
+	TALENT:(ARG:0):임신 = 0
+	CALL MOTHER_SHRINK_BUSTSIZE(ARG:0)
+	CALL MOTHER_STOP_MILKING(ARG:0)
+ELSE
+	;사관 시킬 때
+	;포로가 아니면 육아 상태로 설정
+	IF CFLAG:(ARG:0):포로처 == 0
+		;육아를 한다면 육아 휴가
+		CFLAG:(ARG:0):행동불능상태 = 행동불능_육아
+		CFLAG:(ARG:0):육아대상 = GET_ID(아이)
+	ELSE
+		;포로의 경우 육아 할 수 없다
+		CFLAG:(ARG:0):행동불능상태 = 0
+		CFLAG:(ARG:0):임신기간 = 0
+		CFLAG:(ARG:0):아이의부친 = 0
+		TALENT:(ARG:0):임신 = 0
+		CALL MOTHER_SHRINK_BUSTSIZE(ARG:0)
+		CALL MOTHER_STOP_MILKING(ARG:0)
+	ENDIF
+	;아이를 피육아 상태로 설정
+	CFLAG:아이:행동불능상태 = 행동불능_아이
+ENDIF
+
+;∨조임이 느슨해진다
+;확장 경험 붙지 않는 것인지는?   호르몬이든지 뭔가의 효과로 도깨비구의 유연성 오르고 있었을 뿐이니까 노우 캔 노우 캔
+LOCAL = MAX(TALENT:(ARG:0):Ｖ조임 / 5, 1)
+CALL TIGHTNESS_DECREASE_V(ARG:0, (RAND:LOCAL + RAND:LOCAL + RAND:LOCAL) / 3)
+
+EXP:(ARG:0):출산경험 += 1
+EXP:(ARG:0):출산경험치 += 1
+CALL TRAIN_AUTO_ABLUP(ARG:0, 1)
+
+SIF !관직에오름시키지않는플래그
+	CFLAG:(ARG:0):육아기간 = 1
+
+;성지식이 Lv0라면 Lv1가 된다
+IF ABL:(ARG:0):성지식 == 0
+	ABL:(ARG:0):성지식 = 1
+	IF IS_PREGNANT_MSG(ARG:0)
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 출산을 통해 최저한의 성지식을 몸에 익힌 것 같습니다
+		SETCOLOR 칼라_오렌지
+		PRINTFORML %ANAME(ARG:0)%의 성지식이 상승했습니다(Lv{ABL:(ARG:0):성지식})
+		RESETCOLOR
+	ENDIF
+ENDIF
+;임신 관계의 플래그를 클리어
+CFLAG:(ARG:0):임신기간 = 0
+CFLAG:(ARG:0):아이의부친 = 0
+TALENT:(ARG:0):임신 = 0
+
+SIF IS_PREGNANT_MSG(ARG:0)
+	CALL SINGLE_EMPTY_LINE()
+
+CALL CLEAR_CREAMPIE_HISTORY(ARG:0)
+
+;---------------------------------------------------------
+;통상의 아이 출산 처리를 실시한다
+;아이의 생성에 관계하는 것이나 아이가 임관한다인가에 영향을 주는 것만을 여기에 써, 그렇지 않으면 이 함수의 부모의 (분)편으로 공통 부분으로서 처리하는 것을 의도해 나누었다
+;RESULT CASE
+	;-1:아이 관직에 오름 하지 않는다
+	;else:임관한다
+;---------------------------------------------------------
+@NORMAL_BIRTH_CHILD(MOTHER)
+#DIM MOTHER
+#DIM CHILD
+#DIM FATHER
+;사토코 플래그가 서 있으면, 사토코에게 냈던 것에 한다
+IF IS_FOSTER_CHILD(MOTHER)
+	IF IS_PREGNANT_MSG(MOTHER)
+		SETCOLOR 칼라_주의
+		PRINTFORMW %ANAME(MOTHER)%가 해산기있던 것 같습니다
+		PRINTFORMW 태어난 아이를, %ANAME(MOTHER)%는 사토코에게 냈습니다……
+		CALL SINGLE_EMPTY_LINE()
+		RESETCOLOR
+		RETURN -1
+	ELSE
+		RETURN -1
+	ENDIF
+ENDIF
+
+;아이를 생성
+CALL CREATE_CHILD(MOTHER)
+CHILD = RESULT
+
+IF RESULT == -1
+	IF IS_PREGNANT_MSG(MOTHER)
+		SETCOLOR 칼라_주의
+		PRINTFORMW %ANAME(MOTHER)%가 해산기있던 것 같습니다
+		PRINTFORMW 태어난 아이를, %ANAME(MOTHER)%는 사토코에게 냈습니다……
+		RESETCOLOR
+		CALL SINGLE_EMPTY_LINE()
+		RETURN -1
+	ELSE
+		RETURN -1
+	ENDIF
+ENDIF
+
+;포로의 경우
+IF CFLAG:MOTHER:포로처 >= 1
+	;자의 소속을 모친이 붙잡혀 있는 세력으로 한다
+	CALL CHANGE_COUNTRY(CHILD, CFLAG:MOTHER:포로처, 1)
+ELSE
+	;자의 소속을 모친과 같게 한다
+	CALL CHANGE_COUNTRY(CHILD, CFLAG:MOTHER:소속, 1)
+ENDIF
+
+IF IS_PREGNANT_MSG(MOTHER)
+	;부친의 캐릭터 번호를 취득
+	FATHER = ID_TO_CHARA(CFLAG:MOTHER:아이의부친)
+
+	IF MOTHER == MASTER
+		SETCOLOR 칼라_주의
+		PRINTFORMW 슬슬 아이가 출생할 것 같습니다
+		RESETCOLOR
+
+		;부친이 동일 세력에 있으면 출산에 입회할 때의 구상을 표시
+		IF FATHER >= 0 && CFLAG:FATHER:포로처 == 0 && CFLAG:FATHER:소속 >= 1 && CFLAG:FATHER:특수상태 == 0 && ((CFLAG:MASTER:포로처 == 0 && CFLAG:FATHER:소속 == CFLAG:MASTER:소속) || (CFLAG:MASTER:포로처 >= 1 && CFLAG:MASTER:포로처 == CFLAG:FATHER:소속))
+			CALL KOJO_EVENT(FATHER, 43)
+		ELSE
+			PRINTFORMW %ANAME(MOTHER)%는 무사하게 출산을 끝냈습니다
+		ENDIF
+	ELSE
+		SETCOLOR 칼라_주의
+		PRINTFORMW %ANAME(MOTHER)%가 해산기있던 것 같습니다
+		RESETCOLOR
+
+		;구상의 표시
+		CALL KOJO_EVENT(MOTHER, 42)
+	ENDIF
+
+	CALL VIRGIN_COMMON(MOTHER, "출산")
+	
+	IF IS_MALE(CHILD)
+		PRINTFORMW 건강한 남자아이입니다
+	ELSE
+		PRINTFORMW 건강한 여자아이입니다
+	ENDIF
+	IF !FLAG:관전모드 && (CFLAG:MASTER:소속 == CFLAG:MOTHER:소속 || CFLAG:MASTER:소속 == CFLAG:MOTHER:포로처)
+		IF CONFIG:16 == 1
+			GOTO AUTO_RECRUIT
+		ELSEIF CONFIG:16 == 2
+			GOTO AUTO_CANCEL
+		ENDIF
+		;관전이 아니다
+		FLAG:능력표시모드 = 0
+		CALL SHOW_INFO_WITH_UI(CHILD, 0, 0)
+		CALL SINGLE_DRAWLINE
+		PRINTFORMW 이 아이를 장래, 자국의 관직에 오름이 되도록(듯이) 교육합니까?
+		CALL ASK_MULTI("한다", "한다（향후 자동적으로 사관으로 한다）", "하지 않는다", "하지 않는다（향후 자동적으로 무시한다）")
+		IF GROUPMATCH(RESULT, 2, 3)
+			SIF RESULT == 3
+				CONFIG:16 = 2
+			$AUTO_CANCEL
+			PRINTFORMW 교육하는 것은 그만둡니다
+			CALL DELETE_CHARA(CHILD)
+			;관직에 오름 시키지 않는 플래그
+			RETURN -1
+		ELSE
+			SIF RESULT == 1
+				CONFIG:16 = 1
+			$AUTO_RECRUIT
+			PRINTFORML 스스로 이름을 붙입니까?
+			CALL ASK_YN("수동으로 명명", "랜덤에 명명")
+			IF RESULT == 0
+				;수동에서의 명명 처리
+				CALL INPUT_CHILD_NAME(CHILD)
+				RETURN CHILD
+			ENDIF
+		ENDIF
+	ENDIF
+	;랜덤에 명명
+	CALL RANDOM_CHILD_NAMING(CHILD)
+	PRINTFORMW 이 아이의 이름은 「%CSTR:(CHILD):1%」\@ CSTR:(CHILD):2 != "" ? , 자는 「%CSTR:(CHILD):2%」 # \@로 정해진 것 같습니다
+	CALL SINGLE_EMPTY_LINE()
+;메세지 표시를 실시하지 않는 경우, 랜덤에 이름을 설정
+ELSE
+	;랜덤에 명명
+	CALL RANDOM_CHILD_NAMING(CHILD)
+ENDIF
+RETURN CHILD
+
+
+;---------------------------------------------------------
+;ARG:0이, 낳은 아이가 몰수될까
+;---------------------------------------------------------
+@IS_CONFISCATE_CHILD(ARG:0)
+#FUNCTION
+
+SIF FLAG:관전모드
+	RETURNF 1
+
+;주인공의 세력의 포로가 되어 있는 경우, 몰수되지 않는다
+SIF CFLAG:(ARG:0):포로처 && CFLAG:(ARG:0):포로처 == CFLAG:MASTER:소속
+	RETURNF 0
+
+;특수 세력 소속으로, 한편 그 특수 세력이 주인공의 곳에서는 없으면, 몰수된다
+SIF IS_SP_COUNTRY(CFLAG:(ARG:0):소속) && CFLAG:(ARG:0):소속 != CFLAG:MASTER:소속
+	RETURNF 1
+
+;포로로, 한편 그 세력이 주인공의 세력이 아닌 경우, 몰수된다
+SIF CFLAG:(ARG:0):포로처 && CFLAG:(ARG:0):포로처 != CFLAG:MASTER:소속
+	RETURNF 1
+
+RETURNF 0
+
+;---------------------------------------------------------
+;ARG:0이, 낳은 아이를 사토코에게 낼까.
+;---------------------------------------------------------
+@IS_FOSTER_CHILD(ARG:0)
+#FUNCTION
+
+SIF ARG:0 == MASTER && !IS_COUNTRY(CFLAG:MASTER:소속)
+	RETURNF 1
+
+SIF CFLAG:MASTER:소속 == CFLAG:(ARG:0):소속
+	RETURNF 0
+
+;SIF CFLAG:(ARG:0):아이의 부친 < 0 && GROUPMATCH(GET_SPERM_NAME(CFLAG:(ARG:0):아이의 부친), "", "불명")
+;	RETURNF 1
+
+SIF FLAG:관전모드 && RAND:4
+	RETURNF 1
+
+IF CFLAG:MASTER:소속 != CFLAG:(ARG:0):소속
+	IF CFLAG:(ARG:0):아이의부친 == GET_ID(MASTER) && (IS_LOVER(ARG:0) || IS_SLAVE(ARG:0) || IS_SLAVED_BY(ARG:0))
+		RETURNF 0
+	ELSE
+		RETURNF RAND:4
+	ENDIF
+ENDIF
+
+RETURNF RAND:4
+
+;---------------------------------------------------------
+;턴 엔드시의 임신 출산 관계의 처리의 아이용
+;---------------------------------------------------------
+@TURNEND_PREGNANT_CHECK_CHILD(ARG:0)
+
+;피육아 상태의 아이
+IF CFLAG:(ARG:0):행동불능상태 == 행동불능_아이
+	;일부 능력의 초기치를 현재의 값으로 덧쓰기
+	;CALL SET_INI_ABL(ARG:0, "무투")
+	;CALL SET_INI_ABL(ARG:0, "지략")
+	;CALL SET_INI_ABL(ARG:0, "정치")
+	;CALL SET_INI_ABL(ARG:0, "가창")
+	;CALL SET_INI_ABL(ARG:0, "요리")
+
+	;아이가 충분히 성장했다
+	IF CFLAG:(ARG:0):아이의성장도 == 6
+		;주인공 세력의 사관이라면 메세지를 표시
+		IF CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속
+			SETCOLOR 칼라_주의
+			PRINTFORML 아직 어리면서 %조사처리(ANAME(ARG:0),"는")% 혼자서 행동할 수 있는 정도로까지 성장했습니다
+			PRINTFORMW %조사처리(ANAME(ARG:0),"가")% 우리 나라의 사관(?)로서 더해졌습니다
+			CALL SINGLE_EMPTY_LINE
+			RESETCOLOR
+		ENDIF
+
+		;정신력의 설정
+		CALL SET_MIND_POWER(ARG:0)
+		CALL SET_BODYSIZE(ARG:0)
+
+		;INI_MAXBASE:(ARG:0):2 = MAXBASE:(ARG:0):2
+		;피육아 상태를 해제
+		CFLAG:(ARG:0):행동불능상태 = 0
+	ENDIF
+ENDIF
+
+;[유아]가 있어 성장도가 15이상의 아이를 성장시킨다
+IF TALENT:(ARG:0):유아 && CFLAG:(ARG:0):아이의성장도 >= 15 && IS_CHILD(ARG:0)
+	IF IS_PREGNANT_MSG(ARG:0)
+		SETCOLOR 칼라_주의
+		PRINTFORML 어린 %조사처리(ANAME(ARG:0),"는")% 지금은 훌륭하게 성장했습니다
+		PRINTFORMW %조사처리(ANAME(ARG:0),"는")%[유아]를 잃어, 일부의 소질이 변화했습니다
+		CALL SINGLE_EMPTY_LINE
+		RESETCOLOR
+	ENDIF
+	CALL SET_BUSTSIZE(ARG:0, TALENT:(ARG:0):성장후가슴)
+	CALL SET_HIPSIZE(ARG:0, TALENT:(ARG:0):성장후엉덩이)
+	SELECTCASE RAND:100
+		CASE 0 TO 60
+			TALENT:(ARG:0):체격 = 체격_보통
+		CASE 61 TO 70
+			TALENT:(ARG:0):체격 = 체격_작은체형
+		CASE 71 TO 80
+			TALENT:(ARG:0):체격 = 체격_장신
+		CASE 81 TO 87
+			TALENT:(ARG:0):체격 = 체격_아이
+		CASE 88 TO 94
+			TALENT:(ARG:0):체격 = 체격_큰몸집
+		CASEELSE
+			TALENT:(ARG:0):체격 = 체격_거대
+	ENDSELECT
+
+	SELECTCASE RAND:100
+		CASE 0 TO 60
+			TALENT:(ARG:0):체형 = 체형_보통
+		CASE 61 TO 70
+			TALENT:(ARG:0):체형 = 체형_슬렌더
+		CASE 71 TO 80
+			TALENT:(ARG:0):체형 = 체형_글래머
+		CASE 81 TO 86
+			TALENT:(ARG:0):체형 = 체형_풍만
+		CASE 87 TO 93
+			TALENT:(ARG:0):체형 = 체형_호리호리한
+		CASE 94 TO 97
+			TALENT:(ARG:0):체형 = 체형_비만
+		CASEELSE
+			TALENT:(ARG:0):체형 = 체형_빼빼마른
+	ENDSELECT
+
+	TALENT:(ARG:0):유치 = TALENT:(ARG:0):성장후유치
+	TALENT:(ARG:0):유아 = 0
+	CALL SET_BODYSIZE(ARG:0)
+	;랜덤 캐릭터의 설정을 유용해 음모를 설정
+	;어디까지나 잠정적인 조치·완전 랜덤에서 유전은 하지 않는다
+	CALL SET_INMOU_RANDOM(ARG:0)
+	CALL SET_ARMPIT_RANDOM(ARG:0)
+ENDIF
+
+;---------------------------------------------------------
+;턴 엔드시에 실시하는 임신 관련의 처리(허브)
+;---------------------------------------------------------
+@TURNEND_PREGNANT_PHASE
+CALL SINGLE_DRAWLINE
+PRINTFORML 임신·출산 보고
+CALL COLOR_LINE
+CALL TURNEND_PREGNANT_CHECK
+CALL TURNEND_PREGNANT_CHECK_SYOKUSYU
+
+;---------------------------------------------------------
+;턴 엔드시에 실시하는 임신 출산 관련의 처리(촉수 출산)
+;---------------------------------------------------------
+@TURNEND_PREGNANT_CHECK_SYOKUSYU
+
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):촉수산란실행자 || CFLAG:(LOCAL:0):촉수Ａ산란실행자
+		SETCOLOR 칼라_주의
+		PRINTFORMW %ANAME(LOCAL:0)%에 낳을 수 있었던 촉수의 아이는, 순식간에 크고 성장%ANAME(LOCAL:0)%의 배로부터 기어나오려고 하고 있습니다
+		SIF GETBIT(TALENT:(LOCAL:0):음란계, 소질_음란_모판)
+			PRINTFORMW 모판화한 %조사처리(ANAME(LOCAL:0),"는")%, 촉수의 아이를 낳을 수 있는 것에 이 이상 없는 기쁨을 느끼고 있는 것 같다……
+		RESETCOLOR
+		PRINTL 
+		
+		;구상의 표시
+		CALL KOJO_EVENT(LOCAL:0, 44)
+
+		VARSET LOCAL, 0, 10, 30
+
+		IF CFLAG:(LOCAL:0):촉수산란실행자
+			LOCAL:12 = RAND:2 + 3
+			LOCAL:13 = (ABL:(LOCAL:0):Ｖ감 + 1) * LOCAL:12 * 2
+			LOCAL:14 = MIN(ABL:(LOCAL:0):Ｖ감, 25) * LOCAL:12 * LIMIT(ABL:(LOCAL:0):촉수 * 50 + EXP:(LOCAL:0):Ｖ확장경험, 50, 200) / 100
+			LOCAL:15 = 5
+			CALL FUCK(LOCAL, "Ｖ, 촉수, Ｖ확장")
+		ENDIF
+
+		IF CFLAG:(LOCAL:0):촉수Ａ산란실행자
+			LOCAL:22 = RAND:2 + 3
+			LOCAL:23 = (ABL:(LOCAL:0):Ａ감 + 1) * LOCAL:22 * 2
+			LOCAL:24 = MIN(ABL:(LOCAL:0):Ａ감, 25) * LOCAL:22 * LIMIT(ABL:(LOCAL:0):촉수 * 50 + EXP:(LOCAL:0):Ａ확장경험, 50, 200) / 100
+			LOCAL:25 = 5
+			CALL FUCK(LOCAL, "Ａ, 촉수, Ａ확장")
+		ENDIF
+
+		PRINTL 
+		PRINTFORML <%ANAME(LOCAL:0)%>
+		CALL PRINT_ADD_EXP(LOCAL:0, "출산경험", 1)
+		CALL PRINT_ADD_EXP(LOCAL:0, "촉수출산경험", LOCAL:12 + LOCAL:22)
+		CALL TRAIN_AUTO_ABLUP(LOCAL:0)
+		PRINTL 
+
+		;임신 이력의 기록
+		CALL REFRESH_PREGNANT_RECORD(LOCAL:0, GET_SPERM_ID("촉수"), LOCAL:12 + LOCAL:22)
+
+		;●붕괴치의 계산과 추가
+		LOCAL:30 = 0
+		LOCAL:31 = 0
+
+		;혐오 요소
+		IF ABL:(LOCAL:0):출산 < 3 && ABL:(LOCAL:0):촉수 < 3
+			LOCAL:31 += 1600
+			LOCAL:30 = 1
+		ENDIF
+
+		;고통 요소
+		IF CFLAG:(LOCAL:0):촉수산란실행자 && ABL:(LOCAL:0):Ｖ감 < 5
+			IF CFLAG:(LOCAL:0):촉수Ａ산란실행자 >= 1 && ABL:(LOCAL:0):Ａ감 < 5
+				LOCAL:31 += 900 + LOCAL:30 * 1200
+			ELSE
+				LOCAL:31 += 600 + LOCAL:30 * 800
+			ENDIF
+		ELSEIF CFLAG:(LOCAL:0):촉수Ａ산란실행자 && ABL:(LOCAL:0):Ａ감 < 5
+			LOCAL:31 += 600 + LOCAL:30 * 800
+		ENDIF
+
+		;임신 요소
+		IF TALENT:(LOCAL:0):임신
+			TIMES LOCAL:31, 1.50
+			LOCAL:31 += 800
+		ENDIF
+
+		CFLAG:(LOCAL:0):붕괴 += LOCAL:31
+
+		IF TALENT:(LOCAL:0):임신 && CFLAG:(LOCAL:0):촉수산란실행자
+			SETCOLOR 칼라_주의
+			PRINTFORMW 촉수는 %ANAME(LOCAL:0)%의 태내에 머물고 있던 아이와 동화해, 보다 강인하게 자랐습니다(요술 보너스+{CFLAG:(LOCAL:0):임신기간 * 2})
+			PRINTL 
+			RESETCOLOR
+
+			;임신 관계의 플래그를 클리어
+			SIF CFLAG:(LOCAL:0):행동불능상태 == 행동불능_임월
+				CFLAG:(LOCAL:0):행동불능상태 = 0
+			CFLAG:(LOCAL:0):임신기간 = 0
+			CFLAG:(LOCAL:0):아이의부친 = 0
+			TALENT:(LOCAL:0):임신 = 0
+
+			;질내사정 이력을 클리어
+			CALL CLEAR_CREAMPIE_HISTORY(LOCAL:0)
+			IF CFLAG:(LOCAL:0):육아기간 == 0
+				PRINTFORMW 촉수에 의한 낙태의 쇼크로 몸의 반응이 들어간다
+				CALL MOTHER_SHRINK_BUSTSIZE(LOCAL:0)
+				CALL MOTHER_STOP_MILKING(LOCAL:0)
+			ENDIF
+		ENDIF
+
+		LOCAL:5 = ID_TO_CHARA(CFLAG:(LOCAL:0):촉수산란실행자)
+		LOCAL:6 = ID_TO_CHARA(CFLAG:(LOCAL:0):촉수Ａ산란실행자)
+		LOCAL:7 = LOCAL:12 * 4 + LOCAL:14 / 3 + CFLAG:(LOCAL:0):임신기간 * 2
+		LOCAL:8 = LOCAL:22 * 4 + LOCAL:24 / 3
+
+		IF LOCAL:5 >= 0
+			PRINTFORML <%ANAME(LOCAL:5)%>
+			IF LOCAL:5 == LOCAL:6
+				CALL PRINT_ADD_EXP(LOCAL:5, "요술경험치", LOCAL:7 + LOCAL:8)
+			ELSE
+				CALL PRINT_ADD_EXP(LOCAL:5, "요술경험치", LOCAL:7)
+			ENDIF
+			CALL TRAIN_AUTO_ABLUP(LOCAL:5)
+			PRINTL 
+		ENDIF
+
+		IF LOCAL:6 >= 0 && LOCAL:5 != LOCAL:6
+			PRINTFORML <%ANAME(LOCAL:6)%>
+			CALL PRINT_ADD_EXP(LOCAL:6, "요술경험치", LOCAL:8)
+			CALL TRAIN_AUTO_ABLUP(LOCAL:6)
+			PRINTL 
+		ENDIF
+
+		WAIT
+
+		TALENT:(LOCAL:0):촉수임신 = 0
+		TALENT:(LOCAL:0):Ａ촉수임신 = 0
+		CFLAG:(LOCAL:0):촉수산란실행자 = 0
+		CFLAG:(LOCAL:0):촉수Ａ산란실행자 = 0
+	ENDIF
+NEXT
+
+
+;---------------------------------------------------------
+;출산후의 복친 상태를 원래대로 되돌린다(육아 해제, 가슴크기 변경, 모유체질 삭제)
+;ARG:0은 복친의 캐릭터 번호, ARG:1은 각종 메세지를 표시할지 어떨지의 플래그
+;---------------------------------------------------------
+@RESET_MOTHER_STATE(ARG:0, ARG:1 = 1)
+CALL MOTHER_END_REARING(ARG:0, ARG:1)
+CALL MOTHER_SHRINK_BUSTSIZE(ARG:0, ARG:1)
+CALL MOTHER_STOP_MILKING(ARG:0, ARG:1)
+
+SIF IS_PREGNANT_MSG(ARG:0)
+	CALL SINGLE_EMPTY_LINE
+
+;---------------------------------------------------------
+;육아의 종료 처리
+;---------------------------------------------------------
+@MOTHER_END_REARING(ARG:0, ARG:1 = 1)
+;육아대상의 캐릭터 번호를 취득
+LOCAL:5 = ID_TO_CHARA(CFLAG:(ARG:0):육아대상)
+
+;육아중
+IF LOCAL:5 >= 0
+	IF CFLAG:(ARG:0):행동불능상태 == 행동불능_임월
+		;예외 상황으로서 육아중에 임월이 되는 경우가 있다  그것용의 분기
+		IF ARG:1 && IS_PREGNANT_MSG(ARG:0)
+			SETCOLOR 칼라_주의
+			PRINTFORMW %조사처리(ANAME(ARG:0),"는")% 부풀어 오른 배꼽이 빠지게 웃으면서 전의 아이의 육아를 끝냈습니다
+			RESETCOLOR
+		ENDIF
+	ELSE
+		IF ARG:1 && IS_PREGNANT_MSG(ARG:0)
+			SETCOLOR 칼라_주의
+			PRINTFORMW %조사처리(ANAME(ARG:0),"는")% 육아를 끝내 복귀했습니다
+			RESETCOLOR
+		ENDIF
+		;육아 상태를 해제
+		CFLAG:(ARG:0):행동불능상태 = 0
+	ENDIF
+	CFLAG:(ARG:0):육아대상 = 0
+	;육아가 끝나면【아이인질】하지만 해제
+	IF TALENT:(ARG:0):아이인질 > 0
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(ARG:0),"는")% 인질로 있던 우리 아이의 씩씩하게 성장한 모습에 안도해, %ANAME(MASTER)%에 대한 공포심을 극복했습니다.
+		RESETCOLOR
+		TALENT:(ARG:0):아이인질 = 0
+	ENDIF
+	;육아기간의 리셋트
+	CFLAG:(ARG:0):육아기간 = 0
+ENDIF
+
+;---------------------------------------------------------
+;출산했지만 기르지 않는 경우, 없고 육아 종료시의 가슴크기 되돌리는 처리
+;---------------------------------------------------------
+@MOTHER_SHRINK_BUSTSIZE(ARG:0, ARG:1)
+;육아대상의 캐릭터 번호를 취득
+LOCAL:5 = ID_TO_CHARA(CFLAG:(ARG:0):육아대상)
+
+;「육아 종료시에 임신하고 있다」 「출산시에 육아중이다」경우를 제외해 가슴크기를 되돌린다
+IF !TALENT:(ARG:0):임신 && LOCAL:5 < 0 && CFLAG:(ARG:0):임신시가슴크기증가
+	IF ARG:1 && IS_PREGNANT_MSG(ARG:0)
+		SETCOLOR 칼라_주의
+		PRINTFORMW 출산에 의해 커지고 있었던 %ANAME(ARG:0)%의 가슴은 원래에 돌아왔습니다
+		RESETCOLOR
+	ENDIF
+	SIF INRANGE(GET_BUSTSIZE(ARG:0), -1, 2)
+		CALL SET_BUSTSIZE(ARG:0, GET_BUSTSIZE(ARG:0) - 1)
+	CFLAG:(ARG:0):임신시가슴크기증가 = 0
+ENDIF
+
+;---------------------------------------------------------
+;출산했지만 기르지 않는 경우, 없고 육아 종료시의 가슴크기 되돌리는 처리
+;---------------------------------------------------------
+@MOTHER_STOP_MILKING(ARG:0, ARG:1)
+;육아대상의 캐릭터 번호를 취득
+LOCAL:5 = ID_TO_CHARA(CFLAG:(ARG:0):육아대상)
+
+;일시적으로 모유체질이 되어 있었을 경우(
+IF CFLAG:(ARG:0):일시적모유체질 && !TALENT:(ARG:0):임신 && LOCAL:5 < 0
+	;가슴의 크기에 응한 ABL:분유를 가지고 있으면 모유체질이 영속화한다
+	IF ( GET_BUSTSIZE(ARG:0) < 0 && ABL:(ARG:0):분유 >= 랭크역치:랭크_그외:랭크_A ) || ( GET_BUSTSIZE(ARG:0) == 0 && ABL:(ARG:0):분유 >= 랭크역치:랭크_그외:랭크_B ) || ( GET_BUSTSIZE(ARG:0) > 0 && ABL:(ARG:0):분유 >= 랭크역치:랭크_그외:랭크_C )
+		IF ARG:1 && IS_PREGNANT_MSG(ARG:0)
+			SETCOLOR 칼라_주의
+			PRINTFORMW %조사처리(ANAME(ARG:0),"는")% 거듭되는 분유에 의해, 육아가 끝났음에도 관계되지 않고 모유가 멈추지 않게 되었습니다
+			RESETCOLOR
+		ENDIF
+	ELSE
+		IF ARG:1 && IS_PREGNANT_MSG(ARG:0)
+			SETCOLOR 칼라_주의
+			PRINTFORMW %ANAME(ARG:0)%의 모유는 멈추었습니다
+			RESETCOLOR
+		ENDIF
+		TALENT:(ARG:0):모유체질 = 0
+	ENDIF
+	;임신에 의한 일시적인 모유체질의 플래그
+	CFLAG:(ARG:0):일시적모유체질 = 0
+ENDIF
+
+
+
+;---------------------------------------------------------
+;수동으로 아이의 이름을 설정하는 함수  ARG:0=아이의 캐릭터 번호
+;---------------------------------------------------------
+@INPUT_CHILD_NAME(ARG:0)
+#DIM FIRST_LINE
+;부친, 모친의 캐릭터 번호를 취득
+LOCAL:5 = ID_TO_CHARA(CFLAG:(ARG:0):부친)
+LOCAL:6 = ID_TO_CHARA(CFLAG:(ARG:0):모친)
+
+;성의 초기설정
+IF LOCAL:5 >= 0 && CSTR:(LOCAL:5):0 != ""
+	CSTR:(ARG:0):0 = %CSTR:(LOCAL:5):0%
+	CSTR:(ARG:0):5 = %CSTR:(LOCAL:5):5%
+	SIF TALENT:(LOCAL:5):성명역전
+		TALENT:성명역전 = 1
+ELSEIF LOCAL:6 >= 0 && CSTR:(LOCAL:6):0 != ""
+	CSTR:(ARG:0):0 = %CSTR:(LOCAL:6):0%
+	CSTR:(ARG:0):5 = %CSTR:(LOCAL:6):5%
+	SIF TALENT:(LOCAL:6):성명역전
+		TALENT:성명역전 = 1
+ENDIF
+FIRST_LINE = LINECOUNT
+$SHOW_LOOP
+
+CALL SINGLE_DRAWLINE
+PRINTFORML ★★★이 아이에게 어떤 이름을 붙입니까? ★★★
+CALL SINGLE_DRAWLINE
+
+;명명
+PRINTFORM   성:%CSTR:(ARG:0):0, 10, LEFT%%CSTR:(ARG:0):5, 10, LEFT%
+IF LOCAL:5 >= 0 && CSTR:(LOCAL:5):0 != ""
+	PRINTBUTTON "[아버지 쪽]", 110
+ELSE
+	SETCOLOR 칼라_선택불가
+	PRINTPLAIN [아버지 쪽]
+	RESETCOLOR
+ENDIF
+IF LOCAL:6 >= 0 && CSTR:(LOCAL:6):0 != ""
+	PRINTBUTTON "[외가]", 111
+ELSE
+	SETCOLOR 칼라_선택불가
+	PRINTPLAIN [외가]
+	RESETCOLOR
+ENDIF
+IF CSTR:(ARG:0):0 != ""
+	PRINTBUTTON "[소거]", 112
+ENDIF
+PRINTL 
+PRINTFORM   명:%CSTR:(ARG:0):1, 10, LEFT%%CSTR:(ARG:0):6, 10, LEFT%
+PRINTBUTTON "[입력]", 120
+PRINTBUTTON "[랜덤(한국명)]", 121
+PRINTBUTTON "[랜덤(서양명)]", 123
+PRINTBUTTON "[랜덤(일본명)]", 124
+IF CSTR:(ARG:0):1 != ""
+	PRINTBUTTON "[소거]", 122
+ENDIF
+PRINTL 
+PRINTFORM   자:%CSTR:(ARG:0):2, 10, LEFT%%CSTR:(ARG:0):7, 10, LEFT%
+PRINTBUTTON "[입력]", 130
+PRINTBUTTON "[랜덤]", 131
+IF CSTR:(ARG:0):2 != ""
+	PRINTBUTTON "[소거]", 132
+ENDIF
+PRINTL 
+PRINTFORM 애칭:%CSTR:(ARG:0):98, 10, LEFT%
+PRINTBUTTON "[입력]", 140
+IF CSTR:(ARG:0):98 != ""
+	PRINTBUTTON "[소거]", 141
+ENDIF
+PRINTL 
+PRINTL 
+PRINTL ※명은 필수입니다
+IF CSTR:(ARG:0):1 == ""
+	SETCOLOR 칼라_선택불가
+	PRINTPLAIN [결정]
+	RESETCOLOR
+ELSE
+	PRINTBUTTON "[결정]", 999
+ENDIF
+
+;다른 캐릭터와의 중복 체크
+LOCAL:1 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF LOCAL:0 != ARG:0 && CSTR:(ARG:0):0 == CSTR:(LOCAL:0):0 && CSTR:(ARG:0):1 == CSTR:(LOCAL:0):1
+		LOCAL:1 = 1
+		BREAK
+	ENDIF
+NEXT
+IF LOCAL:1
+	SETCOLOR 0xc41818
+	PRINT   ◆동성 동명의 캐릭터가 존재합니다◆
+	RESETCOLOR
+ENDIF
+PRINTL 
+
+REDRAW 0
+
+$INPUT_LOOP
+INPUT
+
+
+IF RESULT == 110 && LOCAL:5 >= 0 && CSTR:(LOCAL:5):0 != ""
+	CSTR:(ARG:0):0 = %CSTR:(LOCAL:5):0%
+	CSTR:(ARG:0):5 = %CSTR:(LOCAL:5):5%
+	TALENT:성명역전 = 0
+	SIF TALENT:(LOCAL:5):성명역전
+		TALENT:성명역전 = 1
+	GOTO SHOW_LOOP
+
+ELSEIF RESULT == 111 && LOCAL:6 >= 0 && CSTR:(LOCAL:6):0 != ""
+	CSTR:(ARG:0):0 = %CSTR:(LOCAL:6):0%
+	CSTR:(ARG:0):5 = %CSTR:(LOCAL:6):5%
+	CLEARLINE LINECOUNT - FIRST_LINE
+	TALENT:성명역전 = 0
+	SIF TALENT:(LOCAL:6):성명역전
+		TALENT:성명역전 = 1
+	GOTO SHOW_LOOP
+
+ELSEIF RESULT == 112
+	CSTR:(ARG:0):0 = 
+	CSTR:(ARG:0):5 = 
+	CLEARLINE LINECOUNT - FIRST_LINE
+	TALENT:성명역전 = 0
+	GOTO SHOW_LOOP
+
+ELSEIF RESULT == 120
+	PRINTL 설정하는 이름을 입력해 주세요
+	$INPUTS_LOOP3
+	INPUTS
+	IF RESULTS == ""
+		CSTR:(ARG:0):1 = 
+		CSTR:(ARG:0):6 = 
+	ELSE
+		CSTR:(ARG:0):1 = %RESULTS%
+		PRINTL (필요한 경우는) 읽기를 카타카나로 입력해 주세요
+		$INPUTS_LOOP3_1
+		INPUTS
+		IF CSTR:(ARG:0):1 == RESULTS
+			CSTR:(ARG:0):6 = 
+		ELSE
+			CSTR:(ARG:0):6 = %RESULTS%
+		ENDIF
+	ENDIF
+	GOTO SHOW_LOOP
+
+ELSEIF RESULT == 121
+	LOCAL:0 = TARGET
+	TARGET = ARG:0
+;	CALL SET_FIRST_NAME
+	IF IS_MALE(TARGET)
+		CALL SET_FIRST_NAME_KRM
+	ELSE
+		CALL SET_FIRST_NAME_KRF
+	ENDIF
+	TARGET = LOCAL:0
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+
+ELSEIF RESULT == 122
+	CSTR:(ARG:0):1 = 
+	CSTR:(ARG:0):6 = 
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+
+ELSEIF RESULT == 123
+	LOCAL:0 = TARGET
+	TARGET = ARG:0
+	IF IS_MALE(TARGET)
+		CALL SET_FIRST_NAME_KM
+	ELSE
+		CALL SET_FIRST_NAME_KF
+	ENDIF
+	TARGET = LOCAL:0
+	CLEARLINE 11
+	GOTO SHOW_LOOP
+
+ELSEIF RESULT == 124
+	LOCAL:0 = TARGET
+	TARGET = ARG:0
+	IF IS_MALE(TARGET)
+		CALL SET_FIRST_NAME_JM
+	ELSE
+		CALL SET_FIRST_NAME_JF
+	ENDIF
+	TARGET = LOCAL:0
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+
+ELSEIF RESULT == 130
+	PRINTL 설정하는 글자를 입력해 주세요
+	$INPUTS_LOOP4
+	INPUTS
+	IF RESULTS == ""
+		CSTR:(ARG:0):2 = 
+		CSTR:(ARG:0):7 = 
+	ELSE
+		CSTR:(ARG:0):2 = %RESULTS%
+		PRINTL (필요한 경우는) 읽기를 카타카나로 입력해 주세요
+		$INPUTS_LOOP4_1
+		INPUTS
+		IF CSTR:(ARG:0):2 == RESULTS
+			CSTR:(ARG:0):7 = 
+		ELSE
+			CSTR:(ARG:0):7 = %RESULTS%
+		ENDIF
+	ENDIF
+	GOTO SHOW_LOOP
+
+ELSEIF RESULT == 131
+	LOCAL:0 = TARGET
+	TARGET = ARG:0
+	CALL SET_MIDDLE_NAME
+	TARGET = LOCAL:0
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+
+ELSEIF RESULT == 132
+	CSTR:(ARG:0):2 = 
+	CSTR:(ARG:0):7 = 
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 140
+	PRINTL 설정하는 애칭을 입력해 주세요
+	INPUTS
+	CSTR:(ARG:0):98 = %RESULTS%
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 141
+	CSTR:(ARG:0):98 = 
+	GOTO SHOW_LOOP
+ELSEIF RESULT != 999 || (CALLNAME:(ARG:0) == "" && CSTR:(ARG:0):1 == "")
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+
+REDRAW 1
+
+PRINTL 이름은 어떤 형식으로 합니까?
+PRINTL [0] 명만（일본식·서양식）
+;PRINTL [1] 성명 맞추어（중화식풍）
+PRINTL [1] 성명 합쳐서（한국식）
+$INPUT_LOOP2
+INPUT
+IF RESULT == 0
+	PRINTFORMW 명만으로 설정했습니다
+	NAME:(ARG:0) = %CSTR:(ARG:0):1%
+ELSEIF RESULT == 1
+	PRINTFORMW 성명 합쳐로 설정했습니다
+	;성명을 맞추어 이름을 설정
+	NAME:(ARG:0) = %CSTR:(ARG:0):0%%CSTR:(ARG:0):1%
+ELSE
+	GOTO INPUT_LOOP2
+ENDIF
+
+;CALLNAME는 NAME와 동일하게
+CALLNAME:(ARG:0) = %NAME:(ARG:0)%
+
+
+;---------------------------------------------------------
+;랜덤에 아이의 이름을 설정하는 함수  ARG:0=아이의 캐릭터 번호
+;---------------------------------------------------------
+@RANDOM_CHILD_NAMING(ARG:0)
+LOCAL:4 = TARGET
+TARGET = ARG:0
+
+;부친, 모친의 캐릭터 번호를 취득
+LOCAL:5 = ID_TO_CHARA(CFLAG:24)
+LOCAL:6 = ID_TO_CHARA(CFLAG:21)
+
+;성의 설정(부친 우선)
+IF LOCAL:5 >= 0 && CSTR:(LOCAL:5):0 != ""
+	CSTR:0 = %CSTR:(LOCAL:5):0%
+	CSTR:5 = %CSTR:(LOCAL:5):5%
+	SIF TALENT:(LOCAL:5):성명역전
+		TALENT:성명역전 = 1
+ELSEIF LOCAL:6 >= 0 && CSTR:(LOCAL:6):0 != ""
+	CSTR:0 = %CSTR:(LOCAL:6):0%
+	CSTR:5 = %CSTR:(LOCAL:6):5%
+	SIF TALENT:(LOCAL:6):성명역전
+		TALENT:성명역전 = 1
+ENDIF
+
+;;성이 없게 부모가 동물 캐릭터라면 카타카나명
+;LOCAL:10 = (LOCAL:5 >= 0 && (TALENT:(LOCAL:5):동물귀 || TALENT:(LOCAL:5):꼬리))
+;LOCAL:11 = (LOCAL:6 >= 0 && (TALENT:(LOCAL:6):동물귀 || TALENT:(LOCAL:6):꼬리))
+;IF (LOCAL:10 || LOCAL:11) && CSTR:0 == ""
+;	;↓이것이라면 FAMILYNAME까지 설정되는 같은가
+;	;카나명의 결정
+;	;CALL SET_RANDOM_NAME_K(TALENT:성별)
+;	;명으로부터 NAME와 CALLNAME를 설정
+;	;NAME = %CSTR:1%
+;	;CALLNAME = %CSTR:1%
+;	
+;	;동방계는 성없음 또한 카나명이 아닌 동물 캐릭터가 상당히 많이 일괄로 카나명으로 하면 위화감이 나온다
+;	;미발표 바리안트로 자작한 카나 판정을 유용해 사용한다
+;	
+;	;부친 불명의 경우의 처리를 잘 몰랐기 때문에 모친 의존으로 해 버려라
+;	IF CHECK_KATAKANA(NAME:(LOCAL:6), 0)
+;		IF IS_MALE(ARG:0)
+;			CALL SET_FIRST_NAME_KM
+;		ELSE
+;			CALL SET_FIRST_NAME_KF
+;		ENDIF
+;		;명으로 NAME를 설정
+;		NAME = %CSTR:1%
+;		CALLNAME = %NAME%
+;		CSTR:3 = %CSTR:6%
+;	ELSE
+;		IF IS_MALE(ARG:0)
+;			CALL SET_FIRST_NAME_JM
+;		ELSE
+;			CALL SET_FIRST_NAME_JF
+;		ENDIF
+;		;명으로 NAME를 설정
+;		NAME = %CSTR:1%
+;		CALLNAME = %NAME%
+;		CSTR:3 = %CSTR:6%
+;	ENDIF
+;ELSE
+	SELECTCASE RAND:100
+		; 60% 확률로 일본식 이름
+		CASE 0 TO 60
+			IF IS_MALE(ARG:0)
+				CALL SET_FIRST_NAME_JM
+			ELSE
+				CALL SET_FIRST_NAME_JF
+			ENDIF
+			;명으로 NAME를 설정
+			NAME = %CSTR:1%
+			CALLNAME = %NAME%
+			CSTR:3 = %CSTR:6%
+		; 20% 확률로 한국식 이름
+		CASE 61 TO 80
+			IF IS_MALE(ARG:0)
+				CALL SET_FIRST_NAME_KRM
+			ELSE
+				CALL SET_FIRST_NAME_KRF
+			ENDIF
+			;명으로 NAME를 설정
+			NAME = %CSTR:1%
+			CALLNAME = %NAME%
+			CSTR:3 = %CSTR:6%
+		; 20% 확률로 서양식 이름
+		CASEELSE
+			IF IS_MALE(ARG:0)
+				CALL SET_FIRST_NAME_KM
+			ELSE
+				CALL SET_FIRST_NAME_KF
+			ENDIF
+			;명으로 NAME를 설정
+			NAME = %CSTR:1%
+			CALLNAME = %NAME%
+			CSTR:3 = %CSTR:6%
+	ENDSELECT
+;ENDIF
+
+TARGET = LOCAL:4
+
+;---------------------------------------------------------
+;모친에 의한 자동 육아 처리  ARG:0=모친의 캐릭터 번호, ARG:1=아이의 캐릭터 번호, ARG:2=육아기간
+;---------------------------------------------------------
+@MOTHER_AUTO_REARING(ARG:0, ARG:1, ARG:2)
+
+MPLY:0 = ARG:0
+MTAR:0 = ARG:1
+
+SIF IS_COUNTRY(CFLAG:(ARG:0):소속) && CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속
+	PRINTFORML %조사처리(ANAME(ARG:0),"는")% %조사처리(ANAME(ARG:1),"를")% 교육하고 있다……
+
+FOR LOCAL, 0, 5
+	SELECTCASE RAND:6
+		CASE 0
+			LOCAL:1 = GETNUM(ABL, "무투")
+		CASE 1
+			LOCAL:1 = GETNUM(ABL, "방위")
+		CASE 2
+			LOCAL:1 = GETNUM(ABL, "지략")
+		CASE 3
+			LOCAL:1 = GETNUM(ABL, "정치")
+		CASE 4
+			LOCAL:1 = GETNUM(ABL, "가창")
+		CASE 5
+			LOCAL:1 = GETNUM(ABL, "요리")
+	ENDSELECT
+	CALL COM_SLG_TRAIN_MAIN_PROCESS(LOCAL:1, 1)
+NEXT
+
+CALL TRAIN_AUTO_ABLUP(ARG:1, 1)
+
+;-----------------------------------------
+;상대의 아이를 낳았던 적이 있을까 조사한다
+;상대 전용을 세우고 신중히, 그 이외의 아이를 낳았던 적이 있는 경우에 0이 돌아가게 된다
+;-----------------------------------------
+@HAVE_GIVEN_BIRTH_ITS_CHILD(대상, 상대, 상대전용 = 0)
+#FUNCTION
+#DIM 대상
+#DIM 임신기록
+#DIM 상대
+#DIM 상대ID
+#DIM 상대의아이를낳은플래그
+#DIM 상대전용
+
+상대ID = GET_ID(상대)
+상대의아이를낳은플래그 = 0
+
+FOR 임신기록, 0, PREGNANT_RECORD_MAX
+	;전용 플래그가 서 있어, 상대 이외의 아이를 임신하고 있는 경우는 안 돼
+	IF 상대전용 && !GROUPMATCH(PREGNANT_RECORD_FATHER:대상:임신기록, 0, 상대ID)
+		RETURNF 0
+	ELSEIF PREGNANT_RECORD_FATHER:대상:임신기록 == 상대ID
+		상대의아이를낳은플래그 = 1
+	ENDIF
+NEXT
+
+RETURNF 상대의아이를낳은플래그

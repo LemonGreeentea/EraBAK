@@ -1,0 +1,388 @@
+﻿@TATTOO_MENU(대상, 편집모드 = 0)
+#DIM 대상
+#DIM 편집모드
+#DIM FIRST_LINE, 2
+FIRST_LINE = LINECOUNT
+
+FOR LOCAL, 0, VARSIZE("TATTOO")
+	IF IS_TATTOOED(대상, LOCAL:0)
+		PRINTBUTTON @"[{LOCAL:0}] %GET_TATTOO_NAME(LOCAL:0)% : %TATTOO:(대상):(LOCAL:0)%", LOCAL:0
+		PRINTL
+	ELSE
+		PRINTBUTTON @"[{LOCAL:0}] %GET_TATTOO_NAME(LOCAL:0), 8, LEFT%", LOCAL:0
+		PRINTBUTTON @"[{LOCAL:0 + 100}] %GET_TATTOO_NAME(LOCAL:0) + "(랜덤)", 20, LEFT%", LOCAL:0 + 100
+		PRINTL
+	ENDIF
+NEXT
+PRINTFORML [99] 돌아온다
+
+INPUT
+LOCAL:1 = RESULT
+IF LOCAL:1 == 99
+	PRINTFORML 역시 그만두었다
+	RETURN 0
+ELSEIF INRANGE(LOCAL:1, 0, VARSIZE("TATTOO") - 1) && CAN_TATTOO(대상, LOCAL:1)
+	PRINTFORML 뭐라고 조각해 넣습니까? (미입력으로 캔슬)
+	INPUTS
+	CALL SET_TATTOO(대상, LOCAL:1, RESULTS:0)
+	IF 편집모드
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RESTART
+	ELSE
+		RETURN 1
+	ENDIF
+ELSEIF INRANGE(LOCAL:1, 0, VARSIZE("TATTOO") - 1) && 편집모드
+	PRINTFORML %ANAME(대상)%의 %GET_TATTOO_NAME(RESULT:0)%의 문신을 소거했습니다
+	TATTOO:(대상):RESULT = 
+	CLEARLINE LINECOUNT - FIRST_LINE
+	RESTART
+ELSEIF INRANGE(LOCAL:1, 100, 99 + VARSIZE("TATTOO")) && CAN_TATTOO(대상, LOCAL:1 - 100)
+	FIRST_LINE:1 = LINECOUNT
+	$RANDOM_LOOP_TATTOO
+	LOCALS:0 = %STR_FOR_TATTOO(LOCAL:1 - 100)%
+	PRINTFORML 「%LOCALS:0%」를 조각해 넣는 것은 어떨까……
+	CALL ASK_MULTI("조각한다", "별의로", "그만둔다")
+	IF RESULT == 0
+		CALL SET_TATTOO(대상, LOCAL:1 - 100, LOCALS:0)
+		IF 편집모드
+			CLEARLINE LINECOUNT - FIRST_LINE
+			RESTART
+		ELSE
+			RETURN 1
+		ENDIF
+	ELSEIF RESULT == 1
+		CLEARLINE LINECOUNT - FIRST_LINE:1
+		GOTO RANDOM_LOOP_TATTOO
+	ELSEIF RESULT == 2
+		CLEARLINE LINECOUNT -FIRST_LINE
+		RESTART
+	ENDIF
+ENDIF
+
+CLEARLINE LINECOUNT - FIRST_LINE
+RESTART
+
+;---------------------------
+;ARG:0의 ARG:1번에 ARG:2로 문신을 넣는 함수
+;이미 들어가 있는 경우는 무리
+;ARG:2는 메세지를 표시하는 플래그
+;---------------------------
+@SET_TATTOO(ARG:0, ARG:1, ARGS:0, ARG:2 = 1)
+SIF !CAN_TATTOO(ARG:0, ARG:1)
+	RETURN 0
+SIF ARG:2
+CALL COLOR_PRINTW(@"%ANAME(ARG:0)%의 %GET_TATTOO_NAME(ARG:1)%에 「%ARGS:0%」가 새겨졌다……", 칼라_주의)
+TATTOO:(ARG:0):(ARG:1) = %ARGS:0%
+RETURN 1
+
+;---------------------------
+;ARG:0번의 캐릭터가, ARG:1번의 비트에 문신 할 수 있을까
+;---------------------------
+@CAN_TATTOO(ARG:0, ARG:1)
+#FUNCTION
+;범위외라면 불가
+SIF ARG:1 < 0 || VARSIZE("TATTOO") <= ARG:1
+	RETURNF 0
+;장착이 끝난 상태라면 불가
+SIF IS_TATTOOED(ARG:0, ARG:1)
+	RETURNF 0
+;그 이외는 통한다
+RETURNF 1
+
+;---------------------------
+;ARG:0번의 캐릭터가, 어디에서라도 좋으니까 문신 할 수 있을까
+;---------------------------
+@CAN_TATTOO_ANYWHERE(ARG:0)
+#FUNCTION
+FOR LOCAL, 0, VARSIZE("TATTOO")
+	SIF !IS_TATTOOED(ARG:0, LOCAL)
+		RETURNF 1
+NEXT
+RETURNF 0
+
+;---------------------------
+;ARG:0의 ARG:1 비트의 문신을 지우는 함수
+;지우면 1, 원래 없었으면 0이 돌아간다
+;문신에 대해서는 피어스와 달리, 게임내에서 유저가 임의에 삭제할 수 있는 정규의 방법을 줄 생각은 없다. 이 함수는 디버그용
+;라는 것으로, 이 함수를 사용하는 패치를 작성할 생각(분)편은 그근처 부탁합니다
+;---------------------------
+@REMOVE_TATTOO(ARG:0, ARG:1, ARG:2 = 1)
+IF IS_TATTOOED(ARG:0, ARG:1)
+	TATTOO:(ARG:0):(ARG:1) = 
+	RETURN 1
+ENDIF
+RETURN 0
+
+;---------------------------
+;TATTOO:캐릭터명:부위  의 부위의 각 번호에 대응하는 부위명을 돌려주는 함수
+;---------------------------
+@GET_TATTOO_NAME(ARG:0)
+#FUNCTIONS
+SELECTCASE ARG:0
+	CASE 문신_이마
+		RETURNF "이마"
+	CASE 문신_뺨
+		RETURNF "뺨"
+	CASE 문신_어깨
+		RETURNF "어깨"
+	CASE 문신_가슴
+		RETURNF "가슴"
+	CASE 문신_등
+		RETURNF "등"
+	CASE 문신_배
+		RETURNF "배"
+	CASE 문신_비부
+		RETURNF "비부"
+	CASE 문신_엉덩이
+		RETURNF "엉덩이"
+	CASE 문신_넙적다리
+		RETURNF "넙적다리"
+	CASE 문신_발목
+		RETURNF "발목"
+	CASEELSE
+		RETURNF "불명"
+ENDSELECT
+
+;---------------------------
+;ARG:0의 ARG:1 부위의 문신의 유무를 조사하는 함수
+;---------------------------
+@IS_TATTOOED(ARG:0, ARG:1)
+#FUNCTION
+SIF ARG:1 < 0 || VARSIZE("TATTOO") <= ARG:1
+	RETURNF 0
+RETURNF TATTOO:(ARG:0):(ARG:1) != ""
+
+;---------------------------
+;ARG:0에, ARG:2 ~ ARG:12번의 우선순서로 ARGS:0의 문신을 넣는 함수
+;ARG:1을 1으로 한다고 메세지를 표시.
+;일부만 설정한다든가 말하는 것도 할 수 있다
+;달았을 경우는, 조각한 문신의 부위 번호가 돌아간다
+;---------------------------
+@SET_TATTOO_RANKED(ARG:0, ARGS:0, ARG:1, ARG:2 = 99, ARG:3 = 99, ARG:4 = 99, ARG:5 = 99, ARG:6 = 99, ARG:7 = 99, ARG:8 = 99, ARG:9 = 99, ARG:10 = 99, ARG:11 = 99)
+FOR LOCAL:0, 2, VARSIZE("TATTOO") + 2
+	CALL SET_TATTOO(ARG:0, ARG:(LOCAL:0), ARGS:0, ARG:1)
+	SIF RESULT
+		RETURN ARG:(LOCAL:0)
+NEXT
+RETURN -1
+
+;---------------------------
+;ARG:0번의 캐릭터의, 랜덤인 부위에 문신을 넣는다
+;ARG:1은 메세지 표시 플래그. 0이라면 비표시.
+;반환값은 단 부위 번호
+;어디도 비어있지 않았으면-1이 돌아오므로, 그근처 생각하지 않고 단순하게 RESULT를 GET_TATTOO_NAME에 걸치거나 하지 않는 달각달닥
+;---------------------------
+@SET_TATTOO_RANDOM(ARG:0, ARGS:0, ARG:1  = 1)
+#DIM 빈자리, VARSIZE("TATTOO")
+#DIM 빈수
+VARSET 빈자리, -1
+VARSET 빈수
+
+FOR LOCAL, 0, VARSIZE("TATTOO")
+	IF CAN_TATTOO(ARG:0, LOCAL:0)
+		빈자리:빈수 = LOCAL:0
+		빈수 ++
+	ENDIF
+NEXT
+
+;어디도 비어있지 않았으면-1
+SIF 빈수 == 0
+	RETURN -1
+
+LOCAL = 빈자리:(RAND:빈수)
+CALL SET_TATTOO(ARG:0, LOCAL, ARGS:0, ARG:1)
+SIF RESULT
+	RETURN LOCAL
+;아마 오지 않을 것
+RETURN -1
+;---------------------------
+;ARG:0번의 캐릭터가 붙이고 있는 문신에 대해, PRINT 한다
+;---------------------------
+@PRINT_TATTOO(ARG:0)
+LOCAL:1 = 0
+FOR LOCAL:0, 0, VARSIZE("TATTOO")
+	IF IS_TATTOOED(ARG:0, LOCAL:0)
+		LOCAL:1 = 1
+		BREAK
+	ENDIF
+NEXT
+
+IF !LOCAL:1
+	PRINTFORM 없음
+	RETURN
+ENDIF
+
+FOR LOCAL:0, 0, VARSIZE("TATTOO")
+	IF IS_TATTOOED(ARG:0, LOCAL:0)
+		PRINTFORM <%GET_TATTOO_NAME(LOCAL:0)% : %TATTOO:(ARG:0):(LOCAL:0)%>  
+	ENDIF
+NEXT
+
+;---------------------
+;ARG:0번의 부위 번호에 대응하는 랜덤인 문신용 문자열을 돌려준다
+;TATTOO_SAMPLE_LIST_COMMON에 하나는 들어가 있지 않으면 에러 초월하므로 주의
+;---------------------
+@STR_FOR_TATTOO(ARG:0)
+#FUNCTIONS
+SIF ARG:0 < -1 || VARSIZE("TATTOO") <= ARG:0
+	THROW STR_FOR_TATTOO의 인수에 이상한 수치가 건네받았습니다 인수:{ARG:0}
+IF RAND:2 && 0 < ARG:0 && TATTOO_SAMPLE_ADDRESS:(ARG:0)
+	RETURNF TATTOO_SAMPLE_LIST:(ARG:0):(RAND:(TATTOO_SAMPLE_ADDRESS:(ARG:0)))
+ELSE
+	RETURNF TATTOO_SAMPLE_LIST_COMMON:(RAND:TATTOO_SAMPLE_COMMON_ADDRESS)
+ENDIF
+
+;---------------------
+;각 부위 번호에 대응하는 랜덤인 문신용 문자열을 준비한다
+;---------------------		
+@CREATE_TATTOO_LIST
+CALL ADD_TATTOO_SAMPLE(-1, "육변기")
+CALL ADD_TATTOO_SAMPLE(-1, "범죄자")
+CALL ADD_TATTOO_SAMPLE(문신_이마, "육")
+CALL ADD_TATTOO_SAMPLE(-1, "창녀")
+CALL ADD_TATTOO_SAMPLE(-1, "더치 와이프")
+CALL ADD_TATTOO_SAMPLE(-1, "공중변소")
+CALL ADD_TATTOO_SAMPLE(-1, "성노예")
+CALL ADD_TATTOO_SAMPLE(-1, "빗치")
+CALL ADD_TATTOO_SAMPLE(-1, "변태")
+CALL ADD_TATTOO_SAMPLE(-1, "치녀")
+CALL ADD_TATTOO_SAMPLE(-1, "색마녀")
+CALL ADD_TATTOO_SAMPLE(-1, "암캐")
+CALL ADD_TATTOO_SAMPLE(-1, "오나홀녀")
+CALL ADD_TATTOO_SAMPLE(-1, "마조")
+CALL ADD_TATTOO_SAMPLE(-1, "진검승부 에로 무")
+CALL ADD_TATTOO_SAMPLE(-1, "음란")
+CALL ADD_TATTOO_SAMPLE(-1, "정액중독")
+CALL ADD_TATTOO_SAMPLE(-1, "섹스 중독")
+CALL ADD_TATTOO_SAMPLE(-1, "자위원숭이")
+CALL ADD_TATTOO_SAMPLE(-1, "모판")
+CALL ADD_TATTOO_SAMPLE(-1, "노리겟감")
+CALL ADD_TATTOO_SAMPLE(-1, "음란 가축녀")
+CALL ADD_TATTOO_SAMPLE(-1, "무  료")
+CALL ADD_TATTOO_SAMPLE(-1, "색광")
+CALL ADD_TATTOO_SAMPLE(-1, "정액 거지")
+CALL ADD_TATTOO_SAMPLE(-1, "직업:변기")
+CALL ADD_TATTOO_SAMPLE(-1, "나는 가축입니다")
+CALL ADD_TATTOO_SAMPLE(-1, "펫")
+CALL ADD_TATTOO_SAMPLE(문신_엉덩이, "정액으로 관장해")
+CALL ADD_TATTOO_SAMPLE(-1, "노출광")
+CALL ADD_TATTOO_SAMPLE(문신_엉덩이, "애널 미치광이")
+CALL ADD_TATTOO_SAMPLE(문신_가슴, "변태젖")
+CALL ADD_TATTOO_SAMPLE(문신_뺨, "입보지")
+CALL ADD_TATTOO_SAMPLE(문신_가슴, "젖보지")
+CALL ADD_TATTOO_SAMPLE(문신_엉덩이, "엉덩이 보지")
+CALL ADD_TATTOO_SAMPLE(-1, "외에 사정하지 말아 주세요")
+CALL ADD_TATTOO_SAMPLE(-1, "뿌려 주세요")
+CALL ADD_TATTOO_SAMPLE(문신_비부, "유르만 사용해 주세요")
+CALL ADD_TATTOO_SAMPLE(문신_비부, "그로만")
+CALL ADD_TATTOO_SAMPLE(문신_엉덩이, "엉덩이 섹스 최고")
+CALL ADD_TATTOO_SAMPLE(-1, "전신 개발이 끝난 상태")
+CALL ADD_TATTOO_SAMPLE(문신_비부, "질내사정 전용")
+CALL ADD_TATTOO_SAMPLE(문신_엉덩이, "애널 변소")
+CALL ADD_TATTOO_SAMPLE(문신_비부, "자궁 범해")
+CALL ADD_TATTOO_SAMPLE(문신_비부, "변태 보지")
+CALL ADD_TATTOO_SAMPLE(-1, "I LOVE SEX")
+CALL ADD_TATTOO_SAMPLE(-1, "정액 탱크")
+CALL ADD_TATTOO_SAMPLE(-1, "자지 의존증")
+CALL ADD_TATTOO_SAMPLE(-1, "촉수 의존증")
+CALL ADD_TATTOO_SAMPLE(-1, "정액 의존증")
+CALL ADD_TATTOO_SAMPLE(-1, "암퇘지")
+CALL ADD_TATTOO_SAMPLE(-1, "특기·아헤얼굴")
+CALL ADD_TATTOO_SAMPLE(-1, "드브스로 미안해요")
+CALL ADD_TATTOO_SAMPLE(-1, "육 인형")
+CALL ADD_TATTOO_SAMPLE(-1, "나는 변태입니다")
+CALL ADD_TATTOO_SAMPLE(-1, "정자 베풀어♥")
+CALL ADD_TATTOO_SAMPLE(-1, "I LOVE FUCKING")
+CALL ADD_TATTOO_SAMPLE(-1, "좋아하는 것:정액")
+CALL ADD_TATTOO_SAMPLE(-1, "좋아하는 것:자지")
+CALL ADD_TATTOO_SAMPLE(문신_넙적다리, "정")
+CALL ADD_TATTOO_SAMPLE(문신_넙적다리, "정정")
+CALL ADD_TATTOO_SAMPLE(문신_넙적다리, "정정정")
+CALL ADD_TATTOO_SAMPLE(문신_넙적다리, "정정정정")
+CALL ADD_TATTOO_SAMPLE(문신_넙적다리, "정정정정정")
+CALL ADD_TATTOO_SAMPLE(문신_넙적다리, "정정Ｔ")
+CALL ADD_TATTOO_SAMPLE(문신_넙적다리, "정정쇼우이치")
+CALL ADD_TATTOO_SAMPLE(-1, "자지님이 절대 복종")
+CALL ADD_TATTOO_SAMPLE(-1, "자지의 신부")
+CALL ADD_TATTOO_SAMPLE(-1, "자지 노예")
+CALL ADD_TATTOO_SAMPLE(문신_비부, "FUCK ME♥")
+CALL ADD_TATTOO_SAMPLE(-1, "RAPE ME♥")
+CALL ADD_TATTOO_SAMPLE(-1, "기분 좋지 않았으면 사과하는♥")
+CALL ADD_TATTOO_SAMPLE(-1, "씨뿌리기 최고♥")
+CALL ADD_TATTOO_SAMPLE(-1, "일생 성노예로 좋은♥")
+CALL ADD_TATTOO_SAMPLE(-1, "언제라도 사용해♥")
+CALL ADD_TATTOO_SAMPLE(-1, "윤간 희망♥")
+CALL ADD_TATTOO_SAMPLE(-1, "노예 지원♥")
+CALL ADD_TATTOO_SAMPLE(-1, "강간 환영♥")
+CALL ADD_TATTOO_SAMPLE(-1, "오자지 대환영♥")
+CALL ADD_TATTOO_SAMPLE(-1, "자지로 뚫어♥")
+CALL ADD_TATTOO_SAMPLE(-1, "섹스 도망 환영♥")
+CALL ADD_TATTOO_SAMPLE(문신_가슴, "파이즈리 시켜 주세요♥")
+CALL ADD_TATTOO_SAMPLE(문신_비부, "자궁 부비부비 해♥")
+CALL ADD_TATTOO_SAMPLE(-1, "정액 먹여♥")
+CALL ADD_TATTOO_SAMPLE(-1, "수간 너무 좋아♥")
+CALL ADD_TATTOO_SAMPLE(-1, "♥♥♥♥♥")
+CALL ADD_TATTOO_SAMPLE(문신_비부, "질내사정 전용 보지")
+CALL ADD_TATTOO_SAMPLE(-1, "범해 주세요 부탁하는♥")
+CALL ADD_TATTOO_SAMPLE(-1, "목표로 해라!   섹스 100만회♥")
+CALL ADD_TATTOO_SAMPLE(문신_비부, "마마로 해♥")
+CALL ADD_TATTOO_SAMPLE(문신_가슴, "유두도 괴롭혀♥")
+CALL ADD_TATTOO_SAMPLE(문신_비부, "신품")
+CALL ADD_TATTOO_SAMPLE(문신_비부, "중고")
+CALL ADD_TATTOO_SAMPLE(문신_비부, "헐렁보지로 미안해요♥")
+CALL ADD_TATTOO_SAMPLE(문신_배, "파파 모집중♥")
+CALL ADD_TATTOO_SAMPLE(문신_배, "임신 머신")
+CALL ADD_TATTOO_SAMPLE(문신_비부, "임신 무렵 노예 보지")
+CALL ADD_TATTOO_SAMPLE(-1, "공짜 섹스 OK♥")
+CALL ADD_TATTOO_SAMPLE(-1, "두 구멍 꾸짖고 해♥")
+CALL ADD_TATTOO_SAMPLE(-1, "파코리손")
+CALL ADD_TATTOO_SAMPLE(문신_뺨, "틴너무 좋아♥")
+CALL ADD_TATTOO_SAMPLE(-1, "범해지는 것 너무 좋아♥")
+CALL ADD_TATTOO_SAMPLE(-1, "인간 변기")
+CALL ADD_TATTOO_SAMPLE(-1, "정액 변소")
+CALL ADD_TATTOO_SAMPLE(-1, "♥")
+CALL ADD_TATTOO_SAMPLE(-1, "★")
+CALL ADD_TATTOO_SAMPLE(문신_비부, "무료")
+CALL ADD_TATTOO_SAMPLE(문신_엉덩이, "무료")
+CALL ADD_TATTOO_SAMPLE(-1, "♪")
+CALL ADD_TATTOO_SAMPLE(문신_비부, "insert free")
+CALL ADD_TATTOO_SAMPLE(문신_엉덩이, "insert free")
+CALL ADD_TATTOO_SAMPLE(-1, "자유롭게 사용해 주세요")
+CALL ADD_TATTOO_SAMPLE(-1, "일발백엔")
+CALL ADD_TATTOO_SAMPLE(-1, "일발백엔(내가 지불하는♥)")
+CALL ADD_TATTOO_SAMPLE(-1, "일발 10엔")
+CALL ADD_TATTOO_SAMPLE(-1, "【장미의 마크】")
+CALL ADD_TATTOO_SAMPLE(-1, "【나비의 마크】")
+CALL ADD_TATTOO_SAMPLE(-1, "【도쿠로의 마크】")
+CALL ADD_TATTOO_SAMPLE(-1, "【스페이드의 에이스】")
+CALL ADD_TATTOO_SAMPLE(-1, "강간해♥")
+CALL ADD_TATTOO_SAMPLE(-1, "【반야의 모양】")
+CALL ADD_TATTOO_SAMPLE(-1, "【올라 용】")
+CALL ADD_TATTOO_SAMPLE(-1, "보지 마음껏 사용")
+CALL ADD_TATTOO_SAMPLE(-1, "노예")
+CALL ADD_TATTOO_SAMPLE(-1, "에로녀")
+CALL ADD_TATTOO_SAMPLE(-1, "범해♥")
+CALL ADD_TATTOO_SAMPLE(-1, "bitch")
+CALL ADD_TATTOO_SAMPLE(-1, "마조돼지")
+CALL ADD_TATTOO_SAMPLE(-1, "수간녀")
+CALL ADD_TATTOO_SAMPLE(-1, "윤간 중독")
+CALL ADD_TATTOO_SAMPLE(-1, "야크중")
+CALL ADD_TATTOO_SAMPLE(-1, "낳는 기계")
+CALL ADD_TATTOO_SAMPLE(-1, "임신 머신")
+
+
+
+;---------------------
+;각 부위 번호에 대응하는 랜덤인 문신용 문자열을 추가한다
+;---------------------		
+@ADD_TATTOO_SAMPLE(ARG:0, ARGS:0)
+IF ARG:0 == -1 && TATTOO_SAMPLE_COMMON_ADDRESS < VARSIZE("TATTOO_SAMPLE_LIST_COMMON")
+	TATTOO_SAMPLE_LIST_COMMON:(TATTOO_SAMPLE_COMMON_ADDRESS) = %ARGS:0%
+	TATTOO_SAMPLE_COMMON_ADDRESS ++
+ELSEIF 0 <= ARG:0 && ARG:0 < VARSIZE("TATTOO_SAMPLE_LIST") && TATTOO_SAMPLE_ADDRESS:(ARG:0) < VARSIZE("TATTOO_SAMPLE_LIST", 1)
+	TATTOO_SAMPLE_LIST:(ARG:0):(TATTOO_SAMPLE_ADDRESS:(ARG:0)) = %ARGS:0%
+	TATTOO_SAMPLE_ADDRESS:(ARG:0) ++
+ELSE
+	RETURN 0
+ENDIF
+RETURN 1

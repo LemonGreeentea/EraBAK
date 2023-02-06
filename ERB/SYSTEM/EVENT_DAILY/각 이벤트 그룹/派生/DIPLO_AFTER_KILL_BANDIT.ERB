@@ -1,0 +1,99 @@
+﻿;---------------------
+;대응하는 데일리의 DISABLE를 돌려준다. 설정하지 않는 경우, 이벤트는 발생하지 않는다.
+;---------------------
+@EVENT_DAILY_DERIVATION_AFTER_KILL_BANDIT_DISABLE()
+RETURN DAILY_GET_DISABLE_CONFIG("REQUEST_CHARA")
+
+
+;---------------------
+;발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;대응하는 데일리의 DISABLE 체크를 규약으로서 필수로 한다
+;---------------------
+@EVENT_DAILY_DERIVATION_AFTER_KILL_BANDIT_DECISION()
+SIF ID_TO_CHARA(DVAR:사관요구_도둑베어버리기플래그) != -1
+	RETURN 1
+RETURN 0
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_DERIVATION_AFTER_KILL_BANDIT()
+#DIM 대상
+대상 = ID_TO_CHARA(DVAR:사관요구_도둑베어버리기플래그)
+CALL SINGLE_DRAWLINE
+PRINTFORMW 위병의 눈을 속여, 복수의 남자가 궁정에 잠입했다……
+PRINTFORMW 복도를 걷고 있었던 %ANAME(대상)%에 배후로부터 소리없이 다가와, 약을 스며들게 한 옷감을 머리로부터 씌운다
+PRINTFORMW 축 늘어진 %조사처리(ANAME(대상),"를")% 마대에 담으면, 남자들은 궁정으로부터 도망치기 시작했다……
+PRINTFORML
+PRINTFORML
+PRINTFORML
+PRINTFORMW 남자들의 정체는 도둑이었다
+PRINTFORMW %조사처리(ANAME(MASTER),"가")% 사용의 사람을 베었으므로, 보복하는 김에 %조사처리(ANAME(대상),"를")% 납치한 것이다
+PRINTFORMW 아지트로 돌아간 그들은, 골아떨어진 %ANAME(대상)%의 옷을 벗겨내면, 조속히 그 신체를 「사용」시작했다……
+FLAG:턴엔드조교 = 3
+FLAG:위안장소 = 위안_행선지_도둑의아지트
+CVARSET CFLAG, GETNUM(CFLAG, "위안참가자") , 0
+CVARSET CFLAG, GETNUM(CFLAG, "조교참가플래그") , 0
+CFLAG:대상:조교참가플래그 = 1
+FOR LOCAL, 0, 5
+	CALL CREATE_IAN_MOB(위안_행선지_도둑의아지트, LOCAL + 1)
+NEXT
+CALL ADD_EVENTTRAIN_CALLEE("AFTER_KILL_BANDIT_BEFORE_TRAIN")
+CALL ADD_EVENTEND_CALLEE("AFTER_KILL_BANDIT_AFTER_TRAIN_A")
+DAILY_CANCEL = 1
+
+RETURN 1
+
+
+@EVENTTRAIN_AFTER_KILL_BANDIT_BEFORE_TRAIN
+TFLAG:56 = 30
+
+@EVENTEND_AFTER_KILL_BANDIT_AFTER_TRAIN_A
+#DIM 대상
+대상 = ID_TO_CHARA(DVAR:사관요구_도둑베어버리기플래그)
+
+PRINTFORMW %조사처리(ANAME(대상),"가")% 눈을 뜨면, 거기는 기억에 없는 방이었다
+PRINTFORMW 한가닥의 실 휘감지 않은 스스로의 신체는 밧줄로 속박되어 낯선 남자들에게 모여지고 있다
+PRINTFORMW 백탁 투성이가 된 피부는, 자신이 이 남자들에게 몇 번이나 능욕된 것을 나타내고 있다……
+PRINTFORMW %조사처리(ANAME(대상),"는")% 어떻게든 도망치기 시작하려고 하지만, 속박되고 있어 한층 더 남자들이 억눌려져서는 어쩔 수 없었다
+PRINTFORMW 남자들은 실실 웃으면서, 예의 범절이 되지 않은 암캐를 굴복 시키려고, 다시 그녀를 범하기 시작한다……
+FLAG:턴엔드조교 = 3
+FLAG:위안장소 = 위안_행선지_도둑의아지트
+CVARSET CFLAG, GETNUM(CFLAG, "위안참가자") , 0
+CVARSET CFLAG, GETNUM(CFLAG, "조교참가플래그") , 0
+CFLAG:대상:조교참가플래그 = 1
+FOR LOCAL, 0, 5
+	CALL CREATE_IAN_MOB(위안_행선지_도둑의아지트, LOCAL + 1)
+NEXT
+CALL ADD_EVENTTRAIN_CALLEE("AFTER_KILL_BANDIT_BEFORE_TRAIN")
+CALL ADD_EVENTEND_CALLEE("AFTER_KILL_BANDIT_AFTER_TRAIN_B")
+DAILY_CANCEL = 1
+
+RETURN 1
+
+
+
+
+@EVENTEND_AFTER_KILL_BANDIT_AFTER_TRAIN_B
+#DIM 대상
+대상 = ID_TO_CHARA(DVAR:사관요구_도둑베어버리기플래그)
+
+PRINTFORMW ……조교는 간신히 끝난 것 같다
+PRINTFORMW 격렬한 능욕에 기력이 다한 %조사처리(ANAME(대상),"는")%, 그 양구멍으로부터 백탁을 뚝뚝 흘려 보내면서, 때때로 경련할 뿐이 되어 있다
+PRINTFORML 이지만, 도둑들이 이것으로 만족할 리도 없었다
+PRINTFORML 그들은 %ANAME(대상)%에 고농도의 약을 뽑는다. 그러자, 그녀의 피로는 시원스럽게 바람에 날아가, 신체는 더 이상 없게 고조되기 시작했다
+PRINTFORMW 보여지고 있는 것도 잊은 것처럼, 암컷구멍을 손가락으로 질척질척 휘젓기 시작한 %조사처리(ANAME(대상),"를")%, 남자들은 껄껄 웃어 버린다
+PRINTFORML 우리의 노예로서 보낸다면, 자지 정도 얼마든지 주겠어?
+PRINTFORML 그처럼 말해져, %조사처리(ANAME(대상),"는")% 1도 2에도 없고 동의 해 버렸다
+PRINTFORMW 그 대답에 만족한 것처럼, 남자들은 %ANAME(대상)%에 목걸이를 끼웠다……
+PRINTFORML
+SETCOLOR 칼라_경고
+PRINTFORMW %조사처리(ANAME(대상),"가")% 도둑의 성노예가 되었습니다
+RESETCOLOR
+CALL SINGLE_DRAWLINE
+CALL CHANGE_COUNTRY(대상, GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_도둑)))
+EXP:대상:윤간경험 += RAND(25, 50)
+DVAR:사관요구_도둑베어버리기플래그 = 0
+
+RETURN 1

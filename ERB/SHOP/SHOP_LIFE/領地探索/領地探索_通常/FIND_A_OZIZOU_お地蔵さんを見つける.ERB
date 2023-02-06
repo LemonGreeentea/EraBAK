@@ -1,0 +1,48 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_FIND_A_OZIZOU_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_FIND_A_OZIZOU_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_FIND_A_OZIZOU(대상)
+#DIM 대상
+
+PRINTFORML 외딴 길가에, 쇠퇴해진 지장씨를 찾아냈다
+PRINTFORML 왕래가 적은 길인 것으로, 잊혀져 방치되어 있을 것이다
+
+PRINTL
+CALL ASK_MULTI("청소해 준다", "공양을 한다", "방치한다")
+
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 이대로는 불쌍함
+		PRINTFORML %조사처리(ANAME(대상),"는")% 청소해 주기로 했다
+		PRINTFORML ……지쳤지만 조금 전보다 대단히 좋게 되었다
+		PRINTFORMW 좋은 기분으로 거점에 돌아왔다
+		CALL ADD_COOLTIME(대상, 1)
+		MAXBASE:대상:체력 += 100
+		CALL COLOR_PRINTW(@"체력 최대치가 100올라, {MAXBASE:대상:체력}가 되었다", 칼라_주의)
+	CASE 1
+		PRINTFORML 소지의 과자를 갖추어 손을 모았다
+		PRINTFORMW …마음 탓인지 기분이 좋아진 것 같다
+		MAXBASE:대상:체력 += 50
+		CALL COLOR_PRINTW(@"체력 최대치가 50올라, {MAXBASE:대상:체력}가 되었다", 칼라_주의)
+	CASE 2
+		PRINTFORML 귀찮기 때문에 방치하자
+		PRINTFORMW 일단 손을 모아, 그 자리를 떠났다
+ENDSELECT
+
+RETURN 1
+

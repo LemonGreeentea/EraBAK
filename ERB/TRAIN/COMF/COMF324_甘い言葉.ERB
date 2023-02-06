@@ -1,0 +1,235 @@
+﻿;달콤한 말
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME324
+RESULTS:0 = 달콤한 말을 건다
+RESULTS:1 = 달콤한 말을 졸라진다
+RESULTS:2 = 달콤한 말을 조른다
+RESULTS:3 = 달콤한 말을 속삭여진다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE324
+;공통 부분
+CALL COM_ABLE_COMMON(324)
+SIF RESULT == 0
+	RETURN 0
+;주인공 이외가 실행하는 경우, 호감도가 1500이상 필요
+SIF MPLY:0 != MASTER && CFLAG:(MPLY:0):2 < 1500
+	RETURN 0
+;상처라면 불가
+SIF CFLAG:(MTAR:0):행동불능상태 == 3
+	RETURN 0
+;키스중은 불가
+SIF IS_EQUIP(MPLY:0, 342)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM324
+;실행 판정
+CALL COM_ORDER_COMMON
+IF RESULT == 0
+	RETURN 0
+ENDIF
+
+IF MPLY:0 == MASTER
+	;커맨드의 성공 여부를 TFLAG:18에 세트
+	CALL JUDGE_COM_RESULT(MTAR:0, 5, 10)
+ELSE
+	;커맨드의 성공 여부를 TFLAG:18에 세트
+	CALL JUDGE_COM_RESULT(MPLY:0, 5, 10)
+ENDIF
+
+;호감도 500 미만이라면 확실히 실패
+IF MPLY:0 == MASTER && CFLAG:(MTAR:0):2 < 500
+	TFLAG:18 = -1
+ENDIF
+
+;주도권에 응한 우월·수동의 소스 추가
+CALL ADD_SOURCE_INITIATIVE_N(MPLY:0, 70, 70)
+CALL ADD_SOURCE_INITIATIVE_N(MTAR:0, 70, 70)
+
+;친밀하게 응한 환락의 소스 추가
+SOURCE:(MPLY:0):환락 = -50
+SOURCE:(MTAR:0):환락 = -50
+CALL ADD_SOURCE_KANRAKU(MPLY:0, 90)
+CALL ADD_SOURCE_KANRAKU(MTAR:0, 90)
+SOURCE:(MPLY:0):환락 = MAX(SOURCE:(MPLY:0):환락, 0)
+SOURCE:(MTAR:0):환락 = MAX(SOURCE:(MTAR:0):환락, 0)
+
+;친밀하게 응한 애정의 소스 추가
+CALL ADD_SOURCE_AIZYOU(MPLY:0, 150)
+CALL ADD_SOURCE_AIZYOU(MTAR:0, 150)
+
+;실패
+IF TFLAG:18 == -1
+	TIMES SOURCE:(MPLY:0):환락, 0.10
+	TIMES SOURCE:(MPLY:0):우월, 0.50
+	TIMES SOURCE:(MPLY:0):애정, 0.10
+	TIMES SOURCE:(MTAR:0):환락, 0.10
+	TIMES SOURCE:(MTAR:0):우월, 0.50
+	TIMES SOURCE:(MTAR:0):애정, 0.10
+	SOURCE:(MPLY:0):반감 += 100
+	SOURCE:(MTAR:0):반감 += 100
+	SOURCE:(MPLY:0):불만 += 800
+	SOURCE:(MTAR:0):불만 += 800
+	TFLAG:37 -= 8
+;성공
+ELSEIF TFLAG:18 == 0
+
+;대성공
+ELSE
+	TIMES SOURCE:(MPLY:0):환락, 2.00
+	TIMES SOURCE:(MPLY:0):우월, 2.00
+	TIMES SOURCE:(MPLY:0):애정, 2.00
+	TIMES SOURCE:(MTAR:0):환락, 2.00
+	TIMES SOURCE:(MTAR:0):우월, 2.00
+	TIMES SOURCE:(MTAR:0):애정, 2.00
+	TFLAG:37 += 8
+ENDIF
+
+;주도도 변화 기준치
+TFLAG:49 = 3
+
+;도착도 변화 기준치
+TFLAG:50 = -1
+
+RETURN 1
+
+;-------------------------------------------------
+;고유의 실행 판정(플레이어측)
+;-------------------------------------------------
+@COM_ORDER_PLAYER324(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 40
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 2)
+
+;호감도
+LOCAL:0 = CFLAG:(ARG:0):2 / 75
+CALL COM_ORDER_ELEMENT(ARG:0, @"호감도", LOCAL:0)
+
+IF TALENT:(ARG:0):수치심옅음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수치심옅음", 4)
+ENDIF
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -6)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 2)
+ENDIF
+IF TFLAG:54
+	CALL COM_ORDER_ELEMENT(ARG:0, "데이트중", 7)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE324
+;플레이어가 주인공측
+IF MPLY:0 == MASTER
+	;주도권이 주인공측
+	IF IS_INITIATIVE(MASTER)
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 이빨이 뜨는 것 같은 달콤한 말을 걸었다
+
+		IF TFLAG:18 == 1
+			IF TALENT:(MTAR:0):반항적 || TALENT:(MTAR:0):거만함 || TALENT:(MTAR:0):보수적
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 말을 차가운 태도로 받아 넘겼지만, 기쁨을 숨기지 못하고 때때로 미소를 흘리고 있다…
+			ELSE
+				IF GROUPMATCH(TALENT:(MTAR:0):성별, 0, 3)
+					PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 얼굴을 새빨갛게 하면서도, 행복하게 %조사처리(ANAME(MPLY:0),"를")% 껴안았다…
+				ELSE
+					PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 얼굴을 새빨갛게 하면서도, 행복하게 %ANAME(MPLY:0)%에 껴안았다…
+				ENDIF
+			ENDIF
+		ELSEIF TFLAG:18 == 0
+			IF TALENT:(MTAR:0):반항적 || TALENT:(MTAR:0):거만함 || TALENT:(MTAR:0):보수적
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 돌연 무슨 말을 하고 있는지 %조사처리(ANAME(MPLY:0),"를")% 매도했지만, 그 표정은 그렇지만도 않은 것 같다…
+			ELSE
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 돌연의 말에, 얼굴을 새빨갛게 해 당황하고 있다…
+			ENDIF
+		ELSEIF TFLAG:18 == -1
+			IF TALENT:(MTAR:0):반항적 || TALENT:(MTAR:0):거만함 || TALENT:(MTAR:0):보수적
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 오물을 볼 것 같은 눈으로 %조사처리(ANAME(MPLY:0),"를")% 보았다…
+			ELSE
+				PRINTFORML 이지만, %ANAME(MTAR:0)%에 성대하게 끌려 버렸다…
+			ENDIF
+		ENDIF
+	;주도권이 상대측
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 요구에 응해, 생각나는 한 달콤한 말을 걸었다
+
+		IF TFLAG:18 == 1
+			IF TALENT:(MTAR:0):반항적 || TALENT:(MTAR:0):거만함 || TALENT:(MTAR:0):보수적
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 냉정을 가장하고 있지만, 완전히 얼굴을 새빨갛게 해, 가슴의 두근거림을 숨기지 못하고 있다…
+			ELSE
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 예상 외로 두근두근 해 버린 것 같고, 얼굴을 새빨갛게 해 %조사처리(ANAME(MPLY:0),"를")% 응시했다…
+			ENDIF
+		ELSEIF TFLAG:18 == 0
+			IF TALENT:(MTAR:0):반항적 || TALENT:(MTAR:0):거만함 || TALENT:(MTAR:0):보수적
+				PRINTFORML %ANAME(MTAR:0)%에 일단은 만족 해 주어진 것 같다…
+			ELSE
+				PRINTFORML 아무래도 %조사처리(ANAME(MTAR:0),"는")% 만족한 것 같고, %ANAME(MPLY:0)%에 향하여 미소지었다…
+			ENDIF
+		ELSEIF TFLAG:18 == -1
+			IF TALENT:(MTAR:0):반항적 || TALENT:(MTAR:0):거만함 || TALENT:(MTAR:0):보수적
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 좀 더 착실한 일은 말할 수 없는 것인지 라며 %조사처리(ANAME(MPLY:0),"를")% 매도했다…
+			ELSE
+				PRINTFORML 이지만, %조사처리(ANAME(MTAR:0),"는")% 반응이 곤란해 눈을 피해 버렸다…
+			ENDIF
+		ENDIF
+	ENDIF
+
+
+;플레이어가 상대측
+ELSE
+	;주도권이 주인공측
+	IF IS_INITIATIVE(MASTER)
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 요구에 응해, 생각나는 한 달콤한 대사를 걸어 왔다
+
+		IF TFLAG:18 == 1
+			PRINTFORML %조사처리(ANAME(MTAR:0),"가")% %조사처리(ANAME(MPLY:0),"를")% 칭찬하면, %조사처리(ANAME(MTAR:0),"는")% 행복하게 미소지었다…
+		ELSEIF TFLAG:18 == 0
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 부끄러운 나머지 얼굴을 새빨갛게 하고 있다…
+		ELSEIF TFLAG:18 == -1
+			PRINTFORML 이지만, %조사처리(ANAME(MPLY:0),"는")% 부끄러운 나머지 잠자코 있어 버렸다…
+		ENDIF
+	;주도권이 상대측
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 이빨이 뜨는 것 같은 달콤한 말을 걸어 왔다
+
+		IF TFLAG:18 == 1
+			PRINTFORML %조사처리(ANAME(MTAR:0),"와")% %조사처리(ANAME(MPLY:0),"는")% 분위기에 흐르게 되는 대로, 서로를 가만히 서로 응시했다…
+		ELSEIF TFLAG:18 == 0
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 반응을 보고 즐기고 있다…
+		ELSEIF TFLAG:18 == -1
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 반응이 얇은 것에 등져 버렸다…
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;-------------------------------------------------
+@COM_TEXT_LAST324
+;일상 커맨드에 공통의 지문
+;CALL COM_TEXT_LAST_LIFE
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN324
+RETURN 커맨드_일상

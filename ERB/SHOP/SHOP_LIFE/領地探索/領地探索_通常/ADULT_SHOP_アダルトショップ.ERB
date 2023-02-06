@@ -1,0 +1,97 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_ADULT_SHOP_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_ADULT_SHOP_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_ADULT_SHOP(대상)
+#DIM 대상
+
+PRINTFORMW 신경이 쓰인다 분위기의 가게를 보기 시작해, %조사처리(ANAME(대상),"는")% 들어가 보았다
+PRINTFORMW 점안은 어슴푸레하게 어수선해 점주다운 남자가 흘깃 이쪽을 노려본다
+
+IF IS_MALE(대상)
+	PRINTFORMW 대충 점내를 돌아봤지만, 특별히 바뀐 것은 없는 것 같다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 조속히 가게를 뒤로 했다
+	RETURN 1
+ENDIF
+
+PRINTFORML 남은 품평 하도록(듯이) 이쪽을 바라보면, 용돈 돈벌이를 하지 않는가?   와 물어 왔다
+PRINTFORML 어떻게 말하는 것인가 물으면, 히죽히죽 웃으면서 앨범을 내며 온다
+PRINTFORML 성숙한 소녀들의 치태를 거둔 사진이, 빽빽이 붙여지고 있다
+PRINTFORMW 아무래도 이러한 의심스러운 것을 판매하고 있는 것 같다
+PRINTFORML
+CALL ASK_MULTI("거절한다", "누드 사진을 촬영한다", "자위 사진을 촬영한다", "섹스 촬영 사진을 촬영한다", "섹스 촬영 영상을 촬영한다")
+
+LOCAL = RESULT
+IF LOCAL == 0
+	PRINTFORML 그런 일이 생길 리도 없다
+	PRINTFORMW 단호히 거절해, 가게를 뒤로 했다
+	RETURN 0
+ENDIF
+
+PRINTFORML 그런 일은, 이라고 생각하면서도, 앨범으로부터 눈을 떼어 놓을 수 없다
+PRINTFORMW 그녀들의 치태를 보고 있으면, 부러움을 기억해 버린다
+PRINTFORMW 잠깐 고민한 후, %조사처리(ANAME(대상),"는")% 점주의 제안을 받아들인다
+PRINTFORMW 간들거리는 점주에 이끌려 가게의 안쪽에 들어갔다
+PRINTFORML 
+SELECTCASE LOCAL
+	CASE 1
+		PRINTFORMW 한가닥의 실 휘감지 않은 %ANAME(대상)%의 %STR_BODY("신체", 대상)%를, 카메라가 비추어 간다
+		PRINTFORMW 팔을 생각이라고 대어, %STR_BODY("가슴:애무", 대상)%를 강조한다
+		PRINTFORMW 크게 다리를 벌리고 %STR_BODY("음순:처녀 확인", 대상)%를 과시한다
+		PRINTFORMW 그처럼 단정치 못한 모습을 기록에 남겨질 때, %ANAME(대상)%의 신체는 뜨겁게 쑤시고 있었다……
+		CALL FUCK(대상, "노출")
+		PRINTFORMW 
+		PRINTFORML 며칠 후, 가게의 라인 업에 %ANAME(대상)%의 사진집이 더해졌다
+		PRINTFORMW 거둘 수 있었던 %PRONOUN(대상)%는 모두 미소를 띄우고 있어 몇개의 사진에서는 비밀스런 장소로부터 흘러넘치는 애액이 비치고 있었다
+	CASE 2
+		PRINTFORMW 스튜디오에 주문할 수 있었던 침대 위에서, %조사처리(ANAME(대상),"는")% 치태를 드러내고 있다
+		PRINTFORMW 당초는 긴장하고 있었던 %조사처리(ANAME(대상),"이지만")%, 자위의 쾌락의 전에 완전히 녹고 있었다
+		PRINTFORMW %STR_BODY("가슴:애무", 대상)%를 뭉그러뜨려,\@ HAS_PENIS(대상) ? 페니스를 다뤄 간다 # %STR_BODY("클리:욕정", 대상)%를 만지작거린다\@
+		PRINTFORMW 셔터소리가 울릴 때, %조사처리(ANAME(대상),"는")% 높은 소리를 질러 좋아한다
+		PRINTFORMW 상스럽게 절정 하는 모양도, 남기는 곳 없게 기록에 남겨졌다……
+		CALL FUCK(대상, "자위, Ｃ, Ｂ, 노출" + (HAS_PENIS(대상) ? ", 사정" # ""))
+		PRINTFORMW
+		PRINTFORML 며칠 후, 가게의 라인 업에 %ANAME(대상)%의 사진집이 더해졌다
+		PRINTFORMW 후일 보내져 온 사진집에 %조사처리(ANAME(대상),"는")% 촬영시를 생각해 내, 한사람 자위에 빠졌다
+	CASE 3
+		PRINTFORMW 스튜디오에 주문할 수 있었던 침대 위에서, %조사처리(ANAME(대상),"는")% 점주의 준비한 남자와 사귀고 있다
+		PRINTFORMW 그의 기술은 교묘해, 당초는 긴장하고 있었던 %ANAME(대상)%도, 완전히 탕그라고 있었다
+		PRINTFORMW %STR_BODY("가슴:성교:정상위", 대상)%나 결합부가 근접 촬영되어 %조사처리(ANAME(대상),"는")% 수치와 함께 강한 쾌락에 허덕인다
+		PRINTFORMW 점차 %PRONOUN(대상)%는 촬영되는 것 그것에 쾌락을 발견해, 셔터소리가 울릴 때 교성을 준다
+		PRINTFORMW 남으로부터의 질내사정을 받아 절정 하는 모양, 육봉을 뽑아 내진 질로부터 자식이 걸죽 흘러넘치는 모양도, 제대로 사진에 남겨졌다……
+		CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교, 노출, 매춘", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("AV남배우"), @"AV남배우의 \@RAND:2 ? 페니스 # 입술\@", "AV남배우", "", "촬영중의 매춘")
+		PRINTFORMW
+		PRINTFORML 며칠 후, 가게의 라인 업에 %ANAME(대상)%의 사진집이 더해졌다
+		PRINTFORMW 사진집은 가게의 인기 상품이 되어, %ANAME(대상)%의 상관없는 곳으로 많은 남자의 밤의 수행이 되었다
+	CASE 4
+		PRINTFORMW 스튜디오에 주문할 수 있었던 침대 위에서, %조사처리(ANAME(대상),"는")% 점주의 준비한 남자와 사귀고 있다
+		PRINTFORMW 그의 기술은 교묘해, 당초는 긴장하고 있었던 %ANAME(대상)%도, 완전히 탕그라고 있었다
+		PRINTFORMW %STR_BODY("가슴:성교:정상위", 대상)%나 결합부가 근접 촬영되어 %조사처리(ANAME(대상),"는")% 수치와 함께 강한 쾌락에 허덕인다
+		PRINTFORMW 점차 %PRONOUN(대상)%는 촬영되는 것 그것에 쾌락을 발견해, 카메라에 시선을 향하면서 스스로 허리를 구불거리게 할 수 있다
+		PRINTFORMW 남으로부터의 질내사정을 받아 절정 하는 모양, 육봉을 뽑아 내진 질로부터 자식이 걸죽 흘러넘치는 모양도, 제대로 촬영되었다……
+		CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교, 노출, 매춘", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("AV남배우"), @"AV남배우의 \@RAND:2 ? 페니스 # 입술\@", "AV남배우", "", "촬영중의 매춘")
+		EXP:대상:촬영경험 += 5
+		PRINTFORMW
+		PRINTFORML 며칠 후, 가게의 라인 업에 %ANAME(대상)%의 비디오가 더해졌다
+		PRINTFORMW 비디오는 가게의 인기 상품이 되어, %ANAME(대상)%의 상관없는 곳으로 많은 남자의 밤의 수행이 되었다
+ENDSELECT
+
+
+MONEY += LOCAL * 1000
+CALL ICPRINT(@"출연료로 해서 돈<{LOCAL * 1000}>를 받았다", "L", 칼라_주의)
+
+RETURN 1

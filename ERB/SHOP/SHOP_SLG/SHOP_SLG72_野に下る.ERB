@@ -1,0 +1,49 @@
+﻿;-------------------------------------------------
+;「하야한다」의 명칭
+;-------------------------------------------------
+@SHOP_SLG_NAME72
+RESULTS:0 '= "하야한다"
+
+;-------------------------------------------------
+;「하야한다」의 선택 가부
+;-------------------------------------------------
+@SHOP_SLG_CHECK72
+SIF CFLAG:MASTER:소속 == 0
+	RETURN 0
+SIF GET_COUNTRY_BOSS(CFLAG:MASTER:소속) == MASTER
+	RETURN 0
+SIF PLAYER_HIRED_COUNTER != 0
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「하야한다」의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_SLG_EVENTBUY72
+CALL SHOP_RESIGN
+RETURN 1
+
+;-------------------------------------------------
+;「하야한다」본체
+;-------------------------------------------------
+@SHOP_RESIGN()
+CALL SINGLE_DRAWLINE
+PRINTFORML %ANAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))%의 원을 떠나, 들에 물러납니다
+PRINTFORML 정말로 좋습니까?
+CALL ASK_YN()
+IF RESULT == 0
+	ARRAYSHIFT COUNTRY_PLAYER_BELONGED, 1, 0
+	COUNTRY_PLAYER_BELONGED:0 = CFLAG:MASTER:소속
+	PRINTFORMW 하야 했습니다
+	IF MATCH(COUNTRY_PLAYER_BELONGED, 0) < VARSIZE("COUNTRY_PLAYER_BELONGED") - 2
+		CALL COLOR_PRINTW(@"소속을 전전으로 하는 %조사처리(ANAME(MASTER),"는")%, 제국으로부터 경계되고 있습니다", 칼라_경고)
+		FOR LOCAL, 0, MAX_COUNTRY
+			SIF IS_COUNTRY(LOCAL)
+				CALL CHANGE_RELATION_C_TO_O(LOCAL, MASTER, RAND(-100, -50), RAND(50, 100))
+		NEXT
+	ENDIF
+	CALL CHANGE_COUNTRY(MASTER, 0, 1)
+ELSE
+	PRINTFORMW 단념했습니다
+ENDIF
+

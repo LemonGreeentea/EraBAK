@@ -1,0 +1,253 @@
+﻿;--------------------------------------
+;턴 엔드시의 홉고블린의 처리
+;--------------------------------------
+@TURNEND_GOBLIN
+#DIM 홉고블린
+홉고블린 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_홉고블린)
+
+;병력의 증가하는 처리
+IF DAY % 3 == 0
+	CALL SINGLE_DRAWLINE
+	LOCAL:0 = MAX(RAND:3000, 1000)
+	LOCAL:0 += RAND:500 * SP_COUNTRY_RANK:(특수세력_홉고블린)
+	PRINTFORML 홉고블린에 붙으면 넘쳐 흐름을 맡을 수 있다고 들은 들요괴들이, 차례차례로 돌아눕고 있는 것 같습니다……
+	PRINTFORML 홉고블린의 병력이 {LOCAL:0} 증가했다
+	COUNTRY_SOLDIER:홉고블린 += LOCAL:0
+ENDIF
+;4턴에 1회, 특별한 징병
+CALL GOBLIN_SPECIAL_REQRUITMENT(DAY % 4 == 0)
+
+;--------------------------------------
+;멸망시의 처리
+;--------------------------------------
+@GOBLIN_DESTROY_MSG
+CALL SINGLE_DRAWLINE
+SETCOLOR 칼라_주의
+PRINTFORML
+PRINTFORML
+PRINTFORML
+PRINTFORMW 괴멸적인 피해를 받은 홉고블린은, 뿔뿔이에 산산조각 해 나갔습니다
+PRINTFORMW 야쿠모 유카리가 「째☆（멸）」한 것 같은 것으로, 한동안은 얌전하게 하고 있는 것이지요……
+PRINTFORML
+PRINTFORML
+PRINTFORML
+RESETCOLOR
+
+;--------------------------------------
+;홉고블린의 초기화 처리
+;--------------------------------------
+@GOBLIN_INIT(ARG:0)
+#DIM LCOUNT
+VARSET LOCAL
+
+SIF GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_홉고블린) != -1
+	RETURN 0
+
+SIF SP_COUNTRY_RANK:특수세력_홉고블린 == 0
+	RETURN 0
+
+SIF GET_NEW_COUNTRY() == -1
+	RETURN 0
+
+CALL CREATE_SP_COUNTRY(특수세력_홉고블린)
+
+RETURN RESULT
+
+;--------------------------------------
+;홉고블린의 정기 이벤트.
+;함락이 끝난 캐릭터를 사용해 병수를 늘린다
+;--------------------------------------
+@GOBLIN_SPECIAL_REQRUITMENT(조건 = 1)
+#DIM 고블린
+#DIM 조건
+#DIM 후보, 3000
+#DIM 후보수
+#DIM 대상
+#DIM 메세지
+VARSET 후보, -1
+VARSET 후보수
+
+고블린 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_홉고블린))
+
+;고블린 세력이 있어, 조건을 채우고 있다
+SIF 고블린 == -1 || !조건
+RETURN -1
+
+FOR LOCAL, 0, CHARANUM
+	;고블린 소속으로, 포로가 아니고, 함락완료
+	IF CFLAG:LOCAL:소속 == 고블린 && !CFLAG:LOCAL:포로처 && IS_FEMALE(LOCAL) && GETBIT(TALENT:LOCAL:특수세력함락계, 특수세력_홉고블린)
+		후보:후보수 = LOCAL
+		후보수 ++
+	ENDIF
+NEXT
+
+SIF 후보수 < 1
+	RETURN -1
+
+CALL FISHER_YATES_SHAFFLE(후보수)
+
+대상 = 후보:(SHAFFLE_ARRAY:0)
+
+SIF 대상 == -1 && CONFIG:200
+	RETURN -1
+
+CALL SINGLE_DRAWLINE
+SETCOLOR 칼라_핑크
+PRINTFORML 홉고블린은\@CONFIG:200 ? # %조사처리(ANAME(대상),"를")%,\@병사의 모집 활동에 끌어낸 것 같다……
+PRINTFORML 
+메세지 = CONFIG:200 ? 4 # RAND:4
+SELECTCASE 메세지
+	CASE 0
+		PRINTFORMW 그들은 가까이의 마을에 내질렀다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 그들의 한 걸음 뒤를 걸어, 수행하고 있다
+		PRINTFORML 쫙 보고는 평상시의 그녀이며, 매우 보통이었다
+		PRINTFORMW ……그 발걸음은, %조사처리(ANAME(대상),"으로")%서는 드물 정도(수록) 휘청거리고 있었지만
+		PRINTFORML 그들은 마을의 중심, 광장까지 오면, 거기서 마을의 남자들을 모았다
+		PRINTFORML 무슨 일일까하고 생각한 구경꾼이 인 요 묻지 않고 모여, 광장은 눈 깜짝할 순간에 메워진다
+		PRINTFORMW 거기서 홉고블린은, 전원에게 자주(잘) 들리도록, 큰 소리로 스피치를 시작했다
+		PRINTFORMW 우리들에게 참가하면 굉장히 좋은 일이 있다. 그것을 오늘은 보여 준다……
+		PRINTFORML 홉고블린이 %ANAME(대상)%에 눈짓 하면, 그녀는 조용히 옷을 벗어 던졌다
+		PRINTFORML 갑자기 공공연하게 되는 아름다운 지체에, 모두의 눈은 못박음이 된다
+		PRINTFORMW \@ TATTOO:(대상):문신_비부 != "" ? 그 아랫배에는 「%TATTOO:대상:문신_비부%」의 문신이 새겨져 # \@양구멍에는 굵은 바이브가 쑤셔 넣어지고 있었다
+		PRINTFORML 이 여자는 우리의 노예다. 오늘은 이 녀석을 데려 왔지만, 그 밖에도 여자는 얼마든지 있다……
+		PRINTFORML %ANAME(대상)%에 당신의 육봉을 빨게 하면서, 홉고블린들은 권유의 말을 늘어놓는다
+		PRINTFORMW 이윽고 홉고블린은 사정해, %ANAME(대상)%의 얼굴에 털어 놓으면, %조사처리(ANAME(대상),"를")% 안아, 군중중에 내던진다
+		PRINTFORMW 이 여자는 서비스다. 마음대로 해도 좋아
+		PRINTFORMW 홉고블린이 그렇게 말하면, 남자들은 눈빛을 바꾸어, %ANAME(대상)%에 모였다……
+	CASE 1
+		CALL SET_PIERCE_RANDOM(대상, 0)
+		SIF RESULT == -1
+			RESULT = 피어스_유두
+		PRINTFORMW 그들은 가까이의 마을에 내질렀다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 리드포함의 목걸이를 끼울 수 있어 마을의 번화가를 걸어지고 있다
+		PRINTFORML 구에는 재갈볼을 끼워져 걸쳐입고 있는 것은 중요한 곳을 전혀 숨기지 않는 노예용 본디지
+		PRINTFORML 전신에는 여기저기에 추잡한 낙서가 베풀어지고 있다. 게다가 %GET_PIERCE_NAME(RESULT)%에 딱한 피어스가 장착되고 있다
+		PRINTFORMW 거점을 나오기 전에 몇 번이나 「사용되어」내려 전신 흠뻑흰 것 투성이가 되어 있다. 특히 그 양구멍은, 나와라 나오라고 백탁을 흘려 보낸다
+		PRINTFORML 팔에는 튼튼한 형벌 도구를 끼워지고 있어 저항 따위 할 수 있을 리도 없었다
+		PRINTFORMW 가장, 홉고블린 "모양"들의 충실머슴인 %ANAME(대상)%에, 그런 엄청난 생각은 없을 것이지만……
+		PRINTFORML 마을의 남자들은, 대열지어 걷는 그들을 가만히 바라보고 있다
+		PRINTFORMW 정확하게는, %ANAME(대상)%의 추잡한 모습을
+		PRINTFORMW 홉고블린은 히죽히죽 웃으면서 말한다
+		PRINTFORML 우리의 노예가 그렇게 신경이 쓰인다인가, 우리들에게 참가하면 이 녀석 이외에도 해 마음껏이다
+		PRINTFORMW 특별히 이번은, 너희들에게 이 녀석을 좋아하게 시켜 준다……
+		PRINTFORMW 홉고블린이 그렇게 말하면, 남자들은 눈빛을 바꾸어, %ANAME(대상)%에 모였다……
+	CASE 2
+		PRINTFORMW 그들은 %조사처리(ANAME(대상),"를")%, 다른 노예와 함께 육변기로서 제공했다
+		PRINTFORMW 그녀들은 옥외에 설치된 「특설 변소」에서, 벽고 상태로 비치할 수 있었다
+		PRINTFORML 인 요 묻지 않고, 다양한 남자들이 방문해서는, %ANAME(대상)%의 양구멍을 사용해 간다
+		PRINTFORML 스스로 물건을 다뤄 휴지에 사정할 때의 가벼움으로, 간단하게 질내사정 해 나간다
+		PRINTFORMW 일회용피학과 쾌락에, %조사처리(ANAME(대상),"는")% 몇 번이나 격렬하게 절정 한다……
+		PRINTFORMW 이윽고 것이 끝나는 무렵에는, %ANAME(대상)%의 %STR_BODY("엉덩이", 대상)%에는 양손에 남는 정의 글자가 기입해지고 있었다
+		PRINTFORML 그녀의 구멍은 큰 일 평판이 좋았던 것 같다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 그 「포상」으로서, 홉고블린 "모양"들의 것을 한껏 빨게 해 받았다……
+	CASE 3
+		PRINTFORMW 그들은 %조사처리(ANAME(대상),"를")%, 다른 노예와 함께 육변기로서 제공했다
+		PRINTFORML 그녀들은 옥외에 설치된 「특설 변소」에서, 그로리호르를 한 것 같다
+		PRINTFORMW 인 요 묻지 않고, 다양한 남자들이 방문해서는, 벽 너머에 페니스를 내밀어 온다
+		PRINTFORML 굵은 것, 가는 것, 씩씩한 것으로부터 치구를 모은 것
+		PRINTFORML 그것들 모두를, %조사처리(ANAME(대상),"는")% 얼굴을 녹여, 가랑이를 적시면서 빨아 간다
+		PRINTFORMW 관능의 불길은 %ANAME(대상)%중(안)에서 격렬하게 불타올라, 그녀는 업무중에 몇 번이나 자위를 해, 절정 했다
+		PRINTFORMW 이윽고 것이 끝나는 무렵에는, 몇 번이나 백탁을 받은 상반신에, 희게 더러워지지 않은 곳은 없을만큼 되어 있었다
+		PRINTFORML 그녀의 입 기술은 큰 일 평판이 좋았던 것 같다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 그 「포상」으로서, 쑤시는 신체를 홉고블린 "모양"들에게 한껏 사용해 받았다……
+ENDSELECT
+
+PRINTFORML
+SETCOLOR 칼라_주의
+LOCAL:0 = MAX(RAND:3000, 1000)
+PRINTFORML 캠페인은 호평이었던 것 같다……
+PRINTFORMW 홉고블린의 병력이 {LOCAL:0} 증가했다
+RESETCOLOR
+COUNTRY_SOLDIER:(고블린) += LOCAL:0
+
+;-----------------------------
+;홉고블린에 잡혔을 때의 이벤트
+;-----------------------------
+@MASTER_CAPTURED_GOBLIN(ARG:0)
+PRINTFORMW 잡힌 %조사처리(ANAME(MASTER),"는")% 홉고블린의 앞에 끌어내졌다…
+IF IS_MALE(MASTER)
+	PRINTFORMW 홉고블린은 %조사처리(ANAME(MASTER),"를")% 보면, 남자 같은거 필요하지 않은데라고 중얼거렸다
+	PRINTFORMW 우리들의 곁에 도착한다면, 좋은 생각을 시켜 주겠어?   라고 말했다
+	PRINTFORMW 노예라는 취급으로는 되는 것 같지만, 거부한다보다 대우는 좋게 되는 것 같다……
+	PRINTFORMW 받아들입니까?
+	CALL ASK_YN("받아들인다", "거부한다")
+	IF RESULT == 0
+		PRINTFORMW 투옥되는 것보다는 좋을 것이다. %조사처리(ANAME(MASTER),"가")% 수긍하면, 홉고블린은 나막신 나막신과 웃는다
+		PRINTFORMW 무엇을 웃고 있는지 의심하는 %ANAME(MASTER)%에, 노예로서의 증거를 붙여 줄게와 그들은 말하기 시작했다
+		PRINTFORMW 준비된 인두는, 당치 않게, %ANAME(MASTER)%의 페니스에 꽉 누를 수 있었다……
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 홉고블린의 성노예가 되었습니다
+		RESETCOLOR
+	ELSE
+		PRINTFORMW 너희들 따위에 손을 빌려 줄까. %조사처리(ANAME(MASTER),"는")% 의연히 해 단언한다	
+		PRINTFORMW 그런가와 그들은 그대로 흥미없는 것같이, %조사처리(ANAME(MASTER),"를")% 투옥했다……
+	ENDIF
+ELSEIF GETBIT(TALENT:MASTER:특수세력함락계, 특수세력_홉고블린)
+	PRINTFORMW 질리지 않고 우리들의 앞에 왔는지와 그들은 %ANAME(MASTER)%의 신체에 손을 기게 하면서 속삭인다
+	PRINTFORMW 그것만으로 %ANAME(MASTER)%의 신체는, 그들에게 새겨진 쾌락을 생각해 내 젖어 버린다
+	PRINTFORMW %ANAME(MASTER)%의 소리가 달콤하게 녹기 시작했을 무렵, 또 우리들에게 올까?   와 그들은 묻는다
+	PRINTFORMW 받아들입니까?
+	CALL ASK_YN("받아들인다", "거부한다")
+	IF RESULT == 0
+		PRINTFORMW 그들에 의해 길러내진 암컷의 본성이, %조사처리(ANAME(MASTER),"를")% 수긍하게 했다
+		PRINTFORMW 어서 오세요라는 말을 %ANAME(MASTER)%에 걸치면, 홉고블린은 그 목에 가축용의 목걸이를 끼웠다……
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")%, 홉고블린의 성노예라는 신분을 생각해 냈다
+		RESETCOLOR
+	ELSE
+		PRINTFORMW 거부된다는 일은 생각에 없었던 것 같고, 홉고블린들은 잠깐 의외인 것처럼 하고 있었다
+		PRINTFORMW 이윽고 그 표정을 분노로 바꾸면, 감옥에서 자신의 입장이라는 것을 생각나게 해 줄게와 내뱉었다
+		PRINTFORMW 홉고블린들은 %ANAME(MASTER)%에 쇠사슬과 족쇄를 끼워, 투옥했다……
+	ENDIF
+ELSE
+	PRINTFORMW 홉고블린은 %ANAME(MASTER)%의 몸을 추잡한 눈으로 바라본다.
+	PRINTFORMW 우리들의 성노예가 될 것을 맹세한다면, 행동의 자유를 어느 정도는 인정해 준다고 하기 시작했다……
+	PRINTFORMW 굴욕적인 제안이지만, 받아들이지 않고도, 여자인 %ANAME(MASTER)%의 말로는 같을 것이다
+	PRINTFORMW 받아들입니까?
+	CALL ASK_YN("받아들인다", "거부한다")
+	IF RESULT == 0
+		PRINTFORMW 받아들이지 않아도, 어차피 범해지는 것은 보이고 있다. %조사처리(ANAME(MASTER),"는")% 힘 없게 수긍한다.
+		PRINTFORMW 그렇게 오지 않으면와 홉고블린은 천하게 보인 미소를 띄웠다
+		PRINTFORMW %ANAME(MASTER)%의 신체에, 성노예로서의 소인이 새겨졌다……
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 홉고블린의 성노예가 되었습니다
+		RESETCOLOR
+	ELSE
+		PRINTFORMW 그런 일이 생길까. %조사처리(ANAME(MASTER),"가")% 단호히거부한다와 홉고블린은 얼굴을 찡그린다
+		PRINTFORMW 아 그런가, 감옥에서 1만회 정도나들, 너도 입장이라는 것을 알 수 있을 것이다 마을 내뱉었다
+		PRINTFORMW 홉고블린들은 %ANAME(MASTER)%에 쇠사슬과 족쇄를 끼워, 투옥했다……
+	ENDIF
+ENDIF
+IF RESULT == 0
+	CALL CHANGE_COUNTRY(MASTER, ARG:0, 1)
+	SETBIT TALENT:MASTER:특수세력함락계, 특수세력_홉고블린
+	CALL PLAYER_FALLEN_TO_SP_COUNTRY(ARG:0)
+	RETURN 0
+ELSE
+	CALL CAPTURE(MASTER, ARG:0)
+	RETURN 2
+ENDIF
+
+;--------------------------------------
+;엔딩
+;--------------------------------------
+@GOBLIN_ENDING
+PRINTFORML 홉고블린들의 저력은, 환상향을 전복시킬 정도의 것이었다
+PRINTFORML 유명한 강자들은 수의 폭력전에 구축되어 그들에게 잡혀 갔다
+PRINTFORMW ……그리고, 그들이 환상향의 지배자가 되는 날이, 드디어 방문했다
+PRINTFORML 그들의 거점에, 소녀들의 교성이 울려 퍼진다
+PRINTFORML 처음은 저항하고 있던 그녀들도, 홉고블린의 강렬한 성욕에 의한, 철저한 조교전에, 어느덧 굽히고 있었다
+PRINTFORMW 지금은 그녀들은, 그들이 사용할 수 있는 무가치인 성노예에 지나지 않는다. 거기에, 한 때의 모습 따위 없었다……
+IF CFLAG:MASTER:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_홉고블린) && IS_FEMALE(MASTER)
+	PRINTFORMW 
+	PRINTFORML ……노예들 속에, %ANAME(MASTER)%의 모습도 있었다
+	PRINTFORMW 홉고블린들에게 둘러싸지면서, 열심히 허리를 흔들고 있다
+	PRINTFORML 질 구멍이 꽤 좋은 상태라고 소문난 그녀는, 노예들중에서도 비교적 좋은 취급을 받고 있었다
+	PRINTFORMW ……노예로 해서는, 라는 단서 서로 돌출하지만
+	PRINTFORML 두 구멍에, 그리고 입에 육봉을 무는 그녀의 머릿속에는, 종을 붙일 수 있는 것, 그리고 임신하는 것에의 기대 밖에 없었다
+	PRINTFORMW 자궁을 찔러지고 절정 하는 %조사처리(ANAME(MASTER),"를")% 뒷전으로, 홉고블린은 사납게 허리를 흔들고 싶어서 간다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")%, 견딜 수 없다고 한 소리를 질러 몇 번이나 발해지는 정액을 고기구멍으로 받아 들여 간다
+	PRINTFORMW 끝날리가 없는 기쁨에, %조사처리(ANAME(MASTER),"는")% 계속 앞으로도 잠긴다……
+ENDIF
+PRINTFORML 
+PRINTFORMW 이미 구세주 따위 없는 땅에, 그저 여자의 교성이 계속 울려 퍼진다……

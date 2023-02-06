@@ -1,0 +1,65 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_FURIN_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_FURIN_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_FURIN(대상)
+#DIM 대상
+
+PRINTFORMW 술집에서 한사람 마시고 있는 손님과 서로 이웃
+PRINTFORML 어떻게 하지?
+PRINTL
+CALL ASK_YN("말을 건다" ,"방치한다")
+IF RESULT == 1
+	PRINTFORML 아무래도 꽤 취하고 있는 것 같다
+	PRINTFORMW 귀찮게 안 되게 떨어졌다
+	RETURN
+ENDIF
+PRINTFORMW 한사람이라면 외롭기 때문에 말을 걸었다
+PRINTFORML 하지만 손님은 이미 몹시 취하고 있어 관련술에 맞대졌다
+IF IS_MALE(대상) || (HAS_PENIS(대상) && RAND:2)
+	PRINTFORML 그녀는 남편과의 관계가 차가워지고 있는 것 같다
+	PRINTFORML 오늘도 싸움을 해 홧술을 하고 있다라는 일이다
+	PRINTFORMW 만취하는 그녀에게 껴안아진 %조사처리(ANAME(대상),"는")% 어쩔 수 없이 함께 마시는 일로 했다
+	PRINTFORML 
+	PRINTFORML %ANAME(대상)%들은 호텔의 한 방으로 침대를 삐걱거리게 하면서 짐승과 같이 서로 같이 탐내고 있다
+	PRINTFORML 그 후%조사처리(ANAME(대상),"는")% 완전히 만취한 그녀에게 요구되는 대로 호텔에 들어갔다
+	PRINTFORML 그녀는 머리카락을 흩뜨리면서 격렬하게 허리를 흔들어, %ANAME(대상)%의 이름을 불러 요구해 온다
+	PRINTFORML 격렬하고 교묘한 허리자세에 하나의 물건을 자극 받으며, 참지 못하고 그녀의 허리를 강하게 잡아 버린다
+	PRINTFORMW 참지 못하고 그녀에게 요구되는 대로 허리를 쳐박아, 몇 번이나 그 중에 정액을 발했다……
+	CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", "스침의 여자의 질", "화간")
+	PRINTFORML 
+	PRINTFORML 충분히 즐긴 후, 새벽전에 호텔을 나왔다
+	PRINTFORMW 그녀는 마지막에 %ANAME(대상)%에 키스를 해 연락처를 건네주면 빠른 걸음에 떠나 갔다
+	RETURN
+ENDIF
+PRINTFORML 그는 아내라고 싸움해 홧술 하고 있는 것 같다
+PRINTFORML 아내와의 관계가 차가워져 고민하고 있다든가
+PRINTFORMW 만취하는 그에게 어깨를 안긴 %조사처리(ANAME(대상),"는")% 어쩔 수 없이 함께 마시는 일로 했다
+PRINTFORML 
+PRINTFORML %ANAME(대상)%들은 호텔의 한 방으로 격렬하게 침대를 삐걱거리게 하면서 짐승과 같이 서로 같이 탐내고 있다
+PRINTFORML 그 후 만취한 %조사처리(ANAME(대상),"는")% 그에게 요구되는 대로 호텔에 데리고 들어가져 버렸다
+PRINTFORMW 그는 귓전으로 %ANAME(대상)%의 이름을 부르면서 격렬하게 허리를 쳐박고 질의 구석구석까지 유린해 온다
+PRINTFORML 구멍의 안쪽을 울퉁불퉁 될 때에 의식이 날아, 기분 좋은 나머지 그에게 매달려 버린다
+PRINTFORML %조사처리(ANAME(대상),"는")% 야무지지 못한 아헤얼굴을 쬐면서 체내에서 날뛰는 씩씩한 자지의 감각에 미친듯이 자지러지는 신음소리를 낸다
+PRINTFORML 땀투성이가 되면서 계속 사귀어, 임신의 리스크도 잊고 기뻐해 몇 번이나 질내사정 된다
+PRINTFORMW 불륜 섹스에 불탄 %ANAME(대상)%들은 정신을 잃을 때까지 끝없이 섹스에 몰두했다……
+CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교, 노출", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("지나가는 남자"), @"지나가는 남자의 \@RAND:2 ? 페니스 # 입술\@", "지나가는 남자", "", "제정신을 잃은 끝의 화간")
+PRINTFORML 
+PRINTFORML 어느새인가 정신을 잃고 있었던 %조사처리(ANAME(대상),"는")%, 그의 팔 중(안)에서 아침을 맞이했다
+PRINTFORMW 그에게 마음에 들었던 %조사처리(ANAME(대상),"는")% 억지로 연락처를 (들)물어 거절하지 못했다
+
+RETURN 1

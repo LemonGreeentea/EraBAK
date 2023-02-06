@@ -1,0 +1,62 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_SLAVE_MERCHANT_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_SLAVE_MERCHANT_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_SLAVE_MERCHANT(대상)
+#DIM 대상
+
+PRINTFORML 영내를 순회하고 있으면, 쇠사슬에 연결될 수 있었던 아이들을 거느리는 남자를 만났다
+PRINTFORML 만류해 이야기를 들으면, 노예 상인인것 같다
+PRINTFORML 친척이 없는 고아들을 잡아 팔러 가는 곳이라든가
+PRINTFORML 하필이면, 아이들을 사지 않을까 걸어 왔다
+
+PRINTL
+CALL ASK_MULTI_JUDGE("금 3000으로 한사람 매입한다", MONEY >= 3000, "금 10000으로 전원 매입한다", MONEY >= 10000, "방치한다", 1)
+
+SELECTCASE RESULT
+	CASE 0
+	PRINTFORML 교섭의 끝, 한사람 매입하기로 했다
+	CALL ICPRINT("금<3000>을 지불했다", "L", 칼라_주의)
+	MONEY -= 3000
+	PRINTFORML
+	PRINTFORMW 조속히 아가씨를 자기 방에 데리고 들어가면, 소녀의 신체를 마음껏 맛보았다
+	IF HAS_PENIS(대상)
+		CALL FUCK(대상, "성기술, 성교, Ｃ, 사정, Ｖ삽입" + (IS_FEMALE(대상) ? ", Ｂ, Ｖ, 레즈" # "") , "동정상실, 키스상실", 0, "노예 소녀의 입술", "", "노예 소녀의 질", "화간")
+	ELSE
+		CALL FUCK(대상, "성기술, 성교, Ｃ, Ｂ, Ｖ, 레즈", "키스상실", 0, "노예 소녀의 입술", "", "", "화간")
+	ENDIF
+	CASE 1
+		PRINTFORML 전원 사는 대신에, 요금을 져 받았다
+	 	CALL ICPRINT("금<10000>을 지불했다", "L", 칼라_주의)
+	 	MONEY -= 10000
+		PRINTFORMW 물러간 아이들을 부하에게 명해 고아원까지 데리고 가게 했다
+		IF IS_COUNTRY(CFLAG:대상:소속)
+			FOR LOCAL, 1, MAX_COUNTRY
+				CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:대상:소속, 100, -100)
+			NEXT
+	 		CALL COLOR_PRINTW("고화소문으로서 퍼져, 세력의 평판이 올랐다", 칼라_주의)
+	 	ELSE
+			FOR LOCAL, 1, CHARANUM
+				CFLAG:LOCAL:호감도 += 200
+			NEXT
+			CALL ICPRINT("고화소문으로서 퍼져, 모두의 호감도가<200>올랐다", "L", 칼라_주의)
+		ENDIF
+	CASE 2
+		PRINTFORML 흥미가 없다
+		PRINTFORML 그냥두었다
+ENDSELECT
+RETURN 1

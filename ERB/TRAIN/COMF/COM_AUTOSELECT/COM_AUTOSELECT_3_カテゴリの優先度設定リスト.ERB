@@ -1,0 +1,1381 @@
+﻿;-------------------------------------------------
+;# 01 COM_CATEGORY_NUM 애무한다
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_1(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무한다 += GET_INITIATIVE_U_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무한다 += AUTO_N_TYPE_활발(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무한다 += AUTO_N_TYPE_얌전함(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무한다 += AUTO_N_TYPE_쿨(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무한다 += AUTO_N_TYPE_늠름했다(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무한다 += AUTO_N_TYPE_건달(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무한다 += AUTO_N_TYPE_매료(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무한다 += AUTO_N_TYPE_매료(MASTER, 0)
+;-------------------------------------------------
+; 성적 기호 보정
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무한다 && (GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_애무하고싶다) || GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_봉사하고싶다))
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무한다 *= 3
+ENDIF
+;-------------------------------------------------
+; 함락 경향 보정
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무한다 && TALENT:MAIN_PLAYER:연모
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 특수 세력 보정
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무한다 && TALENT:MAIN_PLAYER:특수세력소질 == 특수세력_자경단
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무한다 *= 2
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 02 COM_AUTO_CATEGORY_NUM_성교한다
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_2(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+#DIM COM_AUTO_CHECK_FLAG_IS_CATEGORY	;가부 플래그
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 += GET_INITIATIVE_U_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 += AUTO_N_TYPE_활발(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 += AUTO_N_TYPE_얌전함(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 += AUTO_N_TYPE_쿨(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 += AUTO_N_TYPE_늠름했다(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 += AUTO_N_TYPE_건달(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 += AUTO_N_TYPE_매료(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 += AUTO_N_TYPE_매료(MASTER, 0)
+;-------------------------------------------------
+; 가부 체크
+;-------------------------------------------------
+;가부 체크 리셋트
+VARSET COM_AUTO_CHECK_FLAG_IS_CATEGORY
+;윤활 추가 체크 리셋트
+VARSET COM_AUTO_CHECK_FLAG_IS_WET_ENOUGH
+;-------------------------------------------------
+; # 대상이 위안모브나 특수 세력
+;	특수 세력의 경우, 서큐버스나 자경단은 제외함
+;-------------------------------------------------
+IF CHECK_SP_SADIST_CHARA(MAIN_PLAYER) || GROUPMATCH(TALENT:MAIN_PLAYER:위안모브, 위안_캐릭터_개, 위안_캐릭터_돼지,  위안_캐릭터_말, 위안_캐릭터_원숭이)
+	;---------------------------------------------
+	;대상 남성·실행 여성
+	;---------------------------------------------
+	IF IS_MALE(MAIN_TARGET) && IS_MALE(MAIN_PLAYER)
+		;대상의 윤활·실행의 도착도 800이상·실행의 주도도Ｕ800이상·실행의 새드가 필요
+		IF COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_TARGET) && ABL:MAIN_PLAYER:도착도 >= 800 && ABL:MAIN_PLAYER:주도도Ｕ >= 800 && GETBIT(TALENT:MAIN_PLAYER:음란계, 소질_음란_새드)
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;대상의 윤활을 채우면 조건을 달성한다
+		ELSEIF ABL:MAIN_PLAYER:도착도 >= 800 && ABL:MAIN_PLAYER:주도도Ｕ >= 800 && GETBIT(TALENT:MAIN_PLAYER:음란계, 소질_음란_새드)
+			COM_AUTO_CHECK_FLAG_IS_WET_ENOUGH = 1
+		ENDIF
+	;---------------------------------------------
+	;대상 남성·실행 남성
+	;---------------------------------------------
+	ELSEIF IS_MALE(MAIN_TARGET) && IS_MALE(MAIN_PLAYER)
+		;대상의 윤활·실행의 도착도 500이상·실행의 주도도Ｕ500이상
+		IF COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_TARGET) && ABL:MAIN_PLAYER:도착도 >= 500 && ABL:MAIN_PLAYER:주도도Ｕ >= 500
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;대상의 윤활을 채우면 조건을 달성한다
+		ELSEIF ABL:MAIN_PLAYER:도착도 >= 500 && ABL:MAIN_PLAYER:주도도Ｕ >= 500
+			COM_AUTO_CHECK_FLAG_IS_WET_ENOUGH = 1
+		ENDIF
+	;---------------------------------------------
+	;대상 여성·실행 여성　
+	;---------------------------------------------
+	ELSEIF IS_FEMALE(MAIN_TARGET) && IS_FEMALE(MAIN_PLAYER)
+		;대상의 윤활·실행의 도착도 100이상·실행의 주도도Ｕ100이상
+		IF COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_TARGET) && ABL:MAIN_PLAYER:도착도 >= 100 && ABL:MAIN_PLAYER:주도도Ｕ >= 300
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;대상의 윤활을 채우면 조건을 달성한다
+		ELSEIF ABL:MAIN_PLAYER:도착도 >= 100 && ABL:MAIN_PLAYER:주도도Ｕ >= 100
+			COM_AUTO_CHECK_FLAG_IS_WET_ENOUGH = 1
+		ENDIF
+	;---------------------------------------------
+	;대상 여성·실행 남성
+	;---------------------------------------------
+	ELSEIF IS_FEMALE(MAIN_TARGET) && IS_MALE(MAIN_PLAYER)
+		;대상의 윤활
+		IF  COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_TARGET) 
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;대상의 윤활을 채우면 조건을 달성한다
+		ELSE
+			COM_AUTO_CHECK_FLAG_IS_WET_ENOUGH = 1
+		ENDIF
+	ENDIF
+;-------------------------------------------------
+; # 대상이 위안모브나 특수 세력이 아니다
+;	또는 특수 세력이어도 서큐버스나 자경단
+;-------------------------------------------------
+ELSE
+	;---------------------------------------------
+	;대상 남성＆실행 여성 역전하므로 가장 도착도와 주도도Ｕ를 필요로 한다
+	;---------------------------------------------
+	IF IS_MALE(MAIN_TARGET) && IS_FEMALE(MAIN_PLAYER)
+		;대상의 윤활이 불충분하면 새드기분이 필요
+		IF !COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_TARGET) && ABL:MAIN_PLAYER:도착도 >= 500 && ABL:MAIN_PLAYER:주도도Ｕ >= 500
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;대상의 윤활이 충분한들, 실행의 도착도 300이상·실행의 주도도Ｕ300이상
+		ELSEIF COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_TARGET) && ABL:MAIN_PLAYER:도착도 >= 300 && ABL:MAIN_PLAYER:주도도Ｕ >= 300
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;대상의 윤활을 채우면 조건을 달성된다
+		ELSEIF ABL:MAIN_PLAYER:도착도 >= 300 && ABL:MAIN_PLAYER:주도도Ｕ >= 300
+			COM_AUTO_CHECK_FLAG_IS_WET_ENOUGH = 1
+		ENDIF
+	;---------------------------------------------
+	;대상 남성＆실행 남성 남자역의 여배우를 좋아한다
+	;---------------------------------------------
+	ELSEIF IS_MALE(MAIN_TARGET) && IS_MALE(MAIN_PLAYER)
+		;대상의 윤활이 불충분하면 새드기분이 필요
+		IF !COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_TARGET) && ABL:MAIN_PLAYER:도착도 >= 100 && ABL:MAIN_PLAYER:주도도Ｕ >= 300
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;대상의 윤활이 충분한들, 실행의 주도도Ｕ-100이상
+		ELSEIF COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_TARGET) && ABL:MAIN_PLAYER:주도도Ｕ >= -100
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;대상의 윤활을 채우면 조건을 달성된다
+		ELSEIF ABL:MAIN_PLAYER:주도도Ｕ >= -100
+			COM_AUTO_CHECK_FLAG_IS_WET_ENOUGH = 1
+		ENDIF
+	;---------------------------------------------
+	;대상 여성＆실행 여성 여자 역을 좋아한다
+	;---------------------------------------------
+	ELSEIF IS_FEMALE(MAIN_TARGET) && IS_FEMALE(MAIN_PLAYER)
+		;대상의 윤활이 불충분하면 새드기분이 필요
+		IF !COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_TARGET) && ABL:MAIN_PLAYER:도착도 >= 300 && ABL:MAIN_PLAYER:주도도Ｕ >= 500
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;대상의 윤활이 충분한들, 실행의 도착도 100이상·실행의 주도도Ｕ100이상
+		ELSEIF COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_TARGET) && ABL:MAIN_PLAYER:도착도 >= 100 && ABL:MAIN_PLAYER:주도도Ｕ >= 100
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;대상의 윤활을 채우면 조건을 달성된다
+		ELSEIF ABL:MAIN_PLAYER:도착도 >= 100 && ABL:MAIN_PLAYER:주도도Ｕ >= 100
+			COM_AUTO_CHECK_FLAG_IS_WET_ENOUGH = 1
+		ENDIF
+	;---------------------------------------------
+	;대상 여성＆실행 남성
+	;---------------------------------------------
+	ELSEIF IS_FEMALE(MAIN_TARGET) && IS_MALE(MAIN_PLAYER)
+		;대상의 윤활이 불충분하면, 실행의 도착도 100이상·실행의 주도도Ｕ100이상
+		IF !COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_TARGET) && ABL:MAIN_PLAYER:도착도 >= 100 && ABL:MAIN_PLAYER:주도도Ｕ >= 100
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;대상의 윤활이 충분한들 무조건
+		ELSEIF COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_TARGET)
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;대상의 윤활을 채우면 조건을 달성된다
+		ELSE
+			COM_AUTO_CHECK_FLAG_IS_WET_ENOUGH = 1
+		ENDIF
+	ENDIF
+ENDIF
+;-------------------------------------------------
+; 성적 기호 보정
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 > 0 && GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_성교하고싶다)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 *= 3
+ENDIF
+;-------------------------------------------------
+; 함락 경향 보정
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 > 0 && TALENT:MAIN_PLAYER:연모
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 특수 세력 보정
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 > 0 && TALENT:MAIN_PLAYER:특수세력소질 == 특수세력_홉고블린
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 특수 세력 함락 보정
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 > 0 && TALENT:MAIN_PLAYER:특수세력함락계 == 특수세력_서큐버스
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 그 외 보정
+;-------------------------------------------------
+;	삽입 상태 보정	@IS_INSERT_MUTUAL	3= ARG:1이 ARG:0의Ｖ에 삽입	4= ARG:1이 ARG:0의Ａ에 삽입
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 > 0 && GROUPMATCH(IS_INSERT_MUTUAL(MAIN_PLAYER, MAIN_TARGET), 3, 4)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 /= 2
+ENDIF
+;	턴수보정 처음의 5 턴 정도는 다른 행동을 취하기 쉽다
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 > 0 && TFLAG:55 < 5
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 /= 10
+ENDIF
+;	콘피그 설정 보정 남자 주인공에게로의 역조교의 경향이 인내 시킨다
+;	장대를 만지작거리지 않는 설정이라고 코멘트 되고 있어 성교 제한되고 있었으므로, 암컷화일까하고 생각해 뒤는 적극에 파도록(듯이)해 본다
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 > 0 && CONFIG:8 == 1 && MAIN_TARGET == MASTER && HAS_PENIS(MAIN_TARGET) && GROUPMATCH(FLAG:조교모드, 조교_역조교특수, 조교_역조교통상, 조교_위안)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 *= 2
+ENDIF
+;	피로
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 > 0 && BASE:MAIN_PLAYER:체력 <= MAXBASE:MAIN_PLAYER:체력 / 2
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 /= 10
+ENDIF
+;-------------------------------------------------
+; 불가
+;-------------------------------------------------
+IF !COM_AUTO_CHECK_FLAG_IS_CATEGORY
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 = -1
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 03 COM_AUTO_CATEGORY_NUM_윤활 추가한다
+;	성교 할 수 없을 때, 피임 할 수 없을 때의 받침접시에도
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_3(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가한다 += GET_INITIATIVE_U_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가한다 += AUTO_N_TYPE_활발(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가한다 += AUTO_N_TYPE_얌전함(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가한다 += AUTO_N_TYPE_쿨(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가한다 += AUTO_N_TYPE_늠름했다(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가한다 += AUTO_N_TYPE_건달(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가한다 += AUTO_N_TYPE_매료(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가한다 += AUTO_N_TYPE_매료(MASTER, 0)
+;-------------------------------------------------
+; 성적 기호 보정
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가한다 > 0  && GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_성교하고싶다)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가한다 *= 3
+ENDIF
+;-------------------------------------------------
+; 특수 세력 보정
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가한다 > 0 && TALENT:MAIN_PLAYER:특수세력소질 == 특수세력_홉고블린
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 함락 경향 보정
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가한다 > 0 && TALENT:MAIN_PLAYER:연모
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 특수 소질 보정
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가한다 > 0 && TALENT:MAIN_PLAYER:기사
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 그 외 보정
+;-------------------------------------------------
+;	젖고가 부족함
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가한다 > 0 && !COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_TARGET)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가한다 *= 3
+ENDIF
+;-------------------------------------------------
+; 불가
+;-------------------------------------------------
+IF !COM_AUTO_CHECK_FLAG_IS_WET_ENOUGH
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가한다 = -1
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 04 COM_AUTO_CATEGORY_NUM_피임한다
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_4(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임한다 += GET_INITIATIVE_U_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임한다 += AUTO_N_TYPE_활발(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임한다 += AUTO_N_TYPE_얌전함(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임한다 += AUTO_N_TYPE_쿨(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임한다 += AUTO_N_TYPE_늠름했다(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임한다 += AUTO_N_TYPE_건달(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임한다 += AUTO_N_TYPE_매료(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임한다 += AUTO_N_TYPE_매료(MASTER, 0)
+;-------------------------------------------------
+; 성적 기호
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임한다 > 0 && GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_성교하고싶다)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임한다 *= 3
+ENDIF
+;-------------------------------------------------
+; 함락 경향
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임한다 > 0 && TALENT:MAIN_PLAYER:연모
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 그 외 보정
+;-------------------------------------------------
+;	기사
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임한다 > 0 && TALENT:MAIN_PLAYER:기사
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 불가
+;-------------------------------------------------
+;	특수 세력이나 위안모브등의 공격 캐릭터 혹은 동물
+IF CHECK_SP_SADIST_CHARA(MAIN_PLAYER) || GROUPMATCH(TALENT:MAIN_PLAYER:위안모브, 위안_캐릭터_개, 위안_캐릭터_돼지, 위안_캐릭터_말, 위안_캐릭터_원숭이)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임한다 = -1
+ENDIF
+;	실행에Ｐ가 없는, 대상으로Ｖ가 없다
+IF !HAS_PENIS(MAIN_PLAYER) || !HAS_VAGINA(MAIN_TARGET)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임한다 = -1
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 05 COM_AUTO_CATEGORY_NUM_도구 사용한다
+;	동소속·도착도 100이상·주도도Ｕ100이상
+;	위소속·무조건
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_5(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 += GET_INITIATIVE_U_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 += GET_PERVERSION_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 += AUTO_N_TYPE_활발(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 += AUTO_N_TYPE_얌전함(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 += AUTO_N_TYPE_쿨(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 += AUTO_N_TYPE_늠름했다(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 += AUTO_N_TYPE_건달(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 += AUTO_N_TYPE_매료(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 += AUTO_N_TYPE_매료(MASTER, 0)
+;-------------------------------------------------
+; 성적 기호
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 > 0 && GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_도구를사용하고싶다)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 *= 3
+ENDIF
+;-------------------------------------------------
+; 함락 경향
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 > 0 && TALENT:MAIN_PLAYER:주인
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 특수 세력
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 > 0 && TALENT:MAIN_PLAYER:특수세력소질 == 특수세력_외래인
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 그 외 보정
+;-------------------------------------------------
+;	기사
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 > 0 && TALENT:MAIN_PLAYER:기사
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 *= 2
+ENDIF
+;	도구 사용의 지정되고 있던 위안모브
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 > 0 && TALENT:MAIN_PLAYER:위안모브 == 위안_캐릭터_요정
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 불가
+;-------------------------------------------------
+IF !CHECK_SP_SADIST_CHARA(MAIN_PLAYER)
+	IF CFLAG:MAIN_PLAYER:소속 == CFLAG:MAIN_TARGET:소속
+		IF ABL:MAIN_PLAYER:도착도 < 100 || ABL:MAIN_PLAYER:주도도Ｕ < 100
+			COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 = -1
+		ENDIF
+	ENDIF
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 06 COM_AUTO_CATEGORY_NUM_가학 한다
+;	동소속·도착도 300이상·주도도Ｕ300이상
+;	위소속·도착도 100이상·주도도Ｕ100이상
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_6(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 += GET_INITIATIVE_U_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 += GET_PERVERSION_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 += AUTO_N_TYPE_활발(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 += AUTO_N_TYPE_얌전함(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 += AUTO_N_TYPE_쿨(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 += AUTO_N_TYPE_늠름했다(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 += AUTO_N_TYPE_건달(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 += AUTO_N_TYPE_매료(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 += AUTO_N_TYPE_매료(MASTER, 0)
+;-------------------------------------------------
+; 성적 기호
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 > 0 && GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_학대하고싶다)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 *= 3
+ENDIF
+;-------------------------------------------------
+; 함락 경향
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 > 0 && TALENT:MAIN_PLAYER:주인
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 특수 세력
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 > 0 && TALENT:MAIN_PLAYER:특수세력소질 == 특수세력_광신도
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 그 외 보정
+;-------------------------------------------------
+;	주도도Ｕ가 높게 설정되어 있던 위안모브
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 > 0 && GROUPMATCH(TALENT:MAIN_PLAYER:위안모브, 위안_캐릭터_텐구, 위안_캐릭터_도둑, 위안_캐릭터_월인)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 *= 2
+ENDIF
+; 불가
+IF !CHECK_SP_SADIST_CHARA(MAIN_PLAYER)
+	IF CFLAG:MAIN_PLAYER:소속 == CFLAG:MAIN_TARGET:소속
+		IF ABL:MAIN_PLAYER:도착도 < 300 || ABL:MAIN_PLAYER:주도도Ｕ < 300
+			COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 = -1
+		ENDIF
+	ELSE
+		IF ABL:MAIN_PLAYER:도착도 < 100 || ABL:MAIN_PLAYER:주도도Ｕ < 100
+			COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 = -1
+		ENDIF
+	ENDIF
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 07 COM_AUTO_CATEGORY_NUM_심하게 가학 한다
+;	공격역 특수 캐릭터는 제외함
+;	동소속·도착도 800이상·주도도Ｕ800이상·새드
+;	위소속·도착도 500이상·주도도Ｕ500이상
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_7(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하게가학한다 = GET_INITIATIVE_U_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하게가학한다 += GET_PERVERSION_RANK(MAIN_PLAYER) * 5
+;-------------------------------------------------
+; 성적 기호
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하게가학한다 > 0 && GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_학대하고싶다)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하게가학한다 *= 3
+ENDIF
+;-------------------------------------------------
+; 불가
+;-------------------------------------------------
+IF !CHECK_SP_SADIST_CHARA(MAIN_PLAYER)
+	IF CFLAG:MAIN_PLAYER:소속 == CFLAG:MAIN_TARGET:소속
+		IF !GETBIT(TALENT:MAIN_PLAYER:음란계, 소질_음란_새드) || ABL:MAIN_PLAYER:도착도 < 800 || ABL:MAIN_PLAYER:주도도Ｕ < 800
+			COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하게가학한다 = -1
+		ENDIF
+	ELSE
+		IF ABL:MAIN_PLAYER:도착도 < 500 || ABL:MAIN_PLAYER:주도도Ｕ < 500
+			COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하게가학한다 = -1
+		ENDIF
+	ENDIF
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 08 COM_AUTO_CATEGORY_NUM_노출한다
+;	도착도 300이상 주도도Ｕ-300 미만
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_8(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 += GET_INITIATIVE_U_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 += GET_PERVERSION_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 += AUTO_N_TYPE_활발(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 += AUTO_N_TYPE_얌전함(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 += AUTO_N_TYPE_쿨(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 += AUTO_N_TYPE_늠름했다(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 += AUTO_N_TYPE_건달(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 += AUTO_N_TYPE_매료(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 += AUTO_N_TYPE_매료(MASTER, 0)
+;-------------------------------------------------
+; 성적 기호
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 > 0  && GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_노출하고싶다)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 *= 3
+ENDIF
+;-------------------------------------------------
+; 함락 경향
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 > 0 && TALENT:MAIN_PLAYER:복종
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 특수 세력 함락
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 > 0 && TALENT:MAIN_PLAYER:특수세력함락계 == 특수세력_도둑
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 그 외 보정
+;-------------------------------------------------
+;	이름 그대로의 위안모브
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 > 0 && TALENT:MAIN_PLAYER:위안모브 == 위안_캐릭터_노출광
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 불가
+;-------------------------------------------------
+IF CHECK_SP_SADIST_CHARA(MAIN_PLAYER) && TALENT:MAIN_PLAYER:위안모브 != 위안_캐릭터_노출광
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 = -1
+ENDIF
+IF ABL:MAIN_PLAYER:도착도 < 300 || ABL:MAIN_PLAYER:주도도Ｕ >= -300
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 = -1
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 09 COM_AUTO_CATEGORY_NUM_소배설한다
+;	배설 1·도착도 100이상·주도도Ｕ가-100 미만이나 주도도가 100이상
+;	함락 경향이Ｓ인가Ｍ나 판별하기 어렵기 때문에 어느 쪽으로도
+;	4족 보행의 동물은 제한하지 않는다
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_9(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설한다 += GET_INITIATIVE_U_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설한다 += GET_PERVERSION_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설한다 += AUTO_N_TYPE_활발(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설한다 += AUTO_N_TYPE_얌전함(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설한다 += AUTO_N_TYPE_쿨(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설한다 += AUTO_N_TYPE_늠름했다(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설한다 += AUTO_N_TYPE_건달(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설한다 += AUTO_N_TYPE_매료(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설한다 += AUTO_N_TYPE_매료(MASTER, 0)
+;-------------------------------------------------
+; 성적 기호
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설한다 > 0 && GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_욕보여지고싶다)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설한다 *= 3
+ENDIF
+;-------------------------------------------------
+; 특수 세력 함락
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설한다 > 0 && TALENT:MAIN_PLAYER:특수세력함락계 == 특수세력_도둑
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 그 외 보정
+;-------------------------------------------------
+;	위안모브
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설한다 > 0 && TALENT:MAIN_PLAYER:위안모브 == 위안_캐릭터_노출광
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설한다 *= 2
+ENDIF
+; 불가
+IF !CHECK_SP_SADIST_CHARA(MAIN_PLAYER)
+	IF !GROUPMATCH(TALENT:MAIN_PLAYER:위안모브, 위안_캐릭터_개, 위안_캐릭터_돼지, 위안_캐릭터_말, 위안_캐릭터_원숭이)
+		IF ABL:MAIN_PLAYER:배설 < 1 || ABL:MAIN_PLAYER:도착도 < 100 || (ABL:MAIN_PLAYER:주도도Ｕ > -100 && ABL:MAIN_PLAYER:주도도Ｕ < 100)
+			COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설한다 = -1
+		ENDIF
+	ENDIF
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 10 COM_AUTO_CATEGORY_NUM_대배설한다
+;	배설 2·도착도 300이상·주도도Ｕ가-300 미만이나 주도도가 300이상
+;	함락 경향이Ｓ인가Ｍ나 판별하기 어렵기 때문에 어느 쪽으로도
+;	4족 보행의 동물은 제한하지 않는다
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_10(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설한다 += GET_INITIATIVE_U_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설한다 += GET_PERVERSION_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설한다 += AUTO_N_TYPE_활발(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설한다 += AUTO_N_TYPE_얌전함(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설한다 += AUTO_N_TYPE_쿨(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설한다 += AUTO_N_TYPE_늠름했다(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설한다 += AUTO_N_TYPE_건달(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설한다 += AUTO_N_TYPE_매료(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설한다 += AUTO_N_TYPE_매료(MASTER, 0)
+;-------------------------------------------------
+; 성적 기호
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설한다 > 0 && GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_욕보여지고싶다)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설한다 *= 3
+ENDIF
+;-------------------------------------------------
+; 특수 세력 함락
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설한다 > 0 && TALENT:MAIN_PLAYER:특수세력함락계 == 특수세력_도둑
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 그 외 보정
+;-------------------------------------------------
+;	위안모브
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설한다 > 0 && TALENT:MAIN_PLAYER:위안모브 == 위안_캐릭터_노출광
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 불가
+;-------------------------------------------------
+IF !CHECK_SP_SADIST_CHARA(MAIN_PLAYER)
+	IF !GROUPMATCH(TALENT:MAIN_PLAYER:위안모브, 위안_캐릭터_개, 위안_캐릭터_돼지, 위안_캐릭터_말, 위안_캐릭터_원숭이)
+		IF ABL:MAIN_PLAYER:배설 < 2 || ABL:MAIN_PLAYER:도착도 < 300 || (ABL:MAIN_PLAYER:주도도Ｕ > -300 && ABL:MAIN_PLAYER:주도도Ｕ < 300)
+			COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설한다 = -1
+		ENDIF
+	ENDIF
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 11 COM_AUTO_CATEGORY_NUM_촉수를 취급한다
+;	일행력·요술지식·도착도 500이상·주도도Ｕ500이상
+;	위세력·요술지식·도착도 300이상·주도도Ｕ300이상
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_11(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급한다 += GET_INITIATIVE_U_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급한다 += GET_PERVERSION_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급한다 += AUTO_N_TYPE_활발(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급한다 += AUTO_N_TYPE_얌전함(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급한다 += AUTO_N_TYPE_쿨(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급한다 += AUTO_N_TYPE_늠름했다(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급한다 += AUTO_N_TYPE_건달(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급한다 += AUTO_N_TYPE_매료(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급한다 += AUTO_N_TYPE_매료(MASTER, 0)
+
+;-------------------------------------------------
+; 성적 기호
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급한다 > 0 && GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_촉수로범하고싶다)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급한다 *= 3
+ENDIF
+;-------------------------------------------------
+; 함락 경향
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급한다 > 0 && TALENT:MAIN_PLAYER:주인
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 특수 세력
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급한다 > 0 && TALENT:MAIN_PLAYER:특수세력소질 == 특수세력_촉수
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급한다 *= 5
+ENDIF
+;-------------------------------------------------
+; 불가
+;-------------------------------------------------
+IF !TALENT:MAIN_PLAYER:요술지식
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급한다 = -1
+ENDIF
+IF !CHECK_SP_SADIST_CHARA(MAIN_PLAYER)
+	IF CFLAG:MAIN_PLAYER:소속 == CFLAG:MAIN_TARGET:소속
+		IF ABL:MAIN_PLAYER:도착도 < 500 || ABL:MAIN_PLAYER:주도도Ｕ < 500
+			COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급한다 = -1
+		ENDIF
+	ELSE
+		IF ABL:MAIN_PLAYER:도착도 < 300 || ABL:MAIN_PLAYER:주도도Ｕ < 300
+			COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급한다 = -1
+		ENDIF
+	ENDIF
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 12 COM_AUTO_CATEGORY_NUM_애무시킨다
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_12(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무시킨다 += GET_INITIATIVE_U_RANK(MAIN_PLAYER) * -1 * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무시킨다 += AUTO_N_TYPE_활발(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무시킨다 += AUTO_N_TYPE_얌전함(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무시킨다 += AUTO_N_TYPE_쿨(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무시킨다 += AUTO_N_TYPE_늠름했다(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무시킨다 += AUTO_N_TYPE_건달(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무시킨다 += AUTO_N_TYPE_매료(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무시킨다 += AUTO_N_TYPE_매료(MASTER, 1)
+;-------------------------------------------------
+; 성적 기호
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무시킨다 > 0 && (GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_애무되고싶다) || GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_봉사되고싶다))
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무시킨다 *= 3
+ENDIF
+;-------------------------------------------------
+; 함락 경향
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무시킨다 > 0 && TALENT:MAIN_PLAYER:연모
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무시킨다 *= 2
+ENDIF
+;-------------------------------------------------
+; 특수 세력 함락
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무시킨다 > 0 && TALENT:MAIN_PLAYER:특수세력함락계 == 특수세력_자경단
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무시킨다 *= 2
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 13 COM_AUTO_CATEGORY_NUM_성교시킨다
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_13(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+#DIM COM_AUTO_CHECK_FLAG_IS_CATEGORY	;가부 플래그
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 += GET_INITIATIVE_U_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 += AUTO_N_TYPE_활발(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 += AUTO_N_TYPE_얌전함(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 += AUTO_N_TYPE_쿨(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 += AUTO_N_TYPE_늠름했다(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 += AUTO_N_TYPE_건달(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 += AUTO_N_TYPE_매료(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 += AUTO_N_TYPE_매료(MASTER, 0)
+;-------------------------------------------------
+; 가부 체크
+;-------------------------------------------------
+;가부 체크 리셋트
+VARSET COM_AUTO_CHECK_FLAG_IS_CATEGORY
+;윤활 추가 체크 리셋트
+VARSET COM_AUTO_CHECK_FLAG_IS_WET_ENOUGH
+;-------------------------------------------------
+; # 대상이 위안모브나 특수 세력
+;	특수 세력의 경우, 서큐버스나 자경단은 제외함
+;-------------------------------------------------
+IF CHECK_SP_SADIST_CHARA(MAIN_TARGET) || GROUPMATCH(TALENT:MAIN_TARGET:위안모브, 위안_캐릭터_개, 위안_캐릭터_돼지, 위안_캐릭터_말, 위안_캐릭터_원숭이)
+	;---------------------------------------------
+	;실행 남성
+	;---------------------------------------------
+	IF IS_MALE(MAIN_PLAYER)
+		;실행의 윤활·실행의 도착도 800이상·실행의 주도도Ｕ-800 미만·실행의 마조가 필요
+		IF COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_PLAYER) && ABL:MAIN_PLAYER:도착도 >= 800 && ABL:MAIN_PLAYER:주도도Ｕ < -800 && GETBIT(TALENT:MAIN_PLAYER:음란계, 소질_음란_마조)
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;실행의 윤활을 채우면 조건을 달성한다
+		ELSEIF ABL:MAIN_PLAYER:도착도 >= 800 && ABL:MAIN_PLAYER:주도도Ｕ < -800 && GETBIT(TALENT:MAIN_PLAYER:음란계, 소질_음란_마조)
+			COM_AUTO_CHECK_FLAG_IS_WET_ENOUGH = 1
+		ENDIF
+	;---------------------------------------------
+	;실행 여성
+	;---------------------------------------------
+	ELSE
+		;실행의 윤활
+		IF COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_PLAYER) 
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;실행의 윤활을 채우면 조건을 달성한다
+		ELSE
+			COM_AUTO_CHECK_FLAG_IS_WET_ENOUGH = 1
+		ENDIF
+	ENDIF
+;-------------------------------------------------
+; # 대상이 위안모브나 특수 세력이 아니다
+;	또는 특수 세력이어도 서큐버스나 자경단
+;-------------------------------------------------
+ELSE
+	;-------------------------------------------------
+	;대상 여성＆실행 남성 역전하므로 가장 도착도와 주도도Ｕ마이너스를 필요로 한다
+	;-------------------------------------------------
+	IF IS_FEMALE(MAIN_TARGET) && IS_MALE(MAIN_PLAYER)
+		;자신의 윤활이 불충분하면 마조기분이 필요
+		IF !COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_PLAYER) && ABL:MAIN_PLAYER:도착도 >= 500 && ABL:MAIN_PLAYER:주도도Ｕ < -500
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;자신의 윤활이 충분한들, 실행의 도착도 300이상·실행의 주도도Ｕ-300 미만
+		ELSEIF COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_PLAYER) && ABL:MAIN_PLAYER:도착도 >= 300 && ABL:MAIN_PLAYER:주도도Ｕ < -300
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;실행의 윤활을 채우면 조건을 달성한다
+		ELSEIF ABL:MAIN_PLAYER:도착도 >= 300 && ABL:MAIN_PLAYER:주도도Ｕ < -300
+			COM_AUTO_CHECK_FLAG_IS_WET_ENOUGH = 1
+		ENDIF
+	;---------------------------------------------
+	;대상 남성＆실행 남성 남자역의 여배우를 좋아한다
+	;---------------------------------------------
+	ELSEIF IS_MALE(MAIN_TARGET) && IS_MALE(MAIN_PLAYER)
+		;자신의 윤활이 불충분하면 마조기분이 필요
+		IF !COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_PLAYER) && ABL:MAIN_PLAYER:도착도 >= 300 && ABL:MAIN_PLAYER:주도도Ｕ < -500
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;자신의 윤활이 충분한들, 실행의 도착도 100이상·실행의 주도도Ｕ-100 미만
+		ELSEIF COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_PLAYER) && ABL:MAIN_PLAYER:도착도 >= 100 && ABL:MAIN_PLAYER:주도도Ｕ < -300
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;실행의 윤활을 채우면 조건을 달성한다
+		ELSEIF ABL:MAIN_PLAYER:도착도 >= 100 && ABL:MAIN_PLAYER:주도도Ｕ < -300
+			COM_AUTO_CHECK_FLAG_IS_WET_ENOUGH = 1
+		ENDIF
+	;---------------------------------------------
+	;대상 여성＆실행 여성 여자 역을 좋아한다
+	;---------------------------------------------
+	ELSEIF IS_FEMALE(MAIN_TARGET) && IS_FEMALE(MAIN_PLAYER)
+		;자신의 윤활이 불충분하면 마조기분이 필요
+		IF !COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_PLAYER) && ABL:MAIN_PLAYER:도착도 >= 100 && ABL:MAIN_PLAYER:주도도Ｕ < -300
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;자신의 윤활이 충분한들, 실행의 주도도Ｕ100 미만
+		ELSEIF COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_PLAYER) && ABL:MAIN_PLAYER:주도도Ｕ < 100
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;실행의 윤활을 채우면 조건을 달성한다
+		ELSEIF ABL:MAIN_PLAYER:주도도Ｕ < 100
+			COM_AUTO_CHECK_FLAG_IS_WET_ENOUGH = 1
+		ENDIF
+	;---------------------------------------------
+	;대상 남성＆실행 여성
+	;---------------------------------------------
+	ELSEIF IS_MALE(MAIN_TARGET) && IS_FEMALE(MAIN_PLAYER)
+		;자신의 윤활이 불충분하면이라면 마조기분이 필요
+		IF !COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_PLAYER) && ABL:MAIN_PLAYER:도착도 >= 100 && ABL:MAIN_PLAYER:주도도Ｕ < -100
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;자신의 윤활이 충분한들 무조건
+		ELSEIF COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_PLAYER)
+			COM_AUTO_CHECK_FLAG_IS_CATEGORY = 1
+		;실행의 윤활을 채우면 조건을 달성한다
+		ELSE
+			COM_AUTO_CHECK_FLAG_IS_WET_ENOUGH = 1
+		ENDIF
+	ENDIF
+ENDIF
+;-------------------------------------------------
+; 성적 기호
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 > 0 && GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_성교되고싶다)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 *= 3
+ENDIF
+;-------------------------------------------------
+; 함락 경향
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 > 0 && TALENT:MAIN_PLAYER:연모
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 *= 2
+ENDIF
+;-------------------------------------------------
+; 특수 세력
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 > 0 && TALENT:MAIN_PLAYER:특수세력소질 == 특수세력_서큐버스
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 *= 2
+ENDIF
+;-------------------------------------------------
+; 특수 세력 함락
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 > 0 && TALENT:MAIN_PLAYER:특수세력함락계 == 특수세력_홉고블린
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 *= 2
+ENDIF
+;-------------------------------------------------
+; 그 외 보정
+;-------------------------------------------------
+;	삽입 상태 @IS_INSERT_MUTUAL	1= ARG:0이 ARG:1의Ｖ에 삽입	2= ARG:0이 ARG:1의Ａ에 삽입
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 > 0 && GROUPMATCH(IS_INSERT_MUTUAL(MAIN_PLAYER, MAIN_TARGET), 1, 2)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 /= 2
+ENDIF
+;	피로
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 > 0 && BASE:MAIN_PLAYER:체력 <= MAXBASE:MAIN_PLAYER:체력 / 2
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 /= 10
+ENDIF
+;-------------------------------------------------
+; 불가
+;-------------------------------------------------
+IF !COM_AUTO_CHECK_FLAG_IS_CATEGORY
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 = -1
+ENDIF
+;	콘피그 설정·남자 주인공에게로의 역조교의 경향이 인내 시킨다
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 > 0 && CONFIG:8 == 1 && MAIN_TARGET == MASTER && HAS_PENIS(MAIN_TARGET) && GROUPMATCH(FLAG:조교모드, 조교_역조교특수, 조교_역조교통상, 조교_위안)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 = -1
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 14 COM_AUTO_CATEGORY_NUM_윤활 추가시킨다
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_14(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 += GET_INITIATIVE_U_RANK(MAIN_PLAYER) * -1 * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 += AUTO_N_TYPE_활발(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 += AUTO_N_TYPE_얌전함(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 += AUTO_N_TYPE_쿨(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 += AUTO_N_TYPE_늠름했다(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 += AUTO_N_TYPE_건달(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 += AUTO_N_TYPE_매료(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 += AUTO_N_TYPE_매료(MASTER, 1)
+;-------------------------------------------------
+; 성적 기호
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 > 0 && GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_성교되고싶다)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 *= 3
+ENDIF
+;-------------------------------------------------
+; 함락 경향
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 > 0 && TALENT:MAIN_PLAYER:연모
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 *= 2
+ENDIF
+;-------------------------------------------------
+; 특수 소질
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 > 0 && TALENT:MAIN_PLAYER:기사
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 *= 2
+ENDIF
+;-------------------------------------------------
+; 그 외 보정
+;-------------------------------------------------
+;	젖고가 부족함
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 > 0 && !COM_AUTOSELECT_IS_WET_ENOUGH(MAIN_PLAYER)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 *= 3
+ENDIF
+;-------------------------------------------------
+; 불가
+;-------------------------------------------------
+IF !COM_AUTO_CHECK_FLAG_IS_WET_ENOUGH
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 = -1
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 15 COM_AUTO_CATEGORY_NUM_피임시킨다
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_15(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임시킨다 += GET_INITIATIVE_U_RANK(MAIN_PLAYER) * -1 * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임시킨다 += AUTO_N_TYPE_활발(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임시킨다 += AUTO_N_TYPE_얌전함(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임시킨다 += AUTO_N_TYPE_쿨(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임시킨다 += AUTO_N_TYPE_늠름했다(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임시킨다 += AUTO_N_TYPE_건달(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임시킨다 += AUTO_N_TYPE_매료(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임시킨다 += AUTO_N_TYPE_매료(MASTER, 1)
+;-------------------------------------------------
+; 성적 기호
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임시킨다 > 0 && GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_성교되고싶다)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임시킨다 *= 3
+ENDIF
+;-------------------------------------------------
+; 함락 경향
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임시킨다 > 0 && TALENT:MAIN_PLAYER:연모
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임시킨다 *= 2
+ENDIF
+;-------------------------------------------------
+; 특수 소질
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임시킨다 > 0 && TALENT:MAIN_PLAYER:기사
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임시킨다 *= 2
+ENDIF
+;-------------------------------------------------
+; 불가
+;-------------------------------------------------
+IF !HAS_PENIS(MAIN_TARGET) || !HAS_VAGINA(MAIN_PLAYER)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임시킨다 = -1
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 16 COM_AUTO_CATEGORY_NUM_도구 사용하게 한다
+;	동소속·무조건
+;	위소속·도착도 100이상·주도도Ｕ100이상
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_16(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 += GET_INITIATIVE_U_RANK(MAIN_PLAYER) * -1 * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 += GET_PERVERSION_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 += AUTO_N_TYPE_활발(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 += AUTO_N_TYPE_얌전함(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 += AUTO_N_TYPE_쿨(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 += AUTO_N_TYPE_늠름했다(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 += AUTO_N_TYPE_건달(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 += AUTO_N_TYPE_매료(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 += AUTO_N_TYPE_매료(MASTER, 1)
+;-------------------------------------------------
+; 성적 기호
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 > 0 && GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_도구를사용되고싶다)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 *= 3
+ENDIF
+;-------------------------------------------------
+; 함락 경향
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 > 0 && TALENT:MAIN_PLAYER:복종
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 특수 세력 함락
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 > 0 && TALENT:MAIN_PLAYER:특수세력함락계 == 특수세력_외래인
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 특수 소질
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 > 0 && TALENT:MAIN_PLAYER:기사
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 불가
+;-------------------------------------------------
+IF CFLAG:MAIN_PLAYER:소속 != CFLAG:MAIN_TARGET:소속
+	IF ABL:MAIN_PLAYER:도착도 < 100 || ABL:MAIN_PLAYER:주도도Ｕ >= -100
+		COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 = -1
+	ENDIF
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 17 COM_AUTO_CATEGORY_NUM_피학 한다
+;	도착도 300이상·주도도Ｕ-300 미만
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_17(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 += GET_INITIATIVE_U_RANK(MAIN_PLAYER) * -1 * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 += GET_PERVERSION_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 += AUTO_N_TYPE_활발(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 += AUTO_N_TYPE_얌전함(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 += AUTO_N_TYPE_쿨(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 += AUTO_N_TYPE_늠름했다(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 += AUTO_N_TYPE_건달(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 += AUTO_N_TYPE_매료(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 += AUTO_N_TYPE_매료(MASTER, 1)
+;-------------------------------------------------
+; 성적 기호
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 > 0 && GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_시달리고싶다)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 *= 3
+ENDIF
+;-------------------------------------------------
+; 함락 경향
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 > 0 && TALENT:MAIN_PLAYER:복종
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 특수 세력 함락
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 > 0 && TALENT:MAIN_PLAYER:특수세력함락계 == 특수세력_광신도
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 불가
+;-------------------------------------------------
+IF ABL:MAIN_PLAYER:도착도 < 300 || ABL:MAIN_PLAYER:주도도Ｕ >= -300
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 = -1
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 18 COM_AUTO_CATEGORY_NUM_심하고 피학 한다
+;	도착도 800이상·주도도Ｕ800이상·마조
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_18(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하고피학한다 = GET_INITIATIVE_U_RANK(MAIN_PLAYER) * -1 * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하고피학한다 += GET_PERVERSION_RANK(MAIN_PLAYER) * 5
+;-------------------------------------------------
+; 성적 기호
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하고피학한다 > 0 && GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_시달리고싶다)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하고피학한다 *= 3
+ENDIF
+;-------------------------------------------------
+; 불가
+;-------------------------------------------------
+IF ABL:MAIN_PLAYER:도착도 < 800 || ABL:MAIN_PLAYER:주도도Ｕ >= -800 && !GETBIT(TALENT:MAIN_PLAYER:음란계, 소질_음란_마조)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하고피학한다 = -1
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 19 COM_AUTO_CATEGORY_NUM_노출시킨다
+;	동소속·도착도 300이상·주도도Ｕ300이상
+;	위소속·도착도 100이상·주도도Ｕ100이상
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_19(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 += GET_INITIATIVE_U_RANK(MAIN_PLAYER) * -1 * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 += GET_PERVERSION_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 += AUTO_N_TYPE_활발(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 += AUTO_N_TYPE_얌전함(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 += AUTO_N_TYPE_쿨(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 += AUTO_N_TYPE_늠름했다(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 += AUTO_N_TYPE_건달(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 += AUTO_N_TYPE_매료(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 += AUTO_N_TYPE_매료(MASTER, 1)
+;-------------------------------------------------
+; 성적 기호
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 > 0 && GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_욕보이고싶다)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 *= 3
+ENDIF
+;-------------------------------------------------
+; 함락 경향
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 > 0 && TALENT:MAIN_PLAYER:주인
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 *= 2
+ENDIF
+;-------------------------------------------------
+; 특수 세력
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 > 0 && TALENT:MAIN_PLAYER:특수세력소질 == 특수세력_도둑
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 *= 2
+ENDIF
+;-------------------------------------------------
+; 불가
+;-------------------------------------------------
+IF !CHECK_SP_SADIST_CHARA(MAIN_PLAYER)
+	IF CFLAG:MAIN_PLAYER:소속 == CFLAG:MAIN_TARGET:소속
+		IF ABL:MAIN_PLAYER:도착도 < 300 || ABL:MAIN_PLAYER:주도도Ｕ < 300
+			COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 = -1
+		ENDIF
+	ELSE
+		IF ABL:MAIN_PLAYER:도착도 < 100 || ABL:MAIN_PLAYER:주도도Ｕ < 100
+			COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 = -1
+		ENDIF
+	ENDIF
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 20 COM_AUTO_CATEGORY_NUM_소배설시킨다
+;	배설 1·도착도 100이상·주도도Ｕ가-100 미만이나 주도도가 100이상
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_20(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설시킨다 += GET_INITIATIVE_U_RANK(MAIN_PLAYER) * -1 * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설시킨다 += GET_PERVERSION_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설시킨다 += AUTO_N_TYPE_활발(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설시킨다 += AUTO_N_TYPE_얌전함(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설시킨다 += AUTO_N_TYPE_쿨(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설시킨다 += AUTO_N_TYPE_늠름했다(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설시킨다 += AUTO_N_TYPE_건달(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설시킨다 += AUTO_N_TYPE_매료(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설시킨다 += AUTO_N_TYPE_매료(MASTER, 1)
+;-------------------------------------------------
+; 성적 기호
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설시킨다 > 0 && GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_욕보이고싶다)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설시킨다 *= 3
+ENDIF
+;-------------------------------------------------
+; 특수 세력
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설시킨다 > 0 && TALENT:MAIN_PLAYER:특수세력소질 == 특수세력_광신도
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설시킨다 *= 2
+ENDIF
+;-------------------------------------------------
+; 불가
+;-------------------------------------------------
+IF !CHECK_SP_SADIST_CHARA(MAIN_PLAYER)
+	IF ABL:MAIN_PLAYER:배설 < 1 || ABL:MAIN_PLAYER:도착도 < 100 || (ABL:MAIN_PLAYER:주도도Ｕ >= -100 && ABL:MAIN_PLAYER:주도도Ｕ < 100)
+		COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설시킨다 = -1
+	ENDIF
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 21 COM_AUTO_CATEGORY_NUM_대배설시킨다
+;	배설 2·도착도 300이상·주도도Ｕ가-300 미만이나 주도도가 300이상
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_21(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설시킨다 += GET_INITIATIVE_U_RANK(MAIN_PLAYER) * -1 * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설시킨다 += GET_PERVERSION_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설시킨다 += AUTO_N_TYPE_활발(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설시킨다 += AUTO_N_TYPE_얌전함(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설시킨다 += AUTO_N_TYPE_쿨(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설시킨다 += AUTO_N_TYPE_늠름했다(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설시킨다 += AUTO_N_TYPE_건달(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설시킨다 += AUTO_N_TYPE_매료(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설시킨다 += AUTO_N_TYPE_매료(MASTER, 1)
+;-------------------------------------------------
+; 성적 기호
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설시킨다 > 0  && GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_욕보이고싶다)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설시킨다 *= 3
+ENDIF
+;-------------------------------------------------
+; 특수 세력
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설시킨다 > 0 && TALENT:MAIN_PLAYER:특수세력소질 == 특수세력_광신도
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설시킨다 *= 2
+ENDIF
+;-------------------------------------------------
+; 불가
+;-------------------------------------------------
+IF !CHECK_SP_SADIST_CHARA(MAIN_PLAYER)
+	IF ABL:MAIN_PLAYER:배설 < 2 || ABL:MAIN_PLAYER:도착도 < 300 || (ABL:MAIN_PLAYER:주도도Ｕ >= -300 && ABL:MAIN_PLAYER:주도도Ｕ < 300)
+		COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설시킨다 = -1
+	ENDIF
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 22 COM_AUTO_CATEGORY_NUM_촉수를 취급하게 한다
+;	요술지식·도착도 500이상·주도도Ｕ-500 미만
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_22(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 += GET_INITIATIVE_U_RANK(MAIN_PLAYER) * -1 * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 += GET_PERVERSION_RANK(MAIN_PLAYER) * 5
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 += AUTO_N_TYPE_활발(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 += AUTO_N_TYPE_얌전함(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 += AUTO_N_TYPE_쿨(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 += AUTO_N_TYPE_늠름했다(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 += AUTO_N_TYPE_건달(MAIN_PLAYER, 1)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 += AUTO_N_TYPE_매료(MAIN_PLAYER, 0)
+COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 += AUTO_N_TYPE_매료(MASTER, 1)
+;-------------------------------------------------
+; 성적 기호
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 > 0  && GETBIT(SEXUAL_PREFERENCE:MAIN_PLAYER:0, 성적기호_촉수로범해지고싶다)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 *= 3
+ENDIF
+;-------------------------------------------------
+; 함락 경향
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 > 0 && TALENT:MAIN_PLAYER:복종
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 특수 세력 함락
+;-------------------------------------------------
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 > 0 && TALENT:MAIN_PLAYER:특수세력함락계 == 특수세력_촉수
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 *= 2
+ENDIF
+;-------------------------------------------------
+; 불가
+;-------------------------------------------------
+IF !TALENT:MAIN_TARGET:요술지식
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 = -1
+ENDIF
+IF ABL:MAIN_PLAYER:도착도 < 500 || ABL:MAIN_PLAYER:주도도Ｕ >= -500
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 = -1
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;# 23 COM_AUTO_CATEGORY_NUM_설득
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY_23(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+#DIM L_COUNTER
+#DIM L_COUNTER_CHECK
+
+;-------------------------------------------------
+; 기초
+;-------------------------------------------------
+;TFLAG:55 현재 시간
+IF FLAG:조교모드 == 조교_역조교통상 && CFLAG:MAIN_PLAYER:소속 != CFLAG:MAIN_TARGET:소속 && TFLAG:55 >= 5 && FLAG:권유경과기간 > 3
+	L_COUNTER_CHECK = 4
+	FOR L_COUNTER, 0, COM_AUTO_CATEGORY_NUM_MAX + 1
+		L_COUNTER_CHECK += MAX(COM_AUTO_CATEGORY_PRIORITY:L_COUNTER, 0)
+	NEXT
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_설득 = LIMIT(FLAG:권유경과기간 * 20, 0, 90)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_설득 = L_COUNTER_CHECK * COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_설득 / (100 - COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_설득)
+ELSE
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_설득 = -1
+ENDIF
+IF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_설득 <= 0
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_설득 = -1
+ENDIF
+
+DEBUGPRINTFORML      FLAG:권유 경과 기간 {FLAG:권유경과기간}기
+
+RETURN 0
+

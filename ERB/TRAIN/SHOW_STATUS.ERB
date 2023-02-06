@@ -1,0 +1,180 @@
+﻿;조교중의 정보 표시
+
+;-------------------------------------------------
+;조교중의 정보 표시
+;-------------------------------------------------
+@SHOW_STATUS
+;턴 최초의 변수의 초기화
+TFLAG:0 = 0
+
+;체력 기력을 0～최대치의 범위에 거둔다
+CALL LIFE_LIMIT
+
+;역조교라면 상시 주인공을 플레이어에
+IF GROUPMATCH(FLAG:조교모드, 4, 5, 7)
+	CALL CLEAR_MPLY()
+	CALL CLEAR_MTAR()
+	SIF FLAG:조교모드 != 7
+	CALL ADD_MPLY(MASTER)
+ENDIF
+
+;주도권을 잡고 있는 캐릭터가 피로·실신·수면·이탈 상태가 되어 있으면 주도권을 해제
+IF FLAG:주도권소유자 >= 0
+	IF TCVAR:(FLAG:주도권소유자):51 || TCVAR:(FLAG:주도권소유자):52 || TCVAR:(FLAG:주도권소유자):53
+		FLAG:주도권소유자 = -1
+	ENDIF
+ENDIF
+
+CUSTOMDRAWLINE ─
+CALL TITLE_CATEGORY_GENERAL("현재 상태")
+PRINTL 
+
+PRINTBUTTON @"[그림 \@ FLAG:화상설정 ? 표시 # 비표시 \@]", 3100
+
+IF FLAG:화상설정
+	;-----------------
+	;표시 설정 관련
+	;-----------------
+	PRINTFORM %TOSTR_SPACE(2)%
+	PRINTBUTTON @"[그림종류변경]", 3104
+	PRINTFORM %TOSTR_SPACE(2)%
+	PRINTBUTTON @"[테두리 표시]", 3103
+	IF FLAG:우후후플래그
+		PRINTFORM %TOSTR_SPACE(2)%
+		PRINTBUTTON @"[의복 표시 : \@ FLAG:의복표시 ? 의복 # 알몸 \@]", 3105
+	ENDIF
+;	PRINTBUTTON @"[%@"삽화표시 : \@ FLAG:삽화표시 ? ON # OFF \@", 14, LEFT%]", 3105
+;	SIF FLAG:삽화표시
+;		PRINTBUTTON @" [애니메이션 \@ FLAG:애니메이션 ? 반복수 : {FLAG:애니메이션}회 # OFF \@]", 3106
+;	PRINTL
+	;-----------------
+	;표시 인원수의 증감
+	;-----------------
+	PRINTFORM %TOSTR_SPACE(2)%
+	PRINTBUTTON "[－] ", 3101
+	PRINTFORM 표시인원수 : {FLAG:그림표시}인
+	PRINTBUTTON " [＋]", 3102
+;	IF FLAG:삽화표시 && FLAG:애니메이션
+;		PRINTFORM %TOSTR_SPACE(20)%
+;		PRINTBUTTON @"[매턴 애니메이션 표시：\@FLAG:삽입애니메이션필터 & 아니메필터_삽입 ? X # O\@]", 3107
+;	ENDIF
+	PRINTL 
+	CALL PRINT_PLAY_IMAGE()
+ENDIF
+PRINTL
+	
+CALL SHOW_EQUIP
+CALL COLOR_LINE
+
+;조교 커맨드의 표시
+CALL SHOW_COMMAND
+
+CALL COLOR_LINE
+
+;역조교 또는 주인공이 행동불능
+IF GROUPMATCH(FLAG:조교모드, 4, 5, 7) || !IS_PLAYABLE(MASTER)
+	CALL TITLE_CATEGORY_GENERAL("캐릭터의 정보")
+ELSE
+	CALL TITLE_CATEGORY_GENERAL("현재의 대상")
+ENDIF
+PRINT    
+IF GROUPMATCH(FLAG:조교모드, 0, 1, 2, 6)
+	PRINTBUTTON "900[실행／대상의 반전]", 900
+	PRINTBUTTON "  901[명령시켜라]", 901
+ELSE
+	SETCOLOR 칼라_선택불가
+	PRINTPLAIN 900[실행／대상의 반전]
+	PRINTPLAIN   901[명령시켜라]
+	RESETCOLOR
+ENDIF
+PRINTL 
+
+;역조교
+IF GROUPMATCH(FLAG:조교모드, 4, 5, 7)
+	PRINTFORML %TOSTR_SPACE(11)%%TOSTR_SPACE(44)%기분 체력 기력    민/둔   상태
+;참가인수가 2명 이상
+ELSEIF TFLAG:44 >= 2
+	PRINTFORML %TOSTR_SPACE(11)%<주도권><실행>  <대상>%TOSTR_SPACE(44)%기분 체력 기력    민/둔   상태
+;참가인수가 1명
+ELSE
+	;만나러간다
+	IF FLAG:조교모드 == 0
+		IF FLAG:우후후플래그
+			PRINTFORML %TOSTR_SPACE(11)%<주도권>%TOSTR_SPACE(48)%기분 취기 체력 기력    민/둔   상태
+		ELSE
+			PRINTFORML %TOSTR_SPACE(11)%<주도권>%TOSTR_SPACE(48)%기분 취기
+		ENDIF
+	;육아
+	ELSEIF FLAG:조교모드 == 3
+		PRINTFORML %TOSTR_SPACE(11)%<주도권>%TOSTR_SPACE(48)%기분
+	ELSE
+		PRINTFORML %TOSTR_SPACE(11)%<주도권>%TOSTR_SPACE(48)%기분 체력 기력    민/둔   상태
+	ENDIF
+ENDIF
+
+;대상 캐릭터의 선택 커맨드
+CALL SHOW_MTAR_SELECTOR
+
+CALL COLOR_LINE
+CALL TITLE_CATEGORY_GENERAL("현재의 상황")
+
+;비우후후
+IF !FLAG:우후후플래그
+	;무드 표시
+	PRINT     무드 
+	LOCAL:0 = MAX(0, TFLAG:37)
+	LOCAL:1 = MAX(0, TFLAG:37 - 60)
+	SETCOLOR 0x00FF00
+	FOR LOCAL:2, 0, 6
+		IF LOCAL:0 / 10 > LOCAL:2
+			PRINTFORM ♥
+		ELSE
+			PRINTFORM _
+		ENDIF
+	NEXT
+	SETCOLOR 0xFF80FF
+	FOR LOCAL:2, 0, 26
+		IF LOCAL:1 / 10 > LOCAL:2
+			PRINTFORM ♥
+		ELSE
+			PRINTFORM _
+		ENDIF
+	NEXT
+	RESETCOLOR
+	PRINTL
+	PRINT         
+ENDIF
+
+;남은 시간 표시
+PRINT   남은 시간 
+FOR LOCAL:0, 0, TFLAG:56
+	IF FLAG:우후후플래그
+		SETCOLOR 0xFF8080
+	;데이트에 의해 추가된 시간(7번 이후)은 유카리 색으로 표시
+	ELSEIF LOCAL:0 >= 7
+		SETCOLOR 0xFF00FF
+	ELSE
+		SETCOLOR 칼라_주의
+	ENDIF
+	IF TFLAG:55 > LOCAL:0
+		PRINT ★
+	ELSE
+		PRINT ☆
+	ENDIF
+NEXT
+RESETCOLOR
+PRINTFORM %TOSTR_SPACE(54 - TFLAG:56 * 2)%
+
+;역조교·주인공이 행동불능 때는 종료 버튼을 회색 표시(자신의 의지로 종료 할 수 없다)
+IF !GROUPMATCH(FLAG:조교모드, 4, 5, 7) && IS_PLAYABLE(MASTER)
+	PRINTBUTTON "999[행동 종료]", 999
+ELSE
+	SETCOLOR 칼라_선택불가
+	PRINTFORM 999[행동 종료]
+	RESETCOLOR
+ENDIF
+PRINTL
+
+;상황 표시
+PRINTFORML               장소 <%TRAIN_PLACE%>
+CUSTOMDRAWLINE ─

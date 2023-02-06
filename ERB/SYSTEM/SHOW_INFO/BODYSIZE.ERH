@@ -1,0 +1,21 @@
+﻿#DIM CONST 사이즈_신장 = 0
+#DIM CONST 사이즈_체중 = 1
+#DIM CONST 사이즈_가슴 = 2
+#DIM CONST 사이즈_허리 = 3
+#DIM CONST 사이즈_엉덩이 = 4
+#DIM CONST 사이즈_페니스 = 5
+
+#DIM CONST 체격_아이 = -2
+#DIM CONST 체격_작은체형 = -1
+#DIM CONST 체격_보통 = 0
+#DIM CONST 체격_장신 = 1
+#DIM CONST 체격_큰몸집 = 2
+#DIM CONST 체격_거대 = 3
+
+#DIM CONST 체형_빼빼마른 = -3
+#DIM CONST 체형_호리호리한 = -2
+#DIM CONST 체형_슬렌더 = -1
+#DIM CONST 체형_보통 = 0
+#DIM CONST 체형_글래머 = 1
+#DIM CONST 체형_풍만 = 2
+#DIM CONST 체형_비만 = 3

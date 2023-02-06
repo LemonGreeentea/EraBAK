@@ -1,0 +1,913 @@
+﻿;-------------------------------------------------
+;「백성위안」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE_NAME23
+IF CFLAG:MASTER:소속
+	RESULTS:0 '= "백성위안"
+ELSE
+	RESULTS:0 '= "매춘한다"
+ENDIF
+
+;-------------------------------------------------
+;「백성위안」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE_CHECK23
+SIF CFLAG:MASTER:포로처
+	RETURN 0
+SIF !CAN_ADD_RANDOM_CHARA()
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「백성위안」의 선택 가능 캐릭터 존재 판정（당하는 측）
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA23(ARG:0)
+;주인공
+IF ARG:0 == MASTER
+	SIF COOLTIME:MASTER:0 < 2 && CFLAG:(ARG:0):행동불능상태 != 행동불능_임월
+		RETURN CHECK91(ARG:0, 2, 1)
+;주인공이 아니다
+ELSE
+	;침실호출의 선택 가능 캐릭터 존재 판정
+	CALL SHOP_LIFE_CHECKCHARA_NEYA(ARG:0)
+	RETURN CHECK91(ARG:0, 2, RESULT && !IS_ANIMAL(ARG:0) && CFLAG:(ARG:0):소속 && CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속)
+ENDIF
+RETURN 0
+
+;-------------------------------------------------
+;「백성위안의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY23
+FLAG:거점페이즈페이지 = 1
+FLAG:요바이 = 0
+RETURN 0
+
+;-------------------------------------------------
+;「백성위안」의 오른쪽 컬럼 캐릭터 리스트 1의 버튼（함수미지정이라면 선택중색없음 표시）
+;-------------------------------------------------
+@SHOP_LIFE_LIST1_BUTTON23(ARG:0, ARG:1)
+;캐릭터, 선택중 칼라 표시 플래그, 버튼 번호에 추가하는 수치, CHECKCHARA의 반환값, 행동이 끝난 마크를 오프로 하는 플래그
+CALL COLUMN_RIGHT_CHARALIST_BUTTON(ARG:0, CFLAG:(ARG:0):침실호출선택중, SHOP_LIFE_LIST1_ADD_INPUT, ARG:1)
+RETURN 0
+
+;-------------------------------------------------
+;「백성위안」의 오른쪽 컬럼 캐릭터 리스트 버튼（상）표시에 추적 시키는 정보
+;  Default의 정보를 표시하지 않는 경우는 RETURN 1
+;-------------------------------------------------
+@SHOP_LIFE_BUTTON_ADD23(ARG:0)
+CALL SHOP_LIFE_BUTTON_ADD_BOTTOM_PRISONER(ARG:0)
+RETURN RESULT
+
+
+;-------------------------------------------------
+;「백성위안」의 오른쪽 컬럼 표시 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SHOW23
+#DIM 선택인원수
+#DIM 최대인원수
+최대인원수 = MIN(CALC_SHOP_TIME() - SHOP_TIME, 3)
+
+선택인원수 = 0
+FOR LOCAL:0, 0, CHARANUM
+	;선택 가능한 조건을 채우고 있는지 어떤지 판정
+	RESULT = 0
+	TRYCALLFORM SHOP_LIFE_CHECKCHARA{FLAG:거점페이즈선택커맨드}(LOCAL:0)
+	IF RESULT == 1
+		;선택중의 인원수를 센다
+		IF CFLAG:(LOCAL:0):침실호출선택중
+			선택인원수 ++
+			SIF 선택인원수 > 최대인원수
+				CFLAG:(LOCAL:0):침실호출선택중 = 0
+		ENDIF
+	ELSE
+		;조건을 채우지 않으면 강제적으로ＯＦＦ
+		CFLAG:(LOCAL:0):침실호출선택중 = 0
+	ENDIF
+NEXT
+
+SIF 선택인원수 * 2000 > MONEY
+	FLAG:위안피임약 = 0
+
+;오른쪽 컬럼 타이틀 표시
+CALL COLUMN_RIGHT_TITLE("실행자 선택", TOSTR(선택인원수), TOSTR(최대인원수), "인원수", "피임시만 2, 000×인원수")
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+IF 선택인원수 >= 1
+	PRINTBUTTON "[이 멤버로 결정]", 1
+	PRINTPLAIN   
+	PRINTBUTTON "[리셋트]", 2
+ELSE
+	SETCOLOR 칼라_선택불가
+	PRINTPLAINFORM [이 멤버로 결정]
+	PRINTPLAIN   
+	PRINTPLAINFORM [리셋트]
+	RESETCOLOR
+ENDIF
+
+PRINTPLAIN   
+IF FLAG:위안피임약
+	PRINTBUTTON "[피임 있어]", 3
+ELSE
+	IF MONEY > 선택인원수 * 2000
+		PRINTBUTTON "[피임 없음]", 3
+	ELSE
+		SETCOLOR 칼라_선택불가
+		PRINTPLAINFORM [피임 없음]
+		RESETCOLOR
+	ENDIF
+ENDIF
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+;표준적인 캐릭터 리스트와 페이지 이동
+CALL COLUMN_RIGHT_CHARALIST(1)
+
+RETURN 0
+
+;-------------------------------------------------
+;「백성위안」의 오른쪽 컬럼 버튼의 입력 처리 보좌
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SUB23(ARG:0)
+;이 멤버로 결정
+IF ARG:0 == 1
+	CALL DECIDE_IAN_MEMBER()
+	SIF !RESULT
+		RETURN 0
+;멤버를 리셋트
+ELSEIF ARG:0 == 2
+	CALL RESET_IAN_MEMBER
+;피임 유무
+ELSEIF ARG:0 == 3
+	LOCAL:1 = 0
+	FOR LOCAL, 0, CHARANUM
+		SIF CFLAG:LOCAL:침실호출선택중
+			LOCAL:1 ++
+	NEXT
+	SIF FLAG:위안피임약 || MONEY >= LOCAL:1 * 2000
+		FLAG:위안피임약 = !FLAG:위안피임약
+	RETURN 0
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;「백성위안」의 리스트 1 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP23(ARG:0)
+;참가 캐릭터의 수를 센다
+LOCAL:5 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):침실호출선택중
+		LOCAL:5 ++
+	ENDIF
+NEXT
+IF CFLAG:(ARG:0):침실호출선택중 || LOCAL:5 < MIN(CALC_SHOP_TIME() - SHOP_TIME, 3)
+	;조교참가플래그를 반전
+	CFLAG:(ARG:0):침실호출선택중 = !CFLAG:(ARG:0):침실호출선택중
+	LOCAL:5 += CFLAG:(ARG:0):침실호출선택중 == 0 ? -1 # 1
+	SIF FLAG:위안피임약 && LOCAL:5 * 2000 > MONEY
+		FLAG:위안피임약 = 0
+ENDIF
+RETURN 0
+
+;-------------------------------------------------
+;「백성위안」의 오른쪽 컬럼 버튼의 입력 처리 보좌 본체
+;-------------------------------------------------
+@DECIDE_IAN_MEMBER()
+#DIM 행선지
+#DIM 인원수
+#DIM 메인
+#DIM 방랑리스트, 3000
+#DIM 방랑자수
+#DIM FIRST_LINE
+FIRST_LINE = LINECOUNT
+
+인원수 = 0
+FOR LOCAL, 0, CHARANUM
+	SIF CFLAG:(LOCAL:0):침실호출선택중
+		인원수 ++
+NEXT
+
+IF 인원수 == 0
+	CLEARLINE LINECOUNT - FIRST_LINE
+	RETURN 0
+ENDIF
+
+;방랑자의 리스트 생성
+VARSET 방랑리스트
+VARSET 방랑자수
+FOR LOCAL, 0, CHARANUM
+	IF CFLAG:LOCAL:특수상태 == 특수상태_방랑 && !RAND:3
+		SELECTCASE CONFIG:14
+			CASE 1
+				SIF !IS_MALE(LOCAL)
+					CONTINUE
+			CASE 2
+				SIF !IS_FEMALE(LOCAL)
+					CONTINUE
+			CASE 3
+				SIF !(IS_FEMALE(LOCAL) && HAS_PENIS(LOCAL))
+					CONTINUE
+		ENDSELECT
+		방랑리스트:방랑자수 = LOCAL
+		방랑자수 ++
+	ENDIF
+NEXT
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 어디에 위안하러 갈까……?
+FOR LOCAL, 0, VARSIZE("IAN_PLACE")
+	PRINTFORML [{LOCAL}] %IAN_PLACE:LOCAL%
+NEXT
+PRINTFORML [99] 역시 그만둔다
+$INPUT_LOOP
+INPUT
+
+IF RESULT == 99
+	CLEARLINE LINECOUNT - FIRST_LINE
+	RETURN 0
+ELSEIF !INRANGE(RESULT, 0, VARSIZE("IAN_PLACE") - 1)
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+
+행선지 = RESULT
+메인 = -1
+;START_TRAIN_COMMON로 SHOP_TIME가+1되므로, 그것을 끌어 둔다
+SHOP_TIME --
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):침실호출선택중
+		CFLAG:(LOCAL:0):조교참가플래그  = 1
+		CFLAG:(LOCAL:0):강제우호화 = 1
+
+		IF FLAG:위안피임약
+			PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 피임약을 복용했다
+			CFLAG:(LOCAL:0):피임약남은턴 += 1
+			MONEY -= 2000
+		ENDIF
+		SIF LOCAL != MASTER && 메인 == -1
+			메인 = LOCAL
+		SHOP_TIME ++
+	ENDIF
+NEXT
+
+;전원의 위안참가자 플래그를 클리어（위안할당 메뉴로 조작되기 (위해)때문에）
+CVARSET CFLAG, GETNUM(CFLAG, "위안참가자") , 0
+
+LOCAL:2 = 0
+;방랑자를 추가
+IF 방랑자수 > 0 && CONFIG:15 == 0
+	FOR LOCAL, 0, 방랑자수
+		IF RAND:방랑자수 == 0
+			CFLAG:(방랑리스트:LOCAL):위안참가자 = 1
+			CFLAG:(방랑리스트:LOCAL):조교참가플래그  = 1
+			CFLAG:(방랑리스트:LOCAL):강제우호화 = 1
+			LOCAL:2 ++
+		ENDIF
+	NEXT
+ENDIF
+
+LOCAL:1 = RAND(3, 6) - LOCAL:2
+FOR LOCAL, 0, LOCAL:1
+	CALL CREATE_IAN_MOB(행선지, LOCAL + 1)
+	SIF RESULT == -1
+		BREAK
+NEXT
+
+FLAG:위안모드 = 1
+FLAG:위안장소 = 행선지
+ITEM:A_로터 = 1
+ITEM:A_바이브 = 1
+ITEM:A_애널바이브 = 1
+ITEM:A_페니스밴드 = 1
+ITEM:A_오나홀 = 1
+ITEM:A_클리캡 = 1
+ITEM:A_유두캡 = 1
+ITEM:A_마약 = 99
+ITEM:A_밧줄 = 1
+ITEM:A_채찍 = 1
+ITEM:A_눈가리개 = 1
+ITEM:A_재갈 = 1
+ITEM:A_코걸이 = 1
+ITEM:A_매직 = 1
+ITEM:A_로션 = 99
+ITEM:A_콘돔 = 99
+ITEM:A_미약 = 99
+ITEM:A_배란유발제 = 99
+ITEM:A_도원향 = 99
+ITEM:A_절륜환 = 99
+
+FLAG:조교모드 = 7
+;우후후플래그를 ON에
+FLAG:우후후플래그 = 1
+
+SIF 메인 != -1
+	CALL SHOW_IAN_MESSAGE(메인, 인원수)
+
+;행동 개시시의 공통 처리
+CALL START_TRAIN_COMMON
+RETURN 1
+
+;-------------------------------------------------
+;「백성위안」의 선택 멤버의 리셋트
+;-------------------------------------------------
+@RESET_IAN_MEMBER
+FOR LOCAL:0, 0, CHARANUM
+	SIF CFLAG:(LOCAL:0):침실호출선택중
+		CFLAG:(LOCAL:0):침실호출선택중 = 0
+NEXT
+RETURN 0
+
+;-------------------------------------------------
+;「백성위안」의 모브 추가처리
+;-------------------------------------------------
+@CREATE_IAN_MOB(행선지, 인원수, 카운트 = 1)
+#DIM 행선지
+#DIM 인원수
+#DIM 종류
+#DIM 남녀
+#DIMS 이름
+#DIM 대상
+#DIM 카운트
+종류 = CREATE_IAN_MOB_GET_CHARA(행선지)
+남녀 = CREATE_IAN_MOB_GET_SEX(종류)
+이름 = %CREATE_IAN_MOB_GET_NAME(종류, 남녀)%\@ 카운트 ? %TOFULL(TOSTR(인원수))% # \@
+
+CALL CREATE_RANDOM_CHARA(0, -1, 0)
+FLAG:범용무장카운트 --
+대상 = RESULT
+IF LOCAL == -1
+	RETURN -1
+ENDIF
+
+NO:대상 = GET_EMPTY_NO()
+NAME:대상 = %이름%
+CALLNAME:대상 = %이름%
+CSTR:대상:0 =
+CSTR:대상:1 =
+TALENT:대상:성별 = 남녀
+MAXBASE:대상:체력 = 99999999
+MAXBASE:대상:기력 = 99999999
+MAXBASE:대상:정신력 = 1500
+BASE:대상:체력 = MAXBASE:대상:체력
+BASE:대상:기력 = MAXBASE:대상:기력
+BASE:대상:정신력 = MAXBASE:대상:정신력
+ABL:대상:성지식 = 5
+ABL:대상:Ｃ감 = RAND(0,3)
+ABL:대상:Ｖ감 = RAND(0,3)
+ABL:대상:Ａ감 = RAND(0,3)
+ABL:대상:Ｂ감 = RAND(0,3)
+ABL:대상:Ｍ감 = RAND(0,3)
+ABL:대상:욕망 = RAND(3,5)
+ABL:대상:성기술 = RAND(4,7)
+ABL:대상:성지식 = 5
+ABL:대상:봉사 = RAND(0,3)
+ABL:대상:성교 = RAND(0,3)
+ABL:대상:레즈 = RAND:2
+ABL:대상:정애 = RAND:2
+ABL:대상:노출 = RAND:2
+ABL:대상:사정 = RAND:3
+ABL:대상:배설 = RAND:2
+ABL:대상:주도도Ｕ = RAND(-300, 300)
+ABL:대상:주도도Ｎ = RAND(-300, 300)
+ABL:대상:도착도 = RAND(0, 300)
+EXP:대상:절정경험 = 500
+ABL:대상:무투 = 30
+ABL:대상:방위 = 30
+ABL:대상:지략 = 30
+ABL:대상:정치 = 30
+ABL:대상:요리 = 10
+ABL:대상:주량 = 3
+IF HAS_PENIS(대상)
+	FOR LOCAL, 30, 50
+		SIF GROUPMATCH(LOCAL, 36, 46)
+			CONTINUE
+		COM_TENDENCY:대상:LOCAL = RAND:2
+	NEXT
+ENDIF
+
+IF HAS_VAGINA(대상)
+	FOR LOCAL, 30, 50
+		SIF GROUPMATCH(LOCAL, 36, 46)
+			CONTINUE
+		COM_TENDENCY:대상:LOCAL = RAND:2
+	NEXT
+ENDIF
+
+TALENT:대상:절륜 = 1
+TALENT:대상:음모현재치 = 음모_표준
+TALENT:대상:음모목표치 = 음모_표준
+TALENT:대상:Ｖ조임 = GET_DEFAULT_TIGHTNESS("보통")
+TALENT:대상:Ａ조임 = GET_DEFAULT_TIGHTNESS("보통")
+TALENT:대상:처녀 = 0
+TALENT:대상:키스미경험 = 0
+TALENT:대상:동정 = 0
+TALENT:대상:애널처녀 = 1
+TALENT:대상:위안모브 = 종류
+SEXUAL_EXPERIENCE:(대상):첫체험_처녀 = 불명
+SEXUAL_EXPERIENCE:(대상):첫체험_키스 = 불명
+SEXUAL_EXPERIENCE:(대상):첫체험_동정 = 불명
+SEXUAL_EXPERIENCE:(대상):첫체험_애널처녀 = ----
+SEXUAL_LAST_EXPERIENCE:(대상):첫체험_처녀 = 불명
+SEXUAL_LAST_EXPERIENCE:(대상):첫체험_키스 = 불명
+SEXUAL_LAST_EXPERIENCE:(대상):첫체험_동정 = 불명
+SEXUAL_LAST_EXPERIENCE:(대상):첫체험_애널처녀 = ----
+CALL CREATE_IAN_MOB_SET_STATUS(종류, 대상)
+CFLAG:대상:위안참가자 = 1
+CFLAG:대상:위안모브 = 1
+CFLAG:대상:조교참가플래그  = 1
+CFLAG:대상:강제우호화 = 1
+
+;-------------------------------------------------
+;「백성위안」의 모브 종류 취득 처리
+;-------------------------------------------------
+@CREATE_IAN_MOB_GET_CHARA(행선지)
+#FUNCTION
+#DIM 행선지
+SELECTCASE 행선지
+	CASE 위안_행선지_slum
+{
+		RETURNF IFRAND(
+		 @"{위안_캐릭터_빈민}, {위안_캐릭터_부랑자}, {위안_캐릭터_건달}", 1,
+		 @"{위안_캐릭터_민}", RAND:100 < 20,
+		 @"{위안_캐릭터_노출광}", RAND:100 < 20)
+}
+	CASE 위안_행선지_일반주택가
+{
+		RETURNF IFRAND(
+		 @"{위안_캐릭터_민}", 1,
+		 @"{위안_캐릭터_빈민}, {위안_캐릭터_부랑자}, {위안_캐릭터_건달}", RAND:100 < 20,
+		 @"{위안_캐릭터_노출광}", RAND:100 < 10,
+		 @"{위안_캐릭터_귀족}, {위안_캐릭터_부호}", RAND:100 < 10,
+		 @"{위안_캐릭터_요괴}", RAND:100 < 20,
+		 @"{위안_캐릭터_아이}", RAND:100 < 30,
+		 @"{위안_캐릭터_바람둥이}", RAND:100 < 30)
+}
+	CASE 위안_행선지_귀족의거주지
+{
+		RETURNF IFRAND(
+		 @"{위안_캐릭터_귀족}, {위안_캐릭터_부호}, {위안_캐릭터_자산가}", 1,
+		 @"{위안_캐릭터_민}", RAND:100 < 15,
+		 @"{위안_캐릭터_아이}", RAND:100 < 15)
+}
+	CASE 위안_행선지_요괴의산
+{
+		RETURNF IFRAND(
+		 @"{위안_캐릭터_텐구}, {위안_캐릭터_갓파}", 1,
+		 @"{위안_캐릭터_요괴}", RAND:100 < 20)
+}
+	CASE 위안_행선지_구지옥
+{
+		RETURNF IFRAND(
+		 @"{위안_캐릭터_오니}", 1,
+		 @"{위안_캐릭터_요괴}", RAND:100 < 20)
+}
+	CASE 위안_행선지_대나무숲
+{
+		RETURNF IFRAND(
+		 @"{위안_캐릭터_토끼}", 1,
+		 @"{위안_캐릭터_요괴}", RAND:100 < 20)
+}
+	CASE 위안_행선지_도둑의아지트
+{
+		RETURNF IFRAND(
+		 @"{위안_캐릭터_도둑}", 1,
+		 @"{위안_캐릭터_건달}, {위안_캐릭터_부랑자}", RAND:100 < 20)
+}
+	CASE 위안_행선지_아이들의비밀기지
+		RETURNF 위안_캐릭터_아이
+	CASE 위안_행선지_병사
+		RETURNF 위안_캐릭터_병사
+	CASE 위안_행선지_개축사
+		RETURNF 위안_캐릭터_개
+	CASE 위안_행선지_축사
+{
+		RETURNF IFRAND(
+		 @"{위안_캐릭터_돼지}", 1,
+		 @"{위안_캐릭터_말}", RAND:100 < 50)
+}
+	CASE 위안_행선지_마계
+{
+		RETURNF IFRAND(
+		 @"{위안_캐릭터_악마}", 1,
+		 @"{위안_캐릭터_요괴}", RAND:100 < 15)
+}
+	CASE 위안_행선지_마법의숲
+{
+		RETURNF IFRAND(
+		 @"{위안_캐릭터_요정}", 1,
+		 @"{위안_캐릭터_요괴}", RAND:100 < 15)
+}
+	CASE 위안_행선지_피안
+{
+		RETURNF IFRAND(
+		 @"{위안_캐릭터_사신}", 1,
+		 @"{위안_캐릭터_유령}", RAND:100 < 30)
+}
+	CASE 위안_행선지_홍마관
+{
+		RETURNF IFRAND(
+		@"{위안_캐릭터_홉고블린}", 1,
+		@"{위안_캐릭터_요정}", RAND:100 < 30
+		)
+}
+	CASE 위안_행선지_달궁전
+{
+		RETURNF IFRAND(
+		@"{위안_캐릭터_월인}, {위안_캐릭터_달토끼}", 1
+		)
+}
+	CASE 위안_행선지_천계
+		RETURNF 위안_캐릭터_천인
+	CASE 위안_행선지_호수
+{
+		RETURNF IFRAND(
+		@"{위안_캐릭터_민}, {위안_캐릭터_바람둥이}, {위안_캐릭터_아이}", 1
+		)
+}
+	CASE 위안_행선지_숲
+{
+		RETURNF IFRAND(
+		@"{위안_캐릭터_요괴}", 1,
+		@"{위안_캐릭터_개}, {위안_캐릭터_원숭이}", RAND:100 < 30
+		)
+}
+ENDSELECT
+RETURNF 위안_캐릭터_민
+
+;-------------------------------------------------
+;「백성위안」의 모브 종류에 응한 성별의 취득 처리
+;-------------------------------------------------
+@CREATE_IAN_MOB_GET_SEX(종류)
+#FUNCTION
+#DIM 종류
+SELECTCASE 종류
+	CASE 위안_캐릭터_요정, 위안_캐릭터_귀족, 위안_캐릭터_텐구, 위안_캐릭터_사신, 위안_캐릭터_갓파, 위안_캐릭터_민, 위안_캐릭터_노출광, 위안_캐릭터_아이, 위안_캐릭터_월인, 위안_캐릭터_달토끼, 위안_캐릭터_천인
+		SELECTCASE CONFIG:14
+			CASE 0
+				RETURNF IFRAND("0", 1, "1", RAND:100 < 50, "2", RAND:100 < 20)
+			CASE 1
+				RETURNF 0
+			CASE 2
+				RETURNF 1
+			CASE 3
+				RETURNF 2
+		ENDSELECT
+	CASE 위안_캐릭터_홉고블린
+		RETURNF 0
+	CASEELSE
+		RETURNF 0
+ENDSELECT
+
+;-------------------------------------------------
+;「백성위안」의 모브 종류에 응한 이름의 취득 처리
+;-------------------------------------------------
+@CREATE_IAN_MOB_GET_NAME(종류, 성별)
+#FUNCTIONS
+#DIM 종류
+#DIM 성별
+SELECTCASE 종류
+	CASE 위안_캐릭터_민
+		RETURNF "영지민"
+	CASE 위안_캐릭터_빈민
+		RETURNF "빈민"
+	CASE 위안_캐릭터_부랑자
+		RETURNF "부랑자"
+	CASE 위안_캐릭터_건달
+		RETURNF "건달"
+	CASE 위안_캐릭터_부호
+		RETURNF "부호"
+	CASE 위안_캐릭터_귀족
+		RETURNF 성별 == 0 ? "귀족" # "귀부인"
+	CASE 위안_캐릭터_자산가
+		RETURNF "자산가"
+	CASE 위안_캐릭터_텐구
+		RETURNF "텐구"
+	CASE 위안_캐릭터_갓파
+		RETURNF "갓파"
+	CASE 위안_캐릭터_오니
+		RETURNF "오니"
+	CASE 위안_캐릭터_요괴
+		RETURNF "요괴"
+	CASE 위안_캐릭터_노출광
+		RETURNF 성별 == 0 ? "노출광" # "치녀"
+	CASE 위안_캐릭터_토끼
+		RETURNF "토끼"
+	CASE 위안_캐릭터_도둑
+		RETURNF "도둑"
+	CASE 위안_캐릭터_아이
+		RETURNF "아이"
+	CASE 위안_캐릭터_병사
+		RETURNF "병사"
+	CASE 위안_캐릭터_개
+		RETURNF "개"
+	CASE 위안_캐릭터_돼지
+		RETURNF "돼지"
+	CASE 위안_캐릭터_악마
+		RETURNF "악마"
+	CASE 위안_캐릭터_요정
+		RETURNF "요정"
+	CASE 위안_캐릭터_사신
+		RETURNF "사신"
+	CASE 위안_캐릭터_유령
+		RETURNF "유령"
+	CASE 위안_캐릭터_홉고블린
+		RETURNF "홉고블린"
+	CASE 위안_캐릭터_월인
+		RETURNF "월인"
+	CASE 위안_캐릭터_달토끼
+		RETURNF "달토끼"
+	CASE 위안_캐릭터_천인
+		RETURNF 성별 == 0 ? "천인" # "선녀"
+	CASE 위안_캐릭터_바람둥이
+		RETURNF "바람둥이"
+	CASE 위안_캐릭터_말
+		RETURNF "말"
+	CASE 위안_캐릭터_원숭이
+		RETURNF "원숭이"
+ENDSELECT
+
+;-------------------------------------------------
+;「백성위안」의 모브 종류에 응한 능력 세트 처리
+;-------------------------------------------------
+@CREATE_IAN_MOB_SET_STATUS(종류, 대상)
+#DIM 종류
+#DIM 대상
+SELECTCASE 종류
+	CASE 위안_캐릭터_빈민, 위안_캐릭터_부랑자
+		ABL:대상:봉사 = 0
+		ABL:대상:성기술 = RAND:2
+		ABL:대상:욕망 = RAND(3, 7)
+		ABL:대상:성교 = RAND(4, 7)
+		ABL:대상:사정 = RAND(4, 7)
+		ABL:대상:새드 = RAND(1, 4)
+		ABL:대상:주도도Ｕ = RAND(0, 500)
+		ABL:대상:도착도 = RAND(0, 300)
+		TALENT:대상:정조관념없음 = 1
+		TALENT:대상:정조관념 = 0
+		COM_TENDENCY:대상:36 = 1
+		COM_TENDENCY:대상:46 = 1
+		COM_TENDENCY:대상:55 = 1
+		COM_TENDENCY:대상:56 = 1
+		COM_TENDENCY:대상:57 = 1
+		COM_TENDENCY:대상:58 = 1
+	CASE 위안_캐릭터_건달, 위안_캐릭터_병사
+		ABL:대상:봉사 = 1
+		ABL:대상:성기술 = RAND(0, 4)
+		ABL:대상:욕망 = RAND(3, 7)
+		ABL:대상:성교 = RAND(3, 5)
+		ABL:대상:사정 = RAND(3, 5)
+		ABL:대상:새드 = RAND(0, 3)
+		ABL:대상:주도도Ｕ = RAND(0, 500)
+		ABL:대상:도착도 = RAND(0, 300)
+		TALENT:대상:정조관념없음 = 1
+		TALENT:대상:정조관념 = 0
+	CASE 위안_캐릭터_부호, 위안_캐릭터_귀족, 위안_캐릭터_자산가
+		ABL:대상:욕망 = RAND(2,6)
+		ABL:대상:성기술 = RAND(2,5)
+		ABL:대상:봉사 = RAND(0,3)
+		ABL:대상:성교 = RAND(1,3)
+		ABL:대상:레즈 = RAND(0,2)
+		ABL:대상:정애 = RAND(1,3)
+		ABL:대상:노출 = RAND:2
+		ABL:대상:사정 = RAND(0,2)
+		ABL:대상:배설 = RAND(0,2)
+		ABL:대상:주도도Ｕ = RAND(0, 500)
+		ABL:대상:도착도 = RAND(0, 500)
+		TALENT:대상:프라이드높음 = 1
+		TALENT:대상:프라이드낮음 = 0
+	CASE 위안_캐릭터_텐구, 위안_캐릭터_갓파, 위안_캐릭터_사신, 위안_캐릭터_유령
+		ABL:대상:욕망 = RAND(4,7)
+		ABL:대상:성기술 = RAND(3,8)
+		ABL:대상:봉사 = RAND(1,4)
+		ABL:대상:성교 = RAND(0,4)
+		ABL:대상:정애 = RAND(0,2)
+		ABL:대상:사정 = RAND(0,3)
+		ABL:대상:배설 = RAND(0,2)
+		SIF 종류 == 위안_캐릭터_텐구
+			ABL:대상:새드 = RAND(1, 4)
+		ABL:대상:주도도Ｕ = RAND(300, 500)
+		ABL:대상:도착도 = RAND(300, 500)
+		TALENT:대상:정조관념없음 = 1
+		TALENT:대상:정조관념 = 0
+		TALENT:대상:프라이드높음 = 1
+		TALENT:대상:프라이드낮음 = 0
+		IF 종류 == 위안_캐릭터_갓파
+			TALENT:대상:기사 = 1
+			COM_TENDENCY:대상:60 = 1
+			COM_TENDENCY:대상:61 = 1
+			COM_TENDENCY:대상:62 = 1
+			COM_TENDENCY:대상:63 = 1
+			COM_TENDENCY:대상:64 = 1
+			COM_TENDENCY:대상:65 = 1
+		ENDIF
+	CASE 위안_캐릭터_오니
+		ABL:대상:Ｃ감 = RAND(0,2)
+		ABL:대상:Ｖ감 = RAND(0,2)
+		ABL:대상:Ａ감 = RAND(0,2)
+		ABL:대상:Ｂ감 = RAND(0,2)
+		ABL:대상:Ｍ감 = RAND(0,2)
+		ABL:대상:욕망 = RAND(4,8)
+		ABL:대상:성기술 = RAND(1,4)
+		ABL:대상:봉사 = RAND:2
+		ABL:대상:성교 = RAND(5,8)
+		ABL:대상:사정 = RAND(0,5)
+		ABL:대상:주도도Ｕ = RAND(300, 700)
+		TALENT:대상:정조관념없음 = 1
+		TALENT:대상:정조관념 = 0
+		TALENT:대상:프라이드높음 = 1
+		TALENT:대상:프라이드낮음 = 0
+	CASE 위안_캐릭터_노출광
+		ABL:대상:욕망 = RAND(5,8)
+		ABL:대상:노출 = RAND(5,10)
+		ABL:대상:배설 = RAND(4,8)
+		ABL:대상:주도도Ｕ = RAND(600, 1000)
+		ABL:대상:도착도 = RAND(600, 1000)
+		TALENT:대상:정조관념없음 = 1
+		TALENT:대상:정조관념 = 0
+		TALENT:대상:수치심옅음 = 1
+		TALENT:대상:수줍음 = 0
+		TALENT:대상:호기심 = 1
+		TALENT:대상:해방 = 1
+		COM_TENDENCY:대상:85 = 1
+		COM_TENDENCY:대상:86 = 1
+		COM_TENDENCY:대상:93 = 1
+		COM_TENDENCY:대상:1110 = 1
+		COM_TENDENCY:대상:1111 = 1
+		COM_TENDENCY:대상:112 = 1
+		COM_TENDENCY:대상:114 = 1
+	CASE 위안_캐릭터_토끼, 위안_캐릭터_달토끼, 위안_캐릭터_바람둥이
+		ABL:대상:욕망 = RAND(5,10)
+		ABL:대상:성기술 = RAND:2
+		ABL:대상:성교 = RAND(5,10)
+		ABL:대상:사정 = RAND(5,9)
+		TALENT:대상:정조관념없음 = 1
+		TALENT:대상:정조관념 = 0
+		COM_TENDENCY:대상:36 = 2
+		COM_TENDENCY:대상:46 = 2
+		COM_TENDENCY:대상:55 = 2
+		COM_TENDENCY:대상:56 = 2
+		COM_TENDENCY:대상:57 = 2
+		COM_TENDENCY:대상:58 = 2
+	CASE 위안_캐릭터_도둑
+		ABL:대상:Ｃ감 = RAND(1, 5)
+		ABL:대상:욕망 = 5
+		ABL:대상:성기술 = RAND(2, 5)
+		ABL:대상:봉사 = 3
+		ABL:대상:성교 = 5
+		ABL:대상:노출 = 2
+		ABL:대상:사정 = 3
+		ABL:대상:배설 = 2
+		ABL:대상:새드 = RAND(0, 3)
+		ABL:대상:주도도Ｕ = 500
+		ABL:대상:주도도Ｎ = 300
+		ABL:대상:도착도 = 300
+		TALENT:대상:특수세력소질 = 특수세력_도둑
+	CASE 위안_캐릭터_아이, 위안_캐릭터_요정
+		ABL:대상:성지식 = RAND(3, 6)
+		ABL:대상:욕망 = RAND:3
+		ABL:대상:성기술 = RAND:3
+		ABL:대상:성교 = RAND:2
+		ABL:대상:사정 = RAND:2
+		CALL VIRGINIZE(대상, 첫체험_처녀)
+		CALL VIRGINIZE(대상, 첫체험_애널처녀)
+		CALL VIRGINIZE(대상, 첫체험_동정)
+		CALL VIRGINIZE(대상, 첫체험_키스)
+	CASE 위안_캐릭터_개, 위안_캐릭터_돼지, 위안_캐릭터_말, 위안_캐릭터_원숭이
+		ABL:대상:Ｃ감 = RAND(3, 6)
+		ABL:대상:욕망 = RAND(3, 8)
+		ABL:대상:성기술 = RAND:3
+		ABL:대상:봉사 = RAND(2, 5)
+		ABL:대상:성교 = RAND(5, 8)
+		ABL:대상:사정 = RAND(3, 8)
+		TALENT:대상:동물귀 = 1
+		TALENT:대상:꼬리 = 1
+		SELECTCASE 종류
+			CASE 위안_캐릭터_개
+				TALENT:대상:동물 = 동물_개
+			CASE 위안_캐릭터_돼지
+				TALENT:대상:동물 = 동물_돼지
+			CASE 위안_캐릭터_말
+				TALENT:대상:동물 = 동물_말
+			CASE 위안_캐릭터_원숭이
+				TALENT:대상:동물 = 동물_원숭이
+		ENDSELECT
+	CASE 위안_캐릭터_악마
+		ABL:대상:욕망 = RAND(4,7)
+		ABL:대상:성기술 = RAND(3,8)
+		ABL:대상:봉사 = RAND(1,4)
+		ABL:대상:성교 = RAND(0,4)
+		ABL:대상:정애 = RAND(0,2)
+		ABL:대상:사정 = RAND(0,3)
+		ABL:대상:배설 = RAND(0,2)
+		ABL:대상:새드 = RAND(3, 6)
+		ABL:대상:주도도Ｕ = RAND(300, 500)
+		ABL:대상:도착도 = RAND(300, 500)
+		TALENT:대상:Ｓ기질 = 1
+		SETBIT TALENT:대상:음란계, 소질_음란_새드
+		TALENT:대상:정조관념없음 = 1
+		TALENT:대상:정조관념 = 0
+		TALENT:대상:프라이드높음 = 1
+		TALENT:대상:프라이드낮음 = 0
+	CASE 위안_캐릭터_홉고블린
+		ABL:대상:Ｃ감 = 4
+		ABL:대상:욕망 = 6
+		ABL:대상:성기술 = 4
+		ABL:대상:성지식 = 5
+		ABL:대상:봉사 = 2
+		ABL:대상:성교 = 4
+		ABL:대상:노출 = 1
+		ABL:대상:사정 = 4
+		ABL:대상:배설 = 2
+		ABL:대상:새드 = RAND(0, 3)
+		ABL:대상:주도도Ｕ = 700
+		ABL:대상:주도도Ｎ = 300
+		ABL:대상:도착도 = 300
+		EXP:대상:절정경험 = 500
+		TALENT:대상:특수세력소질 = 특수세력_홉고블린
+		COM_TENDENCY:대상:36 = 1
+		COM_TENDENCY:대상:46 = 1
+		COM_TENDENCY:대상:55 = 1
+		COM_TENDENCY:대상:56 = 1
+		COM_TENDENCY:대상:57 = 1
+		COM_TENDENCY:대상:58 = 1
+	CASE 위안_캐릭터_천인, 위안_캐릭터_월인
+		ABL:대상:욕망 = 5
+		ABL:대상:성기술 = 5
+		ABL:대상:성지식 = 5
+		ABL:대상:봉사 = 5
+		ABL:대상:성교 = 0
+		ABL:대상:사정 = 0
+		ABL:대상:배설 = 2
+		ABL:대상:새드 = RAND(0, 4)
+		ABL:대상:주도도Ｕ = 700
+		ABL:대상:도착도 = 600
+		TALENT:대상:기사 = 1
+		TALENT:대상:프라이드높음 = 1
+		TALENT:대상:프라이드낮음 = 0
+		TALENT:대상:반항적 = 1
+	CASEELSE
+		;돼지
+ENDSELECT
+
+;-------------------------------------------------
+;「백성위안」개시시의 메세지
+;-------------------------------------------------
+@SHOW_IAN_MESSAGE(대상, 인원수)
+#DIM 대상
+#DIM 인원수
+SIF !CFLAG:MASTER:소속
+	RETURN 0
+
+SELECTCASE IFRAND("0TO2", 1, "3", IS_FEMALE(대상))
+	CASE 0
+		PRINTFORML 민을 기쁘게 하는 것이 세력을 강하게 한다
+		PRINTFORML 인 것으로, 너의 신체로 백성을 기쁘게 하고 와
+	CASE 1
+		PRINTFORML 민중에게도 가스 빼기는 필수다
+		PRINTFORML 너가 책임 가지고 「뽑아」해라
+	CASE 2
+		PRINTFORML 너에게 백성을 위안하는 임무를 준다
+		PRINTFORML 제대로 만족시켜 주어라
+	CASE 3
+		PRINTFORML 우수한 사관인 아이는 우수하게 되는 것으로 정해져 있다
+		PRINTFORML 이니까 임신해지고 와
+ENDSELECT
+PRINTFORMW 그렇게 명해 %ANAME(대상) + (인원수 > 1 ? "들" # "")%를 배웅했다……
+
+SIF RAND:3
+	RETURN
+
+IF GETBIT(TALENT:대상:음란계, 소질_음란_음란) && !RAND:3
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 추잡한 행위를 기대해, 신체를 쑤시게 하고 있는 것 같다……
+ELSEIF GETBIT(TALENT:대상:음란계, 소질_음란_정액변소) && !RAND:3
+	PRINTFORMW 변소로서 다루어지는 기대에, %조사처리(ANAME(대상),"는")% 흥분을 숨길 수 없이 있다……
+ELSEIF GETBIT(TALENT:대상:음란계, 소질_음란_창녀) && !RAND:3
+	PRINTFORMW 창녀란 약간 다른 일에 %조사처리(ANAME(대상),"는")% 당황스러움을 느끼고 있는 것 같지만, 그런데도 적극적인 자세를 보이고 있다……
+ELSEIF GETBIT(TALENT:대상:음란계, 소질_음란_마조) && !RAND:3
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 누군가에게 시달리는 것을 기대해, 신체를 쑤시게 하고 있는 것 같다……
+ELSEIF GETBIT(TALENT:대상:음란계, 소질_음란_임신하고싶어함) && !RAND:3
+	PRINTFORMW 임무의 결과자를 품는 것을 상상해, %조사처리(ANAME(대상),"는")% 흥분을 느끼고 있는 것 같다……
+ELSEIF IS_LOVER(대상) && !RAND:3
+	SELECTCASE ABL:대상:욕망
+		CASE IS > 랭크역치:랭크_그외:랭크_B
+			PRINTFORMW %ANAME(MASTER)% 이외에 안긴다는데, %조사처리(ANAME(대상),"는")% 흥분을 느끼고 있는 것 같다……
+		CASE IS > 랭크역치:랭크_그외:랭크_D
+			PRINTFORMW %조사처리(ANAME(대상),"는")% %ANAME(MASTER)% 이외에 안기는 것을 거절하려고 하고 있지만, 신체는 의지라든지 변하지 않고 고조되고 있다……
+		CASEELSE
+			PRINTFORMW %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%의 명령의 의도를 이해하지 못하고 슬퍼하고 있지만, 그런데도 받아들였다……
+	ENDSELECT
+ELSEIF IS_SLAVE(대상) && !RAND:3
+	SELECTCASE ABL:대상:욕망
+		CASE IS > 랭크역치:랭크_그외:랭크_B
+			PRINTFORMW %ANAME(MASTER)%의 명령 이전에, 누군가에게 안긴다는 것을, %조사처리(ANAME(대상),"는")% 흥분을 느끼고 있는 것 같다……
+		CASE IS > 랭크역치:랭크_그외:랭크_D
+			PRINTFORMW %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%의 명령이하고 있지만, 신체는 그런 일과 관계없이 고조되고 있다……
+		CASEELSE
+			PRINTFORMW %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%의 명령이라면 어쩔 수 없으면 받아들였다……
+	ENDSELECT
+ELSEIF !RAND:3
+	PRINTFORMW %조사처리(ANAME(대상),"는")%, 임무라면 어쩔 수 없으면 받아들였다……
+ENDIF
+

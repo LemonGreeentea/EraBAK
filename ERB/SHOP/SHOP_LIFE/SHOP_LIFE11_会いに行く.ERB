@@ -1,0 +1,330 @@
+﻿;「만나러간다」는 FLAG:거점페이즈선택커맨드가 선택 불가 때
+;  지정되는 Default의 메뉴 번호（DEFAULT_MENU_NUM）가 되어 있다
+;「만나러간다」마셔 사용하지 않는 함수도 코멘트 아웃으로 배치했다
+;  어떤 함수가 이미 존재하고 있을까 모르게 되었을 때의 확인용이나 텐프레이트 대신에
+;-------------------------------------------------
+;「만나러간다」의 명칭
+;  명칭의 유무는 메뉴의 존재 판정에도 사용된다
+;-------------------------------------------------
+@SHOP_LIFE_NAME11
+IF CFLAG:MASTER:행동불능상태 == 행동불능_육아
+	RESULTS:0 '= "육아한다"
+ELSE
+	RESULTS:0 '= "만나러간다"
+ENDIF
+
+;-------------------------------------------------
+;「만나러간다」의 선택 가부
+;  메뉴의 선택 가부 판정은@CHECK_CHECKCHARA_SAVE로 행해지고
+;  SHOP_AVAIL:(메뉴 번호)에 0:선택 불가 1:선택가능으로 보존된다
+;  선택 가능 캐릭터 존재 판정으로 1:선택가능의 캐릭터가 존재해
+;  이 판정에서도 1:선택가능이라면 SHOP_AVAIL:(메뉴 번호)=1:선택가능
+;
+;  RETURN 0:선택 불가（캐릭터 존재 판정에 덧쓰기해 표시를 저지한다）
+;  RETURN 1:선택가능
+;-------------------------------------------------
+@SHOP_LIFE_CHECK11
+SIF CFLAG:MASTER:포로처
+	RETURN 0
+SIF CFLAG:MASTER:행동불능상태 == 행동불능_임월 || COOLTIME:MASTER:0 > 1
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「만나러간다」의 선택 가능 캐릭터 존재 판정 리스트 1（상）
+;  RETURN 0:이 캐릭터는 선택 불가로 리스트에 실리지 않는다
+;  RETURN 1:이 캐릭터는 선택가능
+;  RETURN 2:이 캐릭터는 회색으로 리스트에 실리지만 선택 불가
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA11(ARG:0)
+;※사용전에 TMP_CREATE_RELATION_MAP 함수를 호출할 필요 있어
+;  현재 TMP_CREATE_RELATION_MAP 는 SHOP.ERB 로 불려 가고 있다
+LOCAL:0 = TMP_COUNTRY_RELATION:(CFLAG:MASTER:소속):(CFLAG:(ARG:0):소속)
+;포로로서 잡고 있는 경우
+IF CFLAG:(ARG:0):포로처
+	;비주인공, 주인공 세력의 포로 또한 연금중
+	RETURN CHECK91(ARG:0, 2, ARG:0 != MASTER && CFLAG:(ARG:0):포로처 == CFLAG:MASTER:소속 && CFLAG:(ARG:0):연금중 == 1 && !IS_ANIMAL(ARG:0) && SHOP_LIFE_11_GET_FILTER(ARG:0))
+ENDIF
+
+;방랑시
+IF !CFLAG:MASTER:소속
+	;포로가 아닌, 비주인공, 방랑중
+	RETURN CHECK91(ARG:0, 2, ARG:0 != MASTER && CFLAG:(ARG:0):특수상태 == 특수상태_방랑 && !IS_ANIMAL(ARG:0) && SHOP_LIFE_11_GET_FILTER(ARG:0))
+ELSE
+	;포로가 아닌, 비주인공, 동일 세력 or공투 세력 or방랑중에서 후보 리스트에 있다
+	RETURN CHECK91(ARG:0, 2, ARG:0 != MASTER && (LOCAL:0 >= 2 || FINDELEMENT(MEET_CANDIDATES, GET_ID(ARG:0)) != -1) && !IS_ANIMAL(ARG:0) && SHOP_LIFE_11_GET_FILTER(ARG:0))
+ENDIF
+;-------------------------------------------------
+;「만나러간다」의 선택 가능 캐릭터 존재 판정 리스트 2（하·보좌）
+;  리스트 2（하）가 존재하는 경우, 이쪽에서 판정을 실시한다
+;  다만 하단은 조수의 지정 따위에 사용되는 것이 많이
+;  조수는 없어도 행동할 수 있는 것이 많기 때문에
+;  이 판정으로 선택 불가가 돌아가도 메뉴 표시를 오프로 하지 않는다
+;-------------------------------------------------
+;@SHOP_LIFE_CHECKCHARA_SUB11(ARG:0)
+
+;-------------------------------------------------
+;「만나러간다」의 왼쪽 컬럼 메뉴의 입력 처리
+;  RETURN 0:CLEARLINE LINECOUNT - LINES_SHOP 한다
+;  RETURN 1:CLEARLINE LINECOUNT - LINES_SHOP 하지 않는다
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY11
+FLAG:거점페이즈페이지 = 1
+FLAG:요바이 = 0
+RETURN 0
+
+;-------------------------------------------------
+;「만나러간다」의 오른쪽 컬럼 오프 판정
+;  통상은 오른쪽 컬럼에 어떠한 표시가 있지만
+;  오른쪽 컬럼에 아무것도 표시하지 않는 메뉴라면 이 함수를 세트 해 둔다
+;  하면 메인 화면으로 돌아갔을 때 최신의 오른쪽 컬럼（하나전에 선택한 메뉴등 ）를 표시한다
+;-------------------------------------------------
+;@SHOP_LIFE_EVENTBUY_COLUMN_RIGHT_OFF_CHECK11
+
+;-------------------------------------------------
+;「만나러간다」의 오른쪽 컬럼 버튼 입력치를 캐릭터 번호로 변환하는 처리의 오프 판정
+;  입력치를 그대로 지정하고 싶을 때에 사용
+;  이것을 사용하면 입력치가 캐릭터 번호의 범위외에서도 퇴피 처리를 통하지 않다
+;  그 때문에 입력치로부터 캐릭터 번호를 취하는 경우는 퇴피 처리를 자작하는 일이 된다
+;-------------------------------------------------
+;@SHOP_LIFE_USERSHOP_COLUMN_RIGHT_CONVERT_CHARANUM_OFF_CHECK11
+
+;-------------------------------------------------
+;「만나러간다」의 오른쪽 컬럼 캐릭터 리스트 1（상）의 버튼
+;  캐릭터 리스트의 Default의 버튼은 선택중색이 없다（타글식이 아니다）
+;  타글식의 버튼을 사용하고 싶을 때나, 버튼을 얼마든지 나열 하고 싶을 때 등
+;  캐릭터 리스트에 Default의 버튼 이외를 사용하고 싶은 메뉴라면 이것을 준비한다
+;
+;  버튼 번호에 추가하는 수치는 SHOP_LIFE_LIST1_ADD_INPUT=100
+;  ARG:1은 리스트 함수로부터 CHECKCHARA의 판정 결과가 건네받고 있으므로 그대로 돌려주면ＯＫ
+;-------------------------------------------------
+;@SHOP_LIFE_LIST1_BUTTON11(ARG:0, ARG:1)
+;CALL COLUMN_RIGHT_CHARALIST_BUTTON(캐릭터（ARG:0）, 선택중 칼라 표시 플래그, 버튼 번호에 추가하는 수치（SHOP_LIFE_LIST1_ADD_INPUT）, CHECKCHARA의 반환값（ARG:1）, 행동이 끝난 마크를 오프로 하는 플래그)
+;RETURN 0
+
+;-------------------------------------------------
+;「만나러간다」의 오른쪽 컬럼 캐릭터 리스트 2（하）의 버튼
+;  상에 같음. 하단의 리스트에 사용된다
+;  버튼 번호에 추가하는 수치는 SHOP_LIFE_LIST2_ADD_INPUT=1100
+;-------------------------------------------------
+;@SHOP_LIFE_LIST2_BUTTON11(ARG:0, ARG:1)
+;CALL COLUMN_RIGHT_CHARALIST_BUTTON(캐릭터（ARG:0）, 선택중 칼라 표시 플래그, 버튼 번호에 추가하는 수치（SHOP_LIFE_LIST2_ADD_INPUT）, CHECKCHARA의 반환값（ARG:1）, 행동이 끝난 마크를 오프로 하는 플래그)
+;RETURN 0
+
+;-------------------------------------------------
+;「만나러간다」의 오른쪽 컬럼 캐릭터 리스트 1（상）의 버튼에 추적 시키는 정보
+;  「투옥한다」(이)나 「오락담당」등과 같이
+;  Default의 버튼에서는 표시되지 않는 능력치를 더하고 싶은 경우나
+;  자동적으로 표시되는 정보가 불필요한 때 이것을 준비한다
+;
+;  RETURN 0  버튼에 Default의 정보를 부여한다
+;  RETURN 1  버튼에 Default의 정보를 부여하지 않는다
+;-------------------------------------------------
+;@SHOP_LIFE_BUTTON_ADD_TOP11(ARG:0)
+;여기에 버튼의 뒤로 표시하고 싶은 정보
+;RETURN 1
+
+;-------------------------------------------------
+;「만나러간다」의 오른쪽 컬럼 캐릭터 리스트 2（하）버튼에 추적 시키는 정보
+;-------------------------------------------------
+;@SHOP_LIFE_BUTTON_ADD_BOTTOM11(ARG:0)
+;여기에 버튼의 뒤로 표시하고 싶은 정보
+;RETURN 1
+
+;-------------------------------------------------
+;「만나러간다」의 오른쪽 컬럼 표시 처리
+;  여기는 오른쪽 컬럼에 표시하는 정보의 메인 부분
+;  왼쪽 컬럼의 버튼 표시와 오른쪽 컬럼의 리스트 표시를 교대로 지정할 필요가 있었지만
+;  지정이 큰 일인 것으로, 개행이나 단락지어 선의 지정에 이하의 함수를 사용한다
+;
+;  CALL COLUMN_RIGHT_PRINTL  개행과 행 번호의 지정과 왼쪽 컬럼 버튼 표시
+;  CALL COLUMN_RIGHT_LINE　　오른쪽 컬럼용의 폭으로 설정된 라인을 표시
+;
+;  루프 처리에서는 개행되지 않는 편이 처리하기 쉽기 때문에 선은 개행하고 있지 않다
+;  선을 표시하면 개행（CALL COLUMN_RIGHT_PRINTL）할 필요 있어
+;
+;  리스트 호출 함수는 이하
+;  1. CALL COLUMN_RIGHT_CHARALIST 　　　　기본의 캐릭터 리스트（리스트 1）
+;  2. CALL COLUMN_RIGHT_CHARALIST_TOP 　　2단조캐릭터 리스트상（리스트 1）
+;　　　CALL COLUMN_RIGHT_CHARALIST_BOTTOM  2단조캐릭터 리스트하（리스트 2）
+;  2는 세트로 사용한다
+;
+;  각각 ARG:0（1행에 늘어놓는 버튼수）와
+;  ARG:1（1 버튼 지정으로 몇행 취할까）를 지정할 수 있다
+;  버튼의 정보량이나 행수에 따라서는 표시가 허물없으므로 확인은 필요
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SHOW11
+;타이틀 표시
+CALL COLUMN_RIGHT_TITLE("대상자 선택", "0", "1", "1", "0")
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+PRINTBUTTON @"[%SHOP_LIFE_11_GET_FILTER_MODE(), MAX_CHARANAME_LENGTH, LEFT%]", 1
+PRINTPLAIN   
+PRINTBUTTON @"[%"필터 설정", MAX_CHARANAME_LENGTH, LEFT%]", 2
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+;표준적인 캐릭터 리스트와 페이지 이동
+CALL COLUMN_RIGHT_CHARALIST
+RETURN 0
+
+;-------------------------------------------------
+;「만나러간다」의 오른쪽 컬럼 버튼의 입력 처리 보좌
+;  입력치 0～9를 상정하고 있다
+;  RETURN 0:CLEARLINE LINECOUNT - LINES_SHOP 한다
+;  RETURN 1:CLEARLINE LINECOUNT - LINES_SHOP 하지 않는다
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SUB11(ARG:0)
+;표시 필터 변환
+IF ARG:0 == 1
+	SHOP_LIFE_11_FILTER_MODE = ROUND_INCREMENT(SHOP_LIFE_11_FILTER_MODE, 0, VARSIZE("SHOP_LIFE_11_FILTER", 0) - 1)
+	RETURN 0
+;표시 필터 설정
+ELSEIF ARG:0 == 2
+	CALL SHOP_LIFE_11_SET_FILTER
+ENDIF
+
+;-------------------------------------------------
+;「만나러간다」의 리스트 1（상）입력 처리
+;  ARG:0=NO_TO_CHARA(입력치-SHOP_LIFE_LIST1_ADD_INPUT) 되고 있다
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP11(ARG:0)
+
+;SHOW_INFO의 초기 화면을 기본 정보로 한다
+FLAG:능력표시모드 = 0
+
+$SHOW_LOOP_INFO_A
+
+;대상 캐릭터의 정보를 표시
+CALL SINGLE_DRAWLINE
+CALL SHOW_INFO(ARG:0)
+CALL SINGLE_DRAWLINE
+
+;포로의 경우
+IF CFLAG:(ARG:0):포로처
+	PRINTFORML %조사처리(ANAME(ARG:0),"를")% 어떻게 합니까?
+	PRINTPLAIN  
+	PRINTBUTTON " 0[만나러간다]", 0
+	PRINTPLAIN  
+	PRINTBUTTON " 1[투옥한다]", 1
+	PRINTPLAIN  
+	;클리어 다음에는 없다
+	IF !FLAG:클리어플래그
+		PRINTBUTTON " 2[해방한다]", 2
+	ELSE
+		SETCOLOR 칼라_선택불가
+		PRINTPLAIN  2[해방한다]
+		RESETCOLOR
+	ENDIF
+	PRINTL 
+	PRINTPLAIN  
+	PRINTBUTTON " 9[캔슬]", 9
+	PRINTL 
+
+	REDRAW 0
+
+	$INPUT_LOOP_PRISONER
+	INPUT
+
+	IF RESULT == 0
+		;조교 초기설정
+		CALL TRAIN_TARGET_SETTING(ARG:0)
+		;초기의 우후후플래그는ＯＦＦ로 한다
+		FLAG:우후후플래그 = 0
+		;만나러간다 모드
+		FLAG:조교모드 = 0
+		;행동 개시시의 공통 처리
+		CALL START_TRAIN_COMMON
+		REDRAW 1
+		RETURN 1
+	ELSEIF RESULT == 1
+		PRINTFORMW %조사처리(ANAME(ARG:0),"를")% 투옥했습니다
+		CFLAG:(ARG:0):연금중 = 0
+		REDRAW 1
+		RETURN 1
+	ELSEIF RESULT == 2 && !FLAG:클리어플래그
+		PRINTFORML 정말로 %조사처리(ANAME(ARG:0),"를")% 해방합니까?
+		CALL ASK_YN
+		IF RESULT == 0
+			CALL KOJO_EVENT(ARG:0, 340)
+			PRINTFORMW %조사처리(ANAME(ARG:0),"를")% 해방했습니다
+			CALL CAPTURE(ARG:0, 0, TALENT:(ARG:0):붕괴)
+			REDRAW 1
+			RETURN 1
+		ENDIF
+		REDRAW 1
+		GOTO SHOW_LOOP_INFO_A
+	ELSEIF RESULT != 9
+		CLEARLINE 1
+		GOTO INPUT_LOOP_PRISONER
+	ENDIF
+	REDRAW 1
+ELSE
+	IF CFLAG:(ARG:0):행동불능상태 == 행동불능_임월
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 출산을 앞에 두고 행동이 제한되고 있습니다
+		PRINTFORML %조사처리(ANAME(ARG:0),"를")% 만나러 갑니까?
+	ELSEIF CFLAG:(ARG:0):행동불능상태 == 행동불능_육아
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 육아중에 대해 행동이 제한되고 있습니다
+		PRINTFORML %조사처리(ANAME(ARG:0),"를")% 만나러 갑니까?
+	ELSEIF CFLAG:(ARG:0):행동불능상태 == 3
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 중증에 대해 행동이 제한되고 있습니다
+		PRINTFORML %ANAME(ARG:0)%의 병문안 하러 갑니까?
+	ELSEIF CFLAG:(ARG:0):행동불능상태 == 행동불능_아이
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 아직 어리기 때문에 육아 모드로 개시합니다
+		PRINTFORML %조사처리(ANAME(ARG:0),"를")% 만나러 갑니까?
+	ELSE
+		PRINTFORML %조사처리(ANAME(ARG:0),"를")% 만나러 갑니까?
+	ENDIF
+	IF CFLAG:(ARG:0):행동불능상태 == 행동불능_아이
+		LOCALS = %EDUCATION(CFLAG:ARG:교육방침)%
+		PRINTL [0] 보통으로 만나는[1] 집중 교육을 실행 [2] 역시 그만둔다
+		PRINTFORM   현재의 교육 방침 -  
+		PRINTBUTTON "["+LOCALS+"]",10
+		INPUT
+		IF RESULT == 1 && CFLAG:ARG:교육방침 >= 10 && CFLAG:ARG:교육방침 <= 15
+			CFLAG:ARG:행동완료 = 1
+			SHOP_TIME ++
+			CALL 교육(ARG, MASTER, CFLAG:ARG:교육방침)
+			LINES_SHOP = LINECOUNT
+			BEGIN TURNEND
+		ELSEIF  RESULT == 2
+		;처리없이 돌아올 수 있어?
+		ELSEIF RESULT == 10
+			IF CFLAG:ARG:교육방침 < 10 || CFLAG:ARG:교육방침 >= 15
+				CFLAG:ARG:교육방침 = 10
+			ELSE
+				CFLAG:ARG:교육방침 ++
+			ENDIF
+			GOTO SHOW_LOOP_INFO_A
+		ELSE
+			GOTO NORMAL_MEET
+		ENDIF
+	ELSE
+		CALL ASK_YN
+		IF RESULT == 0
+			$NORMAL_MEET
+			;조교 초기설정
+			CALL TRAIN_TARGET_SETTING(ARG:0)
+			;초기의 우후후플래그는ＯＦＦ로 한다
+			FLAG:우후후플래그 = 0
+			;상대가 아이라면 육아 모드
+			IF CFLAG:(ARG:0):행동불능상태 == 행동불능_아이
+				FLAG:조교모드 = 3
+			;그 이외는 통상의 만나러간다 모드
+			ELSE
+				FLAG:조교모드 = 0
+			ENDIF
+			;행동 개시시의 공통 처리
+			CALL START_TRAIN_COMMON
+		ENDIF
+	ENDIF
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;「만나러간다」의 리스트 2（하）입력 처리
+;  ARG:0=NO_TO_CHARA(입력치-SHOP_LIFE_LIST2_ADD_INPUT) 되고 있다
+;-------------------------------------------------
+;@SHOP_LIFE_USERSHOP_SUB11(ARG:0)
+

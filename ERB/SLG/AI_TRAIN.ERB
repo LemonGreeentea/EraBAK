@@ -1,0 +1,107 @@
+﻿;@fn AI에 의한 훈련
+;@param 세력 훈련을 실시하는 세력의 번호
+@SLG_AI_TRAIN(세력)
+#DIM 세력
+#DIM 대상
+#DIM 상승능력
+#DIM 상승량
+
+AI_TRAIN_TERM:세력 --
+
+;설득 기한 마감 + 사관이 있는 것 같으면 플랜 생성
+SIF AI_TRAIN_TERM:세력 <= 0 && CMATCH(CFLAG:소속, 세력) > 1
+	CALL AI_TRAIN_CREATE_PLAN(세력)
+
+FOR LOCAL, 0, AI_TRAIN_MAX_TARGET
+	대상 = ID_TO_CHARA(AI_TRAIN_TARGET:세력:LOCAL)
+	SIF 대상 == -1
+		CONTINUE
+	IF CFLAG:대상:소속 != 세력 || CFLAG:대상:포로처
+		AI_TRAIN_TARGET:세력:LOCAL = 0
+		CONTINUE
+	ENDIF
+	
+	상승능력 = IFRAND(@"{GETNUM(ABL, "무투")}, {GETNUM(ABL, "방위")}, {GETNUM(ABL, "지략")}, {GETNUM(ABL, "정치")}", 1, @"{GETNUM(ABL, "요리")}, {GETNUM(ABL, "가창")}", RAND:100 > 50, @"{GETNUM(ABL, "요술")}", TALENT:대상:요술지식 && RAND:100 > 30)
+	상승량 = RAND:3
+	
+	SELECTCASE ABL:대상:상승능력
+		CASE IS >= 랭크역치:랭크_ＳＬＧ:랭크_A
+			상승량 = 1
+		CASE IS < 랭크역치:랭크_ＳＬＧ:랭크_C
+			상승량 += RAND:2
+	ENDSELECT
+
+	SIF FIND_PASSIVE_SKILL(대상, "초성장력")
+		상승량 ++
+
+	SIF FIND_PASSIVE_SKILL(대상, "노력가")
+		상승량 ++
+
+	;요술의 필요경험치 높기 때문에
+	SIF 상승능력 == GETNUM(ABL, "요술")
+		상승량 *= 10
+
+	EXP:대상:GET_EXP(상승능력) += 상승량
+
+	CALL TRAIN_AUTO_ABLUP(대상, 1)
+
+NEXT
+
+;@fn AI에 의한 훈련 대상 리스트를 생성한다
+;@param 세력 대상 리스트를 생성하는 세력
+@AI_TRAIN_CREATE_PLAN(세력)
+#DIM 세력
+#DIM 세력군주
+#DIM 사관리스트, 3000
+#DIM 능력치리스트, 3000
+#DIM 사관수
+#DIM 훈련대상자수
+#DIM 대상
+#DIM 대상위치
+#DIM 훈련자수최대
+VARSET 사관리스트, -1
+VARSET 능력치리스트, __INT_MIN__
+VARSET 사관수
+VARSET 훈련대상자수
+
+FOR 대상, 0, AI_TRAIN_MAX_TARGET
+	AI_TRAIN_TARGET:세력:대상 = 0
+NEXT
+
+FOR 대상, 0, CHARANUM
+	IF CFLAG:대상:소속 == 세력 && !CFLAG:대상:포로처
+		사관리스트:사관수 = 대상
+		능력치리스트:사관수 = ABL:대상:무투 + ABL:대상:지략 + ABL:대상:방위 + ABL:대상:요술 + ABL:대상:요리 + ABL:대상:가창 + ABL:대상:정치
+		사관수 ++
+	ENDIF
+NEXT
+
+SIF 사관수 == 0
+	RETURN
+
+;우선 능력이 최저의 캐릭터
+IF 사관수 > 0
+	대상위치 = FINDELEMENT(능력치리스트, MINARRAY(능력치리스트, 0, 사관수), 0, 사관수)
+	대상 = GET_ID(사관리스트:대상위치)
+	AI_TRAIN_TARGET:세력:훈련대상자수 = 대상
+	ARRAYSHIFT 사관리스트, -1, -1, 대상위치
+	ARRAYSHIFT 능력치리스트, -1, __INT_MIN__ , 대상위치
+	사관수 --
+	훈련대상자수 ++
+ENDIF
+
+;후 적당 랜덤에
+WHILE 0 < 사관수 && 훈련대상자수 < AI_TRAIN_MAX_TARGET
+	대상위치 = RAND:사관수
+	대상 = GET_ID(사관리스트:대상위치)
+	AI_TRAIN_TARGET:세력:훈련대상자수 = 대상
+	ARRAYSHIFT 사관리스트, -1, -1, 대상위치
+	ARRAYSHIFT 능력치리스트, -1, __INT_MIN__ , 대상위치
+	사관수 --
+	훈련대상자수 ++
+WEND
+
+SIF 훈련대상자수 > 0
+	AI_TRAIN_TERM:세력 = RAND(3, 5)
+
+RETURN

@@ -1,0 +1,167 @@
+﻿;-------------------------------------------------
+;시나리오 19
+;환상광조곡
+;테마는 「완전 셔플」
+;세력 멤버는 커녕, 리더 및 그 본거지조차 플레이 마다 랜덤에서 결정합니다
+;
+;-------------------------------------------------
+@SCENARIO_NAME_19
+RESULTS = 환상광조곡
+RETURN
+
+@SCENARIO_INTRO_19
+PRINTFORMW ※군주·멤버·영지가 랜덤으로 선택되는 시나리오입니다
+PRINTFORML
+
+;랜덤 캐릭터는 선택에 맡긴다
+FLAG:OP랜덤캐릭터사용 = 0
+
+
+@SCENARIO_MAPSELECT_19
+PRINTFORML
+PRINTFORML 어느 맵으로 플레이 합니까?
+CALL ASK_MULTI("Default", "일본", "유럽")
+SELECTCASE RESULT
+	CASE 0
+		MAPID '= "DEFAULT"
+	CASE 1
+		MAPID '= "JAPAN"
+	CASE 2
+		MAPID '= "EU"
+ENDSELECT
+
+
+@SCENARIO_PLACEMENT_19
+#DIM 세력수
+#DIM 사관수, MAX_COUNTRY
+#DIM 배분
+
+COUNTRY_BOSS:0 = 0
+COUNTRY_COLOR:0 = GETDEFCOLOR()
+
+
+CALL ASK_YN("구작 캐릭터도 군주가 될 수 있다", "구작 캐릭터는 군주가 되지 않는다")
+SCVAR:0 = RESULT
+
+CALL ASK_MULTI("세력수 보통", "세력수 많음", "세력수 적음")
+SELECTCASE RESULT
+	CASE 0
+		세력수 = 12 + RAND:5 + RAND:5 + RAND:5
+	CASE 1
+		세력수 = MIN(18 + RAND:7 + RAND:7 + RAND:7, MAX_COUNTRY - 2)
+	CASE 2
+		세력수 = 6 + RAND:3 + RAND:3 + RAND:3
+ENDSELECT
+
+PRINTFORML 군주에 「하고 싶지 않는」캐릭터를 선택
+CALL SELECT_CHARA_LIST_MULTI_ONLY_LOGIC_SLG(50, "NONE", "NONE")
+
+CALL FISHER_YATES_SHAFFLE(CHARANUM)
+VARSET 배분
+
+;군주의 설정
+FOR LOCAL, 0, CHARANUM
+	LOCAL:1 = SHAFFLE_ARRAY:LOCAL
+	SIF !IS_FIXED_CHARA(LOCAL:1)
+		CONTINUE
+	SIF FINDELEMENT(SELECTED_CHARA, LOCAL:1) != -1
+		CONTINUE
+	SIF LOCAL:1 == NAME_TO_CHARA("당신")
+		CONTINUE
+	SIF SCVAR:0 && TALENT:(LOCAL:1):캐릭터구분
+		CONTINUE
+	COUNTRY_BOSS:(배분 + 1) = GET_ID(LOCAL:1)
+	CALL CHANGE_COUNTRY(LOCAL:1, 배분 + 1, 1)
+	배분 ++
+	SIF 배분 == 세력수
+		BREAK
+NEXT
+
+;세력의 작성
+FOR LOCAL, 1, 세력수 + 1
+	COUNTRY_COLOR:LOCAL = CHARA_COUNTRY_COLOR(GET_COUNTRY_BOSS(LOCAL))
+	CALL SP_COUNTRY_RISE(LOCAL)
+NEXT
+
+CALL TMP_CREATE_OWN_CITY_MAP()
+CALL FISHER_YATES_SHAFFLE(CHARANUM)
+
+;사관의 배분
+VARSET 사관수
+VARSET 배분
+LOCAL:3 = 1
+FOR LOCAL, 0, CHARANUM
+	LOCAL:1 = SHAFFLE_ARRAY:(LOCAL)
+	SIF LOCAL:1 == GET_COUNTRY_BOSS(CFLAG:(LOCAL:1):소속)
+		CONTINUE
+	SIF LOCAL:1 == NAME_TO_CHARA("당신")
+		CONTINUE
+
+	;사관을 배분해 간다
+	;도시의 수가 적을 정도(수록), 사관의 수는 많아진다
+	;배분한 시점에서 배분 위치를 기록해 루프를 탈출, 그 다음으로부터 다음번 루프를 개시
+	FOR LOCAL:2, LOCAL:3, 세력수 + 1
+		SIF LIMIT(7 - TMP_OWN_CITY:(LOCAL:2), 1, 6) - 사관수:(LOCAL:2) <= 0
+			CONTINUE
+		CALL CHANGE_COUNTRY(LOCAL:1, LOCAL:2, 1)
+		사관수:(LOCAL:2) ++
+		LOCAL:3 = LOCAL:2 + 1
+		SIF LOCAL:3 == 세력수 + 1
+			LOCAL:3 = 1
+		BREAK
+	NEXT
+NEXT
+
+;지정되지 않았던 캐릭터는 방랑 「당신」는 제외（MASTER 바꿔 넣었을 때에 방랑하는 것을 막는다）.
+FOR LOCAL:0, 1, CHARANUM
+	SIF CFLAG:(LOCAL:0):1 == 0  && CSTR:(LOCAL:0):99 != "당신"
+		CFLAG:(LOCAL:0):특수상태 = 특수상태_방랑
+NEXT
+
+;무소속 도시의 병수는 경제의 7.5%
+FOR LOCAL:0, 0, MAX_CITY
+	SIF CITY_OWNER:(LOCAL:0) == 0
+		CITY_SOLDIER:(LOCAL:0) = CITY_ECONOMY:(LOCAL:0) * 75 / 1000
+NEXT
+
+FOR LOCAL:0, 1, 세력수 + 1
+	SELECTCASE TMP_OWN_CITY:LOCAL
+		CASE 1, 2
+			MONEY:LOCAL = 5000
+			COUNTRY_SOLDIER:LOCAL = RAND(10000, 15000)
+		CASE 3, 4
+			MONEY:LOCAL = 2000
+			COUNTRY_SOLDIER:LOCAL = RAND(3000, 7000)
+		CASE 5, 6
+			MONEY:LOCAL = 100
+			COUNTRY_SOLDIER:LOCAL = RAND(100, 2000)
+		CASEELSE
+	ENDSELECT
+NEXT
+
+
+;■관계 설정
+CALL SHARED_SETTING_RELATION
+
+;세력간의 감정치
+FOR LOCAL:0, 0, 세력수 + 1
+	FOR LOCAL:1, LOCAL:0 + 1, 세력수 + 1
+		CALL CHANGE_RELATION_C_TO_C(LOCAL:0, LOCAL:1, 500 + POWER(-1, RAND:2 + 1) * (RAND:101 + RAND:101), 500 + POWER(-1, RAND:2 + 1) * (RAND:101 + RAND:101))
+	NEXT
+NEXT
+
+;개인 사이의 감정치
+CALL FISHER_YATES_SHAFFLE(CHARANUM)
+FOR LOCAL:1, 0, CHARANUM - 1
+	CALL CHANGE_RELATION_O_TO_O(SHAFFLE_ARRAY:(LOCAL:1), SHAFFLE_ARRAY:(LOCAL:1 + 1), RAND:400 - 200, RAND:400 - 200)
+NEXT
+
+
+
+;-------------------------------------------------
+;정례 이벤트
+;턴 엔드시에 불려 간다
+;-------------------------------------------------
+@SCENARIO_EVENT_19
+#DIM UNIFY
+

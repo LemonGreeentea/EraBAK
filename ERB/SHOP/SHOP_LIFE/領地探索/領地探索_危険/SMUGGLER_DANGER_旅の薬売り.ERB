@@ -1,0 +1,67 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_SMUGGLER_DANGER_EXISTS()
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_SMUGGLER_DANGER_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_SMUGGLER_DANGER(대상)
+#DIM 대상
+PRINTFORML 탐색중, 여행의 약팔이와 우연히 만났다
+PRINTFORML 귀한 물건의 약이 있는 것 같은, 가격은 금 3000이다
+PRINTFORML 현재의 소지금:{MONEY}
+PRINTL
+CALL ASK_MULTI_JUDGE("모처럼이니까 사 본다", MONEY >= 3000,"그만둔다", 1)
+
+IF RESULT == 1
+	PRINTFORML 공교롭게도 지금은 병도 아니다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 끈질긴 약팔이를 뿌리쳐 거점에 돌아왔다
+	RETURN 1
+ENDIF
+
+MONEY -= 3000
+
+CALL ICPRINT("금<3000>을 지불했다", "W", 칼라_주의)
+PRINTFORMW 약을 산 %조사처리(ANAME(대상),"는")%, 즉시 마셔 보았다
+
+SELECTCASE RAND:3
+	CASE 0
+		PRINTFORML ……하지만 아무것도 일어나지 않았다
+		PRINTFORML 금을 쓸데없게 해 버린 것 같다……
+	CASE 1
+		PRINTFORML 곧바로 몸이 뜨거워졌다
+		PRINTFORMW ……어쩐지 영리해진 것 같다!
+		CALL PRINT_ADD_EXP(대상, "지략경험치", 10)
+		PRINTFORML 꽤 좋은 쇼핑을 한 것 같다……
+	CASE 2
+		PRINTFORML 곧바로 몸이 달아오르기 시작했다
+		PRINTFORMW ……미약의 종류였던 것 같다
+		IF IS_MALE(대상)
+			PRINTFORML %조사처리(ANAME(대상),"는")% 무심코 발기하는 것을 억눌러, 약팔이를 노려본다
+			PRINTFORML 그는 전혀 동요하지 않고, 빨리 도망치기 시작해 버렸다
+			PRINTFORMW 성욕을 주체 못하면서, %조사처리(ANAME(대상),"는")% 거점으로 돌아갔다……
+		ELSE
+			PRINTFORML 돌연 자궁이 욱신거림이고, %조사처리(ANAME(대상),"는")% 무심코 그 자리에 주저앉아 버렸다
+			PRINTFORML 약팔이가 말하려면, 약의 부작용으로, 조금 쉬면 다스려진다 한다
+			PRINTFORMW 그에게 허리에 손을 써지고 유지되면서, %조사처리(ANAME(대상),"는")% 가까이의 그늘에 데리고 들어가졌다
+			PRINTFORMW
+			PRINTFORML %조사처리(ANAME(대상),"는")% %STR_BODY("질:욕정")%를 약팔이에 의해 난폭하게 범해지고 있다
+			PRINTFORML 난폭한 허리 사용에 %ANAME(대상)%의 자궁은 뜨끔 쑤셔, 단정치 못한 신음소리를 내면서 몸을 진동시킨다
+			PRINTFORMW 한층 더 깊게 페니스를 쑤셔 넣어져 사정되면, %조사처리(ANAME(대상),"는")% 기쁨의 소리를 높이고 전신을 핑 늘려 절정 했다
+			CALL FUCK(대상, "욕망, 봉사, 성교, 성기술, Ｖ, 약물의존, Ｖ성교", "처녀상실, 질내사정", GET_SPERM_ID("약팔이"), @"약팔이의 \@RAND:2 ? 페니스 # 입술\@", "약팔이", "", "강간")
+			PRINTFORML 
+			PRINTFORMW 몇 번이나 절정 당하고 경련하는 %조사처리(ANAME(대상),"를")% 방치해, 약팔이는 빨리 떠났다
+		ENDIF
+ENDSELECT
+
+RETURN 1

@@ -1,0 +1,939 @@
+﻿;-------------------------------------------------
+;전략 페이즈 종료시의 처리
+;-------------------------------------------------
+@SLG_TURNEND
+;#; #DIM USETIME
+;#; #DIM USETIME_AI
+#DIM 세력행동순서, MAX_COUNTRY
+#DIM 세력
+#DIM 표시플래그
+;국가 관계 맵의 작성(처리의 고속화)
+CALL TMP_CREATE_RELATION_MAP
+
+;도둑은 도시를 가지고 있으면 외교할 수 있다
+LOCAL = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_도둑))
+IF LOCAL > 0 && GET_OWN_CITY(LOCAL) > 0
+	COUNTRY_IS_CLOSED:LOCAL = 0
+ELSEIF LOCAL > 0 && GET_OWN_CITY(LOCAL) == 0
+	;여기서 플래그 세워도, 전략 턴중에 도둑이 도시전로스트→도둑 대상의 외교  로 에러 초월한다
+	;자지 않아 때문에 세워 두지만, 신뢰성은 없다
+	COUNTRY_IS_CLOSED:LOCAL = 1
+ENDIF
+
+;행동순서의 결정
+CALL FISHER_YATES_SHAFFLE(MAX_COUNTRY)
+ARRAYCOPY "SHAFFLE_ARRAY", "세력행동순서"
+
+
+;국가간의 인접 관계 맵의 작성(처리의 고속화)
+CALL TMP_CREATE_COUNTRY_NEIBORING_MAP
+;접속 맵의 작성
+CALL TMP_CREATE_CONNECTION_MAP
+;뚝 떨어진 영토 맵의 작성
+CALL TMP_CREATE_ENCLAVE_MAP
+;유닛 관련
+CALL TMP_CREATE_UNIT_MAP
+CALL TMP_CREATE_COUNTRY_NEIBORING_MAP
+;중요성의 설정
+CALL TMP_CREATE_OFFENSIVE_IMPORTANCE_MAP
+CALL TMP_CREATE_DEFENSIVE_IMPORTANCE_MAP
+;리스크와 침공
+CALL TMP_CREATE_IS_INVADABLE_MAP
+CALL TMP_CREATE_CITY_RISK_MAP
+;사관이 행동 가능한 상태에 있을지 어떨지의 리스트를 작성
+CALL TMP_CREATE_IS_FREE_MAP
+CALL TMP_CREATE_POLITICS_POWER_MAP
+CALL TMP_CREATE_COOKING_POWER_MAP
+;도시수와 경제를 준비
+CALL TMP_CREATE_OWN_CITY_MAP
+CALL TMP_CREATE_SUM_ECONOMY_MAP
+;병력을 준비
+CALL TMP_CREATE_SUM_SOLDIER_MAP
+CALL TMP_CREATE_UNION_TARGET_MAP
+CUSTOMDRAWLINE =
+PRINTFORML 국가 내정·외교 페이즈
+CUSTOMDRAWLINE =
+
+; AI
+;#; USETIME_AI = 0
+FOR LOCAL, 0, MAX_COUNTRY
+	세력 = 세력행동순서:LOCAL
+	SIF !IS_COUNTRY(세력) || (세력 == CFLAG:MASTER:소속 && CONFIG:302 != 1)
+		CONTINUE
+	SIF FLAG:전사엔드플래그 || FLAG:강제엔드플래그 || (COUNTRY_EVENT_ID:세력 == SP_COUNTRY_ID:특수세력_도둑 && TMP_OWN_CITY:세력 <= 0)
+		CONTINUE
+	;#; USETIME = GETMILLISECOND();
+	CALL AI_ACTION(세력)
+	CALL SINGLE_DRAWLINE("-", 칼라_선택불가)
+	;#; USETIME = GETMILLISECOND() - USETIME;
+	;#; USETIME_AI += USETIME
+	;;#; DEBUGPRINTFORML %ANAME(GET_COUNTRY_BOSS(LOCAL:LOCAL)) %AI : {USETIME}ms------------
+NEXT
+
+;#; DEBUGPRINTFORML AI TOTAL: {USETIME_AI}ms
+
+CLEARLINE 1
+
+FOR LOCAL, 0, MAX_COUNTRY
+	IF COUNTRY_EVENT_ID:LOCAL == SP_COUNTRY_ID:(특수세력_도둑) && TMP_OWN_CITY:LOCAL == 0
+		CALL BANDIT_AI(LOCAL)
+	ENDIF
+NEXT
+
+;자군 쿨 타임 감소 처리와 이 턴에 할당한 플래그 삭제 처리
+FOR LOCAL, 0, CHARANUM
+	IF CFLAG:LOCAL:소속 == CFLAG:MASTER:소속
+		SIF !TALENT:LOCAL:회복느림 || RAND:5
+			COOLTIME:LOCAL:0 = MAX(COOLTIME:LOCAL:0 - 1 , 0)
+		IF TALENT:LOCAL:회복빠름 && !RAND:3
+			COOLTIME:LOCAL:0 = MAX(COOLTIME:LOCAL:0 - 1 , 0)
+		ENDIF
+		ASSIGNED_THIS_TURN:LOCAL:0 = 0
+	ENDIF
+NEXT
+
+IF DAY >= SLG_PP:1
+	표시플래그 = 0
+	CUSTOMDRAWLINE =
+	PRINTFORML 부대 행동 페이즈
+	CUSTOMDRAWLINE =
+	;자군의 부대 처리
+	IF CFLAG:MASTER:소속 >= 1
+		CALL COUNTRY_TURNEND(CFLAG:MASTER:소속)
+		표시플래그 = 1
+	ENDIF
+	FOR LOCAL, 0, MAX_COUNTRY
+		세력 = 세력행동순서:LOCAL
+		SIF !IS_COUNTRY(세력) || 세력 == CFLAG:MASTER:소속
+			CONTINUE
+		SIF FLAG:전사엔드플래그 || FLAG:강제엔드플래그 || (COUNTRY_EVENT_ID:세력 == SP_COUNTRY_ID:특수세력_도둑 && TMP_OWN_CITY:세력 <= 0)
+			CONTINUE
+		SIF 표시플래그
+			CALL SINGLE_DRAWLINE("-", 칼라_선택불가)
+		CALL COUNTRY_TURNEND(세력)
+		표시플래그 = 1
+	NEXT
+
+	CUSTOMDRAWLINE =
+	PRINTFORML 도시 화력지원
+	CUSTOMDRAWLINE =
+	FOR LOCAL, 0, MAX_COUNTRY
+		세력 = 세력행동순서:LOCAL
+		SIF !IS_COUNTRY(세력)
+			CONTINUE
+		SIF FLAG:전사엔드플래그 || FLAG:강제엔드플래그 || (COUNTRY_EVENT_ID:세력 == SP_COUNTRY_ID:특수세력_도둑 && TMP_OWN_CITY:세력 <= 0)
+			CONTINUE
+		CALL TURNEND_CITY_ATTACK(세력)
+	NEXT
+
+
+	;관전 모드 이외라면 이 후 거점 페이즈에 그대로 가 버리므로, 그 앞에 세력 변화를 표시
+	IF !FLAG:관전모드
+		CUSTOMDRAWLINE =
+		PRINTFORML 부대 행동 후의 세력도
+		CUSTOMDRAWLINE =
+		CALL SET_CITY_COLOR_UNIT
+		CALL SET_CITY_COLOR_COUNTRY
+		CALL DRAWMAP
+		CALL RESET_CITY_COLOR
+	ENDIF
+ENDIF
+
+IF DAY >= SLG_PP:1
+	CUSTOMDRAWLINE =
+	PRINTFORML 고용·설득 페이즈
+	CALL COLOR_LINE
+	;#; USETIME = GETMILLISECOND();
+	FOR LOCAL, 0, MAX_COUNTRY
+		SIF !IS_COUNTRY(LOCAL) || CFLAG:MASTER:소속 == LOCAL
+			CONTINUE
+		CALL SLG_AI_RECRUITMENT(LOCAL)
+		SIF !IS_SP_COUNTRY(LOCAL)
+			CALL SLG_AI_PERSUASION(LOCAL)
+	NEXT
+	;#; USETIME = GETMILLISECOND() - USETIME;
+	;#; DEBUGPRINTFORML PERSUASION TOTAL: {USETIME}ms
+	CUSTOMDRAWLINE =
+	PRINTFORML 재야 무장 고용 페이즈
+	CALL COLOR_LINE
+	CALL SLG_AI_OFFICER_JOBHUNT()
+ELSE
+	CUSTOMDRAWLINE =
+	PRINTFORML 고용 페이즈
+	CALL COLOR_LINE
+	;#; USETIME = GETMILLISECOND();
+	FOR LOCAL, 0, MAX_COUNTRY
+		SIF !IS_COUNTRY(LOCAL) || CFLAG:MASTER:소속 == LOCAL
+			CONTINUE
+		CALL SLG_AI_RECRUITMENT(LOCAL)
+	NEXT
+	;#; USETIME = GETMILLISECOND() - USETIME;
+	;#; DEBUGPRINTFORML PERSUASION TOTAL: {USETIME}ms
+ENDIF
+
+; CUSTOMDRAWLINE =
+; PRINTFORML 투자 페이즈
+; CUSTOMDRAWLINE =
+FOR LOCAL, 0, MAX_COUNTRY
+	SIF !IS_COUNTRY(LOCAL) || IS_SP_COUNTRY(LOCAL) || CFLAG:MASTER:소속 == LOCAL
+		CONTINUE
+	CALL SLG_AI_INVEST(LOCAL)
+NEXT
+
+
+; CUSTOMDRAWLINE =
+; PRINTFORML 훈련 페이즈
+; CUSTOMDRAWLINE =
+FOR LOCAL, 0, MAX_COUNTRY
+	SIF !IS_COUNTRY(LOCAL) || IS_SP_COUNTRY(LOCAL) || CFLAG:MASTER:소속 == LOCAL
+		CONTINUE
+	CALL SLG_AI_TRAIN(LOCAL)
+NEXT
+
+SIF FLAG:전사엔드플래그 || FLAG:강제엔드플래그
+	GOTO DEAD
+
+
+
+
+;동맹·연합의 기한 체크
+CALL TREATY_TURNEND
+
+;특수 세력의 봉기 판정
+;우선 호출해 용문자열을 준비
+;준비할 수 있으면 확률 판정을 불러, 판정 함수가 있어 다니고 있으면 봉기
+FOR LOCAL, 0, MAX_SP_COUNTRY
+	LOCALS = %SP_COUNTRY_NAME_ENG:LOCAL%
+	IF LOCALS != ""
+		TRYCCALLFORM %LOCALS%_RISE_RATE()
+			SIF RESULT
+				TRYCALLFORM %LOCALS%_RISE()
+		CATCH
+		ENDCATCH
+	ENDIF
+NEXT
+
+;특수 세력에 의한 턴 엔드
+FOR LOCAL, 0, MAX_COUNTRY
+	TRYCALLFORM TURNEND_%SP_COUNTRY_NAME_ENG:SP_COUNTRY_TO_CONST(LOCAL)%
+NEXT
+
+;시나리오 고유의 이벤트
+TRYCALLFORM SCENARIO_EVENT_%SCENARIOID%
+
+;랜덤인 모반 처리
+IF !DAILY_GET_DISABLE_CONFIG("RANDOM_RISE") && !FLAG:클리어플래그
+	CALL SLG_RANDOM_INDEPENDENCE
+	CALL SLG_RANDOM_RISE
+ENDIF
+
+;방랑 사관으로 자국으로 이끈 캐릭터가 있으면 주인공 세력에 가입
+CALL GO_TO_MASTERS_COUNTRY(0)
+
+$DEAD
+
+;엔딩·게임 오버의 체크
+CALL ENDING_CHECK
+
+;dead 엔딩이라면 돌아온다
+SIF FLAG:강제엔드플래그
+	RETURN 1
+
+CALL TMP_CREATE_IS_FREE_MAP
+
+;각국군의 징병 처리
+FOR LOCAL:0, 0, MAX_COUNTRY
+	SIF IS_COUNTRY(LOCAL:0)
+		CALL COUNTRY_ADD_SOLDIER(LOCAL:0)
+NEXT
+
+;피로도의 회복 및 전투가 끝난 플래그의 해제
+FOR LOCAL:0, 0, MAX_COUNTRY
+	FOR LOCAL:1, 0, 10
+		SIF UNIT_SOLDIER:(LOCAL:0):(LOCAL:1) <= 0
+			CONTINUE
+		SIF !UNIT_FBATTLE:(LOCAL:0):(LOCAL:1)
+			UNIT_TIRED_COUNT:(LOCAL:0):(LOCAL:1) = MAX(UNIT_TIRED_COUNT:(LOCAL:0):(LOCAL:1) - (RAND:3 + 3), 0)
+		UNIT_FBATTLE:(LOCAL:0):(LOCAL:1) = 0
+	NEXT
+NEXT
+
+FOR LOCAL:0, 0, MAX_COUNTRY
+	SIF INDEPENDENCE_COUNTER:LOCAL > 0
+		INDEPENDENCE_COUNTER:LOCAL --
+	SIF DIPLOMACY_HATE:LOCAL > 0
+		DIPLOMACY_HATE:LOCAL --
+NEXT
+
+;AI갱신
+FOR LOCAL:0, 0, MAX_COUNTRY
+	SIF !IS_COUNTRY(LOCAL)
+		CONTINUE
+	CALL SET_COUNTRY_AI_TYPE(LOCAL)
+NEXT
+
+;통계 정보의 기억
+CALL STATS_SAVE
+
+;자동 송금
+SIF !FLAG:클리어플래그
+	CALL AUTO_SENDMONEY
+
+
+;외교가 끝난 플래그의 해제
+VARSET DONE_DIPLOMACY_FRIENDSHIP, 0
+VARSET DONE_DIPLOMACY_REQUEST, 0
+VARSET DONE_DIPLOMACY_SCANDAL, 0
+VARSET DONE_DIPLOMACY_SABOTAGE, 0
+;영지탐색 플래그를 꺾는다
+VARSET DONE_TERRITORYSEARCH, 0
+
+;계략에 의한 파워 1 플래그의 해제
+CVARSET CFLAG, 34, 0
+
+;강요 행위에 의한 헤이트의 쿨 다운
+;FLAG:99 = MAX(FLAG:99 - MAX(10 - CONFIG:300 * 2, 0), 0)
+
+;-------------------------------------------------
+;ARG:0번의 세력의 부대 처리
+;-------------------------------------------------
+@COUNTRY_TURNEND(ARG:0)
+#DIM LCOUNT, 3
+SETCOLOR COUNTRY_COLOR:(ARG:0)
+PRINTFORML %ANAME(GET_COUNTRY_BOSS(ARG:0))%군행동중...
+RESETCOLOR
+
+CALL SINGLE_EMPTY_LINE()
+[IF_DEBUG]
+;DEBUGPRINTFORM 이 시점에서 존재하는 부대:
+;FOR LOCAL, 0, 10
+;	SIF UNIT_SOLDIER:(ARG:0):(LOCAL:0) > 0
+;		DEBUGPRINTFORM {LOCAL} 
+;NEXT
+;DEBUGPRINTFORML
+[ENDIF]
+
+CALL TURNEND_UNIT_MOVE(ARG:0)
+
+CALL TURNEND_UNIT_BATTLE(ARG:0)
+
+CALL KILL_EMPTY_LINE()
+
+;-------------------------------------------------
+;부대의 이동
+;-------------------------------------------------
+@TURNEND_UNIT_MOVE(세력)
+#DIM 세력
+#DIM 부대
+#DIM 포지션
+#DIM 사관
+#DIM 중계점
+#DIM 부대현재지
+#DIM 부대목적지
+#DIM 경로판정
+
+FOR 부대, 0, MAX_UNIT
+	SIF UNIT_POSITION:세력:부대 == 0
+		CONTINUE
+	SIF UNIT_SOLDIER:세력:부대 <= 0
+		CONTINUE
+	SIF UNIT_FBATTLE:세력:부대
+		CONTINUE
+	부대현재지 = UNIT_POSITION:세력:부대
+	부대목적지 = UNIT_TARGET:세력:부대
+	;정전중의 도시가 목적지라면 목적지를 해제
+	IF TMP_COUNTRY_RELATION:세력:(CITY_OWNER:부대목적지) == 1
+		UNIT_TARGET:세력:부대 = 0
+		CONTINUE
+	ENDIF
+
+	;적이 있으면 이동 할 수 없다
+	SIF TMP_IS_STAY_ENEMY_UNIT(부대현재지, 세력)
+		CONTINUE
+
+	경로판정 = IS_ROUTE(부대현재지, 부대목적지)
+
+	IF 경로판정 == 1
+		CALL MOVE_UNIT(세력, 부대, 부대목적지, 1)
+	ELSEIF 경로판정 == 2
+		중계점 = GET_RELAYPOINT(부대현재지, 부대목적지)
+		IF 중계점 > 0
+			CALL MOVE_UNIT(세력, 부대, 중계점, 0)
+		ELSE
+			;있을 수 없을 것이지만 만약을 위해
+			UNIT_TARGET:세력:부대 = 0
+		ENDIF
+	;있을 수 없을 것이지만 만약을 위해
+	ELSE
+		UNIT_TARGET:세력:부대 = 0
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;부대의 전투
+;원래의 처리가 쓰레기였으므로 함수로서 잘라 리파크타.
+;-------------------------------------------------
+@TURNEND_UNIT_BATTLE(세력)
+#DIM 세력
+#DIM 부대
+#DIM 적부대
+#DIM 적세력
+#DIM 루프
+#DIM 적세력리스트, VARSIZE("TMP_UNIT_ONCITY_CNT", 1)
+#DIM 적부대리스트, VARSIZE("TMP_UNIT_ONCITY_CNT", 1)
+#DIM 병력리스트, VARSIZE("TMP_UNIT_ONCITY_CNT", 1)
+#DIM 적의수
+#DIM 부대현재지
+#DIM 공격대상
+
+VARSET 적세력리스트, 0
+VARSET 적부대리스트, -1
+VARSET 적의수
+
+FOR 부대, 0, MAX_UNIT
+	SIF UNIT_POSITION:세력:부대 == 0
+		CONTINUE
+	SIF UNIT_SOLDIER:세력:부대 <= 0
+		CONTINUE
+
+	;행동완료라면 전투하지 않는다
+	;별의 부대에 공격받았을 경우에 여기에 해당한다
+	SIF UNIT_FBATTLE:세력:부대
+		CONTINUE
+
+	;현재가에 있는 적성 부대를 리스트화
+	부대현재지 = UNIT_POSITION:세력:부대
+	적의수 = 0
+	FOR 루프, 0, VARSIZE("TMP_UNIT_ONCITY_CNT", 1)
+		적세력 = TMP_UNIT_ONCITY_CNT:부대현재지:루프
+		적부대 = TMP_UNIT_ONCITY_NUM:부대현재지:루프
+		IF 적세력 > 0 && UNIT_SOLDIER:적세력:적부대 > 0 && TMP_COUNTRY_RELATION:세력:적세력 == 0
+			적세력리스트:적의수 = 적세력
+			적부대리스트:적의수 = 적부대
+			병력리스트:적의수 = UNIT_SOLDIER:적세력:적부대
+			적의수 ++
+		ENDIF
+	NEXT
+	;적이 없으면, 방위 부대와의 전투에 들어가는 판정까지 난다
+	SIF 적의수 == 0
+		GOTO VS_CASTLE
+
+	IF 적의수 == 1
+		공격대상 = 0
+	ELSE
+		IF 세력 != CFLAG:MASTER:소속
+			공격대상 = FINDELEMENT(병력리스트, MINARRAY(병력리스트, 0, 적의수))
+		ELSE
+			PRINTFORML 우리 군의 제{부대 + 1}부대의 현재지인 %GET_RELAYNAME(부대현재지)%에는 복수의 적부대가 존재합니다
+			PRINTL 어느 부대를 공격합니까?
+			PRINTFORM 자군 제{부대 + 1}부대 
+			CALL SHOW_UNIT_INFO_SIMPLE(CFLAG:MASTER:소속, 부대)
+
+			FOR 루프, 0, 적의수
+				적세력 = 적세력리스트:루프
+				적부대 = 적부대리스트:루프
+				PRINTFORM [{루프, 2}] %SNAME(GET_COUNTRY_BOSS(적세력)), 6%군
+				CALL SHOW_UNIT_INFO_SIMPLE(적세력, 적부대)
+			NEXT
+			PRINTL [99] 공격하지 않는다
+
+			$INPUT_LOOP_SETTARGET
+			INPUT
+			IF INRANGE(RESULT, 0, 적의수 - 1)
+				공격대상 = RESULT
+			ELSEIF RESULT == 99
+				공격대상 = -1
+			ELSE
+				GOTO INPUT_LOOP_SETTARGET
+			ENDIF
+		ENDIF
+	ENDIF
+
+	SIF 공격대상 < 0
+		CONTINUE
+	적세력 = 적세력리스트:공격대상
+	적부대 = 적부대리스트:공격대상
+
+	CALL BATTLE_UNIT_TO_UNIT(세력, 부대, 적세력리스트:공격대상, 적부대리스트:공격대상)
+	CALL SINGLE_EMPTY_LINE()
+
+	;적성 부대가 1 부대였던 경우, 그 부대를 격파하면 계속해 방위 부대와의 전투에 들어간다
+	SIF 적의수 != 1 || UNIT_SOLDIER:적세력:적부대 > 0
+		CONTINUE
+
+	$VS_CASTLE
+
+	적세력 = CITY_OWNER:부대현재지
+	IF 부대현재지 > 0 && CITY_TYPE:부대현재지 == 0 && TMP_COUNTRY_RELATION:세력:적세력 == 0
+		CALL BATTLE_UNIT_TO_CITY(세력, 부대, 부대현재지)
+		CALL SINGLE_EMPTY_LINE()
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;도시로부터의 원호 공격
+;-------------------------------------------------
+@TURNEND_CITY_ATTACK(세력)
+#DIM 세력
+#DIM 도시
+#DIM 여안돼
+#DIM 적부대
+#DIM 적세력
+#DIM 자부대
+#DIM 공격대상
+#DIM 루프
+
+FOR 도시, 0, MAX_CITY
+	;그 세력의 도시가 아닌지, 벌써 맞고 있는지, 수비 배치하고 있지 않으면 무시
+	SIF CITY_OWNER:도시 != 세력 || CITY_IS_ATTACKED:도시 || CITY_SOLDIER:도시 <= 0
+		CONTINUE
+
+	VARSET 여안돼
+	FOR 자부대, 0, VARSIZE("TMP_UNIT_ONCITY_CNT", 1)
+		SIF TMP_UNIT_ONCITY_CNT:도시:자부대 == -1
+			CONTINUE
+		SIF TMP_UNIT_ONCITY_CNT:도시:자부대 == 세력
+			여안돼 += UNIT_SOLDIER:세력:(TMP_UNIT_ONCITY_NUM:도시:자부대) / 10
+	NEXT
+
+	SIF 여안돼 == 0
+		CONTINUE
+
+	FOR 공격대상, 0, VARSIZE("TMP_UNIT_ONCITY_CNT", 1)
+		적세력 = TMP_UNIT_ONCITY_CNT:도시:공격대상
+		적부대 = TMP_UNIT_ONCITY_NUM:도시:공격대상
+		SIF !IS_COUNTRY(적세력) || UNIT_SOLDIER:적세력:적부대 <= 0 || TMP_COUNTRY_RELATION:세력:적세력 > 0
+			CONTINUE
+		CALL COLOR_PRINTL(@"%SNAME(GET_COUNTRY_BOSS(세력)), MAX_CHARANAME_LENGTH / 2, LEFT%의 영지인 %GET_CITYNAME(도시)%로부터의 원호 공격!", COUNTRY_COLOR:세력)
+		CALL DECREASE_SOLDIER(적세력, 적부대, MIN(여안돼, UNIT_SOLDIER:적세력:적부대 - 1), 1)
+		;자세력만 웨이트
+		IF (세력 == CFLAG:MASTER:소속 || 적세력 == CFLAG:MASTER:소속 || FLAG:관전모드) && CFLAG:MASTER:포로처 == 0
+			WAIT
+		ENDIF
+	NEXT
+NEXT
+
+;-------------------------------------------------
+;동맹·연합의 기한 체크
+;-------------------------------------------------
+@TREATY_TURNEND
+#DIM 세력
+#DIM 참가세력, 2
+#DIM 조약
+
+;★
+;FOR LOCAL:0, 0, MAX_TREATY_A
+;	PRINTFORM No. {LOCAL:0, 2, LEFT} 기간:{TREATY_A_TERM:(LOCAL:0)} 
+;	FOR LOCAL:1, 0, MAX_TREATY_COUNTRY
+;		IF TREATY_A_COUNTRY:(LOCAL:0):(LOCAL:1) >= 1
+;			PRINTFORM {LOCAL:1}-{TREATY_A_COUNTRY:(LOCAL:0):(LOCAL:1)} 
+;		ENDIF
+;	NEXT
+;	PRINTL 
+;NEXT
+CUSTOMDRAWLINE =
+PRINTFORML 외교·동맹 종료 확인
+CALL COLOR_LINE
+
+;동맹의 체크
+FOR 조약, 0, MAX_TREATY_A
+	SIF TREATY_A_TERM:조약 <= 0 || TREATY_A_TERM:조약 == 9999
+		CONTINUE
+	TREATY_A_TERM:조약 --
+	;기한 마감에 의한 해산
+	IF TREATY_A_TERM:조약 == 0
+		참가세력:0 = TREATY_A_COUNTRY:조약:0
+		참가세력:1 = TREATY_A_COUNTRY:조약:1
+		CALL BREAK_ALLIANCE(참가세력:0, 참가세력:1, 조약)
+	ENDIF
+NEXT
+
+;정전의 체크
+FOR 조약, 0, MAX_TREATY_C
+	SIF TREATY_C_TERM:조약 <= 0 || TREATY_C_TERM:조약 == 9999
+		CONTINUE
+	TREATY_C_TERM:조약 --
+	;기한 마감에 의한 해산
+	IF TREATY_C_TERM:조약 == 0
+		참가세력:0 = TREATY_C_COUNTRY:조약:0
+		참가세력:1 = TREATY_C_COUNTRY:조약:1
+		CALL BREAK_CEASEFIRE(참가세력:0, 참가세력:1, 조약)
+	ENDIF
+NEXT
+
+FOR 조약, 0, MAX_TREATY_U
+	SIF TREATY_U_TERM:조약 <= 0 || TREATY_U_TERM:조약 == 9999
+		CONTINUE
+	TREATY_U_TERM:조약 --
+	SIF TREATY_U_TERM:조약 == 0
+		CALL BREAK_UNION(조약)
+NEXT
+
+CALL KILL_EMPTY_LINE()
+RESETCOLOR
+
+;-------------------------------------------------
+;ARG:0번의 세력의 징병 처리
+;-------------------------------------------------
+@COUNTRY_ADD_SOLDIER(ARG:0)
+#DIM LCOUNT
+#DIM 가창파워
+#DIM 정치파워
+#DIM 보정
+#DIM 경제력
+#DIM 병수
+#DIM 증가량
+#DIM 최대증가량
+#DIM 인기소지자수
+#DIM 난이도보정
+#DIM 방위배분표시
+#DIM 방위배분수
+;증가하는 병수는 경제 규모×0.5(순찰·가창 따위에 의한 보정 있어)
+;최대병수는 경제 규모×10
+
+;사관이 부대에 소속해 있는지 어떤지의 리스트를 작성
+
+;가창 파워·정치 파워를 취득
+정치파워 = 0
+가창파워 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):소속 == ARG:0 && TMP_IS_FREE:(LOCAL:0):0 == 0
+		정치파워 += ABL_POWER((ABL:(LOCAL:0):정치 * 7 + ABL:(LOCAL:0):무투 * 3) / 10, LOCAL:0)
+		가창파워 += ABL_POWER(ABL:(LOCAL:0):가창, LOCAL:0)
+	ENDIF
+NEXT
+보정 = SQRT(정치파워) * 3 / 2 + SQRT(가창파워) * 5 / 4
+
+경제력 = GET_SUM_ECONOMY(ARG:0) / 100
+병수 = GET_SUM_SOLDIER(ARG:0)
+
+SIF FLAG:병수증가추가치 > 보정
+	FLAG:병수증가추가치 = 보정 + (FLAG:병수증가추가치 - 보정) / 3
+
+;증가량은 경제력 베이스에 보정
+증가량 = 경제력 * (( ARG:0 == CFLAG:MASTER:소속 ? FLAG:병수증가추가치 # 0) + 보정 + 10) * 5 / 10000
+
+;정책에 의한 보정
+SIF COUNTRY_POLICY:(ARG:0) == 정책_징병
+	TIMES 증가량, 1.50
+
+;AI타입에 응한 병수의 증감
+;IF ARG:0 != CFLAG:MASTER:소속
+;	SELECTCASE COUNTRY_AI_TYPE:(ARG:0)
+;		CASE AI_호전
+;			TIMES LOCAL:2, 1.10
+;		CASE AI_내정
+;			TIMES LOCAL:2, 0.90
+;	ENDSELECT
+;ENDIF
+
+;인기 소유 한사람에 대해 5% 증가
+;50%까지
+인기소지자수 = 0
+FOR LCOUNT, 0, CHARANUM
+	IF TMP_IS_FREE:LCOUNT:0 ==0 && TALENT:LCOUNT:인기 && CFLAG:LCOUNT:소속 == ARG:0
+		증가량 += MAX(증가량 * 5 / 100, 1)
+		인기소지자수 ++
+		SIF 인기소지자수 == 10
+			BREAK
+	ENDIF
+NEXT
+
+IF ARG:0 != CFLAG:MASTER:소속
+	난이도보정 = GET_DIFFICULTY_CORRECTION()
+	SIF 난이도보정 > 100
+		난이도보정 = 100 + (난이도보정 - 100) / 2
+	증가량 = 증가량 * 난이도보정 / 100
+ENDIF
+
+;경제력의 10배 이상은 보유 할 수 없다
+최대증가량 = MAX(경제력 * 10 - 병수, 0)
+증가량 = MIN(증가량, 최대증가량)
+
+COUNTRY_SOLDIER:(ARG:0) += 증가량
+
+IF ARG:0 == CFLAG:MASTER:소속
+	IF 증가량 == 0
+		CALL COLOR_PRINTL(@"징병의 한계에 이르고 있습니다, 더 이상 군사를 조달하려면 경제를 늘리는지, 임시 징병을 할 필요가 있습니다", 칼라_주의)
+	ELSE
+		PRINTFORMW 우리 나라의 병수가 {증가량}만 증가했습니다
+	ENDIF
+ENDIF
+
+;방위병수가 최저수를 나누고 있는 도시가 있다면 자동 배분
+방위배분표시 = 0
+FOR LOCAL:0, 0, MAX_CITY
+	IF CITY_OWNER:(LOCAL:0) == ARG:0 && CITY_SOLDIER:(LOCAL:0) < 500 && COUNTRY_SOLDIER:(ARG:0) > 0
+		;적부대가 있는 도시는 증감 불가
+		SIF IS_STAY_ENEMY_UNIT(LOCAL:0) == 1
+			CONTINUE
+		방위배분수 = MIN(500 - CITY_SOLDIER:(LOCAL:0), COUNTRY_SOLDIER:(ARG:0))
+		CITY_SOLDIER:(LOCAL:0) += 방위배분수
+		COUNTRY_SOLDIER:(ARG:0) -= 방위배분수
+		방위배분표시 = 1
+		SIF ARG:0 == CFLAG:MASTER:소속
+			PRINTFORML %GET_CITYNAME(LOCAL:0)%의 방위병수를 {방위배분수}만 보충했습니다
+	ENDIF
+NEXT
+IF ARG:0 == CFLAG:MASTER:소속 && 방위배분표시
+	WAIT
+ENDIF
+
+;-------------------------------------------------
+;각 세력 도시의 경제 규모 변동(실제의 호출은 TURNEND.ERB)
+;-------------------------------------------------
+@VARY_ECONOMY
+#DIM CITY_DAMAGE, 3
+#DIM ECONOMY_POWER, MAX_COUNTRY, 3
+
+FOR LOCAL:0, 0, MAX_CITY
+	VARSET CITY_DAMAGE
+	VARSET ECONOMY_POWER
+
+	;도시의 전투 플래그를 지운다
+	CITY_IS_ATTACKED:(LOCAL:0) = 0
+
+	;그 장소에서 전투가 있던 도시의 경제 규모를 감소시킨다
+	;CITY_IS_ATTACKED는 도시가 직접 맞았을 때의 플래그이며, 도시상에서의 부대 VS부대를 참조 할 수 없다.
+	;인 것으로 CITY_TIRED_COUNT를 이용한다.
+	CITY_DAMAGE:0 = CITY_TIRED_COUNT:(LOCAL:0) - PAST_CITY_TIRED_COUNT:(LOCAL:0)
+	IF CITY_DAMAGE:0 > 0
+		FOR CITY_DAMAGE:1, 0, MAX(CITY_DAMAGE:0 / 2, 1)
+			CITY_DAMAGE:2 += RAND:3
+			SIF CITY_DAMAGE:2 >= 20
+				BREAK
+		NEXT
+		CITY_ECONOMY:(LOCAL:0) = MAX(CITY_ECONOMY:(LOCAL:0) - (CITY_ECONOMY:(LOCAL:0) * MIN(CITY_DAMAGE:2, 20) / 400), 500)
+		CITY_ECONOMY_LIMIT:(LOCAL:0) = MAX(CITY_ECONOMY_LIMIT:(LOCAL:0) - (CITY_ECONOMY_LIMIT:(LOCAL:0) * MIN(CITY_DAMAGE:2, 20) / 800), 500)
+	ENDIF
+NEXT
+
+;각 사관이 행동 가능한 상태에 있을지 어떨지의 맵 작성(고속화용)
+CALL TMP_CREATE_IS_FREE_MAP
+
+;캐릭터마다의 보정 계산을 세력 마다 집약
+FOR LOCAL, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):소속 && TMP_IS_FREE:(LOCAL:0):0 == 0
+		;정치의 보정
+		ECONOMY_POWER:(CFLAG:(LOCAL:0):소속):0 += ABL_POWER((ABL:(LOCAL:0):정치 * 7 + ABL:(LOCAL:0):지략 * 3) / 10, LOCAL:0)
+		
+		;요리의 보정／능력 50 이하는 잘라 버린다
+		ECONOMY_POWER:(CFLAG:(LOCAL:0):소속):1 += ABL_POWER(ABL:(LOCAL:0):요리, LOCAL:0)
+	ENDIF
+NEXT
+
+IF CFLAG:MASTER:소속
+
+	SIF FLAG:경제성장추가치 > ECONOMY_POWER:(CFLAG:MASTER:소속):0
+		FLAG:경제성장추가치 = ECONOMY_POWER:(CFLAG:MASTER:소속):0 + (FLAG:경제성장추가치 - ECONOMY_POWER:(CFLAG:MASTER:소속):0) / 3
+	ECONOMY_POWER:(CFLAG:MASTER:소속):0 += FLAG:경제성장추가치
+	ECONOMY_POWER:(CFLAG:MASTER:소속):1 += FLAG:경제성장추가치
+ENDIF
+
+;세력 마다 계산
+FOR LOCAL:0, 0, MAX_COUNTRY
+	IF IS_COUNTRY(LOCAL:0) && GET_SUM_ECONOMY(LOCAL:0) && GET_OWN_CITY(LOCAL:0) > 0
+		LOCAL:5 = SQRT(ECONOMY_POWER:(LOCAL:0):0) * 50 + SQRT(ECONOMY_POWER:(LOCAL:0):1) * 30
+
+		;증가율에 응해 감쇠
+		SELECTCASE LOCAL:5 * 100 / GET_SUM_ECONOMY(LOCAL:0)
+		CASE  0 TO 5
+		CASE  6 TO 10
+			TIMES LOCAL:5, 0.95
+		CASE 11 TO 20
+			TIMES LOCAL:5, 0.90
+		CASE 21 TO 35
+			TIMES LOCAL:5, 0.85
+		CASE 36 TO 50
+			TIMES LOCAL:5, 0.80
+		CASE IS > 51
+			TIMES LOCAL:5, 0.75
+		CASEELSE
+			TIMES LOCAL:5, 0.50
+		ENDSELECT
+
+		SIF COUNTRY_POLICY:(LOCAL:0) == 정책_경제
+			TIMES LOCAL:5, 1.20
+
+;		;내정형이라면 게다가 1.1배
+;		SELECTCASE COUNTRY_AI_TYPE:(LOCAL:0)
+;		CASE AI_내정
+;			SIF LOCAL != CFLAG:MASTER:소속
+;				TIMES LOCAL:5, 1.10
+;		CASEELSE
+;		ENDSELECT
+		
+		;성장치에 소유 도시수의 보정을 걸어 도시를 성장시킨다
+		LOCAL:6 = GET_OWN_CITY(LOCAL:0)
+		CALL GROW_COUNTRY_ECONOMY(LOCAL:0, LOCAL:5 * LOCAL:6 / (LOCAL:6 + 3))
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;세수입 처리 함수
+;-------------------------------------------------
+@GAIN_COUNTRY_TAX
+#DIM TAX_VALUE
+#DIM POLICY
+#DIM TAX_COUNT
+#DIM TAX, 2
+#DIM LUCK_COUNT, MAX_COUNTRY
+VARSET TAX_COUNT
+VARSET TAX_VALUE
+VARSET POLICY
+VARSET TAX
+VARSET LUCK_COUNT
+
+FOR LOCAL, 0, CHARANUM
+	SIF TALENT:LOCAL:행운 && IS_FREE(LOCAL)
+		LUCK_COUNT:(CFLAG:LOCAL:소속) ++
+NEXT
+
+FOR TAX_COUNT, 0, MAX_CITY
+	SIF CITY_TYPE:TAX_COUNT || CITY_OWNER:TAX_COUNT == 0
+		CONTINUE
+
+	TAX = CITY_ECONOMY:TAX_COUNT / 100 
+	;정책에 의한 세율 조정
+	SELECTCASE COUNTRY_POLICY:(CITY_OWNER:TAX_COUNT)
+	CASE 정책_경제
+		TAX = TAX * 100 / 100
+	CASE 정책_방위
+		TAX = TAX * 80 / 100
+	CASE 정책_징병
+		TAX = TAX * 60 / 100
+	ENDSELECT
+
+	TAX = TAX * (LUCK_COUNT:(CITY_OWNER:TAX_COUNT) * 5 + 100) / 100
+
+	SIF CITY_OWNER:TAX_COUNT != CFLAG:MASTER:소속 && GET_DIFFICULTY_CORRECTION() > 100
+		TAX = TAX * GET_DIFFICULTY_CORRECTION() / 100
+
+	SIF CITY_OWNER:(TAX_COUNT) == CFLAG:MASTER:소속
+		TAX:1 += TAX
+	MONEY:(CITY_OWNER:TAX_COUNT) += TAX
+NEXT
+
+IF TAX:1
+	PRINTFORML 영지로부터의 징세를 했습니다
+	PRINTFORML 국고＋{TAX:1}（현재:{MONEY:(CFLAG:MASTER:소속)}）
+ENDIF
+
+
+;-------------------------------------------------
+;ARG:0 세력의 도시의 경제 규모를 합계 ARG:1만 성장시키는 함수
+;-------------------------------------------------
+@GROW_COUNTRY_ECONOMY(ARG:0, ARG:1)
+;난수 제어에 사용
+#DIM CUT_POS, MAX_CITY
+
+;소유 도시마다의 성장률을, 합계 성장량을 일정하게 하면서 랜덤으로 설정
+LOCAL:12 = GET_OWN_CITY(ARG:0)
+LOCAL:13 = LOCAL:12 * 70
+CUT_POS:0 = 0
+CUT_POS:(LOCAL:12) = LOCAL:13
+FOR LOCAL:1, 1, LOCAL:12
+	CUT_POS:(LOCAL:1) = RAND:(LOCAL:13)
+	FOR LOCAL:2, 1, LOCAL:1
+		IF CUT_POS:(LOCAL:1) < CUT_POS:(LOCAL:2)
+			FOR LOCAL:3, LOCAL:1, LOCAL:2, -1
+				SWAP CUT_POS:(LOCAL:3 - 1), CUT_POS:(LOCAL:3)
+			NEXT
+		ENDIF
+	NEXT
+NEXT
+
+;성장치에 응해 도시를 성장시킨다
+LOCAL:14 = 0
+FOR LOCAL:1, 0, MAX_CITY
+	IF CITY_OWNER:(LOCAL:1) == ARG:0
+		CITY_ECONOMY:(LOCAL:1) += ARG:1 * (CUT_POS:(LOCAL:14 + 1) - CUT_POS:(LOCAL:14) + 30) / (LOCAL:12 * 100)
+
+		;경제 규모가 한계치를 넘고 있으면 한계치가 상승
+		IF CITY_ECONOMY:(LOCAL:1) > CITY_ECONOMY_LIMIT:(LOCAL:1)
+			CITY_ECONOMY_LIMIT:(LOCAL:1) += (CITY_ECONOMY:(LOCAL:1) - CITY_ECONOMY_LIMIT:(LOCAL:1)) / 20
+			CITY_ECONOMY_LIMIT:(LOCAL:1) = MIN(CITY_ECONOMY_LIMIT:(LOCAL:1), 999900)
+			CITY_ECONOMY:(LOCAL:1) = CITY_ECONOMY_LIMIT:(LOCAL:1)
+		ENDIF
+		LOCAL:14 ++
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;도시의 피로도의 리셋트  호출은 TURNEND_COMMON
+;-------------------------------------------------
+@RESET_CITY_TIRED_COUNT()
+
+VARSET CITY_IS_ATTACKED, 0
+
+;이 턴 그 도시에서 전투가 일어나지 않으면, 피로도는 리셋트 된다
+FOR LOCAL, 0, MAX_CITY
+	SIF CITY_TIRED_COUNT:LOCAL == PAST_CITY_TIRED_COUNT:LOCAL
+		CITY_TIRED_COUNT:LOCAL = 0
+NEXT
+
+;이 턴의 최종적인 도시 피로도를 카피해 되돌린다
+ARRAYCOPY "CITY_TIRED_COUNT" , "PAST_CITY_TIRED_COUNT"
+
+
+;-------------------------------------------------
+;자국에 권한 사관의 이동 ARG:0은 이동원의 세력 번호
+;-------------------------------------------------
+@GO_TO_MASTERS_COUNTRY(ARG:0)
+FOR LOCAL:0, 0, CHARANUM
+	SIF CFLAG:(LOCAL:0):소속 != ARG:0 || !CFLAG:(LOCAL:0):자국권유성공플래그
+		CONTINUE
+	;사망 상태라면 플래그를 클리어
+	IF CFLAG:(LOCAL:0):특수상태 == 특수상태_사망
+		CFLAG:(LOCAL:0):자국권유성공플래그 = 0
+	;현시점에서 타국의 포로가 되어 있는 경우는 일시 보류
+	ELSEIF CFLAG:(LOCAL:0):포로처 >= 1 && CFLAG:(LOCAL:0):포로처 != CFLAG:MASTER:소속
+	;현시점에서 주인공이 방랑 상태라면 플래그를 클리어
+	ELSEIF CFLAG:MASTER:소속 == 0
+		CFLAG:(LOCAL:0):자국권유성공플래그 = 0
+	;그 이외라면 주인공의 국가에 이동
+	ELSE
+		LOCAL:2 = GET_COUNTRY_BOSS(CFLAG:(LOCAL:0):소속)
+		SETCOLOR 칼라_오렌지
+		IF LOCAL:2 >= 0
+			PRINTFORMW %조사처리(ANAME(LOCAL:0),"는")% %ANAME(LOCAL:2)% 세력을 빠져 나가, %ANAME(MASTER)% 앞으로 달려왔습니다
+		ELSE
+			PRINTFORMW %조사처리(ANAME(LOCAL:0),"는")% %ANAME(MASTER)% 앞으로 달려왔습니다
+		ENDIF
+		RESETCOLOR
+		CALL CHANGE_COUNTRY(LOCAL:0, CFLAG:MASTER:소속, 1)
+		CFLAG:(LOCAL:0):자국권유성공플래그 = 0
+		;대상국가와의 관계가 악화
+		CALL CHANGE_RELATION_C_TO_C(ARG:0, CFLAG:MASTER:소속, -125)
+		;군주로부터 주인공에게로의 인상은 한층 더 악화
+		SIF LOCAL:2 >= 0
+			CALL CHANGE_RELATION_O_TO_O(LOCAL:2, MASTER, -125)
+	ENDIF
+NEXT
+
+
+
+;-------------------------------------------------
+;ARG:0 세력의 ARG:1번의 부대에 「인기」떡의 무장이 존재하는 경우, 그 부대의 병수를 증가시키는 처리
+;-------------------------------------------------
+;@IDOL_GATHER_SOLDIER(ARG:0, ARG:1)
+;#DIM LCOUNT
+;#DIM 무장
+;#DIM 증가수
+;FOR LCOUNT, 0, 3
+;	무장 = GET_UNIT_COMMANDER(ARG:0, ARG:1, LCOUNT)
+;	IF 무장 >= 0 && TALENT:무장:인기
+;		증가수 = GET_SUM_ECONOMY(ARG:0)/100
+;		TIMES 증가수, 0.10
+;		IF ARG:0 == CFLAG:MASTER:소속
+;			PRINTFORML
+;			PRINTFORML %ANAME(무장)%의 인기가, 부대에 사람을 모으고 있는 것 같다……
+;			PRINTFORM {ARG:1+1}차례의 부대에
+;			PRINTFORM {증가수}
+;			PRINTFORML 의 의용병이 모였습니다
+;			PRINTFORML 병 수:{UNIT_SOLDIER:(ARG:0):(ARG:1)} → {UNIT_SOLDIER:(ARG:0):(ARG:1) + 증가수}
+;		ENDIF
+;		UNIT_SOLDIER:(ARG:0):(ARG:1) +=증가수
+;	ENDIF
+;NEXT
+;

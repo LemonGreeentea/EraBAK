@@ -1,0 +1,27 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_BUY_TACTICAL_BOOK_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_BUY_TACTICAL_BOOK_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_BUY_TACTICAL_BOOK(대상)
+#DIM 대상
+
+PRINTFORML 훌쩍 들어간 서점에서 신경이 쓰인다 책을 보기 시작했다
+PRINTFORML 아무래도 병법서인 것 같다
+PRINTFORMW 모처럼인데서 사 읽어 보기로 했다
+CALL PRINT_ADD_EXP(대상, "방위경험치", RAND:10 + 1, 1)
+
+RETURN 1

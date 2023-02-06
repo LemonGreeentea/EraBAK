@@ -1,0 +1,138 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_ZOOPHILIA_RATE()
+RETURN 1000
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_ZOOPHILIA_DECISION()
+RETURN 1
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_ZOOPHILIA_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;특정의 조건을 채우는 캐릭터를 랜덤에 선택하는 경우에 이용
+;다른 함수는 필수이지만, 이것만은 없어도 좋다  라고 할까 퍼포먼스에 영향을 주므로 불필요하면 만들어서는 안 된다
+;대상이 존재하지 않고 데일리를 개시 할 수 없는 경우는 0을 돌려주는 것으로 데일리의 발생을 캔슬한다
+;---------------------
+@EVENT_DAILY_ZOOPHILIA_SETTARGET()
+FOR LOCAL, 0, CHARANUM
+	;포로가 아니고, 죽지 않고, 암캐 소지자의 여자로,1/3의 확률
+	IF !CFLAG:LOCAL:포로처 && CFLAG:LOCAL:특수상태 != 특수상태_사망 && GETBIT(TALENT:LOCAL:음란계, 소질_음란_암캐) && IS_FEMALE(LOCAL) && !RAND:3 && IS_APPEAR(LOCAL)
+		DAILY_TARGET:DAILY_TARGET_NUM = LOCAL
+		DAILY_TARGET_NUM ++
+	ENDIF
+NEXT
+SIF DAILY_TARGET_NUM < 1
+	RETURN 0
+RETURN 1
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_ZOOPHILIA()
+#DIM 대상
+#DIM ID
+#DIMS 간역
+
+FOR LOCAL, 0, DAILY_TARGET_NUM
+	대상 = DAILY_TARGET:LOCAL
+	PRINTFORMW 수간의 쾌락에 눈을 뜬 %ANAME(대상)%의 신체가, 밤마다 쑤시고 있는 것 같다……
+	SELECTCASE RAND:8
+		CASE 0
+			PRINTFORML %조사처리(ANAME(대상),"는")% 떠돌이 개의 집합소에 나가 온 것 같다
+			PRINTFORML %조사처리(ANAME(대상),"는")% 조용히 옷을 벗어 던져, 그들의 앞에서 엎드린 자세로 된다
+			PRINTFORML 갑자기 나타난 훌륭한 암컷을, 그들은 기분 좋게 맞아들인 것 같다
+			PRINTFORML ……다만, 편리한 고기구멍으로서
+			PRINTFORML %조사처리(ANAME(대상),"는")% 개들에게 모여져 몇 번이나 종을 붙여져 간다
+			PRINTFORML 환희에 떨리는 그녀의 표정은, 확실히 암캐 그 자체였다……
+			ID = GET_SPERM_ID("개")
+			간역 = 개
+		CASE 1
+			PRINTFORML %조사처리(ANAME(대상),"는")% 축사에게 잠입한 것 같다
+			PRINTFORML 땅거미에 맨살을 쬐었던 %조사처리(ANAME(대상),"는")%, 수퇘지의 무리에 섞여 붐비었다
+			PRINTFORML 갑자기 나타난 %조사처리(ANAME(대상),"를")%, 그들은 임신 희망의 암컷으로서 인식한 것 같다
+			PRINTFORML 앞 다투어 모여서는, 짐승냄새를 발하는 페니스를 젖은 암컷구멍에 쑤셔 넣어 간다
+			PRINTFORML %조사처리(ANAME(대상),"는")% 그 자궁으로, 돼지의 정액을 여러번 받아 들였다……
+			PRINTFORML 해방되는 무렵에는, 그 배는 임신했는지같이 부풀어 오르고 있었다
+			ID = GET_SPERM_ID("돼지")
+			간역 = 돼지
+		CASE 2
+			PRINTFORML %조사처리(ANAME(대상),"는")% 아르바이트에 신청한 것 같다
+			PRINTFORML 호사가가 보고 있는 눈앞에서, 그의 기르는 개에게 범해진다, 라고 한다……
+			PRINTFORML 개는 %조사처리(ANAME(대상),"를")% 매우 마음에 든 것 같아, 격렬하게 허리를 곤두세운다
+			PRINTFORML 한편의 %ANAME(대상)%도, 혈통서 첨부의 피스톤에 매료되어 격렬하게가는 있다
+			PRINTFORML 2"마리"의 교제는 호사가를 몹시 만족시킨 것 같다. 금 지불은 실로 좋았다……
+			IF CFLAG:대상:소속 == CFLAG:MASTER:소속
+				CALL COLOR_PRINTL(@"자금이 다소 증가했습니다", 칼라_주의)
+				MONEY += RAND(3000, 10000)
+			ENDIF
+			ID = GET_SPERM_ID("개")
+			간역 = 개
+		CASE 3
+			PRINTFORML %조사처리(ANAME(대상),"는")% 밤의 거리를 배회한 것 같다
+			PRINTFORML 그녀는 주택가가 있는 단독주택의 마당에 잠입했다
+			PRINTFORML 거기서 옷을 벗어 던지면, 기르는 개를 유혹하기 시작했다
+			PRINTFORML 갑자기 나타난 암컷에 개는 완전히 그럴 기분이 들어, 사납게 허리를 흔들기 시작했다……
+			PRINTFORML 발견될지도 모르는 공포와 개에게 줄 수 있는 쾌락이, %조사처리(ANAME(대상),"를")% 몇 번이나 절정 시켰다
+			ID = GET_SPERM_ID("개")
+			간역 = 개
+		CASE 4
+			PRINTFORML %조사처리(ANAME(대상),"는")% 밤의 숲에 나간 것 같다
+			PRINTFORML 아니나 다를까, 들의 요수를 당했다
+			PRINTFORML 평상시라면 아무 문제도 없게 거부되는 상대에게, 하지만 %조사처리(ANAME(대상),"는")% 저항하지 않고, 깔아눌러진다
+			PRINTFORML 그리고 그대로, 짐승 그 자체의 페니스를 쑤셔 넣어졌다
+			PRINTFORML 강력한 피스톤에, %조사처리(ANAME(대상),"는")% 몇 번이나 절정 한다
+			PRINTFORML 해방되는 무렵에는, 그 암컷구멍은 녹진녹진 백탁을 흘리고 있었다……
+			ID = GET_SPERM_ID("불명")
+			간역 = 요수
+		CASE 5
+			PRINTFORML 자신이 기르고 있는 개와 %조사처리(ANAME(대상),"는")% 즐긴 것 같다
+			PRINTFORML 낮은 좋은 사육주와 좋은 기르는 개라는 관계를, %조사처리(ANAME(대상),"와")% 개는 쌓아 올리고 있다
+			PRINTFORML 밤도 그렇다. ……관계가 거꾸로 되는 것 이외는
+			PRINTFORML %조사처리(ANAME(대상),"는")% 굴종의 포즈를 취해, "주인님"에 암컷구멍을 바치고 있다
+			PRINTFORML 개도 개로, 온순한 암컷에 "포상"을 몇 번이나 준 것 같다
+			PRINTFORML 두 명의 교제는, 밤이 희어질 때까지 계속되었다……
+			ID = GET_SPERM_ID("개")
+			간역 = 개
+		CASE 6
+			PRINTFORML %조사처리(ANAME(대상),"는")% 마굿간에게 잠입한 것 같다
+			PRINTFORML 종마의 장대한 페니스를, 그녀는 입으로애무 하고 있다
+			PRINTFORML 성인 남성의 팔(정도)만큼도 있으리라고 말하는 페니스의 씩씩함과 수컷 수상함에, %조사처리(ANAME(대상),"는")% 몹시 놀라고 있다
+			PRINTFORML %조사처리(ANAME(대상),"가")% 엎드린 자세로든지, 그 암컷구멍에 페니스를 이끌면, 말은 흥분해 격렬하게 허리를 흔들기 시작한다
+			PRINTFORML 삽입질의 여행배가 페니스의 형태에 부푼다. 자궁마다 파괴될 것 같은 쾌락에, %조사처리(ANAME(대상),"는")% 머리카락을 흩뜨려 절정 계속 했다……
+			PRINTFORML 이윽고 말이 사정하면, 그 정액을 따라진 배는 임신했는지같이 부풀었다……
+			ID = GET_SPERM_ID("말")
+			간역 = 말
+		CASE 7
+			PRINTFORML %조사처리(ANAME(대상),"는")% 축사에게 갔다온 것 같다
+			PRINTFORML 축사에는, 돼지의 교미의 연습용으로, 「의자대」라는 것이 비치되어지고 있다
+			PRINTFORML %조사처리(ANAME(대상),"는")% 그 의자대가 되기 시작한 것 같다……
+			PRINTFORML 암퇘지의 발하는 페로몬을 고기구멍에 쳐바른 %ANAME(대상)%에, 흥분한 수퇘지가 차례차례로 덥친다
+			PRINTFORML 그리고, 걸쭉과 기름기가 돈 농후한 정액을, 지겨워 할 정도로 쏟아 간다……
+			PRINTFORML 해방되는 무렵에는, 그녀의 배는 정말로 임신했는지같이 부풀고 있었다
+			ID = GET_SPERM_ID("돼지")
+			간역 = 돼지
+	ENDSELECT
+	CALL FUCK_BEAST(대상, ID, @"%간역%의 \@ RAND:2 ? 페니스 # 입술\@", @"%간역%")
+
+	PRINTW
+NEXT
+RETURN 1
+
+@EVENT_DAILY_ZOOPHILIA_ALLOW_WHEN_WANDERING
+RETURN 1
+

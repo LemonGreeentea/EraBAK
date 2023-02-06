@@ -1,0 +1,220 @@
+﻿;--------------------------------------
+;턴 엔드시의 외래병의 처리
+;--------------------------------------
+@TURNEND_GAIRAI
+#DIM 외래인
+
+외래인 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_외래인)
+
+;병력의 증가하는 처리
+IF DAY % 3 == 0
+	CALL SINGLE_DRAWLINE
+	LOCAL:0 = MAX(RAND:3000, 1000)
+	PRINTFORML 외래인에 붙으면 「실험」의 넘쳐 흐름을 맡을 수 있다고 들은 들요괴들이, 차례차례로 돌아눕고 있는 것 같습니다……
+	PRINTFORML 외래인군의 병력이 {LOCAL:0} 증가했다
+	COUNTRY_SOLDIER:외래인 += LOCAL:0
+ENDIF
+
+;5턴에 1회, 브레인 컨트롤
+CALL GAIRAI_BRAINCONTROL(DAY % 5 == 0)
+
+;--------------------------------------
+;멸망시의 처리
+;--------------------------------------
+@GAIRAI_DESTROY_MSG
+CALL SINGLE_DRAWLINE
+SETCOLOR 칼라_주의
+PRINTFORML
+PRINTFORML
+PRINTFORML
+PRINTFORMW 괴멸적인 피해를 받은 외래인은, 결계의 밖에 철수 해 나갔습니다
+PRINTFORMW 환상향의 승리입니다!
+PRINTFORML
+PRINTFORML
+PRINTFORML
+RESETCOLOR
+CALL SINGLE_DRAWLINE
+
+;--------------------------------------
+;외래 세력의 초기화 처리
+;--------------------------------------
+@GAIRAI_INIT(ARG:0)
+#DIM LCOUNT
+VARSET LOCAL
+
+SIF GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_외래인) != -1
+	RETURN 0
+
+SIF SP_COUNTRY_RANK:특수세력_외래인 == 0
+	RETURN 0
+
+SIF GET_NEW_COUNTRY() == -1
+	RETURN 0
+
+CALL CREATE_SP_COUNTRY(특수세력_외래인)
+
+RETURN RESULT
+
+
+;--------------------------------------
+;외래 사람에 따라 다른 브레인 컨트롤 이벤트
+;인수에는 발동 조건을 쓴다. 쓰지 않으면 상시 발동.
+;--------------------------------------
+@GAIRAI_BRAINCONTROL(조건 = 1)
+#DIM 외래
+#DIM 조건
+#DIM 후보, 3000
+#DIM 후보수
+#DIM 대상
+#DIM 메세지
+VARSET 후보, -1
+VARSET 후보수
+
+외래 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_외래인)
+
+;외래 소속이 아니고, 조건을 채우고 있다
+SIF 외래 == -1 || !조건
+RETURN -1
+
+FOR LOCAL, 0, CHARANUM
+	SIF IS_SP_CHARA(LOCAL)
+		CONTINUE
+	SIF LOCAL == MASTER
+		CONTINUE
+	SIF LOCAL == GET_COUNTRY_BOSS(CFLAG:LOCAL:소속)
+		CONTINUE
+	SIF CFLAG:LOCAL:포로처 && CFLAG:LOCAL:포로처 != 외래
+		CONTINUE
+	SIF CFLAG:LOCAL:소속 == 외래
+		CONTINUE
+	SIF CFLAG:LOCAL:소속 == 2
+		CONTINUE
+	SIF !CFLAG:LOCAL:소속 && CFLAG:LOCAL:특수상태 != 특수상태_방랑
+		CONTINUE
+	SIF TALENT:LOCAL:유아
+		CONTINUE
+	후보:후보수 = LOCAL
+	후보수 ++
+NEXT
+
+SIF 후보수 <= 0
+	RETURN -1
+
+CALL FISHER_YATES_SHAFFLE(후보수)
+
+대상 = 후보:(SHAFFLE_ARRAY:0)
+
+SIF 대상 == -1
+	RETURN -1
+
+IF CFLAG:대상:포로처 == 외래
+	CALL SINGLE_DRAWLINE
+	SETCOLOR 칼라_핑크
+	PRINTFORMW 외래 사람들은 실험이라고 칭해, 이상한 듯한 헬멧형 장치를 %ANAME(대상)%에 씌웠다……
+	PRINTFORMW 처음은 날뛰고 있었던 %조사처리(ANAME(대상),"이지만")%, 외래인이 장치의 전원을 넣으면, 순간에 얌전해진다
+	PRINTFORML 장치중에서는, 그들이 만든 세뇌용 무비·음성이 흐르고 있다
+	PRINTFORML 게다가 장치로부터 머리에 흐르고 되는 미약한 전류가, %ANAME(대상)%의 심층 심리로부터 고쳐 써 간다
+	PRINTFORMW 자신은 외래 사람들의 노예에 지나지 않는 것이라고
+	PRINTFORML %ANAME(대상)%의 마음이 행복감에 채워져 간다
+	PRINTFORMW 이렇게 행복한데, 어째서 거역할 필요가 있겠지?
+	IF !CONFIG:200
+		PRINTFORML 어느 정도 경과를 본 후, 외래 사람들은 장치의 세뇌 영상에, 자위해서라는 신호를 혼합하고 붐비었다
+		PRINTFORMW 외래인의 온순한 연구 대상과 완성되어버린 %조사처리(ANAME(대상),"는")%, 어떤 의문도 안지 않고,
+		PRINTFORMW 다만 (듣)묻는 대로 스스로의 비부를 격렬하게 위로하기 시작했다……
+	ENDIF
+	PRINTFORML
+	CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"가")% 외래인의 노예가 되었습니다", 칼라_경고)
+	RESETCOLOR
+	SETBIT TALENT:대상:특수세력함락계, 특수세력_외래인
+	CALL CHANGE_COUNTRY(대상, 외래, 1)
+ELSE
+	CALL SINGLE_DRAWLINE
+	SETCOLOR 칼라_핑크
+	PRINTFORML 외래 사람들은 대형의 음향 장치를 야외에 꺼냈다
+	PRINTFORMW 그리고, 거기에서 귀로 들리지 않는 세뇌 음파를 대음량으로 흘리기 시작했다
+	PRINTFORMW 우연히 근처에 있었던 %조사처리(ANAME(대상),"는")% 그것을 그대로 (들)물어 버려, 음파의 발생 원래로 휘청휘청 접근했다……
+	PRINTFORML 공허한 눈동자로 외래인의 바탕으로 급히 달려간 %조사처리(ANAME(대상),"는")%, 우리에게 들어가도록(듯이) 얘기한다
+	PRINTFORMW 음파의 영향하에 있는 %조사처리(ANAME(대상),"는")%, (듣)묻는 대로 따랐다
+	PRINTFORMW 연구 대상을 확보할 수 있었다고, 외래 사람들은 그대로 %조사처리(ANAME(대상),"를")% 가지고 돌아갔다
+	PRINTFORMW %조사처리(ANAME(대상),"가")% 나에게 돌아갔을 무렵에는, 벌써 뒤늦음이었다
+	PRINTFORML
+	CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"가")% 외래인에 붙잡혔습니다", 칼라_경고)
+	RESETCOLOR
+	CALL CAPTURE(대상, 외래)
+ENDIF
+
+;-----------------------------------
+;외래 세력에 잡혔을 때의 이벤트
+;-----------------------------------
+@MASTER_CAPTURED_GAIRAI(ARG:0)
+PRINTFORMW 잡힌 %조사처리(ANAME(MASTER),"는")% 외래 사람들의 연구자의 앞에 끌어내졌다…
+IF GETBIT(TALENT:MASTER:특수세력함락계, 특수세력_외래인)
+	PRINTFORML 군은 탈주한 연구 대상 XXX차례가 아닌가, 자주(잘) 돌아왔다
+	PRINTFORMW 자, 또 실험을 실시하기 때문에, 이 목걸이를 입으세요
+	PRINTFORMW 외래 사람들은 당연히, 목걸이를 끼우려고 해 오지만……
+	CALL ASK_YN("받아들인다", "거부한다")
+	IF RESULT == 0
+		PRINTFORMW 이것을 붙이면, 또 많이 연구 해 줄 수 있다
+		PRINTFORMW %ANAME(MASTER)%의 신체는 쑤셔, 목걸이를 스스로 받아들여 버렸다
+		PRINTFORMW 순간, 그들에 대해서는 절대 복종이다는 생각이, 머릿속을 다 메웠다
+		PRINTFORMW 붙어 오게, 그렇게 간단한 명령에 따르는 것에조차, 깊은 기쁨을 느낀다
+		PRINTFORMW 그들이 만든 특수한 목걸이를 끼워, %조사처리(ANAME(MASTER),"는")% 다시, 노예에게 되어 내렸다……
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 다시, 외래 사람들의 연구용 노예가 되었습니다
+		RESETCOLOR
+	ELSE
+		PRINTFORMW 누가 그런 것. %조사처리(ANAME(MASTER),"는")% 물리친다
+		PRINTFORMW 외래 사람들에게는 그 태도를 이해 할 수 없는 것 같았다
+		PRINTFORMW 어떤 반응일까 이것은, 흥미로워, 부디 조사하지 않으면
+		PRINTFORMW 끓어 끊는 외래 사람들은, %조사처리(ANAME(MASTER),"를")% 붙잡아 형벌 도구로 묶어, 연구용의 감옥으로 던져 넣었다……
+	ENDIF
+ELSE
+	PRINTFORML 연구자는 %ANAME(MASTER)%의 몸을 연구 대상을 보는 눈동자로 빨도록(듯이) 확정한 후,
+	PRINTFORMW 군은 연구 가치가 있을 듯 하다고 중얼거렸다
+	PRINTFORMW 스스로 연구에 협력해 준다면, 극심한 흉내는 하지 않는다고 말하고 있지만……
+	PRINTFORMW 받아들입니까?
+	CALL ASK_YN("받아들인다", "거부한다")
+	IF RESULT == 0
+		PRINTFORMW 투옥되는 것보다는 좋을 것이다. %조사처리(ANAME(MASTER),"가")% 수긍하면, 외래 사람들은 만족스럽게 수긍했다
+		PRINTFORMW 에서는 관리용 태그를 붙이려고, 그들은 말하기 시작했다
+		PRINTFORMW 「태그」로서 준비된 인두는, 당치 않게, %ANAME(MASTER)%의 아랫배에 꽉 누를 수 있었다……
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 외래 사람들의 연구용 노예가 되었습니다
+		RESETCOLOR
+	ELSE
+		PRINTFORMW 너희들 따위에 손을 빌려 줄까. %조사처리(ANAME(MASTER),"는")% 의연히 해 단언한다	
+		PRINTFORMW 에서는 어쩔 수 없으면, 그들은 그대로 %조사처리(ANAME(MASTER),"를")% 투옥했다……
+	ENDIF
+ENDIF
+IF RESULT == 0
+	SETBIT TALENT:MASTER:특수세력함락계, 특수세력_외래인
+	CFLAG:MASTER:소속 = ARG:0
+	CALL PLAYER_FALLEN_TO_SP_COUNTRY(ARG:0)
+	RETURN 0
+ELSE
+	CALL CAPTURE(MASTER, ARG:0)
+	RETURN 2
+ENDIF
+
+;--------------------------------------
+;엔딩
+;--------------------------------------
+@GAIRAI_ENDING
+PRINTFORML 외래 사람들의 환상향 침공 계획은 성공했다
+PRINTFORMW 그들은 과학의 힘으로, 환상향 전 국토를 지배하에 두었다
+PRINTFORML 오늘도 그들은 소녀들을 사용해, 비도인 「실험」을 반복하고 있다
+PRINTFORML 그들의 연구소에는, 소녀의 비명이나 교성이 울려 퍼진다
+PRINTFORMW 이지만, 그것을 멈추는 사람은 없다. 그들에게 거슬리는 사람은 모두, 멸해져 버린 것이니까……
+IF CFLAG:MASTER:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_외래인) && IS_FEMALE(MASTER)
+	PRINTFORMW 
+	PRINTFORMW 연구용 노예들 속에, %ANAME(MASTER)%의 모습도 있었다
+	PRINTFORMW 연구에 협력적인 모범적 노예라는 일로, 비교적 대우는 좋다
+	PRINTFORMW ……노예로 해서는, 라는 단서 서로 돌출하지만
+	PRINTFORML 오늘의 그녀에게 부과된 것은, 이종 생물과의 교배 실험이다
+	PRINTFORMW 특수한 배란유발제를 미리 아랫배에 자궁에 주사되고 있는 %조사처리(ANAME(MASTER),"는")%, 임신의 기대에 아랫배를 쑤시게 하고 있다
+	PRINTFORML 그녀가 실험실에 들어가든지, 대형개가 그녀를 덮어눌러, 범하기 시작한다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")%, 견딜 수 없다고 한 소리를 질러 몇 번이나 발해지는 정액을 고기구멍으로 받아 들여 간다 
+	PRINTFORMW 과학자들은, 그것을 무감동에 바라봐, 때때로 기록을 취하고 있었다……
+ENDIF
+PRINTFORML 
+PRINTFORMW 이미 구세주 따위 없는 땅에, 그저 여자의 교성이 계속 울려 퍼진다……

@@ -1,0 +1,72 @@
+﻿
+;--------------------------------------
+;봉기 이벤트가 발생할까의 판정
+;--------------------------------------
+@GAIRAI_RISE_RATE()
+;이미 출현하고 있는지, 외래인 없음 설정이라면 발동하지 않는다
+SIF SP_COUNTRY_APPEARED:특수세력_외래인 || !SP_COUNTRY_RANK:(특수세력_외래인)
+	RETURN 0
+
+;가득하면 안 돼
+SIF GET_NEW_COUNTRY() == -1
+	RETURN 0
+
+SIF !CHECK_SP_COUNTRY_RISE()
+	RETURN 0
+RETURN 1
+
+
+;--------------------------------------
+;외래 세력 출현 이벤트
+;출현할 수 있으면 1, 할 수 없으면 0을 돌려준다
+;--------------------------------------
+@GAIRAI_RISE(도시 = 0)
+#DIM 외래인
+#DIM 도시
+
+;외래 세력을 작성
+CALL GAIRAI_INIT()
+외래인 = RESULT
+;만들 수 없으면 되돌린다
+SIF 외래인 == -1
+	RETURN 0
+
+CALL SP_COUNTRY_RISE(외래인, 도시)
+
+SIF !RESULT
+	RETURN 0
+
+SP_COUNTRY_APPEARED:특수세력_외래인 = 1
+RETURN 외래인
+
+;--------------------------------------
+;봉기 이벤트용 도시 선택 처리
+;--------------------------------------
+@GAIRAI_RISE_SELECT_CITY()
+#DIM 결계
+#DIM 소유자
+;하쿠레이 대결계의 소유자가 3 도시 이상 소지하고 있으면 거기로부터
+결계 = GET_CITYNUMBER("하쿠레이 대결계")
+IF 결계 >= 0 && (!IS_COUNTRY(CITY_OWNER:결계) || GET_OWN_CITY(CITY_OWNER:결계) >= 3)
+	LOCAL = 결계
+;그렇지 않으면 랜덤
+ELSE
+	CALL SP_COUNTRY_RISE_SELECT_CITY()
+	LOCAL = RESULT
+ENDIF
+
+RETURN LOCAL
+
+
+;---------------------
+;봉기 이벤트용 메세지 함수
+;---------------------
+@GAIRAI_RISE_MSG(세력, 대상)
+#DIM 세력
+#DIM 대상
+CALL SINGLE_DRAWLINE
+SETCOLOR 칼라_경고
+PRINTFORMW 결계의 밖으로부터 갑자기, 외래인이 눈사태같이 공격하고 넣어 왔습니다!
+PRINTFORMW 그들의 전격적인 작전 행동에 의해, %CITY_NAME:(대상)%\@ GET_OWN_CITY(세력) > 1 ? 등 # \@가 빼앗겼습니다
+PRINTFORMW 이것에 수반해, 환상향의 각 세력이 이변 해결의 준비를 시작한 것 같습니다…
+RESETCOLOR

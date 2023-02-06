@@ -1,0 +1,316 @@
+﻿;쌍쌍두바이브
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME22
+LOCALS:0 = 쌍두바이브
+
+RESULTS:0 = %조사처리(LOCALS:0,"를")% 사용한다
+RESULTS:1 = %조사처리(LOCALS:0,"를")% 사용된다
+RESULTS:2 = %조사처리(LOCALS:0,"를")% 사용하게 한다
+RESULTS:3 = %조사처리(LOCALS:0,"를")% 사용된다
+RESULTS:4 = %조사처리(LOCALS:0,"를")% 사용하게 한다
+RESULTS:5 = %LOCALS:0%과시하고
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE22
+;공통 부분
+CALL COM_ABLE_COMMON(22)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 1명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 1
+	RETURN 0
+;타겟은 최대로 1명까지
+SIF MTAR_NUM <= 0 || MTAR_NUM > 1
+	RETURN 0
+;플레이어와 타겟이 함께 행동불능이라면 불가
+SIF !IS_PLAYABLE(MPLY:0) && !IS_PLAYABLE(MTAR:0)
+	RETURN 0
+;쌍두바이브가 필요
+SIF !ITEM:쌍두바이브 && !ITEM:A_쌍두바이브
+	RETURN 0
+;플레이어에Ｖ가 없으면 불가
+SIF !HAS_VAGINA(MPLY:0)
+	RETURN 0
+;타겟으로Ｖ가 없으면 불가
+SIF !HAS_VAGINA(MTAR:0)
+	RETURN 0
+;플레이어의Ｖ가 메워지고 있다면 불가
+SIF IS_V_HOLD(MPLY:0)
+	RETURN 0
+;타겟의Ｖ가 메워지고 있다면 불가
+SIF IS_V_HOLD(MTAR:0)
+	RETURN 0
+;플레이어가 안면승마중이라면 불가
+SIF IS_RIDE(MPLY:0)
+	RETURN 0
+;플레이어가 바닥에 엎드리며 있다면 불가
+SIF IS_EQUIP_PLAYER(MPLY:0, 110)
+	RETURN 0
+;타겟이 안면승마중이라면 불가
+SIF IS_RIDE(MTAR:0)
+	RETURN 0
+;플레이어와 타겟이 함께 구속중이라면 불가
+SIF IS_BIND(MPLY:0) && IS_BIND(MTAR:0)
+	RETURN 0
+;서로 쌍두바이브로 결합중인가 어떤가의 플래그를 취득
+LOCAL:2 = (SEARCH_EQUIP(22, MPLY:0, MTAR:0) >= 0) || (SEARCH_EQUIP(22, MTAR:0, MPLY:0) >= 0)
+;플레이어가 쌍두바이브 제외한 삽입 상태라면 불가
+SIF IS_INSERT_SINGLE(MPLY:0, "전") && !LOCAL:2
+	RETURN 0
+;타겟이 쌍두바이브 제외한 삽입 상태라면 불가
+SIF IS_INSERT_SINGLE(MTAR:0, "전") && !LOCAL:2
+	RETURN 0
+;플레이어와 타겟이 서로 키스중이라면 불가
+SIF SEARCH_EQUIP(20, MPLY:(LOCAL:0), MTAR:(LOCAL:1)) >= 0 || SEARCH_EQUIP(20, MTAR:(LOCAL:1), MPLY:(LOCAL:0)) >= 0
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM22
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;역방향으로부터의 MEQUIP를 해제
+FOR LOCAL:0, 0, MPLY_NUM
+	FOR LOCAL:1, 0, MTAR_NUM
+		CALL RELEASE_EQUIP_EX(22, MTAR:(LOCAL:1), MPLY:(LOCAL:0))
+	NEXT
+NEXT
+
+;●플레이어에 대해 처리
+DOWNBASE:(MPLY:0):체력 += 140
+
+EXP:(MPLY:0):성기술경험치 += 1
+EXP:(MPLY:0):성교경험치 += 2
+
+SOURCE:(MPLY:0):쾌Ｖ = SENSE_SEX_TARGET(MTAR:0, MPLY:0, 1400)
+SOURCE:(MPLY:0):접촉 = 100
+SOURCE:(MPLY:0):성행동 = 360
+
+;성교계의 공통 처리
+CALL COM_COMMON_SEX_V(MPLY:0, MTAR:0)
+
+;주도권에 응한 우월·굴종의 소스 추가
+CALL ADD_SOURCE_INITIATIVE_U(MPLY:0, 50, 50)
+
+;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+TCVAR:(MPLY:0):4 = 1
+
+;사정 개소와 대상을 세트
+CALL STACK_SPERM(MPLY:0, MTAR:0, 0)
+
+;●타겟으로 붙어 처리
+DOWNBASE:(MTAR:0):체력 += 140
+
+EXP:(MTAR:0):성기술경험치 += 1
+EXP:(MTAR:0):성교경험치 += 2
+
+SOURCE:(MTAR:0):쾌Ｖ = SENSE_SEX_TARGET(MPLY:0, MTAR:0, 1400)
+SOURCE:(MTAR:0):접촉 = 80
+SOURCE:(MTAR:0):성행동 = 360
+
+;성교계의 공통 처리
+CALL COM_COMMON_SEX_V(MTAR:0, MPLY:0)
+
+;주도권에 응한 우월·굴종의 소스 추가
+CALL ADD_SOURCE_INITIATIVE_U(MTAR:0, 50, 50)
+
+;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+TCVAR:(MTAR:0):4 = 1
+
+;사정 개소와 대상을 세트
+CALL STACK_SPERM(MTAR:0, MPLY:0, 0)
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = 0
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 7
+
+RETURN 1
+
+;-------------------------------------------------
+;계속 커맨드인가 어떤가를 설정
+;-------------------------------------------------
+@COM_IS_EQUIP22
+RETURN 1
+
+;-------------------------------------------------
+;계속 상태의 처리
+;-------------------------------------------------
+@COM_EQUIP22(ARG:0)
+LOCAL:2 = MEQUIP_PLAYER:(ARG:0):0
+LOCAL:3 = MEQUIP_TARGET:(ARG:0):0
+
+;소스를 퇴피
+CALL PUTOUT_SOURCE(LOCAL:2)
+CALL PUTOUT_SOURCE(LOCAL:3)
+
+DOWNBASE:(LOCAL:2):체력 += 20
+
+EXP:(LOCAL:2):성기술경험치 += 1
+EXP:(LOCAL:2):성교경험치 += 1
+
+SOURCE:(LOCAL:2):쾌Ｖ += SENSE_SEX_TARGET(LOCAL:3, LOCAL:2, 700)
+SOURCE:(LOCAL:2):노출 += 100
+SOURCE:(LOCAL:2):성행동 += 120
+
+;성교계의 공통 처리
+CALL COM_COMMON_SEX_V(LOCAL:2, LOCAL:3)
+
+;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+TCVAR:(LOCAL:2):4 = 1
+
+;도착도 변화 기준치
+TCVAR:(LOCAL:2):50 -= 1
+
+;사정 개소와 대상을 세트
+CALL STACK_SPERM(LOCAL:2, LOCAL:3, 0, 0)
+
+DOWNBASE:(LOCAL:3):체력 += 20
+
+EXP:(LOCAL:3):성기술경험치 += 1
+EXP:(LOCAL:3):성교경험치 += 1
+
+SOURCE:(LOCAL:3):쾌Ｖ += SENSE_SEX_TARGET(LOCAL:2, LOCAL:3, 700)
+SOURCE:(LOCAL:3):노출 += 100
+SOURCE:(LOCAL:3):성행동 += 120
+
+;성교계의 공통 처리
+CALL COM_COMMON_SEX_V(LOCAL:3, LOCAL:2)
+
+;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+TCVAR:(LOCAL:3):4 = 1
+
+;도착도 변화 기준치
+TCVAR:(LOCAL:3):50 -= 1
+
+;사정 개소와 대상을 세트
+CALL STACK_SPERM(LOCAL:3, LOCAL:2, 0, 0)
+
+;퇴피한 소스를 가산
+CALL SUM_SOURCE(LOCAL:2)
+CALL SUM_SOURCE(LOCAL:3)
+
+;-------------------------------------------------
+;계속중의 표시
+;-------------------------------------------------
+@EQUIP_MESSAGE22(ARG:0)
+RESULTS = %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"와")% %조사처리(EQUIP_TARGET_ANAME(ARG:0),"가")% 쌍두바이브로 결합중
+
+;-------------------------------------------------
+;계속중의 지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE_EQUIP22(ARG:0)
+PRINTFORML %조사처리(EQUIP_TARGET_ANAME(ARG:0),"와")% %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"는")% 쌍두바이브로 연결된 채로 허리를 움직이고 있다…
+
+;-------------------------------------------------
+;계속을 해제했을 때의 지문
+;-------------------------------------------------
+@COM_TEXT_RELEASE_EQUIP22(ARG:0)
+PRINTFORMW %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"와")% %조사처리(EQUIP_TARGET_ANAME(ARG:0),"는")% 쌍두바이브를 뽑아 냈다…
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER22(ARG:0)
+CALL COM_ORDER_COMMON21(ARG:0)
+RETURN 1
+
+@COM_ORDER_TARGET22(ARG:0)
+CALL COM_ORDER_COMMON21(ARG:0)
+RETURN 1
+
+@COM_ORDER_COMMON22(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 95
+
+;질성교 공통
+CALL COM_ORDER_VSEX_V(ARG:0, 1)
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE22
+;계속중
+IF SEARCH_EQUIP_IC(22, MPLY:0, MTAR:0) >= 0
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 쌍두바이브로 결합한 채로, 한층 더 허리를 동요시켜 %조사처리(ANAME(MTAR:0),"를")% 자극%TARGET_STR("했다", "해 왔다")%…
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 다리를 걸면서, 한층 더 격렬하게 허리를 흔드는 %ANAME(MPLY:0)%에 요구했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 쌍두바이브로 결합한 채로, 한층 더 허리를 동요시켜 %ANAME(MTAR:0)%에 봉사했다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")%, 쌍두바이브로 서로 연결된 %조사처리(ANAME(MPLY:0),"와")% %ANAME(MTAR:0)%에, 좀 더 격렬하게 허리를 움직이도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"와")% %조사처리(ANAME(MTAR:0),"는")% (듣)묻는 대로 한층 더 허리를 동요시켜, 서로의 질내를 바이브로 휘저었다…
+	ENDSELECT
+
+ELSE
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			IF TALENT:(MPLY:0):처녀 == 1
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 쌍두바이브로 결합하면, 파과의 아픔에 참으면서 필사적으로 허리를 흔들어 %조사처리(ANAME(MTAR:0),"를")% 자극%TARGET_STR("했다", "해 왔다")%…
+			ELSEIF ABL:(MPLY:0):Ｖ감 <= 1 && MPLY:0 == MASTER
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 쌍두바이브로 결합하면, 허리를 흔들어 %조사처리(ANAME(MTAR:0),"를")% 자극%TARGET_STR("했다", "해 왔다")%…
+			ELSEIF ABL:(MPLY:0):Ｖ감 <= 1
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 쌍두바이브로 결합하면, 괴로운 듯이 하면서도 필사적으로 허리를 흔들어 %조사처리(ANAME(MTAR:0),"를")% 자극%TARGET_STR("했다", "해 왔다")%…
+			ELSE
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 쌍두바이브로 결합해, 격렬하게 허리를 흔들어 스스로도 쾌락을 탐내면서 %조사처리(ANAME(MTAR:0),"를")% 자극%TARGET_STR("했다", "해 왔다")%…
+			ENDIF
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에, 서로의 질에 쌍두바이브를 삽입해 허리를 흔드는야 게요구했다
+			IF TALENT:(MPLY:0):처녀 == 1
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 쌍두바이브로 결합하면, 파과의 아픔에 참으면서 필사적으로 허리를 흔들어 %ANAME(MTAR:0)%에 봉사했다…
+			ELSEIF ABL:(MPLY:0):Ｖ감 <= 1 && MPLY:0 == MASTER
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 쌍두바이브로 결합하면, 허리를 흔들어 %ANAME(MTAR:0)%에 봉사했다…
+			ELSEIF ABL:(MPLY:0):Ｖ감 <= 1
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 쌍두바이브로 결합하면, 괴로운 듯이 하면서도 필사적으로 허리를 흔들어 %ANAME(MTAR:0)%에 봉사했다…
+			ELSE
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 쌍두바이브로 결합하면, 격렬하게 허리를 흔들어 스스로도 쾌락을 탐내면서 %ANAME(MTAR:0)%에 봉사했다…
+			ENDIF
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %조사처리(ANAME(MPLY:0),"와")% %ANAME(MTAR:0)%에 쌍두바이브로 서로 연결되도록(듯이) 명령했다
+			IF TALENT:(MPLY:0):처녀 == 1
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 쌍두바이브로 결합하면, 파과의 아픔에 참으면서 필사적으로 허리를 흔들었다…
+			ELSE
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 쌍두바이브로 결합해, 서로 허리를 흔들어 쾌감을 서로 높였다…
+			ENDIF
+	ENDSELECT
+ENDIF
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN22
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_22()
+RETURN POWER(2, 성적기호_도구를사용하고싶다)
+
+@COM_PREFERENCE_TARGET_22()
+RETURN POWER(2, 성적기호_도구를사용되고싶다)
+

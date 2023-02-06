@@ -1,0 +1,62 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_DAIJOBU_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_DAIJOBU_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_DAIJOBU(대상)
+#DIM 대상
+PRINTFORML 탐색중, 백의를 입은 이상한 인물과 만났다
+PRINTFORML 그는 스스로를 의사와 자칭해, 실험에 교제해 주지 않을까 말해 왔다
+PRINTFORML 이상하지만, 왜일까 묘한 설득력이 있다
+PRINTFORMW 어떻게 하지?
+
+PRINTL
+CALL ASK_YN("받는다", "거절한다")
+IF RESULT == 1
+	PRINTFORML 아니, 역시 이런 이상한 실험에는 교제할 수 없다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 거절하면 빨리 떠났다
+	RETURN 1
+ENDIF
+
+PRINTFORML 재미있을 것 같다
+PRINTFORML 실험을 받는 일로 했다
+PRINTFORMW 박사는 뛰어 오르고 기뻐하면, %ANAME(대상)%의 팔을 당겨 가까이의 오두막으로 데리고 들어갔다
+PRINTFORML 
+PRINTFORML 어슴푸레한 방 안에서 %조사처리(ANAME(대상),"는")% 의자에 자리 헤드기어를 붙이고 있다
+PRINTFORML 아무것도 안보이게 되어 과연 불안하게 되지만, 벨트로 고정되고 있고 움직일 수 없었다
+PRINTFORML 박사가 뭔가의 스윗치를 넣으면 눈앞이 새하얗게 되어, %조사처리(ANAME(대상),"는")% 의식을 잃었다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF RAND:3 == 0
+	PRINTFORML 실험은 성공한 것 같다!
+	PRINTFORML 신체에 힘이 넘치는 것을 느낀다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 박사에 예를 고해 떠났다
+	CALL PRINT_ADD_EXP(대상, "무투경험치", RAND:10 + 1, 1)
+	CALL PRINT_ADD_EXP(대상, "지략경험치", RAND:10 + 1, 1)
+	CALL PRINT_ADD_EXP(대상, "정치경험치", RAND:10 + 1, 1)
+ELSE
+	PRINTFORML 실험은 실패한 것 같다
+	PRINTFORML 체로부터 힘이 빠지는 것 같은 감각에 습격당했다
+	PRINTFORMW 박사는 빨리 떠나 갔다
+	SIF MAXBASE:대상:체력 - 100 < 1000
+		RETURN 1
+	MAXBASE:대상:체력 -= 100
+	CALL ICPRINT(@"체력 최대치가<100>내려,<{MAXBASE:대상:체력}>가 되었다", "W", 칼라_주의)
+ENDIF
+
+RETURN 1
+

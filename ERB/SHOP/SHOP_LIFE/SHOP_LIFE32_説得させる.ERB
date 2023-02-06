@@ -1,0 +1,474 @@
+﻿;-------------------------------------------------
+;「설득시킨다」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE_NAME32
+RESULTS:0 '= "설득시킨다"
+
+;-------------------------------------------------
+;「설득시킨다」의 선택 가부 판정
+;-------------------------------------------------
+@SHOP_LIFE_CHECK32
+SIF CFLAG:MASTER:포로처
+	RETURN 0
+SIF !CFLAG:MASTER:소속
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「설득시킨다」의 선택 가능 캐릭터 존재 판정（설득되는 측）
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA32(ARG:0)
+;비주인공, 주인공 세력에 소속하지 않은, 주인공 세력의 포로
+RETURN CHECK91(ARG:0, 2, ARG:0 != MASTER && CFLAG:(ARG:0):소속 != CFLAG:MASTER:소속 && CFLAG:(ARG:0):포로처 == CFLAG:MASTER:소속)
+
+;-------------------------------------------------
+;「설득시킨다」의 선택 가능 캐릭터 존재 판정（설득하는 측）
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA_SUB32(ARG:0)
+;포로가 아닌, 통상 상태 또는 육아중, 동일 세력
+RETURN CHECK91(ARG:0, 2, CFLAG:(ARG:0):포로처 == 0 && GROUPMATCH(CFLAG:(ARG:0):행동불능상태, 0, 2) && CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속 && !IS_ANIMAL(ARG:0))
+
+;-------------------------------------------------
+;함수명 변경에 따르는 SHOP 폴더외 파일로부터의 호출 대응
+;※SYSTEM\EVENT_SETTOKU.ERB	@EVENT_SETTOKU	CALL CHECK_SELECTABLE1012(LOCAL:0) 되고 있다
+;※SYSTEM\TURNEND.ERB 로부터 CALL CHECK_SELECTABLE_SETTOKU(LOCAL:10) 되고 있다
+;-------------------------------------------------
+@CHECK_SELECTABLE1012(ARG:0)
+CALL SHOP_LIFE_CHECKCHARA32(ARG:0)
+
+@CHECK_SELECTABLE_SETTOKU(ARG:0)
+CALL SHOP_LIFE_CHECKCHARA_SUB32(ARG:0)
+
+;-------------------------------------------------
+;「설득시킨다의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY32
+FLAG:거점페이즈페이지 = 1
+FLAG:요바이 = 0
+RETURN 0
+
+
+;-------------------------------------------------
+;「설득시킨다」의 오른쪽 컬럼 캐릭터 리스트 1의 버튼（함수미지정이라면 선택중색없음 표시）
+;-------------------------------------------------
+@SHOP_LIFE_LIST1_BUTTON32(ARG:0, ARG:1)
+;캐릭터, 선택중 칼라 표시 플래그, 버튼 번호에 추가하는 수치, CHECKCHARA의 반환값
+CALL COLUMN_RIGHT_CHARALIST_BUTTON(ARG:0, MENUVAR:0 == ARG:0, SHOP_LIFE_LIST1_ADD_INPUT, ARG:1, 0, "TOP")
+RETURN
+
+;-------------------------------------------------
+;「설득시킨다」의 오른쪽 컬럼 캐릭터 리스트 2의 버튼（함수미지정이라면 선택중색없음 표시）
+;-------------------------------------------------
+@SHOP_LIFE_LIST2_BUTTON32(ARG:0, ARG:1)
+;캐릭터, 선택중 칼라 표시 플래그, 버튼 번호에 추가하는 수치, CHECKCHARA의 반환값
+CALL COLUMN_RIGHT_CHARALIST_BUTTON(ARG:0, CFLAG:(ARG:0):포로조교의조수, SHOP_LIFE_LIST2_ADD_INPUT, ARG:1, 0, "BOTTOM")
+RETURN 0
+
+;-------------------------------------------------
+;「포로의조교」의 오른쪽 컬럼 캐릭터 리스트 버튼（상）표시에 추적 시키는 정보
+;  Default의 정보를 표시하지 않는 경우는 RETURN 1
+;-------------------------------------------------
+@SHOP_LIFE_BUTTON_ADD_TOP32(ARG:0)
+#DIM 설득자군주
+#DIM 대상군주
+#DIM 충성
+#DIM 유혹
+설득자군주 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+대상군주 = GET_COUNTRY_BOSS(CFLAG:(ARG:0):소속)
+IF 대상군주 == -1
+	충성 = 0
+ELSE
+	충성 = SETTOKU_REL_EFFECT(ARG:0, 대상군주)
+ENDIF
+
+IF 설득자군주 == -1
+	유혹 = 0
+ELSE
+	유혹 = SETTOKU_REL_EFFECT(ARG:0, 설득자군주)
+ENDIF
+
+PRINTFORM 지:
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:(ARG:0):지략)
+PRINTFORM {ABL:(ARG:0):지략, 3, RIGHT} 
+PRINTFORM 정:
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:(ARG:0):정치)
+PRINTFORM {ABL:(ARG:0):정치, 3, RIGHT} 
+PRINTFORM 충성:
+CALL PRINT_GRADATIONBAR(충성, 100, 10, 0xFF5E7E, , 1)
+PRINTFORM  유혹:
+CALL PRINT_GRADATIONBAR(유혹, 100, 10, 0x60A74E)
+RETURN 1
+
+;-------------------------------------------------
+;「포로의조교」의 오른쪽 컬럼 캐릭터 리스트 버튼（상）표시에 추적 시키는 정보
+;  Default의 정보를 표시하지 않는 경우는 RETURN 1
+;-------------------------------------------------
+@SHOP_LIFE_BUTTON_ADD_BOTTOM32(ARG:0)
+#DIM 설득자군주
+#DIM 충성
+설득자군주 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+
+IF 설득자군주 == -1
+	충성 = 0
+ELSE
+	충성 = SETTOKU_REL_EFFECT(ARG:0, 설득자군주)
+ENDIF
+
+PRINTFORM 지:
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:(ARG:0):지략)
+PRINTFORM {ABL:(ARG:0):지략, 3, RIGHT} 
+PRINTFORM 정:
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:(ARG:0):정치)
+PRINTFORM {ABL:(ARG:0):정치, 3, RIGHT} 
+IF ARG != 설득자군주
+	PRINTFORM 충성:
+	CALL PRINT_GRADATIONBAR(충성, 100, 10, 0xFF5E7E, , 1)
+ENDIF
+
+RETURN 1
+
+
+;-------------------------------------------------
+;「설득시킨다」의 오른쪽 컬럼 표시 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SHOW32
+;타이틀
+CALL COLUMN_RIGHT_TITLE("대상과 담당자를 선택", "0", "1", "대상과 담당자에게 1CT", "")
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+IF MENUVAR:0 >= 0 && CFLAG:(MENUVAR:0):포로처 == CFLAG:MASTER:소속
+	PRINTBUTTON "[이 멤버로 결정]", 1
+ELSE
+	SETCOLOR 칼라_선택불가
+	PRINTPLAINFORM [이 멤버로 결정]
+	RESETCOLOR
+ENDIF
+PRINTPLAIN   
+CALL COLOR_PRINT(@"충성은 소속 세력의 군주에의 충성, 유혹은 이쪽으로 넘어온 정도를 나타낸다", 칼라_주석)
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+;오른쪽 컬럼의 상하 2의 캐릭터 리스트상과 페이지 이동을 부른다
+CALL COLUMN_RIGHT_CHARALIST_TOP(1)
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+;현재 참가하고 있는 조수의 수를 센다
+LOCAL:1 = 0
+FOR LOCAL:0, 0, CHARANUM
+	;선택 가능한 조건을 채우고 있는지 어떤지를 판정
+	TRYCALLFORM SHOP_LIFE_CHECKCHARA_SUB{FLAG:거점페이즈선택커맨드}(LOCAL:0)
+	IF RESULT == 1
+		;선택중의 인원수를 센다
+		IF CFLAG:(LOCAL:0):포로조교의조수
+			LOCAL:1 ++
+		ENDIF
+	ELSE
+		;조건을 채우지 않으면 강제적으로ＯＦＦ
+		CFLAG:(LOCAL:0):포로조교의조수 = 0
+	ENDIF
+NEXT
+
+PRINTFORM 최대 3명이 설득할 수 있습니다
+SIF LOCAL:1 >= 3 
+	SETCOLOR 칼라_오렌지
+PRINTFORM (현재{LOCAL:1}/3명)
+RESETCOLOR
+PRINTFORM  
+PRINTBUTTON "[자동 선택]", 2
+CALL COLOR_PRINT("(대상을 선택하고 나서 누르면보다 정확)", 칼라_주석)
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+;오른쪽 컬럼의 상하 2의 캐릭터 리스트하와 페이지 이동을 부른다
+CALL COLUMN_RIGHT_CHARALIST_BOTTOM(1)
+RETURN 0
+
+;-------------------------------------------------
+;「설득시킨다」의 오른쪽 컬럼 버튼의 입력 처리 보좌
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SUB32(ARG:0)
+;이 멤버로 결정
+SELECTCASE ARG:0 
+	CASE 1
+		IF MENUVAR:0 >= 0 && CFLAG:(MENUVAR:0):포로처 == CFLAG:MASTER:소속
+			CALL SHOP_LIFE_SETTOKU(MENUVAR:0)
+			IF !RESULT
+				REDRAW 1
+			ELSE
+				SHOP_TIME ++
+				LINES_SHOP = LINECOUNT
+				BEGIN TURNEND
+			ENDIF
+		ENDIF
+	CASE 2
+		CALL SHOP_LIFE_SETTOKU_SELECT_BEST_MEMBER(MENUVAR:0)
+ENDSELECT
+RETURN 0
+
+;-------------------------------------------------
+;「설득시킨다」의 리스트 1 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP32(ARG:0)
+MENUVAR:0 = ARG:0
+
+;-------------------------------------------------
+;「설득시킨다」의 리스트 2 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP_SUB32(ARG:0)
+;선택 가능한 조건을 채우지 않은 캐릭터라면 돌아온다
+RESULT = 0
+TRYCALLFORM SHOP_LIFE_CHECKCHARA_SUB{FLAG:거점페이즈선택커맨드}(ARG:0)
+IF RESULT != 1
+	RETURN 0
+ENDIF
+
+LOCAL:5 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):포로조교의조수
+		LOCAL:5 ++
+	ENDIF
+NEXT
+
+IF CFLAG:(ARG:0):포로조교의조수 || LOCAL:5 < 3
+	;조교참가플래그를 반전
+	CFLAG:(ARG:0):포로조교의조수 = !CFLAG:(ARG:0):포로조교의조수
+ENDIF
+
+;-------------------------------------------------
+;「설득시킨다」의 대상 자동 선택
+;-------------------------------------------------
+@SHOP_LIFE_SETTOKU_SELECT_BEST_MEMBER(대상, 최대수 = 3)
+#DIM 대상
+#DIM 후보, 3000
+#DIM 후보치, 3000
+#DIM 후보수
+#DIM 설득자수
+#DIM 최대수
+VARSET 후보, -1
+VARSET 후보치, __INT_MIN__
+VARSET 후보수
+VARSET 설득자수
+CVARSET CFLAG, GETNUM(CFLAG, "포로조교의조수"), 0
+
+FOR LOCAL:0, 0, CHARANUM
+	;선택 가능한 조건을 채우고 있는지 어떤지를 판정
+	TRYCALLFORM SHOP_LIFE_CHECKCHARA_SUB{FLAG:거점페이즈선택커맨드}(LOCAL:0)
+	IF RESULT == 1
+		후보:후보수 = LOCAL
+		후보치:후보수 = CALC_SETTOKU_EFFECT(LOCAL, 대상) - (대상 > 0 ? CALC_SETTOKU_EFFECT_TARGET(대상, LOCAL) # 0)
+		후보수 ++
+	ENDIF
+NEXT
+
+SIF 후보수 == 0
+	RETURN 0
+
+WHILE 1
+	LOCAL = FINDELEMENT(후보치, MAXARRAY(후보치), 0, 후보수)
+	SIF 후보치:LOCAL == __INT_MIN__ || 후보:LOCAL == -1
+		BREAK
+	CFLAG:(후보:LOCAL):포로조교의조수 = 1
+
+	후보치:LOCAL = __INT_MIN__
+	후보:LOCAL = -1
+	설득자수 ++
+	SIF 설득자수 >= 최대수
+		BREAK
+WEND
+
+RETURN 0
+
+;-------------------------------------------------
+;설득 이벤트(@EVENT_PRISONER로부터 유용)
+;-------------------------------------------------
+@SHOP_LIFE_SETTOKU(대상)
+#DIM 설득자, 3
+#DIM 설득자수
+#DIM 대상 
+#DIM 충성, 2
+#DIM 유혹, 2
+#DIM 설득자군주
+#DIM 대상군주
+
+VARSET 설득자, -1
+VARSET 설득자수
+
+SIF !(대상 >= 0 && CFLAG:(대상):포로처 == CFLAG:MASTER:소속)
+	RETURN 0
+
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:LOCAL:포로조교의조수
+		설득자:설득자수 = LOCAL
+		설득자수 ++
+	ENDIF
+NEXT
+
+IF 설득자:0 == -1
+	PRINTFORMW 먼저 설득자를 설정해 주세요
+	RETURN 0
+ENDIF
+
+설득자군주 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+대상군주 = GET_COUNTRY_BOSS(CFLAG:대상:소속)
+IF 대상군주 == -1
+	충성:0 = 0
+ELSE
+	충성:0 = SETTOKU_REL_EFFECT(대상, 대상군주)
+ENDIF
+유혹:0 = SETTOKU_REL_EFFECT(대상, 설득자군주)
+
+FOR LOCAL, 0, VARSIZE("설득자")
+	SIF 설득자:LOCAL == -1
+		BREAK
+	CALL DO_SETTOKU(대상, 설득자:LOCAL)
+	SIF RESULT == 2
+		BREAK
+NEXT
+
+IF 대상군주 == -1
+	충성:1 = 0
+ELSE
+	충성:1 = SETTOKU_REL_EFFECT(대상, 대상군주)
+ENDIF
+유혹:1 = SETTOKU_REL_EFFECT(대상, 설득자군주)
+
+IF 대상군주 != -1
+	PRINTFORM 충성:
+	CALL PRINT_GRADATIONBAR(충성:0, 100, 10, 0xFF5E7E, , 1)
+	PRINT  → 
+	CALL PRINT_GRADATIONBAR(충성:1, 100, 10, 0xFF5E7E, , 1)
+ENDIF
+PRINTFORM 유혹:
+CALL PRINT_GRADATIONBAR(유혹:0, 100, 10, 0x60A74E, , 1)
+PRINT  → 
+CALL PRINT_GRADATIONBAR(유혹:1, 100, 10, 0x60A74E, , 1)
+PRINTW
+
+
+RETURN 1
+
+
+;전략
+;판정치를 이하를 기준에 산출
+;1. 서로의 자신의 군주에의 인상
+;2. 서로의 상대의 군주에의 인상
+;3. 서로의 정치력
+;4. 서로의 지략
+;판정치가 큰 만큼 유리
+@DO_SETTOKU(대상, 설득자)
+#DIM 설득자
+#DIM 대상
+#DIM 설득자군주
+#DIM 대상군주
+#DIM 판정기초치,2
+#DIM 판정치
+#DIM 효과량, 2
+VARSET 판정기초치
+설득자군주 = GET_COUNTRY_BOSS(CFLAG:설득자:소속)
+대상군주 = GET_COUNTRY_BOSS(CFLAG:대상:소속)
+
+;설득측의 판정치
+;군주의 경우는 충성 최대로서 취급한다
+
+판정기초치:0 = CALC_SETTOKU_EFFECT(설득자, 대상)
+판정기초치:1 = CALC_SETTOKU_EFFECT_TARGET(대상, 설득자)
+
+PRINTFORML -<%ANAME(설득자)%>의<%ANAME(대상)%>에의 설득-
+판정치 = (판정기초치:0 - 판정기초치:1) * 2
+
+CALL FIND_GENERAL_SKILL(설득자, "말투")
+SIF RESULT
+	판정치 += RAND(5, 15)
+CALL FIND_GENERAL_SKILL(설득자, "헛소문 유포")
+SIF RESULT
+	판정치 += RAND(5, 15)
+
+SELECTCASE 판정치
+	CASE IS <= -100
+		PRINTFORMW %ANAME(설득자)%는 반대로 감화 되었다
+	CASE IS <= -60
+		PRINTFORMW %ANAME(설득자)%는 말아넣어져 버렸다
+	CASE IS < 0
+		PRINTFORMW %ANAME(설득자)%는 설득에 실패했다
+	CASE IS <= 30
+		PRINTFORMW %ANAME(설득자)%는 설득에 성공했다
+	CASE IS <= 60
+		PRINTFORMW %ANAME(설득자)%는 순조롭게 설득할 수 있었다
+	CASE IS <= 100
+		PRINTFORMW %ANAME(설득자)%는 꽤 순조롭게 설득할 수 있었다
+	CASE IS > 100
+		PRINTFORMW %ANAME(설득자)%는 %조사처리(ANAME(대상),"를")% 감화 시킨 것 같다
+ENDSELECT
+
+CFLAG:대상:행동완료 = 1
+CFLAG:설득자:행동완료 = 1
+
+
+효과량:0 = 판정치
+효과량:1 = 판정치
+
+IF 판정치 > 0
+	SIF REL_LIKE:대상:설득자군주 < REL_HATE:대상:설득자군주
+		TIMES 효과량:1, 1.5
+	CALL CHANGE_RELATION_O_TO_C(대상, CFLAG:설득자:소속, 효과량:0, -효과량:1)
+	CALL CHANGE_RELATION_O_TO_O(대상, 설득자, 효과량:0 / 2, -효과량:1 / 2)
+	CALL CHANGE_RELATION_O_TO_C(설득자, CFLAG:설득자:소속, 효과량:0 / 3, -효과량:1 / 3)
+ELSEIF 판정치 < 0
+	CALL CHANGE_RELATION_O_TO_C(대상, CFLAG:설득자:소속, 효과량:0 / 2, -효과량:1 / 2)
+	CALL CHANGE_RELATION_O_TO_O(대상, 설득자, RAND(5, 10), -RAND(5, 10))
+ENDIF
+
+IF SETTOKU_REL_EFFECT(대상, 설득자군주) >= 95 && 판정치 > 100 && ABL_POWER(ABL:설득자:정치, 설득자) + ABL_POWER(ABL:설득자:지략, 설득자) > ABL_POWER(ABL:대상:정치, 대상) + ABL_POWER(ABL:대상:지략, 대상)
+	CALL COLOR_PRINTW(@"설득의 끝, %조사처리(ANAME(대상),"는")% 이적의 의사를 굳혔다……", 칼라_주의)
+	CALL CHANGE_COUNTRY(대상, CFLAG:설득자:소속, 1)
+	MENUVAR:0 = 0
+	RETURN 2
+ENDIF
+
+RETURN 1
+
+
+;-------------------------------------------------
+;(ARG:0)의 캐릭터로부터(ARG:1)의 캐릭터에 대한다
+;-------------------------------------------------
+@SETTOKU_REL_EFFECT(ARG:0, ARG:1)
+#FUNCTION
+SIF ARG:0 == ARG:1
+	RETURNF 100
+RETURNF MAX((REL_LIKE:(ARG:0):(ARG:1) - REL_HATE:(ARG:0):(ARG:1)) * 100 / 1500, 0)
+
+;-------------------------------------------------
+;(ARG:0)가 ARG:1을 설득하는 경우의 설득 능력을 산출
+;-------------------------------------------------
+@CALC_SETTOKU_EFFECT(ARG:0, ARG:1)
+#FUNCTION
+RETURNF SETTOKU_BASE_EFFECT(ARG:0) + SETTOKU_REL_EFFECT(ARG:0, ARG:1) / 2
+
+;-------------------------------------------------
+;(ARG:0)가 ARG:1에 설득되는 경우의 설득 능력을 산출
+;-------------------------------------------------
+@CALC_SETTOKU_EFFECT_TARGET(ARG:0, ARG:1)
+#FUNCTION
+#DIM 군주
+군주 = GET_COUNTRY_BOSS(CFLAG:(ARG:1):소속)
+RETURNF SETTOKU_BASE_EFFECT(ARG:0) - (군주 >= 0 ? SETTOKU_REL_EFFECT(ARG:1, 군주) # 0)
+
+
+;-------------------------------------------------
+;(ARG:0)의 캐릭터의 기초 설득 능력을 산출
+;-------------------------------------------------
+@SETTOKU_BASE_EFFECT(ARG:0)
+#FUNCTION
+#DIM 군주
+군주 = GET_COUNTRY_BOSS(CFLAG:(ARG:0):소속)
+LOCAL = 0
+IF ARG:0 != 군주 && 군주 >= 0
+	LOCAL += SETTOKU_REL_EFFECT(ARG:0, 군주) / 2
+ELSEIF ARG:0 == 군주
+	LOCAL += 50
+ENDIF
+RETURNF LOCAL + ABL_POWER(ABL:(ARG:0):정치, ARG:0) / 1000 + ABL_POWER(ABL:(ARG:0):지략, ARG:0) / 1000

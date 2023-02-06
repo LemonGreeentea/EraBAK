@@ -1,0 +1,73 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_ASSAULT_IN_SLUM_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_ASSAULT_IN_SLUM_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_ASSAULT_IN_SLUM(대상)
+#DIM 대상
+PRINTFORML slum을 걷고 있으면, 갑자기 뒷골목으로부터 복수의 손이 뻗어 왔다
+PRINTFORML 폭한들은 돌연의 일에 당황하는 %조사처리(ANAME(대상),"를")% 어둠에 끌어들이려고 해 온다……!
+PRINTL
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "무투"))
+CALL ASK_MULTI_JUDGE("저항한다", 1, "몸을 바친다", IS_FEMALE(대상))
+
+IF RESULT    == 0
+	IF LIMIT(ABL:대상:무투, 30, 90) > RAND:100
+		PRINTFORML 어떻게든 폭한들의 마의 손을 뿌리쳐, 잘 도망치는 것을 성공했다
+		PRINTFORMW 이 근처의 치안을 어떻게든 하지 않으면 라고 생각하면서 빠른 걸음을 떠났다
+		RETURN 1
+	ENDIF
+	PRINTFORML 하지만 폭한들 힘은 예상 외로 강하고
+	PRINTFORMW 필사의 저항도 소용없이, 어둠에 끌어들여져 버렸다
+	PRINTFORML
+	IF IS_MALE(대상)
+		PRINTFORML %조사처리(ANAME(대상),"는")% 머리에 영향을 주는 아픔으로 눈을 떴다
+		PRINTFORML 깨달으면 지면에 납죽 엎드리고 있었다
+		PRINTFORML 땅땅 영향을 주는 머리를 갈면서, 몸을 일으키려고 하면 시야가 뒤틀렸다
+		PRINTFORML 아무래도 폭한들에게 맞고 기절해 버린 것 같다
+		PRINTFORML 품에 손을 하면, 아니나 다를까 지갑을 벗어지고 있었다
+		PRINTFORMW 이 근처의 치안을 어떻게든 하지 않으면 라고 생각하면서 휘청거리는 발걸음으로 귀로에 들었다
+		LOCAL = MIN(MONEY, 3000)
+		CALL ICPRINT(@"금<{LOCAL}>를 빼앗겼다", "L", 칼라_주의)
+		CALL ADD_COOLTIME(대상, 2)
+	ELSE
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 재갈을 물려져 폭한들에게 윤간되고 있다
+		PRINTFORML 치구 투성이의 페니스로 난폭하게 범해지면서, %조사처리(ANAME(대상),"는")% 눈물을 흘려 피하려고 발버둥 친다
+		PRINTFORMW 하지만 여자 가뭄의 그들이 오래간만의 여자를 그렇게 거뜬히 놓칠 리가 없고, 보다 난폭하게 범해질 뿐(만큼)이었다
+		PRINTFORML %조사처리(ANAME(대상),"를")% 범하고 있는 남자가 몸부림 하면서 낮게 신음소리를 내면, 깊숙히 페니스를 찌른 채로 마음껏 사정했다
+		PRINTFORMW 추접스러운 정액을 질 안쪽으로 내던질 수 있어 %조사처리(ANAME(대상),"는")% 흐려진 비명을 올려 몸을 경련시킨다
+		PRINTFORML 페니스를 뽑아 내지면, %STR_BODY("음순:처녀 확인:시간 경과", 대상)%로부터는 노래진 대량의 정액이 걸죽 넘쳐 나왔다
+		PRINTFORMW 어안이 벙벙히 하는 %조사처리(ANAME(대상),"이지만")%, 그 뒤도 폭한들이 만족할 때까지 끝없이 그들의 상대를 계속 하게 했다
+		CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 키스, 펠라티오, 윤간, 고통쾌락, 마조, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 질내사정, 키스상실, 장내사정, 구강사정", GET_SPERM_ID("불량배"), @"폭한의 \@RAND:2 ? 페니스 # 입술\@", "폭한", "", "뒷골목에서의 윤간")
+		PRINTFORML
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 결국 반나절 가깝게 그들에게 범해진 후, 보는 것도 끔찍한 모습으로 뒷골목에 버려졌다
+	ENDIF
+ELSE
+	PRINTFORML 도망치지 않으면 난폭하게 당해 버린다
+	PRINTFORML 알고 있으면서, %조사처리(ANAME(대상),"는")% 그들에게 몸을 바쳤다
+	PRINTFORMW %조사처리(ANAME(대상),"가")% 저항하지 않는다고 알면, 남자들은 히죽히죽 하면서 %PRONOUN(대상)%를 보금자리로 데리고 돌아갔다
+	PRINTFORML 
+	PRINTFORMW %조사처리(ANAME(대상),"는")% slum의 남자들에게 봉사하고 있다
+	PRINTFORML 입술이나 양손으로 치구 투성이의 페니스를 애무해, 정액을 받아 들인다
+	PRINTFORMW %STR_BODY("질:Ｖ삽입:질내사정", 대상)%도, %STR_BODY("애널:감도", 대상)%도, 계속해서 그들에게 사용되고 있다
+	PRINTFORML 남이 끝질내에 정액을 한껏 쏟으면, %ANAME(대상)%도 소리를 질러 절정 한다
+	PRINTFORML 구멍이 빈 것과 동시에, %STR_BODY("엉덩이:정액 더러운:윤간", 대상)%를 털어 유혹한다
+	PRINTFORMW 그들이 질릴 때까지, %조사처리(ANAME(대상),"는")% 그 신체를 계속 사용되었다……
+	CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 키스, 펠라티오, 윤간, 고통쾌락, 마조, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 질내사정, 키스상실, 장내사정, 구강사정", GET_SPERM_ID("불량배"), @"폭한의 \@RAND:2 ? 페니스 # 입술\@", "폭한", "", "보금자리에 데리고 들어가진 윤간")
+	PRINTFORML 
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 또 오는 것을 그들과 약속해, 간신히 해방되었다
+ENDIF
+RETURN 1

@@ -1,0 +1,23 @@
+﻿;-------------------------------------------------
+;오른쪽 컬럼에 아무것도 표시하지 않는 경우
+;왼쪽 컬럼 메뉴의 버튼을 호출하기 위한 빈행 묻고
+;-------------------------------------------------
+@COLUMN_RIGHT_CLEAR_SLG
+FOR LOCAL:0, LINECOUNT - FIRST_COLUMN_RIGHT_LINE_SLG, LINES_SHOP_DRAW
+	CALL COLUMN_RIGHT_PRINTL_SLG
+NEXT
+RETURN 0
+
+;-------------------------------------------------
+;오른쪽 컬럼으로 PRINTL 대신에 사용한다
+;-------------------------------------------------
+@COLUMN_RIGHT_PRINTL_SLG
+;개행에 수반하는 처리이기 (위해)때문에 개행을 실시한다
+PRINTL 
+;컬럼의 행 번호를 계산해 돌려준다
+LOCAL:0 = LINECOUNT - FIRST_COLUMN_RIGHT_LINE_SLG
+;최대행수에 도달하고 있지 않으면 메뉴를 표시한다
+IF LOCAL:0 < LINES_SHOP_DRAW
+	CALL COLUMN_LEFT_MENU_SHOW_SLG(LOCAL:0)
+ENDIF
+

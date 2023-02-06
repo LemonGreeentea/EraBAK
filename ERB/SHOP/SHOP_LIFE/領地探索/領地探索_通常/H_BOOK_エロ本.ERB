@@ -1,0 +1,36 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_H_BOOK_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_H_BOOK_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_H_BOOK(대상)
+#DIM 대상
+
+PRINTFORML 황혼 물러나, 강변에서 오래된 책을 주웠다
+PRINTFORML 어떤기분도 없이 읽어 보면, 에로책이었다
+PRINTFORMW 여성이 목걸이를 입어, 개처럼 범해지고 있다
+
+IF IS_MALE(대상)
+	PRINTFORML 좋은 줍기의 것을 했다고 기꺼이 가지고 돌아갔다
+	PRINTFORML 자기 방에서 차분히 읽어들였다
+	CALL FUCK(대상, "성기술")
+ELSE
+	PRINTFORML 수줍음이면서도 못박음이 되어 버렸다
+	PRINTFORML 몰래 가지고 돌아가, 자기 방에서 자위에 빠졌다
+	CALL FUCK(대상, "성기술, 자위, Ｃ, Ｖ, Ｂ" + (HAS_PENIS(대상) ? ", 사정" # ""))
+ENDIF
+
+RETURN 1

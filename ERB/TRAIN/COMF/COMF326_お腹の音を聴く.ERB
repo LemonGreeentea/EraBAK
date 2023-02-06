@@ -1,0 +1,206 @@
+﻿;배의 소리를 듣는다
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME326
+RESULTS:0 = 배의 소리를 듣는다
+RESULTS:1 = 배의 소리를 들어진다
+RESULTS:2 = 배의 소리를 듣게 한다
+RESULTS:3 = 배의 소리를 들어진다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE326
+;공통 부분
+CALL COM_ABLE_COMMON(326)
+SIF RESULT == 0
+	RETURN 0
+;타겟이 임신하고 있지 않으면 불가
+SIF !TALENT:(MTAR:0):임신
+	RETURN 0
+;플레이어가 상처라면 불가
+SIF CFLAG:(MPLY:0):행동불능상태 == 3
+	RETURN 0
+;키스중은 불가
+SIF IS_EQUIP(MPLY:0, 342)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM326
+;실행 판정
+CALL COM_ORDER_COMMON
+IF RESULT == 0
+	RETURN 0
+ENDIF
+
+IF MPLY:0 == MASTER
+	;커맨드의 성공 여부를 TFLAG:18에 세트
+	CALL JUDGE_COM_RESULT(MTAR:0, 0, 0)
+	LOCAL:1 = MTAR:0
+ELSE
+	;커맨드의 성공 여부를 TFLAG:18에 세트
+	CALL JUDGE_COM_RESULT(MPLY:0, 0, 0)
+	LOCAL:1 = MPLY:0
+ENDIF
+
+;●플레이어측의 처리
+;고정으로 획득하는 소스
+SOURCE:(MPLY:0):환락 = 50
+SOURCE:(MPLY:0):접촉 = 20
+
+;친밀하게 응한 환락의 소스 추가
+CALL ADD_SOURCE_KANRAKU(MPLY:0, 150)
+
+;친밀하게 응한 애정의 소스 추가
+CALL ADD_SOURCE_AIZYOU(MPLY:0, 50)
+
+;주도권에 응한 소스의 추가
+CALL ADD_SOURCE_INITIATIVE_N(MPLY:0, 50, 50)
+
+;●타겟측의 처리
+;고정으로 획득하는 소스
+SOURCE:(MTAR:0):환락 = 30
+SOURCE:(MTAR:0):접촉 = 20
+
+;친밀하게 응한 환락의 소스 추가
+CALL ADD_SOURCE_KANRAKU(MTAR:0, 100)
+
+;친밀하게 응한 애정의 소스 추가
+CALL ADD_SOURCE_AIZYOU(MTAR:0, 100)
+
+;주도권에 응한 소스의 추가
+CALL ADD_SOURCE_INITIATIVE_N(MTAR:0, 50, 50)
+
+;실패
+IF TFLAG:18 == -1
+	TIMES SOURCE:(MPLY:0):환락, 0.10
+	TIMES SOURCE:(MPLY:0):애정, 0.50
+	TIMES SOURCE:(MTAR:0):환락, 0.10
+	TIMES SOURCE:(MTAR:0):애정, 0.50
+	SOURCE:(MPLY:0):불만 += 500
+	SOURCE:(MTAR:0):불만 += 500
+	TFLAG:37 -= 5
+;성공
+ELSEIF TFLAG:18 == 0
+
+;대성공
+ELSE
+	TIMES SOURCE:(MPLY:0):환락, 2.00
+	TIMES SOURCE:(MPLY:0):애정, 2.00
+	TIMES SOURCE:(MTAR:0):환락, 2.00
+	TIMES SOURCE:(MTAR:0):애정, 2.00
+	TFLAG:37 += 5
+ENDIF
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = -1
+
+RETURN 1
+
+;-------------------------------------------------
+;고유의 실행 판정(플레이어측)
+;-------------------------------------------------
+@COM_ORDER_PLAYER326(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 10
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 2)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 3)
+
+;호감도
+IF CFLAG:(ARG:0):2 < 300
+	IF CFLAG:(ARG:0):2 < 0
+		LOCAL:0 = -30
+	ELSEIF CFLAG:(ARG:0):2 < 100
+		LOCAL:0 = -10
+	ELSE
+		LOCAL:0 = -5
+	ENDIF
+	CALL COM_ORDER_ELEMENT(ARG:0, @"호감도 부족", LOCAL:0)
+ELSE
+	LOCAL:0 = CFLAG:(ARG:0):2 / 75
+	CALL COM_ORDER_ELEMENT(ARG:0, @"호감도", LOCAL:0)
+ENDIF
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -3)
+ENDIF
+IF TALENT:(ARG:0):호기심
+	CALL COM_ORDER_ELEMENT(ARG:0, "호기심", 8)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE326
+IF CFLAG:(MTAR:0):행동불능상태 == 행동불능_임월
+	LOCALS:0 = 완전히 커졌다
+ELSEIF TALENT:(MTAR:0):임신
+	LOCALS:0 = 분명하게 부풀어 올랐다
+ELSE
+	LOCALS:0 = 
+ENDIF
+
+;플레이어가 주인공측
+IF MPLY:0 == MASTER
+	;주도권이 주인공측
+	IF IS_INITIATIVE(MASTER)
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %ANAME(MTAR:0)%의 배에 귀를 대어 보았다
+	;주도권이 상대측
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 들어 %LOCALS:0%배에 귀를 대어 보았다
+	ENDIF
+
+	;마지막 녀석 죽어 분기가 되지만 아무튼 좋아
+	IF CFLAG:(MTAR:0):행동불능상태 == 행동불능_임월
+		PRINTFORML 때때로 뱃속의 아이가 움직이는 소리가 들린다…
+	ELSEIF TALENT:(MTAR:0):임신
+		PRINTFORML 조금 아이의 움직이는 소리가 들린 것 같다…
+	ELSE
+		PRINTFORML 과연 아직 너무 빨랐는지, 특히 아무것도 들리지 않았다…
+	ENDIF
+;플레이어가 상대측
+ELSE
+	;주도권이 주인공측
+	IF IS_INITIATIVE(MASTER)
+		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 %LOCALS:0%배의 소리를 듣게 해 보았다
+	;주도권이 상대측
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %ANAME(MTAR:0)%의 배에 귀를 대었다
+	ENDIF
+
+	IF CFLAG:(MTAR:0):행동불능상태 == 행동불능_임월
+		PRINTFORML 때때로 뱃속의 아이가 움직이는 소리가 들리는 것 같고, %조사처리(ANAME(MPLY:0),"는")% 즐거운 듯 하다…
+	ELSEIF TALENT:(MTAR:0):임신
+		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 뭔가 들리는지, 진지한 표정으로 귀를 기울이고 있다…
+	ELSE
+		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 가만히 귀를 기울이고 있지만, 특히 아무것도 들리지 않았던 것 같다…
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;-------------------------------------------------
+@COM_TEXT_LAST326
+;일상 커맨드에 공통의 지문
+CALL COM_TEXT_LAST_LIFE
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN326
+RETURN 커맨드_일상

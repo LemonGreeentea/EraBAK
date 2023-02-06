@@ -1,0 +1,254 @@
+﻿;---------------------
+;대응하는 데일리의 DISABLE를 돌려준다. 설정하지 않는 경우, 이벤트는 발생하지 않는다.
+;---------------------
+@EVENT_DAILY_DERIVATION_REPAYMENT_PREGNANCY_DISABLE()
+RETURN DAILY_GET_DISABLE_CONFIG("REPAYMENT")
+
+;---------------------
+;발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;대응하는 데일리의 DISABLE 체크를 규약으로서 필수로 한다
+;---------------------
+@EVENT_DAILY_DERIVATION_REPAYMENT_PREGNANCY_DECISION()
+SIF DVAR:보은_임신플래그
+	DVAR:보은_임신도 ++
+RETURN 0
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_DERIVATION_REPAYMENT_PREGNANCY()
+;더미
+RETURN 1
+
+
+;---------------------
+;대응하는 데일리의 DISABLE를 돌려준다. 설정하지 않는 경우, 이벤트는 발생하지 않는다.
+;---------------------
+@EVENT_DAILY_DERIVATION_REPAYMENT_BIRTH_DISABLE()
+RETURN DAILY_GET_DISABLE_CONFIG("REPAYMENT")
+
+;---------------------
+;발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;대응하는 데일리의 DISABLE 체크를 규약으로서 필수로 한다
+;---------------------
+@EVENT_DAILY_DERIVATION_REPAYMENT_BIRTH_DECISION()
+SIF DVAR:보은_임신플래그 == 2　&& DVAR:보은_임신도 >= 10
+	RETURN 1
+RETURN 0
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_DERIVATION_REPAYMENT_BIRTH()
+PRINTFORML 
+PRINTFORMW %조사처리(ANAME(MASTER),"는")% 출산 직전의 %보은_종류:(DVAR:보은_동물번호)%의 아가씨의 집을 방문했다
+PRINTFORML 「병문안 하러 와 준 것입니까? 에헤헤, 감사합니다」
+PRINTFORMW 「후우, 슬슬 출생할 것 같습니다」
+PRINTFORML 「네, 나도 불안하지만…」
+PRINTFORMW 「%조사처리(ANAME(MASTER),"가")% 응원해 주기 때문에, 노력하네요♥」
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+PRINTFORML 아가씨는 무사 건강한 아기를 출산했습니다
+PRINTFORMW %조사처리(ANAME(MASTER),"와")%의 갓난아기를 포옹하고 있는 그녀의 표정은 행복 그 자체였다
+CALL COLOR_PRINT(@"%보은_종류:(DVAR:보은_동물번호)%의 아가씨가 출산을 끝내, 원래의 체형에 돌아왔습니다", 칼라_핑크)
+PRINTFORMW 
+DVAR:보은_임신플래그 = 0
+DVAR:보은_임신도 = 0
+RETURN 1
+
+
+;---------------------
+;대응하는 데일리의 DISABLE를 돌려준다. 설정하지 않는 경우, 이벤트는 발생하지 않는다.
+;---------------------
+@EVENT_DAILY_DERIVATION_REPAYMENT_PREGNANT_DISABLE()
+RETURN DAILY_GET_DISABLE_CONFIG("REPAYMENT")
+
+;---------------------
+;발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;대응하는 데일리의 DISABLE 체크를 규약으로서 필수로 한다
+;---------------------
+@EVENT_DAILY_DERIVATION_REPAYMENT_PREGNANT_DECISION()
+SIF DVAR:보은_임신플래그 == 1　&& DVAR:보은_임신도 >= 7
+	RETURN 1
+RETURN 0
+
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_DERIVATION_REPAYMENT_PREGNANT()
+
+PRINTFORML %보은_종류:(DVAR:보은_동물번호)%의 아가씨는 임월에 접어들었다
+PRINTFORMW 임신의 몸을 위로하듯 전하면 그녀는 기쁜듯이 미소지었다
+PRINTFORML 그건 그걸로하고, 라고 그녀는 응석부리는 것처럼%ANAME(MASTER)%에 관련되어 왔다
+PRINTFORMW %조사처리(ANAME(MASTER),"는")% 쓴웃음을 지으면서도 이 사랑스러워서 엣치한 젊은 처에게 교제하기로 했다
+PRINTFORML 
+SELECTCASE RAND:5
+	CASE 0
+		PRINTFORMW 「앙♥안 됩니다♥아기, 깜짝 놀라 버리는♥아♥후응♥♥」
+		PRINTFORML 큰 배로 암컷의 색기를 조성하기 시작하는 아가씨에게 인내 할 수 없게 되어 껴안아 신체를 만지작거린다
+		PRINTFORML 그녀도 또 그렇지만도 않은 것 같아서, 애무에 맞추어 신체를 구불거리게 할 수 있는 달콤한 한숨을 흘린다
+		PRINTFORML 잠깐 러브러브 한 후 귓전으로 마루로 이끌면, 그녀는 수줍으면서도 기쁜듯이 수긍했다
+		PRINTFORMW 임신의 그녀를 신경쓰면서도 오랜만의 섹스에 고조되어, 몇 번이나 사귀었다
+	CASE 1
+		PRINTFORMW 「아♥가는♥가 버리는♥마마인데♥♥아기 있는데♥자지로 가게 되어 버리는 것♥」
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 서서뒷치기의 자세로 그녀의 자궁에 닿는만큼 격렬하게 밀어올린다
+		PRINTFORML 아가씨는 달콤한 신음소리를 지르면서 큰 배를 흔들어, 움찔움찔 신체를 뛰게 한 기뻐한다
+		PRINTFORML 민감하게 되어 있는 자궁은 일발 찌르기마다 경련해, 꽈악 질육 전체를 억압 자극했다
+		PRINTFORMW 단정치 못하게 질내사정을 졸라대는 그녀에게 응해, 안쪽 깊고로 몇 번이나 정액을 발했다
+	CASE 2
+		PRINTFORMW 「(이)나♥그렇게 가득 짜서는♥아♥아기의 밀크♥없어져서는…앙♥」
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 아가씨에게 간절히 부탁해, 그녀가 커진 가슴을 만끽되어 받고 있다
+		PRINTFORML 묵직한 가슴을 비비면서 유두를 들이마시면, 그녀의 한숨과 함께 모유가 흘러넘쳐 온다
+		PRINTFORML 점차 그녀는 숨을 거칠게 하고, %조사처리(ANAME(MASTER),"와")% 손가락을 얽히게 되어지면서 응석부리는 것처럼 받고 걸려 왔다
+		PRINTFORMW 억제가 듣지 않게 된 두 명은 열중해 서로를 요구해, 밤새 서로 사랑했다
+	CASE 3
+		PRINTFORMW 「아이참♥임산부에게 이런 모습 시켜 하고 싶다니이♥네에♥…주인님의 엣치♥」
+		PRINTFORML 알몸 에이프런의 그녀가 부끄러운 듯이 머뭇머뭇 하면서 %조사처리(ANAME(MASTER),"를")% 올려봐 온다
+		PRINTFORML 그 행동과 큰 배에 흥분을 꼬드김%조사처리(ANAME(MASTER),"는")% 즉시 그녀를 거느리고 인상마루에 옮겼다
+		PRINTFORML 상냥하게 재우면 그녀는 쑥스러운 듯이 부끄러워하면서 양손을 열어, %조사처리(ANAME(MASTER),"를")% 불러 왔다
+		PRINTFORMW 그녀를 돌보면서 낙낙하게 하면서도 농후한 섹스를 마음껏 즐겼다
+	CASE 4
+		PRINTFORMW 「아이참♥이런 나와도 엣치하고 싶습니까? …응훗♥엣치한 파파군요♥」
+		PRINTFORML 보테배의 아가씨를 엣치하게 권하면, 그녀는 일순간 멍청히 한 후, 심술궂은 것 같은 미소를 띄웠다
+		PRINTFORML 그녀가 옷을 벗으면 큰 배와 부푼 가슴이 드러나, 무심코 꿀꺽 군침을 마셔 버린다
+		PRINTFORML 참지 못하고 쓰러트리자 그녀도 또 오랜만의 엣치하게 기쁜듯이 미소지어 키스했다
+		PRINTFORMW 둘이서 열중해 육욕에 빠져 가 평상시와 다른 보테배섹스를 즐겼다
+ENDSELECT
+DVAR:보은_임신플래그 ++
+RETURN 1
+
+;---------------------
+;대응하는 데일리의 DISABLE를 돌려준다. 설정하지 않는 경우, 이벤트는 발생하지 않는다.
+;---------------------
+@EVENT_DAILY_DERIVATION_REPAYMENT_ATTENDED_DISABLE()
+RETURN DAILY_GET_DISABLE_CONFIG("REPAYMENT")
+
+;---------------------
+;발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;대응하는 데일리의 DISABLE 체크를 규약으로서 필수로 한다
+;---------------------
+@EVENT_DAILY_DERIVATION_REPAYMENT_ATTENDED_DECISION()
+SIF DVAR:보은_내왕아내플래그 == 1 && ((RAND:100 < 10 && DVAR:보은_임신도 < 3) || DVAR:보은_임신도 == 3)
+	RETURN 1
+RETURN 0
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_DERIVATION_REPAYMENT_ATTENDED()
+PRINTFORMW %ANAME(MASTER)%의 집에 %보은_종류:(DVAR:보은_동물번호)%의 아가씨가 왔다……
+PRINTFORML 
+
+SELECTCASE RAND:15
+	CASE 0
+		PRINTFORMW 「아읏♥안 됩니다, 지금, 요리중이기 때문에♥」
+		PRINTFORML 부엌에 서는 아가씨의 신체를 배후로부터 만지작거린다
+		PRINTFORML 입으로는 저항하고 있지만, 얼굴을 녹게 해 신체도 애무에 맞추어 구불거리게 되어지고 있다
+		PRINTFORML 점차 입으로부터도 사랑스러운 신음소리가 누락이고, %ANAME(MASTER)%에 매달려 왔다
+		PRINTFORMW 이미 인내할 수 없게 되어, 선 채로 페니스를 쑤셔 넣으면, 격렬하게 교접했다
+	CASE 1
+		PRINTFORMW 「응츄♥읏♥응읏♥츄♥응앗♥」
+		PRINTFORML 응 팡팡, 라고 고기가 서로 치는 소리가 울린다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 아가씨에게 덮어씌운 자세로, 격렬하게 허리를 쳐박는다
+		PRINTFORML 그녀는 그때마다 몸을 진동시키면서도, %ANAME(MASTER)%의 목에 매달려 필사적으로 혀를 얽히게 되어져 온다
+		PRINTFORMW 이윽고 그녀가 달하면, 질이 수축하는 자극에 맞추어, %ANAME(MASTER)%도 마음껏 정액을 풀었다
+	CASE 2
+		PRINTFORMW 「이, 이런 곳에서 하다니…앗♥」
+		PRINTFORML 산보중, 므흣 온 %조사처리(ANAME(MASTER),"는")% 그녀를 가까이의 수풀에 데리고 들어갔다
+		PRINTFORML 상냥하게 애무하면서 옷을 벗게 하면, 그녀는 얼굴을 새빨갛게 해부끄러워한다
+		PRINTFORML 원래는 동물인데 부끄러운 것인지와 내심 쓴웃음 지으면서도, 그 행동이 견딜 수 없게 흥분을 부추긴다
+		PRINTFORMW 그녀에게 엉덩이를 내밀게 해 완전히 젖고 있는 비밀스런 장소에 삽입하면, 감미의 신음소리를 올렸다
+	CASE 3
+		PRINTFORMW 「하아-…♥하아-…♥허리가, 이제(이미/벌써/더는/정말), 세우지 않게 되었습니다아…♥」
+		PRINTFORML 그녀는 %ANAME(MASTER)%의 팔 중(안)에서 크게 숨을 쉬면서, 황홀한 표정을 보이고 있다
+		PRINTFORML 밤새 그녀와 교미를 계속해, 기진맥진되어, 서로의 체액 투성이가 되어 이불에 구르고 있다
+		PRINTFORML 하지만, 기쁜듯이 다가서는 그녀의 행동과 콧구멍을 간질이는 암컷의 냄새로, 다시 하반신에 열이 모여 온다
+		PRINTFORMW 다시 그녀에게 덮어씌우면, 그녀는 일순간 놀람 하면서도, 쑥스러운 듯이 균열을 스스로 열어 보였다
+	CASE 4
+		PRINTFORMW 「읏…후응…앗♥……하아…앗♥……쿠응♥」
+		PRINTFORML 그녀의 신체를 껴안으면서, 혀와 손가락을 사용해 차분히 애무한다
+		PRINTFORML 접할까 접하지 않는가의 빠듯이로 애무를 하고 있으면, 그녀는 서서히 숨을 거칠게 해, 신체를 안타깝게 구불거리게 할 수 있는 낸다
+		PRINTFORML 가볍게 질에 손가락을 쑤시면, 그것만으로 등을 뒤로 젖혀 절정 해 버렸다
+		PRINTFORMW 눈동자를 물기를 띠게 해 발정한 짐승과 같이 %ANAME(MASTER)%에 말이야라도 오는 아가씨에게 응해, 그녀에게 덮어씌웠다
+	CASE 5
+		PRINTFORMW 「꺄♥이, 이제(이미/벌써/더는/정말)♥또 인내 할 수 없게 된 것입니까♥아읏♥」
+		PRINTFORML 수영을 하고 있는 도중, 매료 시키고 붙이는 것처럼 흔들리는 그녀의 지체에 인내 할 수 없게 되어, 그녀에게 껴안았다
+		PRINTFORML 농후하게 입맞춤을 하면서 그녀의 가슴을 주무르면 쫑긋쫑긋 신체를 진동시켜 %ANAME(MASTER)%에 의지해 온다
+		PRINTFORML 입술을 떼어 놓으면 안타까운 듯이 %조사처리(ANAME(MASTER),"를")% 올려봐, 그녀도 또 인내의 한계인것 같고, 신체를 칠해 왔다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 가까이의 바위 밭의 그림자에 그녀를 데리고 들어가, 차가운 물속에서 짐승과 같이 격렬하게 교접했다
+	CASE 6
+		PRINTFORMW 「앗♥앗♥응읏♥멋져♥아아♥종♥종을 주세요♥앗♥」
+		PRINTFORML 아가씨가 %ANAME(MASTER)% 위에 걸치면서, 필사적으로 허리를 흔들고 있다
+		PRINTFORML 그녀가 허리를 상하시킬 때에, 결합부로부터 추잡한 미츠네와 함께 애액이 흘러넘쳐 온다
+		PRINTFORML 야무지지 못하게 혀를 늘어뜨려, 선정적인 표정으로 %조사처리(ANAME(MASTER),"를")% 응시하면서, 자식을 졸라 온다
+		PRINTFORMW 이윽고 한계에 이르른 %조사처리(ANAME(MASTER),"가")% 애타게 기다리는 그녀의 자궁에 종을 발하면, 한층 더 큰 교성을 올려 절정 했다
+	CASE 7
+		PRINTFORMW 「앗♥앗♥아앗♥아읏♥좋은♥좋은 것♥앗♥」
+		PRINTFORML %조사처리(ANAME(MASTER),"는")%, 엎드린 자세로 된 그녀의 허리를 잡으면서 범하고 있다
+		PRINTFORML 그 꿀단지로부터 주어지는 극상의 자극에, 허리를 끊을 수 있지 않고, 짐승의 교미같이 격렬하게 허리를 쳐박는다
+		PRINTFORML 그녀도 또, 일발 찌르기마다 교성을 올리면서 절정 해, 신체를 계속 흔들게 하고 있다
+		PRINTFORMW 탐내도록(듯이) 서로를 계속 요구해, 완전히 지쳐 버리는 무렵에는, 그녀의 자궁은 %ANAME(MASTER)%의 종으로 채워지고 있었다
+	CASE 8
+		PRINTFORMW 「응읏♥하아…♥이런 곳에서, 앗♥발견되어 버려요…아읏♥」
+		PRINTFORML 쇼핑의 돌아가, 뒷골목에 그녀를 데리고 들어가 범하고 있다
+		PRINTFORML 처음은 수줍어하고 있던 그녀이지만, 보여질지도 모르는 수치심과 배덕감의 탓인지, 평소보다 민감하게 반응한다
+		PRINTFORML 이윽고 자신으로부터 적극적으로 허리를 흔들기 시작해, 안타까운 표정으로 %조사처리(ANAME(MASTER),"를")% 응시해 조르기했다
+		PRINTFORMW 그녀와 혀를 얽히게 되어지면서 허리의 움직임을 가속시켜, 둘이서 동시에 절정 했다
+	CASE 9
+		PRINTFORMW 「아긋♥앗♥히긋♥아아♥아"♥아앙♥」
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 아가씨에게 덮어씌워, 질의 안쪽 깊게까지 페니스를 쑤셔 넣고 있다
+		PRINTFORML 전체중을 실어 자궁에 닿을 정도의 깊은 스트로크로, 그녀의 신체의 안쪽 깊게까지 맛본다
+		PRINTFORML 난폭하게 보르치오를 자극 받으며, 비명에 가까운 교성을 올리면서, 그녀는 필사적으로 %ANAME(MASTER)%에 매달려 온다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 자궁입구에 직접 요도구멍을 꽉 누르면서, 그녀의 자궁으로 모든 정액을 쏟았다
+	CASE 10
+		PRINTFORMW 「앙♥아이참♥주인님♥앗♥앙♥엣치하니까♥응♥츄♥」
+		PRINTFORML 메이드복을 입어 청소를 하고 있는 아가씨를 배후로부터 껴안고 신체를 만지작거리면, 기쁜듯이 몸을 비틀게 했다
+		PRINTFORML 어느 날 코스프레 엣찌를 제안해 보면 그녀는 생각의 외 타 와, 하루 메이드로서 보내는 일이 되었다
+		PRINTFORML 때때로 드지를 하면 벌로서 격렬하게 범해, 능숙하게 일을 할 수 있으면 포상으로서 상냥하게 안아 준다
+		PRINTFORMW 그런 짓무른 시추에이션에 둘이서 꿈 속이 되어, 육욕에 빠진 짐승과 같이 몇 번이나 사귀었다
+	CASE 11
+		PRINTFORMW 「아아…앗♥응, 응♥…응읏♥…앗, 하앙♥」
+		PRINTFORML 이불 중(안)에서 키스를 하면서 낙낙하게 전신을 애무해 주면, 그녀는 달콤한 한숨을 흘려 몸을 구불거리게 할 수 있다
+		PRINTFORML 아직 어림을 남기면서도 암컷의 색기를 조성하기 시작하는 그 표정에 흥분을 부추겨져 하나의 물건은 끙끙 발기해 버린다
+		PRINTFORML 하면 그녀는 벌렁 위로 향해 되어 스스로의 비밀스런 장소를 갈라지고 열면, 속삭이는 것 같은 소리로 졸라댔다
+		PRINTFORMW 그 행동에 이미 인내 할 수 없게 된 %조사처리(ANAME(MASTER),"는")% 수컷의 본능대로 아가씨중으로 당신의 하나의 물건을 쑤셔 넣었다
+	CASE 12
+		PRINTFORMW 「후우…♥후우…♥이, 이런 건♥…부끄러워♥…읏♥」
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 알몸의 그녀에게 목걸이만을 붙여 심야의 근처로 산책에 데리고 나갔다
+		PRINTFORML 얼굴을 새빨갛게 해 떨리는 그녀이지만, 노출로 흥분하고 있는지 그 사타구니로부터는 애액이 방울져 떨어져 떨어지고 있다
+		PRINTFORML 그런 그녀의 엣치한 모습을 귓전으로 속삭이면, 아가씨는 부르릇 몸부림 해 발정한 표정으로 달라붙어 왔다
+		PRINTFORMW 그 음미로운 표정에 불끈불끈 온 %조사처리(ANAME(MASTER),"는")% 그녀를 그늘에 데리고 들어가면, 한껏 귀여워해 주었다
+	CASE 13
+		PRINTFORMW 「아아아♥♥♥또 온다아♥앗♥아아♥굉장한 것♥간닷♥히이이이♥♥♥」
+		PRINTFORML 퓻퓻 하고 몇 번째인가의 사정을 끝낸 %조사처리(ANAME(MASTER),"는")%, 아가씨와 함께 이불에 쓰러졌다
+		PRINTFORML 하루종일 오로지 계속 교접한 %ANAME(MASTER)%들은 땀투성이가 되어 있어, 서로 껴안으면서 잠깐숨을 정돈한다
+		PRINTFORML 문득 숨을 거칠게 하면서 황홀한 표정을 한 아가씨와 시선이 마주쳐, 작게 키스를 해 주면 그녀는 행복하게 미소지었다
+		PRINTFORMW 그 후%ANAME(MASTER)%들은 땀을 흘리기 위해서(때문에) 함께 목욕탕에 향했지만, 결국 거기서도 교접을 재개하는 일이 되었다
+	CASE 14
+		PRINTFORMW 「아"♥아"♥아아♥♥♥가고 있습니다♥♥아앙♥가는 것♥멈추지 않는 것♥♥♥」
+		PRINTFORML 숨이 막히는 것 같은 정액의 냄새가 감도는 침실의 안에 남녀의 교접하는 소리가 끊임없이 울리고 있다
+		PRINTFORML 아가씨의 가고 있는 채의 질육은 흠칫흠칫 경련해 %ANAME(MASTER)%에 휘감겨, 허리가 떠 버릴 정도의 쾌락을 가져온다
+		PRINTFORML 인내도 한계에 이르러 허리의 움직임을 빨리 하면, 그녀도 꾹%ANAME(MASTER)%에 매달려 자식을 졸라댔다
+		PRINTFORMW 둘이서 질척질척 녹아 가는 것 같은 착각에 빠지면서, 모두 절정으로 올라 갔다
+ENDSELECT
+
+IF RAND:4 == 0 && DVAR:보은_임신플래그 == 0
+	DVAR:보은_임신플래그 = 1
+	DVAR:보은_임신도 ++
+ENDIF
+IF DVAR:보은_임신도 == 3
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+	PRINTFORML 아무래도 아가씨는 %ANAME(MASTER)%의 아이를 임신한 것 같다
+	PRINTFORMW 그녀는 기쁜듯이 배를 어루만지고 있다
+	CALL COLOR_PRINT(@"%보은_종류:(DVAR:보은_동물번호)%의 아가씨의 배와 가슴이 부풀어, 모유가 나오게 되었다", 칼라_핑크)
+	PRINTFORMW 
+ENDIF
+RETURN 1

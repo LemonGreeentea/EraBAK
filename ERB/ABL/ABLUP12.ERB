@@ -1,0 +1,48 @@
+﻿;능력 상승 욕망
+
+;-------------------------------------------------
+;능력 상승에 필요한 경험을 설정
+;-------------------------------------------------
+@ABLUP_EXPNAME12
+RESULTS = 욕망경험치
+
+;-------------------------------------------------
+;능력 상승에 필요한 경험량을 돌려주는 함수
+;-------------------------------------------------
+@CALC_ABLUP_EXP12(ARG:0)
+SELECTCASE ABL:(ARG:0):욕망
+	CASE 0
+		LOCAL:0 = 10
+	CASE 1
+		LOCAL:0 = 30
+	CASE 2
+		LOCAL:0 = 80
+	CASE 3
+		LOCAL:0 = 160
+	CASE 4
+		LOCAL:0 = 300
+	CASEELSE
+		LOCAL:0 = 500 + 250 * (ABL:(ARG:0):욕망 - 5)
+ENDSELECT
+
+;소질에 의한 보정
+IF TALENT:(ARG:0):선을넘지않음
+	IF ABL:(ARG:0):욕망 >= 9
+		IF TALENT:(ARG:0):연모 || TALENT:(ARG:0):복종
+			TIMES LOCAL:0, 1.20
+		ELSE
+			TIMES LOCAL:0, 2.00
+		ENDIF
+	ELSEIF ABL:(ARG:0):욕망 >= 4
+		TIMES LOCAL:0, 1.50
+	ENDIF
+ENDIF
+
+IF TALENT:(ARG:0):자제심
+	TIMES LOCAL:0, 1.50
+ENDIF
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음란)
+	TIMES LOCAL:0, 0.75
+ENDIF
+
+RETURN MAX(LOCAL:0, 1)

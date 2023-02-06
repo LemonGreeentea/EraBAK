@@ -1,0 +1,89 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_PUBLIC_TOILET_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_PUBLIC_TOILET_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_PUBLIC_TOILET(대상)
+#DIM 대상
+#DIMS 상대
+#DIMS 삼인칭
+
+CALL SELECT_CHARA_RANDOM("TERRITORY_EVENT_PUBLIC_TOILET")
+상대 = \@ RESULT == -1 ? 여성 # %ANAME(RESULT)% \@
+삼인칭 = \@ RESULT == -1 ? 그녀 # %PRONOUN(RESULT)% \@
+
+PRINTFORML 한밤중의 탐색중 변소에 들르면, 쇠사슬로 연결된 %조사처리(상대,"가")% 남자들에게 습격당하고 있는 현장을 당했다
+PRINTFORML 능욕되고 있는지 준비했지만, %조사처리(상대,"는")% 오히려 적극적으로 교접해 있는 것처럼 보인다
+PRINTFORMW 아무래도 좋아해 공중변소가 되어 있는 것 같다
+PRINTFORMW 술을 마신다거나 해서 야던 법석을 앞에 굳어지고 있으면, 남자가 가까워져 왔다
+PRINTFORML 너도\@ IS_MALE(대상) ? 섞일까?  # 변소가 될까?  \@와이지만……
+PRINTFORML
+CALL ASK_MULTI_JUDGE("변소가 된다", IS_FEMALE(대상), "저항한다", IS_FEMALE(대상), "섞인다", HAS_PENIS(대상), "거절한다", 1)
+
+SELECTCASE RESULT
+	CASE 0
+		LOCAL:1 = 0
+		PRINTFORML %조사처리(ANAME(대상),"는")% %상대%의 모습에 못박음이 되어, 몹시 흥분하고 있었다
+		PRINTFORMW 아 되고 싶다는 호기심과 욕망에 이기지 못하고, 작게 수긍한다
+		PRINTFORMW 남자들은 %ANAME(대상)%의 옷을 벗겨내, 쇠사슬포함의 목걸이를 껴 %상대%의 근처에 늘어놓았다
+		$FUCK_SCENE
+		PRINTFORML 
+		PRINTFORML 공중변소의 안으로부터 %조사처리(ANAME(대상),"와")% %상대%의 목소리가 울리고 있다
+		PRINTFORMW 남에 뒤로부터 %STR_BODY("질:처녀 확인:시간 경과:Ｖ삽입:질내사정", 대상)%를 난폭하게 찔려 낑낑거리며허덕인다
+		PRINTFORML 근처에서 허덕이는 %상대%같이 변녀로 된 %조사처리(ANAME(대상),"는")%, 다수의 남자들의 성처리에 오로지 사용되고 있었다
+		PRINTFORMW %ANAME(대상)%의 %STR_BODY("신체", 대상)%는 추잡한 낙서나 정자로 더러워지고 자르고 있어 심하게 범해진 것을 이야기하고 있다
+		IF RESULT == 0
+			PRINTFORML %조사처리(ANAME(대상),"는")% 야무지지 못하게 혀를 늘어뜨리면서, 양구멍을 찔리고 성감대를 희롱해지는 쾌락에 암캐같이 좋아하고 있다
+			PRINTFORMW 될 뿐만이 아니고, 스스로 적극적으로 양손이나 입으로 페니스에 봉사해 정액을 짜내고 있었다
+		ELSE
+			PRINTFORML 눈물을 흘려 견디고 있었던 %ANAME(대상)%도, 점차 야무지지 못하게 발정한 여자의 표정이 되고 있다
+			PRINTFORMW 신체는 완전히 쾌락에 굴하고 있어 무의식 중에 페니스를 억압수컷을 기쁘게 하려고 한다
+			PRINTFORMW 양손이나 입으로 페니스에 봉사하는 모양은, 강요받고 있는 만큼 해 대단히 열심이었다
+		ENDIF
+		PRINTFORML 몇 번째인가의 질내사정에, %조사처리(ANAME(대상),"는")% 크게 키를 뒤로 젖히게 하면서 절정 한다
+		PRINTFORMW 사정을 끝낸 남자가 페니스를 뽑아 내면, %STR_BODY("음순", 대상)%로부터 천한 소리와 함께 대량의 백탁이 흘러넘쳐 왔다
+		PRINTFORML 지나친 쾌락에 방심한 %ANAME(대상)%에, 근처에서 같이 육봉에 봉사하고 있었던 %조사처리(상대,"가")% 상냥하게 키스를 한다
+		PRINTFORMW 남자들이 휴식을 허락할 리도 없고, 비어있던 구멍에 곧 페니스를 쑤셔 넣어져 %조사처리(ANAME(대상),"는")% 또 짐승 같아 보인 신음소리를 주었다
+		IF LOCAL == 1
+			PRINTFORMW 수컷에게 사용되는 쾌락에 빠져 버린 %조사처리(ANAME(대상),"는")%, %상대% 다같이 밤새도록 스스로 신체를 열어 그들의 정액을 계속 받아 들였다
+		ELSE
+			PRINTFORMW 수컷에게 사용되는 기쁨에 눈을 뜬 %조사처리(ANAME(대상),"는")%, 그 뒤는 스스로 신체를 열어 %상대% 다같이 밤새도록그들의 정액을 계속 받아 들였다
+		ENDIF
+		CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 질내사정, 키스상실, 장내사정, 구강사정", GET_SPERM_ID("건달"), @"건달의 \@RAND:2 ? 페니스 # 입술\@", "건달", "", "공중변소로서의 윤간")
+		PRINTFORML 
+		PRINTFORML 새벽녘이 되어, %조사처리(ANAME(대상),"와")% %조사처리(상대,"는")% 간신히 해방되었다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 너무나 충격적인 체험에, 휘청휘청 귀로에 들면서, 또 여기에 오는 것을 생각하고 있었다
+	CASE 1
+		LOCAL:1 = 1
+		PRINTFORML 과연 그런 일은 할 수 없다
+		PRINTFORMW 거부하려고 했지만, 남자는 그것보다 빨리 팔을 잡아 왔다
+		PRINTFORMW 그들은 날뛰는 %ANAME(대상)%의 의복을 벗겨내면, 쇠사슬포함의 목걸이를 껴 %상대%의 근처에 늘어놓았다
+		GOTO FUCK_SCENE
+	CASE 3
+		IF IS_MALE(대상)
+			PRINTFORML 과연 흥미가 인기없다
+			PRINTFORML 그만두었다
+		ELSE
+			PRINTFORML 누가 변녀 따위에 될까 보냐
+			PRINTFORML 단호히 거절해, 빨리 도망치기 시작했다
+		ENDIF
+ENDSELECT
+
+RETURN 1
+
+@SELECT_CHARA_RANDOM_LOGIC_TERRITORY_EVENT_PUBLIC_TOILET(대상)
+#DIM 대상
+RETURN SELECT_CHARA_RANDOM_LOGIC_FOR_TERRITORY_EXPLORING_BASE(대상) && IS_FEMALE(대상) && GETBIT(TALENT:대상:음란계, 소질_음란_정액변소)

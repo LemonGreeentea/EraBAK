@@ -1,0 +1,263 @@
+﻿;채찍
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME82
+LOCALS:0 = 채찍
+
+RESULTS:0 = %LOCALS:0%로 친다
+RESULTS:1 = %LOCALS:0%로 맞는다
+RESULTS:2 = %LOCALS:0%로 치게 한다
+RESULTS:3 = %LOCALS:0%로 맞는다
+RESULTS:4 = %LOCALS:0%로 치게 한다
+RESULTS:5 = %LOCALS:0%언뜻 보고 재촉져라
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE82
+;공통 부분
+CALL COM_ABLE_COMMON(82)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 1명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 1
+	RETURN 0
+;타겟은 최대로 2명까지
+SIF MTAR_NUM <= 0 || MTAR_NUM > 2
+	RETURN 0
+;플레이어가 행동불능이라면 불가
+SIF !IS_PLAYABLE(MPLY:0)
+	RETURN 0
+;채찍이 필요
+SIF !ITEM:채찍 && !ITEM:A_채찍
+	RETURN 0
+;플레이어가Ｖ인가Ａ에 삽입되고 있다면 불가
+SIF IS_INSERT_SINGLE(MPLY:0, "ＶＡ")
+	RETURN 0
+;플레이어가 안면승마 되고 있다면 불가
+SIF IS_RIDDEN(MPLY:0)
+	RETURN 0
+;플레이어가 구속중이라면 불가
+SIF IS_BIND(MPLY:0)
+	RETURN 0
+;플레이어가 키스중이라면 불가
+SIF IS_EQUIP(MPLY:0, 20)
+	RETURN 0
+;플레이어가 대딸·페라·파이즈리·스마타·엉덩이코키중이라면 불가
+SIF IS_EQUIP_PLAYER(MPLY:0, 10, 11, 12, 13, 15)
+	RETURN 0
+;모든 타겟으로 붙어 판정
+FOR LOCAL:0, 0, MTAR_NUM
+	;안면승마 되고 있다면 1명만
+	SIF IS_RIDDEN(MTAR:(LOCAL:0)) && MTAR_NUM >= 2
+		RETURN 0
+	;키스중이라면 불가
+	SIF IS_EQUIP(MTAR:(LOCAL:0), 20)
+		RETURN 0
+	;플레이어로부터 타겟／타겟으로부터 플레이어에 가슴애무중이라면 불가
+	SIF SEARCH_EQUIP_IC(1, MPLY:0, MTAR:(LOCAL:0)) >= 0
+		RETURN 0
+	;플레이어로부터 타겟／타겟으로부터 플레이어에 다리 빨고 안이라면 불가
+	SIF SEARCH_EQUIP_IC(104, MPLY:0, MTAR:(LOCAL:0)) >= 0
+		RETURN 0
+NEXT
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM82
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;●플레이어에 대해 처리
+DOWNBASE:(MPLY:0):체력 += 100
+EXP:(MPLY:0):기학경험치 += RAND:3 + 1
+
+SOURCE:(MPLY:0):기학 = 400
+SOURCE:(MPLY:0):일탈 = 150
+
+;주도권에 응한 우월·굴종의 소스 추가
+CALL ADD_SOURCE_INITIATIVE_U(MPLY:0, 170, 50)
+
+;●전 타겟으로 붙어 처리
+FOR LOCAL:0, 0, MTAR_NUM
+	LOCAL:1 = MTAR:(LOCAL:0)
+
+	DOWNBASE:(LOCAL:1):체력 += 60
+
+	SOURCE:(LOCAL:1):고통 = 400 + MIN(ABL:(MPLY:0):무투, 90) * 3
+	SOURCE:(LOCAL:1):노출 = 50
+	SOURCE:(LOCAL:1):일탈 = 150
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:1, 0, 170)
+	EXP:(LOCAL:1):피학경험치 += RAND:3 + 1
+
+	IF GETBIT(TALENT:(MPLY:0):음란계, 소질_음란_새드)
+		TIMES SOURCE:(LOCAL:1):고통, 1.50
+	ENDIF
+NEXT
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = 4
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 0
+
+RETURN 1
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER82(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 110
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"새드 Lv{ABL:(ARG:0):새드}", ABL:(ARG:0):새드 * 3)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 1, 10))
+
+IF TALENT:(ARG:0):얌전함
+	CALL COM_ORDER_ELEMENT(ARG:0, "얌전함", -3)
+ENDIF
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -2)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 3)
+ENDIF
+IF TALENT:(ARG:0):Ｓ기질
+	CALL COM_ORDER_ELEMENT(ARG:0, "Ｓ기질", 6)
+ENDIF
+
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_새드)
+	CALL COM_ORDER_ELEMENT(ARG:0, "새드", 40)
+ELSE
+	IF ABL:(ARG:0):주도도Ｕ >= 500
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 15)
+	ELSEIF ABL:(ARG:0):주도도Ｕ >= 300
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 10)
+	ELSEIF ABL:(ARG:0):주도도Ｕ >= 100
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 5)
+	ELSEIF ABL:(ARG:0):주도도Ｕ > -100
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 0)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", -5)
+	ENDIF
+
+	IF ABL:(ARG:0):도착도 >= 800
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 20)
+	ELSEIF ABL:(ARG:0):도착도 >= 500
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 15)
+	ELSEIF ABL:(ARG:0):도착도 >= 300
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 10)
+	ELSEIF ABL:(ARG:0):도착도 >= 100
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 5)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 0)
+	ENDIF
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE82
+;타겟이 2명
+IF MTAR_NUM == 2
+	LOCALS:0 = %조사처리(ANAME(MTAR:0),"와")% %ANAME(MTAR:1)%
+	LOCALS:1 = 교대로
+
+;타겟이 1명
+ELSE
+	LOCALS:0 = %ANAME(MTAR:0)%
+	LOCALS:1 = 
+ENDIF
+
+SELECTCASE GET_COM_INITIATIVE()
+	;플레이어에 주도권
+	CASE 0
+		IF MPLY:0 == MASTER
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(LOCALS:0,"를")% %LOCALS:1% 채찍으로 몇 번이나 고정시켜두었다…
+		ELSEIF ABL:(MPLY:0):새드 >= 3
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 기학적인 표정을 띄우면, %조사처리(LOCALS:0,"를")% 채찍으로 %LOCALS:1% 격렬하게 고정시켜두었다…
+		ELSE
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 약간 긴장하도록(듯이) 채찍을 지으면, %LOCALS:0%의 몸에 내려쳤다…
+		ENDIF
+	;타겟으로 주도권
+	CASE 1
+		PRINTFORML %조사처리(LOCALS:0,"는")% %ANAME(MPLY:0)%에 채찍을 갖게하면, 그래서 두드리도록(듯이) 명령했다
+		IF MPLY:0 == MASTER
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 듣는 대로, %조사처리(LOCALS:0,"를")% %LOCALS:1% 몇 번이나 채찍으로 쳤다…
+		ELSEIF ABL:(MPLY:0):새드 >= 3
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 기가 막힌 것처럼 쓴웃음 지으면, 사양 없고 %LOCALS:0%의 몸에 %LOCALS:1% 채찍을 내려%TARGET_STR("쳤다", "쳐 왔다")%…
+		ELSE
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 곤혹하면서도, (들)물은 대로 %LOCALS:0%의 몸에 %LOCALS:1% 채찍을 흔들었다…
+		ENDIF
+	;제삼자에게 주도권
+	CASEELSE
+		PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에게, %LOCALS:0%의 몸을 채찍으로 두드리도록(듯이) 명령했다
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% (듣)묻는 대로, %LOCALS:0%의 몸에 채찍을 %LOCALS:1% 내려쳤다…
+ENDSELECT
+
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST82
+FOR LOCAL:0, 0, MTAR_NUM
+	LOCAL:1 = MTAR:(LOCAL:0)
+	IF LOCAL:1 != MASTER
+		LOCAL:2 = CUP:(LOCAL:1):포주
+		LOCAL:3 = CUP:(LOCAL:1):로주
+
+		IF ABL:(LOCAL:1):마조 >= 5
+			PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 아픔을 느끼고 있는 것에도 불구하고 기쁜듯이 달콤한 소리를 높이고 있다
+		ELSEIF ABL:(LOCAL:1):마조 >= 3
+			PRINTFORML %조사처리(ANAME(LOCAL:1),"는")%비명을올린다가, 그 소리에는 달콤한 색이 섞이고 있다
+		ELSEIF LOCAL:2 >= 3000
+			PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 지나친 아픔과 공포에 주위의 시선에도 아랑곳 없게 울부짖고 있다
+		ELSEIF LOCAL:2 >= 1500
+			PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 아픔에 계속 참지 못하고, 몇 번이나 비명을 올리면서 번민 미치고 있다
+		ELSEIF LOCAL:2 >= 500
+			PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 아픔의 너무 입으로부터 신음을 흘리고 있다
+		ELSE
+			IF LOCAL:3 >= 200 && !IS_INITIATIVE(MTAR:(LOCAL:0))
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 아픔에 참으면서, %조사처리(ANAME(MPLY:0),"를")% 노려봤다
+			ELSE
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 이를 악물어 아픔에 참고 있다
+			ENDIF
+		ENDIF
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN82
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_82()
+RETURN POWER(2, 성적기호_학대하고싶다)
+
+@COM_PREFERENCE_TARGET_82()
+RETURN POWER(2, 성적기호_시달리고싶다)
+

@@ -1,0 +1,226 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_TERRITORY_LOST_SPOT_RATE()
+RETURN 50
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_TERRITORY_LOST_SPOT_DECISION()
+#DIM 마요이
+마요이 = GET_CITYNUMBER("마요이가")
+
+SIF 마요이 == -1
+	RETURN 0
+SIF 마요이 != CFLAG:MASTER:소속
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_TERRITORY_LOST_SPOT_GENRE()
+RETURN 데일리_장르_에로
+
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_TERRITORY_LOST_SPOT
+#DIM 대상
+#DIM 마요이
+마요이 = GET_CITYNUMBER("마요이가")
+
+대상 = NAME_TO_CHARA("첸")
+
+PRINTFORML 있는 휴일, 마요이가로 빈둥거리고 있으면 과연 한가하게 되었다
+PRINTFORMW 라고 해도 여기에는 고양이와 바케네코 밖에 없다
+PRINTFORML 어떻게 하지?
+CALL ASK_MULTI_JUDGE("고양이와 재롱부린다", 1,"나간다", 1,"첸의 방에", CFLAG:대상:소속 == CFLAG:MASTER:소속 && CFLAG:대상:포로처 == 0)
+IF RESULT == 1
+	PRINTFORML 고양이를 상대로 하는 것도 질렸다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 마을에 놀러 나갔다
+	RETURN
+ELSEIF RESULT == 2
+	PRINTFORML 첸의 방에 갔다
+	PRINTFORML 그녀는 고양이들을 따르게 하는 훈련에 악전고투 하고 있었다
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% 시간 때우기로 이끈다고 그녀는 기꺼이 타 왔다
+	IF (CFLAG:대상:호감도 >= 2500 || DVAR:고양이너무좋아_발생플래그 == 1) && HAS_PENIS(MASTER)
+		IF DVAR:고양이너무좋아_발생플래그 == 0
+			PRINTFORML 무엇을 할까하고 생각하고 있으면 그녀가 팔에 휘감겨 왔다
+			PRINTFORML 놀라 그녀를 보면 신체를 다가서게 해 오면서 간살스러운 소리를 내고 있다
+			PRINTFORMW 아무래도 발정기인것 같다…
+			PRINTFORML 여기까지 권해져 거절할 이유도 없었다
+			PRINTFORMW %조사처리(ANAME(MASTER),"가")% 쓰러트리자 그녀는 기쁨의 소리를 높였다
+			$TYEN_LOST_SPOT
+			PRINTFORML 
+			PRINTFORMW 첸의 방으로부터 암코양이의 단정치 못한 신음소리가 주워듣는동 넘어 온다
+			PRINTFORML 그녀의 신체는 완전히 완성되고 있어 순조롭게 %ANAME(MASTER)%의 하나의 물건을 받아들였다
+			PRINTFORML 녹진녹진 녹은 암컷구멍전체는 생물과 같이 꿈틀거려 장대에 휘감겨 가부간의 대답 없게 사정을 재촉해 온다
+			PRINTFORMW 몸집이 작은 그녀를 껴안으면서 밀어올려 주면 전신을 경련시켜 사랑스러운 신음소리를 미치게 했다
+			PRINTFORML 극상의 감촉에 %조사처리(ANAME(MASTER),"는")% 열중해 허리를 흔들어, 보다 깊게 그녀의 안으로 페니스를 쑤셔 넣어 간다
+			PRINTFORML %ANAME(MASTER)%들은 시간을 잊어 땀투성이가 되면서 그저 단순히 육욕대로 서로를 구해라
+			PRINTFORMW 잠깐의 사이, 방 안에는 고기가 서로 치는 소리와 함께 첸의 단정치 못한 교성만이 계속 영향을 주었다
+			PRINTFORML 한계가 가까워진 %조사처리(ANAME(MASTER),"가")% 허리를 가속시키면 첸이 말씨가 돌지 않는 혀로 사랑스럽고 졸라댔다
+			PRINTFORML 그 야무지지 못하고 열정적인 표정에 결국 한계를 넘었던 %조사처리(ANAME(MASTER),"는")% 그녀의 최안쪽으로 마음껏 정액을 발하면
+			PRINTFORMW 첸은 2 개의 꼬리를 핀! (와)과 늘리면서 그 날 제일의 교성을 올려 크게 등을 뒤로 젖혔다
+			PRINTFORMW …%ANAME(MASTER)%들은 그 뒤도 완전히 지쳐 버릴 때까지 끝없이 계속 교접하고 얼싸안으면서 잠들었다
+			DVAR:고양이너무좋아_발생플래그 = 1
+		ELSEIF DVAR:고양이너무좋아_발생플래그 == 1
+			PRINTFORML 그녀의 2 개의 꼬리가 스르륵 당신의 팔에 휘감겨 왔다
+			PRINTFORML 아무래도 그녀는 이전의 엣치를 잊을 수 없는 같다
+			PRINTFORMW 그녀는 %조사처리(ANAME(MASTER),"를")% 방으로 끌여들이면 신체를 문질러 응석부려 왔다
+			PRINTFORML 
+			SELECTCASE RAND:5
+				CASE 0
+					PRINTFORMW 어루만지면 추잡하게 울어, 찌르면 민감하게 날아 뛰는 그녀를 마음껏 귀여워했다
+				CASE 1
+					PRINTFORMW 장난해 붙도록(듯이) 응석부려 오는 그녀와 신체를 얽히게 하면서 밤새도록 교접했다
+				CASE 2
+					PRINTFORMW 그녀로부터 감도는 농후한 암컷의 냄새에 자극 받으며, 열중해 몇 번이나 교제정액을 발했다
+				CASE 3
+					PRINTFORMW 이키 미치면서도 와♥좀 더♥(와)과 졸라대 오는 그녀를 반복해 안아 주었다
+				CASE 4
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 귀여워해 받으려고 열심인 그녀의 봉사를 흡족해 할 때까지 즐겁게 해 받았다
+			ENDSELECT
+		ENDIF
+		CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, @"%ANAME(대상)%의 입술", "", @"%ANAME(대상)%의 질", "화간")
+		CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_ID(MASTER), @"%ANAME(MASTER)%의 입술", @"%ANAME(MASTER)%", "", "화간")
+	ELSE
+		PRINTFORMW 그녀는 %ANAME(MASTER)%의 무릎을 타면서 순진하게 무엇을 해? 라고 (들)물어 왔다
+		PRINTFORML 어떻게 하지?
+		CALL ASK_MULTI_JUDGE("공부", 1,"외에서 논다", 1,"엣치한 일", HAS_PENIS(MASTER))
+		IF RESULT == 2
+			PRINTFORMW 꾸욱 껴안고 귓전으로 엣치한 일을 하려고 속삭였다
+			IF CFLAG:대상:호감도 + RAND:600 + (ABL:대상:욕망 * 100) >= 2000
+				PRINTFORML 그녀는 멍하니 귀까지 새빨갛게 되어, 부끄러운 듯이 수긍했다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀의 이마에 가볍게 키스를 하면 침실로 데리고 들어갔다
+				GOTO TYEN_LOST_SPOT
+			ELSE
+				PRINTFORML 그녀는 귀까지 새빨갛게 해 %ANAME(MASTER)%의 얼굴을 세게 긁어 왔다
+				PRINTFORMW 몸부림치는 %조사처리(ANAME(MASTER),"를")% 두어 첸은 화내 떠나 버렸다
+				CFLAG:대상:호감도 -= RAND:500
+			ENDIF
+		ELSEIF RESULT == 0
+			PRINTFORML 공부로 이끌면 그녀는 조금 실망한 표정을 보였다
+			PRINTFORMW 하지만 고양이들을 따르게 하기 위해서(때문에)도 필요하다고 말하면 키릿 얼굴을 긴축시켰다
+			CALL PRINT_ADD_EXP(대상, "지략경험치", RAND:10 + 1, 1)
+			CALL PRINT_ADD_EXP(대상, "정치경험치", RAND:10 + 1, 1)
+			CALL PRINT_ADD_EXP(MASTER, "지략경험치", RAND:10 + 1, 1)
+			CALL PRINT_ADD_EXP(MASTER, "정치경험치", RAND:10 + 1, 1)
+			CALL TRAIN_AUTO_ABLUP
+			CFLAG:대상:호감도 += 50 + RAND:100
+		ELSEIF RESULT == 1
+			PRINTFORML 모처럼의 좋은 날씨인 것이니까 밖에서 놀자
+			PRINTFORMW 첸과 고양이들을 모아 뜰에서 술래잡기를 즐겼다
+			CALL PRINT_ADD_EXP(대상, "무투경험치", RAND:10 + 1, 1)
+			CALL PRINT_ADD_EXP(대상, "방위경험치", RAND:10 + 1, 1)
+			CALL PRINT_ADD_EXP(MASTER, "무투경험치", RAND:10 + 1, 1)
+			CALL PRINT_ADD_EXP(MASTER, "방위경험치", RAND:10 + 1, 1)
+			CALL TRAIN_AUTO_ABLUP
+			CFLAG:대상:호감도 += 50 + RAND:100
+		ENDIF
+	ENDIF
+ELSEIF RESULT == 0
+	PRINTFORMW 고양이들과 재롱부리는 일로 했다
+	PRINTFORML 어떻게 놀아?
+	CALL ASK_MULTI("강아지풀" ,"볼" ,"마타타비")
+	IF RESULT == 0
+		PRINTFORML 강아지풀로 놀았다
+		PRINTFORMW …생각외 열중했다
+		CALL PRINT_ADD_EXP(MASTER, "지략경험치", RAND:5 + 1, 1)
+		CALL TRAIN_AUTO_ABLUP
+	ELSEIF RESULT == 1
+		PRINTFORML 볼로 놀았다
+		PRINTFORMW …생각외 열중했다
+		CALL PRINT_ADD_EXP(MASTER, "무투경험치", RAND:5 + 1, 1)
+		CALL TRAIN_AUTO_ABLUP
+	ELSEIF RESULT == 2
+		PRINTFORML 마타타비를 올리면 고양이들은 취등 넘겼다
+		PRINTFORMW 하면 그 안의 한마리가 인간의 모습으로 변해 %ANAME(MASTER)%에 가까워져 왔다
+		IF IS_MALE(MASTER) || (HAS_PENIS(MASTER) && RAND:2)
+			PRINTFORML 그녀는 발정한 표정으로 %ANAME(MASTER)%에 껴안아 간살스러운 소리를 냈다
+			PRINTFORML 아무래도 마타타비의 영향으로 발정해 버린 것 같다
+			PRINTFORMW 책임을 질 수 있도록 %조사처리(ANAME(MASTER),"는")% 그녀를 껴안아 이불에 옮겼다
+			PRINTFORML 
+			SELECTCASE RAND:5
+				CASE 0
+					PRINTFORML 그때 부터 %ANAME(MASTER)%들은 땀투성이가 되면서 오로지 교접하고 있다
+					PRINTFORML 육욕대로 신체를 얽히게 할 수 있는 허리를 서로 쳐박아, 서로의 체액과 체온을 교환해 몇 번이나 절정 한다
+					PRINTFORML 애무에 민감하게 반응아♥냐아♥(와)과 사랑스럽게 우는 그녀를 %조사처리(ANAME(MASTER),"는")% 열중해 계속 사랑했다
+					PRINTFORMW 해가 질 때까지 서로 요구해 완전히 지쳐 버린 %ANAME(MASTER)%들은 서로 껴안아 연결된 채로 깊은 잠에 떨어졌다
+				CASE 1
+					PRINTFORML 그녀의 방으로부터 고기가 서로 치는 소리와 번창한 고양이의 신음소리가 영향을 주어 온다
+					PRINTFORML 그녀는 %ANAME(MASTER)%에 걸쳐 격렬하게 허리를 흔들어 페니스를 깊숙히 받아들이면서 단정치 못하게 미친듯이 자지러지는 신음소리를 낸다
+					PRINTFORML 그 음미롭고 아름다운 육체의 움직임을 즐기면서 배를 어루만져 주면 그녀의 교성은 더욱 색기를 늘렸다
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 눈동자에♥를 띄워 씨뿌리기를 졸라대 오는 그녀 안쪽 깊이 몇 번이나 정액을 발해 주었다
+				CASE 2
+					PRINTFORML 엎드린 자세로 한 그녀에게 덮어씌우면서 격렬하게 허리를 쳐박고 범한다
+					PRINTFORML 그녀의 고기는 이미 녹진녹진이 되어 있어, 일발 찌르기마다 전신을 진동시키면서 사랑스러운 신음소리를 올린다
+					PRINTFORML 큐우큐우 단단히 조여 오는 극상의 질 구멍에 %ANAME(MASTER)%도 참지 못하고 그녀의 안에 몇 번이나 정액을 발했다
+					PRINTFORMW 이튿날 아침, 헤어질 때에 그녀가 부비부비 몸을 대었기 때문에 키스를 해 재회를 약속해 두었다
+				CASE 3
+					PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀를 옆으로 하면 키스를 하면서 가슴이나 사타구니에 손을 기게 한다
+					PRINTFORML 이미 녹고 자른 비밀스런 장소는 균열을 가볍게 훑는 것만으로 애액을 흘러넘치게 해 그녀는 기쁨의 소리를 높였다
+					PRINTFORML 몸을 구불거리게 할 수 있는 목을 울리는 그녀의 모습에 %ANAME(MASTER)%도 곧바로 인내 할 수 없게 되어 숨을 거칠게 하고 덮어씌웠다
+					PRINTFORMW 둘이서 시간을 잊어, 완전히 지쳐 버릴 때까지 단지 계속해서짐승과 같이 격렬한 교미에 열중했다
+				CASE 4
+					PRINTFORML 그녀는 방으로 들어가자%조사처리(ANAME(MASTER),"를")% 쓰러트려 격렬하게 허리를 흔들기 시작했다
+					PRINTFORML 암컷의 소리를 미치게 하고 고양이로 해서는 건방지게도 풍만한 육체를 요염하게 흔들어 %ANAME(MASTER)%의 눈을 즐겁게 한다
+					PRINTFORML 가볍게 밀어올려 주면 요도구가 자궁에 부딪쳐 그녀는 흠칫 크게 몸을 뒤로 젖히게 해 조수를 뿜었다
+					PRINTFORMW 오로지 흐트러지는 그녀로 되는 대로 되어, 요구되는 대로 몇 번이나 씨뿌리기를 해 주었다
+			ENDSELECT
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "묘낭의 입술", "", "묘낭의 질", "화간")
+			PRINTFORML 
+			PRINTFORML 완전히 해가 져 버렸다
+			PRINTFORMW 서운한 것 같은 그녀를 상냥하게 어루만져 주어 헤어졌다
+		ELSE
+			PRINTFORML 그는 발정한 표정으로 %조사처리(ANAME(MASTER),"를")% 쓰러트렸다
+			PRINTFORML 아무래도 마타타비의 영향으로 발정해 버린 것 같다
+			PRINTFORMW 생각하지 않는 전개에 놀라고 있으면 껴안을 수 있어 침실에 옮겨져 버렸다
+			PRINTFORML 
+			SELECTCASE RAND:5
+				CASE 0
+					PRINTFORML 엎드린 자세로 된 %조사처리(ANAME(MASTER),"는")% 배후로부터 격렬하게 범해지면서 히익히익 거리며 허덕이고 있다
+					PRINTFORML 그의 욕망에 맡긴 야성적인 피스톤으로 여자의 본능이 자극된 %조사처리(ANAME(MASTER),"는")% 완전히 암코양이의 얼굴이 되어 좋아한다
+					PRINTFORML 츄♥푸츄♥(와)과 요도구와 자궁입구가 키스를 할 때에 저리는 것 같은 쾌감이 전신 구석구석까지 달려 시야가 반짝반짝 빛났다
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 점차 섹스와 자지의 일 이외 아무것도 생각할 수 없게 되어 그와의 교미에 열중해 갔다
+				CASE 1
+					PRINTFORML 무리하게 밀어 쓰러트려진 %조사처리(ANAME(MASTER),"는")% 저항하는 사이도 없게 옷을 벗겨져 난폭하게 범해졌다
+					PRINTFORML 육욕에 맡기고 오로지 허리를 쳐박아 오는 짐승 마찬가지의 행위에, %ANAME(MASTER)%의 신체는 가부간의 대답 없게 반응해 허덕여 버린다
+					PRINTFORML 그의 허리 사용으로부터 진심으로 자신에게 씨뿌리기 하려고 하고 있다고 느낀 %ANAME(MASTER)%의 신체는 점차 자궁을 내려 갔다
+					PRINTFORMW 발정기의 그의 성욕은 굉장하고 %조사처리(ANAME(MASTER),"는")% 자궁으로부터 흘러넘칠 정도의 대량의 정액을 따라져 버렸다
+				CASE 2
+					PRINTFORML 그는 방으로 들어가자%ANAME(MASTER)%에 달라붙으면서 격렬하게 허리를 쳐박아 왔다
+					PRINTFORML 짐승 마찬가지의 난폭한 허리 사용에 %조사처리(ANAME(MASTER),"는")% 신음해 몸을 비틀게 하지만 페니스가 깊게 꽂히고 있고 도망가지 않는다
+					PRINTFORML 그가 발하는 진한 수컷의 기분과 질육을 가차 없이 후벼파지는 감촉에 점차 %ANAME(MASTER)%의 저항심은 풀어져 가며 자지러지는 신음소리를 낸다
+					PRINTFORMW 이윽고 그가 %ANAME(MASTER)%의 안쪽 깊고로 그 정액을 털어 놓으면, 단정치 못한 교성을 미치게 하면서 가는 얼굴을 쬐었다
+				CASE 3
+					PRINTFORML %조사처리(ANAME(MASTER),"는")% 그의 교묘한 공격으로 순식간에 소리 되고 되는 대로 좋아하고 있다
+					PRINTFORML 허리를 잡아진 모습으로로 천천히 푸는 것처럼 암컷구멍을 후비어져, %조사처리(ANAME(MASTER),"는")% 베개에 얼굴을 묻어 몸을 진동시킨다
+					PRINTFORML 그가 꾹꾹 허리를 비틀면 여자의 약점을 후벼파진 %조사처리(ANAME(MASTER),"는")% 참지 못하고 단정치 못하게 허덕여져 버렸다
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 이미 인간으로서의 존엄도 잊어 단정치 못하게 졸라대 고양이에 몇 번이나 마구 가게 되었다
+				CASE 4
+					PRINTFORML %ANAME(MASTER)%들은 어슴푸레한 그의 침실에서 연인같이 서로 같이 껴안으면서 격렬하게 교접하고 있다
+					PRINTFORML 그의 정열적인 구애 행동에 묶인 스스로 신체를 열었던 %조사처리(ANAME(MASTER),"는")% 적극적으로 허리를 흔들면서 기쁨의 소리를 높인다
+					PRINTFORML 농후하게 혀를 얽히게 할 수 있는 이름을 서로 부르면서 단지 계속해서 달굴 수 있는 것 같은 쾌락에 몸을 바치고 서로 몇 번이나 절정에 이르렀다
+					PRINTFORMW 그에게 하복부를 어루만져진 %조사처리(ANAME(MASTER),"는")% 자궁의 안에서날뛴다제지를 느껴 가볍게 가면서 부르릇 몸부림쳤다
+			ENDSELECT
+			CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, Ｖ성교, 펠라티오", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("들요괴"), @"고양이 변화의 \@RAND:2 ? 페니스 # 입술\@", "고양이 변화", "", "화간")
+			PRINTFORML 
+			PRINTFORML 완전히 해가 져 버렸다
+			PRINTFORMW 이별할 때에 그로부터 재회를 졸라진 %조사처리(ANAME(MASTER),"는")% 기뻐해 연락처를 건네주었다
+		ENDIF
+	ENDIF
+ENDIF
+
+RETURN 1

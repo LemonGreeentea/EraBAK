@@ -1,0 +1,69 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_BOOKSHOP_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_BOOKSHOP_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_BOOKSHOP(대상)
+#DIM 대상
+
+PRINTFORML 오래된 책방을 보기 시작하고 들어가 보았다
+PRINTFORML 중에서는 중년의 점주가 한사람이 카운터에서 책을 읽고 있었다
+PRINTFORMW 그는 이쪽을 슬쩍 본 후 다시 시선을 떨어뜨렸다
+PRINTL
+PRINTFORML 어떻게 하지?
+CALL ASK_MULTI("병술 책을 읽는다" ,"요리책을 읽는다" ,"마술 책을 읽는다")
+IF RESULT == 0
+	PRINTFORMW 병술 책을 읽어 보았다
+	PRINTFORML 
+	PRINTFORMW 꽤 도움이 되었다
+	CALL PRINT_ADD_EXP(대상, "지략경험치", RAND:8 + 6, 1)
+ELSEIF RESULT == 1
+	PRINTFORMW 요리책을 읽어 보았다
+	PRINTFORML 
+	PRINTFORMW 새로운 레시피를 기억했다
+	CALL PRINT_ADD_EXP(대상, "요리경험치", RAND:8 + 6, 1)
+ELSEIF RESULT == 2
+	PRINTFORMW 마술서에 손을 뻗었다
+	PRINTFORML 
+	IF TALENT:대상:요술지식 == 1
+		PRINTFORMW 마술의 요령을 배웠다
+		CALL PRINT_ADD_EXP(대상, "요술경험치", RAND:8 + 6, 1)
+	ELSE
+		PRINTFORMW 하지만 무엇이 써 있을까 횡설수설이었다
+	ENDIF
+ENDIF
+IF RAND:2 || IS_MALE(대상)
+	RETURN
+ENDIF
+PRINTFORML 
+PRINTFORML %조사처리(ANAME(대상),"가")% 책을 읽고 있으면 점차 머리가 멍-하니 했다
+PRINTFORML 뭔가 이상하다고 느끼는 사이도 없고, %ANAME(대상)%의 의식은 정신나가, 그 자리에 우두커니 섰다
+PRINTFORMW 그 상태를 보고 있었던 점주는 힐쭉 웃으면, %ANAME(대상)%에 가까워져 왔다……
+PRINTFORML 
+PRINTFORML %조사처리(ANAME(대상),"는")% 책방의 점원으로서 일하고 있다
+PRINTFORML 접객, 물건 내, 발주에 펠라치오, 섹스도 점장에게 명령받는 대로 의욕에 넘쳐 해내 간다
+PRINTFORMW 그의 최면술에 걸린 %조사처리(ANAME(대상),"는")% 인식과 상식을 개변 당하고 그것이 당연한일이 되어 있다
+PRINTFORML 손님이 중단되었을 때에는 책장의 그늘에서 안겨 손님이 오면 카운터아래에 잠수해 자지를 문다
+PRINTFORML 물론 모든 정액을 흘리지 않아 받아 들여, 봉사의 뒤는 답례의 끈적 베로츄도 잊지 않는다
+PRINTFORML 폐점 후도 귀가하지 않고 그의 신변을 돌보면서 몇 번이나 몇 번이나 씨뿌리기 섹스를 반복한다
+PRINTFORMW 하지만 모두 지금의 %ANAME(대상)%에는 보통 일이며, 그의 아이를 임신하도록(듯이) 명령받으면 자궁을 쑤시게 한 수긍했다……
+CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("책방의 점주"), @"책방의 점주의 \@RAND:2 ? 페니스 # 입술\@", "책방의 점주", "", "최면을 걸쳐지면서 조교")
+CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("책방의 점주"), @"책방의 점주의 \@RAND:2 ? 페니스 # 입술\@", "책방의 점주", "", "최면을 걸쳐지면서 조교")
+PRINTFORML 
+PRINTFORML 하지만 그런 생활도 길게 계속되지 않고, 어느 최면이 끊어졌다
+PRINTFORMW %조사처리(ANAME(대상),"는")% 혼란하면서도 그에게 다시 잡히기 전에 가게를 도망치기 시작했다
+
+RETURN 1

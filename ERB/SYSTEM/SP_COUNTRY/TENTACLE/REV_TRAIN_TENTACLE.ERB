@@ -1,0 +1,50 @@
+﻿;-------------------------------------------------
+;정기 이벤트
+;-------------------------------------------------
+@TENTACLE_REV_TRAIN_REGULAR_EVENT(세력)
+#DIM 세력
+
+SIF FLAG:역조교회수 == 0 || FLAG:역조교회수 % 4 != 0
+	RETURN 0
+
+PRINTFORML 조교의 시간이 가까워지면, %조사처리(ANAME(MASTER),"는")% 여느 때처럼 촉수들에게 구속되어
+PRINTFORMW 후는 촉수에 자아를 납치된 무리에게 더럽혀지는 것을 기다릴 뿐되었다
+PRINTFORML 온 촉수병들은, %ANAME(MASTER)%에 아무것도 하지 않았다
+PRINTFORMW 스스로 촉수에 신체를 명도해, 모체가 되면, 더 이상의 조교는 하지 않을 생각과 같지만……
+PRINTFORMW 어떻게 해야 할 것일까……
+CALL ASK_YN("단념해 받아들인다（모판화)", "그런 것은 미안이다")
+IF RESULT == 0
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 수긍하면, 촉수는 일제히 %조사처리(ANAME(MASTER),"로")% 모였다
+	FOR LOCAL, 0, 5
+		CALL FUCK_SP(MASTER, "욕망, 봉사, 성교, 성기술, 정애, 배설, Ｖ확장, Ａ확장, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 펠라티오, 키스, 긴박, 고통쾌락, 마조, Ｖ성교, Ａ성교", "처녀상실, 질내사정, Ａ처녀상실, 키스상실, 장내사정, 구강사정", 세력, GET_SPERM_ID("촉수"), "촉수", "촉수", "", "윤간")
+	NEXT
+	SETCOLOR 칼라_주의
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 촉수에 기생되었습니다
+	RESETCOLOR
+	SETBIT TALENT:MASTER:특수세력함락계, 특수세력_촉수
+	CALL CHANGE_COUNTRY(MASTER, 세력, 1)
+	CALL PLAYER_FALLEN_TO_SP_COUNTRY(세력)
+	RETURN 1
+ELSE
+	PRINTFORML 그런 일이 인정될까
+	PRINTFORML 거부의 말을 이해하고 있는지, 촉수병들은 %ANAME(MASTER)%의 말을 받아, 다시 움직이기 시작했다
+	PRINTFORMW 그들은 그대로, %ANAME(MASTER)%에 모여 간다……
+ENDIF
+
+;-------------------------------------------------
+;아는 사람이 왔을 때의 이벤트
+;-------------------------------------------------
+@TENTACLE_REV_TRAIN_MSG(세력, 아는사람참가자, 아는사람참가수)
+#DIM 세력
+#DIM REF 아는사람참가자
+#DIM 아는사람참가수
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 조교의 시간이 가까워지면, %조사처리(ANAME(MASTER),"는")% 여느 때처럼 촉수들에게 구속되어
+PRINTFORMW 후는 촉수에 자아를 납치된 무리에게 더럽혀지는 것을 기다릴 뿐되었다
+PRINTFORMW 온 촉수병중에, %조사처리(ANAME(MASTER),"가")% 자주(잘) 면식이 있던 상대가 섞이고 있었다
+PRINTFORMW %ANAME(아는사람참가자:0, 아는사람참가수)%…
+PRINTFORMW 공허한 표정을 띄우고 있다. 그 눈동자로부터는 이성을 물을 수 없다
+PRINTFORMW %조사처리(ANAME(MASTER),"는")% 필사적으로 부르지만, 역시 무반응이었다
+PRINTFORMW 아무래도 촉수에 기생되어 자아를 상실해 버리고 있는 것 같다……
+PRINTFORMW %ANAME(아는사람참가자:0, 아는사람참가수)%는 다른 촉수병과 함께, %ANAME(MASTER)%에 모이기 시작했다……

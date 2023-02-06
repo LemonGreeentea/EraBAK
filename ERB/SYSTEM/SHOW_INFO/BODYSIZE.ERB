@@ -1,0 +1,476 @@
+﻿@SET_BODYSIZE(대상, 세트위치 = 0)
+#DIM 대상
+#DIM 세트위치
+
+SIF GETBIT(세트위치, 사이즈_신장) || 세트위치 == 0
+	CALL SET_BODYSIZE_HEIGHT(대상)
+
+SIF GETBIT(세트위치, 사이즈_가슴) || 세트위치 == 0
+	CALL SET_BODYSIZE_BUST(대상)
+
+SIF GETBIT(세트위치, 사이즈_허리) || 세트위치 == 0
+	CALL SET_BODYSIZE_WEIST(대상)
+
+SIF GETBIT(세트위치, 사이즈_엉덩이) || 세트위치 == 0
+	CALL SET_BODYSIZE_HIP(대상)
+
+SIF GETBIT(세트위치, 사이즈_체중) || 세트위치 == 0
+	CALL SET_BODYSIZE_WEIGHT(대상)
+
+SIF GETBIT(세트위치, 사이즈_페니스) || 세트위치 == 0
+	CALL SET_BODYSIZE_PENIS(대상)
+
+
+;-------------------------
+;신장의 설정
+;-------------------------
+@SET_BODYSIZE_HEIGHT(대상)
+#DIM 대상
+#DIM 신장기초치
+
+MAXBASE:대상:신장 = CALC_BODYSIZE_HEIGHT(대상)
+BASE:대상:신장 = MAXBASE:대상:신장
+
+
+@CALC_BODYSIZE_HEIGHT(대상)
+#FUNCTION
+#DIM 대상
+#DIM 기초치
+
+IF CFLAG:대상:행동불능상태 == 행동불능_아이
+	기초치 = MIN(500 + CFLAG:대상:아이의성장도 * 20, 1300)
+ELSEIF TALENT:대상:유아
+	기초치 = MIN(800 + (CFLAG:대상:아이의성장도 - 6) * 50, 1300)
+ELSE
+	SELECTCASE TALENT:대상:체격
+		CASE 체격_아이
+			기초치 = IS_MALE(대상) ? 1200 # 1100
+			기초치 += RAND:200
+		CASE 체격_작은체형
+			기초치 = IS_MALE(대상) ? 1400 # 1300
+			기초치 += RAND:200
+		CASE 체격_보통
+			기초치 = IS_MALE(대상) ? 1600 # 1500
+			기초치 += RAND:200
+		CASE 체격_장신
+			기초치 = IS_MALE(대상) ? 1800 + RAND:150 # 1700 + RAND:100
+		CASE 체격_큰몸집
+			기초치 = IS_MALE(대상) ? 1950 + RAND:200 # 1800 + RAND:200
+		CASE 체격_거대
+			기초치 = 3000 + RAND:1000
+	ENDSELECT
+ENDIF
+
+RETURNF 기초치
+
+
+
+;-------------------------
+;허리의 설정
+;-------------------------
+@SET_BODYSIZE_WEIST(대상)
+#DIM 대상
+
+BASE:대상:허리 = CALC_BODYSIZE_WEIST(대상)
+MAXBASE:대상:허리 = BASE:대상:허리
+
+@CALC_BODYSIZE_WEIST(대상)
+#FUNCTION
+#DIM 대상
+#DIM 기초치
+기초치 = (BASE:대상:신장 * (IS_MALE(대상) ? 42 # 37 + TALENT:대상:체형)) / 100
+
+SELECTCASE TALENT:대상:체격
+	CASE 체격_아이
+		TIMES 기초치, 1.07
+	CASE 체격_작은체형
+		TIMES 기초치, 1.03
+	CASE 체격_보통
+	CASE 체격_장신
+	CASE 체격_큰몸집
+		TIMES 기초치, 1.03
+	CASE 체격_거대
+		TIMES 기초치, 1.10
+ENDSELECT
+
+SELECTCASE TALENT:대상:체형
+	CASE 체형_빼빼마른
+		TIMES 기초치, 0.90
+	CASE 체형_호리호리한
+		TIMES 기초치, 0.94
+	CASE 체형_슬렌더
+		TIMES 기초치, 0.97
+	CASE 체형_풍만
+		TIMES 기초치, 1.10
+	CASE 체형_비만
+		TIMES 기초치, 1.20
+ENDSELECT
+
+SIF TALENT:대상:더러운아저씨
+	TIMES 기초치, 1.2
+
+기초치 = 기초치 * RAND(97, 104) / 100
+
+RETURNF 기초치
+
+;-------------------------
+;가슴크기의 설정
+;-------------------------
+@SET_BODYSIZE_BUST(대상)
+#DIM 대상
+
+BASE:대상:가슴 = CALC_BODYSIZE_BUST(대상)
+MAXBASE:대상:가슴 = BASE:대상:가슴
+
+@CALC_BODYSIZE_BUST(대상)
+#FUNCTION
+#DIM 대상
+#DIM 기초치
+
+기초치 = BASE:대상:신장 * (IS_MALE(대상) ? 52 # 53) / 100
+
+SELECTCASE GET_BUSTSIZE(대상)
+	CASE -2
+		TIMES 기초치, 0.85
+	CASE -1
+		TIMES 기초치, 0.9
+	CASE 0
+	CASE 1
+		TIMES 기초치, 1.05
+	CASE 2
+		TIMES 기초치, 1.10
+ENDSELECT
+
+SELECTCASE TALENT:대상:체격
+	CASE 체격_아이
+		TIMES 기초치, 0.90
+	CASE 체격_작은체형
+		TIMES 기초치, 0.95
+	CASE 체격_보통
+	CASE 체격_장신
+	CASE 체격_큰몸집
+		TIMES 기초치, 1.03
+	CASE 체격_거대
+		TIMES 기초치, 1.10
+ENDSELECT
+
+SELECTCASE TALENT:대상:체형
+	CASE 체형_빼빼마른
+		TIMES 기초치, 0.90
+	CASE 체형_호리호리한
+		TIMES 기초치, 0.92
+	CASE 체형_슬렌더
+		TIMES 기초치, 0.93
+	CASE 체형_풍만
+		TIMES 기초치, 1.07
+	CASE 체형_비만
+		TIMES 기초치, 1.07
+ENDSELECT
+
+기초치 = 기초치 * RAND(97, 104) / 100
+
+기초치 = MAX(기초치, CALC_BODYSIZE_UNDERBUST(대상) + 10)
+
+RETURNF 기초치
+
+;-------------------------
+;언더 가슴의 산출
+;-------------------------
+@CALC_BODYSIZE_UNDERBUST(대상)
+#FUNCTION
+#DIM 대상
+#DIM 기초치
+기초치 = BASE:대상:신장 * (IS_MALE(대상) ? 50 # 43) / 100
+
+SELECTCASE TALENT:대상:체격
+	CASE 체격_아이
+		TIMES 기초치, 0.90
+	CASE 체격_작은체형
+		TIMES 기초치, 0.95
+	CASE 체격_보통
+	CASE 체격_장신
+		TIMES 기초치, 1.03
+	CASE 체격_큰몸집
+		TIMES 기초치, 1.07
+	CASE 체격_거대
+		TIMES 기초치, 1.15
+ENDSELECT
+
+SELECTCASE TALENT:대상:체형
+	CASE 체형_빼빼마른
+		TIMES 기초치, 0.90
+	CASE 체형_호리호리한
+		TIMES 기초치, 0.93
+	CASE 체형_슬렌더
+		TIMES 기초치, 0.95
+	CASE 체형_풍만
+		TIMES 기초치, 1.05
+	CASE 체형_비만
+		TIMES 기초치, 1.10
+ENDSELECT
+
+RETURNF 기초치
+
+;-------------------------
+;엉덩이크기의 설정
+;-------------------------
+@SET_BODYSIZE_HIP(대상)
+#DIM 대상
+
+BASE:대상:엉덩이 = CALC_BODYSIZE_HIP(대상)
+MAXBASE:대상:엉덩이 = BASE:대상:엉덩이
+
+@CALC_BODYSIZE_HIP(대상)
+#FUNCTION
+#DIM 대상
+#DIM 기초치
+
+기초치 = BASE:대상:신장 * (IS_MALE(대상) ? 51 # 53 + TALENT:대상:체형) / 100
+
+SELECTCASE TALENT:대상:체격
+	CASE 체격_아이, 체격_작은체형
+		TIMES 기초치, 1.05
+	CASE 체격_거대
+		TIMES 기초치, 1.1
+ENDSELECT
+
+SELECTCASE GET_HIPSIZE(대상)
+	CASE -2
+		TIMES 기초치, 0.85
+	CASE -1
+		TIMES 기초치, 0.94
+	CASE 0
+	CASE 1
+		TIMES 기초치, 1.06
+	CASE 2
+		TIMES 기초치, 1.15
+ENDSELECT
+
+SELECTCASE TALENT:대상:체형
+	CASE 체형_빼빼마른
+		TIMES 기초치, 0.93
+	CASE 체형_호리호리한, 체형_슬렌더
+		TIMES 기초치, 0.97
+	CASE 체형_글래머
+		TIMES 기초치, 1.03
+	CASE 체형_풍만
+		TIMES 기초치, 1.07
+	CASE 체형_비만
+		TIMES 기초치, 1.13
+ENDSELECT
+
+SIF TALENT:대상:예쁜엉덩이
+	TIMES 기초치, 1.05
+
+기초치 = 기초치 * RAND(95, 106) / 100
+
+RETURNF 기초치
+
+;-------------------------
+;체중의 설정
+;-------------------------
+@SET_BODYSIZE_WEIGHT(대상)
+#DIM 대상
+
+BASE:대상:체중 = CALC_BODYSIZE_WEIGHT(대상)
+MAXBASE:대상:체중 = BASE:대상:체중
+
+
+
+@CALC_BODYSIZE_WEIGHT(대상)
+#FUNCTION
+#DIM 대상
+#DIM 기초치
+#DIM 젖중량
+
+IF IS_MALE(대상) && CFLAG:대상:행동불능상태 != 행동불능_아이
+	기초치 = BASE:대상:신장 * BASE:대상:신장 * 20 / 100000
+ELSE
+	기초치 = BASE:대상:신장 * BASE:대상:신장 * 19 / 100000
+	기초치 += POWER(BASE:대상:가슴 / 100, 3) / 50
+	기초치 += POWER(BASE:대상:엉덩이 / 100, 3) / 50
+ENDIF
+
+SELECTCASE TALENT:대상:체격
+	CASE 체격_아이
+		TIMES 기초치, 0.85
+	CASE 체격_작은체형
+		TIMES 기초치, 0.95
+	CASE 체격_장신
+		TIMES 기초치, 1.05
+	CASE 체격_큰몸집
+		TIMES 기초치, 1.1
+	CASE 체격_거대
+		TIMES 기초치, 1.5
+ENDSELECT
+
+SELECTCASE TALENT:대상:체형
+	CASE 체형_빼빼마른
+		TIMES 기초치, 0.85
+	CASE 체형_호리호리한
+		TIMES 기초치, 0.90
+	CASE 체형_슬렌더
+		TIMES 기초치, 0.95
+	CASE 체형_풍만
+		TIMES 기초치, 1.15
+	CASE 체형_비만
+		TIMES 기초치, 1.20
+ENDSELECT
+
+기초치 = 기초치 * RAND(95, 105) / 100
+
+RETURNF 기초치
+;-------------------------
+;자지
+;-------------------------
+@SET_BODYSIZE_PENIS(대상)
+#DIM 대상
+#DIM 사이즈기초치
+SELECTCASE GET_PENISSIZE(대상)
+	CASE -2
+		사이즈기초치 = RAND:3 + 2
+	CASE -1
+		사이즈기초치 = RAND:4 + 4
+	CASE 0
+		사이즈기초치 = RAND:4 + 8
+	CASE 1
+		사이즈기초치 = RAND:4 + 13
+	CASE 2
+		사이즈기초치 = RAND:7 + 17
+ENDSELECT
+
+사이즈기초치 = MIN(BASE:대상:신장 / 12 * 사이즈기초치 / 10, 300)
+
+BASE:대상:페니스 = 사이즈기초치
+MAXBASE:대상:페니스 = BASE:대상:페니스
+
+;-------------------------
+;아이의 중량의 취득（임신시의 체중에 가산）
+;-------------------------
+@GET_BABY_WEIGHT(대상)
+#FUNCTION
+#DIM 대상
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_양질모태)
+	RETURNF TALENT:대상:임신 ? BASE:대상:체중 / ( BASE:대상:체중 <= 200 ? 24 # 40 ) * (CFLAG:대상:임신기간 * 2) # 0
+RETURNF TALENT:대상:임신 ? BASE:대상:체중 / ( BASE:대상:체중 <= 200 ? 24 # 40 ) * CFLAG:대상:임신기간 # 0
+
+;-------------------------
+;아이의 사이즈의 취득（임신시의 허리에 가산）
+;-------------------------
+@GET_BABY_SIZE(대상)
+#FUNCTION
+#DIM 대상
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_양질모태)
+	RETURNF TALENT:대상:임신 ? BASE:대상:허리 / 20 * (CFLAG:대상:임신기간 * 2) # 0
+RETURNF TALENT:대상:임신 ? BASE:대상:허리 / 20 * CFLAG:대상:임신기간 # 0
+
+;-------------------------
+;임신하고 있는 것에 의한 가슴의 부푼 곳
+;와콜 가라사대 「2 컵 정도」라는 일인 것으로 5센치 정도?
+;-------------------------
+@GET_BABY_BUST(대상)
+#FUNCTION
+#DIM 대상
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_양질모태)
+	RETURNF TALENT:대상:임신 ? BASE:대상:가슴 / 100 * (CFLAG:대상:임신기간 * 2) # 0
+RETURNF TALENT:대상:임신 ? BASE:대상:가슴 / 100 * CFLAG:대상:임신기간 # 0
+
+;-------------------------
+;쓰리 사이즈 그 외의 표시
+;-------------------------
+@SHOW_BODYSIZE(대상)
+#DIM 대상
+#DIM 아이중량
+#DIM 아이사이즈
+#DIM 아이가슴
+
+아이중량 = GET_BABY_WEIGHT(대상)
+아이사이즈 = GET_BABY_SIZE(대상)
+아이가슴 = GET_BABY_BUST(대상)
+
+IF HAS_TAG(대상, 태그_소인) || GROUPMATCH(대상, NAME_TO_CHARA("샹하이인형"), NAME_TO_CHARA("호라이인형"), NAME_TO_CHARA("오오에도인형"), NAME_TO_CHARA("신묘마루"))
+	PRINTFORM 신장:%DECIMAL_STRING(BASE:대상:신장 / 5, 1), 7, RIGHT%cm/ 
+	PRINTFORM 체중:{BASE:대상:체중 * 5 + 아이중량, 5, RIGHT}g
+;	SIF TALENT:대상:임신
+;		PRINTFORM (임신 전{BASE:대상:체중 * 5, 5, RIGHT}g)
+	PRINTFORM /
+	PRINTFORM  B:%DECIMAL_STRING((BASE:대상:가슴 + 아이가슴) / 5, 1), 6, RIGHT%cm 
+	SIF TALENT:대상:임신
+		PRINTFORM (임신전%DECIMAL_STRING(BASE:대상:가슴 / 5, 1), 6, RIGHT%cm)
+
+	CALL PRINT_CUPSIZE(대상)
+	PRINTFORM / W:%DECIMAL_STRING((BASE:대상:허리 + 아이사이즈) / 5, 1), 6, RIGHT%cm
+	SIF TALENT:대상:임신
+		PRINTFORM (임신전%DECIMAL_STRING(BASE:대상:허리 / 5, 1), 6, RIGHT%cm)
+	PRINTFORM / H:%DECIMAL_STRING(BASE:대상:엉덩이 / 5, 1), 6, RIGHT%cm 
+	CALL PRINT_HIPSIZE(대상)
+	SIF HAS_PENIS(대상)
+		PRINTFORM / P:%DECIMAL_STRING(BASE:대상:페니스 / 5, 1), 6, RIGHT%cm
+ELSE
+	PRINTFORM 신장:%DECIMAL_STRING(BASE:대상:신장, 1), 8, RIGHT%cm/ 
+	PRINTFORM 체중:%DECIMAL_STRING(BASE:대상:체중 + 아이중량, 1), 5, RIGHT%kg
+;	SIF TALENT:대상:임신
+;		PRINTFORM (임신전%DECIMAL_STRING(BASE:대상:체중, 1), 5, RIGHT%kg)
+	PRINTFORM /
+	PRINTFORM  B:%DECIMAL_STRING(BASE:대상:가슴 + 아이가슴, 1), 6, RIGHT%cm 
+	CALL PRINT_CUPSIZE(대상)
+;	SIF TALENT:대상:임신
+;		PRINTFORM (임신전%DECIMAL_STRING(BASE:대상:가슴, 1), 6, RIGHT%cm)
+	PRINTFORM / W:%DECIMAL_STRING(BASE:대상:허리 + 아이사이즈, 1), 6, RIGHT%cm
+;	SIF TALENT:대상:임신
+;		PRINTFORM (임신전%DECIMAL_STRING(BASE:대상:허리, 1), 6, RIGHT%cm)
+	PRINTFORM / H:%DECIMAL_STRING(BASE:대상:엉덩이, 1), 6, RIGHT%cm 
+	CALL PRINT_HIPSIZE(대상)
+	SIF HAS_PENIS(대상)
+		PRINTFORM / P:%DECIMAL_STRING(BASE:대상:페니스, 1), 5, RIGHT%cm 
+ENDIF
+
+PRINTL
+
+;가슴의 컵 사이즈 생성 및 표시 처리
+@PRINT_CUPSIZE(대상)
+#DIM 대상
+VARSET LOCALS,""
+SPLIT "(-),(AAA),(AA),(A),(B),(C),(D),(E),(F),(G),(H),(I),(J),(K),(L),(M),(N),(O),(P),(Q),(R),(S),(T),(U),(V),(W),(X),(Y),(Z),(Z+) ",",",LOCALS
+
+LOCAL = (BASE:대상:가슴 + GET_BABY_BUST(대상) - CALC_BODYSIZE_UNDERBUST(대상)) / 25
+
+;문자열 변수가 약간 부자유스러운 것으로 억지로 작성
+LOCAL = MAX(LOCAL , 1)
+LOCALS:0 = %LOCALS:(LOCAL)%
+
+IF IS_MALE(대상)
+	PRINTFORM (--)
+ELSE
+	PRINTFORM %LOCALS:0%
+ENDIF
+
+@PRINT_HIPSIZE(대상)
+#DIM 대상
+SELECTCASE BASE:대상:엉덩이 / 10
+	CASE IS <= 71
+		LOCALS = XS
+	CASE 72 TO 76
+		LOCALS = 3S
+	CASE 77 TO 81
+		LOCALS = SS
+	CASE 82 TO 86
+		LOCALS = S 
+	CASE 87 TO 91
+		LOCALS = M 
+	CASE 92 TO 96
+		LOCALS = L 
+	CASE 97 TO 101
+		LOCALS = LL
+	CASE 102 TO 106
+		LOCALS = 3L
+	CASE 107 TO 111
+		LOCALS = 4L
+	CASE 112 TO 116
+		LOCALS = 5L
+	CASEELSE
+		LOCALS = XL
+ENDSELECT
+SIF IS_MALE(대상)
+	LOCALS = --
+PRINTFORM (%LOCALS:0%) 

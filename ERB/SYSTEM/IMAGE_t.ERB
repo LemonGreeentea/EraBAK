@@ -1,0 +1,1127 @@
+﻿;===========================================================================
+;	자원 표시 관련으로 사용하는 함수군
+;
+;PRINT_TARGET_IMAGE				타겟의 화상을 인원수분 표시　AA의 장소에서 부른다
+;PRINT_STATE_IMAGE				상태화면의 표시 전용
+;PRINT_IMAGE					어디라도 부르면 그림표시 해 주는 함수
+;PRINT_IMAGE_ANIMATION			연번 화상 애니메이션
+;PRINT_IMAGE_ANIMATION_정상위	정상위의 애니메이션 그림표시
+;PRINT_IMAGE_ANIMATION_후배위	후배위의 애니메이션 그림표시
+;PRINT_IMAGE_ANIMATION_사정후	사정후의 애니메이션 그림표시
+;
+;===========================================================================
+
+[SKIPSTART]
+;=========================================================
+;	타겟의 화상을 인원수분 표시
+;	텍스트 태그와 버튼 첨부 그림표시 처리
+;
+;	pTARGET		：특히 아무것도 생각하지 않고 TARGET 배열을 넣으면 된다
+;				：어디서 매우 선두 주소가 되는 사양이라고 합니다
+;=========================================================
+@PRINT_TARGET_IMAGE(pTARGET)
+#DIM REF pTARGET
+
+#DIM CONST kFontSize = 1000	;font size 배율
+#DIM iFont_Hei_mag			;1행 높이의 배율
+#DIM iPrintCount = 0		;FOR용 묘화 카운트
+#DIM iSpaceSize				;텍스트 태그의 좌우 아무것도 묘화 하지 않는 범위
+#DIMS sTemp, 3				;옷, 표정의 텐포라리
+#DIMS sRes_name				;자원명 격납
+#DIMS sSab_Res_name			;마우스 오버 쪽
+#DIMS sPrint_Text			;HTML_PRINT 하는 캐릭터라인 TEMP
+#DIM iTarget_Num = 0		;TARGET 배열 번호
+#DIM iTarget_Con = 0		;TARGET 인원수
+#DIM iPrintStart = 1		;묘화를 개시하는 TARGET 배열 번호
+#DIM iEnter_Con = 0			;개행수화상 묘화의 세로 맞댐에 사용하는 것
+#DIM iAlignment				;표정 변화의 밸런스
+#DIM Save_RESULT			;RESULT의 보호
+#DIMS sType					;스탠딩의 종류
+
+SIF !pTARGET
+	RETURN RESULT
+
+SIF GETCONFIGS("描画インターフェース") == "WINAPI"
+	THROW 描画インターフェース를 TextRenderer로 변경해 주세요
+
+;RESULT의 보호
+SAVE_RESULT = RESULT
+iTarget_Con = GET_TARGETNUM()
+iTarget_Num = FINDELEMENT(pTARGET, pTARGET:0, 1)
+sType = \@FLAG:스탠딩종류? 얼굴#스탠딩\@
+
+PRINTFORML {iTarget_Con} {iTarget_Num}
+
+;font size와 높이와의 배율차이 사사오입
+iFont_Hei_mag = GETCONFIG("一行の高さ") * kFontSize*10 / GETCONFIG("フォントサイズ")
+iFont_Hei_mag = (iFont_Hei_mag/10) + (iFont_Hei_mag%10 >= 5? 1#0)
+
+IF FLAG:화상설정
+	;-----------------
+	;표시 설정 관련
+	;-----------------
+	sPrint_Text = <p align='\@FLAG:그림표시위치?left#center\@'>
+	sPrint_Text += @"<button value='3105' title='현재：\@FLAG:스탠딩종류?얼굴#스탠딩\@'>"
+	sPrint_Text += @"스탠딩종류[\@FLAG:스탠딩종류? 얼굴#스탠딩\@]　</button>"
+	sPrint_Text += @"<button value='3103' title='현재：\@FLAG:그림표시위치?왼쪽정렬#중앙정렬\@'>"
+	sPrint_Text += @"표시 위치[\@FLAG:그림표시위치? left#center\@]　</button>"
+	sPrint_Text += @"<button value='3104' title='현재：\@FLAG:화상범위표시?ON#OFF\@'>"
+	sPrint_Text += @"범위 표시[\@FLAG:화상범위표시? ON#OFF\@]</button>"
+	sPrint_Text += "<br>"
+	
+	;-----------------
+	;표시 인원수의 증감　＜＜＞＞그리고 TARGET를 옆에 이동
+	;-----------------
+	sPrint_Text += @"<button value='{1000+pTARGET:(MAX(iTarget_Num-1,1))}' title='타겟-'>＜＜</button>"
+	sPrint_Text += @"<button value='3101' title='표시 인원수-'>[－]</button>"
+	sPrint_Text += @"표시 인원수[{FLAG:그림표시}]"
+	sPrint_Text += @"<button value='3102' title='표시 인원수＋'>[＋]</button>"
+	sPrint_Text += @"<button value='{1000+pTARGET:(MIN(iTarget_Num+1,iTarget_Con+1))}' title='타겟＋'>＞＞</button>"
+	
+	HTML_PRINT sPrint_Text
+ENDIF
+
+;묘화 개시 위치의 결정
+IF FLAG:그림표시 != 1
+	IF iTarget_Num >= (iPrintStart + FLAG:그림표시) || iTarget_Num < iPrintStart
+		;화면외
+		iPrintStart = iTarget_Num -1
+	ELSEIF iPrintStart == iTarget_Num
+		;화면 좌단
+		iPrintStart--
+	ELSEIF (iPrintStart + FLAG:그림표시)-1 ==  iTarget_Num && iTarget_Con > FLAG:그림표시
+		;화면 우단
+		iPrintStart++
+	ENDIF
+	
+	;시단 종단
+	iPrintStart = LIMIT(iPrintStart, 1, MAX(iTarget_Con-FLAG:그림표시+1, FLAG:그림표시))
+ELSEIF FLAG:그림표시 == 1
+	iPrintStart = iTarget_Num
+ENDIF
+
+
+;-----------------
+;텍스트 태그 버튼
+;-----------------
+sPrint_Text =  <p align='\@FLAG:그림표시위치?left#center\@'><nobr>
+FOR iPrintCount, iPrintStart, FLAG:그림표시 +iPrintStart
+	SIF !pTARGET:iPrintCount
+		BREAK
+	
+	;좌우폭 맞추어라　[이름] -120은[]분
+	STRLENFORMU %CALLNAME:(pTARGET:iPrintCount)%
+	iSpaceSize	=	iFont_Hei_mag-(RESULT*100)-120
+	iSpaceSize	/=	2
+	sPrint_Text += @"<shape type = 'space' param = '{iSpaceSize}'>"
+	
+	
+	SIF pTARGET == pTARGET:iPrintCount
+		sPrint_Text += @"<font color='#%CONVERT(C_AQUA,16)%'>"
+	sPrint_Text += @"<button value='{1000+pTARGET:iPrintCount}' title='타겟{iPrintCount}'>[%CALLNAME:(pTARGET:iPrintCount)%]</button>"
+	SIF pTARGET == pTARGET:iPrintCount
+		sPrint_Text += @"</font>"
+	
+	sPrint_Text += @"<shape type = 'space' param = '{iSpaceSize}'>"
+	
+NEXT
+
+HTML_PRINT sPrint_Text
+iEnter_Con = 0
+
+;-----------------
+;그림표시
+;-----------------
+sPrint_Text =  <p align='\@FLAG:그림표시위치?left#center\@'><nobr>
+FOR iPrintCount, iPrintStart, FLAG:그림표시 +iPrintStart
+	SIF !pTARGET:iPrintCount
+		BREAK
+	
+	sPrint_Text += @"<button value='{1000+pTARGET:iPrintCount}' title='타겟{iPrintCount}'>"
+	
+	;-----------------
+	;통상 자원 처리
+	;-----------------
+	SELECTCASE pTARGET:iPrintCount
+		;-----------------
+		;여기의 CASE에 resource file에 추가한 캐릭터 ID를 덧붙여 씀 한다
+		;교체 차분용의 스페이스(파일 바꾼다)
+		;-----------------
+		CASE 1 TO CHARANUM
+			IF TALENT:(pTARGET:iPrintCount):스침
+				;모브코
+				sRes_name = MOB_{CFLAG:(pTARGET:iPrintCount):모브얼굴패턴}
+			ELSE
+				sRes_name = {pTARGET:iPrintCount}
+			ENDIF
+		CASEELSE
+			sPrint_Text += @"<img src='더미' height='{iFont_Hei_mag}'></button>"
+			CONTINUE
+	ENDSELECT
+	
+	;-----------------
+	;확장 자원 처리
+	;여기에 조건식을 추가해 복장을 변화시킨다
+	;-----------------
+	VARSET sTemp
+	;IF FLAG:우후후플래그 ;나중에 알몸 추가용
+	IF 1 == 0
+		sTemp:0 = _알몸
+	ELSE
+		;-----------------
+		;복장 차분 여기에 쓴다
+		;-----------------
+		SELECTCASE pTARGET:iPrintCount
+			CASE 13
+				;히나
+				IF CLOTH:13:의상부위_상하의 == 6
+					sTemp:0 = _의복1
+				ELSE
+					sTemp:0 = _의복
+				ENDIF
+		ENDSELECT
+	ENDIF
+	
+	;-----------------
+	;표시 표정 변경
+	;기분등으로 판정
+	;-----------------
+	IF TALENT:(pTARGET:iPrintCount):기분 == -1 || CFLAG:(pTARGET:iPrintCount):빡침
+		sTemp:1 = _분노
+		iAlignment = -1
+	
+	{
+	ELSEIF TALENT:(pTARGET:iPrintCount):기분 == 1 || 
+			BASE:(pTARGET:iPrintCount):무드 == MAXBASE:(pTARGET:iPrintCount):무드 ||
+			TCVAR:(pTARGET:iPrintCount):만취
+	}
+		sTemp:1 = _미소
+		iAlignment = 1
+		;지금으로서 카스 모포문만의 예외 처리
+		IF TARGET_BLUSH_EXCEPTION(pTARGET:iPrintCount) && BLUSH(pTARGET:iPrintCount)
+			IF CFLAG:(pTARGET:iPrintCount):우후후 && !FLAG:70
+				sTemp:1 = _LOVE
+			ELSE
+				sTemp:1 = _홍조
+			ENDIF
+		ENDIF
+	ELSE
+		sTemp:1 = _통상
+		iAlignment = 0
+	ENDIF
+	
+	;-----------------
+	;마우스 오버의 표시 표정 변경
+	;함락등으로 변경
+	;-----------------
+	VARSET sSab_Res_name
+	;-----------------
+	;웃는 얼굴 표정
+	;함락 있어
+	;-----------------
+	{
+	IF TALENT:(pTARGET:iPrintCount):연인 || TALENT:(pTARGET:iPrintCount):연모 || TALENT:(pTARGET:iPrintCount):사모 || 
+		TALENT:(pTARGET:iPrintCount):섹프 || TALENT:(pTARGET:iPrintCount):애욕
+	}
+	{
+	IF TALENT:(pTARGET:iPrintCount):연인 || TALENT:(pTARGET:iPrintCount):연모 || TALENT:(pTARGET:iPrintCount):친애 || 
+		TALENT:(pTARGET:iPrintCount):정실 || TALENT:(pTARGET:iPrintCount):첩
+	}
+		iAlignment ++
+	;-----------------
+	;분노 표정
+	;함락 없음의 목욕탕 돌격
+	;함락 없음의 알몸의 조건이 이 정도 밖에 없을까
+	;-----------------
+	ELSEIF BATHCHECK(CFLAG:(pTARGET:iPrintCount):현재위치) && 목욕탕추방조건(pTARGET:iPrintCount)
+		iAlignment --
+	ENDIF
+	;-----------------
+	;분노 표정
+	;반발각인 분노 게이지
+	;-----------------
+	SIF MARK:(pTARGET:iPrintCount):반발각인
+		iAlignment --
+	SIF BASE:(pTARGET:iPrintCount):분노 >= 500
+		iAlignment --
+	;-----------------
+	;웃는 얼굴 표정
+	;무드
+	;-----------------
+	SIF BASE:(pTARGET:iPrintCount):무드 >= 650
+		iAlignment ++
+	SIF TFLAG:37 >= 50
+		iAlignment ++
+	
+	;-----------------
+	;마우스 오버 변화
+	;-----------------
+	IF sTemp:1 == "_홍조"
+		sSab_Res_name = %sType%%sTemp:0%_LOVE_%sRes_name%
+	ELSE
+		SELECTCASE iAlignment
+			CASE IS >= 1
+				sSab_Res_name = %sType%%sTemp:0%_미소 _%sRes_name%
+				SIF sTemp:1 == "_분노"
+					sTemp:1 = _통상
+			CASE IS < 0
+				sSab_Res_name = %sType%%sTemp:0%_분노 _%sRes_name%
+				SIF sTemp:1 == "_미소"
+					sTemp:1 = _통상
+			CASEELSE
+				sSab_Res_name = %sType%%sTemp:0%_통상 _%sRes_name%
+		ENDSELECT
+	ENDIF
+	sRes_name = %sType%%sTemp:0%%sTemp:1%_%sRes_name%
+	;-----------------
+	;태그 세트
+	;-----------------
+	sPrint_Text += @"<img src='%sRes_name%'"
+	sPrint_Text += @"height='{iFont_Hei_mag}'>"
+	sPrint_Text += "</button>"
+	
+NEXT
+
+HTML_PRINT sPrint_Text
+iEnter_Con++
+
+;----------------------------------
+;	수줍고 표현상으로부터 겹친다
+;	얼굴 그라의 (분)편 전용
+;----------------------------------
+IF FLAG:스탠딩종류
+	sPrint_Text =  <p align='\@FLAG:그림표시위치?left#center\@'><nobr>
+	FOR iPrintCount, iPrintStart, FLAG:그림표시 +iPrintStart
+		SIF !pTARGET:iPrintCount
+			BREAK
+		;-----------------
+		;통상 자원 처리
+		;-----------------
+		VARSET sTemp
+		SELECTCASE pTARGET:iPrintCount
+			;-----------------
+			;여기의 CASE에 resource file에 추가한 캐릭터 ID를 덧붙여 씀 한다
+			;-----------------
+			CASE 10
+				;레밀리아
+				IF CHARISMA_NOW() >= 200
+					;우선 기본 레이트의 200 기준으로
+					sRes_name = {pTARGET:iPrintCount}
+				ELSE
+					sRes_name = {pTARGET:iPrintCount}_1
+				ENDIF
+			CASE 26
+				;케이네 전용
+				IF DAY:3 == 15 && INRANGE(TIME:2, 5,7)
+					sRes_name = {pTARGET:iPrintCount}_2
+				ELSE
+					sRes_name = {pTARGET:iPrintCount}
+				ENDIF
+			CASE 138
+				;헤카티아
+				IF DAY:3 == 15 && INRANGE(TIME:2, 5,19)
+					sRes_name = {pTARGET:iPrintCount}_2
+				ELSEIF ((INRANGE(DAY:3, 1,3) || INRANGE(DAY:3, 29,31)) && !INRANGE(TIME:3/60, 5,19)) || INRANGE(CFLAG:113:현재위치, 1010,1090)
+					sRes_name = {pTARGET:iPrintCount}
+				ELSE
+					sRes_name = {pTARGET:iPrintCount}_1
+				ENDIF
+			CASE 87,100,125
+				;안경딸(아가씨) 전용 리카코, 마미조, 스미레코
+				{
+				IF EQUIP:(pTARGET:iPrintCount):액세서리== 1 ||
+					(TEQUIP:(pTARGET:iPrintCount):하반신착의상황 && TEQUIP:(pTARGET:iPrintCount):상반신착의상황)
+				}
+					;안경 있는 곳개옷 입고 있는 때
+					sTemp:1 = _眼鏡
+				ELSE
+					sTemp:1 = 
+					;스미레코 알몸 없기 때문에 안경도 벗지 않는다
+					SIF pTARGET:iPrintCount == 106
+						sTemp:1 = _眼鏡
+				ENDIF
+				sRes_name = {pTARGET:iPrintCount}
+			CASE 37,38
+				;데이트별 얼굴
+				{
+				IF FLAG:데이트상대 == TARGET ||
+					(TEQUIP:(pTARGET:iPrintCount):하반신착의상황 && TEQUIP:(pTARGET:iPrintCount):상반신착의상황)
+				}
+
+					sTemp:1 = _다른얼굴
+				ELSE
+					sTemp:1 = 
+				ENDIF
+				sRes_name = {pTARGET:iPrintCount}
+			CASE 1 TO CHARANUM - 2
+				sRes_name = {pTARGET:iPrintCount}
+			CASE CHARANUM - 1
+				;모브코
+				sRes_name = MOB_{CFLAG:(pTARGET:iPrintCount):모브얼굴패턴}
+			CASEELSE
+				sPrint_Text += @"<img src='더미' height='{iFont_Hei_mag}'>"
+				sPrint_Text += @"ypos='-{iEnter_Con * iFont_Hei_mag / 10+1}'>"
+				CONTINUE
+		ENDSELECT
+		;-----------------
+		;수줍고 표현
+		;-----------------
+		;빨간 얼굴 화상 있어 용례외 처리
+		IF TARGET_BLUSH_EXCEPTION(pTARGET:iPrintCount)
+			sTemp:0 = 더미
+			sTemp:1 = 
+		ELSEIF BLUSH(pTARGET:iPrintCount)
+			sTemp:0 = %sType%_데레%sTemp:1%_%sRes_name%
+		ELSE
+			;엇갈림이 무서워서 더미 묘화 해버린다
+			sTemp:0 = 더미
+			sTemp:1 = 
+		ENDIF
+		`
+		sPrint_Text += @"<img src='%sTemp:0%' height='{iFont_Hei_mag}'"
+		sPrint_Text += @"ypos='-{iEnter_Con * iFont_Hei_mag / 10+1}'>"
+	NEXT
+	HTML_PRINT sPrint_Text
+	iEnter_Con++
+ENDIF
+
+;----------------------------------
+;	프레임 묘화
+;----------------------------------
+IF FLAG:화상범위표시
+	sPrint_Text =  <p align='\@FLAG:그림표시위치?left#center\@'><nobr>
+	FOR iPrintCount, iPrintStart, FLAG:그림표시 +iPrintStart
+		SIF !pTARGET:iPrintCount
+			BREAK
+		IF TALENT:(pTARGET:iPrintCount):기분 == -1
+			sTemp = _분노
+		ELSEIF TALENT:(pTARGET:iPrintCount):기분 == 1
+			sTemp = _미소
+		ELSE
+			sTemp = _통상
+		ENDIF
+		SIF pTARGET == pTARGET:iPrintCount
+			sTemp = _타겟%sTemp%
+		sPrint_Text += @"<img src='프레임%sTemp%' height='{iFont_Hei_mag}'"
+		sPrint_Text += @"ypos='-{iEnter_Con * iFont_Hei_mag / 10+1}'>"
+	NEXT
+	HTML_PRINT sPrint_Text
+	iEnter_Con++
+ENDIF
+
+
+FOR iPrintCount, iEnter_Con+1, (kFontSize/100)
+	HTML_PRINT "<br>"
+NEXT
+RESULT = SAVE_RESULT
+RETURN RESULT
+
+[SKIPEND]
+
+;=========================================================
+;	신분 화면의 그림표시
+;
+;	iID		：캐릭터 ID와 같은 자원명을 표시합니다
+;	iSize	：폰트에 대한 사이즈%수치세로 기준 종횡비유지 생략으로 1000(10배)
+;=========================================================
+@PRINT_STATE_IMAGE(iID, eText="통상", iSize=1000)
+#DIM iID
+#DIM iSize
+#DIMS sPrint_Text
+#DIMS sTemp, 3
+#DIMS eText
+#DIM iFont_Hei_mag
+#DIM iEnter_Con
+
+;SIF !iID
+;	RETURN RESULT
+
+iFont_Hei_mag = GETCONFIG("一行の高さ") * iSize*10 / GETCONFIG("フォントサイズ")
+iFont_Hei_mag = (iFont_Hei_mag/10) + (iFont_Hei_mag%10 >= 5? 1#0)
+
+sPrint_Text = <p align='left'>
+sTEMP = _의복
+SELECTCASE iID
+	CASE 1
+		;시로코(라이딩)
+		IF CLOTH:iID:의상부위_상하의 == 8
+			sTemp:0 = _라이딩
+		ELSEIF CLOTH:iID:의상부위_상하의 == 10
+			sTemp:0 = _수영복
+		ELSEIF CLOTH:iID:의상부위_상하의 == 9
+			sTemp:0 = _체육복
+		ELSE
+			sTemp:0 = _의복
+		ENDIF
+	CASE 2
+		;호시노(수영복, 체육복)
+		IF CLOTH:iID:의상부위_상하의 == 10
+			sTemp:0 = _수영복
+		ELSEIF CLOTH:iID:의상부위_상하의 == 9
+			sTemp:0 = _체육복
+		ELSE
+			sTemp:0 = _의복
+		ENDIF
+	CASE 3
+		;세리카(수영복, 정월, 체육복)
+		IF CLOTH:iID:의상부위_상하의 == 10
+			sTemp:0 = _수영복
+		ELSEIF CLOTH:iID:의상부위_상하의 == 2
+			sTemp:0 = _정월				
+		ELSEIF CLOTH:iID:의상부위_상하의 == 9
+			sTemp:0 = _체육복
+		ELSE
+			sTemp:0 = _의복
+		ENDIF
+	CASE 4
+		;노노미(수영복, 체육복)
+		IF CLOTH:iID:의상부위_상하의 == 10
+			sTemp:0 = _수영복
+		ELSEIF CLOTH:iID:의상부위_상하의 == 9
+			sTemp:0 = _체육복
+		ELSE
+			sTemp:0 = _의복
+		ENDIF
+	CASE 5
+		;아야네(수영복, 체육복)
+		IF CLOTH:iID:의상부위_상하의 == 10
+			sTemp:0 = _수영복
+		ELSEIF CLOTH:iID:의상부위_상하의 == 9
+			sTemp:0 = _체육복
+		ELSE
+			sTemp:0 = _의복
+		ENDIF
+	CASE 13 
+		;히나(수영복)
+		IF CLOTH:iID:의상부위_상하의 == 6
+			sTemp:0 = _학교수영복
+		ELSE
+			sTemp:0 = _의복
+		ENDIF
+	CASE 16
+		;치나츠(온천) 
+		IF CLOTH:iID:의상부위_상하의 == 3
+			sTemp:0 = _온천
+		ELSE
+			sTemp:0 = _의복
+		ENDIF
+ENDSELECT
+
+SELECTCASE iID
+;-----------------
+;복장 변경에 따른 화상변경 (정보창)
+;-----------------
+CASE 0
+	IF IS_MALE(iID)
+		sPrint_Text += @"<img src='스탠딩_의복_통상_남' height='{iFont_Hei_mag}'>"
+	ELSE
+		sPrint_Text += @"<img src='스탠딩_의복_통상_여' height='{iFont_Hei_mag}'>"
+	ENDIF
+CASE 1 TO CHARANUM
+	sPrint_Text += @"<img src='\@FLAG:스탠딩종류?얼굴#스탠딩\@%sTemp:0%_%eText%_{iID}' height='{iFont_Hei_mag}'>"
+CASEELSE
+	IF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
+		sPrint_Text += @"<img src='스탠딩_의복_통상_도둑' height='{iFont_Hei_mag}'>"
+	ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_홉고블린)
+		sPrint_Text += @"<img src='스탠딩_의복_통상_홉고블린' height='{iFont_Hei_mag}'>"
+	ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_외래인)
+		sPrint_Text += @"<img src='스탠딩_의복_통상_외래인' height='{iFont_Hei_mag}'>"
+	ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_촉수)
+		sPrint_Text += @"<img src='스탠딩_의복_통상_촉수' height='{iFont_Hei_mag}'>"
+	ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_자경단)
+		sPrint_Text += @"<img src='스탠딩_의복_통상_자경단' height='{iFont_Hei_mag}'>"
+	ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_서큐버스)
+		sPrint_Text += @"<img src='스탠딩_의복_통상_서큐버스' height='{iFont_Hei_mag}'>"
+	ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_광신도)
+		sPrint_Text += @"<img src='스탠딩_의복_통상_광신도' height='{iFont_Hei_mag}'>"
+	ELSE
+		RETURN RESULT
+	ENDIF
+;	sPrint_Text += @"<img src='더미' height='{iFont_Hei_mag}'>"
+ENDSELECT
+
+HTML_PRINT sPrint_Text
+iEnter_Con = 1
+
+IF FLAG:화상범위표시
+	sPrint_Text =  <p align='left'><nobr>
+	sPrint_Text += @"<img src='프레임_%eText%' height='{iFont_Hei_mag}'"
+	sPrint_Text += @"ypos='-{(iEnter_Con) * iFont_Hei_mag / 10+1}'>"
+	HTML_PRINT sPrint_Text
+	iEnter_Con++
+ENDIF
+
+FOR LOCAL, iEnter_Con+1, (iSize/100)
+	HTML_PRINT "<br>"
+NEXT
+HTML_PRINT "<br>"
+HTML_PRINT "<br>"
+RETURN RESULT
+
+;=========================================================
+;	조교 화면의 그림표시
+;
+;	iID		：캐릭터 ID와 같은 자원명을 표시합니다
+;	iSize	：폰트에 대한 사이즈%수치세로 기준 종횡비유지 생략으로 1000(10배)
+;	iEnter_Wid	: 그림의 X축 위치 배율
+;=========================================================
+@PRINT_PLAY_IMAGE(iSize=1000)
+#DIM iID
+#DIM iSize
+#DIMS sTemp, 3
+#DIMS sPrint_Text
+#DIMS eMotion_Text
+#DIM iFont_Hei_mag
+#DIM iEnter_Con
+#DIM iEnter_Wid
+#DIM dIsplay_Num
+
+dIsplay_Num = 0
+iEnter_Con = 0
+iEnter_Wid = 0
+iFont_Hei_mag = GETCONFIG("一行の高さ") * iSize*10 / GETCONFIG("フォントサイズ")
+iFont_Hei_mag = (iFont_Hei_mag/10) + (iFont_Hei_mag%10 >= 5? 1#0)
+
+VARSET sTemp
+
+
+
+;뒷부분 최대 캐릭터 수
+FOR iID, 1, CHARANUM
+;	IF CFLAG:(iID):조교참가플래그
+	IF IS_PARTICIPATE_TRAIN(iID)
+		;-----------------
+		;복장 변경에 따른 화상변경 (조교시)
+		;-----------------
+		sTemp:0 = _의복
+		SELECTCASE iID
+			CASE 1
+				;시로코(라이딩, 수영복, 체육복)
+				IF CLOTH:iID:의상부위_상하의 == 8
+					sTemp:0 = _라이딩
+				ELSEIF CLOTH:iID:의상부위_상하의 == 10
+					sTemp:0 = _수영복
+				ELSEIF CLOTH:iID:의상부위_상하의 == 9
+					sTemp:0 = _체육복
+				ELSE
+					sTemp:0 = _의복
+				ENDIF
+			CASE 2
+				;호시노(수영복, 체육복)
+				IF CLOTH:iID:의상부위_상하의 == 10
+					sTemp:0 = _수영복
+				ELSEIF CLOTH:iID:의상부위_상하의 == 9
+					sTemp:0 = _체육복
+				ELSE
+					sTemp:0 = _의복
+				ENDIF
+			CASE 3
+				;세리카(수영복, 정월, 체육복)
+				IF CLOTH:iID:의상부위_상하의 == 10
+					sTemp:0 = _수영복
+				ELSEIF CLOTH:iID:의상부위_상하의 == 2
+					sTemp:0 = _정월				
+				ELSEIF CLOTH:iID:의상부위_상하의 == 9
+					sTemp:0 = _체육복
+				ELSE
+					sTemp:0 = _의복
+				ENDIF
+			CASE 4
+				;노노미(수영복, 체육복)
+				IF CLOTH:iID:의상부위_상하의 == 10
+					sTemp:0 = _수영복
+				ELSEIF CLOTH:iID:의상부위_상하의 == 9
+					sTemp:0 = _체육복
+				ELSE
+					sTemp:0 = _의복
+				ENDIF
+			CASE 5
+				;아야네(수영복, 체육복)
+				IF CLOTH:iID:의상부위_상하의 == 10
+					sTemp:0 = _수영복
+				ELSEIF CLOTH:iID:의상부위_상하의 == 9
+					sTemp:0 = _체육복
+				ELSE
+					sTemp:0 = _의복
+				ENDIF
+			CASE 13 
+				;히나(수영복)
+				IF CLOTH:iID:의상부위_상하의 == 6
+					sTemp:0 = _학교수영복
+				ELSE
+					sTemp:0 = _의복
+				ENDIF
+			CASE 16
+				;치나츠(온천) 
+				IF CLOTH:iID:의상부위_상하의 == 3
+					sTemp:0 = _온천
+				ELSE
+					sTemp:0 = _의복
+				ENDIF
+		ENDSELECT
+
+		SIF FLAG:그림표시 == dIsplay_Num
+			BREAK
+		IF dIsplay_Num == 5
+			iEnter_Con = 0
+			iEnter_Wid = 0
+		ENDIF
+		eMotion_Text = %TOSTR_EMOTION(iID)%
+		IF GROUPMATCH(eMotion_Text, "행복", "기쁨")
+			sTemp:1 = _미소
+		ELSEIF GROUPMATCH(eMotion_Text, "원한", "분노", "분개")
+			sTemp:1 = _분노
+		ELSE
+			sTemp:1 = _통상
+		ENDIF
+		sPrint_Text = <p align='left'><shape type = 'space'param = '{1000 * (iEnter_Wid)}'>
+		SELECTCASE iID
+		CASE 1 TO CHARANUM
+			sPrint_Text += @"<img src='\@FLAG:스탠딩종류?얼굴#스탠딩\@%sTemp:0%%sTemp:1%_{iID}' height='{iFont_Hei_mag}' ypos='-{(iEnter_Con) * iFont_Hei_mag / 10+1}'>"
+		CASEELSE
+			sPrint_Text += @"<img src='더미' height='{iFont_Hei_mag}'>"
+		ENDSELECT
+		HTML_PRINT sPrint_Text
+		iEnter_Con++
+		IF FLAG:화상범위표시
+			sPrint_Text =  <p align='left'><nobr><shape type = 'space'param = '{1000 * (iEnter_Wid)}'>
+			sPrint_Text += @"<img src='프레임%sTemp:1%' height='{iFont_Hei_mag}'"
+			sPrint_Text += @"ypos='-{(iEnter_Con) * iFont_Hei_mag / 10+1}'>"
+			HTML_PRINT sPrint_Text
+		ELSE
+			sPrint_Text =  <p align='left'><nobr><shape type = 'space'param = '{1000 * (iEnter_Wid)}'>
+			sPrint_Text += @"<img src='프레임_공백' height='{iFont_Hei_mag}'"
+			sPrint_Text += @"ypos='-{(iEnter_Con) * iFont_Hei_mag / 10+1}'>"
+			HTML_PRINT sPrint_Text
+		ENDIF
+		iEnter_Con++
+		iEnter_Wid++
+		dIsplay_Num++
+	ENDIF
+NEXT
+
+IF dIsplay_Num > 5
+	FOR LOCAL, dIsplay_Num - 5, 5
+		HTML_PRINT "<br>"
+		HTML_PRINT "<br>"
+	NEXT
+ELSE
+	FOR LOCAL, dIsplay_Num, 5
+		HTML_PRINT "<br>"
+		HTML_PRINT "<br>"
+	NEXT
+ENDIF
+
+RETURN RESULT
+
+;=========================================================
+;	자원의 표시
+;	표시 후 사이즈에 맞추어 개행을 실시한다
+;	PRINT_IMG 의 확장같은 느낌 문중의 삽화적으로 사용할 수 있다고 생각한다
+;
+;	sRes_Name	：자원의 이름 캐릭터라인
+;	iSize		：일행의 높이에 대한 사이즈%수치세로 기준 종횡비유지 생략으로 1000(10배)
+;	sAlign		：align 속성 생략으로 왼쪽 맞춤　left, center, right의 삼종을 지정할 수 있습니다
+;=========================================================
+@PRINT_IMAGE(sRes_Name, iSize=1000, sAlign="left")
+#DIMS sRes_Name
+#DIM iSize
+#DIMS sAlign
+#DIMS sPrint_Text
+#DIM iEnter_Con
+#DIM iFont_Hei_mag
+
+SIF GETCONFIGS("描画インターフェース") == "WINAPI"
+	THROW 描画インターフェース를 TextRenderer로 변경해 주세요
+
+SIF !FLAG:그림표시 || sRes_Name == ""
+	RETURN RESULT
+
+iEnter_Con = 0
+iFont_Hei_mag = GETCONFIG("一行の高さ") * iSize*10 / GETCONFIG("フォントサイズ")
+iFont_Hei_mag = (iFont_Hei_mag/10) + (iFont_Hei_mag%10 >= 5? 1#0)
+
+HTML_PRINT @"<p align='%sAlign%'><nobr><img src='%sRes_Name%' height='{iFont_Hei_mag}'>"
+iEnter_Con++
+
+IF FLAG:화상범위표시
+	sPrint_Text =  <p align='%sAlign%'><nobr>
+	sPrint_Text += @"<img src='프레임_통상' height='{iFont_Hei_mag}'"
+	sPrint_Text += @"ypos='-{iEnter_Con * iFont_Hei_mag / 10+1}'>"
+	HTML_PRINT sPrint_Text
+	iEnter_Con++
+ENDIF
+
+
+FOR LOCAL, iEnter_Con-1, (iSize/100)-1
+	HTML_PRINT "<br>"
+NEXT
+RETURN RESULT
+
+;=========================================================
+;	연번 화상 애니메이션
+;
+;	sRes_Name	：자원의 이름 캐릭터라인 이 이름의 뒤에 연번 숫자를 붙인다
+;	iStart		：개시 번호
+;	iEnd		：개시부터의 묘화 매수
+;	iAnime_Num	：전체의 애니메이션 반복 회수 생략 0으로 옵션 설정한 플래그 회수가 됩니다
+;	iRollback	：롤백(rollback) 시킬까 플래그
+;	iWait		：1매의 표시 시간
+;	iSize		：일행의 높이에 대한 사이즈%수치세로 기준 종횡비유지 생략으로 1000(10배)
+;	sAlign		：align 속성 생략으로 왼쪽 맞춤　left, center, right의 삼종을 지정할 수 있습니다
+;=========================================================
+@PRINT_IMAGE_ANIMATION(sRes_Name,iStart=0,iEnd=4,iAnime_Num=0,iRollback=1,iWait=100,iSize=1000,sAlign="left")
+#DIMS sRes_Name
+#DIM iStart
+#DIM iEnd
+#DIM iAnime_Num
+#DIM iRollback
+#DIM iWait
+#DIM iSize
+#DIMS sAlign
+
+
+SIF !FLAG:그림표시 || sRes_Name == ""
+	RETURN RESULT
+
+;SIF !FLAG:애니메이션
+;	RETURN RESULT
+
+SIF !iAnime_Num
+	iAnime_Num = FLAG:애니메이션
+
+FOR LOCAL,0,iAnime_Num
+	FOR LOCAL:1,iStart,(iStart+iEnd)
+		CALL PRINT_IMAGE(@"%sRes_Name%{LOCAL:1}",iSize,sAlign)
+		TWAIT iWait, 0
+		CLEARLINE iSize/100
+	NEXT
+	
+	;ロールバックさせるか
+	SIF !iRollback
+		CONTINUE
+
+	FOR LOCAL:1,(iStart+iEnd)-2,iStart-1,-1
+		CALL PRINT_IMAGE(@"%sRes_Name%{LOCAL:1}",iSize,sAlign)
+		TWAIT iWait, 0
+		CLEARLINE iSize/100
+	NEXT
+NEXT
+RETURN RESULT
+[SKIPSTART]
+;=========================================================
+;	정상위のアニメーション画像表示
+;
+;	sRes_Name	：最後に表示する画像のリソース名
+;	iSize		：一行の高さに対するサイズ％数値　縦基準　縦横比維持　省略で1000(10倍)
+;	sAlign		：align属性　省略で左寄せ　left, center, rightの三種が指定できます
+;=========================================================
+@PRINT_IMAGE_ANIMATION_정상위(sRes_Name,iSize=1000,sAlign="left")
+#DIMS sRes_Name
+#DIM iSize
+#DIMS sAlign
+
+#DIM iStart
+#DIMS sPrint_Res_Name
+#DIMS sAnime_Res_Name
+
+SIF !FLAG:그림표시 || sRes_Name == "" || !FLAG:삽화표시
+	RETURN RESULT
+
+IF sRes_Name == "정상위_사정"
+	sPrint_Res_Name = %sRes_Name%_{FLAG:사정화상종류}
+ELSE
+	sPrint_Res_Name = %sRes_Name%
+ENDIF
+
+IF !FLAG:애니메이션
+	CALL PRINT_IMAGE(sPrint_Res_Name,iSize,sAlign)
+	RETURN RESULT
+ENDIF
+
+sAnime_Res_Name = 정상위_삽입_
+
+IF sRes_Name == "정상위_사정" || sRes_Name == "정상위_절정"
+	iStart = 1
+ELSE
+	iStart= 0
+ENDIF
+
+CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,iStart,4-iStart,FLAG:애니메이션,1,,iSize,sAlign)
+CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,iStart,4-iStart,1,0,,iSize,sAlign)
+
+IF sRes_Name == "정상위_사정"
+	sAnime_Res_Name = 정상위_사정_{FLAG:사정화상종류}_
+	CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,0,2,FLAG:애니메이션,0,,iSize,sAlign)
+	CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,2,2,FLAG:애니메이션,1,,iSize,sAlign)
+ENDIF
+CALL PRINT_IMAGE(sPrint_Res_Name,iSize,sAlign)
+
+RETURN RESULT
+
+;=========================================================
+;	후배위のアニメーション画像表示
+;	コマ数など変わったので別で
+;
+;	sRes_Name	：最後に表示する画像のリソース名
+;	iSize		：一行の高さに対するサイズ％数値　縦基準　縦横比維持　省略で1000(10倍)
+;	sAlign		：align属性　省略で左寄せ　left, center, rightの三種が指定できます
+;=========================================================
+@PRINT_IMAGE_ANIMATION_후배위(sRes_Name,대상=0,iSize=1000,sAlign="left")
+#DIMS sRes_Name
+#DIM 대상
+#DIM iSize
+#DIMS sAlign
+
+#DIMS sPrint_Res_Name
+#DIMS sAnime_Res_Name
+#DIM iAnimeCon
+
+SIF !FLAG:그림표시 || sRes_Name == "" || !FLAG:삽화표시
+	RETURN RESULT
+
+IF sRes_Name == "후배위_사정"
+	sPrint_Res_Name = %sRes_Name%_{FLAG:사정화상종류}
+	SIF NOWEX:대상:사정 > 6
+		sPrint_Res_Name = %sRes_Name%_{FLAG:사정화상종류}_9
+ELSE
+	sPrint_Res_Name = %sRes_Name%
+ENDIF
+
+IF !FLAG:애니메이션
+	CALL PRINT_IMAGE(sPrint_Res_Name,iSize,sAlign)
+	RETURN RESULT
+ENDIF
+
+
+IF sRes_Name == "후배위_삽입"
+	
+	iAnimeCon = FLAG:애니메이션/2?FLAG:애니메이션/2#1
+	CALL PRINT_IMAGE_ANIMATION("후배위_삽입_",0,6,iAnimeCon,1,,iSize,sAlign)
+	
+	iAnimeCon = (FLAG:애니메이션-iAnimeCon)?FLAG:애니메이션-iAnimeCon#-1
+	CALL PRINT_IMAGE_ANIMATION("후배위_삽입2_",0,12,iAnimeCon,0)
+ELSE
+	IF sRes_Name == "후배위_절정"
+		iAnimeCon = FLAG:애니메이션/2?FLAG:애니메이션/2#1
+		CALL PRINT_IMAGE_ANIMATION("후배위_삽입2_",0,12,iAnimeCon,0)
+	ENDIF
+	
+	CALL PRINT_IMAGE_ANIMATION("후배위_절정_",0,4,FLAG:애니메이션,0)
+	CALL PRINT_IMAGE_ANIMATION("후배위_절정_",0,2,1,0)
+ENDIF
+IF sRes_Name == "후배위_사정"
+	sAnime_Res_Name = 후배위_사정_{FLAG:사정화상종류}_
+	CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,0,8,1,0,,iSize,sAlign)
+	CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,6,2,FLAG:애니메이션,1,,iSize,sAlign)
+	
+	;大量なら追加で
+	IF NOWEX:대상:사정 > 6
+		CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,8,2,FLAG:애니메이션,1,,iSize,sAlign)
+	ENDIF
+	
+ENDIF
+CALL PRINT_IMAGE(sPrint_Res_Name,iSize,sAlign)
+
+RETURN RESULT
+;=========================================================
+;	후배위のアニメーション画像表示
+;	コマ数など変わったので別で
+;
+;	sRes_Name	：最後に表示する画像のリソース名
+;	iSize		：一行の高さに対するサイズ％数値　縦基準　縦横比維持　省略で1000(10倍)
+;	sAlign		：align属性　省略で左寄せ　left, center, rightの三種が指定できます
+;=========================================================
+@PRINT_IMAGE_ANIMATION_파이즈리(sRes_Name,iSize=1000,sAlign="left")
+#DIMS sRes_Name
+#DIM iSize
+#DIMS sAlign
+
+#DIMS sPrint_Res_Name
+#DIMS sAnime_Res_Name
+#DIM iAnimeCon
+
+SIF !FLAG:그림표시 || sRes_Name == "" || !FLAG:삽화표시
+	RETURN RESULT
+
+IF sRes_Name == "파이즈리_사정"
+	sPrint_Res_Name = %sRes_Name%_{FLAG:사정화상종류}
+ELSE
+	sPrint_Res_Name = %sRes_Name%
+ENDIF
+
+sAnime_Res_Name = 파이즈리_삽입_
+
+IF !FLAG:애니메이션
+	CALL PRINT_IMAGE(sPrint_Res_Name,iSize,sAlign)
+	RETURN RESULT
+ENDIF
+
+CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,0,5,FLAG:애니메이션,1,,iSize,sAlign)
+CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,0,5,1,0,,iSize,sAlign)
+
+IF sRes_Name == "파이즈리_사정"
+	sAnime_Res_Name = 파이즈리_사정_{FLAG:사정화상종류}_
+	CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,0,5,FLAG:애니메이션,0,,iSize,sAlign)
+	CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,4,1,FLAG:애니메이션,1,,iSize,sAlign)
+ENDIF
+
+CALL PRINT_IMAGE(sPrint_Res_Name,iSize,sAlign)
+
+RETURN RESULT
+;=========================================================
+;	사정後のアニメーション画像表示
+;
+;	sRes_Name	：最後に表示する画像のリソース名
+;	iSize		：一行の高さに対するサイズ％数値　縦基準　縦横比維持　省略で1000(10倍)
+;	sAlign		：align属性　省略で左寄せ　left, center, rightの三種が指定できます
+;=========================================================
+@PRINT_IMAGE_ANIMATION_사정후(sRes_Name="정상위_질내사정",iSize=1000,sAlign="left")
+#DIMS sRes_Name
+#DIM iSize
+#DIMS sAlign
+
+#DIM iWait
+#DIMS sAnime_Res_Name
+#DIMS sType
+#DIM SAVE_RESULT
+
+SIF !FLAG:그림표시 || sRes_Name == "" || !FLAG:삽화표시
+	RETURN RESULT
+
+IF !FLAG:애니메이션
+	CALL PRINT_IMAGE(sRes_Name,iSize,sAlign)
+	RETURN RESULT
+ENDIF
+SAVE_RESULT = RESULT
+SPLIT sRes_Name,"_",sType
+
+IF sType == "후배위"
+	sAnime_Res_Name = %sType%_사정_{FLAG:사정화상종류}_\@NOWEX:MASTER:사정>1?9#7\@
+ELSE
+	sAnime_Res_Name = %sType%_사정_{FLAG:사정화상종류}_3
+ENDIF
+
+iWait = 500
+CALL PRINT_IMAGE(@"%sAnime_Res_Name%",iSize,sAlign)
+sAnime_Res_Name = %sType%_삽입_
+TWAIT iWait, 0
+CLEARLINE iSize/100
+
+iWait = 100
+FOR LOCAL,3,0,-1
+	CALL PRINT_IMAGE(@"%sAnime_Res_Name%{LOCAL}",iSize,sAlign)
+	TWAIT iWait, 0
+	CLEARLINE iSize/100
+NEXT
+
+;후배위のみアニメ
+IF sType == "후배위"
+	sAnime_Res_Name = %sType%_사정후_
+	CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,0,2,1,0,iWait,iSize,sAlign)
+	CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,2,2,0,0,iWait,iSize,sAlign)
+ENDIF
+
+CALL PRINT_IMAGE(sRes_Name,iSize,sAlign)
+
+RESULT = SAVE_RESULT
+RETURN RESULT
+
+;홍조する条件
+;@BLUSH(ARG)
+;#FUNCTION
+;SIF TCVAR:ARG:만취 || TCVAR:ARG:미약 || TCVAR:ARG:발정
+;	RETURNF 1
+;SIF GETPALAMLV(PALAM:ARG:호의, 15) >= 10
+;	RETURNF 1
+;SIF GETPALAMLV(PALAM:ARG:욕정, 15) + CFLAG:ARG:욕구불만도 / 200 >= 8
+;	RETURNF 1
+;SIF CFLAG:ARG:우후후 && (GETPALAMLV(PALAM:ARG:욕정, 15) + CFLAG:ARG:욕구불만도 / 200 >= 5)
+;	RETURNF 1
+;RETURNF 0
+;
+;@TARGET_BLUSH_EXCEPTION(ARG)
+;#FUNCTION
+;SELECTCASE ARG
+;	CASE 29,69
+;		SIF INRANGE(CFLAG:ARG:현재위치, 200, 299) && TEQUIP:ARG:하반신착의상황 && TEQUIP:ARG:상반신착의상황
+;			RETURNF 1
+;ENDSELECT
+;SIF CFLAG:ARG:モブ顔パターン == 5
+;	RETURNF 1
+;RETURNF 0
+
+@GET_TARGETNUM()
+#FUNCTION
+RETURNF MAX(0, FINDELEMENT(TARGET, 0) - 1)
+[SKIPEND]
+;=========================================================
+;	VS 화면의 그림표시
+;
+;	iID		：캐릭터 ID와 같은 자원명을 표시합니다
+;	iSize	：폰트에 대한 사이즈%수치세로 기준 종횡비유지 생략으로 1000(10배)
+;=========================================================
+@PRINT_VS(VS_1, VS_2)
+#DIM VS_1
+#DIM VS_2
+#DIMS TEMP_1
+#DIMS TEMP_2
+
+IF VS_1 >= 0 && VS_2 >= 0
+	TEMP_1 = {VS_1}
+	TEMP_2 = {VS_2}
+	IF VS_1 == 0
+		IF IS_MALE(VS_1)
+			TEMP_1 = 남
+		ELSE
+			TEMP_1 = 여
+		ENDIF
+	ELSEIF VS_2 == 0
+		IF IS_MALE(VS_2)
+			TEMP_2 = 남
+		ELSE
+			TEMP_2 = 여
+		ENDIF
+	ENDIF
+	IF CFLAG:VS_1:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
+		TEMP_1 = 도둑
+	ELSEIF CFLAG:VS_1:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_홉고블린)
+		TEMP_1 = 홉고블린
+	ELSEIF CFLAG:VS_1:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_외래인)
+		TEMP_1 = 외래인
+	ELSEIF CFLAG:VS_1:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_촉수)
+		TEMP_1 = 촉수
+	ELSEIF CFLAG:VS_1:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_자경단)
+		TEMP_1 = 자경단
+	ELSEIF CFLAG:VS_1:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_서큐버스)
+		TEMP_1 = 서큐버스
+	ELSEIF CFLAG:VS_1:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_광신도)
+		TEMP_1 = 광신도
+	ENDIF
+	IF CFLAG:VS_2:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
+		TEMP_2 = 도둑
+	ELSEIF CFLAG:VS_2:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_홉고블린)
+		TEMP_2 = 홉고블린
+	ELSEIF CFLAG:VS_2:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_외래인)
+		TEMP_2 = 외래인
+	ELSEIF CFLAG:VS_2:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_촉수)
+		TEMP_2 = 촉수
+	ELSEIF CFLAG:VS_2:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_자경단)
+		TEMP_2 = 자경단
+	ELSEIF CFLAG:VS_2:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_서큐버스)
+		TEMP_2 = 서큐버스
+	ELSEIF CFLAG:VS_2:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_광신도)
+		TEMP_2 = 광신도
+	ENDIF
+ELSE
+	RETURN
+ENDIF
+
+FOR COUNT:0, 0, 10
+	PRINT_IMG @"스탠딩_의복_통상_P_%TEMP_1%_{COUNT:0}"
+	PRINT_IMG @"VS_P_{COUNT:0}"
+	PRINT_IMG @"스탠딩_의복_통상_P_%TEMP_2%_{COUNT:0}"
+	PRINTL
+NEXT
+
+RETURN

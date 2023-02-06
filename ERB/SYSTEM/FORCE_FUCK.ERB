@@ -1,0 +1,554 @@
+﻿;-------------------------------------------------
+;섹스 했습니다 적인 장면에서 범용적으로 이용하는 함수
+;부위 문자열에는 가산하고 싶은 경험치를 칸마 단락으로 기술
+;추가처리 문자열에는 그 외 추가의 처리를 칸마 단락으로 기술
+;질내사정 상대 ID는 추가처리 문자열에 질내사정을 포함했을 경우에 사용
+;키스 상대, 섹스 상대, 시츄는 각각 대상이 「키스상실」 「처녀상실」 「Ａ처녀상실」을 지정했을 경우에 사용.
+;-------------------------------------------------
+@FUCK(대상, 경험치문자열, 추가처리문자열, 질내사정상대ID = 0, 키스상대 = "", 섹스상대 = "", 동정상대 = "", 시츄 = "")
+#DIM 대상
+#DIMS 경험치문자열
+#DIMS 추가처리문자열
+#DIM 질내사정상대ID
+#DIMS 키스상대
+#DIMS 섹스상대
+#DIMS 동정상대
+#DIMS 시츄
+
+CALL FUCK_EXP_PROCESS(대상, 경험치문자열)
+CALL FUCK_EXTRA_PROCESS(대상, 경험치문자열, 추가처리문자열, 질내사정상대ID, 키스상대, 섹스상대, 동정상대, 시츄)
+CALL TRAIN_AUTO_ABLUP(대상, 0)
+CALL CHECK_SEXUAL_PREFERENCE(대상)
+;-------------------------------------------------
+;특수 세력용 래퍼
+;-------------------------------------------------
+@FUCK_SP(대상, 경험치문자열, 추가처리문자열, 세력번호, 질내사정상대ID = 0, 키스상대 = "", 섹스상대 = "", 동정상대 = "", 시츄 = "")
+#DIM 대상
+#DIMS 경험치문자열
+#DIMS 추가처리문자열
+#DIM 세력번호
+#DIM 질내사정상대ID
+#DIMS 키스상대
+#DIMS 섹스상대
+#DIMS 동정상대
+#DIMS 시츄
+ABL:대상:주도도Ｎ -= (15 + RAND:15) * (MIN(2 , (TALENT:대상:Ｍ기질 + TALENT:대상:겁쟁이 + TALENT:대상:아픔에약함 + TALENT:대상:정조관념 + TALENT:대상:비관적)) + 2) / (TALENT:대상:꿋꿋함 * 2 + TALENT:대상:정조관념없음 + TALENT:대상:프라이드낮음 + TALENT:대상:감정결핍 + IS_FALLEN_TO_SP_COUNTRY(대상) * 3 + 1) / MAX(1 , SP_TRAIN_COUNT:대상:SP_COUNTRY_TO_CONST(세력번호))
+ABL:대상:주도도Ｕ -= (10 + RAND:10) * (MIN(3 , (TALENT:대상:Ｍ기질 + TALENT:대상:도착적 + TALENT:대상:해방 + TALENT:대상:쾌감에솔직 + TALENT:대상:중독하기쉽다 + TALENT:대상:겁쟁이 + TALENT:대상:아픔에약함)) + 3) / (TALENT:대상:자제심 + TALENT:대상:꿋꿋함 + TALENT:대상:감정결핍 + IS_FALLEN_TO_SP_COUNTRY(대상) * 3 + 1) / MAX(1 , SP_TRAIN_COUNT:대상:SP_COUNTRY_TO_CONST(세력번호))
+ABL:대상:도착도 += (10 + RAND:5) * MIN(5 , (TALENT:대상:Ｍ기질 + TALENT:대상:도착적 + TALENT:대상:해방 + TALENT:대상:쾌감에솔직 + TALENT:대상:중독하기쉽다) * 2 + 1) / (TALENT:대상:자제심 + TALENT:대상:무관심 + TALENT:대상:감정결핍 + IS_FALLEN_TO_SP_COUNTRY(대상) * 3 + 1) / MAX(1 , SP_TRAIN_COUNT:대상:SP_COUNTRY_TO_CONST(세력번호) - 2)
+ABL:대상:주도도Ｎ = LIMIT(ABL:대상:주도도Ｎ, -1000, 1000)
+ABL:대상:주도도Ｕ = LIMIT(ABL:대상:주도도Ｕ, -1000, 1000)
+ABL:대상:도착도 = LIMIT(ABL:대상:도착도, 0, 1000)
+IF SP_TRAIN_IS_DECREASE_CFLAG(대상, 세력번호)
+	추가처리문자열 '= 추가처리문자열 + ", CFLAG 감소"
+	IF CFLAG:대상:소속 == 세력번호
+		CALL CHANGE_RELATION_O_TO_C(대상, 세력번호, 30, -30)
+	ELSE
+		CALL CHANGE_RELATION_O_TO_C(대상, 세력번호, 30, -30)
+		CALL CHANGE_RELATION_O_TO_C(대상, CFLAG:대상:소속, -30, 30)
+	ENDIF
+ENDIF
+CALL FUCK(대상, 경험치문자열, 추가처리문자열, 질내사정상대ID, 키스상대, 섹스상대, 동정상대, 시츄)
+
+
+
+;-------------------------------------------------
+;FUCK의 당의용
+;강간
+;-------------------------------------------------
+@FUCK_RAPE(대상, 질내사정상대ID, 키스상대, 섹스상대)
+#DIM 대상
+#DIM 질내사정상대ID
+#DIMS 키스상대
+#DIMS 섹스상대
+CALL FUCK(대상, "욕망, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, Ｖ확장, Ａ확장, 성교, 자위, 정애, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, CFLAG 감소, 성벽 취득, 질내사정, 장내사정, 구강사정", 질내사정상대ID, 키스상대, 섹스상대, "", "강간")
+
+;-------------------------------------------------
+;FUCK의 당의용
+;강간에 피임 붙인 것 뿐
+;-------------------------------------------------
+@FUCK_RAPE_HININ(대상, 키스상대, 섹스상대)
+#DIM 대상
+#DIMS 키스상대
+#DIMS 섹스상대
+CALL FUCK(대상, "욕망, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, Ｖ확장, Ａ확장, 성교, 자위, 정애, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, CFLAG 감소, 성벽 취득, 장내사정, 구강사정", GET_SPERM_ID("불명"), 키스상대, 섹스상대,  "", "강간")
+
+
+;-------------------------------------------------
+;FUCK의 당의용
+;강간에 수간 붙인 것 뿐
+;-------------------------------------------------
+@FUCK_BEAST(대상, 질내사정상대ID, 키스상대, 섹스상대)
+#DIM 대상
+#DIM 질내사정상대ID
+#DIMS 키스상대
+#DIMS 섹스상대
+CALL FUCK(대상, "욕망, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, Ｖ확장, Ａ확장, 성교, 자위, 정애, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, 수간, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, CFLAG 감소, 성벽 취득, 질내사정, 장내사정, 구강사정", 질내사정상대ID, 키스상대, 섹스상대,  "", "강간")
+
+;-------------------------------------------------
+;FUCK의 당의용
+;강간에 촉수 붙인 것 뿐
+;-------------------------------------------------
+@FUCK_TENTACLE(대상, 질내사정상대ID, 키스상대, 섹스상대)
+#DIM 대상
+#DIM 질내사정상대ID
+#DIMS 키스상대
+#DIMS 섹스상대
+CALL FUCK(대상, "욕망, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, Ｖ확장, Ａ확장, 성교, 자위, 정애, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, 촉수, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, CFLAG 감소, 성벽 취득, 질내사정, 장내사정, 구강사정", 질내사정상대ID, 키스상대, 섹스상대, "", "강간")
+
+
+;-------------------------------------------------
+;FUCK의 당의용
+;윤간
+;-------------------------------------------------
+@FUCK_GANGBANG(대상, 질내사정상대ID, 키스상대, 섹스상대)
+#DIM 대상
+#DIM 질내사정상대ID
+#DIMS 키스상대
+#DIMS 섹스상대
+CALL FUCK(대상, "욕망, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, Ｖ확장, Ａ확장, 성교, 자위, 정애, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실,   CFLAG 감소, 성벽 취득, 질내사정, 장내사정, 구강사정", 질내사정상대ID, 키스상대, 섹스상대, "", "윤간")
+
+;-------------------------------------------------
+;FUCK의 당의용
+;윤간으로부터 CFLAG 감소를 뽑은 것
+;-------------------------------------------------
+;@FUCK_GANGBANG_NO_DECREASE_CFLAG(대상, 질내사정 상대 ID, 키스 상대, 섹스 상대)
+;#DIM 대상
+;#DIM 질내사정 상대 ID
+;#DIMS 키스 상대
+;#DIMS 섹스 상대
+;CALL FUCK(대상, "욕망, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, Ｖ확장, Ａ확장, 성교, 자위, 정애, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, 윤간", "키스상실, 처녀상실, Ａ처녀상실,   CFLAG 감소, 성벽 취득, 질내사정, 장내사정, 구강사정", 질내사정 상대 ID, 키스 상대, 섹스 상대, "", "윤간")
+
+
+;-------------------------------------------------
+;FUCK의 당의용
+;난교
+;-------------------------------------------------
+@FUCK_GROUP(대상, 질내사정상대ID, 키스상대, 섹스상대)
+#DIM 대상
+#DIM 질내사정상대ID
+#DIMS 키스상대
+#DIMS 섹스상대
+CALL FUCK(대상, "욕망, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 레즈, Ｖ확장, Ａ확장, 성교, 자위, 정애, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실,   CFLAG 감소, 성벽 취득, 질내사정, 장내사정, 구강사정", 질내사정상대ID, 키스상대, 섹스상대, "", "난교")
+
+;-------------------------------------------------
+;FUCK의 당의용
+;화간
+;-------------------------------------------------
+@FUCK_MAKELOVE(대상, 질내사정상대ID, 키스상대, 섹스상대)
+#DIM 대상
+#DIM 질내사정상대ID
+#DIMS 키스상대
+#DIMS 섹스상대
+CALL FUCK(대상, "욕망, 봉사, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 성교, 정애, 사정, 키스, 펠라티오, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정, 구강사정", 질내사정상대ID, 키스상대, 섹스상대, "", "화간")
+
+;-------------------------------------------------
+;FUCK의 당의용
+;강간의 시츄를 조교로 한 것 뿐
+;-------------------------------------------------
+@FUCK_TRAIN(대상, 질내사정상대ID, 키스상대, 섹스상대)
+#DIM 대상
+#DIM 질내사정상대ID
+#DIMS 키스상대
+#DIMS 섹스상대
+CALL FUCK(대상, "욕망, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, Ｖ확장, Ａ확장, 성교, 자위, 정애, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, CFLAG 감소, 성벽 취득, 질내사정, 장내사정, 구강사정", 질내사정상대ID, 키스상대, 섹스상대, "", "조교")
+
+;-------------------------------------------------
+;FUCK의 당의용
+;특수 세력에 의한 윤간
+;-------------------------------------------------
+@FUCK_GANGBANG_SP(대상, 질내사정상대ID, 키스상대, 섹스상대, 세력번호)
+#DIM 대상
+#DIM 질내사정상대ID
+#DIMS 키스상대
+#DIMS 섹스상대
+#DIM 세력번호
+
+LOCALS '= "키스상실, 처녀상실, Ａ처녀상실, 성벽 취득, 질내사정"
+SIF SP_TRAIN_IS_DECREASE_CFLAG(세력번호)
+	LOCALS '= LOCALS + ", CFLAG 감소"
+CALL FUCK(대상, "욕망, 봉사, 성기술, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, Ｖ확장, Ａ확장, 성교, 자위, 정애, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, Ｖ성교, Ａ성교", LOCALS, 질내사정상대ID, 키스상대, 섹스상대, "", "윤간")
+
+;-------------------------------------------------
+;FUCK의 당의용
+;특수 세력에 의한 윤간 레즈판
+;-------------------------------------------------
+@FUCK_GANGBANG_LES_SP(대상, 질내사정상대ID, 키스상대, 섹스상대, 세력번호)
+#DIM 대상
+#DIM 질내사정상대ID
+#DIMS 키스상대
+#DIMS 섹스상대
+#DIM 세력번호
+
+LOCALS '= "키스상실, 처녀상실, Ａ처녀상실, 성벽 취득"
+SIF SP_TRAIN_IS_DECREASE_CFLAG(세력번호)
+	LOCALS '= LOCALS + ", CFLAG 감소"
+CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, Ｖ확장, Ａ확장, 성교, 레즈, 자위, 노출, 배설, 사정, 고통쾌락, 긴박, 마조, 키스, 펠라티오, 윤간", LOCALS, 질내사정상대ID, 키스상대, 섹스상대, "", "윤간")
+
+;-------------------------------------------------
+;FUCK에 있어서의, 부위에 경험치를 가산하는 함수
+;-------------------------------------------------
+@FUCK_EXP_PROCESS(대상, 경험치지정문자열)
+#DIM 대상
+#DIMS 경험치지정문자열
+#DIM 주도도저하배율
+#DIM 도착도배율
+#DIMS 경험치, 100
+VARSET 주도도저하배율
+VARSET 도착도배율
+VARSET 경험치
+SPLIT 경험치지정문자열, ",", 경험치
+LOCAL:1 = 0
+FOR LOCAL, 0, VARSIZE("경험치")
+	;빈 문자열이라면 스킵
+	SIF 경험치:LOCAL == ""
+		CONTINUE
+	;스페이스를 제거
+	경험치:LOCAL = %REPLACE(경험치:LOCAL, " ", "")%
+	경험치:LOCAL = %REPLACE(경험치:LOCAL, "　", "")%
+
+	IF 경험치:LOCAL == "Ｃ"
+		EXP:대상:Ｃ감경험치 += ABL:대상:Ｃ감 * 5 + 4 + RAND:3
+		LOCAL:1 += ABL:대상:Ｃ감
+		CONTINUE
+	ENDIF
+	
+	IF 경험치:LOCAL == "Ｖ" && HAS_VAGINA(대상)
+		EXP:대상:Ｖ감경험치 += ABL:대상:Ｖ감 * 5 + 4 + RAND:4
+		LOCAL:1 += ABL:대상:Ｖ감
+		CALL TIGHTNESS_DECREASE_V(대상, RAND(10, 20))
+		SELECTCASE RAND:3
+			CASE 0
+				SEXUAL_PREFERENCE_EXP:대상:성적기호_애무되고싶다 ++
+			CASE 1
+				SEXUAL_PREFERENCE_EXP:대상:성적기호_도구를사용되고싶다 ++
+			CASE 2
+				SEXUAL_PREFERENCE_EXP:대상:성적기호_봉사되고싶다 ++
+		ENDSELECT
+		CONTINUE
+	ENDIF
+
+	IF 경험치:LOCAL == "Ｂ"
+		EXP:대상:Ｂ감경험치 += ABL:대상:Ｂ감 * 5 + 4 + RAND:4
+		LOCAL:1 += ABL:대상:Ｂ감
+		SELECTCASE RAND:3
+			CASE 0
+				SEXUAL_PREFERENCE_EXP:대상:성적기호_애무되고싶다 ++
+			CASE 1
+				SEXUAL_PREFERENCE_EXP:대상:성적기호_도구를사용되고싶다 ++
+			CASE 2
+				SEXUAL_PREFERENCE_EXP:대상:성적기호_봉사되고싶다 ++
+		ENDSELECT
+		CONTINUE
+	ENDIF
+	
+	IF 경험치:LOCAL == "Ａ"
+		EXP:대상:Ａ감경험치 += ABL:대상:Ａ감 * 5 + 4 + RAND:4
+		CALL TIGHTNESS_DECREASE_A(대상, RAND(10, 20))
+		LOCAL:1 += ABL:대상:Ａ감
+		SELECTCASE RAND:3
+			CASE 0
+				SEXUAL_PREFERENCE_EXP:대상:성적기호_애무되고싶다 ++
+			CASE 1
+				SEXUAL_PREFERENCE_EXP:대상:성적기호_도구를사용되고싶다 ++
+			CASE 2
+				SEXUAL_PREFERENCE_EXP:대상:성적기호_봉사되고싶다 ++
+		ENDSELECT
+		CONTINUE
+	ENDIF
+
+	IF 경험치:LOCAL == "Ｍ"
+		EXP:대상:Ｍ감경험치 += ABL:대상:Ｍ감 * 4 + 4 + RAND:3
+		LOCAL:1 += ABL:대상:Ｍ감
+		SELECTCASE RAND:3
+			CASE 0
+				SEXUAL_PREFERENCE_EXP:대상:성적기호_애무되고싶다 ++
+			CASE 1
+				SEXUAL_PREFERENCE_EXP:대상:성적기호_도구를사용되고싶다 ++
+			CASE 2
+				SEXUAL_PREFERENCE_EXP:대상:성적기호_봉사되고싶다 ++
+		ENDSELECT
+		CONTINUE
+	ENDIF
+
+	IF 경험치:LOCAL == "욕망"
+		EXP:대상:욕망경험치 += ABL:대상:욕망 * 5 + 7 + LOCAL:1 + RAND:10
+		CONTINUE
+	ENDIF
+	
+	IF 경험치:LOCAL == "성기술"
+		EXP:대상:성기술경험치 += ABL:대상:성기술 * 2 + 3 + RAND:5
+		CONTINUE
+	ENDIF
+
+	IF 경험치:LOCAL == "봉사"
+		EXP:대상:봉사경험치 += ABL:대상:봉사 * 3 + 5 + RAND:7
+		SEXUAL_PREFERENCE_EXP:대상:성적기호_봉사하고싶다 += 3
+		CONTINUE
+	ENDIF
+
+	IF 경험치:LOCAL == "성교"
+		EXP:대상:성교경험치 += ABL:대상:성교 * 2 + 4 + RAND:6
+		;받고 공격의 판정이 이것 단체에서는 할 수 없기에, 성적 기호는 가산하지 않는다
+		CONTINUE
+	ENDIF
+
+	IF 경험치:LOCAL == "레즈" && IS_FEMALE(대상)
+		EXP:대상:레즈경험치 += 15 + RAND:10
+		SEXUAL_PREFERENCE_EXP:대상:성적기호_동성과사귀고싶다 += 3
+		CONTINUE
+	ENDIF
+	
+	IF 경험치:LOCAL == "ＢＬ" && IS_MALE(대상)
+		EXP:대상:ＢＬ경험치 += 15 + RAND:10
+		SEXUAL_PREFERENCE_EXP:대상:성적기호_동성과사귀고싶다 += 3
+		CONTINUE
+	ENDIF
+
+	IF 경험치:LOCAL == "노출"
+		EXP:대상:노출경험치 += ABL:대상:노출 * 6 + 6 + RAND:10
+		SEXUAL_PREFERENCE_EXP:대상:성적기호_노출하고싶다 += 3
+		도착도배율 ++
+		CONTINUE
+	ENDIF
+
+	IF 경험치:LOCAL == "자위"
+		EXP:대상:자위경험치 += ABL:대상:자위 * 3 + 5 + RAND:6
+		SEXUAL_PREFERENCE_EXP:대상:성적기호_노출하고싶다 += 3
+		SEXUAL_PREFERENCE_EXP:대상:성적기호_욕보여지고싶다 += 3
+		CONTINUE
+	ENDIF
+
+	IF 경험치:LOCAL == "정애"
+		EXP:대상:정애경험치 += ABL:대상:정애 * 5 + 5 + RAND:5
+		CONTINUE
+	ENDIF
+
+	IF 경험치:LOCAL == "사정" && HAS_PENIS(대상)
+		EXP:대상:사정경험치 += ABL:대상:사정 * 2 + 3 + RAND:4
+		CONTINUE
+	ENDIF
+
+	IF 경험치:LOCAL == "분유" && TALENT:대상:모유체질
+		EXP:대상:분유경험치 += ABL:대상:분유 * 2 + 3 + RAND:4
+		CONTINUE
+	ENDIF
+
+	IF 경험치:LOCAL == "배설"
+		EXP:대상:배설경험치 += ABL:대상:배설 * 2 + 3 + RAND:4
+		도착도배율 ++
+		SEXUAL_PREFERENCE_EXP:대상:성적기호_더럽혀지고싶다 += 3
+		CONTINUE
+	ENDIF
+
+	IF 경험치:LOCAL == "촉수"
+		EXP:대상:촉수경험치 += ABL:대상:촉수 * 3 + 5 + RAND:8
+		도착도배율 += 2
+		SEXUAL_PREFERENCE_EXP:대상:성적기호_촉수로범해지고싶다 += 3
+		CONTINUE
+	ENDIF
+
+	IF 경험치:LOCAL == "마조"
+		EXP:대상:피학경험치 += ABL:대상:마조 * 3 + 5 + RAND:5
+		도착도배율 += 3
+		주도도저하배율 ++
+		SEXUAL_PREFERENCE_EXP:대상:성적기호_시달리고싶다 += 3
+		CONTINUE
+	ENDIF
+
+	IF 경험치:LOCAL == "새드"
+		EXP:대상:기학경험치 += ABL:대상:새드 * 3 + 5 + RAND:5
+		도착도배율 += 3
+		SEXUAL_PREFERENCE_EXP:대상:성적기호_학대하고싶다 += 3
+		CONTINUE
+	ENDIF
+
+
+	IF 경험치:LOCAL == "Ｖ확장" && HAS_VAGINA(대상)
+		EXP:대상:Ｖ확장경험 += RAND:5
+		CALL TIGHTNESS_DECREASE_V(대상, RAND(10, 20))
+		CONTINUE
+	ENDIF
+	
+	IF 경험치:LOCAL == "Ａ확장"
+		EXP:대상:Ａ확장경험 += RAND:5
+		CALL TIGHTNESS_DECREASE_A(대상, RAND(10, 20))
+		CONTINUE
+	ENDIF
+
+	IF 경험치:LOCAL == "고통쾌락"
+		EXP:대상:고통쾌락경험 += RAND(20, 30)
+		주도도저하배율 ++
+		도착도배율 ++
+		CONTINUE
+	ENDIF
+
+	IF 경험치:LOCAL == "긴박"
+		EXP:대상:긴박경험 += 3 + RAND:4
+		주도도저하배율 ++
+		도착도배율 ++
+		SEXUAL_PREFERENCE_EXP:대상:성적기호_속박되고싶다 += 3
+		CONTINUE
+	ENDIF
+		
+	IF 경험치:LOCAL == "키스"
+		EXP:대상:키스경험 += 2 + RAND:8
+		CONTINUE
+	ENDIF
+		
+	IF 경험치:LOCAL == "펠라티오"
+		EXP:대상:구음경험 += 3 + RAND:5
+		CONTINUE
+	ENDIF
+		
+	IF 경험치:LOCAL == "Ｖ삽입"
+		EXP:대상:Ｖ삽입경험 += 3 + RAND:5
+		SEXUAL_PREFERENCE_EXP:대상:성적기호_성교하고싶다 ++
+		CONTINUE
+	ENDIF
+
+	IF 경험치:LOCAL == "Ｖ성교"
+		EXP:대상:Ｖ성교경험 += 3 + RAND:5
+		SEXUAL_PREFERENCE_EXP:대상:성적기호_성교되고싶다 ++
+		CONTINUE
+	ENDIF
+
+	IF 경험치:LOCAL == "Ａ삽입"
+		EXP:대상:Ａ삽입경험 += 3 + RAND:5
+		SEXUAL_PREFERENCE_EXP:대상:성적기호_성교하고싶다 ++
+		CONTINUE
+	ENDIF
+
+	IF 경험치:LOCAL == "Ａ성교"
+		EXP:대상:Ａ성교경험 += 3 + RAND:5
+		SEXUAL_PREFERENCE_EXP:대상:성적기호_성교되고싶다 ++
+		CONTINUE
+	ENDIF
+
+
+	IF 경험치:LOCAL == "윤간"
+		EXP:대상:윤간경험 += 3 + RAND(2, MAX(3, MIN(8, ABL:대상:욕망)))
+		도착도배율 += 2
+		SEXUAL_PREFERENCE_EXP:대상:성적기호_윤간되고싶다 += 3
+		CONTINUE
+	ENDIF
+		
+	IF 경험치:LOCAL == "수간"
+		EXP:대상:수간경험 += 3 + RAND:3
+		도착도배율 += 2
+		SEXUAL_PREFERENCE_EXP:대상:성적기호_짐승과사귀고싶다 += 3
+		CONTINUE
+	ENDIF
+	IF 경험치:LOCAL == "약물의존"
+		CFLAG:대상:약물의존 += RAND(20, 50)
+		도착도배율 += 2
+		CONTINUE
+	ENDIF
+	
+	IF 경험치:LOCAL == "매춘"
+		EXP:대상:매춘경험 += 3 + RAND(2, MAX(3, MIN(8, ABL:대상:욕망)))
+		도착도배율 += 2
+		SEXUAL_PREFERENCE_EXP:대상:성적기호_매춘하고싶다 += 3
+		CONTINUE
+	ENDIF
+NEXT
+
+ABL:대상:주도도Ｕ -= (8 + RAND:5) * MIN(3, 주도도저하배율) * (MIN(2 , (TALENT:대상:Ｍ기질 + TALENT:대상:겁쟁이 + TALENT:대상:아픔에약함 + TALENT:대상:정조관념 + TALENT:대상:비관적)) + 2) / (TALENT:대상:꿋꿋함 * 2 + TALENT:대상:정조관념없음 + TALENT:대상:프라이드낮음 + TALENT:대상:감정결핍 + 1) / MAX(1 , (IS_SP_COUNTRY(CFLAG:대상:포로처) || IS_FALLEN_TO_SP_COUNTRY(대상)) * 5)
+ABL:대상:도착도 += (5 + RAND:5) * MIN(3, 도착도배율) * MIN(5 , (TALENT:대상:Ｍ기질 + TALENT:대상:도착적 + TALENT:대상:해방 + TALENT:대상:쾌감에솔직 + TALENT:대상:중독하기쉽다) * 2 + 1) / (TALENT:대상:자제심 + TALENT:대상:무관심 + TALENT:대상:감정결핍 + 1) / MAX(1 , (IS_SP_COUNTRY(CFLAG:대상:포로처) || IS_FALLEN_TO_SP_COUNTRY(대상)) * 5)
+EXP:대상:절정경험 += LOCAL:1 * (60 + RAND:81) / 100
+
+SELECTCASE ABL:대상:성지식
+	CASE 0
+		EXP:대상:성지식경험치 += 10
+	CASE 1
+		EXP:대상:성지식경험치 += 8
+	CASE 2
+		EXP:대상:성지식경험치 += 6
+	CASE 3
+		EXP:대상:성지식경험치 += 3
+	CASE 4
+		EXP:대상:성지식경험치 += 2
+	CASE 5
+		EXP:대상:성지식경험치 += 0
+ENDSELECT
+ABL:대상:도착도 = LIMIT(ABL:대상:도착도, 0, 1000)
+ABL:대상:주도도Ｎ = LIMIT(ABL:대상:주도도Ｎ, -1000, 1000)
+ABL:대상:주도도Ｕ = LIMIT(ABL:대상:주도도Ｕ, -1000, 1000)
+
+;-------------------------------------------------
+;FUCK에 있어서의, 추가처리를 실시하는 함수
+;-------------------------------------------------
+@FUCK_EXTRA_PROCESS(대상, 경험치문자열, 추가처리지정문자열, 질내사정상대ID = 0, 키스상대 = "", 섹스상대 = "", 동정상대 = "", 시츄 = "")
+#DIM 대상
+#DIMS 경험치문자열
+#DIMS 추가처리지정문자열
+#DIMS 추가처리, 100
+#DIM 질내사정상대ID
+#DIMS 키스상대
+#DIMS 섹스상대
+#DIMS 동정상대
+#DIMS 시츄
+VARSET 추가처리
+SPLIT 추가처리지정문자열, ",", 추가처리
+
+IF STRFIND(시츄, "조교") != -1
+	SEXUAL_PREFERENCE_EXP:대상:성적기호_조교되고싶다 ++
+ELSEIF STRFIND(시츄, "최면") != -1
+	SEXUAL_PREFERENCE_EXP:대상:성적기호_최면을걸쳐지고싶다 ++
+ENDIF
+
+FOR LOCAL, 0, VARSIZE("추가처리")
+	SIF 추가처리:LOCAL == ""
+		CONTINUE
+	;스페이스를 제거
+	추가처리:LOCAL = %REPLACE(추가처리:LOCAL, " ", "")%
+	추가처리:LOCAL = %REPLACE(추가처리:LOCAL, "　", "")%
+		
+	IF 추가처리:LOCAL == "키스상실"
+		CALL KISS_COMMON(대상, 키스상대, 시츄)
+		CONTINUE
+	ENDIF
+
+	IF 추가처리:LOCAL == "처녀상실"
+		CALL VIRGIN_COMMON(대상, 섹스상대, 시츄)
+		CONTINUE
+	ENDIF
+
+	IF 추가처리:LOCAL == "Ａ처녀상실"
+		CALL VIRGIN_COMMON_A(대상, 섹스상대, 시츄)
+		CONTINUE
+	ENDIF
+
+	IF 추가처리:LOCAL == "동정상실"
+		CALL DOUTEI_COMMON(대상, 동정상대, 시츄)
+		CONTINUE
+	ENDIF
+	
+	IF 추가처리:LOCAL == "CFLAG 감소" && 대상 != MASTER
+		CFLAG:대상:호감도 = MAX(CFLAG:대상:호감도 - LIMIT(CFLAG:대상:호감도 / 10, 200, 5000) , -1000)
+		CFLAG:대상:의존도 = MAX(CFLAG:대상:의존도 - LIMIT(CFLAG:대상:의존도 / 10, 200, 5000) , -1000)
+		CFLAG:대상:종속도 = MAX(CFLAG:대상:종속도 - LIMIT(CFLAG:대상:종속도 / 10, 200, 5000) , -1000)
+		CFLAG:대상:지배도 = MAX(CFLAG:대상:지배도 - LIMIT(CFLAG:대상:지배도 / 10, 200, 5000) , -1000)
+
+		CONTINUE
+	ENDIF
+	
+	IF 추가처리:LOCAL == "질내사정"
+		EXP:대상:질내사정경험 += RAND(2, 5)
+		IF STRFIND(경험치문자열, "윤간") != -1
+			FOR LOCAL, 0, RAND(6, 10)
+				CALL RECORD_INJECTION(대상, 질내사정상대ID, 2)
+			NEXT
+		ELSE
+			CALL RECORD_INJECTION(대상, 질내사정상대ID, RAND(2, 4))
+		ENDIF
+		CONTINUE
+	ENDIF
+	
+	IF 추가처리:LOCAL == "장내사정"
+		EXP:대상:장내사정경험 += RAND(2, 5)
+	ENDIF
+	
+	IF 추가처리:LOCAL == "구강사정"
+		EXP:대상:구강사정경험 += RAND(2, 5)
+	ENDIF
+NEXT

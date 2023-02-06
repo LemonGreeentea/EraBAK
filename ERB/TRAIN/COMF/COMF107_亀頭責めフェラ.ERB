@@ -1,0 +1,331 @@
+﻿;귀귀두고문페라
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME107
+IF MPLY_NUM == 2
+	LOCALS:0 = Ｗ귀두고문페라
+ELSE
+	LOCALS:0 = 귀두고문페라
+ENDIF
+
+RESULTS:0 = %LOCALS:0%한다
+RESULTS:1 = %LOCALS:0%당한다
+RESULTS:2 = %LOCALS:0%시킨다
+RESULTS:3 = %LOCALS:0%된다
+RESULTS:4 = %LOCALS:0%시킨다
+RESULTS:5 = %LOCALS:0%과시하고
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE107
+;공통 부분
+CALL COM_ABLE_COMMON(107)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 2명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 2
+	RETURN 0
+;타겟은 최대로 1명까지
+SIF MTAR_NUM <= 0 || MTAR_NUM > 1
+	RETURN 0
+;전플레이어에 대해 판정
+FOR LOCAL:0, 0, MPLY_NUM
+	;행동불능이라면 불가
+	SIF !IS_PLAYABLE(MPLY:(LOCAL:0))
+		RETURN 0
+	;구속중이라면 불가
+	SIF IS_BIND(MPLY:(LOCAL:0))
+		RETURN 0
+	;플레이어로부터 타겟으로 삽입중이라면 불가
+	SIF GROUPMATCH(IS_INSERT_MUTUAL(MPLY:(LOCAL:0), MTAR:0), 1, 2)
+		RETURN 0
+	;삽입중은 1-1만 가능
+	SIF IS_INSERT_SINGLE(MTAR:0, "전") && MPLY_NUM >= 2
+		RETURN 0
+	;안면승마 되고 있는, 키스중, 재갈 장착중이라면 불가
+	SIF IS_RIDDEN(MPLY:(LOCAL:0)) || IS_EQUIP(MPLY:(LOCAL:0), 20) || IS_EQUIP_TARGET(MPLY:(LOCAL:0), 86)
+		RETURN 0
+	;가슴애무·다리 빨고 안은 불가
+	SIF IS_EQUIP_PLAYER(MPLY:(LOCAL:0), 1, 104)
+		RETURN 0
+	;타겟으로부터 플레이어에 다리 빨고 안이라면 불가
+	SIF SEARCH_EQUIP(104, MTAR:0, MPLY:(LOCAL:0)) >= 0
+		RETURN 0
+NEXT
+;타겟으로 장대가 필요
+SIF !HAS_PENIS(MTAR:0)
+	RETURN 0
+;장대가 삽입중이라면 불가
+SIF IS_INSERT_SINGLE(MTAR:0, "Ｐ")
+	RETURN 0
+;타겟의 자지가 메워지고 있다면 안 돼
+SIF IS_P_HOLD(MTAR:0)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM107
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+FOR LOCAL:0, 0, MPLY_NUM
+	;플레이어의 쿤닐링구스를 해제
+	CALL RELEASE_EQUIP(SEARCH_EQUIP(2, MPLY:(LOCAL:0), -1), 1, 0)
+NEXT
+
+;대Ｐ봉사계 커맨드의 계속 플래그를 해제
+CALL RELEASE_SERVE_P
+
+;●인원수 보정의 설정
+LOCAL:10 = 100
+
+SELECTCASE MPLY_NUM
+	CASE 2
+		TIMES LOCAL:10, 0.75
+ENDSELECT
+
+;●전플레이어에 대해 판정
+FOR LOCAL:0, 0, MPLY_NUM
+	LOCAL:2 = MPLY:(LOCAL:0)
+
+	DOWNBASE:(LOCAL:2):체력 += 120
+
+	EXP:(LOCAL:2):성기술경험치 += 1
+	EXP:(LOCAL:2):구음경험 += 1
+
+	SOURCE:(LOCAL:2):봉사 = SERVE_HOUSHI(LOCAL:2, 350)
+	SOURCE:(LOCAL:2):접촉 = 50
+	SOURCE:(LOCAL:2):성행동 = 300
+	SOURCE:(LOCAL:2):쾌Ｍ = 150 * COM11_RATE_M(LOCAL:2) / 1000
+
+	IF IS_INITIATIVE(LOCAL:2)
+		SOURCE:(LOCAL:2):기학 = 50
+	ENDIF
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:2, 180, 100)
+
+	;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+	TCVAR:(LOCAL:2):4 = 1
+
+	;전 타겟으로 주는 쾌감계 소스를 계산
+	FOR LOCAL:1, 0, MTAR_NUM
+		LOCAL:3 = MTAR:(LOCAL:1)
+		LOCAL:4 = SENSE_HOUSHI(LOCAL:2, LOCAL:3, 1400) * LOCAL:10 / 100
+		IF TALENT:(LOCAL:2):혀놀림
+			TIMES LOCAL:4, 1.50
+		ENDIF
+		SOURCE:(LOCAL:3):쾌Ｐ += LOCAL:4
+;		SOURCE:(LOCAL:3):쾌Ｃ += LOCAL:4
+
+		;사정 개소와 대상을 세트
+		CALL STACK_SPERM(LOCAL:3, LOCAL:2, RAND:3 ? 사정부위_입 # 사정부위_얼굴)
+	NEXT
+
+	IF HAS_PENIS(MTAR:0)
+		;페니스에의 키스
+		CALL KISS_COMMON(LOCAL:2, @"%ANAME(MTAR:0)%의 페니스", GET_SITUATION_BY_TRAIN_MODE())
+	ENDIF
+NEXT
+
+;●전 타겟으로 붙어 판정
+FOR LOCAL:0, 0, MTAR_NUM
+	LOCAL:1 = MTAR:(LOCAL:0)
+
+	SOURCE:(LOCAL:1):접촉 = 50
+	SOURCE:(LOCAL:1):성행동 = 180
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:1, 110, 120)
+NEXT
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = 1
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 7
+
+RETURN 1
+
+;-------------------------------------------------
+;계속 커맨드인가 어떤가를 설정
+;-------------------------------------------------
+@COM_IS_EQUIP107
+RETURN 1
+
+;-------------------------------------------------
+;계속 상태의 처리
+;-------------------------------------------------
+@COM_EQUIP107(ARG:0)
+;●인원수 보정의 설정
+LOCAL:10 = 100
+
+SELECTCASE MEQUIP_PLAYER_NUM:(ARG:0)
+	CASE 2
+		TIMES LOCAL:10, 0.75
+ENDSELECT
+
+;●전플레이어에 대해 판정
+FOR LOCAL:0, 0, MEQUIP_PLAYER_NUM:(ARG:0)
+	LOCAL:2 = MEQUIP_PLAYER:(ARG:0):(LOCAL:0)
+
+	EXP:(LOCAL:2):성기술경험치 += 1
+	EXP:(LOCAL:2):구음경험 += 1
+
+	SOURCE:(LOCAL:2):봉사 += SERVE_HOUSHI(LOCAL:2, 100)
+	SOURCE:(LOCAL:2):접촉 += 25
+	SOURCE:(LOCAL:2):성행동 += 100
+	SOURCE:(LOCAL:2):쾌Ｍ += 50 * COM11_RATE_M(LOCAL:2) / 1000
+
+	;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+	TCVAR:(LOCAL:2):4 = 1
+
+	;전 타겟으로 주는 쾌감계 소스를 계산
+	FOR LOCAL:1, 0, MEQUIP_TARGET_NUM:(ARG:0)
+		LOCAL:3 = MEQUIP_TARGET:(ARG:0):(LOCAL:1)
+		LOCAL:4 = SENSE_HOUSHI(LOCAL:2, LOCAL:3, 600) * LOCAL:10 / 100
+		IF TALENT:(LOCAL:3):혀놀림
+			TIMES LOCAL:4, 1.50
+		ENDIF
+;		SOURCE:(LOCAL:3):쾌Ｃ += LOCAL:4
+		SOURCE:(LOCAL:3):쾌Ｐ += LOCAL:4
+
+		;사정 개소와 대상을 세트
+		CALL STACK_SPERM(LOCAL:3, LOCAL:2, RAND:3 ? 사정부위_입 # 사정부위_얼굴)
+	NEXT
+NEXT
+
+;●전 타겟으로 붙어 판정
+FOR LOCAL:0, 0, MEQUIP_TARGET_NUM:(ARG:0)
+	LOCAL:1 = MEQUIP_TARGET:(ARG:0):(LOCAL:0)
+
+	SOURCE:(LOCAL:1):접촉 += 25
+	SOURCE:(LOCAL:1):성행동 += 60
+NEXT
+
+;-------------------------------------------------
+;계속중의 표시
+;-------------------------------------------------
+@EQUIP_MESSAGE107(ARG:0)
+RESULTS = %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"가")% %EQUIP_TARGET_ANAME(ARG:0)%에 귀두고문페라중
+
+;-------------------------------------------------
+;계속중의 지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE_EQUIP107(ARG:0)
+PRINTFORML %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"가")% %EQUIP_TARGET_ANAME(ARG:0)%의 귀두를 핥아대고 있다…
+
+;-------------------------------------------------
+;계속을 해제했을 때의 지문
+;-------------------------------------------------
+@COM_TEXT_RELEASE_EQUIP107(ARG:0)
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER107(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 85
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 2)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 4)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 3, 30))
+
+IF TCVAR:(ARG:0):60
+	CALL COM_ORDER_ELEMENT(ARG:0, "미약", 6)
+ENDIF
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -1)
+ENDIF
+IF TALENT:(ARG:0):악취둔감
+	CALL COM_ORDER_ELEMENT(ARG:0, "악취둔감", 1)
+ENDIF
+IF TALENT:(ARG:0):악취민감
+	CALL COM_ORDER_ELEMENT(ARG:0, "악취민감", -3)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 6)
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -1)
+ENDIF
+IF TALENT:(ARG:0):남성혐오
+	CALL COM_ORDER_ELEMENT(ARG:0, "남성혐오", -7)
+ENDIF
+
+;합의
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -10)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE107
+;플레이어가 2명
+IF MPLY_NUM == 2
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"와")% %ANAME(MPLY:1)%는 좌우로부터 %ANAME(MTAR:0)%의 페니스에 얼굴은 접근시키자, 각자 생각대로 귀두를 핥아대 자극%TARGET_STR("했다", "해 왔다")%…
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %조사처리(ANAME(MPLY:0),"와")% %ANAME(MPLY:1)%에, 귀두 고문으로 기분 좋게 하도록(듯이) 요구했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"와")% %ANAME(MPLY:1)%는 좌우로부터 %ANAME(MTAR:0)%의 페니스에 얼굴을 대어, 협력해 귀두를 핥아대 봉사했다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %조사처리(ANAME(MPLY:0),"와")% %ANAME(MPLY:1)%에게, %ANAME(MTAR:0)%의 귀두를 혀로 꾸짖도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"와")% %ANAME(MPLY:1)%는 좌우로부터 %ANAME(MTAR:0)%의 페니스에 얼굴을 대어, 협력해 귀두를 핥아댔다…
+	ENDSELECT
+
+;플레이어가 1명
+ELSE
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 페니스를 물면, 오로지 귀두만을 줄줄 소리를 내 핥%TARGET_STR("았다", "아 왔다")%…
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에, 입을 사용한 귀두 고문으로 기분 좋게 하도록(듯이) 요구했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 페니스의 첨단을 물면, 오로지 귀두만을 혀로 핥아대 봉사했다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에게, %ANAME(MTAR:0)%의 귀두를 혀로 꾸짖도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 페니스를 물면, 오로지 귀두만을 혀로 핥아대 자극했다…
+	ENDSELECT
+ENDIF
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN107
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_107()
+RETURN POWER(2, 성적기호_봉사하고싶다)
+
+@COM_PREFERENCE_TARGET_107()
+RETURN POWER(2, 성적기호_봉사되고싶다)
+

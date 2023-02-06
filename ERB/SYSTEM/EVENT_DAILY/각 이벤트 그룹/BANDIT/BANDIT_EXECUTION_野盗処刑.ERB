@@ -1,0 +1,196 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_BANDIT_EXECUTION_RATE()
+RETURN 15
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_BANDIT_EXECUTION_DECISION()
+#DIM 도둑
+도둑 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_도둑))
+SIF 도둑 == -1
+	RETURN 0
+SIF CFLAG:MASTER:소속 == 도둑
+	RETURN 0
+SIF DAY < 12
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_BANDIT_EXECUTION_GENRE()
+RETURN 데일리_장르_특수세력
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_BANDIT_EXECUTION
+#DIM 대상
+
+PRINTFORMW 부하가 영내에서 도둑의 집단을 발견한 것 같다
+PRINTFORML 어떻게 하지?
+CALL ASK_YN("경비를 강화한다", "잡아에 향한다")
+IF RESULT == 0
+	PRINTFORMW 주변의 경비를 강화해 습격에 대비했다
+	PRINTFORMW 그 덕분인가, 도둑의 피해는 발생하지 않았다
+ELSE
+	PRINTFORML 지금까지 심하게 날뛰어 준 무리다
+	PRINTFORMW 다만 발로 차서 흩뜨리는 것 만으로는 부족, 잡는 일로 했다
+	PRINTFORML 누구를 향하게 할까?
+	CALL SELECT_CHARA_LIST_SLG()
+	대상 = RESULT 
+	IF RESULT < 0
+		PRINTFORMW 역시 그만두자
+		PRINTFORMW 주변의 경비를 강화해 습격에 대비했다
+		PRINTFORMW 그 덕분인가, 도둑의 피해는 발생하지 않았다
+		RETURN
+	ELSEIF 대상 == MASTER
+		PRINTFORMW %ANAME(대상)%스스로 향하는 일로 했다
+	ELSE
+		PRINTFORMW %조사처리(ANAME(대상),"를")% 향하게 했다
+	ENDIF
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+	IF ((ABL:대상:무투 + ABL:대상:방위) / 2) * (RAND:8 + 1) < (40 + (DAY / 2)) * (RAND:7 + 1)
+		PRINTFORML 하지만 매복하고 되고 있었다!
+		PRINTFORMW 부대는 역관광으로 되어 버렸다…
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 너덜너덜이 되면서도 어떻게든 도망갔다
+		CALL ADD_COOLTIME(대상, 3)
+	ELSE
+		PRINTFORMW 성공했다!
+		PRINTFORML %조사처리(ANAME(대상),"는")% 훌륭히 도둑의 집단을 격파했다
+		PRINTFORML 반수 가까이의 도둑을 잡을 수가 있었다
+		PRINTFORMW 본보기로서 처형하기로 하자
+		PRINTFORMW 하지만, 안에는 소녀의 도둑도 섞이고 있었다
+		PRINTFORML 어떻게 하지?
+		CALL ASK_MULTI_JUDGE("모아 처형한다", 1,"병사에게 준다", 1,"범한다", HAS_PENIS(대상))
+		IF RESULT == 0
+			PRINTFORML 하지만 도둑은 도둑이다, 자비는 없다
+			PRINTFORMW 정리해 처형해 목을 쬐었다
+			CALL COLOR_PRINT(@"그 가열인 처분은 다소의 찬부를 낳았지만, 대개 호의적으로 받아들여졌다", 칼라_주의)
+			PRINTFORMW 
+			FOR LOCAL, 1, MAX_COUNTRY
+				CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, 40, 20)
+			NEXT
+		ELSEIF RESULT == 1
+			PRINTFORML 어차피라면 처형보다 유효 활용하자
+			PRINTFORMW 소녀의 도둑은 위안을 위해서(때문에) 병사들에게 주는 일로 했다
+			CALL COLOR_PRINT(@"그녀들은 군사의 사이에 대호평이 되어, 소문을 (들)물어 지원병이 증가했다", 칼라_주의)
+			PRINTFORMW 
+			COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += (50 + RAND:50) * DAY
+		ELSE
+			PRINTFORML 모처럼인 것으로 사용하게 해 받자
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 도둑의 소녀를 가지고 돌아가 즐겁게 해 받는 일로 했다
+			PRINTFORML 
+			SELECTCASE RAND:10
+				CASE 0
+					PRINTFORML 옷을 벗겨내면 상상 이상으로 풍만한 육체가 보여져 무심코 미소가 흘러넘친다
+					PRINTFORML 필사적으로 저항하는 그녀를 난폭하게 덮어누르고 성기에 손가락을 기게 하면, 민감하게 신체를 진동시켰다
+					PRINTFORMW 페니스를 쑤셔 넣으면 그녀는 교성 섞임의 비명을 올리면서 크게 신체를 활에 뒤로 젖혔다
+					PRINTFORML 힘들게 단단히 조여 오는 꿀단지와 그녀의 분한 것 같은 표정을 즐기면서 격렬하게 허리를 쳐박는다
+					PRINTFORML 이윽고 참지 못하고 질내사정 하면, 그녀는 큰 교성을 올려 전신을 경련시켰다
+					PRINTFORMW 생각하지 않는 상등품에 %조사처리(ANAME(대상),"는")% 기분이 되어 밤새 한껏 즐겁게 해 받았다
+				CASE 1
+					PRINTFORML 그녀를 벽에 손을 찌르게 한 엉덩이를 내밀게 해 배후로부터 격렬하게 암 찔러 하고 있다
+					PRINTFORML 부드러운 엉덩이에 허리를 쳐박는점도!! (와)과 울려, 그녀의 신음소리가 오른다
+					PRINTFORMW 질육은 상상 이상으로 훌륭한 작품으로, 일발 찌르기마다 애액을 흘러넘치게 해 페니스에의 억압을 더해 온다
+					PRINTFORML 참지 못하고 1발째를 발하면, 그녀는 크게 몸을 뒤로 젖혀 비명에 가까운 교성을 흘렸다
+					PRINTFORML 미육은 꽉꽉과 꿈틀거려 장대를 단단히 조여, 탐욕에 한 방울 남김없이 짜내려고 해 온다
+					PRINTFORMW 그 극상의 꿀단지에 %조사처리(ANAME(대상),"는")% 꿈 속이 되어, 시간을 잊어 몇 번이나 만끽되어 받았다
+				CASE 2
+					PRINTFORML 난폭하게 할 생각으로 옷을 벗겨내면 여기저기상처투성이의 피부가 드러났다
+					PRINTFORML 눈물을 흘리면서 떨리는 그녀의 얼굴을 보면 갑자기 동정심이 끓어, %조사처리(ANAME(대상),"는")% 상냥하게 피부에 손을 기게 했다
+					PRINTFORMW 그녀가 침착해 준비가 갖추어질 때까지, 시간을 들여 정중하게 애무를 반복해 준다
+					PRINTFORML 점차 그녀는 %ANAME(대상)%의 애무에 몸을 바치기 시작해 떨리는 목으로부터는 달콤한 한숨이 새어나왔다
+					PRINTFORML 그녀를 상냥하게 재워 페니스를 비밀스런 장소에 꽉 누르면, 꼬옥 하고 손을 잡으면서 올려봐 왔다
+					PRINTFORMW 상정외의 형태가 되면서도 그녀를 상냥하게 사랑해 주어, 둘이서 땀투성이가 되면서 얽혔다
+				CASE 3
+					PRINTFORML 눈가리개를 한 다음 단단히 묶어, 동작할 수 없게 한 그녀를 오나홀과 같이 취급한다
+					PRINTFORML 난폭하게 무시무시 자궁을 밀어올리면, 그녀는 히익히익 거리며 자지러지며 전신을 경련시킨다
+					PRINTFORMW 그녀는 피하려고 몸부림 하지만, 그것이 오히려%ANAME(대상)%의 페니스를 마음 좋게 자극했다
+					PRINTFORML 하나 크게 밀어올리면, 그녀는 흠칫! (와)과 신체를 뒤로 젖혀 보기 흉한 신음소리를 흘렸다
+					PRINTFORML 절정 했는지를 물어도 필사적으로 부정하는 그녀를 공격해대면 조금 전보다 민감하게 신체를 뛰게 했다
+					PRINTFORMW %조사처리(ANAME(대상),"는")% 상정 이상의 극상육 오나홀을 하룻밤 걸쳐 한껏 조교해 주었다
+				CASE 4
+					PRINTFORML 그녀를 침대에 붙들어매어 무리하게미약을 먹여 반복해 계속 범했다
+					PRINTFORML 처음은 저항하고 있었던 그녀도 몇 번째인가의 절정을 맞이하는 무렵에는 이미 쾌락에 신체를 진동시키는 만큼 되었다
+					PRINTFORMW 미육은 자꾸자꾸좋아져 가 살아있는 생물인 듯 페니스에 휘감겨 와 허리가 뜰 것 같게 된다
+					PRINTFORML 경련해 요갈 그녀에게 키스를 해 주면, 갑자기 목에 손을 써지고 혀를 얽힐 수 있었다
+					PRINTFORML 놀라 눈동자를 들여다 보면 완전히 쾌락의 포로가 되어 있는 것 같은 발정한 표정으로♥하지만 떠올라 있었다
+					PRINTFORMW 사랑스럽게 허덕이는 그녀와 함께 여러가지 플레이를 즐겨, 졸라지는 대로 몇 번이나 정액을 발했다
+				CASE 5
+					PRINTFORML 날뛴다그녀를 침대에 쓰러트리고, 엎드려 있는 자세로 난폭하게 강간한다
+					PRINTFORML 그 질 구멍은 정말로 명기로, 페니스 전체에 휘감겨, 허리를 보다 격렬하게 깊게 쑤셔 넣는 것을 멈출 수 없다
+					PRINTFORMW 범해지고 있는 그녀는 사지를 삐걱삐걱 진동시키면서도 시트를 꾹 잡아 이를 악물고 있다
+					PRINTFORML 하지만 %조사처리(ANAME(대상),"가")% 천정을 쓸어올려 주면, 전류가 흐른 것처럼 흠칫 신체를 뛰게 했다
+					PRINTFORML 변명 하는 그녀를 무시해, 약점을 후벼파 주면 그때마다 경련해 점차 달콤한 허덕임을 루등 하기 시작했다
+					PRINTFORMW 그 안그녀는 맞아 허리를 밝혀, 사정을 예고해도 저항하지 않아 받아들이는 것처럼 되어 갔다
+				CASE 6
+					PRINTFORML %ANAME(대상)%의 방 안으로부터 소녀의 단정치 못한 신음소리가 영향을 주고 있다
+					PRINTFORML 그녀는 그다지 저항도 하지 않고, 범하기 시작하자마자 자지러지면서 자신으로부터 맞아 허리를 쳐 흐트러지고 있다
+					PRINTFORMW 참지 못하고 1발째를 발하면, 그녀는 꽈악%ANAME(대상)%에 매달리면서 모두 절정에 이르렀다
+					PRINTFORML 한숨 돌려 그녀를 껴안으면서 잠자리에서의 대화를 하고 있으면, 눈물을 흘리며 신상을 이야기 냈다
+					PRINTFORML 가라사대, 도둑에게 휩쓸어지고 나서 쭉 성노예 취급이었다, 지금은 범해지고 있는 (분)편이 침착한다, 라고
+					PRINTFORMW 지금만은 그 밖에 아무것도 생각하지 않고 끝나는 것처럼, %조사처리(ANAME(대상),"는")% 그녀와 함께 달굴 수 있는 것 같은 육욕에 빠져 갔다
+				CASE 7
+					PRINTFORML %조사처리(ANAME(대상),"는")% 그녀에게 입장을 이해시키기 때문에(위해), 알몸에 벗겨 목걸이를 입어 산책하러 나갔다
+					PRINTFORML 궁전안에서 병사들을 만날 때에 그들의 눈앞에서 난폭하게 그녀를 범해, 가차 없이질방편을 반복한다
+					PRINTFORMW 처음은 노려보고 있던 그녀도 몇 번째인가에는, 눈물을 흘리며 이제(이미/벌써/더는/정말) 그만두어 줘와 간원 하게 되었다
+					PRINTFORML 그만두는 대신에 충성이 증거로 삼아 페니스를 내밀면, 그녀는 주저하면서도 귀두에 키스했다
+					PRINTFORML 만족한 %조사처리(ANAME(대상),"는")% 그녀를 방에 데리고 돌아오면 침대에 재워, 상냥하게 애무하면서 안아 주었다
+					PRINTFORMW 그녀는 이미 저항하지 않고 되는 대로 몸을 구불거리게 해 %ANAME(대상)%의 모든 것을 받아들였다
+				CASE 8
+					PRINTFORML %조사처리(ANAME(대상),"는")% 그녀를 심하게 범한 후, 침대에 전매한 채로 한숨을 돌리고 있다
+					PRINTFORML 평소부터 도둑들의 상대로 길들여지고 있었는지, 그 신체는 어리면서 충분히 즐겁게 해 주었다
+					PRINTFORMW 숨을 거칠게 하면서 가로놓여 비밀스런 장소로부터 정액을 늘어뜨리는 소녀의 모습은, 다시 사타구니의 하나의 물건을 우뚝 솟게 한다
+					PRINTFORML %조사처리(ANAME(대상),"가")% 다음을 명하면, 그녀는 주저하면서도 스스로 신체를 열어 상냥하게 해 주었으면 하면 간원 했다
+					PRINTFORML 그 태도에 동정한 %조사처리(ANAME(대상),"가")% 상냥하게 안아 주면, 그녀는 이번에는 응석부리는 것 같은 신음소리를 흘렸다
+					PRINTFORMW 나이 상응하게 신체를 진동시키면서 사랑스럽게 허덕이는 그녀에게, 당초의 목적을 잊어 열중했다
+				CASE 9
+					PRINTFORML %조사처리(ANAME(대상),"는")% 그녀에게 덮어씌우면서 깊숙히 페니스의 안쪽으로 쑤셔 넣어 허리를 흔들고 있다
+					PRINTFORML 그녀는 의외롭게도 처녀이며, 고통에 얼굴을 비뚤어지게 해 신음하면서 %ANAME(대상)%의 양팔을 꽉 쥐고 있다
+					PRINTFORMW 그 표정이라고 하고 다하고 개의 꿀단지를 즐기면서, 아직 아무도 들어간 일이 없는 그녀 안쪽 깊게를 유린해 나간다
+					PRINTFORML 최안쪽에서 허리를 끊은 후, 낙낙하게 애무하면서 사랑의 말을 속삭이면, 그녀는 오슬오슬 등줄기를 진동시켰다
+					PRINTFORML 잠깐 계속하면 그녀의 긴장도 풀려 가 응석부리는 것 같은 신음소리가 희미하게 목으로부터 주워듣는동 넘어 왔다
+					PRINTFORMW 그녀를 마음에 들었던 %조사처리(ANAME(대상),"는")%, 하룻밤 걸쳐 차분히 심신 모두 자신 취향에 조교해 갔다
+			ENDSELECT
+			CALL FUCK(대상, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "도둑의 소녀의 입술", "", @"도둑의 소녀의 질", "강간")
+			PRINTFORML 
+			PRINTFORMW 마음껏 즐긴 후, 그녀를 해방해 주었다
+			IF ABL:대상:성기술 + RAND:4 >= 7
+				PRINTFORML 하지만 그녀는 헤롱헤롱이 된 것 같아, 시중들게 하면 좋겠다고 간원 했다
+				PRINTFORMW 그 모습에 만족한 %조사처리(ANAME(대상),"는")% 그녀를 부하로 해 주기로 했다
+				IF DVAR:도둑처형_소녀부하플래그 == 0
+					CALL CREATE_RANDOM_CHARA(0,0,1)
+					LOCAL = RESULT
+					SIF LOCAL == -1
+						GOTO CREATE_MISS
+					CALL CHANGE_COUNTRY(LOCAL, CFLAG:MASTER:소속, 1)
+					CALL VIRGINIZE_LOST(대상, 첫체험_처녀)
+					CALL VIRGINIZE_LOST(대상, 첫체험_키스)
+					TALENT:LOCAL:합의 = 1
+					CFLAG:LOCAL:호감도 = 1000
+					CFLAG:LOCAL:의존도 = 500
+					CFLAG:LOCAL:종속도 = 1000
+					CALL COLOR_PRINT(@"%조사처리(ANAME(LOCAL),"가")% 동료에 참가했습니다", 칼라_주의) 
+					PRINTFORMW 
+					DVAR:도둑처형_소녀부하플래그 = 1
+				ELSE
+					$CREATE_MISS
+					PRINTFORMW 그녀가 열심히 일해 준 덕분에, %ANAME(대상)%의 힘이 되었다
+					CALL PRINT_ADD_EXP(대상, "무투경험치", RAND:10 + 6, 1)
+					CALL PRINT_ADD_EXP(대상, "방위경험치", RAND:10 + 6, 1)
+					PRINTFORMW 
+				ENDIF
+			ELSE
+				PRINTFORMW 그녀는 한 번%조사처리(ANAME(대상),"를")% 되돌아 보았지만, 아무것도 말하지 않고 그대로 멀리 도망쳐 갔다
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+RETURN 1

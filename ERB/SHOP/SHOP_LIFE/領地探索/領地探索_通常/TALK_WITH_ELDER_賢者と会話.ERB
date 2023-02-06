@@ -1,0 +1,32 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_TALK_WITH_ELDER_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_TALK_WITH_ELDER_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_TALK_WITH_ELDER(대상)
+#DIM 대상
+PRINTFORML 영내를 탐색중, 어떤 현자의 평판을 (들)물었다
+PRINTFORML 신경이 쓰인 %조사처리(ANAME(대상),"는")% 만나 보기로 했다
+PRINTFORMW 현자는 일견 보통 마음좋은 할아범으로 보였다
+IF LIMIT(ABL:대상:정치, 60, 100) > RAND:100
+	PRINTFORML 하지만 몇개인가 말을 주고 받는 동안에 매우 사려깊다고 알았다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 밤새도록그와 이야기를 주고받았다
+	CALL PRINT_ADD_EXP(대상, "정치경험치", RAND:6 + 3, 1)
+ELSE
+	PRINTFORML 몇개인가 말을 주고 받았지만, 시치미를 뗀 대답(뿐)만으로 변변히 이야기가 되지 않았다
+	PRINTFORMW 평판 따위 믿을 수 없다. 실망하면서 현자의 집을 뒤로 했다
+ENDIF
+RETURN 1

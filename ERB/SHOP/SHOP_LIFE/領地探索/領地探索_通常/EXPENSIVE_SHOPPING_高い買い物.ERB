@@ -1,0 +1,100 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_EXPENSIVE_SHOPPING_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_EXPENSIVE_SHOPPING_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_EXPENSIVE_SHOPPING(대상)
+#DIM 대상
+
+PRINTFORML 무기를 신조 하려고, %조사처리(ANAME(대상),"는")% 가게를 돈다
+PRINTFORML 사용하기 쉬운 것 같은 것이 발견되었지만, 약간 높다
+CALL ICPRINT("금<5000>이라는 일이지만……", "L", 칼라_주의)
+PRINTFORML
+PRINTFORML 소지금:{MONEY}
+CALL ASK_MULTI("지불한다", "그만둔다", "입으로 지불한다", "신체로 지불한다")
+
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 몸의 안전하게는 대신할 수 없다
+		PRINTFORMW 지불하기로 했다
+		CALL ICPRINT("금<5000>을 지불했다", "L", 칼라_주의)
+		CALL PRINT_ADD_EXP(대상, "방위경험치", 10 + RAND:5)
+	CASE 1
+		PRINTFORML 과연 값이 너무 친다
+		PRINTFORML 그만두기로 했다
+	CASE 2
+		PRINTFORML 입으로 지불하게 해 주지 않겠는가……
+		PRINTFORMW 점주는 %조사처리(ANAME(대상),"를")% 초롱초롱 바라본 후, 가게의 안쪽으로 데리고 들어갔다
+		PRINTFORML 
+		IF IS_MALE(대상) || RAND:2
+			PRINTFORMW 철벅철벅소리를 내면서, %조사처리(ANAME(대상),"는")% 여자 점주의 비순을 빨고 있다
+			PRINTFORML 혀를 움직일 때마다 암컷의 맛이 입에 퍼져, 머리가 어찔어찔 한다
+			PRINTFORML 가격인하 교섭을 위해서(때문에) 시작한 것이라고 말하는데, 어느새인가 열중해 버리고 있었다
+			PRINTFORMW 점주가 교성을 주어 절정 해 조수를 분출하면, %조사처리(ANAME(대상),"는")% 눈을 감아 그것을 받아 들였다……
+			CALL FUCK(대상, "욕망, 성기술, 봉사, 펠라티오" + (IS_FEMALE(대상) ? ", 레즈" # ""), "키스상실", 0, "점주의 음부", "", "", "매춘")
+		ELSE
+			PRINTFORMW 부글부글 소리를 내면서, %조사처리(ANAME(대상),"는")% 점주의 것을 빨고 있다
+			PRINTFORML 입술로 장대를 잡아당길 때마다 수컷의 냄새가 폐에 퍼져, 머리가 어찔어찔 한다
+			PRINTFORML 가격인하 교섭을 위해서(때문에) 시작한 것이라고 말하는데, 어느새인가 열중해 버리고 있었다
+			PRINTFORMW 점주가 낮은 소리로 신음해, %ANAME(대상)%의 입안에서 정액을 발하면, %조사처리(ANAME(대상),"는")% 눈동자를 녹여지면서 그것을 삼켰다……
+			CALL FUCK(대상, "욕망, 성기술, 봉사, 펠라티오, 정애", "키스상실, 구강사정", 0, "점주의 페니스", "", "", "매춘")
+			PRINTFORML 
+			IF ABL:대상:성기술 + ABL:대상:봉사 > RAND:8
+				PRINTFORML %ANAME(대상)%의 봉사는 점주를 만족시켰다
+				PRINTFORMW 공짜로 무기를 양보해 주었다
+				CALL PRINT_ADD_EXP(대상, "방위경험치", 15)
+			ELSE
+				PRINTFORML %ANAME(대상)%의 봉사에서는 점주를 만족 시킬 수 없었다
+				PRINTFORMW 되돌려 보내져 버렸다……
+			ENDIF
+		ENDIF
+	CASE 3
+		PRINTFORML 신체로 지불하고 싶다……
+		IF (HAS_PENIS(대상) && RAND:2) || IS_MALE(대상)
+			PRINTFORMW 여자 점주는 놀란 모습이었지만, %ANAME(대상)%의 신체를 바라보면 뺨을 붉히고, 가게의 안쪽에 안내했다
+			PRINTFORML 
+			PRINTFORMW 점주의 교성이 영향을 주고 있다
+			PRINTFORML %조사처리(ANAME(대상),"는")% 뜨도록(듯이) 허리를 전후시켜, 점주를 뒤로부터 관철하고 있다
+			PRINTFORML 두 명의 신체는 궁합 발군으로, 이미 몇번이나 사귀고 있었다
+			PRINTFORMW 흔들흔들 떨리는 유방을 움켜잡음으로 하면, 그녀의 질은 큐우큐우 꼭 죄인다
+			PRINTFORMW 견디지 않고 %조사처리(ANAME(대상),"가")% 사정하면, 점주도 등을 피해 절정 했다……
+			CALL FUCK(대상, "욕망, 성교, 봉사, 성기술, Ｃ, 사정" + (IS_FEMALE(대상) ? ", 레즈, Ｂ, Ｖ" # ""), "키스상실, 동정상실", 0, @"점주의 \@ RAND:2 ? 입술 # 음부\@", "", "점주의 질", "매춘")
+		ELSEIF IS_FEMALE(대상)
+			PRINTFORMW 여자 점주는 놀란 모습이었지만, %ANAME(대상)%의 신체를 바라보면 뺨을 붉히고, 가게의 안쪽에 안내했다
+			PRINTFORML 
+			PRINTFORMW 두 명의 여자의 교성이 영향을 주고 있다
+			PRINTFORML %조사처리(ANAME(대상),"와")% 점주는 서로의 신체를 겹쳐 쾌락을 분담하고 있다
+			PRINTFORML %STR_BODY("가슴:감도", 대상)%나 %STR_BODY("음순:욕정", 대상)%를 서로 접해, 서로 비비어, 이미 몇 번이나 달하고 있다
+			PRINTFORMW %조사처리(ANAME(대상),"가")% 입맞춤하면, 점주도 스스로 요구하도록(듯이) 혀를 건다
+			PRINTFORMW 두 명은 동시에, 등을 뒤로 젖혀 절정 했다……
+			CALL FUCK(대상, "욕망, 성교, 봉사, 성기술, Ｂ, Ｖ, Ｍ, Ｃ, 레즈", "키스상실", 0, @"점주의 \@ RAND:2 ? 입술 # 음부\@", "", "", "매춘")
+		ELSE
+			PRINTFORMW 점주는 놀란 모습이었지만, %ANAME(대상)%의 신체를 초롱초롱 바라보면, 가게의 안쪽에 데리고 들어갔다
+			PRINTFORML 
+			PRINTFORMW %ANAME(대상)%의 교성이 영향을 주고 있다
+			PRINTFORMW 점주는 뜨도록(듯이) 허리를 전후시켜, %ANAME(대상)%의 %STR_BODY("질:처녀 확인:시간 경과:Ｖ삽입:절정", 대상)%를 뒤로부터 관철하고 있다
+			PRINTFORMW 두 명의 신체는 궁합 발군으로, 양구멍에서 이미 몇번이나 사귀고 있었다
+			PRINTFORMW %STR_BODY("가슴:성교:후배위", 대상)%나 %STR_BODY("애널:감도")%를 만지작거려질 때, %조사처리(ANAME(대상),"는")% 견딜 수 없다는 소리를 지른다　
+			PRINTFORMW 이윽고 점주가 질내에 한껏 정액을 발하면, %조사처리(ANAME(대상),"는")% 전신을 진동시켜 절정 했다……
+			CALL FUCK(대상, "욕망, 성교, 봉사, 성기술, Ｂ, Ｖ, Ｍ, Ｃ, Ａ, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정", GET_SPERM_ID("점주"), @"점주의 \@ RAND:2 ? 입술 # 페니스\@", "점주", "", "매춘")
+		ENDIF
+		PRINTFORML 
+		PRINTFORMW 점주는 %ANAME(대상)%의 신체에 몹시 만족한 것 같다
+		PRINTFORMW 무기를 공짜로 양보해 주었다
+		CALL PRINT_ADD_EXP(대상, "방위경험치", 15)        
+ENDSELECT
+
+RETURN 1

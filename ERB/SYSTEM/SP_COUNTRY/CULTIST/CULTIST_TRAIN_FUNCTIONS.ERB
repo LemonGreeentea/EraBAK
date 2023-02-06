@@ -1,0 +1,58 @@
+﻿;-------------------------------------------------
+;조교 함수 존재 판정
+;-------------------------------------------------
+@CULTIST_DOES_TRAIN()
+
+;-------------------------------------------------
+;조교 함락시 메세지
+;-------------------------------------------------
+@CULTIST_FALLEN_MSG(대상)
+#DIM 대상
+IF !GETBIT(TALENT:대상:특수세력함락계, 특수세력_광신도)
+	PRINTFORMW 광신도들의 설법에 의해, %조사처리(ANAME(대상),"는")% 가르침에 따르는 사람으로서 다시 태어났다
+	PRINTFORMW 희희낙락 해 법의를 입어, 복면을 해 속세의 더러워진 공기를 싫어해, 「의식」에 몸을 바친다
+	PRINTFORMW 지금은 %PRONOUN(대상)%는, 광신도들의 훌륭한 일원이 되고 있었다……
+	IF TALENT:대상:낙인
+		PRINTFORML %조사처리(ANAME(대상),"가")% %ANAME(MASTER)%전용인 것을 나타내는 낙인 위로부터,
+		PRINTFORMW 가르침에 따르는 사람의 증거인 소인이 베풀어졌다
+		TALENT:대상:낙인 = 0
+	ELSE
+		PRINTFORMW %ANAME(대상)%의 몸에, 가르침에 따르는 사람의 증거인 소인이 베풀어졌다
+	ENDIF
+	IF TALENT:(대상):프라이드높음
+		PRINTL
+		PRINTFORMW  이전에는 자랑을 안고 있었던 %조사처리(ANAME(대상),"이지만")%, 그런 것은 벌써 남지 않았다
+		PRINTFORMW %PRONOUN(대상)%들의 「신」에 비하면, %ANAME(대상)%의 프라이드 따위 있지 않는 것 같은 것이니까……
+		CALL TALENT_LOSE_PRIDE(대상, 1, 1)
+	ENDIF
+ELSE
+	PRINTFORMW 최초야말로 저항하고 있었던 %조사처리(ANAME(대상),"였")%지만, 아주 조금의 설법으로, 가르침에 따르는 마음을 되찾는다
+	PRINTFORMW 접할 수 있을 때, 범해질 때, 당신이 신을 위한 제물에 지나지 않는 것을 생각해 내 간다
+	PRINTFORMW 끊임없이 계속되는 능욕에, 얼마 지나지 않아 %조사처리(ANAME(대상),"는")% 쾌감을 받아들여, 행복한 표정으로 스스로 봉사를 시작했다……
+ENDIF
+
+;-------------------------------------------------
+;조교 함락시에 피어싱 하거나 하는 경우의 처리
+;-------------------------------------------------
+@CULTIST_FALLEN_LEAVE_MARK(대상)
+#DIM 대상
+SELECTCASE RAND:10
+	CASE IS < 3
+		CALL SET_PIERCE_RANDOM(대상, 0)
+		SIF RESULT != -1
+			CALL COLOR_PRINTW(@"%ANAME(대상)%의 %GET_PIERCE_NAME(RESULT)%에, 신자의 일원인 것을 나타내는 피어스가 장착되었다……", 칼라_핑크)
+	CASE IS < 7
+		CALL SET_TATTOO_RANDOM(대상, STR_FOR_TATTOO(-1), 0)
+		SIF RESULT != -1
+			CALL COLOR_PRINTW(@"%ANAME(대상)%의 %GET_TATTOO_NAME(RESULT)%에, 「%TATTOO:대상:RESULT%」%조사만처리(TATTOO:대상:RESULT,"라")%고 문신이 새겨졌다……", 칼라_핑크)
+	CASEELSE
+		IF GET_INMOU(대상) >= 음모_표준 && IS_FEMALE(대상)
+		CALL COLOR_PRINTW(@"신자가 증거로 삼아, %ANAME(대상)%의 음모는 하트형에 정돈되었다……", 칼라_핑크)
+		TALENT:대상:음모목표치 = 음모_하트형
+		TALENT:대상:음모현재치 = 음모_하트형
+		ELSE
+			CALL COLOR_PRINTW(@"신자가 증거로 삼아, %ANAME(대상)%의 음모는 영구 제모되었다……", 칼라_핑크)
+			TALENT:대상:음모목표치 = 음모_백보지
+			TALENT:대상:음모현재치 = 음모_백보지
+		ENDIF
+ENDSELECT

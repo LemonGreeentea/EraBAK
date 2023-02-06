@@ -1,0 +1,171 @@
+﻿;-------------------------------------------------
+;외교 병합을 실시한다
+;-------------------------------------------------
+@DIPLOMACY_PERSONAL_UNION(상대세력)
+#DIM 세력
+#DIM 상대세력
+#DIM 군주
+#DIM 상대군주
+#DIM 상대외교계획
+#DIM 판정치
+#DIM 성공플래그
+#DIM 기간
+세력 = CFLAG:MASTER:소속
+
+IF CHECK_COUNTRY_RELATION_F(세력, 상대세력) != 3
+	PRINTFORMW 외교 병합은, 현재 동맹중의 세력으로밖에 제안할 수가 없습니다
+	RETURN 0
+ENDIF
+
+IF IS_SP_COUNTRY(상대세력)
+	PRINTFORMW 이런 무리와 병합 할 수는 없습니다
+	RETURN 0
+ENDIF
+
+군주 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+상대군주 = GET_COUNTRY_BOSS(상대세력)
+
+;세력끼리의 인접 관계 맵을 작성
+CALL TMP_CREATE_COUNTRY_NEIBORING_MAP
+
+IF !TMP_COUNTRY_IS_NEIBORING:세력:상대세력
+	PRINTW 인접하고 있지 않는 세력과 외교 병합을 실시할 수 없습니다
+	RETURN 0
+ENDIF
+
+PRINTFORMW %조사처리(ANAME(군주),"는")% %ANAME(상대군주)%에게, 외교 병합 하는 제안을 했다
+
+성공플래그 = 0
+
+;조건 1  자세력에 대한 호의-적의가 1350이상.
+IF REL_LIKE:상대군주:군주 - (REL_HATE:상대군주:군주 + DIPLOMACY_HATE:세력 * 30) > 1350
+	성공플래그 = 1
+;조건 2  상대가 예속 하고 있어, 자세력의 경제력이 상대 세력의 8배
+ELSEIF TALENT:상대군주:예속 && GET_SUM_ECONOMY(세력) > GET_SUM_ECONOMY(상대세력) * (8 + DIPLOMACY_HATE:세력 / 3)
+	성공플래그 = 1
+;조건 3  자세력의 경제력 및 정치력이, 각각 상대 세력의 4배
+ELSEIF GET_SUM_ECONOMY(세력) > GET_SUM_ECONOMY(상대세력) * (4 + DIPLOMACY_HATE:세력 / 3) && TMP_GET_POLITICS_POWER(세력) > TMP_GET_POLITICS_POWER(상대세력) * (4 + DIPLOMACY_HATE:세력 / 3)
+	성공플래그 = 1
+ENDIF
+
+
+IF !성공플래그
+	PRINTFORMW 유감스럽지만, %조사처리(ANAME(상대군주),"는")% 우리 나라의 외교 병합에 응하지 않았습니다…
+	RETURN 1
+ENDIF
+
+
+PRINTFORMW 훌륭하다!%조사처리(ANAME(상대군주),"는")% 우리 나라와 1개가 되었습니다
+RESETCOLOR
+
+;병 수의 이동
+CALL CLEAR_ALL_UNIT(상대세력)
+COUNTRY_SOLDIER:세력 += COUNTRY_SOLDIER:상대세력
+COUNTRY_SOLDIER:상대세력 = 0
+
+;영지의 접수
+PRINTL 
+SETCOLOR 칼라_주의
+PRINTFORML %ANAME(상대군주)%의 영지였던 도시는 우리 나라의 영토가 되었습니다
+RESETCOLOR
+FOR LOCAL:0, 0, MAX_CITY
+	IF CITY_OWNER:(LOCAL:0) == 상대세력
+		CITY_OWNER:(LOCAL:0) = 세력
+		PRINTFORML %GET_CITYNAME(LOCAL:0)%를 우리 나라의 지배하에 두었습니다
+	ENDIF
+NEXT
+WAIT
+
+PRINTL 
+PRINTFORMW %ANAME(상대군주)%군의 병사가 우리 나라의 병력으로서 더해졌습니다
+
+;자동으로 등용
+IF CONFIG:303 == 0
+	;사관의 편입
+	PRINTL 
+	SETCOLOR 칼라_주의
+	PRINTFORML %조사처리(ANAME(상대군주),"를")% 시중들고 있던 사관은 우리 나라의 사관으로서 짜넣어졌습니다
+	RESETCOLOR
+	FOR LOCAL:0, 0, CHARANUM
+		;SIF CFLAG:(LOCAL:0):포로처 ==상대 세력:0
+		;	CALL CHANGE_COUNTRY(LOCAL:0, 상대 세력, 1)
+		IF CFLAG:(LOCAL:0):소속 == 상대세력
+			IF !CFLAG:(LOCAL:0):포로처 || CFLAG:(LOCAL:0):포로처 == CFLAG:MASTER:소속
+				CALL CHANGE_COUNTRY(LOCAL:0, CFLAG:MASTER:소속, 1)
+				PRINTFORML %조사처리(ANAME(LOCAL:0),"를")% 등용했습니다
+			ELSE
+				CALL CHANGE_COUNTRY(LOCAL:0, CFLAG:MASTER:소속)
+				SETCOLOR 칼라_시안
+				PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% %ANAME(GET_COUNTRY_BOSS(CFLAG:(LOCAL:0):포로처))%에 붙잡히고 있습니다
+				RESETCOLOR
+			ENDIF
+		ENDIF
+	NEXT
+	WAIT
+
+;자동으로 투옥
+ELSEIF CONFIG:303 == 1
+	;사관의 편입
+	PRINTL 
+	SETCOLOR 칼라_주의
+	PRINTFORML %조사처리(ANAME(상대군주),"를")% 시중들고 있던 사관을 투옥했습니다
+	RESETCOLOR
+	FOR LOCAL:0, 0, CHARANUM
+		;SIF CFLAG:(LOCAL:0):포로처 ==상대 세력
+		;	CALL CHANGE_COUNTRY(LOCAL:0, 상대 세력, 1)
+		IF CFLAG:(LOCAL:0):소속 == 상대세력
+			IF !CFLAG:(LOCAL:0):포로처 || CFLAG:(LOCAL:0):포로처 == CFLAG:MASTER:소속
+				CALL CHANGE_COUNTRY(LOCAL:0, 0, 1)
+				CALL CAPTURE(LOCAL:0, CFLAG:MASTER:소속)
+				PRINTFORML %조사처리(ANAME(LOCAL:0),"를")% 투옥했습니다
+			ELSE
+				CALL CHANGE_COUNTRY(LOCAL:0, CFLAG:MASTER:소속)
+				SETCOLOR 칼라_시안
+				PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% %ANAME(GET_COUNTRY_BOSS(CFLAG:(LOCAL:0):포로처))%에 붙잡히고 있습니다
+				RESETCOLOR
+			ENDIF
+		ENDIF
+	NEXT
+	WAIT
+
+;수동으로 선택
+ELSE
+	CALL DIPLOMACY_SURRENDER_SET_TREATMENT(상대세력)
+ENDIF
+
+;상대 세력 세력의 포로가 되고 있던 캐릭터의 처리
+;상대 세력 세력이 포로 가지고 있을까
+IF CMATCH(CFLAG:포로처, 상대세력)
+	PRINTL
+	PRINTFORMW %ANAME(상대군주)%에 붙잡히고 있던 포로를 찾아냈습니다
+	LOCAL:2 = 0
+	FOR LOCAL:0, 0, CHARANUM
+		IF CFLAG:(LOCAL:0):포로처 == 상대세력
+			;자진영의 사관이라면, 그대로 원래대로 돌아간다
+			IF CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속
+				CALL CAPTURE(LOCAL:0, 0)
+				SETCOLOR 칼라_주의
+				PRINTFORML %ANAME(상대군주)% 세력에 수 얻어지고 있었던 %조사처리(ANAME(LOCAL:0),"는")%, 우리 나라에 복귀했다
+				RESETCOLOR
+				LOCAL:2 = 1
+			ENDIF
+		ENDIF
+	NEXT
+	IF LOCAL:2
+		WAIT
+	ENDIF
+	FOR LOCAL:0, 0, CHARANUM
+		IF CFLAG:(LOCAL:0):포로처 == 상대세력
+			;제 3살력의 사관이라면, TREAT_PRISONER로 취급을 결정
+			CALL TREAT_PRISONER(LOCAL:0, 상대세력, 세력)
+		ENDIF
+	NEXT
+ENDIF
+
+;구세력의 뒤처리
+CALL DESTROY_COUNTRY(상대세력)
+;외교 병합에 의한 외교 인상의 악화
+DIPLOMACY_HATE:(CFLAG:MASTER:소속) += 5
+
+RETURN 1
+

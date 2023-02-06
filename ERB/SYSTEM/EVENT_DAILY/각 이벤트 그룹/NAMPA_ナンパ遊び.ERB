@@ -1,0 +1,157 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_NAMPA_RATE()
+RETURN 45
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_NAMPA_DECISION()
+SIF DAY < 10
+	RETURN 0
+
+SIF DVAR:원조교제_발생플래그 > 0
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;타겟을 랜덤 결정
+;---------------------
+@EVENT_DAILY_NAMPA_SETTARGET()
+#DIM 대상
+#DIM 후보, 3000
+#DIM 후보난수, 3000
+#DIM 후보수
+VARSET 후보, -1
+VARSET 후보난수, __INT_MIN__
+VARSET 후보수
+
+FOR LOCAL, 0, CHARANUM
+	;녀로, 소속이 MASTER와 동일해, 포로가 아니고, 데일리 소질_원조교제 소녀를 가지지 않고, 성지식이 1이상
+	IF CFLAG:LOCAL:소속 == CFLAG:MASTER:소속 && !CFLAG:LOCAL:포로처 && CFLAG:LOCAL:특수상태 != 특수상태_사망 && !(GETBIT(TALENT:LOCAL:데일리계, 소질_데일리_원조교제소녀)) && IS_FEMALE(LOCAL) && ABL:LOCAL:성지식 > 0
+		후보:후보수 = LOCAL
+		후보난수:후보수 = RAND:100
+		후보수 ++
+	ENDIF
+NEXT
+
+SIF 후보수 < 1
+	RETURN 0
+
+대상 = 후보:(FINDELEMENT(후보난수, MAXARRAY(후보난수, 0, 후보수), 0, 후보수))
+
+SIF 대상 < 0
+	RETURN 0
+
+DAILY_TARGET:0 = 대상
+DAILY_TARGET_NUM = 1
+
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_NAMPA_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_NAMPA()
+#DIM 대상
+
+대상 = DAILY_TARGET:0
+
+PRINTFORML %조사처리(ANAME(대상),"가")% 거리를 산책하고 있으면 남자가 말을 걸려졌다
+PRINTFORMW 슈트를 입은 풍채가 좋은, 전형적인 중년남성이라고 한 풍모다
+PRINTFORML %조사처리(ANAME(대상),"가")% 뭔가 용무인가 찾으면 그는 사랑스럽다라고 말하면서 가까워져 왔다
+PRINTFORML 경계해 거리를 잡으려고 하면 팔을 잡아져 놀지 않을까 재촉당했다
+PRINTFORMW %조사처리(ANAME(대상),"는")% 거기서 헌팅되고 있는 것이라고 눈치챈다
+PRINTFORML 가만히 그의 얼굴을 보면 온화할 것 같은 미소의 뒤에 호색가심이 보였다
+PRINTFORMW 더욱 그 왼손의 약지에는 반짝 반지가 빛나고 있다
+PRINTFORML …어떻게 하지?
+CALL ASK_YN("논다" ,"거절한다")
+IF RESULT == 1
+	PRINTFORML 공교롭게도 교제할 생각은 없다
+	PRINTFORMW 그를 뿌리쳐 떠났다
+ELSEIF RESULT == 0
+	IF TALENT:대상:처녀 == 1
+		LOCAL = 1
+	ELSE
+		LOCAL = 0
+	ENDIF
+	PRINTFORML 꼭 짬을 하고 있던 곳이다
+	PRINTFORMW 호기심에 몰아진 %조사처리(ANAME(대상),"는")% 그에게 교제하는 일로 했다
+	PRINTFORML 하면 그는 기쁜듯이 웃어 %ANAME(대상)%의 손을 잡아 자기 소개했다
+	PRINTFORML %ANAME(대상)%의 이름을 (들)물은 그는 허물없고 「%ANAME(대상)%」라고 불러 왔다
+	PRINTFORML 속셈 노출의 아저씨 상대라고는 해도 나쁜 기분은 아니고, 뺨이 피기 시작했다
+	PRINTFORMW 그대로 그에게 손을 잡아 당겨져, 추천하는 가게로 안내되었다……
+	PRINTFORML 
+	PRINTFORML 잠깐 지나가는 남자와의 데이트로 마을을 둘러쌌다
+	PRINTFORMW 생각한 이상으로 그는 유쾌해 회화도 활기를 띠어, 시간을 잊고 즐기고 있었다
+	PRINTFORML 완전히 밤도 깊어져, 슬슬 돌아갈까하고 생각하고 있으면 낯선 대로에 끌려 왔다
+	PRINTFORML 핑크색의 그야말로간판을 내건 호텔이 나란히 서는, 환락가의 일각이었다
+	PRINTFORMW 당연 남자의 의도를 헤아린 %조사처리(ANAME(대상),"가")% 올려보면, 그는 %ANAME(대상)%의 어깨를 안아 눈짓 했다
+	PRINTFORML …어떻게 하지?
+	CALL ASK_YN("수긍한다" ,"떠난다")
+	IF RESULT == 1
+		PRINTFORML 과연 오늘로 있던지 얼마 안된 남자와 자거나 따위 할 수 없다
+		PRINTFORMW 그는 끈질기게 임박해 왔지만 어떻게든 뿌리쳐 집에 돌아갔다
+	ELSEIF RESULT == 0
+		PRINTFORML …그에게 안겼던 것은도 나쁘지 않을지도 모른다
+		PRINTFORMW 완전히 묶이고 있었던 %조사처리(ANAME(대상),"는")% 그의 유혹에 넘어가 끄덕 수긍했다
+		PRINTFORML 그는 다시 그 호색가인 미소를 띄우면 가볍게 키스했다
+		PRINTFORMW 그리고 %ANAME(대상)%의 어깨를 안은 채로, 호텔의 하나로 향했다……
+		PRINTFORML 
+		PRINTFORMW 호텔의 한 방으로 %조사처리(ANAME(대상),"는")% 그에게 덮어씌울 수 있어 격렬하게 안기고 있다
+		IF LOCAL == 1
+			PRINTFORML 조금 전까지 처녀였다에도 불구하고 그 표정은 완전히 암컷이 되어 단정치 못하게 미친듯이 자지러지는 신음소리를 내고 있다
+			PRINTFORMW 결합부로부터는 바츄바츄와 추잡한 소리가 울어, 거기에 맞추어 피와 애액이 넘쳐 나온다
+		ELSE
+			PRINTFORML 만난지 얼마 안된 남자의 페니스를 물면서, %조사처리(ANAME(대상),"는")% 단정치 못하게 몸부림쳐 미친듯이 자지러지는 신음소리를 낸다
+			PRINTFORMW 그가 허리를 쳐박을 때에 추잡한 소리가 울려, 결합부에서 끝 없게 애액이 넘쳐 나온다
+		ENDIF
+		PRINTFORML %ANAME(대상)%들의 신체의 궁합은 발군으로, 밀어닥치는 쾌락에 완전히 빠져 버리고 있었다
+		PRINTFORML 그의 난폭하지만 정열적인 허리 사용은 %ANAME(대상)%의 암컷의 본능을 자극해, 몸도 마음도 예의범절을 가르쳐져 간다
+		PRINTFORMW 대담한 페니스로 질육을 가차 없이 깎아질 때에 발끝까지 시비레가 달려, 삐걱삐걱 경련해 버린다
+		PRINTFORML 참지 못하고 그에게 매달리면, 힘들게 껴안고 돌려주어지고 끈적한 키스로 입술을 색이 되었다
+		PRINTFORML 질척질척 혀를 얽히게 할 수 있는 서로의 타액을 교환하고 있으면 머릿속이 그의 냄새로 채워져 간다
+		IF LOCAL == 1
+			PRINTFORML 불륜 섹스로 처녀를 흩뜨릴 뿐인가, 미친듯이 자지러지는 신음소리를 내고 있는 사실이 %조사처리(ANAME(대상),"를")% 고조되게 한 자궁을 쑤시게 했다
+		ELSE
+			PRINTFORML 추악한 중년의 아저씨와의 불륜 섹스에 몰두하고 있는 사실이, %조사처리(ANAME(대상),"를")% 고조되게 한 자궁을 쑤시게 했다
+		ENDIF
+		PRINTFORMW %ANAME(대상)%들은 모두를 잊어 오로지 고기를 서로 쳐박으면서, 서서히 절정으로 올라 간다
+		PRINTFORML 「%ANAME(대상)%!%ANAME(대상)%! 간다! 사정한다!」
+		PRINTFORML 허리를 가속시키면서 그에게 귓전으로 속삭여져 그 키모에 %조사처리(ANAME(대상),"는")% 무심코 몸부림 해 버린다
+		PRINTFORMW 그리고 그는 짐승과 같은 신음소리를 올리면 한층 더 깊게 페니스를 쑤셔 넣은 채로 마음껏 그 정액을 발했다
+		PRINTFORML 고무 너머에서도 전해지는만큼 힘차게 발해지는 대량의 정액을 느끼면서, %ANAME(대상)%도 또한 절정에 이르렀다
+		PRINTFORML ! 뷰루루루! (와)과 %ANAME(대상)%의 체내의 콘돔으로, 농후한 정액이 대량으로 따라져 간다
+		PRINTFORML 그는 %조사처리(ANAME(대상),"를")% 껴안으면서 전신을 진동시켜 한심한 소리를 높이면서 긴 긴 사정을 계속한다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 숨을 거칠게 하고 그의 열을 몸의 밖과 안으로 느끼면서, 조금 전의 여운으로 2번 3도로 가벼운 절정을 반복했다
+		PRINTFORML …한숨 돌린 %ANAME(대상)%들이지만 고조됨은 한 번에서는 들어가지 않고, 그는 곧바로 허리를 흔들면서 다음을 요구해 왔다
+		PRINTFORMW %ANAME(대상)%도 그다지도 아닌 미소를 띄워 요구되는 대로 여러가지 체위로 안겨 끝에는 엉덩이 구멍까지 사용되었다……
+		CALL FUCK(대상, "Ｃ, Ｂ, Ｖ, Ｍ, Ａ, Ｖ성교, Ａ성교, 성교, 성기술, 봉사, 정애, 펠라티오, 욕망", "키스상실, 처녀상실, Ａ처녀상실, 구강사정", 0, @"원조교제 아버지의 \@RAND:2 ? 페니스 # 입술\@", "원조교제 아버지", "", "매춘")
+		CALL FUCK(대상, "Ｃ, Ｂ, Ｖ, Ｍ, Ａ, Ｖ성교, Ａ성교, 성교, 성기술, 봉사, 정애, 펠라티오, 욕망", "키스상실, 처녀상실, Ａ처녀상실, 구강사정", 0, @"원조교제 아버지의 \@RAND:2 ? 페니스 # 입술\@", "원조교제 아버지", "", "매춘")
+		PRINTFORML 
+		PRINTFORMW 밤이 끝나는 무렵, %조사처리(ANAME(대상),"는")% 휘청거리는 발걸음으로 그에 의지하는 것처럼 해 호텔로부터 나왔다
+		IF LOCAL == 1
+			PRINTFORML 충격적인 첫체험을 끝낸 %조사처리(ANAME(대상),"는")% 아직도 꿈꾸는 듯한 기분이라는 표정으로 그에게 다가붙고 있다
+		ELSE
+			PRINTFORML 마구 너무나 간 %조사처리(ANAME(대상),"는")% 아직도 꿈꾸는 듯한 기분이라는 표정으로 그에게 다가붙고 있다
+		ENDIF
+		PRINTFORMW 그와의 이별을 서운하다고 생각한 %조사처리(ANAME(대상),"는")% 무의식 중에 안타까운 시선으로 그를 올려보고 있었다
+		PRINTFORML 그 시선을 느꼈는지, 그는 다시 그 미소를 띄우면 원조교제를 신청해 왔다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 돌연의 제안에 놀라면서도 기뻐해 승낙해, 그와 연락처를 교환했다
+		PRINTFORML 그리고 마지막에 한껏 타액을 교환하고 나서, 그는 떠나 갔다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 그 등을 전송하면, 방금전까지의 행위를 생각해 내면서 귀가했다……
+		PRINTFORML 
+		CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"는")% 원조교제를 하는 일이 되었다", 칼라_핑크)
+		DVAR:원조교제_대상ID = GET_ID(대상)
+		DVAR:원조교제_발생플래그 = 1
+	ENDIF
+ENDIF
+
+RETURN 1

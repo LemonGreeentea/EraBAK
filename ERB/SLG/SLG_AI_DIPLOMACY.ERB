@@ -1,0 +1,966 @@
+﻿@SLG_AI_DIPLOMACY(세력)
+#DIM 세력
+#DIM 계획
+
+SIF COUNTRY_IS_CLOSED:세력
+	RETURN
+
+AI_DIPLOMACY_TERM:세력 --
+
+;기한 마감이라면 외교 계획 갱신
+IF AI_DIPLOMACY_TERM:세력 <= 0
+	CALL CREATE_AI_DIPLOMACY_PLAN(세력)
+ENDIF
+
+FOR 계획, 0, AI_DIPLOMACY_PROPERTY:(COUNTRY_AI_TYPE:세력):AI_외교_행동횟수
+	SIF AI_DIPLOMACY_PLAN:세력:계획 == -1
+		CONTINUE
+	SIF !IS_COUNTRY(AI_DIPLOMACY_TARGET:세력:계획)
+		CONTINUE
+	SIF COUNTRY_IS_CLOSED:(AI_DIPLOMACY_TARGET:세력:계획)
+		CONTINUE
+	SELECTCASE AI_DIPLOMACY_PLAN:세력:계획
+		CASE AI_외교계획_회담
+			CALL SLG_DIPLOMACY_CONFERENCE(세력, AI_DIPLOMACY_TARGET:세력:계획)
+		CASE AI_외교계획_동맹
+			CALL SLG_DIPLOMACY_ALLIANCE(세력, AI_DIPLOMACY_TARGET:세력:계획)
+		CASE AI_외교계획_정전
+			CALL SLG_DIPLOMACY_CEASE_FIRE(세력, AI_DIPLOMACY_TARGET:세력:계획)
+		CASE AI_외교계획_악평
+			CALL SLG_DIPLOMACY_CREATE_SCANDAL(세력, AI_DIPLOMACY_TARGET:세력:계획)
+		CASE AI_외교계획_연합
+			CALL SLG_DIPLOMACY_CREATE_UNION(세력, AI_DIPLOMACY_TARGET:세력:계획)
+		CASE AI_외교계획_요구
+			CALL SLG_DIPLOMACY_REQUEST(세력, AI_DIPLOMACY_TARGET:세력:계획)
+	ENDSELECT
+NEXT
+
+;------------------------
+;외교 계획을 작성한다
+;------------------------
+@CREATE_AI_DIPLOMACY_PLAN(세력)
+#DIM 세력
+#DIM 군주
+#DIM 상대세력
+#DIM 세력인덱스
+#DIM 세력수
+#DIM 상대세력군주
+#DIM 세력리스트, MAX_COUNTRY
+#DIM 관계성리스트, MAX_COUNTRY
+#DIM 역관계성리스트, MAX_COUNTRY
+#DIM 경제력리스트, MAX_COUNTRY
+#DIM 난이도보정
+#DIM 계획
+#DIM 이유
+#DIM CONST 이유_를좋아하는사람 = 0
+#DIM CONST 이유_싫다 = 1
+#DIM CONST 이유_사랑받고 = 2
+#DIM CONST 이유_미움받고 = 3
+#DIM CONST 이유_경제강함 = 4
+#DIM CONST 이유_경제약함 = 5
+VARSET 세력리스트
+VARSET 관계성리스트, 1500
+VARSET 역관계성리스트, 1500
+VARSET 경제력리스트, __INT_MIN__
+
+군주 = GET_COUNTRY_BOSS(세력)
+
+AI_DIPLOMACY_TERM:세력 = RAND(3, 6)
+
+;외교 계획을 리셋트 한다
+FOR 계획, 0, VARSIZE("AI_DIPLOMACY_PLAN", 1)
+	AI_DIPLOMACY_PLAN:세력:계획 = -1
+	AI_DIPLOMACY_TARGET:세력:계획 = 0
+NEXT
+
+세력수 = 0
+FOR 상대세력, 0, MAX_COUNTRY
+	SIF !IS_COUNTRY(상대세력)
+		CONTINUE
+	SIF COUNTRY_IS_CLOSED:상대세력
+		CONTINUE
+	SIF 세력 == 상대세력
+		CONTINUE
+	SIF IS_SP_COUNTRY(상대세력)
+		CONTINUE
+	세력리스트:세력수 = 상대세력
+	상대세력군주 = GET_COUNTRY_BOSS(상대세력)
+	관계성리스트:세력수 = 1500 + REL_LIKE:군주:상대세력군주 - REL_HATE:군주:상대세력군주 - DIPLOMACY_HATE:상대세력 * (상대세력 == CFLAG:MASTER:소속 ? 50 # 30)
+	역관계성리스트:세력수 = 1500 + REL_LIKE:상대세력군주:군주 - REL_HATE:상대세력군주:군주 - DIPLOMACY_HATE:세력 * (세력 == CFLAG:MASTER:소속 ? 50 # 30)
+	경제력리스트:세력수 = TMP_SUM_ECONOMY:상대세력
+	IF 상대세력 == CFLAG:MASTER:소속
+		난이도보정 = GET_DIFFICULTY_CORRECTION()
+		관계성리스트:세력수 = 관계성리스트:세력수 * 100 / 난이도보정
+	ENDIF
+	세력수 ++
+NEXT
+
+SIF 세력수 <= 0
+	RETURN
+
+FOR 계획, 0, MIN(AI_DIPLOMACY_PROPERTY:(COUNTRY_AI_TYPE:세력):AI_외교_행동횟수, AI_DIPLOMACY_MAX_PLAN)
+	SIF 세력수 <= 0
+		BREAK
+	SELECTCASE RAND:100
+		CASE IS < 10
+			세력인덱스 = FINDELEMENT(역관계성리스트, MAXARRAY(역관계성리스트, 0, 세력수), 0, 세력수 + 1)
+			이유 = 이유_사랑받고
+		CASE IS < 30
+			세력인덱스 = FINDELEMENT(역관계성리스트, MINARRAY(역관계성리스트, 0, 세력수), 0, 세력수 + 1)
+			이유 = 이유_미움받고
+		CASE IS < 50
+			세력인덱스 = FINDELEMENT(관계성리스트, MAXARRAY(관계성리스트, 0, 세력수), 0, 세력수 + 1)
+			이유 = 이유_를좋아하는사람
+		CASE IS < 75
+			세력인덱스 = FINDELEMENT(관계성리스트, MINARRAY(관계성리스트, 0, 세력수), 0, 세력수 + 1)
+			이유 = 이유_싫다
+		CASE IS < 90
+			세력인덱스 = FINDELEMENT(경제력리스트, MAXARRAY(경제력리스트, 0, 세력수), 0, 세력수 + 1)
+			이유 = 이유_경제강함
+		CASEELSE
+			세력인덱스 = FINDELEMENT(경제력리스트, MAXARRAY(경제력리스트, 0, 세력수), 0, 세력수 + 1)
+			이유 = 이유_경제약함
+	ENDSELECT
+
+	상대세력 = 세력리스트:세력인덱스
+	AI_DIPLOMACY_TARGET:세력:계획 = 상대세력
+
+	SELECTCASE 이유
+		CASE 이유_사랑받고
+			SELECTCASE IFRAND("0TO74", 1, "75TO89", 역관계성리스트:세력인덱스 > 1500 && TMP_COUNTRY_RELATION:세력:상대세력 == 0  && 세력수 >= 2, "90TO99", 역관계성리스트:세력인덱스 > 1800 && TMP_COUNTRY_RELATION:세력:상대세력 <= 2 && 세력수 >= 2)
+				CASE IS < 75
+					AI_DIPLOMACY_PLAN:세력:계획 = AI_외교계획_회담
+				CASE IS < 90
+					AI_DIPLOMACY_PLAN:세력:계획 = AI_외교계획_정전
+				CASEELSE
+					AI_DIPLOMACY_PLAN:세력:계획 = AI_외교계획_동맹
+			ENDSELECT
+		CASE 이유_미움받고
+			SELECTCASE RAND:100
+				CASE IS < 80
+					AI_DIPLOMACY_PLAN:세력:계획 = AI_외교계획_회담
+				CASE IS < 99
+					AI_DIPLOMACY_PLAN:세력:계획 = AI_외교계획_악평
+			ENDSELECT
+		CASE 이유_를좋아하는사람
+			SELECTCASE IFRAND("0TO74", 1, "75TO89", 역관계성리스트:세력인덱스 > 1500 && TMP_COUNTRY_RELATION:세력:상대세력 == 0  && 세력수 >= 2, "90TO99", 역관계성리스트:세력인덱스 > 1800 && TMP_COUNTRY_RELATION:세력:상대세력 <= 2 && 세력수 >= 2)
+				CASE IS < 75
+					AI_DIPLOMACY_PLAN:세력:계획 = AI_외교계획_회담
+				CASE IS < 90
+					AI_DIPLOMACY_PLAN:세력:계획 = AI_외교계획_정전
+				CASEELSE
+					AI_DIPLOMACY_PLAN:세력:계획 = AI_외교계획_동맹
+			ENDSELECT
+		CASE 이유_싫다
+			IF SLG_AI_DIPLOMACY_DOES_CREATE_UNION(세력, 상대세력)
+				AI_DIPLOMACY_PLAN:세력:계획 = AI_외교계획_연합
+			ELSE
+				IF 관계성리스트:세력인덱스 < RAND:3000 && DIPLOMACY_HATE:세력 <= RAND(10, 15) && (상대세력 != CFLAG:MASTER:소속 || (!IS_LOVER(군주) && !IS_SLAVE(군주)))
+					AI_DIPLOMACY_PLAN:세력:계획 = AI_외교계획_악평
+				ELSE
+					CALL CLEAR_AI_DIPLOMACY_PLAN(세력, 상대세력)
+				ENDIF
+			ENDIF
+		CASE 이유_경제강함
+			IF REL_HATE:GET_COUNTRY_BOSS(세력):GET_COUNTRY_BOSS(상대세력) > REL_LIKE:GET_COUNTRY_BOSS(세력):GET_COUNTRY_BOSS(상대세력) + 300 && SLG_AI_DIPLOMACY_DOES_CREATE_UNION(세력, 상대세력)
+				AI_DIPLOMACY_PLAN:세력:계획 = AI_외교계획_연합
+			ELSE
+				IF RAND:3000 < 관계성리스트:세력인덱스
+					SELECTCASE IFRAND("0TO74", 1, "75TO89", 역관계성리스트:세력인덱스 > 1500 && TMP_COUNTRY_RELATION:세력:상대세력 == 0  && 세력수 >= 2, "90TO99", 역관계성리스트:세력인덱스 > 1800 && TMP_COUNTRY_RELATION:세력:상대세력 <= 2 && 세력수 >= 2)
+						CASE IS < 75
+							AI_DIPLOMACY_PLAN:세력:계획 = AI_외교계획_회담
+						CASE IS < 90
+							AI_DIPLOMACY_PLAN:세력:계획 = AI_외교계획_정전
+						CASEELSE
+							AI_DIPLOMACY_PLAN:세력:계획 = AI_외교계획_동맹
+					ENDSELECT
+				ELSE
+					IF DIPLOMACY_HATE:세력 <= RAND(10, 15) && (상대세력 != CFLAG:MASTER:소속 || (!IS_LOVER(군주) && !IS_SLAVE(군주)))
+						AI_DIPLOMACY_PLAN:세력:계획 = AI_외교계획_악평
+					ELSE
+						CALL CLEAR_AI_DIPLOMACY_PLAN(세력, 상대세력)
+					ENDIF
+				ENDIF
+			ENDIF
+		CASE 이유_경제약함
+;				IF RAND:3000 < 관계성 리스트:세력 인덱스
+;					SELECTCASE IFRAND("0 TO74", 1, "75 TO89", 역관계성 리스트:세력 인덱스 > 1500 && TMP_COUNTRY_RELATION:세력:상대 세력 == 0  && 세력수 >= 2, "90 TO99", 역관계성 리스트:세력 인덱스 > 1800 && TMP_COUNTRY_RELATION:세력:상대 세력 <= 2 && 세력수 >= 2)
+;						CASE IS < 75
+;							AI_DIPLOMACY_PLAN:세력:계획 = AI_외교 계획_회담
+;						CASE IS < 90
+;							AI_DIPLOMACY_PLAN:세력:계획 = AI_외교 계획_정전
+;						CASEELSE
+;							AI_DIPLOMACY_PLAN:세력:계획 = AI_외교 계획_동맹
+;					ENDSELECT
+;				ELSE
+					SELECTCASE RAND:100
+;					;IFRAND("0 TO59", 1, "60 TO89", 관계성 리스트:세력 인덱스 < 1200, "90 TO99", 관계성 리스트:세력 인덱스 < 900)
+						CASE 0 TO 69
+							AI_DIPLOMACY_PLAN:세력:계획 = AI_외교계획_회담
+						CASE 70 TO 79
+							IF DIPLOMACY_HATE:세력 <= RAND(10, 15) && (상대세력 != CFLAG:MASTER:소속 || (!IS_LOVER(군주) && !IS_SLAVE(군주)))
+								AI_DIPLOMACY_PLAN:세력:계획 = AI_외교계획_악평
+							ELSE
+								CALL CLEAR_AI_DIPLOMACY_PLAN(세력, 상대세력)
+							ENDIF
+						CASE 80 TO 99
+							AI_DIPLOMACY_PLAN:세력:계획 = AI_외교계획_요구
+					ENDSELECT
+;				ENDIF
+	ENDSELECT
+	;동맹내지 정전은, 연합 참가국과 토벌대상의 관계에 있는 경우는 회담에 고쳐 쓴다
+	IF GROUPMATCH(AI_DIPLOMACY_PLAN:세력:계획, AI_외교계획_동맹, AI_외교계획_정전) && GROUPMATCH(TREATY_U_TARGET:0, 세력, 상대세력)
+		FOR LOCAL, 0, MAX_TREATY_COUNTRY
+			IF TREATY_U_COUNTRY:0:LOCAL == (TREATY_U_TARGET:0 == 세력 ? 상대세력 # 세력)
+				AI_DIPLOMACY_PLAN:세력:계획 = AI_외교계획_회담
+				BREAK
+			ENDIF
+		NEXT
+	ENDIF
+	세력수 --
+	;중복 해 등록되는 것이 없게 지워 둔다
+	ARRAYSHIFT 세력리스트,     -1, 0, 세력인덱스
+	ARRAYSHIFT 관계성리스트,   -1, 0, 세력인덱스
+	ARRAYSHIFT 역관계성리스트, -1, 0, 세력인덱스
+	ARRAYSHIFT 경제력리스트,   -1, 0, 세력인덱스
+
+	;DEBUGPRINTFORML %ANAME(군주)%의 외교 계획{계획}차례:상대%ANAME(GET_COUNTRY_BOSS(AI_DIPLOMACY_TARGET:세력:계획))% 내용:{AI_DIPLOMACY_PLAN:세력:계획} 이유:{이유}
+NEXT
+
+
+
+;------------------------
+;회담을 실시한다
+;------------------------
+@SLG_DIPLOMACY_CONFERENCE(세력, 상대세력)
+#DIM 세력
+#DIM 상대세력
+#DIM 군주
+#DIM 상대세력군주
+#DIM 계획
+#DIM 정치파워
+#DIM 요리파워
+#DIM 효과량
+#DIM 거부플래그
+#DIM 지출이마
+
+거부플래그 = 0
+
+군주 = GET_COUNTRY_BOSS(세력)
+상대세력군주 = GET_COUNTRY_BOSS(상대세력)
+
+IF 상대세력 == CFLAG:MASTER:소속
+	CALL COLOR_PRINTL(@"%조사처리(ANAME(군주),"가")% %조사처리(ANAME(상대세력군주),"와")% 회담했습니다", 칼라_주의)
+ELSE
+	PRINTFORM %조사처리(ANAME(군주),"는")% %ANAME(상대세력군주)%에의 회담을 시도했습니다
+	;상대의 외교 대상으로 들어가지 않고, 한편 난수 판정에 실패하면 거부 플래그가 끊는다
+	IF !GROUPMATCH(CHECK_AI_DIPLOMACY_PLAN(상대세력, 세력), AI_외교계획_회담, AI_외교계획_동맹, AI_외교계획_정전) && RAND:MAX(1500 + REL_LIKE:상대세력군주:군주 - REL_HATE:상대세력군주:군주, 1000) < 500
+		PRINTFORML 가, %조사처리(ANAME(상대세력군주),"는")% 환영하지 않았습니다
+		거부플래그 = 1
+	ELSE
+		PRINTFORML 。%조사처리(ANAME(상대세력군주),"는")% 환영한 것 같습니다
+	ENDIF
+ENDIF
+
+;베이스 효과량 계산  거부라면 반감
+효과량 = (30 + RAND:21 + RAND:21) * AI_RELATION:(COUNTRY_AI_TYPE:상대세력):(COUNTRY_AI_TYPE:세력) / 100 / (거부플래그 + 1)
+
+;DEBUGPRINTFORML 회담의 베이스 효과량{효과량}
+
+정치파워 = SQRT(TMP_SUM_POLITICS_POWER:세력) / 10
+요리파워 = SQRT(TMP_SUM_COOKING_POWER:세력) / 10
+
+효과량 = 효과량 * (정치파워 + 요리파워 + 100) / 100
+
+지출이마 = MONEY:세력 * AI_DIPLOMACY_PROPERTY:(COUNTRY_AI_TYPE:세력):AI_외교_회담지불액 / 100
+
+;금전 수수
+MONEY:세력 -= 지출이마
+MONEY:상대세력 += 지출이마
+
+;DEBUGPRINTFORML 회담의 정치 요리 파워 보정 후 효과량{효과량}
+
+CALL CHANGE_RELATION_C_TO_C(세력, 상대세력, 효과량, 효과량 * -1)
+CALL CHANGE_RELATION_C_TO_C(상대세력, 세력, 효과량, 효과량 * -1)
+
+IF 상대세력 != CFLAG:MASTER:소속 && REL_LIKE:상대세력:세력 - REL_HATE:상대세력:세력 > 600 && !RAND:4 && GET_COUNTRY_NUM() > 3
+	CALL CHANGE_AI_DIPLOMACY_PLAN(세력, 상대세력, AI_외교계획_정전)
+	PRINTFORML %조사처리(ANAME(군주),"는")% %조사처리(ANAME(상대세력군주),"와")%의 정전을 시도하는 것 같습니다
+ENDIF
+;------------------------
+;정전을 코코로 본다
+;------------------------
+@SLG_DIPLOMACY_CEASE_FIRE(세력, 상대세력)
+#DIM 세력
+#DIM 상대세력
+#DIM 군주
+#DIM 상대세력군주
+#DIM 계획
+#DIM 정치파워
+#DIM 요리파워
+#DIM 효과량
+#DIM 지출이마
+#DIM 판정치
+;정전 이상 상태라면 RETURN
+SIF TMP_COUNTRY_RELATION:세력:상대세력 >= 1
+	RETURN
+
+군주 = GET_COUNTRY_BOSS(세력)
+상대세력군주 = GET_COUNTRY_BOSS(상대세력)
+
+판정치 = MAX(1500 + REL_LIKE:상대세력군주:군주 - REL_HATE:상대세력군주:군주, 1000)
+판정치 += LIMIT((TMP_SUM_ECONOMY:세력 - TMP_SUM_ECONOMY:상대세력) / 500, 0, 500)
+
+;플레이어에게의 외교였던 경우
+IF 상대세력 == CFLAG:MASTER:소속
+	CALL SLG_DIPLOMACY_TO_PLAYER(세력, AI_외교계획_정전)
+	SIF RESULT == 0
+		RETURN 
+ELSE
+	PRINTFORM %조사처리(ANAME(군주),"는")% %조사처리(ANAME(상대세력군주),"와")%의 정전을 시도했습니다
+	;상대의 외교 대상으로 들어가지 않고, 한편 난수 판정에 실패하면 거부 플래그가 끊는다
+	IF !GROUPMATCH(CHECK_AI_DIPLOMACY_PLAN(상대세력, 세력), AI_외교계획_동맹, AI_외교계획_정전) && RAND:MAX(판정치, 1000) < 1500
+		PRINTFORML 가, %조사처리(ANAME(상대세력군주),"는")% 거부했습니다
+		IF !RAND:3
+			CALL CHANGE_AI_DIPLOMACY_PLAN(세력, 상대세력, AI_외교계획_회담)
+			PRINTFORML %조사처리(ANAME(군주),"는")% 회담을 거듭할 방침으로 전환한 것 같습니다
+		ENDIF
+		RETURN
+	ELSE
+		PRINTFORML 。%조사처리(ANAME(상대세력군주),"는")% 정전에 동의 했습니다
+	ENDIF
+ENDIF
+
+정치파워 = SQRT(TMP_SUM_POLITICS_POWER:세력) / 10
+요리파워 = SQRT(TMP_SUM_COOKING_POWER:세력) / 10
+
+효과량 = LIMIT((REL_LIKE:상대세력군주:군주 - REL_HATE:상대세력군주:군주) * (정치파워 + 요리파워 + 100) / 20000, 5, 15)
+
+CALL COLOR_PRINTL(@"%조사처리(ANAME(군주),"와")% %ANAME(상대세력군주)%의 정전 기간은 {효과량}턴입니다", 칼라_주의)
+CALL INIT_CEASEFIRE(세력, 상대세력, 효과량)
+
+TMP_COUNTRY_RELATION:세력:상대세력 = 1
+TMP_COUNTRY_RELATION:상대세력:세력 = 1
+
+;외교 계획을 갱신
+CALL CLEAR_AI_DIPLOMACY_PLAN(세력, 상대세력)
+CALL CLEAR_AI_DIPLOMACY_PLAN(상대세력, 세력)
+
+지출이마 = MONEY:세력 * AI_DIPLOMACY_PROPERTY:(COUNTRY_AI_TYPE:세력):AI_외교_정전지불액 / 100
+
+;금전 수수
+MONEY:세력 -= 지출이마
+MONEY:상대세력 += 지출이마
+
+;------------------------
+;동맹을 시도한다
+;------------------------
+@SLG_DIPLOMACY_ALLIANCE(세력, 상대세력)
+#DIM 세력
+#DIM 상대세력
+#DIM 군주
+#DIM 상대세력군주
+#DIM 계획
+#DIM 정치파워
+#DIM 요리파워
+#DIM 효과량
+#DIM 판정치
+#DIM 지출이마
+
+;연합 이상 상태라면 RETURN
+SIF TMP_COUNTRY_RELATION:세력:상대세력 >= 2
+	RETURN
+
+군주 = GET_COUNTRY_BOSS(세력)
+상대세력군주 = GET_COUNTRY_BOSS(상대세력)
+
+
+
+판정치 = MAX(1500 + REL_LIKE:상대세력군주:군주 - REL_HATE:상대세력군주:군주, 1000)
+판정치 += LIMIT((TMP_SUM_ECONOMY:세력 - TMP_SUM_ECONOMY:상대세력) / 500, 0, 500)
+
+;플레이어에게의 외교였던 경우
+IF 상대세력 == CFLAG:MASTER:소속
+	CALL SLG_DIPLOMACY_TO_PLAYER(세력, AI_외교계획_동맹)
+	SIF RESULT == 0
+		RETURN 
+ELSE
+	PRINTFORM %조사처리(ANAME(군주),"는")% %조사처리(ANAME(상대세력군주),"와")%의 동맹을 시도했습니다
+	;상대의 외교 대상으로 들어가지 않고, 한편 난수 판정에 실패하면 거부 플래그가 끊는다
+	IF !CHECK_AI_DIPLOMACY_PLAN(상대세력, 세력) == AI_외교계획_동맹 && RAND:MAX(판정치, 1000) < 2000
+		PRINTFORML 가, %조사처리(ANAME(상대세력군주),"는")% 거부했습니다
+		IF !RAND:3
+			CALL CHANGE_AI_DIPLOMACY_PLAN(세력, 상대세력, AI_외교계획_회담)
+			PRINTFORML %조사처리(ANAME(군주),"는")% 회담을 거듭할 방침으로 전환한 것 같습니다
+		ENDIF
+		RETURN
+	ELSE
+		PRINTFORML 。%조사처리(ANAME(상대세력군주),"는")% 동맹에 동의 했습니다
+	ENDIF
+ENDIF
+
+정치파워 = SQRT(TMP_SUM_POLITICS_POWER:세력) / 10
+요리파워 = SQRT(TMP_SUM_COOKING_POWER:세력) / 10
+
+효과량 = LIMIT((REL_LIKE:상대세력군주:군주 - REL_HATE:상대세력군주:군주) * (정치파워 + 요리파워 + 100) / 20000, 5, 15)
+
+CALL COLOR_PRINTL(@"%조사처리(ANAME(군주),"와")% %ANAME(상대세력군주)%의 동맹 기간은 {효과량}턴입니다", 칼라_주의)
+CALL INIT_ALLIANCE(세력, 상대세력, 효과량)
+
+TMP_COUNTRY_RELATION:세력:상대세력 = 3
+TMP_COUNTRY_RELATION:상대세력:세력 = 3
+
+;외교 계획을 갱신
+CALL CLEAR_AI_DIPLOMACY_PLAN(세력, 상대세력)
+CALL CLEAR_AI_DIPLOMACY_PLAN(상대세력, 세력)
+
+
+지출이마 = MONEY:세력 * AI_DIPLOMACY_PROPERTY:(COUNTRY_AI_TYPE:세력):AI_외교_동맹지불액 / 100
+
+;금전 수수
+MONEY:세력 -= 지출이마
+MONEY:상대세력 += 지출이마
+
+
+;------------------------
+;악평을 흘린다
+;------------------------
+@SLG_DIPLOMACY_CREATE_SCANDAL(세력, 상대세력)
+#DIM 세력
+#DIM 상대세력
+#DIM 군주
+#DIM 상대세력군주
+#DIM 계획
+#DIM 정치파워
+#DIM 요리파워
+#DIM 효과량
+#DIM 거부플래그
+#DIM 대상세력, 3
+#DIM 대상세력군주, 3
+#DIMS 군주명
+#DIM 대상수
+VARSET 대상수
+VARSET 대상세력
+VARSET 대상세력군주
+VARSET 군주명
+군주 = GET_COUNTRY_BOSS(세력)
+상대세력군주 = GET_COUNTRY_BOSS(상대세력)
+
+;외교 계획으로부터 대상을 선출
+IF 상대세력 != CFLAG:MASTER:소속
+	FOR LOCAL, 0, AI_DIPLOMACY_PLAN:(COUNTRY_AI_TYPE:상대세력):AI_외교_행동횟수
+		IF !GROUPMATCH(AI_DIPLOMACY_TARGET:상대세력:LOCAL, 세력, 상대세력) && IS_COUNTRY(AI_DIPLOMACY_TARGET:상대세력:LOCAL) && GROUPMATCH(AI_DIPLOMACY_PLAN:상대세력:LOCAL, AI_외교계획_회담, AI_외교계획_정전, AI_외교계획_동맹)
+			대상세력:대상수 = AI_DIPLOMACY_TARGET:상대세력:LOCAL
+			대상세력군주:대상수 = GET_COUNTRY_BOSS(대상세력:대상수)
+			대상수 ++
+		ENDIF
+		SIF 대상수 == VARSIZE("대상세력")
+			BREAK
+	NEXT
+ENDIF
+
+;아직 빈자리가 있으면, 랜덤으로 결정한다
+IF 대상수 != VARSIZE("대상세력")
+	CALL FISHER_YATES_SHAFFLE(MAX_COUNTRY)
+	FOR LOCAL, 0, MAX_COUNTRY
+		LOCAL:1 = SHAFFLE_ARRAY:LOCAL
+		SIF !IS_COUNTRY(LOCAL:1) || GROUPMATCH(LOCAL:1, 세력, 상대세력) || MATCH(대상세력, LOCAL:1)
+			CONTINUE
+		대상세력:대상수 = LOCAL:1
+		대상세력군주:대상수 = GET_COUNTRY_BOSS(대상세력:대상수)
+		대상수 ++
+		SIF 대상수 == VARSIZE("대상세력")
+			BREAK
+	NEXT
+ENDIF
+
+;만약을 위해
+IF 대상수 == 0
+	CALL CLEAR_AI_DIPLOMACY_PLAN(세력, 상대세력)
+	RETURN
+ENDIF
+
+
+FOR LOCAL, 0, 대상수
+	SIF LOCAL >= 1
+		군주명:0 += "·"
+	군주명 += @"%ANAME(대상세력군주:LOCAL)%"
+NEXT
+
+IF 상대세력 == CFLAG:MASTER:소속
+	CALL COLOR_PRINTL(@"%조사처리(ANAME(군주),"가")% %ANAME(상대세력군주)%에 대한 악평을 %군주명%에 흘렸습니다", 칼라_주의)
+ELSE
+	PRINTFORML %조사처리(ANAME(군주),"는")% %ANAME(상대세력군주)%의 악평을 %군주명%에 흘렸습니다
+ENDIF
+
+;베이스 효과량 계산
+효과량 = (15 + RAND:10 + RAND:10)
+
+;DEBUGPRINTFORML 악평의 베이스 효과량{효과량}
+
+정치파워 = SQRT(TMP_SUM_POLITICS_POWER:세력) / 10
+요리파워 = SQRT(TMP_SUM_COOKING_POWER:세력) / 10
+
+효과량 = 효과량 * (정치파워 + 요리파워 + 100) / 100
+
+;DEBUGPRINTFORML 악평의 정치 요리 파워 보정 후 효과량{효과량}
+
+FOR LOCAL, 0, 대상수
+	CALL CHANGE_RELATION_C_TO_C(대상세력:LOCAL, 상대세력, 효과량 * -1, 효과량)
+NEXT
+
+DIPLOMACY_HATE:세력 ++
+
+
+;------------------------
+;요구
+;------------------------
+@SLG_DIPLOMACY_REQUEST(세력, 상대세력)
+#DIM 세력
+#DIM 상대세력
+#DIM 군주
+#DIM 상대세력군주
+#DIM CONST 요구_병사 = 0
+#DIM CONST 요구_경제 = 1
+#DIM CONST 요구_사관 = 2
+#DIMS CONST 요구내용 = "병사", "경제", "사관"
+#DIM 내용
+#DIM 계획
+#DIM 사관, 3000
+#DIM 사관수
+#DIM 효과량
+#DIMS 효과량문자열
+#DIM 거부플래그
+
+거부플래그 = 0
+
+군주 = GET_COUNTRY_BOSS(세력)
+상대세력군주 = GET_COUNTRY_BOSS(상대세력)
+
+;통할 것 같지 않으면 되돌린다
+;IF ! DIPLOMACY_REQUEST_CHECK(세력, 상대 세력, 30)
+;	CALL CLEAR_AI_DIPLOMACY_PLAN(세력, 상대 세력)
+;	RETURN
+;ENDIF
+
+
+SELECTCASE IFRAND("0TO49", 1, "50TO79", DIPLOMACY_REQUEST_CHECK(세력, 상대세력, 250, 1), "80TO99", DIPLOMACY_REQUEST_CHECK(세력, 상대세력, 300, 1))
+	CASE 0 TO 49
+		내용 = 요구_병사
+		거부플래그 = !DIPLOMACY_REQUEST_CHECK(세력, 상대세력, 200, 1)
+		효과량 = MIN(TMP_SUM_ECONOMY:상대세력 * 8 / 1000, TMP_SUM_SOLDIER:상대세력 * 2 / 3)
+		효과량문자열 = %TOSTR(효과량)%
+	CASE 50 TO 79
+		내용 = 요구_경제
+		거부플래그 = !DIPLOMACY_REQUEST_CHECK(세력, 상대세력, 250, 1)
+		효과량 = TMP_SUM_ECONOMY:상대세력 / 20 / 100 * 100
+		효과량문자열 = %TOSTR(효과량)%
+	CASEELSE
+		내용 = 요구_사관
+		거부플래그 = !DIPLOMACY_REQUEST_CHECK(세력, 상대세력, 300, 1)
+		VARSET 사관
+		VARSET 사관수
+		FOR LOCAL, 0, CHARANUM
+			SIF CFLAG:LOCAL:소속 != 상대세력 || CFLAG:LOCAL:포로처 || IS_SP_CHARA(LOCAL) || IS_ANIMAL(LOCAL) || GET_COUNTRY_BOSS(상대세력) == LOCAL
+				CONTINUE
+			사관:사관수 = LOCAL
+			사관수 ++
+		NEXT
+		효과량 = 사관:(RAND:사관수)
+		효과량문자열 = %ANAME(효과량)%
+ENDSELECT
+
+
+IF CFLAG:MASTER:소속 == 상대세력
+	CALL COLOR_PRINTL(@"%조사처리(ANAME(군주),"가")% %ANAME(상대세력군주)%에 %요구내용:내용%%효과량문자열%를 요구해 왔습니다", 칼라_주의)
+
+	CALL ASK_YN("받아들인다", "거절한다")
+	IF RESULT == 0
+		거부플래그 = 0
+	ELSE
+		거부플래그 = 1
+	ENDIF
+ELSE
+	PRINTFORML %조사처리(ANAME(군주),"가")%, %ANAME(상대세력군주)%에 %요구내용:내용%%효과량문자열%를 요구했습니다
+ENDIF
+
+IF 거부플래그
+	PRINTFORML %조사처리(ANAME(상대세력군주),"는")% 거부했습니다
+	CALL CHANGE_RELATION_C_TO_C(세력, 상대세력, -50, 50)
+	DIPLOMACY_HATE:세력 += 3
+	CALL CLEAR_AI_DIPLOMACY_PLAN(세력, 상대세력)
+	RETURN
+ENDIF
+
+PRINTFORML %조사처리(ANAME(상대세력군주),"는")% 받아들였습니다
+
+
+SELECTCASE 내용
+	CASE 요구_병사
+		TMP_SUM_SOLDIER:세력 += 효과량
+		TMP_SUM_SOLDIER:상대세력 -= -효과량
+		CALL SHIFT_SOLDIER(상대세력, 세력, 효과량)
+		PRINTFORML %조사처리(ANAME(상대세력군주),"는")% %ANAME(군주)%에 군사{효과량}를 제공했습니다
+	CASE 요구_경제
+		TMP_SUM_ECONOMY:세력 += 효과량
+		TMP_SUM_ECONOMY:상대세력 -= -효과량
+		CALL SHIFT_ECONOMY(상대세력, 세력, 효과량)
+		PRINTFORML %조사처리(ANAME(상대세력군주),"는")% %ANAME(군주)%에 경제{효과량}를 제공했습니다
+	CASE 요구_사관
+		IF 사관수 == 0
+			PRINTFORML ……가, 건네줄 수 있는 사관이 없었던 것 같다……
+			PRINTFORML 이것에는 그렇게도의 %ANAME(군주)%도 쓴 웃음이었다
+			CALL CLEAR_AI_DIPLOMACY_PLAN(세력, 상대세력)
+		ELSE
+			PRINTFORML %효과량문자열%가 %ANAME(세력)%에 이적했습니다
+			CALL CHANGE_COUNTRY(효과량, 세력, 1)
+		ENDIF
+ENDSELECT
+
+
+DIPLOMACY_HATE:세력 += 3
+CALL CLEAR_AI_DIPLOMACY_PLAN(세력, 상대세력)
+
+
+
+;------------------------
+;연합의 실행 판정
+;------------------------
+@SLG_AI_DIPLOMACY_DOES_CREATE_UNION(세력, 상대세력)
+#FUNCTION
+#DIM 세력
+#DIM 상대세력
+#DIM 세력군주
+#DIM 상대세력군주
+#DIM 혐오감
+#DIM 견적세력수
+세력군주 = GET_COUNTRY_BOSS(세력)
+상대세력군주 = GET_COUNTRY_BOSS(상대세력)
+
+SIF DAY < SLG_PP:1
+	RETURNF 0
+
+;동시에 성립하는 연합은 하나
+SIF MATCH(TREATY_U_TARGET, 0) != MAX_TREATY_U
+	RETURNF 0
+
+SIF TMP_COUNTRY_RELATION:세력:상대세력 != 0
+	RETURNF 0
+
+IF REL_HATE:세력군주:상대세력군주 - REL_LIKE:세력군주:상대세력군주 + DIPLOMACY_HATE:상대세력 * (CFLAG:MASTER:소속 == 상대세력 ? 50 # 30) > 300 * (CFLAG:MASTER:소속 == 상대세력 ? 300 * 100 / GET_DIFFICULTY_CORRECTION() # 1)
+ELSEIF TMP_SUM_ECONOMY:세력 * 3 < TMP_SUM_ECONOMY:상대세력
+ELSEIF TMP_SUM_SOLDIER:세력 * 3 < TMP_SUM_SOLDIER:상대세력
+ELSEIF TMP_OWN_CITY:세력 * 3 < TMP_SUM_SOLDIER:상대세력
+ELSE
+	RETURNF 0
+ENDIF
+
+견적세력수 = 0
+FOR LOCAL, 0, MAX_COUNTRY
+	SIF !IS_COUNTRY(LOCAL) || GROUPMATCH(LOCAL, 세력, 상대세력) || TMP_COUNTRY_RELATION:LOCAL:상대세력 != 0
+		CONTINUE
+	SIF SLG_AI_DIPLOMACY_DOES_PARTICIPATE_UNION(LOCAL, 상대세력, 세력, 0)
+		견적세력수 ++
+NEXT
+
+;DEBUGPRINTFORML 보고 생각{견적 세력수}
+
+SIF RAND:(GET_COUNTRY_NUM() > 10 ? 50 # 30) < 견적세력수
+	RETURNF 1
+
+RETURNF 0
+
+;------------------------
+;발의 된 연합에의 참가 판정
+;------------------------
+@SLG_AI_DIPLOMACY_DOES_PARTICIPATE_UNION(세력, 상대세력, 선언세력, 참가세력수 = 0)
+#FUNCTION
+#DIM 세력
+#DIM 상대세력
+#DIM 선언세력
+#DIM 참가세력수
+#DIM 세력군주
+#DIM 상대세력군주
+#DIM 선언세력군주
+#DIM 혐오감
+#DIM 선언세력에의혐오감
+#DIM CONST 이유_싫다 = 1
+#DIM CONST 이유_경제 = 2
+#DIM CONST 이유_무력 = 3
+#DIM CONST 이유_영토 = 4
+#DIM 참가난이도
+
+세력군주 = GET_COUNTRY_BOSS(세력)
+상대세력군주 = GET_COUNTRY_BOSS(상대세력)
+선언세력군주 = GET_COUNTRY_BOSS(선언세력)
+
+SIF IS_SP_COUNTRY(세력)
+	RETURNF 0
+
+SIF TMP_COUNTRY_RELATION:세력:상대세력 != 0
+	RETURNF 0
+
+혐오감 = REL_HATE:세력군주:상대세력군주 - REL_LIKE:세력군주:상대세력군주 + DIPLOMACY_HATE:상대세력 * (CFLAG:MASTER:소속 == 상대세력 ? 50 # 30)
+선언세력에의혐오감 = REL_HATE:세력군주:선언세력군주 - REL_LIKE:세력군주:선언세력군주 + DIPLOMACY_HATE:선언세력 * (CFLAG:MASTER:소속 == 선언세력 ? 50 # 30)
+
+SIF 상대세력 == CFLAG:MASTER:소속
+	혐오감 = 혐오감 * GET_DIFFICULTY_CORRECTION() / 100
+
+;선언 세력이 싫다면 너무 참가하고 싶어하지 않는다. 또 너무 싫다면 절대로 참가하지 않는다
+SELECTCASE 선언세력에의혐오감
+	CASE IS < 300
+		참가난이도 = 1
+	CASE IS < 600
+		참가난이도 = 2
+	CASE IS < 900
+		참가난이도 = 3
+	CASE IS < 1200
+		참가난이도 = 4
+	CASEELSE
+		RETURNF 0
+ENDSELECT
+
+;선언 세력에의 혐오로부터 설정된 참가 난이도는, 토벌대상에의 혐오감으로 경감（? ）된다
+SELECTCASE 혐오감
+	CASE IS > 1200
+		RETURNF 이유_싫다
+	CASE IS > 900
+		참가난이도 = MIN(참가난이도 - 3, 1)
+	CASE IS > 600
+		참가난이도 = MIN(참가난이도 - 2, 1)
+	CASE IS > 300
+		참가난이도 = MIN(참가난이도 - 1, 1)
+ENDSELECT
+
+IF TMP_SUM_ECONOMY:세력 * 3 * 참가난이도 < TMP_SUM_ECONOMY:상대세력 && !RAND:(2 + 참가세력수 / 2)
+	RETURNF 이유_경제
+ELSEIF TMP_SUM_SOLDIER:세력 * 3 * 참가난이도 < TMP_SUM_SOLDIER:상대세력 && !RAND:(2 + 참가세력수 / 2)
+	RETURNF 이유_무력
+ELSEIF TMP_OWN_CITY:세력 * 3 * 참가난이도 < TMP_OWN_CITY:상대세력 && !RAND:(2 + 참가세력수 / 2)
+	RETURNF 이유_영토
+ELSEIF RAND:MAX(혐오감 - 참가세력수 * 50 - 50 * (참가난이도 - 1), 1) > 300
+	RETURNF 이유_싫다
+ENDIF
+
+RETURNF 0
+
+;------------------------
+;연합의 발의
+;------------------------
+@SLG_DIPLOMACY_CREATE_UNION(세력, 상대세력)
+#DIM 세력
+#DIM 상대세력
+#DIM 참가세력수
+#DIM 세력군주
+#DIM 상대세력군주
+#DIM 참가플래그, MAX_COUNTRY
+#DIM CONST 이유_싫다 = 1
+#DIM CONST 이유_경제 = 2
+#DIM CONST 이유_무력 = 3
+#DIM CONST 이유_영토 = 4
+#DIM 연합번호
+VARSET 참가플래그
+VARSET 참가세력수
+VARSET 연합번호
+
+세력군주 = GET_COUNTRY_BOSS(세력)
+상대세력군주 = GET_COUNTRY_BOSS(상대세력)
+
+IF 세력 == CFLAG:MASTER:소속
+	PRINTFORML %조사처리(ANAME(상대세력군주),"을")% 대상으로 한 토벌령을 발행합니까?
+	PRINTFORMW 각 국의 관계에 따라 참가 국가 수가 달라지거나 연합이 무산될 수 있습니다.
+	CALL ASK_YN("발행한다", "그만둔다")
+	SIF RESULT == 1
+	 RETURN
+ELSE
+	CALL CLEAR_AI_DIPLOMACY_PLAN(세력, 상대세력)
+
+	;짤 수 없으면 스르
+	SIF !SLG_AI_DIPLOMACY_DOES_CREATE_UNION(세력, 상대세력)
+		RETURN
+ENDIF
+
+참가플래그:세력 = 1
+참가세력수 ++
+CALL COLOR_PRINTL("!!! 연합 발의!!!", 칼라_주의)
+CALL COLOR_PRINTL(@"%조사처리(ANAME(세력군주),"는")% %ANAME(상대세력군주)% 토벌 연합을 발의 했습니다!", 상대세력 == CFLAG:MASTER:소속 ? 칼라_경고 # 칼라_주의)
+
+FOR LOCAL, 0, MAX_COUNTRY
+	SIF !IS_COUNTRY(LOCAL) || TMP_COUNTRY_RELATION:LOCAL:상대세력 != 0 || GROUPMATCH(LOCAL, 세력, 상대세력)
+		CONTINUE
+	;주인공 소속 세력의 경우는 특수 처리
+	IF LOCAL == CFLAG:MASTER:소속
+		PRINTFORML 이 연합에 참가합니까?
+		CALL ASK_YN()
+		IF RESULT == 0
+			PRINTFORML 참가를 표명했습니다
+			참가플래그:LOCAL = 1
+		ELSE
+			PRINTFORML 불참가를 표명했습니다
+		ENDIF
+	ELSE
+		참가플래그:LOCAL = SLG_AI_DIPLOMACY_DOES_PARTICIPATE_UNION(LOCAL, 상대세력, 세력, 참가세력수)
+		SIF !참가플래그:LOCAL
+			CONTINUE
+		PRINTFORM %ANAME(GET_COUNTRY_BOSS(LOCAL))%는
+		SELECTCASE 참가플래그:LOCAL
+			CASE 이유_싫다
+				PRINTFORM 세력간의 악감정
+			CASE 이유_경제
+				PRINTFORM 세력간의 경제 격차
+			CASE 이유_무력
+				PRINTFORM 세력간의 병력 격차
+			CASE 이유_영토
+				PRINTFORM 신장 하는 세력에의 경계심
+		ENDSELECT
+		PRINTFORML 로부터, 참가를 표명했습니다
+		참가세력수 ++
+	ENDIF
+NEXT
+
+IF 참가세력수 == 1
+	PRINTFORML ……결국, 어느 세력도 참가하지 않았다
+	PRINTFORML 연합은 취하되었습니다
+	RETURN
+ENDIF
+
+참가세력수 = 0
+
+FOR LOCAL, 0, MAX_COUNTRY
+	SIF !IS_COUNTRY(LOCAL) || !참가플래그:LOCAL
+		CONTINUE
+	TREATY_U_COUNTRY:연합번호:참가세력수 = LOCAL
+	TMP_COUNTRY_UNION_TARGET:LOCAL = 상대세력
+	참가세력수 ++
+	CALL CLEAR_AI_DIPLOMACY_PLAN(LOCAL, 상대세력)
+	FOR LOCAL:1, LOCAL + 1, MAX_COUNTRY
+		SIF !IS_COUNTRY(LOCAL:1) || !참가플래그:(LOCAL:1)
+			CONTINUE
+		TMP_COUNTRY_RELATION:LOCAL:(LOCAL:1) = 2
+		TMP_COUNTRY_RELATION:(LOCAL:1):LOCAL = 2
+	NEXT
+NEXT
+
+TREATY_U_TERM:연합번호 = LIMIT((REL_HATE:세력군주:상대세력군주 - REL_LIKE:세력군주:상대세력군주) / 100, 5, 8)
+TREATY_U_TARGET:연합번호 = 상대세력
+
+CALL ICPRINT(@"연합 기간은<{TREATY_U_TERM:연합번호}>턴입니다", "L", 칼라_주의)
+
+FORCEWAIT
+
+;------------------------
+;세력으로부터 상대 세력에의 외교 계획을 돌려준다
+;------------------------
+@CHECK_AI_DIPLOMACY_PLAN(세력, 상대세력)
+#FUNCTION
+#DIM 세력
+#DIM 상대세력
+#DIM 계획
+FOR 계획, 0, AI_DIPLOMACY_PROPERTY:(COUNTRY_AI_TYPE:세력):AI_외교_행동횟수
+	SIF AI_DIPLOMACY_TARGET:세력:계획 == 상대세력
+		RETURNF AI_DIPLOMACY_PLAN:세력:계획
+NEXT
+RETURNF -1
+
+;------------------------
+;세력으로부터 상대 세력에의 외교 계획을 소거한다
+;------------------------
+@CLEAR_AI_DIPLOMACY_PLAN(세력, 상대세력)
+#DIM 세력
+#DIM 상대세력
+#DIM 계획
+FOR 계획, 0, AI_DIPLOMACY_PROPERTY:(COUNTRY_AI_TYPE:세력):AI_외교_행동횟수
+	IF AI_DIPLOMACY_TARGET:세력:계획 == 상대세력
+		AI_DIPLOMACY_PLAN:세력:계획 = -1
+		AI_DIPLOMACY_TARGET:세력:계획 = 0
+		RETURN 1
+	ENDIF
+NEXT
+RETURN 0
+
+;------------------------
+;세력으로부터 상대 세력에의 외교 계획을 변경한다
+;------------------------
+@CHANGE_AI_DIPLOMACY_PLAN(세력, 상대세력, 신계획)
+#DIM 세력
+#DIM 상대세력
+#DIM 계획
+#DIM 신계획
+FOR 계획, 0, AI_DIPLOMACY_PROPERTY:(COUNTRY_AI_TYPE:세력):AI_외교_행동횟수
+	IF AI_DIPLOMACY_TARGET:세력:계획 == 상대세력
+		AI_DIPLOMACY_PLAN:세력:계획 = 신계획
+		RETURN 1
+	ENDIF
+NEXT
+RETURN 0
+
+;------------------------
+;있는 세력으로부터 플레이어에의 외교 타진(정전·동맹)
+;------------------------
+@SLG_DIPLOMACY_TO_PLAYER(세력, 계획)
+#DIM 세력
+#DIM 군주
+#DIM 계획
+#DIM 판정
+#DIM 효과량
+#DIMS CONST 내용 = "회담", "정전", "동맹"
+
+
+군주 = GET_COUNTRY_BOSS(세력)
+
+CALL COLOR_PRINTL(@"%조사처리(ANAME(군주),"가")% %내용:계획%를 신청해 왔습니다", 칼라_주의)
+PRINTFORML 어떻게 합니까?
+CALL ASK_MULTI_JUDGE("받아들인다", 1, "거부", 1, "병을 요구", 1, "경제를 요구", 1, "조교시켜라", CFLAG:군주:외교조교카운터 == 0)
+
+SELECTCASE RESULT 
+	CASE 0
+		PRINTFORML %내용:계획%에 합의하기로 했습니다
+		RETURN 1
+	CASE 1
+		PRINTFORML 거부했습니다
+		FORCEWAIT
+		;마다 턴 (들)물어 오는 것은 짜증나기 때문에 클리어
+		CALL CLEAR_AI_DIPLOMACY_PLAN(세력, CFLAG:MASTER:소속)
+		RETURN 0
+	CASE 2
+		PRINTFORML 병을 요구했습니다
+		IF DIPLOMACY_REQUEST_CHECK(CFLAG:MASTER:소속, 세력, 200)
+			효과량 = MIN(TMP_SUM_ECONOMY:세력 * 8 / 1000, TMP_SUM_SOLDIER:세력 * 2 / 3)
+			DIPLOMACY_HATE:(CFLAG:MASTER:소속) += 3
+			CALL SHIFT_SOLDIER(세력, CFLAG:MASTER:소속, 효과량)
+			PRINTFORML ……%조사처리(ANAME(군주),"는")% 요구를 삼켰습니다
+			PRINTFORML 병{효과량}를 양도했습니다
+			FORCEWAIT
+			RETURN 1
+		ENDIF
+	CASE 3
+		PRINTFORML 경제를 요구했습니다
+		IF DIPLOMACY_REQUEST_CHECK(CFLAG:MASTER:소속, 세력, 250)
+			효과량 = TMP_SUM_ECONOMY:세력 / 20 / 100 * 100
+			DIPLOMACY_HATE:(CFLAG:MASTER:소속) += 3
+			CALL SHIFT_ECONOMY(세력, CFLAG:MASTER:소속, 효과량)
+			PRINTFORML ……%조사처리(ANAME(군주),"는")% 요구를 삼켰습니다
+			PRINTFORML 경제력{효과량 / 100}를 양도했습니다
+			FORCEWAIT
+			RETURN 1
+		ENDIF
+	CASE 4
+		PRINTFORML 조교시켜라라고 전했습니다
+		IF DIPLOMACY_REQUEST_CHECK(CFLAG:MASTER:소속, 세력, 300)
+			DIPLOMACY_HATE:(CFLAG:MASTER:소속) += 3
+			CFLAG:군주:외교조교중 = 1
+
+			PRINTFORML ……%조사처리(ANAME(군주),"는")% 요구를 삼켰습니다
+			PRINTFORML %조사처리(ANAME(군주),"가")% 「포로의조교」메뉴로부터 조교 가능하게 되었습니다
+			PRINTFORMW (조건을 채우고 있는 동안은 항상 조교 가능하게 됩니다)
+			FORCEWAIT
+			RETURN 1
+		ENDIF
+ENDSELECT
+
+PRINTFORML ……각하 되었습니다
+DIPLOMACY_HATE:(CFLAG:MASTER:소속) += 3
+CALL CLEAR_AI_DIPLOMACY_PLAN(세력, CFLAG:MASTER:소속)
+FORCEWAIT
+RETURN 0
+

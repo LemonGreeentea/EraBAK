@@ -1,0 +1,51 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_GOBLIN_THIEF_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_GOBLIN_THIEF_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_GOBLIN_THIEF(대상)
+#DIM 대상
+PRINTFORML 영지를 탐색중, 작은 오니가 출몰한다는 소문을 들었다
+PRINTFORML 도둑질을 해 곤란해 하고 있는 것이라는 일이지만……
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "지략"))
+PRINTFORML 
+CALL ASK_MULTI("수색에 협력한다", "방치한다")
+
+IF RESULT == 1
+	PRINTFORML 곤란한 이야기이지만, 굉장한 피해도 아니다
+	PRINTFORML 방치하기로 했다
+	RETURN 1
+ENDIF
+
+PRINTFORML 곤란해 하고 있다면 간과할 수 없다
+PRINTFORML %조사처리(ANAME(대상),"는")% 함정을 장치해, 작은 오니를 추적하기로 했다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+IF LIMIT(ABL:대상:지략, 50, 100) > RAND:100
+	PRINTFORMW 작은 오니를 무사하게 잡았다!
+	PRINTFORML 그들은 훔친 것을 소굴에 모아두고 있던 것 같다
+	PRINTFORML 전의 소유자에게 돌려주어, 얼마인가의 보수를 받았다……
+	CALL PRINT_ADD_EXP(대상, "지략경험치", 5 + RAND:5)
+	CALL ICPRINT("금<3000>을 받았다", "L", 칼라_주의)
+	MONEY += 3000
+ELSE
+	PRINTFORML ……가, 작은 오니는 교활하고, 도망쳐져 버렸다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 어깨를 떨어뜨려 거점에 돌아왔다……
+ENDIF
+
+RETURN 1

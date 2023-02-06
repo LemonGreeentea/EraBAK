@@ -1,0 +1,171 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_GIRL_SOLDIER_RATE()
+RETURN 30
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_GIRL_SOLDIER_DECISION()
+SIF DAY < 10
+	RETURN 0
+;MASTER에 페니스가 있다
+SIF !(HAS_PENIS(MASTER))
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_GIRL_SOLDIER_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_GIRL_SOLDIER
+#DIM 대상
+#DIMS CONST 소녀병사_종류 =  "오니", "텐구", "바케네코", "인랑", "요호"
+
+대상 = RAND(0, VARSIZE("소녀병사_종류"))
+
+PRINTFORML 병의 훈련중, 한사람의 소녀병사가 눈에 띄었다
+PRINTFORML 소녀가 왜 병사에? 의문으로 생각한 %조사처리(ANAME(MASTER),"는")% 그녀에게 질문해 보았다
+PRINTFORMW %ANAME(MASTER)%에 말을 걸 수 있어 횡설수설하게 되는 그녀를 침착하게 해 이야기를 듣는다
+PRINTFORML 실은 그녀는 인간과 %소녀병사_종류:대상%의 하프로, 주위로부터 소외당하고 자라 온 것 같다
+PRINTFORML 인 것으로 싸움으로 활약해 사람들에게 인정되고 싶다고 생각해 지원한 것 같다
+PRINTFORML 자주(잘) 보면 그녀의 신체로부터는 요괴의 그것 같은 물건이 나 있다
+PRINTFORMW 또 액으로부터 방울져 떨어지는 땀의 양이 얼마나 진지하게 훈련하고 있을까를 이야기한다
+PRINTFORML 어떻게 하지?
+CALL ASK_MULTI("직접 연습을 붙였다" ,"그늘에 데리고 들어갔다" ,"격려해 떠났다")
+IF RESULT == 2
+	PRINTFORML 격려해 떠났다
+	PRINTFORMW %소녀병사_종류:대상%의 소녀는 감격해 보다 한층 훈련에 쳐박기 시작했다
+	FOR LOCAL, 0, CHARANUM
+		IF CFLAG:(LOCAL):소속 == CFLAG:MASTER:소속 && !CFLAG:(LOCAL):포로처 && !IS_ANIMAL(LOCAL)
+			CFLAG:(LOCAL):호감도 += 50 
+		ENDIF
+	NEXT
+	CALL COLOR_PRINT(@"이 일은 미담으로서 병사들에게 퍼져, 동료의 평가가 올랐다", 칼라_주의)
+	PRINTFORMW
+ELSEIF RESULT == 0
+	PRINTFORML 직접 연습을 붙여 주었다
+	PRINTFORMW %소녀병사_종류:대상%의 소녀는 감격해 열심히 %ANAME(MASTER)%의 지도를 받았다
+	COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 3000
+	CALL COLOR_PRINT(@"그녀는 곧바로 일류의 사관이 되어, 많이 군에 공헌한 결과, 병수가 3000명 증가했다", 칼라_주의)
+	PRINTFORMW
+ELSE
+	PRINTFORML 슬쩍 그녀의 신체를 본다
+	PRINTFORML 땀으로 젖은 의복은 신체의 라인을 떠오르게 해 있어
+	PRINTFORMW 아직 어림을 남기면서도 인 요고인가, 훌륭하게 여자의 색기를 조성하기 시작하고 있었다
+	PRINTFORML 그 모습에 넋을 잃고 본 %조사처리(ANAME(MASTER),"는")% 직접 연습을 붙여 주면 그녀를 그늘로 이끌었다
+	PRINTFORMW 그녀는 돌연의 의사표현에 놀라면서도 기뻐해 %ANAME(MASTER)%에 따라 왔다
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+	IF ABL:MASTER:성기술 + ABL:MASTER:성교 + ABL:MASTER:봉사 < 6 + RAND:20
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀를 만족 시킬 수 없었다
+		PRINTFORMW 그녀는 마음 속이 빌리고 한 모습으로 빨리 대열에 돌아와 갔다
+	ELSE
+		PRINTFORMW 연병 하고 있는 군사들의 목소리가 들리는 나무 그늘에서, %조사처리(ANAME(MASTER),"는")% 그녀와 교접하고 있다
+		SELECTCASE RAND:10
+			CASE 0
+				PRINTFORML 「아히♥아♥아아♥%ANAME(MASTER)%님♥거기 안 됩니다♥아아♥약한 것♥쿠응♥」
+				PRINTFORML 몸집이 작은 몸을 움켜 쥐면서 격렬하게 밀어올려 주면, 그녀는 사랑스럽게 허덕여 신체를 뛰게 한다
+				PRINTFORML 보다 깊게까지 쑤셔 넣어 자궁입구를 귀두로 노크 하면, 질전체가 꽉 조이며 사정을 재촉했다
+				PRINTFORMW 원래 교양이 있었는지, 처음이었다에도 불구하고 그녀는 많이 흐트러져, %조사처리(ANAME(MASTER),"를")% 즐겁게 했다
+			CASE 1
+				PRINTFORML 「응♥응츄♥응읏♥아♥좋습니다아♥%ANAME(MASTER)%님♥좀 더♥응츄우♥」
+				PRINTFORML 그녀는 완전히 정신나간 같은 표정으로 깊숙히 %ANAME(MASTER)%의 페니스를 물면서 열중해 키스를 졸라 온다
+				PRINTFORML 사랑스러운 모습에 %ANAME(MASTER)%도 흥분해, 보다 격렬하게 깊게까지 쳐박아 주면 그녀는 움찔움찔 몸을 진동시킨다
+				PRINTFORMW 처녀였다고는 생각되지 않을만큼 요구해 오는 그녀에게 교제해, 땀투성이가 될 때까지 몇 번이나 교접했다
+			CASE 2
+				PRINTFORML 「아♥앙♥응♥안 돼애♥이런♥아♥안 되는데♥아아♥멈추지 않는 것♥아앙♥」
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀를 나무에 받고 쓰게 해 포동포동 한 엉덩이를 움켜잡음으로 해 격렬하게 암 찔러 해 준다
+				PRINTFORML 그녀는 단정치 못한 교성을 미치게 하고 삐걱삐걱 다리를 진동시키면서도, 어떻게든 붕괴되지 않게 견디고 있다
+				PRINTFORMW 공격하면 공격할수록 밀을 흘러넘치게 하는 극상의 여체에게 %조사처리(ANAME(MASTER),"는")% 열중해 그녀를 계속 공격해대었다
+			CASE 3
+				PRINTFORML 「아♥아♥가 버리는♥끝내는♥외인데♥아아♥가 버립니다아♥아히이♥」
+				PRINTFORML 긴장된 미육이 건방지게 페니스를 단단히 조여, 무심코 넋을 잃을 것 같은 쾌락에 신음소리를 내 버린다
+				PRINTFORML 열중해 허리를 쳐박으면 그녀도 거기에 응하는 것처럼 몸을 구불거리게 한경키보다 사랑스럽게 교성을 미치게 했다
+				PRINTFORMW %ANAME(MASTER)%들은 시간을 잊어 완전히 지쳐 버릴 때까지 계속 교접해, 그녀의 태내에 몇 번이나 정액을 발했다
+			CASE 4
+				PRINTFORML 「응♥응응♥아아♥굉장해에♥%ANAME(MASTER)%님의 자지♥아아♥깊은 것♥응아♥」
+				PRINTFORML 알몸이 된 그녀가 %ANAME(MASTER)%에 걸쳐, 격렬하게 머리카락을 흩뜨리면서 허리를 흔들어 미친듯이 자지러지는 신음소리를 낸다
+				PRINTFORML 몸집이 작으면서도 근원까지 푹 물어 흐트러지는 모습은, %ANAME(MASTER)%의 눈을 즐겁게 하고 한층 하나의 물건을 단단하게 한다
+				PRINTFORMW 이윽고 졸라지는 대로 사정해 주면, 그녀는 암컷인것 같은 기쁨의 소리를 미치게 하면서 크게 뒤로 젖혔다
+			CASE 5
+				PRINTFORML 「아히♥아히♥또 가는♥안 돼 안 돼♥심♥아아♥가는♥이그♥익크우우우♥♥」
+				PRINTFORML 두응! (와)과 깊숙히 페니스를 찌르면, 그녀는 몇 번째인가의 절정에 이르러 크게 몸을 뒤로 젖히게 했다
+				PRINTFORML 절정의 여운으로 질육이 움찔움찔 경련해, 페니스를 전방향으로부터 억압참지 못하고 허리가 떠 버린다
+				PRINTFORMW 처음이라고는 생각되지 않을 만큼의 극상의 꿀단지에 %조사처리(ANAME(MASTER),"는")% 완전히 포로가 되어, 그녀와 함께 몇 번이나 끝났다
+			CASE 6
+				PRINTFORML 「후우-♥후우-♥응읏♥앗…♥안 됏, 아아♥응응～～～♥♥♥」
+				PRINTFORML %ANAME(MASTER)%에 안기면서 그녀는 몇 번이나 절정 하면서도 소리를 높이지 않으려고 필사적으로 견디려고 몸을 진동시킨다
+				PRINTFORML 그 필사적인 표정에 기학심을 돋워져보다 격렬하게 끈적 공격하면 그녀는 눈물을 흘리면서 경련 하기 시작한다
+				PRINTFORMW 사랑스럽게 몸부림치는 소녀의 모습에 흥분이 들어가지 않은 %조사처리(ANAME(MASTER),"는")%, 몇 번이나 그녀의 안에 정액을 발했다
+			CASE 7
+				PRINTFORML 「히우♥아♥아앙♥그런 곳♥빨아서는♥응응♥아아♥아♥아앙♥」
+				PRINTFORML 격렬하게 밀어올리면서 땀의 방울져 떨어지는 겨드랑이를 혀로 훑으면, 그녀는 오슬오슬 몸부림 해 꽉 질을 잡았다
+				PRINTFORML 땀투성이의 소녀의 향기가 비강을 간질여, %ANAME(MASTER)%의 흥분을 부추겨 페니스는 더욱 더 열을 띠어 간다
+				PRINTFORMW 두 사람 모두에 통상의 훈련 이상으로 땀투성이가 되면서, 오로지 서로를 요구해 계속 교접했다
+			CASE 8
+				PRINTFORML 「응♥응푸♥응응♥푸하아…하아, 어떻습니까♥읏, 응츄♥또 커져 왔던♥」
+				PRINTFORML 그녀는 무릎 꿇어 페니스를 열심히 빨아 청소하면서, 눈동자에♥를 띄워%조사처리(ANAME(MASTER),"를")% 올려봐 온다
+				PRINTFORML 스스로를 여자로 한 그 하나의 물건에 사랑스러운 듯이 뺨을 비비는 그녀의 사타구니로부터는 조금 전 낸 정액이 걸죽 흘러넘치고 있다
+				PRINTFORMW 그녀같이 아직 다 만족하지 않은 %조사처리(ANAME(MASTER),"는")% 다시 소녀를 덮어누르면, 2 회전으로 옮겼다
+			CASE 9
+				PRINTFORML 「아긋♥앗♥아히♥아아♥%ANAME(MASTER)%님♥%ANAME(MASTER)%님♥아구♥♥」
+				PRINTFORML 몸집이 작은 신체를 움켜 쥐어, 긴장된 질육을 밀치고 밀어올리면, 그녀는 짐승과 같이 허덕여 흐트러진다
+				PRINTFORML 그녀는 일발 찌르기마다 몸을 진동시켜 절정을 반복하면서 %ANAME(MASTER)%에 매달려, 이름을 불러 요구해 온다
+				PRINTFORMW 그 사랑스러운 암컷의 모습에 %ANAME(MASTER)%도 더욱 더 고조되어, 숨어 있는 일도 잊어 격렬한 섹스를 계속했다
+		ENDSELECT
+		CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", @"소녀병사의 질", "화간")
+		PRINTFORML 
+		PRINTFORML …인요 특유의 꿀단지를 만족할 때까지 교접한 후, %조사처리(ANAME(MASTER),"는")% 새침한 얼굴로 훈련하러 돌아왔다
+		PRINTFORMW 훈련 종료후, 무수한 군사중에서 그녀의 열정적인 시선을 느꼈다
+		PRINTFORML 어떻게 하지?
+		CALL ASK_MULTI_JUDGE("그녀를 직속의 부하로 한다", CAN_ADD_RANDOM_CHARA(),"무시해 떠난다", 1)
+		IF RESULT == 1
+			PRINTFORML 나쁘지만 이쪽에 있어서는 한 번 한계의 관계다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀를 무시해 빨리 떠났다
+		ELSE
+			PRINTFORML 그녀를 마음에 들었던 %조사처리(ANAME(MASTER),"는")% 직속의 부하로 하는 일로 결정했다
+			PRINTFORMW 스스로 소녀의 곳에 나가 설득하면, 그녀는 기쁜 나머지 눈물을 흘리고 기뻐했다
+			CALL CREATE_RANDOM_CHARA(0,0,1)
+			대상 = RESULT
+			ABL:대상:무투 = 35
+			ABL:대상:방위 = 35
+			ABL:대상:지략 = 20
+			ABL:대상:정치 = 15
+			ABL:대상:가창 = 20
+			ABL:대상:요리 = 15
+			ABL:대상:Ｃ감 = 1
+			ABL:대상:Ｖ감 = 1
+			ABL:대상:Ｍ감 = 1
+			ABL:대상:Ｂ감 = 1
+			ABL:대상:성기술 = 1
+			ABL:대상:성교 = 1
+			ABL:대상:봉사 = 2
+			ABL:대상:자위 = 1
+			ABL:대상:정애 = 1
+			ABL:대상:욕망 = 1
+			ABL:대상:노출 = 1
+			ABL:대상:성지식 = 2
+			CALL LEARN_SKILL_GENERAL_BY_NAME(대상, "노력가")
+			TALENT:대상:처녀 = 0
+			TALENT:대상:키스미경험 = 0
+			TALENT:대상:합의 = 1
+			CALL CHANGE_COUNTRY(대상, CFLAG:MASTER:소속, 1)
+			CFLAG:대상:호감도 = 500
+			CFLAG:대상:의존도 = 500
+			CFLAG:대상:종속도 = 500
+			CALL COLOR_PRINT(@"%조사처리(ANAME(대상),"가")% %ANAME(MASTER)%의 부하가 되었습니다", 칼라_주의)
+			PRINTFORMW 
+		ENDIF
+	ENDIF
+ENDIF
+
+RETURN 1

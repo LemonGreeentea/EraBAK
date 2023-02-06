@@ -1,0 +1,82 @@
+﻿;-------------------------------------------------
+;그림의 표시에 관한 설정
+;-------------------------------------------------
+@COMFIG_IMAGE_K
+#DIM FIRST_LINE
+FIRST_LINE = LINECOUNT
+CALL SINGLE_DRAWLINE
+PRINTL ●캐릭터 그림의 표시에 관한 설정●
+CALL SINGLE_DRAWLINE
+
+;CALL ASK_MULTI("캐릭터 그림의 상세설정", "그림을 표시하지 않는다", "돌아온다")
+PRINTBUTTON @"  0[%@"캐릭터 그림을 \@FLAG:화상설정 ? 표시한다 # 표시하지 않는다\@", 30, RIGHT%]", 0
+PRINTL
+IF FLAG:화상설정
+	PRINTFORML  *[%@"현재의 \@ FLAG:스탠딩종류 ? 페이스 # 스탠딩 \@ 표시 인원수 {FLAG:그림표시}인", 30, RIGHT%]
+	PRINTBUTTON @"  1[%"늘린다", 30, RIGHT%]", 1
+	PRINTL
+	PRINTBUTTON @"  2[%"줄인다", 30, RIGHT%]", 2
+	PRINTL
+	PRINTBUTTON @"  3[%@"캐릭터 그림의 타입 : \@ FLAG:스탠딩종류 ? 페이스 # 스탠딩 \@", 30, RIGHT%]", 3
+	PRINTL
+	PRINTBUTTON @"  4[%@"조교화면에서 의복을 표시 : \@ FLAG:의복표시 ? 의복 # 알몸 \@", 30, RIGHT%]", 4
+	PRINTL
+;	PRINTBUTTON @"4[삽화를 표시 : \@ FLAG:삽화표시 ? ON # OFF \@]", 4
+;	PRINTL
+;	IF FLAG:삽화표시
+;		PRINTBUTTON "5[사정 그림의 종류 : ", 5
+;		SELECTCASE FLAG:사정화상종류
+;			CASE 0
+;				PRINTL 단면＋효과음]
+;			CASE 1
+;				PRINTL 단면만]
+;			CASE 2
+;				PRINTL 효과음만]
+;		ENDSELECT
+;	ENDIF
+;	PRINTBUTTON @"6[애니메이션 \@ FLAG:애니메이션 ? 반복 회수 : {FLAG:애니메이션}회 # OFF \@", 6
+;	PRINTL
+;	IF FLAG:애니메이션
+;		PRINTBUTTON @"7[삽입중에는 매턴 애니메이션 표시：\@FLAG:삽입애니메이션필터 & 아니메필터_삽입 ? X # O\@]", 7
+;		PRINTL
+;	ENDIF
+	PRINTBUTTON @"  8[%@"그림 표시에 테두리를 친다 : \@ FLAG:화상범위표시 ? %" ON"% # OFF \@", 30, RIGHT%]", 8
+	PRINTL
+ENDIF
+PRINTBUTTON @"999[%"돌아온다", 30, RIGHT%]", 999
+PRINTL
+
+INPUT
+IF RESULT == 999
+	RETURN 0
+ELSEIF RESULT == 0
+	FLAG:화상설정 = !FLAG:화상설정
+ELSEIF RESULT == 1
+	FLAG:그림표시++
+	SIF FLAG:그림표시 > 8
+		FLAG:그림표시 = 8
+ELSEIF RESULT == 2
+	FLAG:그림표시--
+	SIF FLAG:그림표시 < 1
+		FLAG:그림표시 = 1
+ELSEIF RESULT == 3
+	FLAG:스탠딩종류 = !FLAG:스탠딩종류
+ELSEIF RESULT == 4
+	FLAG:의복표시 = !FLAG:의복표시
+;ELSEIF RESULT == 4
+;	FLAG:삽화표시 = !FLAG:삽화표시
+;ELSEIF RESULT == 5 && FLAG:삽화표시
+;	FLAG:사정화상종류++
+;	SIF FLAG:사정화상종류 >= 3
+;		FLAG:사정화상종류 = 0
+;ELSEIF RESULT == 6
+;	FLAG:애니메이션++
+;	SIF FLAG:애니메이션 >= 6
+;		FLAG:애니메이션 = 0
+;ELSEIF RESULT == 7
+;	INVERTBIT FLAG:삽입애니메이션필터, 0
+ELSEIF RESULT == 8
+	FLAG:화상범위표시 = !FLAG:화상범위표시
+ENDIF
+CLEARLINE LINECOUNT - FIRST_LINE
+RESTART

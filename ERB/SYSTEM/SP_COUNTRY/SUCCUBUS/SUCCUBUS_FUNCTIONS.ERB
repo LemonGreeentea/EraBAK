@@ -1,0 +1,230 @@
+﻿;--------------------------------------
+;턴 엔드시의 서큐버스의 처리
+;--------------------------------------
+@TURNEND_SUCCUBUS
+;3턴에 1회, 드레인
+CALL SUCCUBUS_DRAIN(DAY % 3 == 0)
+
+
+;--------------------------------------
+;멸망시의 처리
+;--------------------------------------
+@SUCCUBUS_DESTROY_MSG
+CALL SINGLE_DRAWLINE
+SETCOLOR 칼라_주의
+PRINTFORML
+PRINTFORML
+PRINTFORML
+PRINTFORMW 괴멸적인 피해를 받은 서큐버스는, 꿈의 세계에 철수 해 나갔습니다
+PRINTFORMW 도레미·스위트가 꿈의 세계에의 길을 확실히 자물쇠를 채워 문을 잠금 했으므로, 당면은 괜찮겠지요……
+PRINTFORML
+PRINTFORML
+PRINTFORML
+RESETCOLOR
+
+;--------------------------------------
+;서큐버스의 초기화 처리
+;--------------------------------------
+@SUCCUBUS_INIT(ARG:0)
+#DIM LCOUNT
+VARSET LOCAL
+
+SIF GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_서큐버스) != -1
+	RETURN 0
+
+SIF SP_COUNTRY_RANK:특수세력_서큐버스 == 0
+	RETURN 0
+
+SIF GET_NEW_COUNTRY() == -1
+	RETURN 0
+
+CALL CREATE_SP_COUNTRY(특수세력_서큐버스)
+
+RETURN RESULT
+
+;-----------------------------
+;서큐버스의 정기 이벤트
+;-----------------------------
+@SUCCUBUS_DRAIN(조건)
+#DIM 서큐버스
+#DIM 조건
+#DIM 후보, 3000
+#DIM 후보수
+#DIM 대상, 2
+#DIM 메세지
+#DIM 흡수후보, 5
+#DIM 흡수대상
+#DIM 흡수치
+VARSET 후보, -1
+VARSET 후보수
+
+서큐버스 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_서큐버스))
+
+
+;서큐버스 세력이 있어, 조건을 채우고 있다
+SIF 서큐버스 == -1 || !조건
+	RETURN -1
+
+FOR LOCAL, 0, CHARANUM
+	;서큐버스 소속으로 포로가 아니다  또는 서큐버스 세력의 포로  만약을 위해 SP캐릭터를 제외
+	IF ((CFLAG:LOCAL:소속 == 서큐버스 && !CFLAG:LOCAL:포로처) || CFLAG:LOCAL:포로처 == 서큐버스) && !IS_SP_CHARA(LOCAL)
+		;MASTER는 서큐버스로 특수 세력 스타트 했을 경우는 제외
+		SIF LOCAL == MASTER && SP_COUNTRY_START:특수세력_서큐버스
+			CONTINUE
+		후보:후보수 = LOCAL
+		후보수 ++
+	ENDIF
+NEXT
+
+SIF 후보수 < 1
+	RETURN -1
+
+대상 = 후보:(RAND:후보수)
+
+SIF 대상 == -1 || CONFIG:200
+	RETURN -1
+
+흡수후보:0 = (RAND:(MAX(ABL:대상:무투, 1)))
+흡수후보:1 = (RAND:(MAX(ABL:대상:지략, 1)))
+흡수후보:2 = (RAND:(MAX(ABL:대상:정치, 1)))
+흡수후보:3 = (RAND:(MAX(ABL:대상:가창, 1)))
+흡수후보:4 = (RAND:(MAX(ABL:대상:요리, 1)))
+
+흡수대상 = FINDELEMENT(흡수후보, MAXARRAY(흡수후보))
+SELECTCASE 흡수대상
+	CASE 0
+		흡수대상 = GETNUM(ABL, "무투")
+	CASE 1
+		흡수대상 = GETNUM(ABL, "지략")
+	CASE 2
+		흡수대상 = GETNUM(ABL, "정치")
+	CASE 3
+		흡수대상 = GETNUM(ABL, "가창")
+	CASE 4
+		흡수대상 = GETNUM(ABL, "요리")
+ENDSELECT
+
+SIF ABL:대상:흡수대상 < 10
+	RETURN -1
+
+흡수치 = LIMIT(ABL:대상:흡수대상 / 10, 1, 3)
+
+VARSET 후보, -1
+VARSET 후보수, 0
+
+;FOR LOCAL, 0, CHARANUM
+;	IF CFLAG:LOCAL:소속 ==서큐버스 && ! CFLAG:LOCAL:9 && TALENT:LOCAL:특수 세력 소질 ==특수 세력_서큐버스
+;		후보:후보수 = LOCAL
+;		후보수 ++
+;	ENDIF
+;NEXT
+
+;SIF 후보수 < 1
+;	RETURN -1
+
+대상:1 = GET_COUNTRY_BOSS(서큐버스)
+
+SIF 대상:1 == -1
+	RETURN -1
+
+CALL SINGLE_DRAWLINE
+SETCOLOR 칼라_핑크
+PRINTFORMW 서큐버스는 %조사처리(ANAME(대상),"로")%부터 정기를 흡수하고 있다……
+PRINTFORML 
+SETCOLOR 칼라_경고
+PRINTFORMW 서큐버스는 %ANAME(대상)%의 능력을 강탈했다!
+PRINTFORMW %ANAME(대상)%의 %조사처리(ABLNAME:흡수대상,"가")% {흡수치} 내렸다!
+PRINTFORMW %ANAME(대상:1)%의 %조사처리(ABLNAME:흡수대상,"가")% {흡수치} 올랐다!
+RESETCOLOR
+PRINTFORML 
+ABL:(대상:0):흡수대상 -= 흡수치
+ABL:(대상:1):흡수대상 += 흡수치
+
+
+;-----------------------------
+;서큐버스에게 잡혔을 때의 이벤트
+;-----------------------------
+@MASTER_CAPTURED_SUCCUBUS(ARG:0)
+PRINTFORMW 잡힌 %조사처리(ANAME(MASTER),"는")% 서큐버스의 앞에 끌어내졌다…
+IF IS_MALE(MASTER)
+	PRINTFORMW 서큐버스는 %조사처리(ANAME(MASTER),"를")% 보면, 좋은 남자라고 중얼거린다
+	PRINTFORMW 우리의 권속이 되어, 많이 이이코트를 하지 않아?   와 권해 왔다
+	PRINTFORMW 그것은 즉 몽마가 된다는 일이지만, 거부한다보다 대우는 좋게 되는 것 같다……
+	PRINTFORMW 받아들입니까?
+	CALL ASK_YN("받아들인다", "거부한다")
+	IF RESULT == 0
+		PRINTFORMW 투옥되는 것보다는 좋을 것이다. %조사처리(ANAME(MASTER),"가")% 수긍하면, 서큐버스는 생긋 웃는다
+		PRINTFORMW 그대로 그녀들은 %조사처리(ANAME(MASTER),"를")% 둘러싸, 그 신체를 애무하기 시작했다
+		PRINTFORMW 정신이 몽롱해질 정도의 쾌락 중(안)에서, %ANAME(MASTER)%의 의식은 꿈에 녹아 갔다……
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 음마가 되었습니다
+		RESETCOLOR
+	ELSE
+		PRINTFORMW 너희들 따위에 손을 빌려 줄까. %조사처리(ANAME(MASTER),"는")% 의연히 해 단언한다	
+		PRINTFORMW 그녀들은 쓴웃음 지으면서도, %조사처리(ANAME(MASTER),"를")% 투옥했다……
+	ENDIF
+ELSEIF GETBIT(TALENT:MASTER:특수세력함락계, 특수세력_서큐버스)
+	PRINTFORMW 또 와 주었군요와 그녀들은 %ANAME(MASTER)%의 신체에 손을 기게 하면서 속삭인다
+	PRINTFORMW 그것만으로 %ANAME(MASTER)%의 신체는, 그들에게 새겨진 쾌락을 생각해 내 젖어 버린다
+	PRINTFORMW %ANAME(MASTER)%의 소리가 달콤하게 녹기 시작했을 무렵, 또 우리 이이코트를 해?   와 그녀들은 묻는다
+	PRINTFORMW 받아들입니까?
+	CALL ASK_YN("받아들인다", "거부한다")
+	IF RESULT == 0
+		PRINTFORMW 그들에 의해 길러내진 여자의 본성이, %조사처리(ANAME(MASTER),"를")% 수긍하게 했다
+		PRINTFORMW 어서 오세요라는 말을 %ANAME(MASTER)%에 걸치면, 서큐버스는 %조사처리(ANAME(MASTER),"를")% 애무하기 시작했다……
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 다시, 꿈의 세계의 거주자가 되었다
+		RESETCOLOR
+	ELSE
+		PRINTFORMW 거부된다는 일은 생각에 없었던 것 같고, 서큐버스들은 잠깐 의외인 것처럼 하고 있었다
+		PRINTFORMW 그렇다면 그걸로, 꿈의 세계의 훌륭함을 생각나게 해 주면, 겁없게웃는다
+		PRINTFORMW 서큐버스들은 %조사처리(ANAME(MASTER),"를")% 투옥했다……
+	ENDIF
+ELSE
+	PRINTFORMW 서큐버스는 %ANAME(MASTER)%의 몸을 차분히 바라본다.
+	PRINTFORMW 우리의 권속이 되어, 많이 이이코트를 하지 않아?   와 권해 왔다
+	PRINTFORMW 터무니 없는 제안이지만, 거부하려고, 받아들이도록(듯이) 대해 올 것이다
+	PRINTFORMW 받아들입니까?
+	CALL ASK_YN("받아들인다", "거부한다")
+	IF RESULT == 0
+		PRINTFORMW 어차피 되는 것은 변함없는 것이다. %조사처리(ANAME(MASTER),"는")% 힘 없게 수긍한다
+		PRINTFORMW 그렇게 오지 않으면 하고 서큐버스는 음탕한 미소를 띄웠다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")%, 몽마로서 다시 태어나 간다……
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 서큐버스가 되었습니다
+		RESETCOLOR
+	ELSE
+		PRINTFORMW 그런 일이 생길까. %조사처리(ANAME(MASTER),"가")% 단호히거부한다와 서큐버스는 놀란 얼굴을 한다
+		PRINTFORMW 어째서?   이렇게 기분이 좋은데라는 그녀들이란, 가치관을 공유 할 수 있을 것 같지도 않다
+		PRINTFORMW 서큐버스들은 %조사처리(ANAME(MASTER),"를")% 투옥했다……
+	ENDIF
+ENDIF
+IF RESULT == 0
+	CALL CHANGE_COUNTRY(MASTER, ARG:0, 1)
+	SETBIT TALENT:MASTER:특수세력함락계, 특수세력_서큐버스
+	CALL PLAYER_FALLEN_TO_SP_COUNTRY(ARG:0)
+	RETURN 0
+ELSE
+	CALL CAPTURE(MASTER, ARG:0)
+	RETURN 2
+ENDIF
+
+;--------------------------------------
+;엔딩
+;--------------------------------------
+@SUCCUBUS_ENDING
+
+PRINTFORML 몽마들의 발하는 음기의 전에, 환상향의 소녀들은 어찌할 바도 없었다
+PRINTFORML 그 누구라도 달콤한 쾌락의 전에 굴해, 몽마로 전락해 갔다
+PRINTFORMW ……이윽고, 서큐버스는 환상향 전 국토를 지배했다
+PRINTFORMW 지금은 환상향은 거대한 난교 회장이 되고 있어 여기저기에서 남녀가 교접해, 쾌락을 즐기고 있다
+PRINTFORML 정조라는 개념 따위, 거기에는 이미 존재하고 있지 않다……
+IF CFLAG:MASTER:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_서큐버스) && IS_FEMALE(MASTER)
+	PRINTFORMW 
+	PRINTFORML ……그 중에, %ANAME(MASTER)%의 모습도 있었다
+	PRINTFORMW 추잡한 의상에 몸을 감싼 %PRONOUN(MASTER)%는, 다른 소녀들과 함께 되어, 서로 사귀고
+	PRINTFORMW 지금의 %ANAME(MASTER)%에 있어서는 점막의 서로 스치는 쾌감만이 진실하고, 그 이외 따위 어떻든지 좋았다
+	PRINTFORMW 그렇게 쭉, 기분 좋은 쾌락의 바다에 계속 빠진다……
+ENDIF
+PRINTFORML 
+PRINTFORMW 소녀들의 추잡한 소리가, 언제까지나 환상향에 계속 울리고 있었다……

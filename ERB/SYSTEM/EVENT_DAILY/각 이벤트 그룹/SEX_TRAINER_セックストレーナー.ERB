@@ -1,0 +1,426 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_SEX_TRAINER_RATE()
+RETURN 30
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_SEX_TRAINER_DECISION()
+RETURN DAY >= 15
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_SEX_TRAINER_GENRE()
+RETURN 데일리_장르_트래이너
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_SEX_TRAINER()
+#DIM 소거행
+#DIM 대상
+#DIM 표시위치
+#DIM 표시페이지
+#DIM 총페이지수
+#DIM 캐릭터수
+#DIM 캐릭터카운터
+#DIM 표시개시위치
+#DIM 표시종료위치
+
+IF DVAR:섹스트래이너_발생플래그 == 0
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 일을 하고 있으면, 시종이 손님을 고했다
+	PRINTFORML 뭐든지 「매우 요염한 여성이 왔다」의라고 한다
+	PRINTFORMW 무슨 일이든지라고 생각한 %조사처리(ANAME(MASTER),"는")%, 만나기로 해 보았다
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW 「당신이 %ANAME(MASTER)%?   소문 그대로의 \@ IS_FEMALE(MASTER) ? 사랑스러운 아이 # 좋은 남자 \@군요」
+	PRINTFORMW 기다리고 있던 여자는, 과연 확실히 요염했다
+	PRINTFORML 이목구비가 갖추어진 미모에게, 풍만하고면서 긴장된 신체가 비칠 만큼 얇은 의상을 몸에 감기고 있다
+	PRINTFORML 거기에 있는 것만으로 회전의 것을 흥분시키는 것 같은 성적 매력을 휘두르지 않는다라고 있었다
+	PRINTFORMW 마치 음마의 종류인 것 같다……혹은, 정말로 그것일지도 모른다
+	PRINTFORML 「응 당신, 밤의 생활은 촉촉할까?」
+	PRINTFORML 「나는 여러 가지 사람에게, 성의 초보를 해 돌고 있어. 성의 기쁨을 알아 받고 싶어서 말야」
+ELSE
+	PRINTFORML 「안녕하세요, 또 왔어요」
+	PRINTFORMW 「성의 초보, 받아 보지 않을까」
+	PRINTFORMW 예의 요염한 여성이 또 방문해 왔다
+ENDIF
+CALL ICPRINT("「어때?   금<20000>으로 초보 해 줄 수 있지만」", "L", 칼라_주의)
+PRINTFORML 여성의 요염함에 무심코 즉결 할 것 같게 되었지만, 당황해 고개를 저어 냉정하게 된다
+PRINTFORMW 제시된 것은 결코 싸지 않은 액이다. 안정하고 생각해야 할 것이다
+PRINTFORMW 그런데, 어떻게 할까……
+PRINTFORML
+CALL SINGLE_DRAWLINE
+PRINTFORML 현재의 돈:{MONEY}
+CALL ASK_MULTI_JUDGE("초보 해 받는다", MONEY >= 20000, "그만둔다", 1)
+
+IF RESULT == 1
+	PRINTFORML 「아라, 그렇게……그렇다면 어쩔 수 없네요」
+	PRINTFORMW 「또 와요, 그 때는 좋은 회답을 기대하고 있어요?」
+	PRINTFORMW 여성은 떠나 갔다……
+	DVAR:섹스트래이너_발생플래그 = 1
+	RETURN 1
+ENDIF
+PRINTFORML 「그렇게 말해 준다고 생각하고 있었어요」
+PRINTFORML 「그러면……, 누구에게 초보 할까?」
+CALL SINGLE_DRAWLINE
+PRINTFORML 「그래그래, 이제(이미/벌써/더는/정말) 충분히 민감한 것이는, 더 이상 초보 할 수 없어요, 미안해요」
+CALL SINGLE_DRAWLINE
+PRINTFORML %TOSTR_SPACE(23)%   Ｃ|  Ｖ|  Ａ|  Ｂ|  Ｍ %TOSTR_SPACE(26)%   Ｃ|  Ｖ|  Ａ|  Ｂ|  Ｍ 
+
+VARSET 캐릭터수
+FOR LOCAL, 0, CHARANUM
+	SIF CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속
+		캐릭터수 ++
+NEXT
+
+총페이지수 = (캐릭터수 - 1) / 40 + 1
+표시페이지 = 1
+CALL TMP_CREATE_IS_FREE_MAP
+
+$SHOW_LOOP
+VARSET 소거행
+VARSET 표시위치
+VARSET 캐릭터카운터
+표시개시위치 = (표시페이지 - 1) * 40
+표시종료위치 = 표시페이지 * 40
+
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속 && !CFLAG:(LOCAL:0):포로처
+		IF 표시개시위치 <= 캐릭터카운터 && 캐릭터카운터 < 표시종료위치
+			IF 표시위치 % 2 != 0
+				PRINT 　　
+			ELSEIF 표시위치 >= 1
+				PRINTL 
+				소거행 ++
+			ENDIF
+			PRINTFORM [{LOCAL:0 + 99, 4}]%ANAME(LOCAL:0), 16, RIGHT%
+			PRINTFORM   
+			IF TALENT:(LOCAL:0):Ｃ민감
+				PRINTFORM   
+				CALL COLOR_PRINT("민", 칼라_주의)
+			ELSEIF TALENT:(LOCAL:0):Ｃ둔감
+				PRINTFORM   
+				CALL COLOR_PRINT("둔", 칼라_경고)
+			ELSE
+				PRINTFORM    
+				CALL COLOR_PRINT("-", 칼라_선택불가)
+			ENDIF
+			PRINTFORM |
+			IF TALENT:(LOCAL:0):Ｖ민감
+				PRINTFORM   
+				CALL COLOR_PRINT("민", 칼라_주의)
+			ELSEIF TALENT:(LOCAL:0):Ｖ둔감
+				PRINTFORM   
+				CALL COLOR_PRINT("둔", 칼라_경고)
+			ELSE
+				PRINTFORM    
+				CALL COLOR_PRINT("-", 칼라_선택불가)
+			ENDIF
+			PRINTFORM |
+			IF TALENT:(LOCAL:0):Ａ민감
+				PRINTFORM   
+				CALL COLOR_PRINT("민", 칼라_주의)
+			ELSEIF TALENT:(LOCAL:0):Ａ둔감
+				PRINTFORM   
+				CALL COLOR_PRINT("둔", 칼라_경고)
+			ELSE
+				PRINTFORM    
+				CALL COLOR_PRINT("-", 칼라_선택불가)
+			ENDIF
+			PRINTFORM |
+			IF TALENT:(LOCAL:0):Ｂ민감
+				PRINTFORM   
+				CALL COLOR_PRINT("민", 칼라_주의)
+			ELSEIF TALENT:(LOCAL:0):Ｂ둔감
+				PRINTFORM   
+				CALL COLOR_PRINT("둔", 칼라_경고)
+			ELSE
+				PRINTFORM    
+				CALL COLOR_PRINT("-", 칼라_선택불가)
+			ENDIF
+			PRINTFORM |
+			IF TALENT:(LOCAL:0):Ｍ민감
+				PRINTFORM   
+				CALL COLOR_PRINT("민", 칼라_주의)
+			ELSEIF TALENT:(LOCAL:0):Ｍ둔감
+				PRINTFORM   
+				CALL COLOR_PRINT("둔", 칼라_경고)
+			ELSE
+				PRINTFORM    
+				CALL COLOR_PRINT("-", 칼라_선택불가)
+			ENDIF
+			표시위치++
+		ENDIF
+		캐릭터카운터 ++
+	ENDIF
+NEXT
+
+PRINTL
+CALL SINGLE_DRAWLINE
+
+IF 총페이지수 >= 2
+	소거행 += 2
+	IF 표시페이지 > 1
+		PRINT [  8] 이전페이지            
+	ELSE
+		PRINT                             
+	ENDIF
+	LOCALS:0 = 페이지{표시페이지}/{총페이지수}
+	PRINTPLAINFORM %LOCALS:0, 28, LEFT%
+	IF 표시페이지 < 총페이지수
+		PRINT [  9] 다음페이지
+	ENDIF
+	PRINTL 
+	CALL SINGLE_DRAWLINE
+ENDIF
+
+PRINTL [  0] 돌아온다
+
+REDRAW 0
+
+소거행 += 4
+
+INPUT
+
+IF RESULT == 8 && 표시페이지 > 1
+	표시페이지 --
+	CLEARLINE 소거행
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 9 && 표시페이지 < 총페이지수
+	표시페이지 ++
+	CLEARLINE 소거행
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 0
+	REDRAW 1
+	RETURN 1
+ENDIF
+
+대상 = RESULT - 99
+IF 대상 > CHARANUM || 대상 < 0
+	CLEARLINE 소거행
+	GOTO SHOW_LOOP
+ELSEIF CFLAG:MASTER:소속 != CFLAG:(대상):소속 || CFLAG:(대상):포로처
+	CLEARLINE 소거행
+	GOTO SHOW_LOOP
+ENDIF
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 「%ANAME(대상)%씨를 어떻게 하지?」
+CALL SINGLE_DRAWLINE
+CALL ASK_MULTI_JUDGE("Ｃ의 초보", !TALENT:대상:Ｃ민감, "Ｖ의 초보", !TALENT:대상:Ｖ민감 && HAS_VAGINA(대상), "Ａ의 초보", !TALENT:대상:Ａ민감, "Ｂ의 초보", !TALENT:대상:Ｂ민감, "Ｍ의 초보", !TALENT:대상:Ｍ민감, "돌아온다", 1)
+IF RESULT != 5
+	PRINTFORMW 「그래, 알았어요」
+	PRINTFORMW 「그러면, %ANAME(대상)%씨, 어서오세요……♪」
+	PRINTFORMW 여성은 %조사처리(ANAME(대상),"를")% 부부가 되어, 침실로 들어갔다……
+	PRINTFORML
+	PRINTFORML
+	PRINTFORML
+ENDIF
+LOCAL:1 = RESULT
+SELECTCASE LOCAL:1
+	;Ｃ의 패턴
+	CASE 0
+		IF HAS_PENIS(대상)
+			PRINTFORML 여성은 %ANAME(대상)%의 페니스에 한껏 로션해, 그 흰 손가락끝으로 천천히 다루고 있다
+			PRINTFORML 「코코는, 신체 중(안)에서도, 제일 신경의 집중하는 장소」
+			PRINTFORML 「그러니까, 그대로도 상당히 민감한 것이지만……의식해 자극 해 주면, 좀더 좀더, 기분 좋게 될 수 있는 곳이 되어」
+			PRINTFORML 「후후, 그 모습이라고, 기분 좋아서 견딜 수 없는 것 같구나?   수컷의 기쁨, 즐겨 받아지고 있을까」
+			PRINTFORML 여성은 %ANAME(대상)%에 딱 신체를 겹쳐 부드러운 유방을 강압하면서, %ANAME(대상)%에 육봉에서의 즐거움을 철저히 가르치고 있다
+			PRINTFORML 그러나, %조사처리(ANAME(대상),"가")% 달하게 되는 것만은, 결코 허락하지 않았다
+			PRINTFORML 절정의 징조를 간파하면, 손의 움직임을 딱 멈추어 버린다
+			PRINTFORML 「안 돼요?   아직 가서는 안 돼」
+			PRINTFORML 드디어 견디고일까, 가게해 주세요간원 하는 %ANAME(대상)%에 대해, 그녀는 목을 옆에 흔들었다
+			PRINTFORML 「따로 심술쟁이 할 생각은 없어요. 그렇지만, 나은 당신에 초보 하는 것이야. 가게해 주는 것이 아니고 말야」
+			PRINTFORML 「사정은, 수컷의 기쁨 중(안)에서도 한층 더 기분이 좋은 것. 그렇지만, 일순간 밖에 맛볼 수 없다. 게다가, 맛보면 거기서 마지막」
+			PRINTFORML 「아직도 좀 더, 배워 받는 일이 있어. 마지막으로 해 버리기에는 너무 빨라요」
+			PRINTFORML 녹을 것 같은 하반신의 자극에 허리를 띄우는 %ANAME(대상)%에, 여성은 속삭인다
+			PRINTFORML , 와 로션이나 앞달리기가 섞이는 소리를 들려주도록(듯이), 천천히 육봉을 다뤄 간다
+			IF IS_SLAVE(대상) || IS_LOVER(대상) || IS_SLAVED_BY(대상)
+				PRINTFORML 「……거기에 당신, 소중한 사람이 있을까요?」
+				PRINTFORML 「당신을 가게 하는 것은, 그 사람의 역할」
+				PRINTFORML 「소중한 소중한 정자, 그 사람을 위해서(때문에) 잡아 두지 않으면」
+				PRINTFORML 「소중한 사람을 만족시켜 주기 위해서(때문에), 자지의 기분 좋음, 가득 공부해요……♪」
+			ENDIF
+			LOCALS:0 = 페니스
+		ELSE
+			PRINTFORML 여성은 %ANAME(대상)%의 클리토리스를 손가락이나 혀로 굴려 돌려, 열심히 애무하고 있다
+			PRINTFORML 「코코는, 신체 중(안)에서도, 제일 신경의 집중하는 장소」
+			PRINTFORML 「그러니까, 그대로도 상당히 민감한 것이지만……의식해 자극 해 주면, 좀더 좀더, 기분 좋게 될 수 있는 곳이 되어」
+			PRINTFORML 「후후, 그 모습이라고, 기분 좋아서 견딜 수 없는 것 같구나?   여자아이의 기쁨, 즐겨 받아지고 있을까」
+			PRINTFORML 여성은 %ANAME(대상)%에 딱 신체를 겹쳐 부드러운 유방을 강압하면서, %ANAME(대상)%에 고기콩에서의 즐거움을 철저히 가르치고 있다
+			PRINTFORML 그러나, %조사처리(ANAME(대상),"가")% 달하게 되는 것만은, 결코 허락하지 않았다
+			PRINTFORML 절정의 징조를 간파하면, 손의 움직임을 딱 멈추어 버린다
+			PRINTFORML 「안 돼요?   아직 가서는 안 돼」
+			PRINTFORML 드디어 견디고일까, 가게해 주세요간원 하는 %ANAME(대상)%에 대해, 그녀는 목을 옆에 흔들었다
+			PRINTFORML 「따로 심술쟁이 할 생각은 없어요. 그렇지만, 나은 당신에 초보 하는 것이야. 가게해 주는 것이 아니고 말야」
+			PRINTFORML 「가는 것은, 성의 기쁨 중(안)에서도 한층 더 기분이 좋은 것. 그렇지만, 일순간 밖에 맛볼 수 없다. 게다가, 맛보면 거기서 마지막」
+			PRINTFORML 「아직도 좀 더, 배워 받는 일이 있어. 마지막으로 해 버리기에는 너무 빨라요」
+			PRINTFORML 녹을 것 같은 하반신의 자극에 허리를 띄우는 %ANAME(대상)%에, 여성은 속삭인다
+			PRINTFORML %조사처리(ANAME(대상),"가")% 마지막 일선을 넘어 버리지 않는 최대한의 자극을, 천천히 계속 더한다
+			IF IS_SLAVE(대상) || IS_LOVER(대상) || IS_SLAVED_BY(대상)
+				PRINTFORML 「……거기에 당신, 소중한 사람이 있을까요?」
+				PRINTFORML 「당신을 가게 하는 것은, 그 사람의 역할」
+				PRINTFORML 「고조되고 있는 몸, 그 사람을 위해서(때문에) 잡아 두지 않으면」
+				PRINTFORML 「소중한 사람을 만족시켜 주기 위해서(때문에), 클리토리스의 기분 좋음, 가득 공부해요……♪」
+			ENDIF
+			LOCALS:0 = 클리토리스
+		ENDIF
+		LOCAL = TALENT:대상:Ｃ둔감
+		IF LOCAL
+			TALENT:대상:Ｃ둔감 = 0
+		ELSE
+			TALENT:대상:Ｃ민감 = 1
+		ENDIF
+	;Ｖ의 패턴
+	CASE 1
+		PRINTFORML 여성은 %ANAME(대상)%의 보지에 손가락을 쑤셔, 천천히, 차분히 애무하고 있다
+		PRINTFORML 「코코는, 여자아이에게 있어 제일 중요한 장소」
+		PRINTFORML 「좋아하는 사람을 그 신체에 받아들여, 게다가 기분 좋게 될 수 있으면……훌륭한 일이지요?」
+		PRINTFORML 「그러니까, 그 때의 준비로서……. 지금은, 기분 좋고든지 분을, 많이 기억해요?」
+		PRINTFORML 여성이 말할 필요도 없이, %조사처리(ANAME(대상),"는")% 그 「기분 좋고든지 분」를, 그 몸으로 가지고 배우고 있는 곳이었다
+		PRINTFORML 여성의 교묘한 손가락기술은,\@ VIRGIN(대상) ? 아직도 처녀이다 # \@%ANAME(대상)%의 관능을 일으켜, 쾌락의 벼랑 끝으로 쫓아 버리고 있었다
+		PRINTFORML 그러나 그녀는, %조사처리(ANAME(대상),"가")% 달하게 되는 것만은, 결코 허락하지 않았다
+		PRINTFORML 절정의 징조를 간파하면, 손의 움직임을 딱 멈추어 버린다
+		PRINTFORML 「안 돼요?   아직 가서는 안 돼」
+		PRINTFORML 드디어 견디고일까, 가게해 주세요\@ VIRGIN(대상) ? , 처녀를 빼앗아도 괜찮으니까 # \@와 간원 하는 %ANAME(대상)%에 대해, 그녀는 목을 옆에 흔들었다
+		PRINTFORML 「따로 심술쟁이 할 생각은 없어요. 그렇지만, 나은 당신에 초보 하는 것이야. 가게해 주는 것이 아니고 말야」
+		PRINTFORML 「가는 것은, 성의 기쁨 중(안)에서도 한층 더 기분이 좋은 것. 그렇지만, 일순간 밖에 맛볼 수 없다. 게다가, 맛보면 거기서 마지막」
+		PRINTFORML 「아직도 좀 더, 배워 받는 일이 있어. 마지막으로 해 버리기에는 너무 빨라요」
+		PRINTFORML 녹을 것 같은 하반신의 자극에 허리를 띄우는 %ANAME(대상)%에, 여성은 속삭인다
+		PRINTFORML %조사처리(ANAME(대상),"가")% 마지막 일선을 넘어 버리지 않는 최대한의 자극을, 천천히 계속 더한다
+		IF VIRGIN(대상) && ( IS_SLAVE(대상) || IS_LOVER(대상) )
+			PRINTFORML 「……거기에 당신, 소중한 사람이 있을까요?」
+			PRINTFORML 「안 되지 않아, 간단하게 처음을 준다고 말해서는」
+			PRINTFORML 「제일 최초의 중요한 섹스는, 그 사람을 위해서(때문에) 잡아 두지 않으면」
+			PRINTFORML 「그러니까 지금은, 언젠가 소중한 사람을 만족시켜 주기 위해서(때문에), 보지의 기분 좋음, 가득 공부해요……♪」
+		ENDIF
+		LOCALS:0 = 보지
+		LOCAL = TALENT:대상:Ｖ둔감
+		IF LOCAL
+			TALENT:대상:Ｖ둔감 = 0
+		ELSE
+			TALENT:대상:Ｖ민감 = 1
+		ENDIF
+	;Ａ의 패턴
+	CASE 2
+		PRINTFORML 여성은 로션을 쳐바른 %ANAME(대상)%의 애널에 손가락을 쑤셔, 천천히, 차분히 애무하고 있다
+		PRINTFORML 「어떻게 되었을까?   아기같이 아니아니 해 버려」
+		PRINTFORML 「여기서 느끼는 것이, 그렇게 싫은 것일까」
+		PRINTFORML 「변태같다고?   그렇구나, 세상의인으로부터 하면, 변태같을지도」
+		PRINTFORML 츄, 칠한다는 소리가 울릴 때, 등뼈를 녹이는 것 같은 쾌감이 엉덩이 구멍으로부터 뇌로 기어올라 온다
+		PRINTFORML 항문으로 쾌락을 느껴 버리고 있다는 사실에, %조사처리(ANAME(대상),"는")% 기피감을 기억해, 여성으로부터 도망치려고 한다
+		PRINTFORML 그러나, 성감이 손발의 힘을 빼앗아, 그것조차 허락하지 않는다
+		PRINTFORML 「세상의 사람들은 착각 하고 있는거야. 이런 섹스가 올바르다, 이런 것은 실수도, 단정짓고 있다」
+		PRINTFORML 「사실은 말야, 침실에서의 일에, 올바른 것도 실수도 없는거야. 하나만 있다고 하면, 그것은 『기분이 좋은 일이야말로 올바르다』라는 것」
+		PRINTFORML 「그러니까 이봐요, 기분이 좋다고 느꼈다면, 좋아할 뿐(만큼) 허덕여도 좋고, 좋아할 뿐(만큼) 느껴도 괜찮은거야?」
+		SIF IS_MALE(대상)
+			PRINTFORML 「……그야말로, 여자아이같이?   후후후」
+		PRINTFORML 귓전으로부터 흘려 넣어지는 여성의 말에, %조사처리(ANAME(대상),"가")% 안고 있던 기피감은 없어져 간다
+		PRINTFORML 그렇게 하는 한편으로, 그녀는 결코, %ANAME(대상)%의 절정을 허락하지 않았다
+		PRINTFORML 절정의 징조를 간파하면, 손의 움직임을 딱 멈추어 버린다
+		PRINTFORML 「안 돼요?   아직 가서는 안 돼」
+		PRINTFORML 드디어 견디고일까, 가게해 주세요간원 하는 %ANAME(대상)%에 대해, 그녀는 목을 옆에 흔들었다
+		PRINTFORML 「따로 심술쟁이 할 생각은 없어요. 그렇지만, 나은 당신에 초보 하는 것이야. 가게해 주는 것이 아니고 말야」
+		PRINTFORML 「가는 것은, 성의 기쁨 중(안)에서도 한층 더 기분이 좋은 것. 그렇지만, 일순간 밖에 맛볼 수 없다. 게다가, 맛보면 거기서 마지막」
+		PRINTFORML 「아직도 좀 더, 배워 받는 일이 있어. 마지막으로 해 버리기에는 너무 빨라요」
+		PRINTFORML 녹을 것 같은 하반신의 자극에 허리를 띄우는 %ANAME(대상)%에, 여성은 속삭인다
+		PRINTFORML %조사처리(ANAME(대상),"가")% 마지막 일선을 넘어 버리지 않는 최대한의 자극을, 천천히 계속 더한다
+		IF IS_SLAVE(대상) || IS_LOVER(대상) || IS_SLAVED_BY(대상)
+			PRINTFORML 「……거기에 당신, 소중한 사람이 있을까요?」
+			PRINTFORML 「당신을 가게 하는 것은, 그 사람의 역할」
+			PRINTFORML 「녹진녹진 풀린 부정의 구멍, 그 사람을 위해서(때문에) 잡아 두지 않으면」
+			PRINTFORML 「소중한 사람을 만족시켜 주기 위해서(때문에), 엉덩이의 기분 좋음, 가득 공부해요……♪」
+		ENDIF
+		LOCALS:0 = 애널
+		LOCAL = TALENT:대상:Ａ둔감
+		IF LOCAL
+			TALENT:대상:Ａ둔감 = 0
+		ELSE
+			TALENT:대상:Ａ민감 = 1
+		ENDIF
+	;Ｂ의 패턴
+	CASE 3
+		PRINTFORML 여성은 %ANAME(대상)%의 유방에 손가락을, 혀를 기게 해 차분히 애무하고 있다
+		PRINTFORML 「예쁜 몸이군요, 황홀황홀 할 정도」
+		PRINTFORML 「자, 가슴에서도 가 버릴 수 있을 정도로, 민감하게 되어요……♪」
+		PRINTFORML　훑도록(듯이)주물렀는지라고생각하면、이빨로첨단을살짝깨물기한다
+		PRINTFORML 여성의 고문은 항상 변화해, 쾌감에 익숙한다는 일을 %ANAME(대상)%에 허락하지 않았다
+		PRINTFORML 「후후, 그 모습이라고, 기분 좋아서 견딜 수 없는 것 같구나?   가슴의 기쁨, 즐겨 받아지고 있을까」
+		PRINTFORML 여성은 %ANAME(대상)%에 딱 신체를 겹쳐 부드러운 유방을 강압하면서, %ANAME(대상)%에 유방에서의 즐거움을 철저히 가르치고 있다
+		PRINTFORML 그러나, %조사처리(ANAME(대상),"가")% 달하게 되는 것만은, 결코 허락하지 않았다
+		PRINTFORML 절정의 징조를 간파하면, 손의 움직임을 딱 멈추어 버린다
+		PRINTFORML 「안 돼요?   아직 가서는 안 돼」
+		PRINTFORML 드디어 견디고일까, 가게해 주세요간원 하는 %ANAME(대상)%에 대해, 그녀는 목을 옆에 흔들었다
+		PRINTFORML 「따로 심술쟁이 할 생각은 없어요. 그렇지만, 나은 당신에 초보 하는 것이야. 가게해 주는 것이 아니고 말야」
+		PRINTFORML 「가는 것은, 성의 기쁨 중(안)에서도 한층 더 기분이 좋은 것. 그렇지만, 일순간 밖에 맛볼 수 없다. 게다가, 맛보면 거기서 마지막」
+		PRINTFORML 「아직도 좀 더, 배워 받는 일이 있어. 마지막으로 해 버리기에는 너무 빨라요」
+		PRINTFORML 녹을 것 같은 자극에 몸을 진동시키는 %ANAME(대상)%에, 여성은 속삭인다
+		PRINTFORML %조사처리(ANAME(대상),"가")% 마지막 일선을 넘어 버리지 않는 최대한의 자극을, 천천히 계속 더한다
+		IF IS_SLAVE(대상) || IS_LOVER(대상) || IS_SLAVED_BY(대상)
+			PRINTFORML 「……거기에 당신, 소중한 사람이 있을까요?」
+			PRINTFORML 「당신을 가게 하는 것은, 그 사람의 역할」
+			PRINTFORML 「고조되고 있는 몸, 그 사람을 위해서(때문에) 잡아 두지 않으면」
+			PRINTFORML 「소중한 사람을 만족시켜 주기 위해서(때문에), 가슴의 기분 좋음, 가득 공부해요……♪」
+		ENDIF
+		LOCALS:0 = 가슴
+		LOCAL = TALENT:대상:Ｂ둔감
+		IF LOCAL
+			TALENT:대상:Ｂ둔감 = 0
+		ELSE
+			TALENT:대상:Ｂ민감 = 1
+		ENDIF
+	;Ｍ의 패턴
+	CASE 4
+		PRINTFORML 여성은 %ANAME(대상)%에 당신의 손가락을 빨게 해 입안을 차분히 애무하고 있다
+		PRINTFORML 「그래그래, 차분히, 정중하게 빨아」
+		PRINTFORML 「연인에게 입맞춤하거나 그것이나 연인의 것을 입으로 해 주는 것같이. 후후」
+		PRINTFORML %ANAME(대상)%의 입 끝으로부터는 군침이 방울져 떨어져, 그 뺨은 상기 하고 있다
+		PRINTFORML 여성의 교묘한 손가락기술이, %조사처리(ANAME(대상),"를")% 입으로 느끼게 하고 있다
+		PRINTFORML 「전희를 위한 장소와(뿐)만 생각되고 있는 하지만, 여기라도 훌륭한 성감대야」
+		PRINTFORML 「의식해 자극 해 주면, 몇번이라도 가져 버릴 수 있는 장소가 된다」
+		PRINTFORML 「그러니까……후후, 기분 좋고든지 분, 많이 기억해요♪」
+		PRINTFORML 여성은 즐거운 듯이 말하면서, %ANAME(대상)%의 입안에서 손가락을 춤추게 한다
+		PRINTFORML 잇몸을, 혀를 더듬어져 %조사처리(ANAME(대상),"는")% 쾌락의 벼랑 끝으로 쫓아 버려져 간다
+		PRINTFORML 그러나 여성은, %조사처리(ANAME(대상),"가")% 달하게 되는 것만은, 결코 허락하지 않았다
+		PRINTFORML 절정의 징조를 간파하면, 입으로부터 손가락을 뽑아 내 버린다
+		PRINTFORML 「안 돼요?   아직 가서는 안 돼」
+		PRINTFORML 드디어 견디고일까, 가게해 주세요간원 하는 %ANAME(대상)%에 대해, 그녀는 목을 옆에 흔들었다
+		PRINTFORML 「따로 심술쟁이 할 생각은 없어요. 그렇지만, 나은 당신에 초보 하는 것이야. 가게해 주는 것이 아니고 말야」
+		PRINTFORML 「가는 것은, 성의 기쁨 중(안)에서도 한층 더 기분이 좋은 것. 그렇지만, 일순간 밖에 맛볼 수 없다. 게다가, 맛보면 거기서 마지막」
+		PRINTFORML 「아직도 좀 더, 배워 받는 일이 있어. 마지막으로 해 버리기에는 너무 빨라요」
+		PRINTFORML 녹을 것 같은 자극에 몸을 진동시키는 %ANAME(대상)%에, 여성은 속삭인다
+		PRINTFORML %조사처리(ANAME(대상),"가")% 마지막 일선을 넘어 버리지 않는 최대한의 자극을, 천천히 계속 더한다
+		IF IS_SLAVE(대상) || IS_LOVER(대상) || IS_SLAVED_BY(대상)
+			PRINTFORML 「……거기에 당신, 소중한 사람이 있을까요?」
+			PRINTFORML 「당신을 가게 하는 것은, 그 사람의 역할」
+			PRINTFORML 「고조되고 있는 몸, 그 사람을 위해서(때문에) 잡아 두지 않으면」
+			PRINTFORML 「소중한 사람을 만족시켜 주기 위해서(때문에), 두는 치노 기분 좋음, 가득 공부해요……♪」
+		ENDIF
+		LOCALS:0 = 입
+		LOCAL = TALENT:대상:Ｍ둔감
+		IF LOCAL
+			TALENT:대상:Ｍ둔감 = 0
+		ELSE
+			TALENT:대상:Ｍ민감 = 1
+		ENDIF
+	CASE 5
+		CALL SINGLE_DRAWLINE
+		GOTO SHOW_LOOP
+ENDSELECT
+PRINTFORML 결국, 절정이 용서되지 않는 채, %조사처리(ANAME(대상),"는")% 몇 번이나 깊은 쾌락을 맛보았다……
+CALL COLOR_PRINTW(@"%ANAME(대상)%의 %조사처리(LOCALS:0,"가")%\@ LOCAL ? 남들 수준에 # 남의 두배 \@민감하게 되었다……", 칼라_주의)
+MONEY -= 20000
+DVAR:섹스트래이너_발생플래그 = 1
+RETURN 1

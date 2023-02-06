@@ -1,0 +1,485 @@
+﻿
+;---------------------
+;대응하는 데일리의 DISABLE를 돌려준다. 설정하지 않는 경우, 이벤트는 발생하지 않는다.
+;---------------------
+@EVENT_DAILY_DERIVATION_MILLIONAIRE_PATRON_DISABLE()
+RETURN DAILY_GET_DISABLE_CONFIG("MILLIONAIRE")
+
+;---------------------
+;발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;대응하는 데일리의 DISABLE 체크를 규약으로서 필수로 한다
+;---------------------
+@EVENT_DAILY_DERIVATION_MILLIONAIRE_PATRON_DECISION()
+#DIM 대상
+
+대상 = ID_TO_CHARA(DVAR:부호_마음에든다ID)
+
+SIF 대상 == -1
+	RETURN 0
+	
+;대상 캐릭터와 연인이 아니면 안 돼
+SIF !IS_LOVER(대상)
+	RETURN 0
+
+;주인공이 자지 보유고, 대상이 여자가 아니면 안 돼
+SIF !HAS_PENIS(MASTER) || !IS_FEMALE(대상)
+	RETURN 0
+
+;소속이 함께로, 대상이 포로가 되어 있지 않고, 사망하고 있지 않다
+SIF !(CFLAG:대상:소속 == CFLAG:MASTER:소속 && !CFLAG:대상:포로처 && CFLAG:대상:특수상태 != 특수상태_사망)
+	RETURN 0
+	
+SIF !(DVAR:부호_후원자플래그 >= 5)
+	RETURN 0
+	
+;25％로 발생	
+RETURN RAND:100 < 25
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_DERIVATION_MILLIONAIRE_PATRON()
+#DIM 대상
+
+대상 = ID_TO_CHARA(DVAR:부호_마음에든다ID)
+
+SELECTCASE DVAR:부호_후원자플래그 
+	;파생 이벤트 1회째
+	CASE 5
+		PRINTFORMW 「야아, 또 왔어」
+		PRINTFORMW 후원자가 된 예의 부호의 남자가 물어 왔다
+		PRINTFORMW 그 분위기는, 처음으로 맞았을 무렵과는 전혀 다른, 신사나 마찬가지였다
+		PRINTFORML 오늘도 %조사처리(ANAME(대상),"를")% 안으러 왔는지?   라고 물어보자
+		PRINTFORMW 「아니, 오늘은 우연히 가까운 시일내에 우연히 지나간 것으로. 조금 얼굴을 내밀러 온 것 뿐이야」
+		PRINTFORMW 「뭐, 얼굴을 내밀 뿐(만큼)이라는 것도 무엇이다. 적지만, 이것을 받아 주게」
+		CALL ICPRINT("금<30000>을 손에 넣었다", "W", 칼라_주의)
+		MONEY += 30000
+		PRINTFORMW 「…앞으로도, 너희들 사랑을, 나에게 보이게 해 주어라. 그러면……」
+		PRINTFORMW 그는 그 만큼 전하면, 지원금을 건네주어 돌아갔다……
+		PRINTFORML
+		DVAR:부호_후원자플래그 ++
+		
+	;파생 이벤트 2회째
+	CASE 6
+		PRINTFORMW 「야아, %ANAME(MASTER)%. 오늘내일과 짬이 있는 거야?」
+		PRINTFORML 후원자가 된 부호의 남자가 또 물어 왔다
+		PRINTFORMW 확실히 3일 정도 예정은 비어 있지만…
+		PRINTFORML 「호우!   그 녀석은 좋다. 실은 영지의 변두리에, 새로운 풍속점을 생긴 것 같아」
+		PRINTFORMW 「미인 갖춤의 고급점이라고 (들)물어, 어느 정도의 것인가 보러 가려고 생각해서 말이야. 좋다면 너도 어때?   물론, 대금은 모두 싼다」
+		PRINTFORML ……료우치노하즈레카. 아쵸우드시사트니이코우트시테타트코로다나, 그우젠다나, 코레하이크시카나이나
+		PRINTFORMW 「쿳쿳…. 너도 좋아한다. 뭐이 정도 탐욕은 아니면, %ANAME(대상)%의 일도 획득할 수 없는가, 하하핫」
+		PRINTFORML 두 명을 실은 마차는 목적의 가게에 향한다. 확실히 영지의 빗나가고 부근, 울창하게 한 숲속에, 그 가게는 있었다
+		PRINTFORMW 숲속이라는데 부조화인만큼 호화롭고 눈부신 점포 구조로, 주위에 감도는 달콤한 향기가 콧구멍을 간질인다
+		PRINTFORML 냄새 맡고 있는 것만으로 하반신에 피가 모이는 것 같은…매우 좋은 향기다
+		PRINTFORMW 두 명이 가게에 들어가려고 하면, 현관으로부터 특출의 미녀들이 마중해 주었다
+		PRINTFORML 이야기 대로, 모두 미녀 갖춤이다. 이것은 대적중일지도 모른다!
+		PRINTFORMW 지금 개점 기념 서비스중, 과의 일로, 일인분의 요금으로 몇 사람에서도 안아 마음껏과다
+		PRINTFORMW 부호의 남자는 매우 기분이 좋아, 다수의 미녀를 거느려 가게의 안쪽에 들어갔다…
+		PRINTFORML 「당신은 어떻게 합니까?   기호의 아가씨를 선택할 수 있어요」라고 접수의 여자에게 물을 수 있다
+		PRINTFORMW 방은 완전 방음으로, 아무리 격렬한 플레이에서도 소리는 새지 않기 때문에 안심하고 즐기면 좋다, 라고다
+		PRINTFORMW 자, 그럼, 어떻게 하지……
+		CALL ASK_MULTI("로리아가씨!" , "빵빵함짱!", "전부다")
+		IF RESULT == 2
+			PRINTFORML 전부! …라고 말하기 전에, %ANAME(MASTER)%의 뒤로부터 다수의 미소녀가 나타나, 권하도록(듯이) 껴안아 왔다
+			PRINTFORMW 각각, 체격이나 타입은 다르지만, 모두 한결같게 사랑스럽고, 아름다운 여자들이었다
+			PRINTFORML 「천천히, 즐겨 주세요」접수의 여자가 요염하게 웃는다
+			PRINTFORMW 그녀들에게 안내되는 대로, 안쪽의 독실에 향한다…
+			PRINTFORMW 방으로 들어가자, 이 가게 주변에 감돌고 있던 향기가 한층 더 강해진다
+			PRINTFORML 이것은 이미 향기라는 것보다 음기다
+			PRINTFORMW 완전히 신체에 불이 붙었던 %조사처리(ANAME(MASTER),"는")%, 암컷의 눈동자로 기대의 표정을 향하는 그녀들과의 하렘을 즐기기로 했다…
+			PRINTFORML 
+			PRINTFORMW …
+			PRINTFORMW 몇 시간 정도 지났을 것인가. %조사처리(ANAME(MASTER),"는")% 그녀들과의 교제를 마음껏 즐겼다…
+			PRINTFORML 슬슬 나올까하고 일어선 정면, 그녀들에게 모여져 밀어 쓰러트려진다
+			PRINTFORMW 아직도 만족하지 않다, 좀더 좀더 정액을 따라 받는다, 라고 그녀들은 요염하게 웃는다
+			PRINTFORML 그 눈동자에 요염한 빛을 품으면서 추잡하게 지체를 켜 맞혀, 탐욕에 %조사처리(ANAME(MASTER),"를")% 요구해 온다
+			PRINTFORMW …자주(잘) 보면, 그녀들의 등에 날개와 같은 물건이 보인다. 그것만이 아닌, 꼬리나 모퉁이도 간파할 수 있다
+			CALL COLOR_PRINTW(@"이 풍속점은, 음마가 경영하는 서큐버스 하우스였어!", 칼라_핑크)
+			PRINTFORML 음마로서의 본성을 나타낸 그녀들은, 더욱 추잡하게, 더욱 격렬하게 허리를 거절해 %ANAME(MASTER)%의 정액을 짜낸다
+			PRINTFORMW 그녀들의 풍만한 유방도, 부드러운 어린 치부도, 모두가 남자의 마음을 잡아 놓지 않는다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀들의 농후한 음기에 대어지고 이성을 잃어, 짐승과 같이 음마의 육체를 격렬하게 요구했다…
+			PRINTFORMW 도대체 얼마나 사정하고 싶겠는가. 이제(이미/벌써/더는/정말) 더 이상 나오지 않는다, 라고 정액의 한계를 고한다
+			PRINTFORML 하면, 음마들은 빠짐없이 스스로의 체액을 %ANAME(MASTER)%에 먹이기 시작했다
+			PRINTFORMW 있는 어린 듯한 음마는 %ANAME(MASTER)%의 안면에 걸쳐, 비밀의 틈으로부터 흘러넘치는 꿀물을,
+			PRINTFORMW 또 있는 음마는, 풍만한 유방을 주물러, 흘러넘치는 모유를 %ANAME(MASTER)%에게 준다
+			PRINTFORMW 음마의 꿀물도 모유도, 남자에게 있어 극상의 감로였다
+			PRINTFORMW 그것들을 양쪽 모두 맛본다. 남자에게 더 없는 행복을 주는 타락의 꿀은, 그녀들에게 모두를 바쳐도 좋다고 생각할 정도의 도취를 가져왔다
+			PRINTFORML 이대로 계속 쭉 맛보고 있고 싶다, 라고 생각하게 할 정도의 중독성과 농후한 음향이,
+			PRINTFORMW 이제 한계였어야 할 불알을 자극해, 새로운 정자를 눈 깜짝할 순간에 만들어 낸다. 벌써 옥대는 팡팡 긴장되고 있었다
+			PRINTFORMW 이성을 날린 %조사처리(ANAME(MASTER),"는")% 체내의 수분을 정액으로 바꿀 기세로, 그녀들에게 더욱 격렬하게 정액을 계속 발한다…
+			PRINTFORMW 이 무한하게 생각되는 극상의 쾌락 지옥은, 음마들이 만족할 때까지 계속되었다……
+			FOR LOCAL, 0, 7
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실, Ｖ삽입", 0, "서큐버스의 입술", "", "서큐버스의 질", "난교")
+			NEXT
+		ELSEIF RESULT == 1
+			PRINTFORML 젖가슴의 큰 아이로…라고 말하기 전에, %ANAME(MASTER)%의 뒤로부터 다수의 미녀가 나타나, 권하도록(듯이) 껴안아 왔다
+			PRINTFORMW 강압되어져 가슴의 부드러움이 전해진다. 각각 타입은 다르지만, 모두 한결같게 풍만한 유방의 소유자였다
+			PRINTFORML 「천천히, 즐겨 주세요」접수의 여자가 요염하게 웃는다
+			PRINTFORMW 그녀들에게 안내되는 대로, 안쪽의 독실에 향한다…
+			PRINTFORMW 방으로 들어가자, 이 가게 주변에 감돌고 있던 향기가 한층 더 강해진다
+			PRINTFORML 이것은 이미 향기라는 것보다 음기다
+			PRINTFORMW 완전히 신체에 불이 붙었던 %조사처리(ANAME(MASTER),"는")%, 같은 발정한 모습으로 암컷의 표정을 향하는 그녀들과 즐기기로 했다…
+			PRINTFORML 
+			PRINTFORMW …
+			PRINTFORMW 몇 시간 정도 지났을 것인가. %조사처리(ANAME(MASTER),"는")% 미녀들의 풍만한 신체를 마음껏 즐겼다…
+			PRINTFORML 슬슬 나올까하고 일어선 정면, 그녀들에게 모여져 밀어 쓰러트려진다
+			PRINTFORMW 아직도 만족하지 않다, 좀더 좀더 정액을 따라 받는다, 라고 미녀들은 요염하게 웃는다
+			PRINTFORML 그 눈동자에 요염한 빛을 품으면서 부드러운 지체를 강압해, 탐욕에 %ANAME(MASTER)%의 정액을 요구해 온다
+			PRINTFORMW …자주(잘) 보면, 그녀들의 등에 날개와 같은 물건이 보인다. 그것만이 아닌, 꼬리나 모퉁이도 간파할 수 있다
+			CALL COLOR_PRINTW(@"이 풍속점은, 음마가 경영하는 서큐버스 하우스였어!", 칼라_핑크)
+			PRINTFORML 음마로서의 본성을 나타낸 그녀들은, 더욱 추잡하게, 더욱 격렬하게 허리를 거절해 %ANAME(MASTER)%의 정액을 짜낸다
+			PRINTFORMW %ANAME(MASTER)%도 또한, 그녀들의 농후한 음기에 대어져 짐승과 같이 육봉을 격렬하게 꽂는다
+			PRINTFORMW 도대체 얼마나 사정하고 싶겠는가. 이제(이미/벌써/더는/정말) 더 이상 나오지 않는다, 라고 정액의 한계를 고한다
+			PRINTFORML 하면, 음마들은 빠짐없이 스스로의 유두를, %ANAME(MASTER)%의 입에 넣게 해 모유를 준다
+			PRINTFORMW 음마의 모유는 남자에게 있어 극상의 감로였다. 한입 맛보자마자, 남자를 타락 시키는 악마의 꿀…
+			PRINTFORML 계속 쭉 들이마시고 있고 싶다고 생각될 정도의 중독성과 농후한 음향이,
+			PRINTFORMW 이제 한계였어야 할 불알을 자극해, 새로운 정자를 눈 깜짝할 순간에 만들어 낸다. 벌써 옥대는 정액으로 긴장되고 있었다
+			PRINTFORMW 이성을 날린 %조사처리(ANAME(MASTER),"는")% 체내의 수분을 정액으로 바꿀 기세로, 그녀들과 함께 더욱 격렬하게 서로를 서로 탐낸다…
+			PRINTFORMW 이 무한하게 생각되는 쾌락 지옥은, 음마들이 만족할 때까지 계속되었다……
+			FOR LOCAL, 0, 4
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실, Ｖ삽입", 0, "서큐버스의 입술", "", "서큐버스의 질", "난교")
+			NEXT
+		ELSE
+			PRINTFORML 로리아가씨로…라고 말하기 전에, %ANAME(MASTER)%의 뒤로부터 다수의 미소녀가 나타나, 응석부리도록(듯이) 껴안아 왔다
+			PRINTFORMW 새하얀 피부의 아이, 갈색피부의 아이, 유아 체형인 아이, 부풀어 올라 내기의 아이…, 모두 타입은 다르지만, 한결같게 사랑스러웠다
+			PRINTFORML 「천천히, 즐겨 주세요」접수의 여자가 요염하게 웃는다
+			PRINTFORMW 그녀들에게 안내되는 대로, 안쪽의 독실에 향한다…
+			PRINTFORMW 방으로 들어가자, 이 가게 주변에 감돌고 있던 향기가 한층 더 강해진다
+			PRINTFORML 이것은 이미 향기라는 것보다 음기다
+			PRINTFORMW 완전히 신체에 불이 붙었던 %조사처리(ANAME(MASTER),"는")%, 같은 발정한 모습으로 암컷의 표정을 향하는 소녀들을 껴안았다…
+			PRINTFORML 
+			PRINTFORMW …
+			PRINTFORMW 몇 시간 정도 지났을 것인가. %조사처리(ANAME(MASTER),"는")% 소녀들의 미성숙인 신체를 마음껏 즐겼다…
+			PRINTFORML 슬슬 나올까하고 일어선 정면, 소녀들에게 모여져 밀어 쓰러트려진다
+			PRINTFORMW 아직도 만족하지 않다, 좀더 좀더 정액을 따라 받는다, 라고 소녀들은 요염하게 웃는다
+			PRINTFORML 그 눈동자에 요염한 빛을 품으면서 지체를 강압해, 탐욕에 %ANAME(MASTER)%의 정액을 요구해 온다
+			PRINTFORMW …자주(잘) 보면, 그녀들의 등에 날개와 같은 물건이 보인다. 그것만이 아닌, 작으면서 꼬리나 모퉁이도 나타나고 있다
+			CALL COLOR_PRINTW(@"이 풍속점은, 음마가 경영하는 서큐버스 하우스였어!", 칼라_핑크)
+			PRINTFORML 음마로서의 본성을 나타낸 소녀들은, 더욱 추잡하게, 더욱 격렬하게 허리를 거절해 %ANAME(MASTER)%의 정액을 짜낸다
+			PRINTFORMW %ANAME(MASTER)%도 또한, 그녀들의 농후한 음기에 대어져 짐승과 같이 작은 고기단지를 격렬하게 몰아세운다
+			PRINTFORMW 도대체 얼마나 사정하고 싶겠는가. 이제(이미/벌써/더는/정말) 더 이상 나오지 않는다, 라고 정액의 한계를 고한다
+			PRINTFORML 하면, 소녀들은 빠짐없이 %ANAME(MASTER)%의 안면에 걸쳐,
+			PRINTFORMW 그 어린 비밀의 틈을 강압해 흘러넘치는 음마의 꿀물을 먹이고 준다
+			PRINTFORML 음마의 꿀은 남자에게 있어 극상의 감로였다. 쭉 맛보고 있고 싶다고 생각될 정도의 중독성과 농후한 음향이,
+			PRINTFORMW 이제 한계였어야 할 불알을 자극해, 새로운 정자를 눈 깜짝할 순간에 만들어 낸다. 벌써 옥대는 정액으로 긴장되고 있었다
+			PRINTFORMW 이성을 날린 %조사처리(ANAME(MASTER),"는")% 체내의 수분을 정액으로 바꿀 기세로, 소녀들과 함께 육욕을 서로 탐낸다…
+			PRINTFORMW 이 무한하게 생각되는 쾌락 지옥은, 음마들이 만족할 때까지 계속되었다……
+			FOR LOCAL, 0, 4
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실, Ｖ삽입", 0, "서큐버스의 입술", "", "서큐버스의 질", "난교")
+			NEXT
+		ENDIF
+		PRINTFORML ·
+		PRINTFORML ·
+		PRINTFORMW ·
+		PRINTFORML 「감사합니다. 다음 내점을 기대하고 있습니다」
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 접수양과 음마들에게 웃는 얼굴로 보류되어 서큐버스 하우스의 현관을 나왔다
+		PRINTFORML 도대체 얼마나 짜진 것일 것이다. 일생분 냈는지도 모른다
+		PRINTFORMW 어제의 어둡기 전에 가게에 들어가, 나왔던 것이 낮경. 12시간 이상은 확실히 야리없음이었다
+		PRINTFORML 분명하게 개방해 주었고, 확실히 훌륭한 가게였지만…, 한동안 성욕과 무연의 생활을 보낼 수 있을 것 같다……
+		PRINTFORMW 그러고 보니 함께 온 그는 어떻게 했어?   라고 생각한 정면, 후원자의 남자가 많은 음마를 따르게 하면서 나왔다
+		PRINTFORMW 음마들은 보고눈동자에♥를 띄워, 이별이 아까운 것인지 남자의 육봉에 달라 붙으며 멀어지지 않을 정도다
+		PRINTFORMW 「하하핫!   여기는 좋은 가게다. 이 정도 사정한 것은 처음이다. 향후도 편애에 시켜 받는다」
+		PRINTFORMW 그 말을 (들)물어 음마들로부터 환성…아니, 교성이 오른다
+		PRINTFORMW ……아무래도 이 남자는, 음마들조차 하룻밤에 떨어뜨려 버린 것 같다
+		PRINTFORML …이런 남자에게 안겨, %조사처리(ANAME(대상),"는")% 잘도 저항할 수 있던 것이다. 돌아가면 상냥하게 해 주자
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그런 일을 생각하면서 귀로에 도착했다
+		PRINTFORML 
+		PRINTFORMW ……그 후, 영지 시찰의 선물을 건네주거나하고 %ANAME(대상)%에 상냥하게 했다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%의 모습을 의심스러워 하면서도 기뻐해 준 것 같다
+		PRINTFORML
+		CFLAG:대상:호감도 += 300
+		DVAR:부호_후원자플래그 ++
+		
+	;파생 이벤트 3회째 이후 3개의 이벤트를 랜덤에
+	CASE IS < 10
+		SELECTCASE RAND:3
+			CASE 0
+				PRINTFORMW 「야아, %ANAME(MASTER)%. 전하고 있었던 대로, 예정은 비워 주고 있었는지?」
+				PRINTFORML 후원자가 된 예의 부호가 또 물어 왔다
+				PRINTFORMW 며칠 앞에 그로부터, 이번은 자신이 %조사처리(ANAME(MASTER),"를")% 환대 하고 싶은, 이라는 연락을 받아, 예정을 비우고 있었다
+				PRINTFORML 「그러면 갈까. 지금까지는 너의 여자를 안고 있었기 때문에. 오늘은 나의 하렘에 초대하자」
+				PRINTFORMW 그렇게 남자의 저택에 도착하자, 많은 미녀에게 환영을 받아, 눈 깜짝할 순간에 모여진다
+				PRINTFORML 「하하핫. 너은 그녀들에게도 전하고 있었기 때문에. 모두 흥미진진인 것 같다」
+				PRINTFORMW 모두 이 남자가 떨어뜨린 여자들인 것일까. 굉장한 인원수다. 이 인원수를 기르는 것만이라도 큰 일일텐데, 과연 큰 부자다
+				PRINTFORML 「오늘 밤의 남자는 우리들 두 명 뿐이다. 마음껏 즐기지 않겠는가」
+				PRINTFORMW %조사처리(ANAME(MASTER),"를")% 둘러싸는 미녀들은 한결같게, 남자 좋아하는 하는 발정한 것 같은 표정으로 두 명의 육봉을 기다려 바라고 있다
+				PRINTFORMW 평상시와 다른 환경가운데, %조사처리(ANAME(MASTER),"는")% 객기를 부리고 즐기기로 했다……
+				PRINTFORML
+				PRINTFORMW
+				SELECTCASE RAND:4
+					CASE 0
+						PRINTFORML %조사처리(ANAME(MASTER),"는")% 지금, 두 명의 소녀와의 섹스를 즐기고 있다
+						PRINTFORMW 10대 중반이라고 한 어림이 남는 얼굴 생김새이지만, 실로 옷감 면적이 작은 선정적인 의상이 눈에 띈다
+						PRINTFORML 두 명은 쌍둥이인 것 같아, 신체의 반응도 신음소리도 자주(잘) 비슷했다
+						PRINTFORMW 엎드려 누우면서 누나에게 육봉을, 여동생 쪽은 안면에 걸치게 해 혀를 꽂아 넣어, 자매의 신체를 즐긴다
+						PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀들이 처음의 기세가 죽을 때까지 섹스해 쓰러트렸다…
+					CASE 1
+						PRINTFORML %조사처리(ANAME(MASTER),"는")% 지금, 한사람의 소녀와 후배위로 사귀고 있다
+						PRINTFORMW 10대 후반이라는 얼굴 생김새이지만, 가슴팍을 크게 연 블라우스와 매우 짧은 스커트가 열정을 부추긴다
+						PRINTFORML 그야말로 빗치인 걸, 과 같은 정도이지만, 그러므로 룰루랄라해 %조사처리(ANAME(MASTER),"와")%의 섹스를 즐기고 있다
+						PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀의 부드러운 엉덩이살을 즐기면서 육봉을 돌진했다…
+					CASE 2
+						PRINTFORML %조사처리(ANAME(MASTER),"는")% 지금, 이 관의 메이드라고 생각되는 세 명과 마그 서로 깨고
+						PRINTFORMW 모두 메이드복이지만, 그 스커트는 극단적으로 짧고, 눈부신 허벅지를 강조한다
+						PRINTFORML 그 나머지 추잡하고 괘씸함인 모습의 메이드들에게, 제대로 예의범절을 가르치고를 해 주었다
+						PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀들의 자궁이 가득 될 때까지 섹스해 쓰러트렸다…
+					CASE 3
+						PRINTFORML %조사처리(ANAME(MASTER),"는")% 지금, 묘령의 미녀와 서로 격렬하게 요구하고 있다
+						PRINTFORMW 남이라면 달라붙고 싶어지는 것 같은 풍만한 육체를 당신의 자유에 할 수 있다
+						PRINTFORMW 확실히 남자로 태어난 기쁨에 다하는 순간이었다
+						PRINTFORML 그녀의 테크닉은, 그 정도의 창녀란 비교도 되지 않는 극상의 물건으로 %조사처리(ANAME(MASTER),"를")% 열중하게 시킨다
+						PRINTFORMW %조사처리(ANAME(MASTER),"는")% 정자가 비울 때까지 그녀에게 쏟았다…
+				ENDSELECT
+				PRINTFORML
+				PRINTFORMW
+				PRINTFORMW 그가 조교한 여자들답게, 모두 훌륭한 봉사상이었다
+				PRINTFORML 왕자지로 예의범절을 가르쳐졌기 때문인가, 질의 야무짐이야말로 느슨하기는 했지만, 가슴이나 혀, 다리나 엉덩이, 여자의 신체 모두를 사용해
+				PRINTFORMW %조사처리(ANAME(MASTER),"를")% 많이 즐겁게 했다……
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실, Ｖ삽입", 0, "부호의 여자의 입술", "", "부호의 여자의 질", "난교")
+				PRINTFORML ·
+				PRINTFORML …
+				PRINTFORMW …
+				PRINTFORMW 「하하핫!   즐겨 준 것 같다. 뭐, %ANAME(대상)%에는 입다물고 주기 때문에 안심하면 좋다」
+				PRINTFORMW 「그것과 이것이 이번 기부금이다. 유효하게 사용해 주게?   금은 천하의 주위물이니까」
+				PRINTFORMW 부호는 %조사처리(ANAME(MASTER),"를")% 궁전까지 보낸 후, 지원금을 건네주어 돌아갔다……
+				CALL ICPRINT("금<30000>을 손에 넣었다", "W", 칼라_주의)
+				PRINTFORML
+				MONEY += 30000
+			CASE 1
+				PRINTFORMW 「야아, %ANAME(MASTER)%. 오늘내일과 짬이 있는 거야?」
+				PRINTFORML 예의 후원자의 남자가 또 물어 왔다
+				PRINTFORMW 확실히 예정은 비어 있지만…
+				PRINTFORML 「호우, 그 녀석은 좋다. 실은 또 예의 풍속가게에 가는 곳이지만, 너도 어때?   대금은 싼다」
+				PRINTFORML …예의 풍속점, 과는 언젠가의 음마가 경영하는 서큐버스 하우스일 것이다
+				PRINTFORMW 자, 그럼, 어떻게 하지……
+				CALL ASK_YN("…간다!", "오늘은 그만둔다")
+				IF RESULT == 1
+					PRINTFORMW 「흠?   그런가」
+					PRINTFORMW 「그럼 이번은, 나만으로 갔다온다고 한다」
+					PRINTFORML 그렇게 말하면 그는 혼자서 서큐버스 하우스에 향했다…
+					PRINTFORMW ……며칠 후, 「어떤 부호가 많은 음마를 하렘에 가세했다」라는 소문이 흘렀다……
+				ELSE
+					PRINTFORMW 「쿳쿳쿳…. 너도 좋아한다. 뭐 남자는 그 정도가 아니면 이칸이야, 하하핫」
+					PRINTFORML 두 명을 실은 마차는 목적의 가게에 향한다. 확실히 영지의 빗나가고 부근, 울창하게 한 숲속에, 그 가게는 있었다
+					PRINTFORMW 변함 없이, 숲속이라는데 부조화인만큼 호화롭고 눈부신 점포 구조다
+					PRINTFORML 그리고 주위에 감도는 음기가 콧구멍을 간질일 때, 하반신이 달콤하게 쑤시기 시작한다…
+					PRINTFORMW 두 명이 가게에 도착하면, 현관으로부터 많은 음마들이 마중해 주었다
+					PRINTFORMW 오늘은 두 명의 전세로, 몇 사람에서도 안아 마음껏과다
+					PRINTFORMW 부호의 남자는 매우 기분이 좋아, 다수의 여자들을 거느려 가게의 안쪽에 들어갔다…
+					PRINTFORML 「당신은 어떻게 합니까?   기호의 아가씨를 선택할 수 있어요」라고 접수의 여자에게 물을 수 있었다
+					PRINTFORMW 방은 완전 방음으로, 아무리 허덕여도 소리는 새지 않기 때문에 안심하고 즐기면 좋다, 라고다
+					PRINTFORMW 자, 그럼, 어떻게 하지……
+					CALL ASK_MULTI("로리아가씨!" , "빵빵함짱!", "전부다")
+					IF RESULT == 2
+						PRINTFORML 전부! …라고 말하기 전에, %ANAME(MASTER)%의 뒤로부터 다수의 미소녀가 나타나, 권하도록(듯이) 껴안아 왔다
+						PRINTFORMW 각각, 체격이나 타입은 다르지만, 모두 한결같게 사랑스럽고, 아름다운 여자들이었다
+						PRINTFORML 「천천히, 즐겨 주세요」접수의 여자가 요염하게 웃는다
+						PRINTFORMW 그녀들에게 안내되는 대로, 안쪽의 독실에 향한다…
+						PRINTFORMW 방으로 들어가자, 이 가게 주변에 감돌고 있던 음기가 한층 더 강해진다
+						PRINTFORMW 완전히 신체에 불이 붙었던 %조사처리(ANAME(MASTER),"는")%, 암컷의 눈동자로 기대의 표정을 향하는 그녀들과의 하렘을 즐기기로 했다…
+						PRINTFORML 
+						PRINTFORMW …
+						PRINTFORMW 몇 시간 정도 지났을 것인가. %조사처리(ANAME(MASTER),"는")% 그녀들과의 섹스를 마음껏 즐기고 있다
+						PRINTFORML 음마로서의 태생을 숨기지 않게 된 그녀들은, 더욱 추잡하게, 더욱 격렬하게 허리를 거절해 %ANAME(MASTER)%의 정액을 요구한다
+						PRINTFORMW 그녀들의 풍만한 유방도, 부드러운 어린 치부도, 모두가 남자의 마음을 잡아 놓지 않는다
+						PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀들의 농후한 음기에 대어지고 이성을 잃어, 짐승과 같이 음마의 육체를 격렬하게 탐낸다
+						PRINTFORMW 도대체 얼마나 사정하고 싶겠는가. 이제(이미/벌써/더는/정말) 더 이상 나오지 않는다, 라고 정액의 한계를 고한다
+						PRINTFORML 하면, 음마들은 빠짐없이 스스로의 체액을 %ANAME(MASTER)%먹이고 주기 시작했다
+						PRINTFORMW 있는 어린 듯한 음마는 %ANAME(MASTER)%의 안면에 걸쳐, 흘러넘치는 꿀물을,
+						PRINTFORMW 또 있는 음마는, 풍만한 유방을 주물러, 흘러넘치는 모유를 %ANAME(MASTER)%에게 준다
+						PRINTFORMW 음마의 꿀물도 모유도, 남자에게 있어 극상의 감로였다
+						PRINTFORMW 그것들을 양쪽 모두 맛본다. 음마가 주는 타락의 꿀은 더 없는 행복의 맛으로, 그녀들에게 모두를 바쳐도 좋다고 생각할 정도의 도취를 가져왔다
+						PRINTFORML 스스로의 안면에 걸치는 소녀의 꿀을 놓치지 않으리라고, 그녀의 허리나 허벅지에 손을 돌리고, 쭉쭉 억누른다
+						PRINTFORMW 그렇게 꿀단지 깊게까지 혀를 꽂아 넣고 훑을 때, 소녀들은 큰 염 소리를 높여 절정 해, 새로운 밀을 흘러넘치게 한다
+						PRINTFORMW 그렇게 어린 치부를 탐내는 %ANAME(MASTER)%의 안면에, 음마들은 모유의 샤워를 따른다
+						PRINTFORMW 질식하지 않게 서둘러 모유와 꿀물을 삼킬 때, 말할 길 없는 행복감이 전류같이 전신을 달린다
+						PRINTFORML 이대로 계속 쭉 맛보고 있고 싶다, 라고 생각하게 할 정도의 중독성과 농후한 음향이,
+						PRINTFORMW 이제 한계였어야 할 불알을 자극해, 새로운 정자를 눈 깜짝할 순간에 만들어 낸다. 벌써 옥대는 팡팡 긴장되고 있었다
+						PRINTFORMW 이성을 날린 %조사처리(ANAME(MASTER),"는")% 체내의 수분을 정액으로 바꿀 기세로, 그녀들에게 더욱 격렬하게 정액을 계속 따른다…
+						PRINTFORMW 이 무한하게 생각되는 극상의 쾌락 지옥은, 음마들이 만족할 때까지 계속되었다……
+						FOR LOCAL, 0, 7
+							CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실, Ｖ삽입", 0, "서큐버스의 입술", "", "서큐버스의 질", "난교")
+						NEXT
+					ELSEIF RESULT == 1
+						PRINTFORML 젖가슴의 큰 아이로…라고 말하기 전에, %ANAME(MASTER)%의 뒤로부터 다수의 미녀가 나타나, 권하도록(듯이) 껴안아 왔다
+						PRINTFORMW 강압되어져 가슴의 부드러움이 전해진다. 각각 타입은 다르지만, 모두 한결같게 풍만한 유방의 소유자였다
+						PRINTFORML 「천천히, 즐겨 주세요」접수의 여자가 요염하게 웃는다
+						PRINTFORMW 그녀들에게 안내되는 대로, 안쪽의 독실에 향한다…
+						PRINTFORMW 방으로 들어가자, 이 가게 주변에 감돌고 있던 향기가 한층 더 강해진다
+						PRINTFORML 이것은 이미 향기라는 것보다 음기다
+						PRINTFORMW 완전히 신체에 불이 붙었던 %조사처리(ANAME(MASTER),"는")%, 같은 발정한 모습으로 암컷의 표정을 향하는 그녀들과 즐기기로 했다…
+						PRINTFORML 
+						PRINTFORMW …
+						PRINTFORMW 몇 시간 정도 지났을 것인가. %조사처리(ANAME(MASTER),"는")% 미녀들의 풍만한 신체를 마음껏 즐기고 있다
+						PRINTFORML 음마로서의 태생을 숨기지 않게 된 그녀들은, 더욱 추잡하게, 더욱 격렬하게 허리를 거절해 %ANAME(MASTER)%의 정액을 요구한다
+						PRINTFORMW %ANAME(MASTER)%도 또한, 그녀들의 농후한 음기에 대어져 짐승과 같이 육봉을 유육에 격렬하게 문지른다
+						PRINTFORMW 도대체 얼마나 사정하고 싶겠는가. 이제(이미/벌써/더는/정말) 더 이상 나오지 않는다, 라고 정액의 한계를 고한다
+						PRINTFORML 그리하면, 음마들은 빠짐없이 스스로의 유두를, %ANAME(MASTER)%의 입에 넣게 해 모유를 준다
+						PRINTFORMW 음마의 모유는 남자에게 있어 극상의 감로였다. 한입 맛보자마자, 남자를 타락 시키는 악마의 꿀…
+						PRINTFORML 음마들의, 얼굴을 묻을 정도의 부드러운 유방에 휩싸여, 감로를 흘리는 유두를 입 가득 가득 넣는다
+						PRINTFORMW 강하게 달라붙어, 가끔 살짝 깨물기 해, 음유를 탐낼 때, 그녀들은 큰 염 소리를 높여 절정 해, 한층 더 모유를 입안에 흘려 넣는다
+						PRINTFORML 계속 쭉 들이마시고 있고 싶다고 생각될 정도의 중독성과 농후한 음향이,
+						PRINTFORMW 이제 한계였어야 할 불알을 자극해, 새로운 정자를 눈 깜짝할 순간에 만들어 낸다. 벌써 옥대는 정액으로 긴장되고 있었다
+						PRINTFORMW 이성을 날린 %조사처리(ANAME(MASTER),"는")% 체내의 수분을 정액으로 바꿀 기세로, 그녀들과 함께 더욱 격렬하게 서로를 서로 탐낸다…
+						PRINTFORMW 이 무한하게 생각되는 쾌락 지옥은, 음마들이 만족할 때까지 계속되었다……
+						FOR LOCAL, 0, 4
+							CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실, Ｖ삽입", 0, "서큐버스의 입술", "", "서큐버스의 질", "난교")
+						NEXT
+					ELSE
+						PRINTFORML 로리아가씨로…라고 말하기 전에, %ANAME(MASTER)%의 뒤로부터 다수의 미소녀가 나타나, 응석부리도록(듯이) 껴안아 왔다
+						PRINTFORMW 새하얀 피부의 아이, 갈색피부의 아이, 유아 체형인 아이, 부풀어 올라 내기의 아이…, 모두 타입은 다르지만, 한결같게 사랑스러웠다
+						PRINTFORML 「천천히, 즐겨 주세요」접수의 여자가 요염하게 웃는다
+						PRINTFORMW 그녀들에게 안내되는 대로, 안쪽의 독실에 향한다…
+						PRINTFORMW 방으로 들어가자, 이 가게 주변에 감돌고 있던 향기가 한층 더 강해진다
+						PRINTFORML 이것은 이미 향기라는 것보다 음기다
+						PRINTFORMW 완전히 신체에 불이 붙었던 %조사처리(ANAME(MASTER),"는")%, 같은 발정한 모습으로 암컷의 표정을 향하는 소녀들을 껴안았다…
+						PRINTFORML 
+						PRINTFORMW …
+						PRINTFORMW 몇 시간 정도 지났을 것인가. %조사처리(ANAME(MASTER),"는")% 어린 음마들의 미성숙인 신체를 마음껏 즐기고 있다
+						PRINTFORML 음마로서의 태생을 숨기지 않게 된 소녀들은, 더욱 추잡하게, 더욱 격렬하게 허리를 거절해 %ANAME(MASTER)%의 정액을 짜낸다
+						PRINTFORMW %ANAME(MASTER)%도 또한, 그녀들의 농후한 음기에 대어져 짐승과 같이 작은 고기단지를 격렬하게 훑는다
+						PRINTFORMW 도대체 얼마나 사정하고 싶겠는가. 이제(이미/벌써/더는/정말) 더 이상 나오지 않는다, 라고 정액의 한계를 고한다
+						PRINTFORML 그리하면, 소녀들은 빠짐없이 %ANAME(MASTER)%의 안면에 걸쳐,
+						PRINTFORMW 그 어린 비밀의 틈을 강압해 흘러넘치는 음마의 꿀물을 먹이고 준다
+						PRINTFORMW 음마의 꿀은 남자에게 있어 극상의 감로였다
+						PRINTFORML 스스로의 안면에 걸치는 소녀의 꿀을 놓치지 않으리라고, 그녀들의 허리나 허벅지에 손을 돌리고, 쭉쭉 억누른다
+						PRINTFORMW 그렇게 꿀단지 깊게까지 혀를 꽂아 넣고 훑을 때, 소녀들은 큰 염 소리를 높여 절정 해, 새로운 밀을 흘러넘치게 한다
+						PRINTFORML 쭉 맛보고 있고 싶다고 생각될 정도의 중독성과 농후한 음향이,
+						PRINTFORMW 이제 한계였어야 할 불알을 자극해, 새로운 정자를 눈 깜짝할 순간에 만들어 낸다. 벌써 옥대는 정액으로 긴장되고 있었다
+						PRINTFORMW 이성을 날린 %조사처리(ANAME(MASTER),"는")% 체내의 수분을 정액으로 바꿀 기세로, 소녀들과 함께 육욕을 서로 탐낸다…
+						PRINTFORMW 이 무한하게 생각되는 쾌락 지옥은, 음마들이 만족할 때까지 계속되었다……
+						FOR LOCAL, 0, 4
+							CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실, Ｖ삽입", 0, "서큐버스의 입술", "", "서큐버스의 질", "난교")
+						NEXT
+					ENDIF
+					PRINTFORML ·
+					PRINTFORML ·
+					PRINTFORMW ·
+					PRINTFORML 「감사합니다. 다음 내점을 기대하고 있습니다」
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 접수양과 음마들에게 웃는 얼굴로 보류되어 서큐버스 하우스의 현관을 나왔다
+					PRINTFORML 이러니 저러니로, 이번도 12시간 이상은 야리없음이었다. 한동안 성욕과 무연의 생활을 보낼 수 있을 것 같다……
+					PRINTFORML 하지만, 앞에 왔을 때보다 신체가 길든 것 같다. 음마에게 짜져 반대로 신체를 단련할 수 있었을지도 모른다
+					MAXBASE:MASTER:체력 += 30
+					CALL COLOR_PRINTW(@"체력 최대치가 30올라, {MAXBASE:MASTER:체력}가 되었다", 칼라_주의)
+					PRINTFORMW 그러고 보니 함께 온 그는 어떻게 했어?   라고 생각한 정면, 역시 많은 음마를 따르게 하면서 후원자의 남자가 나왔다
+					PRINTFORMW 음마들은 보고눈동자에♥를 띄워, 이별이 아까운 것인지 남자의 육봉에 달라붙어서 놓지 않아, 「장가가면 좋겠다」등이라고 말하고 있다
+					PRINTFORMW 「하하핫!   상관없다. 얼마든지 돌봐 주자!   향후도 이 가게는 편애에 시켜 받는다」
+					PRINTFORMW 그 말을 (들)물어 음마들로부터 환성…아니, 교성이 오른다
+					PRINTFORMW ……이 남자의 끝없는 정력은, 음마들조차도 함락 시켜 버릴 수 있는 것 같다
+					PRINTFORML 이런 남자에게, %조사처리(ANAME(대상),"는")% 잘도 저항할 수 있던 것이다. 돌아가면 상냥하게 해 주자
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그런 일을 생각하면서 귀로에 도착했다
+					PRINTFORML 
+					PRINTFORMW ……그 후, 영지 시찰의 선물을 건네주거나하고 %ANAME(대상)%에 상냥하게 했다
+					PRINTFORMW %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%의 모습을 의심스러워 하면서도 기뻐해 준 것 같다
+					CFLAG:대상:호감도 += 300
+				ENDIF
+				PRINTFORML 
+			CASE 2
+				PRINTFORML 「야아, 또 왔어」
+				PRINTFORMW 후원자가 된 부호의 남자가 물어 왔다
+				PRINTFORMW 그 분위기는, 처음으로 맞았을 무렵과는 전혀 다른, 신사연으로 한 것이었다
+				PRINTFORML 「미안하지만, 또 그녀를 안게 해 줄래? 　%조사처리(ANAME(대상),"야")%」
+				PRINTFORMW 「어떻게도 그 신체를 잊을 수 없어서 말야. 이번은 분명하게 피임한다. 약속은 지킨다」
+				PRINTFORML 「그것과, 이번은 너도 함께 어때?   나의 여자도 한사람 데리고 와서 있다」
+				PRINTFORMW 「너마저 좋다면, 4Ｐ등 어떨까요?   평상시와 다른 감각을 맛볼 수 있다고 생각하지만」
+				PRINTFORML 이른바 부부 교환 파티와 같은 것인가. 지금의 그라면, 이전과 같은 횡포는 하지 않을 것이다
+				PRINTFORMW 「물론, 안게 해 준다면 보수는 라고도. 그 근처의 걱정은 필요 없어야」
+				PRINTFORML , 어떻게 하지……
+				CALL ASK_YN("모두가 즐긴다", "오늘은 거절한다")
+				IF RESULT == 1
+					PRINTFORMW 오늘은 %조사처리(ANAME(대상),"다")% 같이 바쁘다
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 정직하게, 오늘은 상황이 붙지 않는 것을 전했다
+					PRINTFORML 「그런가. 그것은 유감이다……」
+					PRINTFORMW 이번에 벌충을 하는 것으로, 이번은 참고 받았다
+					PRINTFORMW 「그러면 나는 이것으로 실례한다. 이것이 이번 기부금이야」
+					PRINTFORMW 후원자의 남자는 지원금을 건네주어 돌아갔다……
+					CALL ICPRINT("금<20000>을 손에 넣었다", "W", 칼라_주의)
+					MONEY += 20000
+				ELSE
+					PRINTFORMW 「오오!   고맙다. 감사한다」
+					PRINTFORML 「그러면 나의 여자도 소개하자. 어이, 여기에」
+					PRINTFORMW 그가 말을 걸면, 한사람의 미녀가 %ANAME(MASTER)%의 전에 나아가 시중든다
+					PRINTFORMW 한눈에 아는 그 추잡한 살집은, 확실히 남자를 기쁘게 하기 위해서(때문에) 예의범절을 가르쳐진 성과의 결정이다
+					PRINTFORMW 그녀는 %ANAME(MASTER)%의 팔을 잡아, 풍만한 유방을 강압하면서 주의 신호를 기다리고 있다
+					PRINTFORMW 「자, 오늘은 모두가 즐기지 않겠는가」
+					PRINTFORMW 그렇게 4명은, 특별히 준비된 방에 들어갔다……
+					PRINTFORML ·
+					PRINTFORML …
+					PRINTFORMW …
+					PRINTFORMW 4사람이 들어온 방으로부터, 남녀의 격렬하게 사귀는 목소리가 들려 온다…
+					PRINTFORMW 방에서 한층 더 흐트러지고 있었던 것이, 후원자의 남자에게 안기고 있는 %조사처리(ANAME(대상),"였")%다
+					PRINTFORML 일찍이 그의 조교에 참아 %조사처리(ANAME(MASTER),"를")% 선택한 %조사처리(ANAME(대상),"이지만")%
+					PRINTFORMW 그 신체에 새겨진 쾌락의 맛은 지금 잊을 수 있는 것은 아니었다
+					PRINTFORMW 그런 자신의 추잡하게 흐트러지는 치태를, 사랑하는 %조사처리(ANAME(MASTER),"로")% 보여지고 있다는 수치심과
+					PRINTFORMW %조사처리(ANAME(MASTER),"가")% 안는 모르는 여자의 쾌감에 녹은 표정이, %조사처리(ANAME(MASTER),"를")% 빼앗기고 있다는 질투심을 닮은 감정을 불러,
+					PRINTFORMW 그것들이 서로 합쳐져 %조사처리(ANAME(대상),"를")% 전에 없는 흥분에 이끌어, 그 신체를 한층 더 민감하게 해 나간다
+					PRINTFORML 그 나머지 추잡하고 사랑스러운 모습에 참지 못하고, %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"를")% 강탈하도록(듯이) 사귄다
+					PRINTFORMW 그 모양을 봐, 남자도 또 자신 이외의 남자에게 안겨 좋아한 마음에 드는 여자를 격렬하게 몰아세워 교육한다
+					PRINTFORMW 서로의 상대를 바꿔 넣어, 격렬한 교제는 상도 계속되었다…
+					PRINTFORML 
+					PRINTFORML 
+					PRINTFORMW 충분히 6시간 정도 지나고 나서, 간신히 쾌락의 연회는 끝났다……
+					PRINTFORML 방에는, 전신을 수컷의 백탁액투성이로 한 두 명의 여자가, 절정의 여운으로부터인가 황홀한 표정으로 전신을 경련시키고 있다
+					PRINTFORMW %ANAME(MASTER)%도 또한 격렬한 교제로 소모해, %ANAME(대상)%의 머리를 살그머니 어루만지면서 숨을 정돈한다
+					PRINTFORMW 「거참, 오늘은 즐거웠어요」
+					PRINTFORML 이만큼 해 아직도 건강하다고는, 절실히 이 남자의 정력은 무서운 것이 있다
+					PRINTFORMW 「무리를 말해 나빴다. 기부금에 색을 칠해 둔다」
+					PRINTFORMW 「그러면 오늘은 이것으로 실례한다. 또 온다」
+					PRINTFORMW 후원자의 남자는 지원금을 건네주어 돌아갔다……
+					CALL ICPRINT("금<50000>을 손에 넣었다", "W", 칼라_주의)
+					MONEY += 50000
+					CALL FUCK_MAKELOVE(대상, GET_ID(MASTER), @"%ANAME(MASTER)%의 입술", ANAME(MASTER))
+					CALL FUCK(MASTER, "Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", @"%ANAME(대상)%의 질")
+					CALL FUCK_RAPE_HININ(대상, @"부호의 \@ RAND:2 ? 페니스 # 입술\@", "부호")
+					CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "부호의 여자의 입술", "", "부호의 여자의 질", "화간")
+				ENDIF
+				PRINTFORML 
+		ENDSELECT
+	DVAR:부호_후원자플래그 ++
+	;파생 이벤트 라스트
+	CASE 10
+		PRINTFORMW 예의 부호에게 원한을 가지는 사람이, 그를 습격할 계획이 있다는 소문을 붙잡았다
+		PRINTFORMW 단순한 소문일지도 모르지만, 이전의 그에게 원한을 가지는 사람은 많다고 듣는다
+		PRINTFORMW 그런데, 어떻게 해야할 것인가……
+		CALL ASK_YN("호위를 붙인다", "방치한다")
+		IF RESULT == 1
+			PRINTFORMW …아무것도 확증은 없다. 아마 단순한 소문일 것이다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 특히 기분에 두지 않고, 방치했다
+			PRINTFORML ·
+			PRINTFORML …
+			PRINTFORMW …
+			PRINTFORMW 며칠 후, 예의 부호가 도둑들에게 습격되어 목숨을 잃었다는 보고가 들어갔다
+			PRINTFORMW 그의 첩들도, 도둑들에게 한사람 남김없이 휩쓸어진 것 같다…
+			CALL COLOR_PRINTW(@"%조사처리(ANAME(MASTER),"는")% 후원자를 잃었습니다……", 칼라_경고)
+			PRINTFORML 
+			DVAR:부호_후원자플래그 = -1
+		ELSE
+			PRINTFORMW 소문의 단계이지만, 주의하고 또 주의해야 할 것이다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 이 소문을 후원자의 그에게 전해, 사병을 여러명 호위에 붙게 했다……
+			PRINTFORML ·
+			PRINTFORML …
+			PRINTFORMW …
+			PRINTFORML 며칠 후, 후원자의 부호가 방문 도중에 습격되었다는 보고가 들어갔다
+			PRINTFORMW 다행히, 호위에 붙이고 있던 병사가 분투한 결과, 큰 일에는 이르지 않았던 것 같다
+			PRINTFORML 「거참……심한 꼴을 당했어」
+			PRINTFORMW 헐레벌떡 어떻게든 궁전까지 들어갈 수 있었던 그에게, %조사처리(ANAME(MASTER),"는")% 한동안 몸을 숨기는 것이 좋으면 진언 했다
+			PRINTFORMW 「…분명히, 그와 같다. 지금까지 사람의 너무 미움을 산 벌을 받은 것 같다…」
+			PRINTFORMW 이번 습격은, 일찍이 이 부호에게 여성을 네토라레 당한 남자들이 계획한 것이었다
+			PRINTFORMW 「자업자득이라고는 해도…지금 내가 죽으면, 남겨진 첩들이 대단한 것이 되는구나…」
+			PRINTFORMW 남겨지는 여자들을 생각하는 그의 모습은, 이전의, 여성을 고기구멍으로 밖에 생각하지 않는 남자와 동일 인물에게는 안보였다
+			PRINTFORML 「……알았다. 너의 말대로, 한동안 몸을 숨기자. 또 이런 일이 있으면 견딜 수 없기에」
+			PRINTFORMW 그는 %ANAME(MASTER)%의 진언을 들어주어, 평화롭게 될 때까지 몸을 숨기기로 했다
+			PRINTFORML 「한동안, 너나 %조사처리(ANAME(대상),"를")% 만날 수 없어지는 것은 외롭겠지만…」
+			PRINTFORMW 「너희들이 이 땅을 평화롭게 해 준다고 믿고 있어」
+			PRINTFORMW 「그러면, 안녕히다. 언젠가 또 만나자. 나의…처음의 친구야」
+			PRINTFORMW 그렇게 그는 있을까 말까한 지원금을 남겨 떠나 갔다……
+			CALL ICPRINT("금<30000>을 손에 넣었다", "W", 칼라_주의)
+			MONEY += 30000
+			CALL COLOR_PRINTW(@"%조사처리(ANAME(MASTER),"는")% 후원자를 잃었습니다……", 칼라_주의)
+			PRINTFORML 
+			DVAR:부호_후원자플래그 = -1
+		ENDIF
+ENDSELECT
+
+RETURN 1

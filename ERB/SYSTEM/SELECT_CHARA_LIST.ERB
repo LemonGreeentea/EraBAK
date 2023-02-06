@@ -1,0 +1,746 @@
+﻿;-------------------------------------------------
+;desc  :캐릭터 리스트를 표시하는 함수
+;param :표시 함수명:캐릭터를 리스트에 표시하는지를 판정하는 함수의 이름 SELECT_CHARA_LIST_SHOW_LOGIC_●●(ARG:0)의 것●●의 부분
+;param :선택 함수명:캐릭터를 리스트로 선택할 수 있도록(듯이)하는지를 판정하는 함수의 이름 SELECT_CHARA_LIST_SHOW_LOGIC_●●(ARG:0)의 것●●의 부분
+;param :색지정 함수명:캐릭터를 선택할 수 있는 경우, 리스트로 어떤 색으로 할 수 있도록(듯이)하는지를 판정하는 함수의 이름 SELECT_CHARA_LIST_COLOR_LOGIC_●●(ARG:0)의 것●●의 부분
+;param :표시문자:각 컬럼의 요소 ABL의 이름
+;-------------------------------------------------
+@SELECT_CHARA_LIST(표시함수명 = "", 선택함수명="", 색지정함수명="", 표시문자:0 = "", 표시문자:1 = "", 표시문자:2 = "", 표시문자:3 = "", 표시문자:4 = "", 표시문자:5 = "", 표시문자:6 = "")
+#DIMS 표시함수명
+#DIMS 선택함수명
+#DIMS 색지정함수명
+#DIMS 표시문자, 7
+#DIM 표시수치, 7
+#DIM FIRST_LINE
+#DIM 대상
+#DIM 표시위치
+#DIM 표시페이지
+#DIM 총페이지수
+#DIM 캐릭터수
+#DIM 캐릭터카운터
+#DIM 표시개시위치
+#DIM 표시종료위치
+#DIM 랭크종별
+#DIM 직전총페이지수
+#DIMS 직전표시함수명
+#DIMS 직전선택함수명
+
+VARSET 캐릭터수
+VARSET 표시수치, -1
+
+;가드절
+TRYCCALLFORM SELECT_CHARA_LIST_SHOW_LOGIC_%표시함수명%(MASTER)
+CATCH
+	THROW 지정된 함수 SELECT_CHARA_LIST_SHOW_LOGIC_%표시함수명%가 존재하지 않습니다
+ENDCATCH
+
+TRYCCALLFORM SELECT_CHARA_LIST_SELECT_LOGIC_%선택함수명%(MASTER)
+CATCH
+	THROW 지정된 함수 SELECT_CHARA_LIST_SELECT_LOGIC_%선택함수명%가 존재하지 않습니다
+ENDCATCH
+
+TRYCCALLFORM SELECT_CHARA_LIST_COLOR_LOGIC_%색지정함수명%(MASTER)
+CATCH
+	THROW 지정된 함수 SELECT_CHARA_LIST_COLOR_LOGIC_%색지정함수명%가 존재하지 않습니다
+ENDCATCH
+
+
+;1행째를 준비
+FOR LOCAL, 0, VARSIZE("표시문자")
+	FOR LOCAL:1, 0, VARSIZE("ABL")
+		SIF ABLNAME:(LOCAL:1) == ""
+			CONTINUE
+		IF 표시문자:LOCAL == ABLNAME:(LOCAL:1)
+			표시문자:LOCAL = %TOSTR_SPACE(2)%%SUBSTRINGU(ABLNAME:(LOCAL:1), 0, 1)%\@ LOCAL == VARSIZE("표시문자") - 1 ?   # | \@
+			표시수치:LOCAL = LOCAL:1
+			BREAK
+		ENDIF
+	NEXT
+	SIF LOCAL:1 == VARSIZE("ABL")
+		표시문자:LOCAL = %TOSTR_SPACE(5)%
+NEXT
+
+;페이지수계산
+FOR LOCAL, 0, CHARANUM
+	CALLFORM SELECT_CHARA_LIST_SHOW_LOGIC_%표시함수명%(LOCAL)
+	SIF RESULT
+		캐릭터수 ++
+NEXT
+
+총페이지수 = (캐릭터수 - 1) / 40 + 1
+
+;직전의 호출과 페이지수, 표시하는 함수, 선택하는 함수명이 동일하면 연속한 호출이라고 판단해 페이지를 바꾸지 않는다
+SIF 총페이지수 != 직전총페이지수 || 표시함수명 != 직전표시함수명 || 선택함수명 != 직전선택함수명
+	표시페이지 = 1
+
+직전총페이지수  = 총페이지수
+직전표시함수명 '= 표시함수명
+직전선택함수명 '= 선택함수명
+
+;헤더 표시
+PRINTFORM %TOSTR_SPACE(13)%
+FOR LOCAL:1, 0, VARSIZE("표시문자")
+	PRINTFORM %표시문자:(LOCAL:1)%
+NEXT
+PRINTFORM %TOSTR_SPACE(18)%
+FOR LOCAL:1, 0, VARSIZE("표시문자")
+	PRINTFORM %표시문자:(LOCAL:1)%
+NEXT
+
+PRINTL
+FIRST_LINE = LINECOUNT
+
+CALL CREATE_SELECTOR_SORT_LIST(0)
+
+;본체 부분의 표시
+$SHOW_LOOP
+
+VARSET 표시위치
+VARSET 캐릭터카운터
+
+표시개시위치 = (표시페이지 - 1) * 40
+표시종료위치 = 표시페이지 * 40
+
+
+FOR LOCAL:0, 0, CHARANUM
+	LOCAL:1 = SHOP_CHARA_LIST:LOCAL
+	SIF LOCAL:1 == -1
+		CONTINUE
+	;표시 논리에 들어맞지 않으면 날린다
+	CALLFORM SELECT_CHARA_LIST_SHOW_LOGIC_%표시함수명%(LOCAL:1)
+	SIF !RESULT
+		CONTINUE
+	IF 표시개시위치 <= 캐릭터카운터 && 캐릭터카운터 < 표시종료위치
+		IF 표시위치 % 2 != 0
+			PRINT   
+		ELSEIF 표시위치 > 0
+			PRINTL 
+		ENDIF
+		;선택 논리에 들어맞는 캐릭터만 통상 표시
+		;들어맞지 않으면 회색 표시
+		CALLFORM SELECT_CHARA_LIST_SELECT_LOGIC_%선택함수명%(LOCAL:1)
+		IF RESULT
+			CALLFORM SELECT_CHARA_LIST_COLOR_LOGIC_%색지정함수명%(LOCAL:1)
+			CALL COLOR_PRINT(@"[{LOCAL:1 + 99, 4}]%SNAME(LOCAL:1), MAX_CHARANAME_LENGTH/2, RIGHT%", RESULT)
+			PRINTFORM %TOSTR_SPACE(1)%
+			FOR LOCAL:2, 0, VARSIZE("표시수치")
+				IF 표시수치:(LOCAL:2) != -1
+					SELECTCASE 표시수치:(LOCAL:2)
+						CASE GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "요술"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창")
+							랭크종별 = 랭크_ＳＬＧ
+						CASE GETNUM(ABL, "성지식")
+							랭크종별 = 랭크_성지식
+						CASEELSE
+							랭크종별 = 랭크_그외
+					ENDSELECT
+					CALL PRINT_ALPHABET_RANK(랭크종별, ABL:(LOCAL:1):(표시수치:(LOCAL:2)))
+					PRINTFORM {ABL:(LOCAL:1):(표시수치:(LOCAL:2)), 3}
+					SIF LOCAL:2 != VARSIZE("표시수치") -1
+						PRINT |
+				ELSE
+					PRINTFORM %TOSTR_SPACE(5)%
+				ENDIF
+			NEXT
+			PRINTBUTTON " 정", LOCAL:1 + 10099
+		ELSE
+			LOCALS:0 = [{NO:(LOCAL:1) + 99, 4}]%SNAME(LOCAL:1), MAX_CHARANAME_LENGTH/2, RIGHT%%TOSTR_SPACE(1)%
+			FOR LOCAL:2, 0, VARSIZE("표시수치")
+				IF 표시수치:(LOCAL:2) != -1
+					SELECTCASE 표시수치:(LOCAL:2)
+						CASE GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "요술"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창")
+							랭크종별 = 랭크_ＳＬＧ
+						CASE GETNUM(ABL, "성지식")
+							랭크종별 = 랭크_성지식
+						CASEELSE
+							랭크종별 = 랭크_그외
+					ENDSELECT
+					LOCALS:0 = %LOCALS:0%%ALPHABET_RANK(랭크종별, ABL:(LOCAL:1):(표시수치:(LOCAL:2)))%{ABL:(LOCAL:1):(표시수치:(LOCAL:2)), 3}
+					SIF LOCAL:2 != VARSIZE("표시수치") -1
+						LOCALS:0 = %LOCALS:0%|
+				ELSE
+					 LOCALS:0 = %LOCALS:0%%TOSTR_SPACE(5)%
+				ENDIF
+			NEXT
+			SETCOLOR 칼라_선택불가
+			PRINTPLAINFORM %LOCALS:0%
+			PRINTPLAINFORM    
+			RESETCOLOR
+		ENDIF
+		표시위치 ++
+	ENDIF
+	캐릭터카운터 ++
+NEXT
+
+PRINTL 
+CALL COLOR_LINE
+
+;footer 부분
+IF 총페이지수 >= 2
+	PRINT [  1] 최초의 페이지    
+	PRINT [  2] 이전페이지        
+	PRINTPLAINFORM 페이지{표시페이지}/{총페이지수}        
+	PRINT [  8] 다음페이지    
+	PRINT [  9] 마지막 페이지
+	PRINTL 
+	CALL COLOR_LINE
+ENDIF
+PRINTBUTTON "<<", 20000
+PRINT  
+PRINTBUTTON @"[%STR_NOW_SORTKEY:소트키, 4, LEFT%]", 20001
+PRINT  
+PRINTBUTTON ">>", 20002
+PRINT  
+PRINTBUTTON @"[\@ 내림차순소트 ? 내림차순 # 오름차순\@]", 20003
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTL [  0] 역시 그만둔다
+
+REDRAW 0
+
+
+$INPUT_LOOP
+INPUT
+IF RESULT == 1
+	표시페이지 = 1
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 2
+	표시페이지 = ROUND_DECREMENT(표시페이지, 1, 총페이지수)
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 8
+	표시페이지 = ROUND_INCREMENT(표시페이지, 1, 총페이지수)
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 9
+	표시페이지 = 총페이지수
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 0
+	REDRAW 1
+	RETURN -1
+ELSEIF RESULT == 20000
+	소트키 = ROUND_DECREMENT(소트키, 0, NUM_SORTKEY - 1)
+	CALL CREATE_SELECTOR_SORT_LIST(0)
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 20001
+		CALL SINGLE_DRAWLINE
+		FOR LOCAL, 0, NUM_SORTKEY
+			PRINTFORML [{LOCAL}] %STR_NOW_SORTKEY:LOCAL%
+		NEXT
+		INPUT
+		SIF INRANGE(RESULT, 0, NUM_SORTKEY - 1)
+			소트키 = RESULT
+		CALL CREATE_SELECTOR_SORT_LIST(0)
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+ELSEIF RESULT == 20002
+	소트키 = ROUND_INCREMENT(소트키, 0, NUM_SORTKEY - 1)
+	CALL CREATE_SELECTOR_SORT_LIST(0)
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 20003
+	내림차순소트 = !내림차순소트
+	CALL CREATE_SELECTOR_SORT_LIST(0)
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ENDIF
+
+;가드절·특수 버튼
+IF RESULT >= 10099
+	대상 = RESULT - 10099
+	IF 대상 > CHARANUM || 대상 < 0
+		CLEARLINE 1
+		GOTO INPUT_LOOP
+	ENDIF
+	CALLFORM SELECT_CHARA_LIST_SHOW_LOGIC_%표시함수명%(대상)
+	IF !RESULT
+		CLEARLINE 1
+		GOTO INPUT_LOOP
+	ENDIF
+	CALLFORM SELECT_CHARA_LIST_SELECT_LOGIC_%선택함수명%(대상)
+	IF !RESULT
+		CLEARLINE 1
+		GOTO INPUT_LOOP
+	ENDIF
+	FOR LOCAL, 0, CHARANUM
+		SIF SHOP_CHARA_LIST:LOCAL == -1
+			CONTINUE
+		CALLFORM SELECT_CHARA_LIST_SHOW_LOGIC_%표시함수명%(SHOP_CHARA_LIST:LOCAL)
+		SIF RESULT
+			CALLFORM SELECT_CHARA_LIST_SELECT_LOGIC_%선택함수명%(SHOP_CHARA_LIST:LOCAL)
+		SIF RESULT
+			CONTINUE
+		SHOP_CHARA_LIST:LOCAL = -1
+	NEXT
+	CALL SHOW_INFO_WITH_UI(대상, 1)
+	CALL CREATE_SELECTOR_SORT_LIST(0)
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ENDIF
+
+;입력 본체
+대상 = RESULT - 99
+IF 대상 > CHARANUM || 대상 < 0
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+CALLFORM SELECT_CHARA_LIST_SHOW_LOGIC_%표시함수명%(대상)
+IF !RESULT
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+CALLFORM SELECT_CHARA_LIST_SELECT_LOGIC_%선택함수명%(대상)
+IF !RESULT
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+RETURN 대상
+
+;-------------------------------------------------
+;캐릭터 리스트 표시  대범한 사용법은 SELECT_CHARA_LIST같이
+;인원수에-1을 지정하면 무제한하게 된다
+;선택한 캐릭터는 SELECTED_CHARA에 쳐박아진다
+;선택한 인원수는 SELECTED_CHARA_NUM에 쳐박아진다
+;-------------------------------------------------
+@SELECT_CHARA_LIST_MULTI(인원수, 표시함수명="", 선택함수명 = "", 색지정함수명 = "", 표시문자:0 = "", 표시문자:1 = "", 표시문자:2 = "", 표시문자:3 = "", 표시문자:4 = "", 표시문자:5 = "", 표시문자:6 = "")
+#DIMS 표시함수명
+#DIMS 선택함수명
+#DIMS 색지정함수명
+#DIMS 표시문자, 7
+#DIM 표시수치, 7
+#DIM FIRST_LINE
+#DIM 대상
+#DIM 표시위치
+#DIM 표시페이지
+#DIM 총페이지수
+#DIM 캐릭터수
+#DIM 캐릭터카운터
+#DIM 선택플래그, VARSIZE("SELECTED_CHARA")
+#DIM 인원수
+#DIM 표시개시위치
+#DIM 표시종료위치
+#DIM 랭크종별
+#DIM 직전총페이지수
+#DIMS 직전선택함수명
+#DIMS 직전표시함수명
+VARSET 선택플래그
+VARSET 캐릭터수
+VARSET 표시수치, -1
+
+VARSET SELECTED_CHARA
+VARSET SELECTED_CHARA_NUM
+
+;가드절
+TRYCCALLFORM SELECT_CHARA_LIST_SHOW_LOGIC_%표시함수명%(MASTER)
+CATCH
+	THROW 지정된 함수 SELECT_CHARA_LIST_SHOW_LOGIC_%표시함수명%가 존재하지 않습니다
+ENDCATCH
+
+TRYCCALLFORM SELECT_CHARA_LIST_SELECT_LOGIC_%선택함수명%(MASTER)
+CATCH
+	THROW 지정된 함수 SELECT_CHARA_LIST_SELECT_LOGIC_%선택함수명%가 존재하지 않습니다
+ENDCATCH
+
+
+;헤더 준비
+FOR LOCAL, 0, VARSIZE("표시문자")
+	FOR LOCAL:1, 0, VARSIZE("ABL")
+		SIF ABLNAME:(LOCAL:1) == ""
+			CONTINUE
+		IF 표시문자:LOCAL == ABLNAME:(LOCAL:1)
+			표시문자:LOCAL = %TOSTR_SPACE(2)%%SUBSTRINGU(ABLNAME:(LOCAL:1), 0, 1)%\@ LOCAL == VARSIZE("표시문자") - 1 ?   # | \@
+			표시수치:LOCAL = LOCAL:1
+			BREAK
+		ENDIF
+	NEXT
+	SIF LOCAL:1 == VARSIZE("ABL")
+		표시문자:LOCAL = %TOSTR_SPACE(5)%
+NEXT
+
+;페이지수계산
+FOR LOCAL, 0, CHARANUM
+	CALLFORM SELECT_CHARA_LIST_SHOW_LOGIC_%표시함수명%(LOCAL)
+	SIF RESULT
+		캐릭터수 ++
+NEXT
+
+총페이지수 = (캐릭터수 - 1) / 40 + 1
+
+;직전의 호출과 페이지수, 표시하는 함수, 선택하는 함수명이 동일하면 연속한 호출이라고 판단해 페이지를 바꾸지 않는다
+SIF 총페이지수 != 직전총페이지수 || 표시함수명 != 직전표시함수명 || 선택함수명 != 직전선택함수명
+	표시페이지 = 1
+
+직전총페이지수  = 총페이지수
+직전표시함수명 '= 표시함수명
+직전선택함수명 '= 선택함수명
+
+;헤더 묘화
+PRINTFORM %TOSTR_SPACE(13)%
+FOR LOCAL:1, 0, VARSIZE("표시문자")
+	PRINTFORM %표시문자:(LOCAL:1)%
+NEXT
+PRINTFORM %TOSTR_SPACE(18)%
+FOR LOCAL:1, 0, VARSIZE("표시문자")
+	PRINTFORM %표시문자:(LOCAL:1)%
+NEXT
+
+;여기로부터 본체
+PRINTL
+FIRST_LINE = LINECOUNT
+
+CALL CREATE_SELECTOR_SORT_LIST(0)
+
+$SHOW_LOOP
+
+VARSET 표시위치
+VARSET 캐릭터카운터
+표시개시위치 = (표시페이지 - 1) * 40
+표시종료위치 = 표시페이지 * 40
+
+
+FOR LOCAL:0, 0, CHARANUM
+	LOCAL:1 = SHOP_CHARA_LIST:LOCAL
+	SIF LOCAL:1 == -1
+		CONTINUE
+	CALLFORM SELECT_CHARA_LIST_SHOW_LOGIC_%표시함수명%(LOCAL:1)
+	SIF !RESULT
+		CONTINUE
+	IF 표시개시위치 <= 캐릭터카운터 && 캐릭터카운터 < 표시종료위치
+		IF 표시위치 % 2 != 0
+			PRINT   
+		ELSEIF 표시위치 > 0
+			PRINTL 
+		ENDIF
+		CALLFORM SELECT_CHARA_LIST_SELECT_LOGIC_%선택함수명%(LOCAL:1)
+		IF RESULT	
+			IF 선택플래그:(LOCAL:1)
+				SETCOLOR 칼라_선택중
+			ELSE
+				CALLFORM SELECT_CHARA_LIST_COLOR_LOGIC_%색지정함수명%(LOCAL:1)
+				SETCOLOR RESULT
+			ENDIF
+			PRINTFORM [{LOCAL:1 + 99, 4}]%SNAME(LOCAL:1), MAX_CHARANAME_LENGTH/2, RIGHT%
+			RESETCOLOR
+			PRINTFORM %TOSTR_SPACE(1)%
+			FOR LOCAL:2, 0, VARSIZE("표시수치")
+				IF 표시수치:(LOCAL:2) != -1
+					SELECTCASE 표시수치:(LOCAL:2)
+						CASE GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "요술"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창")
+							랭크종별 = 랭크_ＳＬＧ
+						CASE GETNUM(ABL, "성지식")
+							랭크종별 = 랭크_성지식
+						CASEELSE
+							랭크종별 = 랭크_그외
+					ENDSELECT
+					CALL PRINT_ALPHABET_RANK(랭크종별, ABL:(LOCAL:1):(표시수치:(LOCAL:2)))
+					PRINTFORM {ABL:(LOCAL:1):(표시수치:(LOCAL:2)), 3}
+					SIF LOCAL:2 != VARSIZE("표시수치") -1
+						PRINT |
+				ELSE
+					PRINTFORM %TOSTR_SPACE(5)%
+				ENDIF
+			NEXT
+			PRINTBUTTON " 정", LOCAL:1 + 10099
+		ELSE
+			LOCALS:0 = [{NO:(LOCAL:1) + 99, 4}]%SNAME(LOCAL:1), MAX_CHARANAME_LENGTH/2, RIGHT%%TOSTR_SPACE(1)%
+			FOR LOCAL:2, 0, VARSIZE("표시수치")
+				IF 표시수치:(LOCAL:2) != -1
+					SELECTCASE 표시수치:(LOCAL:2)
+						CASE GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "요술"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창")
+							랭크종별 = 랭크_ＳＬＧ
+						CASE GETNUM(ABL, "성지식")
+							랭크종별 = 랭크_성지식
+						CASEELSE
+							랭크종별 = 랭크_그외
+					ENDSELECT
+					LOCALS:0 = %LOCALS:0%%ALPHABET_RANK(랭크종별, ABL:(LOCAL:1):(표시수치:(LOCAL:2)))%{ABL:(LOCAL:1):(표시수치:(LOCAL:2)), 3}
+					SIF LOCAL:2 != VARSIZE("표시수치") -1
+						LOCALS:0 = %LOCALS:0%|
+				ELSE
+					 LOCALS:0 = %LOCALS:0%%TOSTR_SPACE(5)%
+				ENDIF
+			NEXT
+			SETCOLOR 칼라_선택불가
+			PRINTPLAINFORM %LOCALS:0%
+			PRINTPLAINFORM    
+			RESETCOLOR
+		ENDIF
+		표시위치 ++
+	ENDIF
+	캐릭터카운터 ++
+NEXT
+
+;footer 묘화
+PRINTL 
+CALL SINGLE_DRAWLINE
+
+IF 총페이지수 >= 2
+	PRINT [  1] 최초의 페이지    
+	PRINT [  2] 이전페이지        
+	PRINTPLAINFORM 페이지{표시페이지}/{총페이지수}        
+	PRINT [  8] 다음페이지    
+	PRINT [  9] 마지막 페이지
+	PRINTL 
+	CALL COLOR_LINE
+ENDIF
+
+IF 인원수 != -1
+	PRINTFORM {MATCH(선택플래그, 1)} / {인원수}    
+ELSE
+	PRINTFORM [97] 전원 설정
+	PRINTPLAIN    
+	PRINTFORM [98] 전원 해제
+	PRINTL
+ENDIF
+CALL COLOR_LINE
+PRINTBUTTON "<<", 20000
+PRINT  
+PRINTBUTTON @"[%STR_NOW_SORTKEY:소트키, 4, LEFT%]", 20001
+PRINT  
+PRINTBUTTON ">>", 20002
+PRINT  
+PRINTBUTTON @"[\@ 내림차순소트 ? 내림차순 # 오름차순\@]", 20003
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTL [  0] 이것으로 좋아
+
+REDRAW 0
+
+;입력
+$INPUT_LOOP
+INPUT
+
+;가드절·특수 처리
+IF RESULT == 1
+	표시페이지 = 1
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 2
+	표시페이지 = ROUND_DECREMENT(표시페이지, 1, 총페이지수)
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 8
+	표시페이지 = ROUND_INCREMENT(표시페이지, 1, 총페이지수)
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 9
+	표시페이지 = 총페이지수
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 97 && 인원수 == -1
+	FOR LOCAL, 0, CHARANUM
+		CALLFORM SELECT_CHARA_LIST_SHOW_LOGIC_%표시함수명%(LOCAL)
+		SIF !RESULT
+			CONTINUE
+		CALLFORM SELECT_CHARA_LIST_SELECT_LOGIC_%선택함수명%(LOCAL)
+		SIF !RESULT
+			CONTINUE
+		선택플래그:LOCAL = 1
+	NEXT
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 98 && 인원수 == -1
+	VARSET 선택플래그
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 0
+	REDRAW 1
+	FOR LOCAL, 0, VARSIZE("SELECTED_CHARA")
+		IF 선택플래그:LOCAL
+			SELECTED_CHARA:SELECTED_CHARA_NUM = LOCAL
+			SELECTED_CHARA_NUM ++
+		ENDIF
+	NEXT
+	RETURN
+ELSEIF RESULT == 20000
+	소트키 = ROUND_DECREMENT(소트키, 0, NUM_SORTKEY - 1)
+	CALL CREATE_SELECTOR_SORT_LIST(0)
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 20001
+		CALL SINGLE_DRAWLINE
+		FOR LOCAL, 0, NUM_SORTKEY
+			PRINTFORML [{LOCAL}] %STR_NOW_SORTKEY:LOCAL, 4, LEFT%
+		NEXT
+		INPUT
+		SIF INRANGE(RESULT, 0, NUM_SORTKEY - 1)
+			소트키 = RESULT
+		CALL CREATE_SELECTOR_SORT_LIST(0)
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+ELSEIF RESULT == 20002
+	소트키 = ROUND_INCREMENT(소트키, 0, NUM_SORTKEY - 1)
+	CALL CREATE_SELECTOR_SORT_LIST(0)
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 20003
+	내림차순소트 = !내림차순소트
+	CALL CREATE_SELECTOR_SORT_LIST(0)
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ENDIF
+
+IF RESULT >= 10099
+	대상 = RESULT - 10099
+	IF 대상 > CHARANUM || 대상 < 0
+		CLEARLINE 1
+		GOTO INPUT_LOOP
+	ENDIF
+	CALLFORM SELECT_CHARA_LIST_SHOW_LOGIC_%표시함수명%(대상)
+	IF !RESULT
+		CLEARLINE 1
+		GOTO INPUT_LOOP
+	ENDIF
+	CALLFORM SELECT_CHARA_LIST_SELECT_LOGIC_%선택함수명%(대상)
+	IF !RESULT
+		CLEARLINE 1
+		GOTO INPUT_LOOP
+	ENDIF
+	FOR LOCAL, 0, CHARANUM
+		SIF SHOP_CHARA_LIST:LOCAL == -1
+			CONTINUE
+		CALLFORM SELECT_CHARA_LIST_SHOW_LOGIC_%표시함수명%(SHOP_CHARA_LIST:LOCAL)
+		SIF RESULT
+			CALLFORM SELECT_CHARA_LIST_SELECT_LOGIC_%선택함수명%(SHOP_CHARA_LIST:LOCAL)
+		SIF RESULT
+			CONTINUE
+		SHOP_CHARA_LIST:LOCAL = -1
+	NEXT
+	CALL SHOW_INFO_WITH_UI(대상, 1)
+	CALL CREATE_SELECTOR_SORT_LIST(0)
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ENDIF
+
+;입력
+대상 = RESULT - 99
+IF 대상 > CHARANUM || 대상 < 0
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+
+IF 선택플래그:대상
+	선택플래그:대상 = 0
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ENDIF
+
+CALLFORM SELECT_CHARA_LIST_SHOW_LOGIC_%표시함수명%(대상)
+IF !RESULT
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+CALLFORM SELECT_CHARA_LIST_SELECT_LOGIC_%선택함수명%(대상)
+IF !RESULT
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+IF 선택플래그:대상 == 0
+	SIF (인원수 != -1 && MATCH(선택플래그, 1) < 인원수) || 인원수 == -1
+		선택플래그:대상 = 1
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ENDIF
+
+CLEARLINE 1
+GOTO INPUT_LOOP
+
+;-------------------------------------------------
+;캐릭터 리스트 표시용의 범용 함수의 표시 논리
+;-------------------------------------------------
+@SELECT_CHARA_LIST_SHOW_LOGIC_DEFAULT(대상)
+#DIM 대상
+;육아대상, 별세력, 방랑, 지방, 미등장, 동물을 튕긴다
+SIF CFLAG:대상:행동불능상태 == 행동불능_아이
+	RETURN 0
+SIF CFLAG:대상:소속 != CFLAG:MASTER:소속
+	RETURN 0
+SIF GROUPMATCH(CFLAG:대상:특수상태, 1, 2)
+	RETURN 0
+SIF CFLAG:대상:특수상태 == 0 && !IS_COUNTRY(CFLAG:대상:소속)
+	RETURN 0
+SIF IS_ANIMAL(대상)
+	RETURN 0
+RETURN 1
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_NONE(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------------------------------------
+;캐릭터 리스트 표시용의 범용 함수의 세탁용 논리
+;-------------------------------------------------
+@SELECT_CHARA_LIST_SELECT_LOGIC_DEFAULT(대상)
+#DIM 대상
+;포로를 튕긴다
+SIF CFLAG:대상:포로처
+	RETURN 0
+RETURN 1
+
+@SELECT_CHARA_LIST_SELECT_LOGIC_NONE(대상)
+#DIM 대상
+RETURN 1
+
+@SELECT_CHARA_LIST_COLOR_LOGIC_DEFAULT(대상)
+#DIM 대상
+RETURN GETDEFCOLOR()
+
+;-------------------------------------------------
+;캐릭터 리스트 표시용의 범용 함수 능력표시 SLG판
+;-------------------------------------------------
+@SELECT_CHARA_LIST_SLG()
+CALL SELECT_CHARA_LIST("DEFAULT", "DEFAULT", "DEFAULT", "무투", "방위", "지략", "정치", "요술", "가창", "요리")
+RETURN RESULT
+
+@SELECT_CHARA_LIST_ONLY_LOGIC_SLG(표시함수명, 선택함수명, 색지정함수명 = "DEFAULT")
+#DIMS 표시함수명
+#DIMS 선택함수명
+#DIMS 색지정함수명
+CALL SELECT_CHARA_LIST(표시함수명, 선택함수명, 색지정함수명, "무투", "방위", "지략", "정치", "요술", "가창", "요리")
+RETURN RESULT
+
+;-------------------------------------------------
+;캐릭터 리스트 표시용의 범용 함수 능력표시 호색가판
+;-------------------------------------------------
+@SELECT_CHARA_LIST_SEX()
+CALL SELECT_CHARA_LIST("DEFAULT", "DEFAULT", "DEFAULT", "Ｃ감", "Ｖ감", "Ｂ감", "Ａ감", "Ｍ감", "욕망")
+RETURN RESULT
+
+@SELECT_CHARA_LIST_ONLY_LOGIC_SEX(표시함수명, 선택함수명, 색지정함수명 = "DEFAULT")
+#DIMS 표시함수명
+#DIMS 선택함수명
+#DIMS 색지정함수명
+CALL SELECT_CHARA_LIST(표시함수명, 선택함수명, 색지정함수명,  "Ｃ감", "Ｖ감", "Ｂ감", "Ａ감", "Ｍ감", "욕망")
+RETURN RESULT
+
+
+;-------------------------------------------------
+;캐릭터 리스트 표시용의 범용 함수 멀티판 SLG
+;-------------------------------------------------
+@SELECT_CHARA_LIST_MULTI_SLG(인원수)
+#DIM 인원수
+CALL SELECT_CHARA_LIST_MULTI(인원수, "DEFAULT", "DEFAULT", "DEFAULT", "무투", "방위", "지략", "정치", "요술", "가창", "요리")
+
+@SELECT_CHARA_LIST_MULTI_ONLY_LOGIC_SLG(인원수, 표시함수명, 선택함수명, 색지정함수명 = "DEFAULT")
+#DIM 인원수
+#DIMS 표시함수명
+#DIMS 선택함수명
+#DIMS 색지정함수명
+CALL SELECT_CHARA_LIST_MULTI(인원수, 표시함수명, 선택함수명, 색지정함수명,  "무투", "방위", "지략", "정치", "요술", "가창", "요리")
+
+;-------------------------------------------------
+;캐릭터 리스트 표시용의 범용 함수 멀티판 호색가
+;-------------------------------------------------
+@SELECT_CHARA_LIST_MULTI_SEX(인원수)
+#DIM 인원수
+CALL SELECT_CHARA_LIST_MULTI(인원수, "DEFAULT", "DEFAULT", "DEFAULT", "Ｃ감", "Ｖ감", "Ｂ감", "Ａ감", "Ｍ감", "욕망")
+
+@SELECT_CHARA_LIST_MULTI_ONLY_LOGIC_SEX(인원수, 표시함수명, 선택함수명, 색지정함수명 = "DEFAULT")
+#DIM 인원수
+#DIMS 표시함수명
+#DIMS 선택함수명
+#DIMS 색지정함수명
+CALL SELECT_CHARA_LIST_MULTI(인원수, 표시함수명, 선택함수명, 색지정함수명,  "Ｃ감", "Ｖ감", "Ｂ감", "Ａ감", "Ｍ감", "욕망")
+

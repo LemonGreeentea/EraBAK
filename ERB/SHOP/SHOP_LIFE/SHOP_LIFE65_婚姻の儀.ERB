@@ -1,0 +1,146 @@
+﻿;-------------------------------------------------
+;「혼인의식」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE_NAME65
+RESULTS:0 '= "혼인의식"
+
+;-------------------------------------------------
+;「혼인의식」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE_CHECK65
+SIF MONEY < 100000
+	RETURN 0
+SIF CFLAG:MASTER:포로처
+	RETURN 0
+SIF !CFLAG:MASTER:소속
+	RETURN 0
+;이미 혼인 하고 있는 경우 혼인은 불가능
+;HAS_WIFE = 0
+;FOR LOCAL:0, 0, CHARANUM
+;	IF TALENT:(LOCAL:0):정실
+;		HAS_WIFE ++
+;		BREAK
+;	ENDIF
+;NEXT
+;SIF HAS_WIFE
+;	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「혼인의식」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA65(ARG:0)
+;비주인공, 동일 세력, 포로가 아닌, 호감도 10000이상,[연인]or[낙인], 특수상태가 서 있지 않다
+RETURN ARG:0 != MASTER && CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속 && CFLAG:(ARG:0):포로처 == 0 && CFLAG:(ARG:0):호감도 >= 10000 && (TALENT:(ARG:0):연인 || TALENT:(ARG:0):낙인) && CFLAG:(ARG:0):특수상태 == 0 && !IS_ANIMAL(ARG:0) && !TALENT:(ARG:0):정실 && !TALENT:(ARG:0):첩
+
+;-------------------------------------------------
+;「혼인의식의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY65
+FLAG:거점페이즈페이지 = 1
+FLAG:요바이 = 0
+RETURN 0
+
+;-------------------------------------------------
+;「혼인의식」의 오른쪽 컬럼 표시 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SHOW65
+CALL COLUMN_RIGHT_TITLE("배우자 선택", "0", "1", "0", "100,000")
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+IF HAS_WIFE()
+	CALL COLOR_PRINT(@" 높은 호감도의 연인이나 낙인 소지의 사관을 첩(남편)으로 할 수 있습니다", 칼라_주석)
+ELSE
+	CALL COLOR_PRINT(@" 높은 호감도의 연인이나 낙인 소지의 사관을 정실（남편）로 할 수 있습니다", 칼라_주석)
+ENDIF
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+;표준적인 캐릭터 리스트와 페이지 이동
+CALL COLUMN_RIGHT_CHARALIST
+RETURN 0
+
+;-------------------------------------------------
+;「혼인의식」의 리스트 1 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP65(ARG:0)
+REDRAW 1
+
+IF MONEY < 100000
+	PRINTFORMW 소지금이 부족합니다
+	RETURN
+ENDIF
+
+IF IS_HUSBAND(ARG:0)
+	LOCALS:0 = 남편
+ELSE
+	IF HAS_WIFE()
+		LOCALS:0 = 첩
+	ELSE
+		LOCALS:0 = 정실
+	ENDIF
+ENDIF
+
+PRINTFORML %조사처리(ANAME(ARG:0),"를")% %조사처리(LOCALS:0,"로")%서 맞이합니다
+PRINTL 좋습니까?
+CALL ASK_YN
+IF RESULT == 1
+	RETURN 0
+ENDIF
+
+MONEY -= 100000
+
+;구상의 표시
+CALL KOJO_EVENT(ARG:0, 90)
+
+PRINTL 
+CUSTOMDRAWLINE *-
+PRINTL 혼인의식
+CUSTOMDRAWLINE *-
+WAIT
+PRINTFORMW 식의 당일, 많은 관중에게 축복되면서, %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(ARG:0),"를")% %조사처리(LOCALS:0,"로")%서 맞이하는 것을 선언했다
+
+IF !HAS_WIFE()
+	;구상의 표시
+	CALL KOJO_EVENT(ARG:0, 91)
+ENDIF
+
+IF HAS_WIFE()
+	TALENT:(ARG:0):첩 = 1
+ELSE
+	TALENT:(ARG:0):정실 = 1
+ENDIF
+
+PRINTL 
+SETCOLOR 칼라_주의
+PRINTFORMW %조사처리(ANAME(ARG:0),"가")% %ANAME(MASTER)%의 %조사처리(LOCALS:0,"이")% 되었습니다
+RESETCOLOR
+PRINTL 
+PRINTL 
+RETURN 1
+
+;-------------------------------------------------
+;캐릭터 ARG:0에 대해, 소질<정실>이<남편>이라고 표시되는 조건을 채우고 있는지 어떤지 판정
+;-------------------------------------------------
+@IS_HUSBAND(ARG:0)
+#FUNCTION
+IF GROUPMATCH(TALENT:MASTER:성별, 1, 2) && GROUPMATCH(TALENT:(ARG:0):성별, 0, 3, 4, 5)
+	RETURNF 1
+ELSEIF GROUPMATCH(TALENT:MASTER:성별, 4, 5) && GROUPMATCH(TALENT:(ARG:0):성별, 0, 3)
+	RETURNF 1
+ENDIF
+RETURNF 0
+
+;-------------------------------------------------
+;desc  :정실이 존재할까
+;return:반환값:정실이 존재할까
+;-------------------------------------------------
+@HAS_WIFE()
+#FUNCTION 
+FOR LOCAL:0, 0, CHARANUM
+	IF TALENT:(LOCAL:0):정실
+		RETURNF 1
+	ENDIF
+NEXT
+RETURNF 0

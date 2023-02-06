@@ -1,0 +1,373 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_REPAYMENT_RATE()
+RETURN (DVAR:보은_발생플래그 || DVAR:보은_내왕아내플래그 > 0 ? 250 # 30)
+
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_REPAYMENT_DECISION()
+SIF DVAR:보은_발생플래그 == -1
+	RETURN 0
+SIF DAY < 10
+	RETURN 0
+SIF !HAS_PENIS(MASTER)
+	RETURN 0
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_REPAYMENT_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체  허브로서 취급한다
+;---------------------
+@EVENT_DAILY_REPAYMENT()
+#DIM 대상
+
+TRYCALLFORM EVENT_DAILY_REPAYMENT_%TOSTR(DVAR:보은_발생플래그)%
+SIF RESULT
+	DVAR:보은_발생플래그 ++
+RETURN 1
+
+;---------------------
+;첫회
+;---------------------
+@EVENT_DAILY_REPAYMENT_0()
+#DIM 대상
+대상 = RAND(1, VARSIZE("보은_종류"))
+PRINTFORMW 오래간만의 휴일
+PRINTFORMW 삼림을 산보중, %조사처리(ANAME(MASTER),"는")% 희미한 신음소리를 들었다
+PRINTFORMW 누군가가 상처에서도 하고 있을까?
+PRINTFORM 수풀을 밀어 헤쳐 소리의 한 (분)편에 진행되면, 함정에 걸린 %보은_종류:대상%를 찾아냈다
+PRINTFORMW %보은_종류:대상%는 %조사처리(ANAME(MASTER),"를")% 보면, 경계하는 것처럼 준비했다
+PRINTFORMW 함정은 단단히 %보은_종류:대상%를 잡고 있어 자력으로는 빠져 나갈 수 있을 것 같지는 않다
+PRINTFORMW 자주(잘) 보면 많이 낡은 함정으로, 누군가가 건 채로 잊어 버린 것의 같다
+PRINTFORMW 어떻게 하지……
+CALL ASK_MULTI("도와 준다", "방치한다", "저녁밥으로 한다")
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% %보은_종류:대상%를 불쌍하게 생각해, 도와 주기로 했다
+		PRINTFORMW %보은_종류:대상%는 함정으로부터 해방되면, 가만히 %조사처리(ANAME(MASTER),"를")% 응시하고 있었지만
+		PRINTFORMW 이윽고 뒤꿈치를 돌려주어, 쏜살같이 도망쳐 갔다
+		PRINTFORMW 좋은 일을 하면 기분이 좋은, %조사처리(ANAME(MASTER),"는")% 기분 좋게 산책하러 돌아왔다
+		DVAR:보은_동물번호 = 대상
+	CASE 1
+		PRINTFORMW 서투르게 관련될 것도 없을 것이다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그 자리를 뒤로 했다
+		DVAR:보은_발생플래그 = -1
+		RETURN 0
+	CASE 2
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 결정타를 찌르면 포장판매, 부하에게 대접했다
+		CALL PRINT_ADD_EXP(MASTER, EXPNAME:(GET_EXP(GETNUM(ABL, "요리"))), 5, 1)
+		DVAR:보은_발생플래그 = -1
+		RETURN 0
+ENDSELECT
+RETURN 1
+
+;---------------------
+;2회째
+;---------------------
+@EVENT_DAILY_REPAYMENT_1()
+PRINTFORMW 일을 하고 있으면 손님을 전해들었다
+PRINTFORMW 만나 보면 어디에라도 있을 것 같은 마을 아가씨였다
+PRINTFORMW 「…처음 뵙겠습니다, 이전 이쪽의 군사에 살려 받은 사람입니다」
+PRINTFORMW 「그 때는 매우 살아났습니다, 이므로 뭔가 보은을 할 수 없을까 물었습니다」
+PRINTFORMW 예의 바르고 좋은 아가씨라고 감탄 한다
+PRINTFORMW 하지만 백성을 돕는 것은 군사로서는 당연한일이다, 신경쓰지 않아도 괜찮다고 고한다
+PRINTFORMW 「그렇지만…그러면 나의 기분이 안정되지 않습니다, 반드시 도움이 되기 때문에, 부탁합니다!」
+PRINTFORMW 아가씨는 진지한 표정으로 %ANAME(MASTER)%에 물고 늘어진다
+PRINTFORMW 여기까지 의사가 단단하다면, 기분이 풀리도록(듯이) 시키는 것이 좋을지도 모른다
+PRINTFORMW 어떻게 하지……
+CALL ASK_YN("일을 도와 받는다", "역시 거절한다")
+IF RESULT == 1
+	PRINTFORMW 역시 외부인에게 도와 받을 수도 없을 것이다
+	PRINTFORMW 기분만 받아 둔다고 하면, 소녀는 잠시 물고 늘어지고 있었지만
+	PRINTFORMW 이윽고 서운한 듯이 %조사처리(ANAME(MASTER),"를")% 응시하면, 어깨를 떨어뜨려 돌아갔다
+	DVAR:보은_발생플래그 = -1
+	RETURN 0
+ENDIF
+
+PRINTFORMW 그렇다면 간단한 일을 도와 받는다고 하자
+PRINTFORMW 「감사합니다! 노력하겠습니다!」
+PRINTFORMW 소녀의 얼굴이 파와 밝아져, 힘차게 %ANAME(MASTER)%에 껴안아 왔다
+PRINTFORMW 「앗, 미, 미안해요…기쁘고 무심코, 에헤헤…」
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+PRINTFORMW 소녀의 덕분에 일이 진전되었다
+SELECTCASE RAND:3
+	CASE 0
+		SETCOLOR 칼라_오렌지
+		PRINTFORML 병 수가 500명 증가했다!
+		RESETCOLOR
+		COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 500
+	CASE 1
+		SETCOLOR 칼라_오렌지
+		PRINTFORML 자금이 1000증가했다!
+		RESETCOLOR
+		MONEY += 500
+	CASE 2
+		SETCOLOR 칼라_오렌지
+		PRINTFORML 평판이 조금 올랐다!
+		RESETCOLOR
+		FOR LOCAL, 1, MAX_COUNTRY
+			SIF IS_COUNTRY(LOCAL)
+				CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, 30, 0)
+		NEXT
+ENDSELECT
+PRINTFORMW 소녀에게 예를 고하면, 기쁜듯이 웃었다
+PRINTFORMW 「에헤헤, %ANAME(MASTER)%의 도움이 될 수 있어서 좋았던 것입니다…」
+PRINTFORMW 는이라고, 도운 것은 군사의 사람으로 스스로는 없었다고 생각하지만
+PRINTFORMW 하지만 그런 의문을 던지기 전에, 그녀는 건강 좋게 손을 흔들어 떠나 갔다
+RETURN 1
+
+;---------------------
+;3회째
+;---------------------
+@EVENT_DAILY_REPAYMENT_2()
+PRINTFORMW 휴일, %ANAME(MASTER)%의 집에 손님이 방문했다
+PRINTFORMW 「안녕하세요, 또 거들기에 왔습니다」
+PRINTFORMW 이전 도우러 온 아가씨였다, 어째서 이 집을 알았을 것인가
+PRINTFORMW 「으음, 궁전에 가면 휴가라고 (들)물어, 집을 가르쳐 받았습니다」
+PRINTFORMW 우리 군의 개인정보는 너무 가볍지 않는지, 문득 그런 일을 생각한다
+PRINTFORMW 하지만 답례라면 일전에의 심부름으로 충분하다면 사양하면, 멍하니 해 버렸다
+PRINTFORMW 「그러면, 으음…식사를 만듭니다! 부탁합니다!」
+PRINTFORMW 자신이 그런 일까지 해 받을 이유도 없지만, 소녀의 기분을 하찮게 거절하는 것도 어떨까고민한다
+PRINTFORMW 어떻게 하지……
+CALL ASK_YN("밥을 만들어 받는다", "거절한다")
+IF RESULT == 1
+	PRINTFORMW 기분만 받아 둔다고 하면, 소녀는 잠시 물고 늘어지고 있었지만
+	PRINTFORMW 이윽고 서운한 듯이 %조사처리(ANAME(MASTER),"를")% 응시하면, 어깨를 떨어뜨려 돌아갔다
+	DVAR:보은_발생플래그 = -1
+	RETURN 0
+ENDIF
+
+PRINTFORMW 그래서 그녀의 기분이 풀린다면 좋을 것이다
+PRINTFORMW 「네, 최선의 솜씨를 발휘해 만드네요!」
+PRINTFORMW 그녀는 기쁜듯이 얼굴을 화끈하게 하고, 의욕에 넘쳐 부엌에 향했다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+PRINTFORMW 아가씨의 요리는 소박한 맛내기면서도 꽤의 것이었다
+PRINTFORMW 너무 의욕에 넘쳤는지, 조금량이 많았지만
+PRINTFORMW 「에헤헤…입에 맞은 것 같아서, 기쁩니다」
+PRINTFORML 「으음, 식후에 술을 준비했습니다, 잔 하네요…아무쪼록」
+PRINTFORMW 딱잘라 거절할 수 없어에 잔을 되는 대로 술을 마시고 있으면, 눈치채면 완전히 어두워지고 있었다
+PRINTFORMW 슬슬 집에 돌아가지 않아도 괜찮은 것인지 방문하면, 뭔가 말끝을 흐려진다
+PRINTFORMW 집까지 보내 가려고 일어서려고 하면, 갑자기 그녀에게 달라붙어졌다
+PRINTFORML 「갑자기 미안해요……에서도, 돌아가고 싶지 않습니다……」
+PRINTFORMW 돌연의 일에 당황하고 있으면, %ANAME(MASTER)%에 달라붙은 채로 눈동자를 물기를 띠게 한 올려봐 왔다
+PRINTFORML 「…부탁하는…나를 안아 주시지 않겠습니까?」
+PRINTFORMW 갑자기 무슨 말을 하기 시작하는지, %조사처리(ANAME(MASTER),"는")% 그녀를 침착하게 하려고 한다
+PRINTFORML 「저, 저, 나, %ANAME(MASTER)%의 일이…그 때부터, 그…」
+PRINTFORML 얼굴을 새빨갛게 하면서 짜내는 것 같은 소리로 호소해 온다
+PRINTFORMW 진지한 그녀의 말에, %조사처리(ANAME(MASTER),"는")% 조금 의심스러워 하면서도 입다물고 이야기를 들을 수밖에 없었다
+PRINTFORML 「폐가 됩니까…? 그렇지 않으면, 나, 매력이 없습니까…?」
+PRINTFORMW 잠깐 그녀와 눈을 맞춘다
+PRINTFORMW …그 눈동자에, 거짓은 없는 것 같다
+PRINTFORML 여자아이에게 여기까지 재촉당해, 거절하는 일도 할 수 없다
+PRINTFORMW %조사처리(ANAME(MASTER),"는")% 달라붙는 그녀의 손을 상냥하게 잡으면, 입술을 거듭했다
+PRINTFORML 「읏……!」
+PRINTFORMW 그녀는 흠칫 희미하게 몸을 진동시키면서도, 받아들인다
+PRINTFORMW 긴장을 풀기 위해서(때문에) 옷 위로부터, 노력해 상냥하게 그녀의 신체를 애무한다
+PRINTFORML 「읏, 응읏…앗……하아……」
+PRINTFORMW 거듭한 입술의 사이부터 희미하게 달콤한 한숨이 새어, %ANAME(MASTER)%의 뺨에 걸린다
+PRINTFORML 「읏! 앙…앗, 읏……쿠응……!」
+PRINTFORMW 옷안에 손을 기어들게 해 손가락으로 비밀스런 장소를 훑으면, 희미하게 습기차 있었다
+PRINTFORMW 그것을 확인한 %조사처리(ANAME(MASTER),"는")% 입술을 거듭한 채로, 상냥하게 그녀를 쓰러트렸다
+CALL FUCK(MASTER, "Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "마을 아가씨의 입술", "", "마을 아가씨의 질")
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+PRINTFORMW 이튿날 아침, 깨어나면 그녀의 모습은 없었다
+PRINTFORMW 머리맡에 아직 따뜻한 아침 식사가 준비되어 있다, 아무래도 그녀가 만들어 간 것 같다
+PRINTFORMW 아직 졸음의 남는 머리를 무리하게 일으켜, 식기 전에 식사를 먹기로 했다
+RETURN 1
+
+
+;---------------------
+;4회째
+;---------------------
+@EVENT_DAILY_REPAYMENT_3()
+
+PRINTFORMW 「앗…아, 안녕하세요…」
+PRINTFORMW 그녀가 다시 온, 약간 쑥스러운 듯이 하고 있다
+PRINTFORMW 「오, 오늘은 뱀장어라든지 야채를 가져왔습니다!」
+PRINTFORMW 「그것 그…좋다면, 또……」
+PRINTFORMW 이제 거절할 생각도 없는, %조사처리(ANAME(MASTER),"는")% 그녀를 집에 올렸다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+PRINTFORMW 「하앙♥읏♥아앙♥」
+PRINTFORMW 식후, 이불 중(안)에서 격렬하게 교접하고 있다
+PRINTFORML 「앗♥앗♥아앗♥거기, 좋아♥」
+PRINTFORML 허리를 전후 시킬 때에 기분 좋은 교성이 영향을 주어, 질을 단단히 조일 수 있다
+PRINTFORMW 그녀는 일전에까지 숫처녀였다고는 생각되지 않을 정도 격렬하게꾸중, 신체를 구불거리게 되어지고 있다
+PRINTFORML 「읏♥앗♥아아읏♥좀 더♥」
+PRINTFORML 그 요염한 움직임과 관능적인 표정에, %ANAME(MASTER)%도 흥분이 가속해, 더욱 격렬하게 허리를 쳐박아 간다
+PRINTFORMW 그리고 그 리듬에 맞추어, 다시 그녀의 신음소리가 영향을 주어, 질육을 벌름거릴 수 있는 육봉에 견딜 수 없는 자극을 주어 온다
+PRINTFORML 「읏♥응읏♥가는♥가는♥앗♥%ANAME(MASTER)%씨♥%ANAME(MASTER)%씨♥아앗♥」
+PRINTFORMW 절정에 가까워져, %ANAME(MASTER)%의 이름을 부르면서 움찔움찔 신체를 진동시킨다
+PRINTFORML 「앗♥가는 가는♥♥♥이구♥♥♥있고 구우우 우우 우우♥♥♥♥♥」
+PRINTFORML 그녀가 크게 등을 뒤로 젖히면서, 한층 더 큰 교성을 주고 절정 하면
+PRINTFORMW 꽈악 힘들게 질로 페니스를 졸라져 %ANAME(MASTER)%도 또한 한계가 되어, 그녀의 안에 뜨거운 정액을 풀었다
+CALL FUCK(MASTER, "Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "마을 아가씨의 입술", "", "마을 아가씨의 질")
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+PRINTFORML %ANAME(MASTER)%의 팔 중(안)에서, 아가씨가 숨소리를 내고 있다
+PRINTFORMW 조는 의식안, 어딘지 모르게 그 행복한 얼굴을 응시하고 있었다
+PRINTFORMW …%ANAME(MASTER)%의 눈에 이상한 것이 비쳤다
+IF 보은_종류:(DVAR:보은_동물번호) == "학"
+	PRINTFORML 그녀의 등으로부터 뭔가 부드러운 것 같은 뭔가가 들여다 보고 있다
+	PRINTFORMW 그렇게, 마치 %보은_종류:(DVAR:보은_동물번호)%의 날개의 같다
+	PRINTFORML 「읏…」
+	PRINTFORMW 이불 중(안)에서 그녀가 몸을 비튼다
+	PRINTFORML 하면 %ANAME(MASTER)%의 손바닥에, 뭔가 깃털과 같은 것이 접했다
+	PRINTFORMW 이불 중(안)에서 손으로 더듬어 거기에 접해 보는, 하면 주렁주렁으로 한 감촉이 한다
+ELSE
+	PRINTFORML 그녀의 머리카락중에서 불쑥 뭔가가 튀어나오고 있다
+	PRINTFORMW 그렇게, 마치 %보은_종류:(DVAR:보은_동물번호)%의 귀의 같다
+	PRINTFORML 「읏…」
+	PRINTFORMW 이불 중(안)에서 그녀가 몸을 비튼다
+	PRINTFORML 하면 %ANAME(MASTER)%의 허벅지에, 뭔가 면과 같은 것이 접했다
+	PRINTFORMW 이불 중(안)에서 손으로 더듬어 거기에 접해 보는, 한다고도 갑자기 한 감촉이 한다
+ENDIF
+PRINTFORML 「응읏…」
+PRINTFORMW 그녀가 희미하게 몸을 진동시킨다
+PRINTFORML 이것은 무엇일까, 이불의 면이 나와 버렸는지? 꿈일까? 그렇지 않으면…
+PRINTFORMW 사고하는 것도 이윽고 수마의 물결이 방문해, %ANAME(MASTER)%의 의식은 의문과 함께 꿈 속으로 가라앉아 갔다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+PRINTFORMW 이튿날 아침, 눈을 뜨면, 역시 그녀의 모습은 없었다
+RETURN 1
+
+;---------------------
+;최후
+;---------------------
+@EVENT_DAILY_REPAYMENT_4()
+#DIM 대상
+PRINTFORML 「안녕하세요, 에헤, 또 실례하러 왔습니다」
+PRINTFORMW 그녀가 다시 왔다
+PRINTFORML 이미 당연히 집에 올라, 부엌에 향한다
+PRINTFORMW 그 모습은 단순한 마을 아가씨 그 자체다
+PRINTFORMW …전회은, 역시 꿈이었을까?
+PRINTFORML 하지만 그 감촉은 제대로 기억하고 있다
+PRINTFORMW 그녀가 만약 오니의 종류라면, %ANAME(MASTER)%에 가까워졌던 것도 뭔가를 기도하고 있기 때문일지도 모른다
+PRINTFORMW 어떻게 하지……?
+
+CALL ASK_YN("정체를 따진다", "퇴치한다")
+
+IF RESULT == 1
+	PRINTFORML 이 녀석은 인간으로 변해, 남몰래 가까워져 오는 요괴다
+	PRINTFORMW 무엇을 되는지 모르는, 방심하고 있는 지금 퇴치해야 한다
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% 부엌에 서는 그녀의 배후에 가까워져, 단숨에 베어 버렸다!
+	PRINTFORMW 마지막에 %조사처리(ANAME(MASTER),"를")% 본 그녀는, 무엇이 일어났는지 모른다고 한 표정을 하고 있었다
+	PRINTFORMW …그녀가 숨 끊어지면, 거기에는 %보은_종류:(DVAR:보은_동물번호)%의 망해가 구르고 있던, 역시 요괴가 변하고 있던 것 같다
+	PRINTFORML 위험하게 유괴해지는 곳이었지만, 이것으로 일건낙착이다
+	PRINTFORMW 그 %보은_종류:(DVAR:보은_동물번호)%를 왜일까 어디선가 본 것 같았지만, 아마 단순한 착각일 것이다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 망해를 적당하게 마당에 묻어, 모두를 잊기로 했다
+	DVAR:보은_발생플래그 = -1
+	RETURN 0
+ENDIF 
+
+
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+PRINTFORMW 식사의 뒤, 저녁 반주중에 그녀에게 정체를 따졌다
+PRINTFORML 「………」
+PRINTFORMW %ANAME(MASTER)%의 물음에 숙이고 있었던 그녀이지만, 이윽고 신기한 표정으로 얼굴을 올려, 입을 열었다
+PRINTFORML 「나는…이전, %ANAME(MASTER)%에 도와 받은 %보은_종류:(DVAR:보은_동물번호)%입니다…」
+PRINTFORMW 「함정에 걸려 있었을 때에, %ANAME(MASTER)%에, 해방해 받은 것입니다……」
+PRINTFORMW 그 말로 %조사처리(ANAME(MASTER),"는")% 일찍이 함정에 걸려 있었던 %보은_종류:(DVAR:보은_동물번호)%을 생각해 낸다
+PRINTFORML 「속일 생각은 없었던 것입니다……다만, 그 때의, 보은이, 하고 싶어서……」
+PRINTFORMW 그녀는 더듬거리게 떨리는 소리로 말을 뽑아 간다
+PRINTFORML 「인간의 돈도 귀중한 것도, 가지고 있지 않았으니까, 그……이것 정도의 일 밖에, 할 수 없어서……」
+PRINTFORMW 「……미안해요」
+PRINTFORML 울먹이는 소리가 되면서 짜내도록(듯이) 그렇게 고하면, 그녀는 고개 숙여 버렸다
+PRINTFORMW 아무래도 거짓말은 아닌 것 같다
+PRINTFORML 숙이면서 떨고 있는 그녀를 보고 있으면, 퇴치할 생각은 없어졌다
+PRINTFORMW 하지만, 뭐라고 말을 걸까?
+CALL ASK_MULTI_JUDGE("우리 군으로 이끈다", CAN_ADD_RANDOM_CHARA(), "앞으로도 오고 싶으면 오면 된다", 1, "이제 오지 않게 고한다", 1)
+IF RESULT == 2
+	PRINTFORML 그러면 이제(이미/벌써/더는/정말) 충분함
+	PRINTFORMW 더 이상, 오니에게 관련되고 싶지도 않다
+	PRINTFORMW 아가씨에게, 이제 오지 않지는 좋다고 고한다
+	PRINTFORML 소녀는 %ANAME(MASTER)%의 말을 (들)물어 고개 숙이고 있었지만
+	PRINTFORMW 이윽고 짜낸 것 같은 소리로, 폐라면 어쩔 수 없네요, 라고 중얼거렸다
+	PRINTFORML 마지막으로, 감사합니다와 인사를 하면
+	PRINTFORMW 다음의 순간, %보은_종류:(DVAR:보은_동물번호)%의 모습에 돌아오면, 그대로 밤의 어둠으로 사라져 갔다
+	PRINTFORMW 뒤에는 소녀의 온기가 남은 기모노만이 남아 있었다……
+ELSEIF RESULT == 1
+	PRINTFORML 고개 숙이는 그녀의 머리에 살그머니 손을 싣고 어루만진다
+	PRINTFORMW 일순간몸을 굳어지게 했지만, 다만 어루만져지고 있을 뿐이라고 알면, 흠칫흠칫 얼굴을 올렸다
+	PRINTFORML 사과하는 일은 없는, 충분히 보은을 해 받은 것이니까
+	PRINTFORMW 두를 어루만지면서 그녀에게 그렇게 고하면, 눈동자를 희미하게 물기를 띠게 해 뺨을 느슨해지게 한다
+	PRINTFORML 앞으로도 오고 싶으면 오면 되는, 환영한다
+	PRINTFORMW 「에헤헤…네……앞으로도, 잘 부탁드립니다…♥」
+	PRINTFORML 눈물을 흘리면서 웃는 얼굴을 보이는 그녀를 껴안으면
+	PRINTFORMW 입술을 거듭해 그대로 쓰러트렸다……
+	DVAR:보은_내왕아내플래그 = 1
+ELSE
+	PRINTFORML 고개 숙이는 그녀의 머리에 살그머니 손을 싣고 어루만진다
+	PRINTFORMW 일순간몸을 굳어지게 했지만, 다만 어루만져지고 있을 뿐이라고 알면, 흠칫흠칫 얼굴을 올렸다
+	PRINTFORML 사과하는 일은 없는, 충분히 보은을 해 받은 것이니까
+	PRINTFORMW 두를 어루만지면서 그녀에게 그렇게 고하면, 눈동자를 희미하게 물기를 띠게 해 뺨을 느슨해지게 한다
+	PRINTFORML 만약 좋다면 우리 군에 오지 않을까? 라고 그녀를 부른다
+	PRINTFORMW 「엣, 그…으음」
+	PRINTFORMW 돌연의 권유에, 그녀는 놀라 당황하고 있었지만
+	PRINTFORMW 이윽고 생각이 결정되었는지, %조사처리(ANAME(MASTER),"를")% 응시하면 싱긋 웃어 대답했다
+	PRINTFORMW 「에헤헤…네……앞으로도, 잘 부탁드립니다…♥」
+	PRINTFORML 눈물을 흘리면서 웃는 얼굴을 보이는 그녀를 껴안으면
+	PRINTFORMW 입술을 거듭해 그대로 쓰러트렸다……
+	CALL CREATE_RANDOM_CHARA(0,0,1)
+	대상 = RESULT
+	ABL:대상:무투 = 15 + RAND:10
+	ABL:대상:방위 = 15 + RAND:10
+	ABL:대상:지략 = 15 + RAND:10
+	ABL:대상:정치 = 25 + RAND:10
+	ABL:대상:가창 = 35 + RAND:10
+	ABL:대상:요리 = 45 + RAND:10
+	CALL TAG_INIT(대상,25)
+	CALL LEARN_SKILL_GENERAL_BY_NAME(대상, "노력가")
+	CALL LEARN_SKILL_GENERAL_BY_NAME(대상, "치료")
+	IF 보은_종류:(DVAR:보은_동물번호) == "학"
+		TALENT:대상:동물귀 = 0
+		TALENT:대상:꼬리 = 0
+	ELSEIF 보은_종류:(DVAR:보은_동물번호) == "토끼"
+		TALENT:대상:동물귀 = 1
+		TALENT:대상:꼬리 = 0
+	ELSE
+		TALENT:대상:동물귀 = 1
+		TALENT:대상:꼬리 = 1
+	ENDIF
+	CALL VIRGINIZE_LOST(대상, 첫체험_처녀)
+	CALL VIRGINIZE_LOST(대상, 첫체험_키스)
+	SEXUAL_EXPERIENCE:(대상):첫체험_처녀 = %ANAME(MASTER)%
+	SEXUAL_LAST_EXPERIENCE:(대상):첫체험_처녀 = %ANAME(MASTER)%
+	SEXUAL_EXPERIENCE:(대상):첫체험_키스 = %ANAME(MASTER)%
+	SEXUAL_LAST_EXPERIENCE:(대상):첫체험_키스 = %ANAME(MASTER)%
+	TALENT:대상:반항적 = 0
+	TALENT:대상:선을넘지않음 = 0
+	TALENT:대상:츤데레 = 0
+	TALENT:대상:합의 = 1
+	TALENT:대상:헌신적 = 1
+	CALL CHANGE_COUNTRY(대상, CFLAG:MASTER:소속, 1)
+	CFLAG:대상:호감도 = 1200
+	CFLAG:대상:의존도 = 1200
+	CFLAG:대상:종속도 = 1200
+	CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"가")% 우리 군에 들어갔습니다", 칼라_주의)
+	CALL FUCK_MAKELOVE(대상, GET_ID(MASTER), @"%ANAME(MASTER)%의 입술", @"%ANAME(MASTER)%")
+	CALL FUCK(MASTER, "Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, @"%ANAME(대상)%의 입술", "", @"%ANAME(대상)%의 질")
+	DVAR:보은_캐릭터ID= GET_ID(대상)
+	PRINTFORMW
+ENDIF
+DVAR:보은_발생플래그 = -1
+RETURN 0

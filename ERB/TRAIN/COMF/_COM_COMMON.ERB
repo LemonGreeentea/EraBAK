@@ -1,0 +1,777 @@
+﻿;커맨드 관계의 공통 함수를 정리한다
+
+;-------------------------------------------------
+;주인공이 타겟이라면 ARGS:1을, 그 이외라면 ARGS:0을 돌려주는 함수
+;-------------------------------------------------
+@TARGET_STR(ARGS:0, ARGS:1)
+#FUNCTIONS
+IF IS_MTAR(MASTER)
+	RETURNF ARGS:1
+ENDIF
+RETURNF ARGS:0
+
+;-------------------------------------------------
+;주인공이 플레이어라면 ARGS:1을, 그 이외라면 ARGS:0을 돌려주는 함수
+;-------------------------------------------------
+@PLAYER_STR(ARGS:0, ARGS:1)
+#FUNCTIONS
+IF IS_MPLY(MASTER)
+	RETURNF ARGS:1
+ENDIF
+RETURNF ARGS:0
+
+;-------------------------------------------------
+;캐릭터 ARG:0이 삽입 상태에 있을지 어떨지를 판정하는 함수
+;ARGS:1……"전", "Ｐ", "Ｖ", "Ａ", "ＶＡ"의 어느쪽이든을 지정한다
+;지정의 삽입 상태라면 1, 그 이외라면 0을 돌려준다
+;-------------------------------------------------
+@IS_INSERT_SINGLE(ARG:0, ARGS:1)
+#FUNCTION
+IF ARGS:1 == "전" || ARGS:1 == "Ｐ"
+	IF IS_EQUIP_PLAYER(ARG:0, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 52, 160, 108) || IS_EQUIP_PLAYER(ARG:0, 55, 57)
+		RETURNF 1
+	ENDIF
+	IF IS_EQUIP_PLAYER(ARG:0, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 53, 161, 109) || IS_EQUIP_PLAYER(ARG:0, 56, 58)
+		RETURNF 2
+	ENDIF
+ENDIF
+
+IF ARGS:1 == "전" || ARGS:1 == "Ｖ" || ARGS:1 == "ＶＡ"
+	IF IS_EQUIP_TARGET(ARG:0, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 52) || IS_EQUIP_TARGET(160, 108, 55, 57) || IS_EQUIP_PLAYER(ARG:0, 108)
+		RETURNF 1
+	ENDIF
+	;조개맞대기·쌍두바이브도Ｖ삽입으로서 취급한다
+	IF IS_EQUIP(ARG:0, 21, 22)
+		RETURNF 1
+	ENDIF
+ENDIF
+
+IF ARGS:1 == "전" || ARGS:1 == "Ａ" || ARGS:1 == "ＶＡ"
+	IF IS_EQUIP_TARGET(ARG:0, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 53, 109) || IS_EQUIP_TARGET(161, 56, 58) || IS_EQUIP_PLAYER(ARG:0, 109)
+		RETURNF 2
+	ENDIF
+ENDIF
+
+RETURNF 0
+
+;-------------------------------------------------
+;캐릭터 ARG:0으로 캐릭터 ARG:1이 서로 삽입 상태에 있을까를 돌려주는 함수
+;반환값
+;	0=삽입하고 있지 않다
+;	1= ARG:0이 ARG:1의Ｖ에 삽입
+;	2= ARG:0이 ARG:1의Ａ에 삽입
+;	3= ARG:1이 ARG:0의Ｖ에 삽입
+;	4= ARG:1이 ARG:0의Ａ에 삽입
+;	5=조개맞대기·쌍두바이브에 의한 결합
+;-------------------------------------------------
+@IS_INSERT_MUTUAL(ARG:0, ARG:1)
+#FUNCTION
+FOR LOCAL:0, 0, MEQUIP_NUM
+	IF GROUPMATCH(MEQUIP:(LOCAL:0), 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 52, 160, 55, 57)
+		FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+			IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:0
+				FOR LOCAL:2, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+					IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:2) == ARG:1
+						RETURNF 1
+					ENDIF
+				NEXT
+			ENDIF
+			IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:1
+				FOR LOCAL:2, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+					IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:2) == ARG:0
+						RETURNF 3
+					ENDIF
+				NEXT
+			ENDIF
+		NEXT
+	ENDIF
+	IF GROUPMATCH(MEQUIP:(LOCAL:0), 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 53, 161, 56, 58)
+		FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+			IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:0
+				FOR LOCAL:2, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+					IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:2) == ARG:1
+						RETURNF 2
+					ENDIF
+				NEXT
+			ENDIF
+			IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:1
+				FOR LOCAL:2, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+					IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:2) == ARG:0
+						RETURNF 4
+					ENDIF
+				NEXT
+			ENDIF
+		NEXT
+	ENDIF
+	IF GROUPMATCH(MEQUIP:(LOCAL:0), 21, 22)
+		FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+			IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:0
+				FOR LOCAL:2, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+					IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:2) == ARG:1
+						RETURNF 5
+					ENDIF
+				NEXT
+			ENDIF
+			IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:1
+				FOR LOCAL:2, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+					IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:2) == ARG:0
+						RETURNF 5
+					ENDIF
+				NEXT
+			ENDIF
+		NEXT
+	ENDIF
+	IF GROUPMATCH(MEQUIP:(LOCAL:0), 108, 109) && ARG:0 == ARG:1
+		FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+			IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:0
+				RETURNF MEQUIP:(LOCAL:0) == 108 ? 1 # 3
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+RETURNF 0
+
+;-------------------------------------------------
+;캐릭터 ARG:0이 삽입하고 있는 상대 가운데, 선두의 캐릭터 번호를 돌려준다
+;반환값
+;	-1=삽입하고 있지 않다
+;	0이상의 수 =삽입하고 있는 상대
+;-------------------------------------------------
+@GET_INSERT_TARGET(ARG:0)
+#FUNCTION
+FOR LOCAL:0, 0, MEQUIP_NUM
+	IF GROUPMATCH(MEQUIP:(LOCAL:0), 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 52, 160, 55, 56, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 53, 161, 57, 58, 21, 22, 108, 109, 160, 161)
+		FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+			IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:0
+				RETURNF MEQUIP_TARGET:(LOCAL:0):0
+			ENDIF
+		NEXT
+	ENDIF
+	SIF GROUPMATCH(MEQUIP:(LOCAL:0), 108, 109)
+		RETURNF ARG:0
+NEXT
+RETURNF -1
+
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터에 대해, 지정의 삽입 상태를 해제한다  ※삽입 상대의 플래그도 자동적으로 탐색해 해제한다
+;ARGS:1……"전", "Ｐ", "Ｖ", "Ａ"의 어느쪽이든을 지정한다
+;-------------------------------------------------
+@CLEAR_INSERT_FLAG(ARG:0, ARGS:1)
+IF ARGS:1 == "전" || ARGS:1 == "Ｐ"
+	LOCAL:5 = MEQUIP_NUM
+	FOR LOCAL:0, 0, LOCAL:5
+		IF GROUPMATCH(MEQUIP:(LOCAL:0), 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 52, 160, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 53, 161, 55, 56, 57, 58, 108, 109, 160, 161)
+			FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+				IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:0
+					CALL RELEASE_EQUIP(LOCAL:0, 1, 0)
+					LOCAL:5 --
+					LOCAL:0 --
+					BREAK
+				ENDIF
+			NEXT
+		ENDIF
+	NEXT
+ENDIF
+
+IF (ARGS:1 == "전" || ARGS:1 == "Ｖ")
+	LOCAL:5 = MEQUIP_NUM
+	FOR LOCAL:0, 0, LOCAL:5
+		IF GROUPMATCH(MEQUIP:(LOCAL:0), 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 52, 160, 55, 57, 92, 95, 108, 160)
+			FOR LOCAL:1, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+				IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:1) == ARG:0
+					CALL RELEASE_EQUIP(LOCAL:0, 1, 0)
+					LOCAL:5 --
+					LOCAL:0 --
+					BREAK
+				ENDIF
+			NEXT
+		ENDIF
+	NEXT
+	FOR LOCAL:0, 0, LOCAL:5
+		IF GROUPMATCH(MEQUIP:(LOCAL:0), 21, 22)
+			LOCAL:6 = 0
+			FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+				IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:0
+					CALL RELEASE_EQUIP(LOCAL:0, 1, 0)
+					LOCAL:6 = 1
+					LOCAL:5 --
+					LOCAL:0 --
+					BREAK
+				ENDIF
+			NEXT
+			IF !LOCAL:6
+				FOR LOCAL:1, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+					IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:1) == ARG:0
+						CALL RELEASE_EQUIP(LOCAL:0, 1, 0)
+						LOCAL:5 --
+						LOCAL:0 --
+						BREAK
+					ENDIF
+				NEXT
+			ENDIF
+		ENDIF
+	NEXT
+ENDIF
+
+IF (ARGS:1 == "전" || ARGS:1 == "Ａ")
+	LOCAL:5 = MEQUIP_NUM
+	FOR LOCAL:0, 0, LOCAL:5
+		IF GROUPMATCH(MEQUIP:(LOCAL:0), 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 53, 161, 56, 58, 109, 161)
+			FOR LOCAL:1, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+				IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:1) == ARG:0
+					CALL RELEASE_EQUIP(LOCAL:0, 1, 0)
+					LOCAL:5 --
+					LOCAL:0 --
+					BREAK
+				ENDIF
+			NEXT
+		ENDIF
+	NEXT
+ENDIF
+
+;-------------------------------------------------
+;캐릭터 ARG:0으로부터 캐릭터 ARG:1에 삽입하고 있을 때, 그 체위를 돌려준다
+;1=정상위 2=후배위 3=대면좌위 4=배면좌위 5=기승위 6=배면기승위 7=측위 8=굴곡위 20=쌍두바이브·조개맞대기
+;-------------------------------------------------
+@GET_SEX_POSITION(ARG:0, ARG:1)
+#FUNCTION
+FOR LOCAL:0, 0, MEQUIP_NUM
+	LOCAL:5 = 0
+	IF GROUPMATCH(MEQUIP:(LOCAL:0), 30, 40)
+		LOCAL:5 = 1
+	ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 31, 41)
+		LOCAL:5 = 2
+	ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 32, 42)
+		LOCAL:5 = 3
+	ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 33, 43)
+		LOCAL:5 = 4
+	ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 34, 44)
+		LOCAL:5 = 5
+	ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 35, 45)
+		LOCAL:5 = 6
+	ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 37, 47)
+		LOCAL:5 = 7
+	ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 38, 48)
+		LOCAL:5 = 8
+	ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 39, 49)
+		LOCAL:5 = 9
+	ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 52, 53)
+		LOCAL:5 = 10
+	ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 160, 161)
+		LOCAL:5 = 11
+	ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 21, 22)
+		LOCAL:5 = 20
+	ENDIF
+
+	IF LOCAL:5
+		FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+			IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:0
+				FOR LOCAL:2, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+					IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:2) == ARG:1
+						RETURNF LOCAL:5
+					ENDIF
+				NEXT
+				BREAK
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+RETURNF 0
+
+;-------------------------------------------------
+;캐릭터 ARG:0이 지정의 삽입 상태 때, 그 체위를 돌려준다
+;ARGS:1에"Ｐ", "Ｖ", "Ａ"의 어느쪽이든을 지정
+;1=정상위 2=후배위 3=대면좌위 4=배면좌위 5=기승위 6=배면기승위 20=쌍두바이브·조개맞대기
+;-------------------------------------------------
+@GET_SEX_POSITION_SINGLE(ARG:0, ARGS:1)
+#FUNCTION
+IF ARGS:1 == "Ｐ"
+	FOR LOCAL:0, 0, MEQUIP_NUM
+		LOCAL:5 = 0
+		IF GROUPMATCH(MEQUIP:(LOCAL:0), 30, 40)
+			LOCAL:5 = 1
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 31, 41)
+			LOCAL:5 = 2
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 32, 42)
+			LOCAL:5 = 3
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 33, 43)
+			LOCAL:5 = 4
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 34, 44)
+			LOCAL:5 = 5
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 35, 45)
+			LOCAL:5 = 6
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 36, 46)
+			LOCAL:5 = 7
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 37, 47)
+			LOCAL:5 = 7
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 38, 48)
+			LOCAL:5 = 8
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 39, 49)
+			LOCAL:5 = 9
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 52, 53)
+			LOCAL:5 = 10
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 160, 161)
+			LOCAL:5 = 11
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 21, 22)
+			LOCAL:5 = 20
+		ENDIF
+		IF LOCAL:5
+			FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+				IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:0
+					RETURNF LOCAL:5
+				ENDIF
+			NEXT
+		ENDIF
+	NEXT
+ELSEIF ARGS:1 == "Ｖ"
+	FOR LOCAL:0, 0, MEQUIP_NUM
+		LOCAL:5 = 0
+		IF GROUPMATCH(MEQUIP:(LOCAL:0), 30)
+			LOCAL:5 = 1
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 31)
+			LOCAL:5 = 2
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 32)
+			LOCAL:5 = 3
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 33)
+			LOCAL:5 = 4
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 34)
+			LOCAL:5 = 5
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 35)
+			LOCAL:5 = 6
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 36)
+			LOCAL:5 = 7
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 37)
+			LOCAL:5 = 7
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 38)
+			LOCAL:5 = 8
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 39)
+			LOCAL:5 = 9
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 52)
+			LOCAL:5 = 10
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 160)
+			LOCAL:5 = 11
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 21, 22)
+			LOCAL:5 = 20
+		ENDIF
+		IF LOCAL:5
+			FOR LOCAL:1, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+				IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:1) == ARG:0
+					RETURNF LOCAL:5
+				ENDIF
+			NEXT
+		ENDIF
+	NEXT
+ELSEIF ARGS:1 == "Ａ"
+	FOR LOCAL:0, 0, MEQUIP_NUM
+		LOCAL:5 = 0
+		IF GROUPMATCH(MEQUIP:(LOCAL:0), 40)
+			LOCAL:5 = 1
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 41)
+			LOCAL:5 = 2
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 42)
+			LOCAL:5 = 3
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 43)
+			LOCAL:5 = 4
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 44)
+			LOCAL:5 = 5
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 45)
+			LOCAL:5 = 6
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 46)
+			LOCAL:5 = 7
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 47)
+			LOCAL:5 = 7
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 48)
+			LOCAL:5 = 8
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 49)
+			LOCAL:5 = 9
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 53)
+			LOCAL:5 = 10
+		ELSEIF GROUPMATCH(MEQUIP:(LOCAL:0), 161)
+			LOCAL:5 = 11
+		ENDIF
+		IF LOCAL:5
+			FOR LOCAL:1, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+				IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:1) == ARG:0
+					RETURNF LOCAL:5
+				ENDIF
+			NEXT
+		ENDIF
+	NEXT
+ENDIF
+RETURNF 0
+
+;-------------------------------------------------
+;캐릭터 ARG:0이 주체적인 커맨드 실행이 가능한가 어떤가를 돌려주는 함수
+;구체적으로는 체력 끊어지고·기력 끊어지고·취기 한계·기분이 안에 의한 이탈로 0을 돌려준다
+;-------------------------------------------------
+@IS_PLAYABLE(ARG:0)
+#FUNCTION
+IF TCVAR:(ARG:0):51 || TCVAR:(ARG:0):52 || TCVAR:(ARG:0):53
+	RETURNF 0
+ENDIF
+RETURNF 1
+
+;-------------------------------------------------
+;캐릭터 ARG:0에 페니스가 있으면 「페니스」, 없으면 「딜도」을 돌려주는 문자 함수
+;돌려주는 문자열을 지정하는 일도 가능
+;-------------------------------------------------
+@BAR_NAME(ARG:0, ARGS:1 = "페니스", ARGS:2 = "딜도")
+#FUNCTIONS
+IF HAS_PENIS(ARG:0)
+	RETURNF ARGS:1
+ENDIF
+RETURNF ARGS:2
+
+;-------------------------------------------------
+;사정 대상의 캐릭터와 부위를 스택 하는 함수
+;ARG:0=사정원의 캐릭터 번호, ARG:1=사정처의 캐릭터 번호, ARG:2=사정 부위(※자료 폴더의 변수표를 참조), ARG:3=덧쓰기할지 어떨지
+;0=몸(지정 없음) 1=질내 2=애널 3=손 4=입 5=가슴 6=발 7=꼬리 8=얼굴 9=머리카락 10=겨드랑이 11=엉덩이 12=오나홀 13=촉수 14 =고무
+
+;더 질 쏘아 맞히고·장 쏘아 맞히고를 지정하면 다른 사정 개소가 모두 리셋트 되어 그 커맨드중은 이후의 덧쓰기도 금지된다
+;한층 더 고무 사정은 질 쏘아 맞히고·장 쏘아 맞히고를 덧쓰기한다
+;-------------------------------------------------
+@STACK_SPERM(ARG:0, ARG:1, ARG:2, ARG:3 = 1)
+;고무 장비중은 무리하게 오바라이드 한다
+IF IS_EQUIP_PLAYER(ARG:0, 75)
+	ARG:2 = 14
+ENDIF
+
+;이미 고무처가 지정되고 있으면 돌아온다
+FOR LOCAL:0, 0, 20
+	SIF TCVAR:(ARG:0):(LOCAL:0 + 400) == ARG:1 && GROUPMATCH(TCVAR:(ARG:0):(LOCAL:0 + 420), 14)
+		RETURN
+NEXT
+
+;질, 애널, 고무 이외는, 벌써 질, 애널, 고무가 지정되고 있으면 안 돼
+IF !GROUPMATCH(ARG:2, 1, 2, 14)
+	FOR LOCAL:0, 0, 20
+		SIF GROUPMATCH(TCVAR:(ARG:0):(LOCAL:0 + 420), 1, 2, 14)
+			RETURN
+	NEXT
+ENDIF
+
+;덧쓰기하지 않는 경우, 이미 사정 개소가 설정되어 있으면 돌아온다
+IF !ARG:3
+	FOR LOCAL:0, 0, 20
+		IF TCVAR:(ARG:0):(LOCAL:0 + 400) != -1
+			RETURN
+		ENDIF
+	NEXT
+ENDIF
+
+;만약 ARG:2가 질or애널 or고무로, 한편 그 캐릭터의 사정처가 등록이 끝난 상태라면 지금까지의 지정을 리셋트
+IF ARG:2 == 14 || ARG:2 == 1 || ARG:2 == 2
+	FOR LOCAL:0, 0, 20
+		IF TCVAR:(ARG:0):(LOCAL:0 + 400) == ARG:1
+			TCVAR:(ARG:0):(LOCAL:0 + 400) = -1
+			TCVAR:(ARG:0):(LOCAL:0 + 420) = 0
+		ENDIF
+	NEXT
+ENDIF
+FOR LOCAL:0, 0, 20
+	IF GROUPMATCH(TCVAR:(ARG:0):(LOCAL:0 + 400), -1, ARG:1)
+		TCVAR:(ARG:0):(LOCAL:0 + 400) = ARG:1
+		TCVAR:(ARG:0):(LOCAL:0 + 420) = ARG:2
+		BREAK
+	ENDIF
+NEXT
+
+
+;-------------------------------------------------
+;캐릭터 ARG:0에 대해, 사정 대상에 관한 설정을 강제적으로 클리어 하는 함수
+;-------------------------------------------------
+@RESET_STACK_SPERM(ARG:0)
+FOR LOCAL:0, 0, 20
+	TCVAR:(ARG:0):(LOCAL:0 + 400) = -1
+	TCVAR:(ARG:0):(LOCAL:0 + 420) = 0
+NEXT
+
+;-------------------------------------------------
+;주도권이 플레이어측이라면 0, 타겟측이라면 1, 양쪽 모두라면 2, 어느 쪽에도 없으면 3을 돌려주는 함수
+;-------------------------------------------------
+@GET_COM_INITIATIVE
+#FUNCTION
+IF IS_MPLY(TFLAG:45)
+	RETURNF 0
+ELSEIF IS_MTAR(TFLAG:45)
+	RETURNF 1
+ENDIF
+RETURNF 3
+
+;-------------------------------------------------
+;캐릭터 ARG:0이 주도권을 가지고 있으면 1을, 그 이외라면 0을 돌려주는 함수
+;-------------------------------------------------
+@IS_INITIATIVE(ARG:0)
+#FUNCTION
+IF TFLAG:45 == ARG:0
+	RETURNF 1
+ENDIF
+
+IF (IS_MPLY(TFLAG:45) && IS_MPLY(ARG:0)) || (IS_MTAR(TFLAG:45) && IS_MTAR(ARG:0))
+	RETURNF 1
+ENDIF
+
+RETURNF 0
+
+;-------------------------------------------------
+;캐릭터 ARG:0이 주도권을 잡는 설정이 되어 있다면 2를, 형편이라면 1을, 그 이외라면 0을 돌려주는 함수
+;-------------------------------------------------
+@IS_INITIATIVE_SETTING(ARG:0)
+#FUNCTION
+IF FLAG:주도권소유자 == -1
+	RETURNF 1
+ENDIF
+
+IF FLAG:주도권소유자 == ARG:0
+	RETURNF 2
+ENDIF
+
+IF (IS_MPLY(FLAG:주도권소유자) && IS_MPLY(ARG:0)) || (IS_MTAR(FLAG:주도권소유자) && IS_MTAR(ARG:0))
+	RETURNF 2
+ENDIF
+
+RETURNF 0
+
+;-------------------------------------------------
+;<연인>취득
+;-------------------------------------------------
+@GET_LOVERS(ARG:0)
+SETCOLOR 칼라_주의
+PRINTFORMW %조사처리(ANAME(ARG:0),"와")%<연인>가 되었습니다
+RESETCOLOR
+
+TALENT:(ARG:0):연인 = 1
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의, 주인공과의 상대적인 주도권 기준치를 돌려준다
+;-------------------------------------------------
+@GET_INITIATIVE_RATE(ARG:0)
+#FUNCTION
+LOCAL:0 = GET_INITIATIVE_VALUE(ARG:0)
+LOCAL:1 = GET_INITIATIVE_VALUE(MASTER)
+RETURNF LOCAL:0 - LOCAL:1
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 주도권 기준치를 돌려주는 함수
+;-------------------------------------------------
+@GET_INITIATIVE_VALUE(ARG:0)
+#FUNCTION
+;우후후중은 우후후 주도도
+IF FLAG:우후후플래그
+	LOCAL:0 = ABL:(ARG:0):주도도Ｕ
+;비우후후중은 일상 주도도
+ELSE
+	LOCAL:0 = ABL:(ARG:0):주도도Ｎ
+ENDIF
+
+LOCAL:0 = (ABS(LOCAL:0) / 20) * SIGN(LOCAL:0) + 50
+
+RETURNF LIMIT(LOCAL:0, 0, 100)
+
+;-------------------------------------------------
+;커맨드의 성공 여부를 TFLAG:18에 세트 하는 함수
+;ARG:0=캐릭터 번호, ARG:1=대성공 기본 확률, ARG:2=실패 기본 확률
+;-------------------------------------------------
+@JUDGE_COM_RESULT(ARG:0, ARG:1, ARG:2)
+LOCAL:0 = 0
+
+;기분의 영향
+SELECTCASE TOSTR_EMOTION(ARG:0)
+	CASE "행복"
+		LOCAL:0 += 30
+	CASE "기쁨"
+		LOCAL:0 += 15
+	CASE "양호"
+		LOCAL:0 += 5
+	CASE "원한"
+		LOCAL:0 -= 50
+	CASE "분노"
+		LOCAL:0 -= 20
+	CASE "분개"
+		LOCAL:0 -= 8
+	CASE "암울"
+		LOCAL:0 -= 40
+	CASE "슬픔"
+		LOCAL:0 -= 10
+	CASE "우울"
+		LOCAL:0 -= 5
+	CASE "광기"
+		LOCAL:0 -= 40
+	CASE "공포"
+		LOCAL:0 -= 10
+	CASE "겁냄"
+		LOCAL:0 -= 5
+ENDSELECT
+
+SIF TALENT:(ARG:0):반항적
+	LOCAL:0 -= 5
+
+SIF TALENT:(ARG:0):꿋꿋함
+	LOCAL:0 -= 5
+
+SIF TALENT:(ARG:0):솔직함
+	LOCAL:0 += 5
+
+SIF TALENT:(ARG:0):프라이드높음
+	LOCAL:0 -= 15
+
+SIF TALENT:(ARG:0):프라이드낮음
+	LOCAL:0 += 5
+
+SIF TALENT:(ARG:0):주목받기원함
+	LOCAL:0 += 2
+
+SIF TALENT:(ARG:0):억압
+	LOCAL:0 -= 10
+
+SIF TALENT:(ARG:0):고고함
+	LOCAL:0 -= 10
+
+SIF TALENT:(ARG:0):남성혐오 && IS_MALE(MASTER)
+	LOCAL:0 -= 7
+
+SIF TALENT:(ARG:0):여성혐오 && IS_FEMALE(MASTER)
+	LOCAL:0 -= 7
+
+SIF TALENT:MASTER:매혹
+	LOCAL:0 += 6
+
+SIF TALENT:MASTER:수수께끼의매력
+	LOCAL:0 += 6
+
+;호감도
+LOCAL:0 += CFLAG:(ARG:0):2 / 50
+
+;의존도
+LOCAL:0 += CFLAG:(ARG:0):3 / 150
+
+SIF TALENT:(ARG:0):친애
+	LOCAL:0 += 40
+
+SIF TALENT:(ARG:0):연모
+	LOCAL:0 += 20
+
+SIF TALENT:(ARG:0):친구
+	LOCAL:0 += 20
+
+SIF TALENT:(ARG:0):연인
+	LOCAL:0 += 20
+
+SIF TALENT:(ARG:0):예속
+	LOCAL:0 += 30
+
+SIF TALENT:(ARG:0):복종
+	LOCAL:0 += 10
+
+SIF TALENT:(ARG:0):주인
+	LOCAL:0 += 20
+
+SIF TALENT:(ARG:0):소유자
+	LOCAL:0 += 30
+
+LOCAL:0 = LIMIT(LOCAL:0, 0, 100)
+
+LOCAL:2 = RAND:1000
+
+;대성공
+IF LOCAL:2 < ARG:1 * 10 + LOCAL:0 / 2 + (TFLAG:6 != 0) * 50
+	TFLAG:18 = 1
+;실패(실패율의 하한은 0.5%)
+ELSEIF 999 - LOCAL:2 < MAX(5, ARG:2 * 10 - LOCAL:0 - (TFLAG:6 != 0) * 30)
+	TFLAG:18 = -1
+ELSE
+	TFLAG:18 = 0
+ENDIF
+
+;--------------------------------------------------------
+;일상 커맨드에 공통의 지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST_LIFE
+;주인공이 플레이어
+IF MPLY:0 == MASTER
+	LOCAL:1 = MTAR:0
+	LOCAL:2 = MPLY:0
+;주인공이 타겟
+ELSE
+	LOCAL:1 = MPLY:0
+	LOCAL:2 = MTAR:0
+ENDIF
+
+LOCAL:0 = CFLAG:(LOCAL:1):2 + TCVAR:(LOCAL:1):70
+
+IF TALENT:(LOCAL:1):연모 && TALENT:(LOCAL:1):츤데레
+	IF RAND:2
+		PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% %조사처리(ANAME(LOCAL:2),"를")% 기분이 안좋을 것 같은 모습으로 노려보고 있다…
+	ELSE
+		PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% %ANAME(LOCAL:2)%에 불평을 말하고 있다…
+	ENDIF
+ELSEIF LOCAL:0 < 150
+	IF COM_TEXT_IS_CAUTION(LOCAL:1)
+		PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 이쪽의 모습을 경계하고 있다
+	ELSE
+		PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 아직도 어색한 모습이다
+	ENDIF
+ELSEIF LOCAL:0 < 300
+	IF COM_TEXT_IS_CAUTION(LOCAL:1)
+		PRINTFORML 조금은 막역해 온 것 같지만, %조사처리(ANAME(LOCAL:1),"는")% 아직 이쪽에 기분을 허락할 생각은 없는 것 같다
+	ELSE
+		PRINTFORML %조사처리(ANAME(LOCAL:1),"와")%도 조금은 막역해 온 것 같다
+	ENDIF
+ELSEIF LOCAL:0 < 500
+	IF COM_TEXT_IS_CAUTION(LOCAL:1)
+		PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 이쪽을 신용할 마음이 생긴 것 같다
+	ELSE
+		PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% %조사처리(ANAME(LOCAL:2),"와")% 함께 있는 일을 즐기고 있는 것 같다
+	ENDIF
+ELSEIF LOCAL:0 < 700
+	IF CFLAG:(LOCAL:1):2 < 300
+		PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 즐거운 듯 하는 모습으로 %ANAME(LOCAL:2)%에 미소지었다
+	ELSE
+		PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 조금씩%ANAME(LOCAL:2)%에 호의를 대어 온 것 같다
+	ENDIF
+ELSEIF CFLAG:(LOCAL:1):2 < 500
+	PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 매우 매우 기분이 좋은 모습으로 %조사처리(ANAME(LOCAL:2),"를")% 일을 응시하고 있다
+ELSEIF LOCAL:0 < 1000
+	PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 꽤%조사처리(ANAME(LOCAL:2),"을")% 마음에 드는 것 같다
+ELSE
+	IF TALENT:(LOCAL:1):복종
+		IF RAND:2
+			PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% %ANAME(LOCAL:2)%에 도취하는 것 같은 시선을 향하여 있다
+		ELSE
+			PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% %ANAME(LOCAL:2)%의 반응을 불안한 듯이 듣고 있다…
+		ENDIF
+	ELSEIF !IS_SAMESEX(LOCAL:1, LOCAL:2) || TALENT:(LOCAL:1):바이
+		IF TALENT:(LOCAL:1):연모 && !TALENT:(LOCAL:1):연인 && !TALENT:(LOCAL:1):낙인
+			IF RAND:2
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% %조사처리(ANAME(LOCAL:2),"를")% 넋을 잃은 표정으로 응시하고 있다…
+			ELSE
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% %ANAME(LOCAL:2)%에 온화한 시선을 향하여 있다…
+			ENDIF
+		ELSE
+			IF RAND:2
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% %ANAME(LOCAL:2)%에 애정이 깃들인 시선을 향하여 있다
+			ELSE
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% %ANAME(LOCAL:2)%에 기쁜듯이 미소짓고 있다
+			ENDIF
+		ENDIF
+	ELSE
+		IF RAND:2
+			PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% %조사처리(ANAME(LOCAL:2),"와")% 쭉 이렇게 하고 있고 싶다고 생각하고 있는 것 같다
+		ELSE
+			PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% %ANAME(LOCAL:2)%에 즐거운 듯이 미소지었다…
+		ENDIF
+	ENDIF
+ENDIF
+
+;--------------------------------------------------------
+;COM_TEXT용 경계심을 가지기 쉬운 성격인가 어떤가를 판정
+;--------------------------------------------------------
+@COM_TEXT_IS_CAUTION(ARG:0)
+#FUNCTION
+IF TALENT:(ARG:0):반항적 || TALENT:(ARG:0):프라이드높음 || TALENT:(ARG:0):거만함 || TALENT:(ARG:0):고고함
+	RETURNF 1
+ELSEIF (TALENT:(ARG:0):남성혐오 && IS_MALE(MASTER)) || (TALENT:(ARG:0):여성혐오 && IS_FEMALE(MASTER))
+	RETURNF 1
+ENDIF
+RETURNF 0

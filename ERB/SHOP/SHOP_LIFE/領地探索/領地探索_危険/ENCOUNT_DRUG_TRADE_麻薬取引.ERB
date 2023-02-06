@@ -1,0 +1,95 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_ENCOUNT_DRUG_TRADE_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_ENCOUNT_DRUG_TRADE_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_ENCOUNT_DRUG_TRADE(대상)
+#DIM 대상
+
+PRINTFORML 뒤골목을 걷고 있으면, 매우 안절부절 한 남자를 보기 시작했다
+PRINTFORML 시선을 노골적으로 딴 데로 돌렸다. 왠지 이상하겠지만……
+PRINTFORML 
+CALL ASK_MULTI("말을 건다", "모습을 엿본다", "방치한다")
+
+IF RESULT == 0
+	PRINTFORMW 말을 걸면 남자는 더욱 더 거동 의심스럽게 되었다
+	PRINTFORML 도망치려고 했으므로, 순간에 잡는다
+	PRINTFORMW 하면 품으로부터 약물이 나온이 아닌가!
+	PRINTFORMW 아무래도 마약의 판매원이었던 것 같다
+	PRINTFORMW 위병에 내밀어 두었다
+	ITEM:마약 += 1
+	CALL COLOR_PRINTW("마약을 1개 손에 넣었다", 칼라_주의)
+	RETURN 1
+ELSEIF RESULT == 2
+	PRINTFORML 그렇게 말하는 녀석도 있을 것이다
+	PRINTFORMW 방치했다
+	RETURN 1
+ENDIF
+
+PRINTFORML 그늘에 숨어 모습을 엿보고 있으면, 남자는 다른 남자와 접촉했다
+PRINTFORML ……아무래도 약물 거래의 현장인 것 같다
+
+IF IS_FEMALE(대상) && CFLAG:대상:약물의존
+	PRINTFORML 약을 생각한 것 뿐으로, %ANAME(대상)%의 신체가 뜨겁게 쑤시기 시작한다
+	PRINTFORMW 참지 못하고 두 명의 앞에 모습을 나타내, 자신에게도 나누어 주지 않을까 부탁해 버린다
+	PRINTFORMW 판매원들은 놀랐지만, %ANAME(대상)%의 상태를 보면, 카모가 왔다고 히죽히죽 웃으면서 %조사처리(ANAME(대상),"를")% 어딘가에 데려 갔다
+	GOTO FUCK_SCENE
+ENDIF
+
+PRINTFORML 
+CALL ASK_YN("잡는다", "모습을 찾는다")
+
+IF RESULT == 0 
+	IF IS_MALE(대상)
+		PRINTFORML 이런 일을 허락하고 있어서는 치안이 흐트러져 버린다
+		PRINTFORMW 씩씩하게 현상 두 명을 제압하면, 위병에 내밀었다
+		ITEM:마약 += 2
+		CALL COLOR_PRINTW("마약을 2개 손에 넣었다", 칼라_주의)
+		RETURN 1
+	ELSE
+		PRINTFORML 이런 일을 허락하고 있어서는 치안이 흐트러져 버린다
+		PRINTFORMW 잡을 수 있도록 모습을 나타낸 %조사처리(ANAME(대상),"이지만")%, 틈을 찔려 약물을 냄새 맡아져 버렸다
+		PRINTFORMW 몽롱 한 표정이 되어 무저항이 된 %조사처리(ANAME(대상),"를")%, 남자들은 어딘가에 데려 갔다
+		GOTO FUCK_SCENE
+	ENDIF
+ENDIF
+
+PRINTFORML 갑자기 잡으려고 하는 것보다, 모습을 찾아야 한다
+PRINTFORML 그렇게 생각한 %조사처리(ANAME(대상),"는")% 스스로 모습을 나타내, 약을 팔았으면 좋겠다고 부탁했다
+
+IF IS_MALE(대상)
+	PRINTFORML ……가, 남자들은 %조사처리(ANAME(대상),"를")% 보든지 재빠르게 도망쳐 버렸다……
+	RETURN 1
+ENDIF
+
+PRINTFORMW 남자들은 당황한 것 같지만, 웃는 얼굴을 띄워%조사처리(ANAME(대상),"를")% 불러들인다
+PRINTFORMW 거래의 도중, 일순간의 틈을 찔려 %조사처리(ANAME(대상),"는")% 약물을 냄새 맡아져 버렸다
+PRINTFORMW 몽롱 한 표정이 되어 무저항이 된 %조사처리(ANAME(대상),"를")%, 남자들은 어딘가에 데려갔다
+
+$FUCK_SCENE
+
+PRINTFORML 
+PRINTFORML 판매원의 아지트에 데리고 들어가진 %조사처리(ANAME(대상),"가")%, 남자 위에서 허리를 흔들고 있다
+PRINTFORML 한층 더 다른 남자가 뒤로부터 덮어씌워, 엉덩이 구멍을 후벼파고 있다
+PRINTFORML 범해지고 있다는데, 약의 힘으로 정신나간 %조사처리(ANAME(대상),"는")% 좋아해, 스스로 그들에게 봉사한다
+PRINTFORMW 남이 무슨 사양도 없고 질내나 항내에 정액을 발하면, %ANAME(대상)%도 교성을 주어 절정 한다
+PRINTFORML 포상으로서 새로운 약을 먹게 되면, %조사처리(ANAME(대상),"는")% 더욱 고조됨 한 번 더 섹스 해 주도록(듯이) 조르기 시작한다
+PRINTFORMW 최고의 성노예를 손에 넣었다고 웃으면서, 남자들은 다시 %조사처리(ANAME(대상),"를")% 범하기 시작했다
+CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 키스, 펠라티오, 약물의존, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 질내사정, 키스상실, 장내사정, 구강사정", GET_SPERM_ID("판매원"), @"판매원의 \@RAND:2 ? 페니스 # 입술\@", "판매원", "보금자리에서의 윤간")
+PRINTFORML 
+PRINTFORML 약의 효과가 끊어져 제 정신이 된 %조사처리(ANAME(대상),"는")% 어떻게든 도망치기 시작했다
+PRINTFORMW 하지만 심하게 약을 맞은 영향으로, 몸이 뜨겁게 쑤시게 되어 버렸다
+RETURN 1

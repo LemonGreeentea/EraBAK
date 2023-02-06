@@ -1,0 +1,55 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_LOVELETTER_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_LOVELETTER_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_LOVELETTER(대상)
+#DIM 대상
+PRINTFORMW 거리를 걷고 있으면, 돌연 한사람의 \@ IS_MALE(대상) == 1 ? 여성 # 남성 \@가 %ANAME(대상)%의 전에 가로막고 섰다
+PRINTFORML 무슨 일일까하고 준비하는 %ANAME(대상)%에, 편지를 보내 온다
+PRINTFORMW 아무래도 연애 편지인 것 같다
+PRINTFORMW 상대는 얼굴을 새빨갛게 하고 있지만……
+PRINTFORML 
+CALL ASK_MULTI("일단 받는다", "거절한다", "숙소에 데리고 들어간다")
+
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 너무나 돌연의 일로 곧바로 대답은 할 수 없지만, 우선 받아 둔다
+		PRINTFORMW 그렇게 전하면,\@ IS_MALE(대상) == 1 ? 그녀 # 그 \@는 작고 수긍 빠른 걸음을 떠나 갔다
+	CASE 1
+		PRINTFORML 유감이지만 생각에는 따를 수 없다
+		PRINTFORMW 그렇게 전하면,\@ IS_MALE(대상) == 1 ? 그녀 # 그 \@는 어깨를 떨어뜨려 떠났다
+	CASE 2
+		PRINTFORML 편지를 읽었던 %조사처리(ANAME(대상),"는")%, 서로를 모르는 채로는 교제하는 것도 아무것도 없다고 전했다
+		PRINTFORMW 어떻게 하면, 이라고 멍청히 한 \@ IS_MALE(대상) == 1 ? 그녀 # 그 \@에, 서로 붙어 좀 더 알려고 제안했다
+		PRINTFORMW 말의 의미를 헤아린 \@ IS_MALE(대상) == 1 ? 그녀 # 그 \@는, 얼굴을 붉히면서 %조사처리(ANAME(대상),"와")% 따랐다고 숙소에 들어갔다……
+		PRINTFORMW
+		IF IS_MALE(대상)
+			PRINTFORMW 그녀의 몸은 튀도록(듯이) 부드럽고, %ANAME(대상)%기호였다
+			PRINTFORMW 숫처녀면서 감도도 자주(잘), 사랑스럽게 몸을 뛰게 해 이쪽의 눈을 즐겁게 한다
+			PRINTFORMW 응석부리도록(듯이) 달라붙는 소녀에게, %ANAME(대상)%의 존재를 새겨 주었다……
+			CALL FUCK(대상, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "화간")
+		ELSE
+			PRINTFORMW 이러한 일에 익숙하지 않은 것인지, 그의 성기술은 변변치않은 것이었다
+			PRINTFORMW 하지만 더없는 마음이 탄 허리 사용은 정열적으로, %조사처리(ANAME(대상),"를")% 속박한다
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 그를 리드하면서도 어느덧 높은 곳에 올라, 질내사정을 받는 것과 동시에 스스로도 달했다……
+			CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("지나가는 남자"), "지나가는 남자의 입술", "지나가는 남자", "", "화간")
+		ENDIF
+		PRINTFORML 
+		PRINTFORMW 재회의 약속을 해,\@ IS_MALE(대상) == 1 ? 그녀 # 그 \@와 헤어졌다
+ENDSELECT
+
+RETURN 1

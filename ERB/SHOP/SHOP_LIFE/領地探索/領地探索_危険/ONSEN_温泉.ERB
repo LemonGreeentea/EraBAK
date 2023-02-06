@@ -1,0 +1,83 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_ONSEN_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_ONSEN_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_ONSEN(대상)
+#DIM 대상
+
+PRINTFORML 탐색중, 온천숙소를 보기 시작했다
+PRINTFORML 평소의 피로를 취하는 것도 좋을지도 모른다……
+PRINTFORML 
+CALL ASK_MULTI("남탕에 들어간다", "여탕에 들어간다", "혼욕에 들어간다", "그만둔다")
+
+SELECTCASE RESULT
+	CASE 0
+		IF IS_MALE(대상)
+			PRINTFORML 남탕에 들어가기로 했다
+			PRINTFORML ……천천히 잠겨 피로를 취했다
+		ELSE
+			PRINTFORMW ……남탕에 들어가 보기로 하자
+			PRINTFORML 
+			PRINTFORMW 한가닥의 실 휘감지 않은 모습의 %조사처리(ANAME(대상),"를")% 눈치채면, 다른 입욕손님은 놀란 모습을 보인다
+			PRINTFORML 남자들의 시선을 받으면서, %조사처리(ANAME(대상),"는")% %STR_BODY("가슴:애무", 대상)%나 %STR_BODY("엉덩이:장")%를 천천히 씻어 간다
+			PRINTFORML 신체의 더러움을 제대로 떨어뜨려 목욕통에 잠기면, 좌우로부터 남자들이 가까워져 온다
+			PRINTFORMW 버릇없게 성장해 오는 손을 뿌리치지 않았던 것이, 그들을 힘이 나게 했다
+			PRINTFORML 남자들은 앞 다투어 %ANAME(대상)%에 모이기 시작해, 그 %STR_BODY("신체")%를 탐내 간다
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 다음으로부터 다음에 남근을 쑤셔 넣어져 신체중으로부터 밖으로부터 씻어져 갔다
+			PRINTFORMW 녹초가 된 %조사처리(ANAME(대상),"를")% 목욕탕으로부터 자신들의 방에 데리고 들어가, 남자들은 밤새 교대로 %PRONOUN(대상)%를 계속 범했다……
+			CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, 노출, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("치한"), @"치한의 \@RAND:2 ? 페니스 # 입술\@", "치한", "", "온천에서의 윤간")
+		ENDIF
+	CASE 1
+		IF IS_MALE(대상)
+			PRINTFORML 의외로 발각되지 않을지도 모른다
+			PRINTFORMW 여탕에 들어갔다
+			PRINTFORML 
+			PRINTFORMW 물론 그럴 리는 없었다
+			PRINTFORMW 여성손님에게 뭇매로 되어 버렸다
+			CALL ADD_COOLTIME(대상, 2)
+		ELSE
+			PRINTFORML 여탕에 들어가기로 했다
+			PRINTFORML ……천천히 잠겨 피로를 취했다
+		ENDIF
+	CASE 2
+		PRINTFORMW 혼욕에 들어가 보기로 하자
+		PRINTFORML 
+		IF IS_MALE(대상) || (HAS_PENIS(대상) && RAND:2)
+			PRINTFORMW ……조용한 탕장에, 여자의 교성이 영향을 주고 있다
+			PRINTFORMW 의기 투합한 여성손님과 %조사처리(ANAME(대상),"는")% 사귀고 있었다
+			PRINTFORMW 성격 뿐만이 아니라 신체의 궁합도 자주(잘), 그녀의 질내는 뜨겁게 꾸불꾸불해, %조사처리(ANAME(대상),"를")% 요구해 온다
+			PRINTFORMW 견디지 않고 %조사처리(ANAME(대상),"가")% 사정하면, 그녀도 한층 높은 소리를 질러 절정 했다……
+			CALL FUCK(대상, "성기술, 성교, Ｃ, 사정, Ｖ삽입" + (IS_FEMALE(대상) ? ", 레즈, Ｂ, Ｃ, Ｖ" # ""), "동정상실, 키스상실", 0, "여탕의 손님의 입술", "", "여탕의 손님의 질", "화간")
+		ELSEIF IS_FEMALE(대상) && RAND:2
+			PRINTFORMW ……조용한 탕장에, 두 명의 여자의 교성이 영향을 주고 있다
+			PRINTFORMW 의기 투합한 여성손님과 %조사처리(ANAME(대상),"는")% 사귀고 있었다
+			PRINTFORMW 성격 뿐만이 아니라 신체의 궁합도 자주(잘), %조사처리(ANAME(대상),"는")% 그녀와 입맞춤을 주고 받으면서 신체를 서로 거듭한다
+			PRINTFORMW 견디지 않고 %조사처리(ANAME(대상),"가")% 달하면, 그녀도 한층 높은 소리를 질러 절정 했다……
+			CALL FUCK(대상, "욕망, 성교, 봉사, 성기술, Ｂ, Ｖ, Ｍ, Ｃ, 레즈", "키스상실", 0, @"스침의 여자의 \@ RAND:2 ? 입술 # 음부\@", "", "", "화간")
+		ELSE
+			PRINTFORMW ……조용한 탕장에, %ANAME(대상)%의 교성이 영향을 주고 있다
+			PRINTFORMW 의기 투합한 남성손님과 %조사처리(ANAME(대상),"는")% 사귀고 있었다
+			PRINTFORMW 성격 뿐만이 아니라 신체의 궁합도 자주(잘), 씩씩한 페니스가 %STR_BODY("질:처녀 확인:시간 경과:욕정", 대상)%를 후벼팔 때마다 달콤한 소리가 높아진다
+			PRINTFORMW 남이 %ANAME(대상)%의 질내에 정액을 발하면, %PRONOUN(대상)%도 한층 높은 소리를 질러 절정 했다……
+			CALL FUCK(대상, "욕망, 성교, 봉사, 성기술, Ｂ, Ｖ, Ｍ, Ｃ, Ａ, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정", GET_SPERM_ID("점주"), @"점주의 \@ RAND:2 ? 입술 # 페니스\@", "점주", "", "온천에서의 화간")
+		ENDIF
+	CASE 3
+		PRINTFORML ……아니, 일을 게을리 할 수는 없다
+		PRINTFORML 그만두기로 했다
+ENDSELECT
+
+RETURN 1

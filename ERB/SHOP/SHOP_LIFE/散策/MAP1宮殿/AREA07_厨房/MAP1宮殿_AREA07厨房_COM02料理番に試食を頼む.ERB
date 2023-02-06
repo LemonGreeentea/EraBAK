@@ -1,0 +1,278 @@
+﻿;-------------------------------------------------
+; 「시식을 부탁한다」의 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA7_COM2_EXIST
+RETURN 1
+
+;-------------------------------------------------
+; 「시식을 부탁한다」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA7_COM2_NAME
+RESULTS:0 '= "시식을 부탁한다"
+RETURN 1
+
+;-------------------------------------------------
+; 「시식을 부탁한다」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA7_COM2_CHECK
+RETURN 1
+
+;-------------------------------------------------
+; 「시식을 부탁한다」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA7_COM2_CHECKCHARA(ARG:0)
+
+SIF MASTER == ARG:0
+	RETURN 0
+SIF ID_TO_CHARA(FLAG:오락담당) != ARG:0
+	RETURN 0
+SIF CFLAG:(ARG:0):행동완료
+	RETURN 0
+SIF CFLAG:(ARG:0):포로처
+	RETURN 0
+SIF CFLAG:MASTER:소속 != CFLAG:(ARG:0):소속
+	RETURN 0
+SIF COOLTIME:(ARG:0):0
+	RETURN 0
+SIF !CFLAG:(ARG:0):안면 == 1
+	RETURN 0
+SIF IS_ANIMAL(ARG:0)
+	RETURN 0
+
+RETURN 1
+
+;-------------------------------------------------
+; 「시식을 부탁한다」의 메인 처리
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA7_COM2_MAIN
+#DIM 대상
+#DIM 선택결과
+
+;(미약플래그 =1 대상이 미약을 복용  =2  자신이 미약을 복용  =3  두 명이 미약을 복용)
+;플래그 리셋트
+미약플래그 = 0
+
+대상 = GET_COOK()
+
+$SHOW_LOOP
+
+PRINTFORML  주방에는 요리사의 %조사처리(ANAME(대상),"가")% 있다
+PRINTFORML  %조사처리(ANAME(MASTER),"는")% 스스로 요리를 만들어 시식을 부탁하기로 했다
+
+;미약 있어, 연애 대상, 욕망 3의 경우미약들이 요리를 만들 수 있다
+IF ITEM:미약 > 0 && (!IS_SAMESEX(MASTER, (대상)) || TALENT:(MASTER):바이) && ABL:(MASTER):욕망 >= 3
+	PRINTFORML  미약을 넣습니까?
+	PRINTL 
+	CALL ASK_YN
+ENDIF
+PRINTL 
+PRINTL ………………
+PRINTL …………
+PRINTL ……
+PRINTL 
+
+	IF RESULT == 1
+		;만든 요리명을 취득한다
+		CALL COOKING(MASTER)
+		PRINTFORM  %조사처리(ANAME(MASTER),"는")%
+		CALL COLOR_PRINTL(@" %FOODNAME%", 칼라_오렌지, @"%조사만처리(FOODNAME,"를")% 만들었다", GETDEFCOLOR())
+
+	ELSEIF RESULT == 0
+		ITEM:미약 -= 1
+		미약플래그 = 1
+		PRINTFORM  %조사처리(ANAME(MASTER),"는")%
+		CALL COLOR_PRINTL(@" 달콤한 향기가 나는 연분홍색의 과자", 칼라_핑크, "를 만들었다", GETDEFCOLOR())
+		WAIT
+	ENDIF
+
+		;미약들이 요리치가 요리사보다 높으면, 미약들이 요리인 것이 상대에게 발각된다
+		IF 미약플래그 == 1 && ABL:(MASTER):요리 < ABL:(대상):요리
+			PRINTFORML  %조사처리(ANAME(대상),"는")% %조사처리(ANAME(MASTER),"가")% 만든 %조사처리(요리명,"가")% 이상한 것을 깨달았다
+			IF GETBIT(TALENT:(대상):음란계, 소질_음란_새드) || (ABL:(대상):주도도Ｕ >= 300 || ABL:(대상):욕망 >= 5 || TALENT:(대상):소악마 || TALENT:(대상):소유자) && TALENT:(대상):합의 ;||TALENT:(대상):각인
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%에 요리를 먹도록(듯이) 말했다
+				미약플래그 = 2
+			ELSE
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% 화내 %ANAME(MASTER)%에 나가도록(듯이) 말했다
+				CFLAG:대상:행동완료 = 1
+				SHOP_TIME ++
+				LINES_SHOP = LINECOUNT
+				BEGIN TURNEND
+			ENDIF
+		ELSE
+			IF ABL:(MASTER):요리 < 30
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% 완성된 %조사처리(요리명,"를")% 두 번 보고 했지만, 먹어 주었다
+			ELSEIF ABL:(대상):요리 < 50
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% 만족한 것 같게 먹어 주었다
+			ELSE
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%의 %요리명%의 성과에 감동하고 있는 것 같다
+				;요리 Lv100 이상이 만든 요리를 먹은 상대의 호감도도 상승한다
+				IF ABL:(MASTER):요리 >= 100
+					CALL COLOR_PRINTL(@" %ANAME(대상)%의 호감도가 아주 조금 올랐다", 칼라_주의)
+					
+					CFLAG:(대상):호감도 += 20
+				ENDIF
+			ENDIF
+		ENDIF
+	PRINTL 
+
+;───────────────────────────────────── 
+;경험치의 표시 대상
+;───────────────────────────────────── 
+PRINTL 
+SETCOLOR COLOR("실버")
+PRINTFORML  <%ANAME(MASTER)%>
+CALL PRINT_ADD_EXP(MASTER, "요리경험치", 2 + RAND:2)
+IF MAXBASE:(MASTER):정신력 < 3000 || (MAXBASE:(MASTER):정신력 < 3500 && RAND:5 == 0)
+	MAXBASE:(MASTER):정신력 += 10 + RAND:2
+ENDIF
+IF MAXBASE:(MASTER):기력 < 1600
+	MAXBASE:(MASTER):기력 += 10 + RAND:2
+ELSEIF MAXBASE:(MASTER):기력 < 2000 && RAND:2 == 0
+	MAXBASE:(MASTER):기력 += 10 + RAND:2
+ELSEIF MAXBASE:(MASTER):기력 < 2500 && RAND:6 == 0
+	MAXBASE:(MASTER):기력 += 10 + RAND:2
+ENDIF
+RESETCOLOR
+CALL TRAIN_AUTO_ABLUP(MASTER)
+WAIT
+
+;───────────────────────────────────── 
+;◆식사의 뒤의 운동（미약플래그）
+;───────────────────────────────────── 
+IF 미약플래그 >= 1 
+
+	;자위가 발생하는 정도의 무드와 조르기 플래그 추가
+	TFLAG:37 = 60
+	TCVAR:(MASTER):27 = 1
+	TCVAR:(대상):27 = 1
+	CALL SOURCE_CHECK_MASTER
+	CALL SOURCE_CHECK_1(대상)
+
+	;---------------------------------------------------------------------- 
+	;●주인공의 쾌락계 소스와 사정·절정의 처리를 실시한다
+	;  ARG:0번의 캐릭터에 대해, 쾌락계 소스와 절정의 처리를 실시한다
+	;---------------------------------------------------------------------- 
+	LOCALS:1 = %ANAME(대상)%
+	CALL TITLE_LABEL_START("예상밖의 음란한 일", 0, "", LOCALS:1)
+	IF 미약플래그 == 1 
+		PRINTFORML  식사해 뒷정리를 끝냈다. %조사처리(ANAME(대상),"는")% 침착하지 않은 모습이다
+		PRINTL 
+		CALL ASK_MULTI("그대로 헤어진다", "쓰러트린다", "유혹한다")
+		PRINTL 
+		IF RESULT == 0
+			PRINTFORML  갖고 싶어하는 것 같은 얼굴을 한 %조사처리(ANAME(대상),"를")% 남겨 자기 방에 돌아왔다…
+			CALL AFTER_SELF_CHECK(대상)
+		ELSEIF RESULT == 1
+			PRINTFORML  %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"를")% 쓰러트리기
+			IF TALENT:(대상):합의 || TALENT:(대상):복종 ||TALENT:(대상):주인
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% 기쁜 듯한 얼굴을 하고 있다…
+				GOTO END_MODE
+			ELSE
+				PRINTFORML  %조사처리(ANAME(대상),"는")% 당황하고 있다…
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% %조사처리(ANAME(MASTER),"를")% 되물리쳐 식당을 떠났다
+			ENDIF
+		ELSE
+			PRINTFORML  %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"를")% 권했다
+			IF TALENT:(대상):합의 || TALENT:(대상):예속 ||TALENT:(대상):소유자
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% 의기 양양한 얼굴을 하고 있다…
+				GOTO END_MODE
+			ELSE
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% 당황하고 있다…
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% %조사처리(ANAME(MASTER),"를")% 되물리쳐 식당을 떠났다
+			ENDIF
+		ENDIF
+	ELSEIF 미약플래그 == 2 && ABL:(MASTER):욕망 >= 3
+		PRINTFORML  식사해 뒷정리를 끝냈다. 몸이 쑤시고 있다.
+		PRINTL 
+		CALL ASK_MULTI("그대로 헤어진다", "쓰러트린다", "유혹한다")
+		PRINTL 
+		IF RESULT == 0
+			PRINTFORMW  솟구치는 충동을 억제해 %조사처리(ANAME(MASTER),"는")% 자기 방으로 돌아갔다…
+			CALL AFTER_SELF_CHECK(MASTER)
+		ELSEIF RESULT == 1
+			PRINTFORML  %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"를")% 쓰러트렸다
+			IF TALENT:(대상):합의 || TALENT:(대상):복종 ||TALENT:(대상):주인
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% 만족기분이다…
+				GOTO END_MODE
+			ELSE
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% 당황하고 있다…
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% %조사처리(ANAME(MASTER),"를")% 되물리쳐 식당을 떠났다
+			ENDIF
+		ELSE
+			PRINTFORML  %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"를")% 권했다
+			IF TALENT:(대상):합의 || TALENT:(대상):예속 ||TALENT:(대상):소유자
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% 의기양양한 얼굴이다…
+				GOTO END_MODE
+			ELSE
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% 당황하고 있다…
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% %조사처리(ANAME(MASTER),"를")% 되물리쳐 식당을 떠났다
+			ENDIF
+		ENDIF
+	ELSEIF 미약플래그 == 3
+		PRINTFORML  식사해 뒷정리를 끝냈다. 몸이 쑤시는 것 같다. %조사처리(ANAME(대상),"가")% 열정적인 눈으로 이쪽을 보고 있다
+		PRINTL 
+		CALL ASK_MULTI("그대로 헤어진다", "쓰러트린다", "유혹한다")
+		PRINTL 
+		IF RESULT == 0
+			PRINTFORMW  솟구치는 충동을 억제해 %조사처리(ANAME(MASTER),"는")% 자기 방으로 돌아갔다…
+			CALL AFTER_SELF_CHECK(MASTER)
+			CALL AFTER_SELF_CHECK(대상)
+		ELSEIF RESULT == 1
+			PRINTFORML  %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"를")% 쓰러트렸다
+			IF TALENT:(대상):합의 || TALENT:(대상):복종 ||TALENT:(대상):주인
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% 만족기분이다…
+				GOTO END_MODE
+			ELSE
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% 당황하고 있다…
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% %조사처리(ANAME(MASTER),"를")% 되물리쳐 식당을 떠났다
+			ENDIF
+		ELSE
+			PRINTFORML  %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"를")% 권했다
+			IF TALENT:(대상):합의 || TALENT:(대상):예속 ||TALENT:(대상):소유자
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% 의기양양한 얼굴이다…
+				GOTO END_MODE
+			ELSE
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% 당황하고 있다…
+				PRINTFORMW  %조사처리(ANAME(대상),"는")% %조사처리(ANAME(MASTER),"를")% 되물리쳐 식당을 떠났다
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+CFLAG:대상:행동완료 = 1
+LINES_SHOP = LINECOUNT
+SHOP_TIME ++
+BEGIN TURNEND
+
+RETURN 1
+
+$END_MODE
+
+CALL TRAIN_TARGET_SETTING(대상)
+
+FLAG:조교모드 = 1
+FLAG:우후후플래그 = 1
+
+;행동 개시시의 공통 처리
+CALL START_TRAIN_COMMON
+CALL ADD_EVENTTRAIN_CALLEE("SHOP_LIFE67_MAP1_AREA7_COM2")
+RETURN 1
+
+@EVENTTRAIN_SHOP_LIFE67_MAP1_AREA7_COM2
+#DIM 대상
+대상 = GET_COOK()
+
+;●미약플래그의 처리
+;(미약플래그 =1 대상이 미약을 복용  =2  자신이 미약을 복용  =3  두 명이 미약을 복용)
+IF 미약플래그 == 1 
+	TCVAR:(대상):60 = 1
+ELSEIF 미약플래그 == 2 
+	TCVAR:(MASTER):60 = 1
+ELSEIF 미약플래그 == 3
+	TCVAR:(대상):60 = 1
+	TCVAR:(MASTER):60 = 1
+;자위가 발생하는 정도의 무드와 조르기 플래그 추가
+	TFLAG:37 = 60
+	TCVAR:(MASTER):27 = 1
+	TCVAR:(대상):27 = 1
+ENDIF

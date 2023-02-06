@@ -1,0 +1,145 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_ANIMAL_SEX_BATTLE_RATE()
+RETURN 25
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_ANIMAL_SEX_BATTLE_DECISION()
+SIF !HAS_PENIS(MASTER)
+	RETURN 0
+SIF DVAR:종족사이항쟁_아가씨반하고플래그 > 1
+	RETURN 0
+RETURN DAY >= 15
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_ANIMAL_SEX_BATTLE_GENRE()
+RETURN 데일리_장르_에로
+
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+
+;많이 손질 했습니다  by 아우성친다
+@EVENT_DAILY_ANIMAL_SEX_BATTLE()
+#DIMS 요괴의종족
+#DIMS 요괴의종족2
+#DIM 대상
+#DIM 상승, 2
+
+PRINTFORML 환상향에서 여러가지 요괴들이 인간들을 지배하려고 싸우고 있다
+PRINTFORML 분쟁이라고 해도 수면 아래의 게임과 같은 물건인것 같겠지만
+PRINTFORMW 멋대로 말 취급해 되는 인간에게 있어서는 쌓인 것은 아니다
+PRINTFORML …곳에서 최근, 젊은 요괴아가씨들의 사이에서는 성기술을 이용한 항쟁이 붐인것 같다
+PRINTFORML 성의 힘으로 인간을 뼈 없음으로 하는 것은 확실히 옛부터 요들의 특기라는 곳은 있지만
+PRINTFORMW 완전히 인간에게 있어서는 견딜 수 없다!
+PRINTFORML 그런 까닭으로, %ANAME(MASTER)%에도 그 여파가 방문했다
+PRINTFORML 호, 리, 토, 텐구…다종 다양한 요괴아가씨들이 %ANAME(MASTER)%의 집에 밀어닥쳐 왔다
+PRINTFORML 아무래도 %ANAME(MASTER)%의 소문을 우연히 들어, 누가 선택될까의 승부를 하러 온 것 같다
+PRINTFORMW 꼭 자신을 안아 줘와 각자가 어필 해 온다…
+PRINTFORML 어떻게 하지?
+CALL ASK_MULTI("사양한다", "호낭" ,"리낭" ,"토낭" ,"텐구아가씨")
+IF RESULT == 0
+	PRINTFORML 지금은 그런 기분은 아니다
+	PRINTFORMW 미안하지만 사양하기로 했다
+	RETURN 1
+ENDIF
+
+대상 = RESULT
+
+SELECTCASE RAND:5
+	CASE 0
+		PRINTFORMW 그녀는 부끄러워하면서 %ANAME(MASTER)%의 손을 상냥하게 잡아 왔다
+	CASE 1
+		PRINTFORMW 그녀는 만면의 미소를 띄워%ANAME(MASTER)%의 목에 키스했다
+	CASE 2
+		PRINTFORMW 그녀는 스르륵 팔을 얽히게 할 수 있어 열정적이고 %조사처리(ANAME(MASTER),"를")% 응시해 왔다
+	CASE 3
+		PRINTFORMW 그녀는 %ANAME(MASTER)%에 힘차게 껴안으면 신체를 칠해 왔다
+	CASE 4
+		PRINTFORMW 그녀는 쑥스러운 듯이 %조사처리(ANAME(MASTER),"를")% 응시하면서 머뭇머뭇 하고 있었다
+ENDSELECT
+PRINTFORMW %종족사이항쟁_종류:대상%의 아가씨의 허리에 손을 쓰면 침실에 데리고 들어갔다
+PRINTFORML 
+SELECTCASE RAND:5
+	CASE 0
+		PRINTFORML 그녀의 피부에 손가락을 기게 하면 민감하게 신체를 진동시켜 사랑스러운 한숨을 흘렸다
+	CASE 1
+		PRINTFORML 그녀가 옷을 벗으면 몸집이 작으면서도 훌륭하게 암컷을 주장하는 풍만한 지체가 드러난다
+	CASE 2
+		PRINTFORML 그녀는 %조사처리(ANAME(MASTER),"를")% 열정적인 시선으로 응시하면서 응석부리는 것처럼 가랑이를 칠해 왔다
+	CASE 3
+		PRINTFORML 그녀의 피부는 손가락이 달라붙도록(듯이) 부드럽고 그 감촉이 %ANAME(MASTER)%의 수컷을 자극한다
+	CASE 4
+		PRINTFORML 그녀의 신체로부터는 달콤한 암컷의 냄새가 감돌아 견딜 수 없고 %ANAME(MASTER)%의 비강을 간질였다
+ENDSELECT
+SELECTCASE RAND:5
+	CASE 0
+		PRINTFORMW %종족사이항쟁_종류:대상%의 아가씨의 사랑스러운 교성과 페니스에 관련되어 붙어 오면의 미육을 흡족해 할 때까지 만끽했다
+	CASE 1
+		PRINTFORMW 이쪽의 허리의 움직임에 맞추어 추잡하게 신체를 구불거리게 할 수 있는 허덕이는 %종족사이항쟁_종류:대상%의 아가씨를 충분히 귀여워했다
+	CASE 2
+		PRINTFORMW 눈동자에♥를 띄우면서 양손을 열어 요구해 오는 %종족사이항쟁_종류:대상%의 아가씨와 땀투성이가 되면서 교접했다
+	CASE 3
+		PRINTFORMW %ANAME(MASTER)%에 걸치면서 추잡하게 허리를 구불거리게 할 수 있는 그녀에게 졸라지는 대로 몇 번이나 정액을 발했다
+	CASE 4
+		PRINTFORMW 그녀는 %조사처리(ANAME(MASTER),"가")% 허리를 쳐박을 때에 사랑스럽게 신체를 뛰게 해 마음껏 즐겁게 해 주었다
+ENDSELECT
+CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", @"%종족사이항쟁_종류:대상%의 아가씨의 질", "화간")
+PRINTFORMW 
+
+IF (ABL:MASTER:성기술 + ABL:MASTER:성교 + ABL:MASTER:봉사 + ABL:MASTER:사정) < 12 + (DAY / 12)
+	PRINTFORML 「소문정도가 아니었지요…」
+	PRINTFORMW 이튿날 아침, 그녀는 그런 일을 중얼거려 빨리 떠나 버렸다
+	RETURN 1
+ENDIF
+
+;벌써 반해지고 있는 캐릭터는 아니면 다니기 시작한다
+IF !GROUPMATCH(대상, DVAR:종족사이항쟁_아가씨의종족, DVAR:종족사이항쟁_아가씨2의종족)
+	PRINTFORML 「저…저…또, 또 와도 괜찮은, 입니까…?」
+	PRINTFORMW 이튿날 아침, 서운한 것 같은 그녀와 또 만날 약속을 해 헤어졌다
+	DVAR:종족사이항쟁_아가씨반하고플래그 ++
+	DVAR:(DVAR:종족사이항쟁_아가씨2의종족 == 0 ? 종족사이항쟁_아가씨2의종족 # 종족사이항쟁_아가씨의종족) = 대상
+ENDIF
+
+VARSET 상승, -1
+
+SELECTCASE 대상
+	CASE 종족사이항쟁_여우
+		상승:0 = NAME_TO_CHARA("란")
+	CASE 종족사이항쟁_너구리
+		상승:0 = NAME_TO_CHARA("마미조")
+	CASE 종족사이항쟁_토끼
+		상승:0 = NAME_TO_CHARA("테위")
+		상승:1 = NAME_TO_CHARA("레이센")
+	CASE 종족사이항쟁_텐구
+		상승:0 = NAME_TO_CHARA("아야")
+		상승:1 = NAME_TO_CHARA("하타테")
+ENDSELECT
+
+SIF GROUPMATCH(MASTER, 상승:0, 상승:1)
+	RETURN 1
+PRINTFORML %종족사이항쟁_종류:대상%의 아가씨와의 정사가 동종족이 귀에 들려온 것 같다
+
+SETCOLOR 칼라_시안
+PRINTFORM %ANAME(상승:0)%
+SIF 상승:1 != -1
+	PRINTFORM 와 %ANAME(상승:1)%
+PRINTFORMW 의 관심을 끌었다
+RESETCOLOR
+
+CFLAG:(상승:0):호감도 += 200
+SIF 상승:1 != -1
+CFLAG:(상승:1):호감도 += 200

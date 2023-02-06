@@ -1,0 +1,58 @@
+﻿;-------------------------------------------------
+;■특수 세력에 관한 변수와 정수
+;-------------------------------------------------
+;특수 세력수의 최대수
+#DIM CONST MAX_SP_COUNTRY = 8
+
+;조교로 저속해질 때까지의 기간
+#DIM CONST TRAIN_FALLEN_TERM = 2, 4, 5, 7
+
+;범용적인 정수 할당
+;함락소질（비트 관리）도 이것으로 관리하기 위해(때문에), 0번을 더미로 해 두지 않으면 조금 곤란함
+#DIM CONST 특수세력_더미 = 0
+#DIM CONST 특수세력_도둑 = 1
+#DIM CONST 특수세력_홉고블린 = 2
+#DIM CONST 특수세력_외래인 = 3
+#DIM CONST 특수세력_촉수 = 4
+#DIM CONST 특수세력_자경단 = 5
+#DIM CONST 특수세력_서큐버스 = 6
+#DIM CONST 특수세력_광신도 = 7
+#DIM CONST SP_COUNTRY_ID = -1, 300, 301, 302, 303, 304, 305, 306
+
+#DIM CONST SKILL_SP_COUNTRY_NO = 10000, 10001, 10002, 10003, 10004, 10005, 10006, 10007
+
+;강함 0~50이라면 출현 없음
+#DIM SAVEDATA SP_COUNTRY_RANK, MAX_SP_COUNTRY
+
+;이름을 어느 것으로 했는지 0 세력명 1 고유명 2 랜덤, 3수 입력
+#DIM SAVEDATA SP_COUNTRY_BOSSNAME, MAX_SP_COUNTRY
+
+;손입력시의 이름
+#DIMS SAVEDATA SP_COUNTRY_BOSSNAME_LAST_NAME, MAX_SP_COUNTRY
+#DIMS SAVEDATA SP_COUNTRY_BOSSNAME_FIRST_NAME, MAX_SP_COUNTRY
+
+;출현했는지 0미출현 1 출현이 끝난 2멸망했다
+#DIM SAVEDATA SP_COUNTRY_APPEARED, MAX_SP_COUNTRY
+
+;특수 세력 스타트로 어떤 것을 선택했는지
+#DIM SAVEDATA SP_COUNTRY_START, MAX_SP_COUNTRY
+#DIM SP_COUNTRY_START_CHANGE_BOSS
+;함락
+#DIM SAVEDATA CHARADATA SP_TRAIN_COUNT, MAX_SP_COUNTRY
+
+;특수 세력이 초기부터 봉기 할까
+#DIM SAVEDATA SP_COUNTRY_INITIAL_RISE, MAX_SP_COUNTRY
+
+;도둑의 최초의 봉기로 도시를 빼앗을까
+#DIM SAVEDATA BANDIT_HAS_INITIAL_CITIES
+
+#DIM CONST 특수세력스타트_사관 = 1
+#DIM CONST 특수세력스타트_노예 = 2
+#DIM CONST 특수세력스타트_포로 = 3
+#DIM CONST 특수세력스타트_군주 = 4
+
+#DIMS CONST SP_COUNTRY_NAME = "", "도둑", "홉고블린", "외래인", "촉수", "자경단", "서큐버스", "광신도"
+#DIMS CONST SP_COUNTRY_NAME_ENG = "", "BANDIT", "GOBLIN", "GAIRAI", "TENTACLE", "VIGILANTE", "SUCCUBUS", "CULTIST"
+#DIMS CONST SP_FALLEN_TALENT_NAME = "", "도둑의 성노예", "홉고블린의 육변기", "실험동물", "촉수에 의한 기생", "자경단원", "음마", "광신도"
+
+

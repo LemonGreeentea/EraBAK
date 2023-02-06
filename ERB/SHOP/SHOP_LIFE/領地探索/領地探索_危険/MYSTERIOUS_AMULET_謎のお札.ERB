@@ -1,0 +1,67 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_MYSTERIOUS_AMULET_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_MYSTERIOUS_AMULET_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_MYSTERIOUS_AMULET(대상)
+#DIM 대상
+
+PRINTFORMW 지폐가 떨어지고 있는 것이 보였다
+PRINTFORML 어떻게 하지?
+PRINTFORML 
+CALL ASK_YN("줍는다" ,"떠난다")
+IF RESULT == 1
+	PRINTFORML 일부러 줍는 일도 없다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 지폐를 무시해 떠났다
+	RETURN
+ENDIF
+
+PRINTFORML 무슨 지폐일 것이다?
+PRINTFORMW 신경이 쓰인 %조사처리(ANAME(대상),"는")% 주워 든
+SELECTCASE RAND:3
+	CASE 0
+		PRINTFORML 대역의 부적이었다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 소중히 품으로 해 기다렸다
+		ITEM:대역인형 += 1
+		CALL COLOR_PRINTW("대역인형을 1개 손에 넣었다", 칼라_주의)
+	CASE 1
+		PRINTFORML 부적의 부적이었다
+		PRINTFORMW 어쩐지 강하게 될 수 있던 것 같았다
+		CALL PRINT_ADD_EXP(대상, "방위경험치", RAND:10 + 5)
+	CASE 2
+		PRINTFORML 와 단순히 신체가 저려 움직일 수 있는 울면서 되어 버렸다
+		PRINTFORML 끝낸, 아무래도 속박의 부적이었던 것 같다
+		PRINTFORMW %조사처리(ANAME(대상),"가")% 지면에 주저앉고 있으면 가까이의 그늘로부터 웃는 얼굴의 수상한 자가 나타났다
+		IF IS_MALE(대상)
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 저항도 하지 못하고 품을 찾아져 지갑을 빼앗겨 버렸다
+			LOCAL = MIN(MONEY, 5000)
+			CALL ICPRINT(@"금<{LOCAL}>를 잃었다", "L", 칼라_주의)
+			MONEY -= LOCAL
+		ELSE
+			PRINTFORMW 저항도 하지 못하고 메어지고 어딘가에 데리고 가져 버렸다
+			PRINTFORML 
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 전신에 「발정」 「성감백배」등의 여러가지 지폐를 쳐지고 남자에게 범해지고 있었다
+			PRINTFORML 지폐의 효과는 굉장하게 머릿속은 핑크 1색에 물들어, 사타구니로부터는 애액이 홍수같이 흘러넘치고 있다
+			PRINTFORML 눈가리개를 되고 양팔을 잡아져 격렬하게 백 찌르기를 먹으면서 혀를 늘어뜨려 단정치 못하게 허덕인다
+			PRINTFORML 강렬한 쾌락의 물결에 %조사처리(ANAME(대상),"는")% 완전히 바보가 되어, 아헤아헤와 보기 흉한 얼굴을 쬐어 자지로 되는 대로다
+			PRINTFORMW 그가 힘차게 질 내 하면 %조사처리(ANAME(대상),"는")% 「칙명잉」의 지폐를 쳐진 배를 내밀면서 크게 뒤로 젖혔다
+			CALL FUCK(대상, "욕망, 욕망, 성교, 봉사, 성기술, Ｖ, Ｂ, Ｃ, Ｖ성교", "키스상실, 처녀상실, 질내사정", GET_SPERM_ID("불량배"), @"불량배의 \@RAND:2 ? 페니스 # 입술\@", "불량배", "", "패배한 끝의 강간")
+			PRINTFORML 
+			PRINTFORMW 지폐의 효과가 끊어진 틈에 어떻게든 도망치기 시작할 수 있었다
+		ENDIF
+ENDSELECT
+
+RETURN 1

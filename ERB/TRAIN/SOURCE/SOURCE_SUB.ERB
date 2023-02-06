@@ -1,0 +1,1688 @@
+﻿;SOURCE_CHECK로 사용하는 함수(잡다한 것)
+
+;-------------------------------------------------
+;호감도 상승의 처리
+;-------------------------------------------------
+@LOVE_UP_CHECK(ARG:0)
+;능력 고정 플래그가 서 있다면 처리하지 않는다
+IF CFLAG:(ARG:0):능력고정플래그
+	RETURN
+ENDIF
+
+;최면술 실행중은 안 돼
+SIF TCVAR:(ARG:0):최면중 > 0
+	RETURN
+
+SIF FLAG:조교모드 == 7
+	RETURN
+
+;●호감도의 처리
+;소질에 의한 증감
+;LOCAL:1은 상승 성분에 걸리는 보정
+LOCAL:1 = 100
+;LOCAL:2는 감소 성분에 걸리는 보정
+LOCAL:2 = 100
+
+SIF TALENT:(ARG:0):솔직함
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):헌신적
+	LOCAL:1 += 5
+SIF TALENT:(ARG:0):연모
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):친구
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):친애
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):연인
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):복종
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):예속
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):주인
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):소유자
+	LOCAL:1 += 10
+SIF TALENT:MASTER:하늘의사자
+	LOCAL:1 += 20
+SIF TALENT:MASTER:매혹
+	LOCAL:1 += 10
+SIF TALENT:MASTER:수수께끼의매력
+	LOCAL:1 += 10
+SIF TALENT:MASTER:인기
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):유치
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):쵸로인
+	LOCAL:1 += 10
+
+SIF TALENT:(ARG:0):반항적
+	LOCAL:2 += 10
+SIF TALENT:(ARG:0):거만함
+	LOCAL:2 += 10
+SIF TALENT:(ARG:0):프라이드높음
+	LOCAL:2 += 10
+SIF TALENT:(ARG:0):남성혐오 && IS_MALE(MASTER)
+	LOCAL:2 += 10
+SIF TALENT:(ARG:0):여성혐오 && IS_FEMALE(MASTER)
+	LOCAL:2 += 10
+SIF TALENT:(ARG:0):유치
+	LOCAL:2 += 10
+SIF TALENT:(ARG:0):쵸로인
+	LOCAL:2 -= 10
+
+SIF TALENT:(ARG:0):반항적
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):거만함
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):무관심
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):감정결핍
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):고고함
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):남성혐오 && IS_MALE(MASTER)
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):여성혐오 && IS_FEMALE(MASTER)
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):억압
+	LOCAL:1 = LOCAL:1 * (180 - YOKUATSU_RATE(ARG:0)) / 180
+SIF TALENT:(ARG:0):고고함
+	LOCAL:1 = LOCAL:1 * (250 - KOKOU_RATE(ARG:0)) / 250
+
+SIF TALENT:(ARG:0):헌신적
+	TIMES LOCAL:2, 0.95
+SIF TALENT:(ARG:0):얌전함
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):연모
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):친구
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):친애
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):복종
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):예속
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):주인
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):소유자
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):낙인
+	TIMES LOCAL:2, 0.90
+SIF TALENT:MASTER:매혹
+	TIMES LOCAL:2, 0.90
+SIF TALENT:MASTER:수수께끼의매력
+	TIMES LOCAL:2, 0.90
+SIF TALENT:MASTER:인기
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):무관심
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):감정결핍
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):쵸로인
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):억압
+	LOCAL:2 = LOCAL:2 * (180 - YOKUATSU_RATE(ARG:0)) / 180
+
+;외교 인상치 보정
+LOCAL:1 = LOCAL:1 * (1500 + REL_LIKE:(ARG:0):MASTER / 2) / 1500
+LOCAL:2 = LOCAL:2 * (1500 + REL_HATE:(ARG:0):MASTER / 2) / 1500
+
+;소질에 의한 보정의 최저치를 50, 최고치를 180으로 한다
+LOCAL:1 = LIMIT(LOCAL:1, 50, 180)
+LOCAL:2 = LIMIT(LOCAL:2, 50, 180)
+
+;기분에 응한 상하
+SELECTCASE TOSTR_EMOTION(ARG:0)
+	CASE "행복"
+		TIMES LOCAL:1, 2.00
+		TIMES LOCAL:2, 0.50
+	CASE "기쁨"
+		TIMES LOCAL:1, 1.60
+		TIMES LOCAL:2, 0.60
+	CASE "양호"
+		TIMES LOCAL:1, 1.30
+		TIMES LOCAL:2, 0.80
+	CASE "원한"
+		TIMES LOCAL:1, 0.30
+		TIMES LOCAL:2, 3.50
+	CASE "분노"
+		TIMES LOCAL:1, 0.60
+		TIMES LOCAL:2, 1.80
+	CASE "분개"
+		TIMES LOCAL:1, 0.85
+		TIMES LOCAL:2, 1.40
+	CASE "암울"
+		TIMES LOCAL:1, 0.10
+		TIMES LOCAL:2, 1.50
+	CASE "슬픔"
+		TIMES LOCAL:1, 0.40
+		TIMES LOCAL:2, 1.20
+	CASE "우울"
+		TIMES LOCAL:1, 0.70
+		TIMES LOCAL:2, 1.10
+	CASE "광기"
+		TIMES LOCAL:1, 0.20
+		TIMES LOCAL:2, 2.00
+	CASE "공포"
+		TIMES LOCAL:1, 0.50
+		TIMES LOCAL:2, 1.50
+	CASE "겁냄"
+		TIMES LOCAL:1, 0.80
+		TIMES LOCAL:2, 1.20
+	CASE "붕괴"
+		LOCAL:1 = 0
+		LOCAL:2 = 0
+	CASE "공허"
+		TIMES LOCAL:1, 0.10
+		TIMES LOCAL:2, 0.10
+ENDSELECT
+
+TCVAR:(ARG:0):10 = TCVAR:(ARG:0):10 * LOCAL:1 / 100
+TCVAR:(ARG:0):15 = TCVAR:(ARG:0):15 * LOCAL:2 / 100
+
+;체력이 다하고 있으면 호감도에 패널티
+IF TCVAR:(ARG:0):51
+	TIMES TCVAR:(ARG:0):10, 0.20
+	TIMES TCVAR:(ARG:0):15, 2.00
+ENDIF
+
+;●의존도의 처리
+LOCAL:0 = 0
+
+;소질에 의한 증감
+;LOCAL:1은 상승 성분에 걸리는 보정
+LOCAL:1 = 100
+;LOCAL:2는 감소 성분에 걸리는 보정
+LOCAL:2 = 100
+
+SIF TALENT:(ARG:0):솔직함
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):억압
+	LOCAL:1 += 20
+SIF TALENT:(ARG:0):고고함
+	LOCAL:1 += 20
+SIF TALENT:(ARG:0):연모
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):친구
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):친애
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):연인
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):복종
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):예속
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):낙인
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):주인
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):소유자
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):프라이드낮음
+	LOCAL:1 += 10
+SIF TALENT:MASTER:구심력
+	LOCAL:1 += 20
+SIF TALENT:MASTER:소악마
+	LOCAL:1 += 10
+SIF TALENT:MASTER:매혹
+	LOCAL:1 += 10
+SIF TALENT:MASTER:수수께끼의매력
+	LOCAL:1 += 10
+
+SIF TALENT:(ARG:0):프라이드높음
+	LOCAL:2 += 10
+SIF TALENT:(ARG:0):반항적
+	LOCAL:2 += 10
+SIF TALENT:(ARG:0):자제심
+	LOCAL:2 += 10
+SIF TALENT:(ARG:0):남성혐오 && IS_MALE(MASTER)
+	LOCAL:2 += 10
+SIF TALENT:(ARG:0):여성혐오 && IS_FEMALE(MASTER)
+	LOCAL:2 += 10
+
+SIF TALENT:(ARG:0):꿋꿋함
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):프라이드높음
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):반항적
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):무관심
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):감정결핍
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):자제심
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):남성혐오 && IS_MALE(MASTER)
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):여성혐오 && IS_FEMALE(MASTER)
+	TIMES LOCAL:1, 0.90
+
+SIF TALENT:(ARG:0):연모
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):친구
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):친애
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):복종
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):예속
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):주인
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):소유자
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):프라이드낮음
+	TIMES LOCAL:2, 0.90
+SIF TALENT:MASTER:매혹
+	TIMES LOCAL:2, 0.90
+SIF TALENT:MASTER:수수께끼의매력
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):무관심
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):감정결핍
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):억압
+	TIMES LOCAL:2, 0.30
+
+;외교 인상치 보정
+LOCAL:1 = LOCAL:1 * (1500 + REL_LIKE:(ARG:0):MASTER / 2) / 1500
+LOCAL:2 = LOCAL:2 * (1500 + REL_HATE:(ARG:0):MASTER / 2) / 1500
+
+;소질에 의한 보정의 최저치를 50, 최고치를 180으로 한다
+LOCAL:1 = LIMIT(LOCAL:1, 50, 180)
+LOCAL:2 = LIMIT(LOCAL:2, 50, 180)
+
+;기분에 응한 상하
+SELECTCASE TOSTR_EMOTION(ARG:0)
+	CASE "행복"
+		TIMES LOCAL:1, 2.50
+		TIMES LOCAL:2, 0.50
+	CASE "기쁨"
+		TIMES LOCAL:1, 1.80
+		TIMES LOCAL:2, 0.70
+	CASE "양호"
+		TIMES LOCAL:1, 1.40
+		TIMES LOCAL:2, 0.90
+	CASE "원한"
+		TIMES LOCAL:1, 0.70
+		TIMES LOCAL:2, 1.30
+	CASE "분노"
+		TIMES LOCAL:1, 0.80
+		TIMES LOCAL:2, 1.20
+	CASE "분개"
+		TIMES LOCAL:1, 0.90
+		TIMES LOCAL:2, 1.10
+	CASE "암울"
+		TIMES LOCAL:1, 0.70
+		TIMES LOCAL:2, 1.30
+	CASE "슬픔"
+		TIMES LOCAL:1, 0.80
+		TIMES LOCAL:2, 1.20
+	CASE "우울"
+		TIMES LOCAL:1, 0.90
+		TIMES LOCAL:2, 1.10
+	CASE "광기"
+		TIMES LOCAL:1, 2.00
+		TIMES LOCAL:2, 0.50
+	CASE "공포"
+		TIMES LOCAL:1, 1.60
+		TIMES LOCAL:2, 0.70
+	CASE "겁냄"
+		TIMES LOCAL:1, 1.30
+		TIMES LOCAL:2, 0.90
+	CASE "붕괴"
+		LOCAL:1 = 0
+		LOCAL:2 = 0
+	CASE "공허"
+		TIMES LOCAL:1, 0.10
+		TIMES LOCAL:2, 0.10
+ENDSELECT
+
+TCVAR:(ARG:0):11 = TCVAR:(ARG:0):11 * LOCAL:1 / 100
+TCVAR:(ARG:0):16 = TCVAR:(ARG:0):16 * LOCAL:2 / 100
+
+;기분에 응한 상하
+IF GROUPMATCH(TOSTR_EMOTION(ARG:0), "붕괴", "공허") == 0
+	;절정에 의한 의존도 상승
+	TCVAR:(ARG:0):11 += SUM_NOWEX(ARG:0) * 100
+ENDIF
+
+;●종속도의 처리
+;소질에 의한 증감
+;LOCAL:1은 상승 성분에 걸리는 보정
+LOCAL:1 = 100
+;LOCAL:2는 감소 성분에 걸리는 보정
+LOCAL:2 = 100
+
+SIF TALENT:(ARG:0):솔직함
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):겁쟁이
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):프라이드낮음
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):복종
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):예속
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):낙인
+	LOCAL:1 += 10
+SIF TALENT:MASTER:군주의그릇
+	LOCAL:1 += 20
+SIF TALENT:MASTER:소악마
+	LOCAL:1 += 10
+SIF TALENT:MASTER:매혹
+	LOCAL:1 += 10
+SIF TALENT:MASTER:수수께끼의매력
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):쵸로인
+	LOCAL:1 += 10
+
+SIF TALENT:(ARG:0):프라이드높음
+	LOCAL:2 += 10
+SIF TALENT:(ARG:0):반항적
+	LOCAL:2 += 10
+SIF TALENT:(ARG:0):고고함
+	LOCAL:2 += 10
+SIF TALENT:(ARG:0):자제심
+	LOCAL:2 += 10
+SIF TALENT:(ARG:0):쵸로인
+	LOCAL:2 -= 10
+	
+SIF TALENT:(ARG:0):꿋꿋함
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):프라이드높음
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):반항적
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):무관심
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):감정결핍
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):고고함
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):자제심
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):남성혐오 && IS_MALE(MASTER)
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):여성혐오 && IS_FEMALE(MASTER)
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):억압
+	LOCAL:1 = LOCAL:1 * (180 - YOKUATSU_RATE(ARG:0)) / 180
+SIF TALENT:(ARG:0):고고함
+	LOCAL:1 = LOCAL:1 * (250 - KOKOU_RATE(ARG:0)) / 250
+
+SIF TALENT:(ARG:0):겁쟁이
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):프라이드낮음
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):복종
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):예속
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):낙인
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):무관심
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):감정결핍
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):쵸로인
+	TIMES LOCAL:2, 0.90
+
+SIF TALENT:(ARG:0):억압
+	LOCAL:2 = LOCAL:2 * (180 - YOKUATSU_RATE(ARG:0)) / 180
+
+;외교 인상치 보정
+LOCAL:1 = LOCAL:1 * (1500 + REL_LIKE:(ARG:0):MASTER / 2) / 1500
+LOCAL:2 = LOCAL:2 * (1500 + REL_HATE:(ARG:0):MASTER / 2) / 1500
+
+;최저치를 50, 최고치를 180으로 한다
+LOCAL:1 = LIMIT(LOCAL:1, 50, 180)
+LOCAL:2 = LIMIT(LOCAL:2, 50, 180)
+
+;기분에 응한 상하
+SELECTCASE TOSTR_EMOTION(ARG:0)
+	CASE "행복"
+		TIMES LOCAL:1, 1.50
+		TIMES LOCAL:2, 0.70
+	CASE "기쁨"
+		TIMES LOCAL:1, 1.30
+		TIMES LOCAL:2, 0.80
+	CASE "양호"
+		TIMES LOCAL:1, 1.15
+		TIMES LOCAL:2, 0.90
+	CASE "원한"
+		TIMES LOCAL:1, 0.20
+		TIMES LOCAL:2, 2.50
+	CASE "분노"
+		TIMES LOCAL:1, 0.50
+		TIMES LOCAL:2, 1.60
+	CASE "분개"
+		TIMES LOCAL:1, 0.80
+		TIMES LOCAL:2, 1.20
+	CASE "암울"
+		TIMES LOCAL:1, 0.10
+		TIMES LOCAL:2, 1.50
+	CASE "슬픔"
+		TIMES LOCAL:1, 0.40
+		TIMES LOCAL:2, 1.25
+	CASE "우울"
+		TIMES LOCAL:1, 0.75
+		TIMES LOCAL:2, 1.10
+	CASE "광기"
+		TIMES LOCAL:1, 3.00
+		TIMES LOCAL:2, 0.20
+	CASE "공포"
+		TIMES LOCAL:1, 2.20
+		TIMES LOCAL:2, 0.50
+	CASE "겁냄"
+		TIMES LOCAL:1, 1.50
+		TIMES LOCAL:2, 0.75
+	CASE "붕괴"
+		LOCAL:1 = 0
+		LOCAL:2 = 0
+	CASE "공허"
+		TIMES LOCAL:1, 0.10
+		TIMES LOCAL:2, 0.10
+ENDSELECT
+
+IF FLAG:주도권소유자
+	TIMES TCVAR:(ARG:0):12, 0.7
+	TIMES TCVAR:(ARG:0):17, 1.2
+ENDIF	
+
+TCVAR:(ARG:0):12 = TCVAR:(ARG:0):12 * LOCAL:1 / 100
+TCVAR:(ARG:0):17 = TCVAR:(ARG:0):17 * LOCAL:2 / 100
+
+;기분에 응한 상하
+IF GROUPMATCH(TOSTR_EMOTION(ARG:0), "붕괴", "공허") == 0
+	;절정에 의한 종속도 상승
+	TCVAR:(ARG:0):12 += SUM_NOWEX(ARG:0) * 100
+ENDIF
+
+
+;●지배도의 처리
+;소질에 의한 증감
+;LOCAL:1은 상승 성분에 걸리는 보정
+LOCAL:1 = 100
+;LOCAL:2는 감소 성분에 걸리는 보정
+LOCAL:2 = 100
+
+SIF TALENT:(ARG:0):반항적
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):꿋꿋함
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):프라이드높음
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):주인
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):소유자
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):군주의그릇
+	LOCAL:1 += 20
+SIF TALENT:(ARG:0):소악마
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):매혹
+	LOCAL:1 += 10
+SIF TALENT:(ARG:0):수수께끼의매력
+	LOCAL:1 += 10
+
+SIF TALENT:(ARG:0):프라이드낮음
+	LOCAL:2 += 10
+SIF TALENT:(ARG:0):솔직함
+	LOCAL:2 += 10
+SIF TALENT:(ARG:0):겁쟁이
+	LOCAL:2 += 10
+SIF TALENT:(ARG:0):자제심
+	LOCAL:2 += 10
+SIF TALENT:(ARG:0):쵸로인
+	LOCAL:2 -= 10
+	
+SIF TALENT:(ARG:0):솔직함
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):프라이드낮음
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):얌전함
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):무관심
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):감정결핍
+	TIMES LOCAL:1, 0.90
+
+SIF TALENT:(ARG:0):남성혐오 && IS_MALE(MASTER)
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):여성혐오 && IS_FEMALE(MASTER)
+	TIMES LOCAL:1, 0.90
+SIF TALENT:(ARG:0):억압
+	LOCAL:1 = LOCAL:1 * (180 - YOKUATSU_RATE(ARG:0)) / 180
+SIF TALENT:(ARG:0):고고함
+	LOCAL:1 = LOCAL:1 * (250 - KOKOU_RATE(ARG:0)) / 250
+
+SIF TALENT:(ARG:0):반항적
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):프라이드높음
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):주인
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):소유자
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):소악마
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):꿋꿋함
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):감정결핍
+	TIMES LOCAL:2, 0.90
+SIF TALENT:(ARG:0):쵸로인
+	TIMES LOCAL:2, 0.90
+
+SIF TALENT:(ARG:0):억압
+	LOCAL:2 = LOCAL:2 * (180 - YOKUATSU_RATE(ARG:0)) / 180
+
+;외교 인상치 보정
+LOCAL:1 = LOCAL:1 * (1500 + REL_LIKE:(ARG:0):MASTER / 2) / 1500
+LOCAL:2 = LOCAL:2 * (1500 + REL_HATE:(ARG:0):MASTER / 2) / 1500
+
+;최저치를 50, 최고치를 180으로 한다
+LOCAL:1 = LIMIT(LOCAL:1, 50, 180)
+LOCAL:2 = LIMIT(LOCAL:2, 50, 180)
+
+;기분에 응한 상하
+SELECTCASE TOSTR_EMOTION(ARG:0)
+	CASE "행복"
+		TIMES LOCAL:1, 1.50
+		TIMES LOCAL:2, 0.70
+	CASE "기쁨"
+		TIMES LOCAL:1, 1.30
+		TIMES LOCAL:2, 0.80
+	CASE "양호"
+		TIMES LOCAL:1, 1.15
+		TIMES LOCAL:2, 0.90
+	CASE "원한"
+		TIMES LOCAL:1, 1.00
+		TIMES LOCAL:2, 1.50
+	CASE "분노"
+		TIMES LOCAL:1, 1.00
+		TIMES LOCAL:2, 1.30
+	CASE "분개"
+		TIMES LOCAL:1, 1.30
+		TIMES LOCAL:2, 1.00
+	CASE "암울"
+		TIMES LOCAL:1, 0.10
+		TIMES LOCAL:2, 1.50
+	CASE "슬픔"
+		TIMES LOCAL:1, 0.40
+		TIMES LOCAL:2, 1.25
+	CASE "우울"
+		TIMES LOCAL:1, 0.75
+		TIMES LOCAL:2, 1.10
+	CASE "광기"
+		TIMES LOCAL:1, 0.75
+		TIMES LOCAL:2, 1.50
+	CASE "공포"
+		TIMES LOCAL:1, 0.75
+		TIMES LOCAL:2, 1.25
+	CASE "겁냄"
+		TIMES LOCAL:1, 1.00
+		TIMES LOCAL:2, 1.25
+	CASE "붕괴"
+		LOCAL:1 = 0
+		LOCAL:2 = 0
+	CASE "공허"
+		TIMES LOCAL:1, 0.10
+		TIMES LOCAL:2, 0.10
+ENDSELECT
+
+IF FLAG:주도권소유자 == ARG:0
+	TIMES TCVAR:(ARG:0):74, 1.2
+	TIMES TCVAR:(ARG:0):75, 0.7
+ENDIF
+
+IF GROUPMATCH(FLAG:조교모드, 조교_역조교특수, 조교_역조교통상, 조교_위안)
+	TIMES TCVAR:(ARG:0):74, 1.3
+	TIMES TCVAR:(ARG:0):75, 0.7
+ENDIF
+
+TCVAR:(ARG:0):74 = TCVAR:(ARG:0):74 * LOCAL:1 / 100
+TCVAR:(ARG:0):75 = TCVAR:(ARG:0):75 * LOCAL:2 / 100
+
+;기분에 응한 상하
+IF GROUPMATCH(TOSTR_EMOTION(ARG:0), "붕괴", "공허") == 0
+	;절정에 의한 지배도 상승
+	TCVAR:(ARG:0):74 += SUM_NOWEX(MASTER) * 100
+ENDIF
+
+
+;●우후후중은 호감도 상승량이 저하
+IF FLAG:우후후플래그
+	TIMES TCVAR:(ARG:0):10, 0.30
+ENDIF
+
+;●특수 세력에 떨어지고 있으면 호감도·의존도·종속도 모든 상승률이 저하
+;다만 구제책으로서 최저 보증이 붙는다
+;더 지배도는 상승
+IF IS_FALLEN_TO_SP_COUNTRY(ARG:0) && !IS_SP_COUNTRY(CFLAG:MASTER:소속)
+	FOR LOCAL:0, 10, 13
+		TIMES TCVAR:(ARG:0):(LOCAL:0), 0.20
+		TCVAR:(ARG:0):(LOCAL:0) = MAX(TCVAR:(ARG:0):(LOCAL:0), RAND:10)
+	NEXT
+	TIMES TCVAR:(ARG:0):74, 1.25
+ENDIF
+
+;●바람기버릇의 경우 상승률이 저하
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_바람기버릇)
+	TIMES TCVAR:(ARG:0):10, 0.6
+	TIMES TCVAR:(ARG:0):11, 0.6
+	TIMES TCVAR:(ARG:0):12, 0.6
+	TIMES TCVAR:(ARG:0):13, 0.6
+	TIMES TCVAR:(ARG:0):74, 0.6
+ENDIF
+
+;●주인공이 더러운아저씨 또한 대상이 이 조교로 절정 회수 3회 이하라면 호감도 상승 0
+IF TALENT:MASTER:더러운아저씨 == 1
+	;「만나러간다」의 경우
+	;호감도 상승이 0이상이라면 20%에. 0 이하라면 1.5배에.
+	;지배도는 역
+	IF GROUPMATCH(FLAG:조교모드, 0, 3)
+		IF TCVAR:(ARG:0):10 > 0
+			TIMES TCVAR:(ARG:0):10, 0.2
+			TIMES TCVAR:(ARG:0):74, 1.3
+		ELSE
+			TIMES TCVAR:(ARG:0):10, 1.5
+			TIMES TCVAR:(ARG:0):74, 0.7
+		ENDIF
+	ELSE
+		;대상이 이 조교로 절정 회수 3회 이하로, 호감도 상승이 0이상이라면, 0에
+		IF SUM_NOWEX(ARG:0) < 3
+			TCVAR:(ARG:0):10 = MIN(TCVAR:(ARG:0):10, 0)
+		;3회이상가게해 있으면 의존·종속도 상승률 UP
+		;지배도 다운
+		ELSE
+			TIMES TCVAR:(ARG:0):11, 1.2
+			TIMES TCVAR:(ARG:0):12, 1.2
+			TIMES TCVAR:(ARG:0):74, 0.8
+		ENDIF
+	ENDIF
+ENDIF
+
+;●실제의 변동량을 LOCAL:1～3에 세트
+LOCAL:1 = (TCVAR:(ARG:0):10 - TCVAR:(ARG:0):15) / 100
+LOCAL:2 = (TCVAR:(ARG:0):11 - TCVAR:(ARG:0):16) / 100
+LOCAL:3 = (TCVAR:(ARG:0):12 - TCVAR:(ARG:0):17) / 100
+LOCAL:4 = (TCVAR:(ARG:0):74 - TCVAR:(ARG:0):75) / 100
+
+;의존도의 변동은 최악이어도-1
+LOCAL:2 = MAX(LOCAL:2, -1)
+
+;●하늘의사자로 상승 호감도가 낮을 시 한층 더＋보정
+IF TALENT:MASTER:하늘의사자
+	SELECTCASE LOCAL:1
+		CASE IS < 0
+			LOCAL:1 += 10
+		CASE IS < 15
+			LOCAL:1 += 5
+		CASE IS < 25
+			LOCAL:1 += 3
+		CASE IS < 50
+			LOCAL:1 += 1
+	ENDSELECT
+ENDIF
+
+;●구심력으로 상승 의존도가 낮을 때 한층 더＋보정
+IF TALENT:MASTER:구심력
+	SELECTCASE LOCAL:2
+		CASE IS < 0
+			LOCAL:2 += 10
+		CASE IS < 15
+			LOCAL:2 += 5
+		CASE IS < 25
+			LOCAL:2 += 3
+		CASE IS < 50
+			LOCAL:2 += 1
+	ENDSELECT
+ENDIF
+
+;●군주의그릇으로 상승 종속도가 낮을 때 한층 더＋보정
+IF TALENT:MASTER:군주의그릇
+	SELECTCASE LOCAL:3
+		CASE IS < 0
+			LOCAL:3 += 10
+		CASE IS < 15
+			LOCAL:3 += 5
+		CASE IS < 25
+			LOCAL:3 += 3
+		CASE IS < 50
+			LOCAL:3 += 1
+	ENDSELECT
+ENDIF
+
+IF FLAG:주도권소유자 == ARG:0
+	SELECTCASE LOCAL:4
+		CASE IS < 0
+			LOCAL:4 += 3
+		CASE IS < 15
+			LOCAL:4 += 2
+		CASE IS < 25
+			LOCAL:4 += 1
+	ENDSELECT
+ENDIF
+
+IF TALENT:(ARG:0):군주의그릇 || GROUPMATCH(FLAG:조교모드, 조교_역조교특수, 조교_역조교통상, 조교_위안)
+	SELECTCASE LOCAL:4
+		CASE IS < 0
+			LOCAL:4 += 10
+		CASE IS < 15
+			LOCAL:4 += 5
+		CASE IS < 25
+			LOCAL:4 += 3
+		CASE IS < 50
+			LOCAL:4 += 1
+	ENDSELECT
+ENDIF
+
+
+;●주인공 이외로부터의 행위는 호감도·의존도·종속도 모든 변동량이 저하
+;다만 바람기버릇이 있는 경우는 무효화
+IF ((!IS_MPLY(MASTER) && !IS_MTAR(MASTER)) || (!IS_MPLY(ARG:0) && !IS_MTAR(ARG:0))) && !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_바람기버릇)
+	;포로 조교의 메인 타겟은 영향 완화
+	IF FLAG:조교모드 == 2 && FINDELEMENT(PRISONER_TARGET, ARG:0) != -1
+		TIMES LOCAL:1, 0.50
+		TIMES LOCAL:2, 0.50
+		TIMES LOCAL:3, 0.50
+		TIMES LOCAL:4, 0.50
+	ELSE
+		TIMES LOCAL:1, 0.25
+		TIMES LOCAL:2, 0.25
+		TIMES LOCAL:3, 0.25
+		TIMES LOCAL:4, 0.25
+	ENDIF
+ENDIF
+
+;●실신중·이탈중은 호감도·의존도·종속도가 변동하지 않는다
+IF TCVAR:(ARG:0):52 || TCVAR:(ARG:0):53
+	LOCAL:1 = 0
+	LOCAL:2 = 0
+	LOCAL:3 = 0
+	LOCAL:4 = 0
+ENDIF
+
+;●호감도·의존도·종속도를 가산
+CFLAG:(ARG:0):호감도 = LIMIT(CFLAG:(ARG:0):호감도 + LOCAL:1, -1000, 999999999999)
+CFLAG:(ARG:0):의존도 = LIMIT(CFLAG:(ARG:0):의존도 + LOCAL:2, -1000, 999999999999)
+CFLAG:(ARG:0):종속도 = LIMIT(CFLAG:(ARG:0):종속도 + LOCAL:3, -1000, 999999999999)
+CFLAG:(ARG:0):지배도 = LIMIT(CFLAG:(ARG:0):지배도 + LOCAL:4, -1000, 999999999999)
+
+IF LOCAL:1 || LOCAL:2 || LOCAL:3 || LOCAL:4
+	PRINTFORM %SNAME(ARG:0), MAX_CHARANAME_LENGTH / 2%:
+	SIF ABS(LOCAL:1) > 0
+		PRINTFORM 호감도 %TOSTR_SIGN(LOCAL:1)%{ABS(LOCAL:1), 3, RIGHT}(합계:{CFLAG:(ARG:0):2, 5}) 
+	SIF ABS(LOCAL:2) > 0
+		PRINTFORM 의존도 %TOSTR_SIGN(LOCAL:2)%{ABS(LOCAL:2), 3, RIGHT}(합계:{CFLAG:(ARG:0):3, 5}) 
+	SIF ABS(LOCAL:3) > 0
+		PRINTFORM 종속도 %TOSTR_SIGN(LOCAL:3)%{ABS(LOCAL:3), 3, RIGHT}(합계:{CFLAG:(ARG:0):4, 5}) 
+	SIF ABS(LOCAL:4) > 0
+		PRINTFORM 지배도 %TOSTR_SIGN(LOCAL:4)%{ABS(LOCAL:4), 3, RIGHT}(합계:{CFLAG:(ARG:0):5, 5})
+	PRINTL 
+ENDIF
+
+;관계를 개선
+LOCAL:4 = LIMIT((LOCAL:1 + LOCAL:3) / 10, 0, 20)
+CALL CHANGE_RELATION_O_TO_O(ARG:0, MASTER, LOCAL:4, LOCAL:4 * -1)
+
+SIF FLAG:조교모드 == 조교_포로조교 && CFLAG:(ARG:0):소속 != CFLAG:MASTER:소속 && IS_COUNTRY(CFLAG:(ARG:0):소속)
+	CALL CHANGE_RELATION_O_TO_C(ARG:0, CFLAG:(ARG:0):소속, LOCAL:4 * -1 / 2, 0)
+
+;●이번 호감도·의존도·종속도의 변동량을 TCVAR:70～72에 기록
+TCVAR:(ARG:0):70 = LOCAL:1
+TCVAR:(ARG:0):71 = LOCAL:2
+TCVAR:(ARG:0):72 = LOCAL:3
+TCVAR:(ARG:0):73 = LOCAL:4
+
+;●의존도의 상승량에 응해 제삼자에게로의 친밀도를 감소시킨다
+;CALL DECREASE_LOVE_FOR_OTHERSLOVE(ARG:0)
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터에게 소스 이외의 각종 변동 처리를 실시한다
+;-------------------------------------------------
+@SOURCE_CHANGE_OTHER_STATUS(ARG:0)
+;우후후 중한정
+IF FLAG:우후후플래그
+	;공포에 의한 오줌 흘리기의 설정이 유효의 경우
+	IF CONFIG:91 == 1
+		;소변욕이 어느 정도 상태로 공포 상승량 3000이상, 또는 소변욕이 높은 상태로 공포 상승량 1000이상
+		IF (CUP:(ARG:0):포주 >= 1000 && TCVAR:(ARG:0):54 >= 3000) || (CUP:(ARG:0):포주 >= 2500 && TCVAR:(ARG:0):54 >= 1000)
+			IF TCVAR:(ARG:0):54 >= 3000
+				TCVAR:(ARG:0):1 = 2
+			ELSE
+				TCVAR:(ARG:0):1 = 1
+			ENDIF
+
+			TCVAR:(ARG:0):0 = 4
+			EXP:(ARG:0):배설경험치 += 1
+			EXP:(ARG:0):실금경험 += TCVAR:(ARG:0):1
+
+			;뇨잔량을 0으로 한다
+			TCVAR:(ARG:0):54 = 0
+		ENDIF
+	ENDIF
+
+	;이뇨제 사용중이라면 뇨잔량을 추가
+	IF TCVAR:(ARG:0):62
+		IF TALENT:(ARG:0):오줌싸개
+			TCVAR:(ARG:0):54 += 500
+		ELSE
+			TCVAR:(ARG:0):54 += 300
+		ENDIF
+	;오줌싸개라면 항상 뇨잔량을 보충
+	ELSEIF TALENT:(ARG:0):오줌싸개 && TCVAR:(ARG:0):54 < 2000
+		TCVAR:(ARG:0):54 += 200
+	ENDIF
+
+	;절정·소변욕 한계에 의한 오줌 흘리기의 설정이 무효의 경우
+	IF CONFIG:90 == 0
+		;뇨잔량이 최대에서도 2000까지 밖에 모이지 않는다
+		TCVAR:(ARG:0):54 = MIN(TCVAR:(ARG:0):54, 2000)
+
+	;설정이 유효의 경우
+	ELSE
+		;벌꿀수를 사용해도 뇨잔량이 쌓여 간다
+		IF TCVAR:(ARG:0):64 >= 1
+			TCVAR:(ARG:0):54 += TCVAR:(ARG:0):64 * 50
+			TCVAR:(ARG:0):64 --
+		ENDIF
+	ENDIF
+ENDIF
+
+
+
+;체력·기력·정신력의 감소
+DOWNBASE:(ARG:0):체력 = CALC_LOSEBASE_EXP_CORRECTION(ARG:0, DOWNBASE:(ARG:0):체력)
+DOWNBASE:(ARG:0):기력 = CALC_LOSEBASE_EXP_CORRECTION(ARG:0, DOWNBASE:(ARG:0):기력)
+
+;소질<절륜>또는 아이템 「절륜환」사용으로 소모를 경감
+IF TCVAR:(ARG:0):66
+	DOWNBASE:(ARG:0):체력 /= 10
+	DOWNBASE:(ARG:0):기력 /= 10
+ELSEIF TALENT:(ARG:0):절륜
+	DOWNBASE:(ARG:0):체력 /= 5
+	DOWNBASE:(ARG:0):기력 /= 5
+ENDIF
+
+IF CFLAG:(ARG:0):조교중BASE줄어들지않는다
+	DOWNBASE:(ARG:0):체력 = 0
+	DOWNBASE:(ARG:0):기력 = 0
+ENDIF
+
+SIF DOWNBASE:(ARG:0):체력 > 0
+	BASE:(ARG:0):체력 -= DOWNBASE:(ARG:0):체력
+
+SIF DOWNBASE:(ARG:0):기력 > 0
+	BASE:(ARG:0):기력 -= DOWNBASE:(ARG:0):기력
+
+IF FLAG:조교모드 == 2 && FINDELEMENT(PRISONER_TARGET, ARG:0) != -1
+	;기절하고 있으면 회복
+	IF TCVAR:(ARG:0):52
+		LOCAL = RAND(-100, 0)
+	ELSE
+		LOCAL = LIMIT(CUP:(ARG:0):포주 / 2 - MAXBASE:(ARG:0):정신력 / RAND(15, 21), -500, MAXBASE:(ARG:0):정신력 / 2)
+		SIF LOCAL > 0
+			LOCAL = LOCAL * MAX(10000 - MAX(CFLAG:(ARG:0):호감도, CFLAG:(ARG:0):종속도, 0), 5000) / 10000
+	ENDIF
+	SELECTCASE INRANGEARRAY(PRISONER_TARGET, 0, CHARANUM + 1)
+		CASE 2
+			SIF LOCAL >= 0
+				TIMES LOCAL, 1.30
+		CASE 3
+			SIF LOCAL >= 0
+				TIMES LOCAL, 1.50
+	ENDSELECT
+	BASE:(ARG:0):정신력 = LIMIT(BASE:(ARG:0):정신력 - LOCAL, -500, MAXBASE:(ARG:0):정신력)
+	IF BASE:(ARG:0):정신력 < 0
+		CFLAG:(ARG:0):붕괴 += (100 - BASE:(ARG:0):정신력 / 2) * (MAX(MAXBASE:(ARG:0):정신력, 1000) / 1000)
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;체력 기력 소비량의, 절정경험에서의 보정
+;절정경험에 비례해 줄어든다
+;-------------------------------------------------
+@CALC_LOSEBASE_EXP_CORRECTION(대상, 소비량)
+#FUNCTION
+#DIM 대상
+#DIM 소비량
+;PRINTFORML 소비량{소비량}
+;PRINTFORML 보정 후{소비량 - 소비량 * MIN(EXP:대상:절정경험, 5000)/10000}
+;절정경험 1에 대해 0.1%, 700으로 70%로 최후
+RETURNF 소비량 - 소비량 * MIN(EXP:대상:절정경험, 700) / 1000
+
+;RETURNF 소비량 * (10000/MAX(EXP:대상:절정경험/50, 1))/10000
+
+
+;-------------------------------------------------
+;@PRINT_EXP_UP내에서 사용하는 함수
+;-------------------------------------------------
+@PRINT_COM_RESULT(ARGS:0)
+IF TFLAG:95
+	TFLAG:95 = 0
+	PRINTFORM %ANAME(TFLAG:94), 8, RIGHT%:
+	LOCAL:0 = 9
+ELSE
+	PRINT  
+ENDIF
+
+LOCAL:0 += STRLENS(ARGS:0) + 1
+
+IF LOCAL:0 >= 80
+	PRINTL 
+	PRINT          
+	LOCAL:0 = 9
+ENDIF
+
+PRINTFORM %ARGS:0%
+
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터가 커맨드 실행에 의해 얻은 잃은 체력을 표시
+;-------------------------------------------------
+@PRINT_BASE_LOSE(ARG:0)
+;●체력·기력의 표시
+TFLAG:94 = ARG:0
+TFLAG:95 = 1
+
+FOR LOCAL:0, 0, 2
+	IF DOWNBASE:(ARG:0):(LOCAL:0) > 0
+		CALL PRINT_COM_RESULT(@"%BASENAME:(LOCAL:0)%-{DOWNBASE:(ARG:0):(LOCAL:0)}")
+	ENDIF
+NEXT
+
+IF !TFLAG:95
+	PRINTL 
+ENDIF
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터가 커맨드 실행에 의해 얻은 EXP를 표시
+;주도도·도착도의 변화도 여기서 처리
+;-------------------------------------------------
+@PRINT_EXP_UP(대상)
+#DIM 대상
+#DIM 주도도변화량
+#DIM 도착도변화량
+#DIM 도착도변화기준
+LOCAL:5 = 1
+
+TFLAG:94 = 대상
+TFLAG:95 = 1
+
+;●주도도·도착도의 변동과 표시
+;능력 고정 플래그가 서 있는 경우도 변동시키지 않다
+IF !CFLAG:대상:능력고정플래그
+	주도도변화량 = TFLAG:49
+	도착도변화량 = TFLAG:50 + TCVAR:대상:50
+	도착도변화기준 = TCVAR:대상:50
+
+	IF TALENT:대상:Ｓ기질 && TFLAG:49 > 0
+		TIMES 주도도변화량, 2.00
+	ENDIF
+	IF TALENT:대상:Ｍ기질 && TFLAG:49 < 0
+		TIMES 주도도변화량, 2.00
+	ENDIF
+	IF TALENT:대상:도착적 && TFLAG:50 > 0
+		TIMES 도착도변화량, 2.00
+		TIMES 도착도변화기준, 2.00
+	ENDIF
+
+	IF IS_MPLY(대상)
+		;우후후중
+		IF FLAG:우후후플래그
+			SELECTCASE GET_COM_INITIATIVE()
+				CASE 0
+				CASE 1
+					주도도변화량 *= -1
+				CASE 2
+					주도도변화량 = 1
+				CASE 3
+					주도도변화량 = -1
+			ENDSELECT
+			ABL:대상:주도도Ｕ = LIMIT(ABL:대상:주도도Ｕ + 주도도변화량, -1000, 1000)
+		;비우후후
+		ELSE
+			SELECTCASE GET_COM_INITIATIVE()
+				CASE 0
+				CASE 1
+					주도도변화량 *= -1
+			ENDSELECT
+			ABL:대상:주도도Ｎ = LIMIT(ABL:대상:주도도Ｎ + 주도도변화량, -1000, 1000)
+		ENDIF
+
+	ELSEIF IS_MTAR(대상)
+		;우후후중
+		IF FLAG:우후후플래그
+			SELECTCASE GET_COM_INITIATIVE()
+				CASE 0
+					주도도변화량 *= -1
+				CASE 1
+				CASE 2
+					주도도변화량 = -1
+				CASE 3
+					주도도변화량 = 1
+			ENDSELECT
+		;비우후후
+		ELSE
+			SELECTCASE GET_COM_INITIATIVE()
+				CASE 0
+					주도도변화량 *= -1
+				CASE 1
+			ENDSELECT
+		ENDIF
+
+	ELSE
+		주도도변화량 = 0
+		도착도변화량 = 도착도변화기준
+	ENDIF
+
+	IF FLAG:우후후플래그
+		;커맨드에 참가하고 있을수록, 회복 하기 어려워진다
+		FOR LOCAL:0, 0, MEQUIP_NUM
+			FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+				IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == 대상
+					FOR LOCAL:3, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+						IF MEQUIP_INITIATIVE:(LOCAL:0) == MEQUIP_PLAYER:(LOCAL:0):(LOCAL:3)
+							주도도변화량 ++
+							GOTO FOUND
+						ENDIF
+					NEXT
+					FOR LOCAL:3, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+						IF MEQUIP_INITIATIVE:(LOCAL:0) == MEQUIP_TARGET:(LOCAL:0):(LOCAL:3)
+							주도도변화량 --
+							GOTO FOUND
+						ENDIF
+					NEXT
+					GOTO FOUND
+				ENDIF
+			NEXT
+			FOR LOCAL:1, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+				IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:1) == 대상
+					FOR LOCAL:3, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+						IF MEQUIP_INITIATIVE:(LOCAL:0) == MEQUIP_TARGET:(LOCAL:0):(LOCAL:3)
+							주도도변화량 ++
+							GOTO FOUND
+						ENDIF
+					NEXT
+					FOR LOCAL:3, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+						IF MEQUIP_INITIATIVE:(LOCAL:0) == MEQUIP_PLAYER:(LOCAL:0):(LOCAL:3)
+							주도도변화량 --
+							GOTO FOUND
+						ENDIF
+					NEXT
+					GOTO FOUND
+				ENDIF
+			NEXT
+			$FOUND
+		NEXT
+	ENDIF
+
+	ABL:대상:도착도 = LIMIT(ABL:대상:도착도 + 도착도변화량, 0, 1000)
+
+	IF FLAG:우후후플래그
+		ABL:대상:주도도Ｕ = LIMIT(ABL:대상:주도도Ｕ + 주도도변화량, -1000, 1000)
+	ELSE
+		ABL:대상:주도도Ｎ = LIMIT(ABL:대상:주도도Ｎ + 주도도변화량, -1000, 1000)
+	ENDIF
+
+	IF 주도도변화량 != 0
+		CALL PRINT_COM_RESULT(@"주도도 %TOSTR_SIGN(주도도변화량)%{ABS(주도도변화량)}")
+	ENDIF
+	IF 도착도변화량 != 0
+		CALL PRINT_COM_RESULT(@"도착도 %TOSTR_SIGN(도착도변화량)%{ABS(도착도변화량)}")
+	ENDIF
+ENDIF
+
+;●주인공이 취득 할 수 없는 경험을 리셋트
+;IF 대상 == MASTER
+;	EXP:MASTER:10 = TCVAR:MASTER:110
+;	EXP:MASTER:11 = TCVAR:MASTER:111
+;	EXP:MASTER:12 = TCVAR:MASTER:112
+;	EXP:MASTER:13 = TCVAR:MASTER:113
+;	EXP:MASTER:14 = TCVAR:MASTER:114
+;	EXP:MASTER:15 = TCVAR:MASTER:115
+;	EXP:MASTER:16 = TCVAR:MASTER:116
+;	EXP:MASTER:19 = TCVAR:MASTER:119
+;	EXP:MASTER:20 = TCVAR:MASTER:120
+;	EXP:MASTER:21 = TCVAR:MASTER:121
+;	EXP:MASTER:31 = TCVAR:MASTER:131
+;ENDIF
+
+;●능력 고정 플래그가 서 있는 경우, 모든 경험을 리셋트
+IF CFLAG:대상:능력고정플래그
+	FOR LOCAL:0, 0, 100
+		EXP:대상:(LOCAL:0) = TCVAR:대상:(LOCAL:0 + 100)
+	NEXT
+ENDIF
+
+;●경험의 표시
+FOR LOCAL:0, 0, 94
+	IF EXP:대상:(LOCAL:0) > TCVAR:대상:(LOCAL:0 + 100)
+		CALL PRINT_COM_RESULT(@"%EXPNAME:(LOCAL:0)%+{EXP:대상:(LOCAL:0) - TCVAR:대상:(LOCAL:0 + 100)}")
+	ENDIF
+NEXT
+
+IF !TFLAG:95
+	PRINTL 
+ENDIF
+
+;-------------------------------------------------
+;캐릭터 ARG:0에 레벨 ARG:1의 기성 사실을 취득시키는 함수(이미 지정 이상의 레벨이라면 무시)
+;-------------------------------------------------
+@SET_COUPLE_STEP(ARG:0, ARG:1)
+IF ARG:0 != MASTER && ARG:1 > MARK:(ARG:0):기성사실
+	MARK:(ARG:0):기성사실 = ARG:1
+	PRINTFORM %조사처리(ANAME(ARG:0),"가")%
+	SETCOLOR 칼라_주의
+	PRINTFORM 기성 사실 Lv{ARG:1}
+	RESETCOLOR
+	PRINTW 를 취득
+ENDIF
+
+;-------------------------------------------------
+;동성의 경우의 소스 보정
+;-------------------------------------------------
+@SOURCE_SEX_CHECK(ARG:0)
+LOCAL:5 = -1
+;자신이 타겟이라면, 플레이어에 적어도 한사람 동성의 캐릭터가 필요
+IF IS_MTAR(ARG:0)
+	FOR LOCAL:0, 0, MPLY_NUM
+		IF IS_SAMESEX(MPLY:(LOCAL:0), ARG:0)
+			IF IS_MALE(ARG:0)
+				LOCAL:5 = ABL:(ARG:0):ＢＬ
+			ELSE
+				LOCAL:5 = ABL:(ARG:0):레즈
+			ENDIF
+			BREAK
+		ENDIF
+	NEXT
+;자신이 플레이어라면, 타겟으로 적어도 한사람 동성의 캐릭터가 필요
+ELSEIF IS_MPLY(ARG:0)
+	FOR LOCAL:0, 0, MTAR_NUM
+		IF IS_SAMESEX(MTAR:(LOCAL:0), ARG:0)
+			IF IS_MALE(ARG:0)
+				LOCAL:5 = ABL:(ARG:0):ＢＬ
+			ELSE
+				LOCAL:5 = ABL:(ARG:0):레즈
+			ENDIF
+			BREAK
+		ENDIF
+	NEXT
+ENDIF
+
+;동성 보정을 받는 상황이 아니면 돌아온다
+IF LOCAL:5 == -1
+	RETURN
+ENDIF
+
+;●쾌감 소스의 보정
+SELECTCASE LOCAL:5
+	CASE 0
+		LOCAL:6 = 700
+	CASE 1
+		LOCAL:6 = 850
+	CASE 2
+		LOCAL:6 = 1000
+	CASE 3
+		LOCAL:6 = 1050
+	CASE 4
+		LOCAL:6 = 1100
+	CASEELSE
+		LOCAL:6 = MIN(1150 + (LOCAL:5 - 5) * 5, 2000)
+ENDSELECT
+FOR LOCAL:0, 0, 5
+	SOURCE:(ARG:0):(LOCAL:0) = SOURCE:(ARG:0):(LOCAL:0) * LOCAL:6 / 1000
+NEXT
+
+;●쾌감 이외의 소스의 보정
+;[바이]가 없는 상대에게 우후후코만드를 실시했을 경우
+IF !TALENT:(ARG:0):바이 && FLAG:우후후플래그
+	SELECTCASE LOCAL:5
+		CASE 0
+			SOURCE:(ARG:0):일탈 += MIN(SOURCE:(ARG:0):접촉, 150) * 3
+		CASE 1
+			SOURCE:(ARG:0):일탈 += MIN(SOURCE:(ARG:0):접촉, 150) * 2
+		CASE 2
+			SOURCE:(ARG:0):일탈 += MIN(SOURCE:(ARG:0):접촉, 150) * 1
+		CASE 3
+			SOURCE:(ARG:0):일탈 += MIN(SOURCE:(ARG:0):접촉, 150) / 2
+		CASE 4
+			SOURCE:(ARG:0):일탈 += MIN(SOURCE:(ARG:0):접촉, 150) / 5
+	ENDSELECT
+ENDIF
+
+SELECTCASE LOCAL:5
+	CASE 0
+		TIMES SOURCE:(ARG:0):애정, 0.20
+		SOURCE:(ARG:0):중독충족 += 0
+	CASE 1
+		TIMES SOURCE:(ARG:0):애정, 0.50
+		SOURCE:(ARG:0):중독충족 += MIN(SOURCE:(ARG:0):접촉, 150) / 10
+	CASE 2
+		TIMES SOURCE:(ARG:0):애정, 0.80
+		SOURCE:(ARG:0):중독충족 += MIN(SOURCE:(ARG:0):접촉, 150) / 3
+	CASE 3
+		TIMES SOURCE:(ARG:0):애정, 1.00
+		SOURCE:(ARG:0):중독충족 += MIN(SOURCE:(ARG:0):접촉, 150) * 1
+	CASE 4
+		TIMES SOURCE:(ARG:0):애정, 1.05
+		SOURCE:(ARG:0):중독충족 += MIN(SOURCE:(ARG:0):접촉, 150) * 3 / 2
+	CASEELSE
+		SOURCE:(ARG:0):애정 = SOURCE:(ARG:0):애정 * MIN(110 + (LOCAL:5 - 5), 150) / 100
+		SOURCE:(ARG:0):중독충족 += MIN(SOURCE:(ARG:0):접촉, 150) * ((LOCAL:5 - 5) * 1 + 20) / 10
+ENDSELECT
+
+;-------------------------------------------------
+;쾌감계경험을 취득
+;ARG:0=캐릭터 번호 ARG:1=EXP 번호 ARG:2=변동전의 PALAM
+;-------------------------------------------------
+@ADD_EXP_SENSE(ARG:0, ARG:1, ARG:2)
+
+IF NOWEX:(ARG:0):(ARG:1) >= 1
+	SELECTCASE CUP:(ARG:0):(ARG:1)
+		CASE IS < 1500
+			LOCAL:5 = 3
+		CASE IS < 3000
+			LOCAL:5 = 5
+		CASE IS < 6000
+			LOCAL:5 = 15
+		CASE IS < 30000
+			LOCAL:5 = 25
+		CASE IS < 50000
+			LOCAL:5 = 35
+		CASE IS < 100000
+			LOCAL:5 = 60
+		CASE IS < 200000
+			LOCAL:5 = 80
+		CASE IS < 400000
+			LOCAL:5 = 120
+		CASEELSE
+			LOCAL:5 = 160
+	ENDSELECT
+	GOTO FINALLY
+ENDIF
+
+
+
+SIF PALAM:(ARG:0):(ARG:1) - ARG:2 == 0
+	RETURN 0
+
+SELECTCASE PALAM:(ARG:0):(ARG:1) - ARG:2
+	CASE IS < 500
+		LOCAL:5 = 1
+	CASE IS < 1500
+		LOCAL:5 = 2
+	CASE IS < 3000
+		LOCAL:5 = 4
+	CASE IS < 5000
+		LOCAL:5 = 8
+	CASE IS < 7500
+		LOCAL:5 = 12
+	CASE IS < 10000
+		LOCAL:5 = 17
+	CASEELSE
+		LOCAL:5 = 22
+ENDSELECT
+
+$FINALLY
+
+SIF LOCAL:5 <= 0
+	RETURN
+
+FOR LOCAL, 0, 9
+	SIF LOCAL == ARG:1
+		CONTINUE
+	LOCAL:5 += NOWEX:(ARG:0):LOCAL
+NEXT
+EXP:(ARG:0):(ARG:1) += LOCAL:5
+
+;-------------------------------------------------
+;각종 경험의 취득
+;-------------------------------------------------
+@EXP_GOT_CHECK(ARG:0)
+
+IF IS_MPLY(ARG:0)
+	COM_EXP:(ARG:0):SELECTCOM = MIN(COM_EXP:(ARG:0):SELECTCOM + 10, 99999990)
+ELSEIF IS_MTAR(ARG:0)
+	COM_EXP:(ARG:0):(SELECTCOM + 1000) = MIN(COM_EXP:(ARG:0):(SELECTCOM + 1000) + 10, 99999990)
+ELSE
+	COM_EXP:(ARG:0):(SELECTCOM + 2000) = MIN(COM_EXP:(ARG:0):(SELECTCOM + 2000) + 10, 99999990)
+ENDIF
+
+;계속중의 커맨드에도 반경험이 들어간다
+FOR LOCAL:0, 0, MAX_MEQUIP
+	IF MEQUIP:(LOCAL:0) >= 0 && MEQUIP:(LOCAL:0) != SELECTCOM
+		IF IS_MPLY_EQUIP(ARG:0, LOCAL:0)
+			COM_EXP:(ARG:0):(MEQUIP:(LOCAL:0)) = MIN(COM_EXP:(ARG:0):(MEQUIP:(LOCAL:0)) + 5, 99999990)
+		ELSEIF IS_MTAR_EQUIP(ARG:0, LOCAL:0)
+			COM_EXP:(ARG:0):(MEQUIP:(LOCAL:0) + 1000) = MIN(COM_EXP:(ARG:0):(MEQUIP:(LOCAL:0) + 1000) + 5, 99999990)
+		ELSE
+			COM_EXP:(ARG:0):(MEQUIP:(LOCAL:0) + 2000) = MIN(COM_EXP:(ARG:0):(MEQUIP:(LOCAL:0) + 2000) + 5, 99999990)
+		ENDIF
+	ENDIF
+NEXT
+
+IF TCVAR:(ARG:0):최면중 > 0
+	EXP:(ARG:0):최면경험치 += MAX(TCVAR:(ARG:0):최면중 / 2 , 1)
+	EXP:(ARG:0):피최면경험 ++
+	SEXUAL_PREFERENCE_EXP:(ARG:0):성적기호_최면을걸쳐지고싶다 ++
+	EXP:MASTER:최면경험치 ++
+ENDIF
+
+;수간경험(이번 커맨드)
+IF IS_MPLY(ARG:0)
+	FOR LOCAL, 0, MTAR_NUM
+		IF FLAG:우후후플래그 && IS_ANIMAL(MTAR:(LOCAL))
+			EXP:(ARG:0):수간경험 ++
+			SEXUAL_PREFERENCE_EXP:(ARG:0):성적기호_짐승과사귀고싶다 ++
+		ENDIF
+		SIF TALENT:(MTAR:LOCAL):특수세력소질 == 특수세력_촉수
+			EXP:(ARG:0):촉수경험치 ++ 
+		IF FLAG:우후후플래그 && (HAS_SAME_FATHER(ARG:0, MTAR:LOCAL) || HAS_SAME_MOTHER(ARG:0, MTAR:LOCAL) || IS_FATHER(ARG:0, MTAR:LOCAL) || IS_MOTHER(ARG:0, MTAR:LOCAL) || IS_FATHER(MTAR:LOCAL, ARG:0) || IS_MOTHER(MTAR:LOCAL, ARG:0))
+			EXP:(ARG:0):근친상간경험 ++
+			SEXUAL_PREFERENCE_EXP:(ARG:0):성적기호_근친상간하고싶다 ++
+		ENDIF
+	NEXT
+ENDIF
+
+IF IS_MTAR(ARG:0)
+	FOR LOCAL, 0, MPLY_NUM
+		IF FLAG:우후후플래그 && IS_ANIMAL(MPLY:(LOCAL))
+			EXP:(ARG:0):수간경험 ++
+			SEXUAL_PREFERENCE_EXP:(ARG:0):성적기호_짐승과사귀고싶다 ++
+		ENDIF
+		IF TALENT:(MPLY:LOCAL):특수세력소질 == 특수세력_촉수
+			EXP:(ARG:0):촉수경험치 ++ 
+			SEXUAL_PREFERENCE_EXP:(ARG:0):성적기호_촉수로범해지고싶다 ++
+		ENDIF
+		IF FLAG:우후후플래그 && (HAS_SAME_FATHER(ARG:0, MPLY:LOCAL) || HAS_SAME_MOTHER(ARG:0, MPLY:LOCAL) || IS_FATHER(ARG:0, MPLY:LOCAL) || IS_MOTHER(ARG:0, MPLY:LOCAL) || IS_FATHER(MPLY:LOCAL, ARG:0) || IS_MOTHER(MPLY:LOCAL, ARG:0))
+			EXP:(ARG:0):근친상간경험 ++
+			SEXUAL_PREFERENCE_EXP:(ARG:0):성적기호_근친상간하고싶다 ++
+		ENDIF
+	NEXT
+ENDIF
+
+;수간경험(MEQUIP)
+FOR LOCAL:0, 0, MEQUIP_NUM
+	IF MEQUIP:(LOCAL:0) >= 0 && MEQUIP:(LOCAL:0) != SELECTCOM
+		;대상의 것이 플레이어가 되어 있는 MEQUIP에 관해서, 타겟으로 동물이 있으면 수간경험을 가산
+		IF IS_MPLY_EQUIP(ARG:0, LOCAL:0)
+			FOR LOCAL:1, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+				LOCAL:2 = MEQUIP_TARGET:(LOCAL:0):(LOCAL:1)
+				IF FLAG:우후후플래그 && IS_ANIMAL(LOCAL:2)
+					EXP:(ARG:0):수간경험 ++
+					SEXUAL_PREFERENCE_EXP:(ARG:0):성적기호_짐승과사귀고싶다 ++
+				ENDIF
+				IF FLAG:우후후플래그 && (HAS_SAME_FATHER(ARG:0, LOCAL:2) || HAS_SAME_MOTHER(ARG:0, LOCAL:2) || IS_FATHER(ARG:0, LOCAL:2) || IS_MOTHER(ARG:0, LOCAL:2) || IS_FATHER(LOCAL:2, ARG:0) || IS_MOTHER(LOCAL:2, ARG:0))
+					EXP:(ARG:0):근친상간경험 ++
+					SEXUAL_PREFERENCE_EXP:(ARG:0):성적기호_근친상간하고싶다 ++
+				ENDIF
+				IF IS_SAMESEX(LOCAL:2, ARG:0)
+					IF IS_MALE(ARG:0)
+						EXP:(ARG:0):ＢＬ경험치 += 1
+					ELSE
+						EXP:(ARG:0):레즈경험치 += 1
+					ENDIF
+					SEXUAL_PREFERENCE_EXP:(ARG:0):성적기호_동성과사귀고싶다 ++
+				ENDIF
+			NEXT
+
+		;상기의 타겟과 플레이어가 역의 버젼
+		ELSEIF IS_MTAR_EQUIP(ARG:0, LOCAL:0)
+			FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+				LOCAL:2 = MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1)
+				IF FLAG:우후후플래그 && IS_ANIMAL(LOCAL:2)
+					EXP:(ARG:0):수간경험 ++
+					SEXUAL_PREFERENCE_EXP:(ARG:0):성적기호_짐승과사귀고싶다 ++
+				ENDIF
+				IF FLAG:우후후플래그 && (HAS_SAME_FATHER(ARG:0, LOCAL:2) || HAS_SAME_MOTHER(ARG:0, LOCAL:2) || IS_FATHER(ARG:0, LOCAL:2) || IS_MOTHER(ARG:0, LOCAL:2) || IS_FATHER(LOCAL:2, ARG:0) || IS_MOTHER(LOCAL:2, ARG:0))
+					EXP:(ARG:0):근친상간경험 ++
+					SEXUAL_PREFERENCE_EXP:(ARG:0):성적기호_근친상간하고싶다 ++
+				ENDIF
+				IF IS_SAMESEX(LOCAL:2, ARG:0)
+					IF IS_MALE(ARG:0)
+						EXP:(ARG:0):ＢＬ경험치 += 1
+					ELSE
+						EXP:(ARG:0):레즈경험치 += 1
+					ENDIF
+					SEXUAL_PREFERENCE_EXP:(ARG:0):성적기호_동성과사귀고싶다 ++
+				ENDIF
+			NEXT
+		ENDIF
+	ENDIF
+NEXT
+
+;●레즈·ＢＬ경험
+IF TFLAG:51 > 0
+	IF IS_MTAR(ARG:0)
+		FOR LOCAL:0, 0, MPLY_NUM
+			IF IS_SAMESEX(MPLY:(LOCAL:0), ARG:0)
+				IF IS_MALE(ARG:0)
+					EXP:(ARG:0):ＢＬ경험치 += TFLAG:51
+				ELSE
+					EXP:(ARG:0):레즈경험치 += TFLAG:51
+				ENDIF
+				SEXUAL_PREFERENCE_EXP:(ARG:0):성적기호_동성과사귀고싶다 ++
+			ENDIF
+		NEXT
+	ELSEIF IS_MPLY(ARG:0)
+		FOR LOCAL:0, 0, MTAR_NUM
+			IF IS_SAMESEX(MTAR:(LOCAL:0), ARG:0)
+				IF IS_MALE(ARG:0)
+					EXP:(ARG:0):ＢＬ경험치 += TFLAG:51
+				ELSE
+					EXP:(ARG:0):레즈경험치 += TFLAG:51
+				ENDIF
+				SEXUAL_PREFERENCE_EXP:(ARG:0):성적기호_동성과사귀고싶다 ++
+			ENDIF
+		NEXT
+	ENDIF
+ENDIF
+
+IF FLAG:조교모드 == 조교_위안
+	SEXUAL_PREFERENCE_EXP:(ARG:0):성적기호_매춘하고싶다 ++	
+ELSEIF FLAG:조교모드 == 조교_포로조교 && FINDELEMENT(PRISONER_TARGET, ARG:0) != -1
+	SEXUAL_PREFERENCE_EXP:(ARG:0):성적기호_조교되고싶다 ++
+ENDIF
+
+;●봉사경험치
+;봉사경험치를 얻을 수 있는 커맨드의 플래그
+IF TCVAR:(ARG:0):4
+	LOCAL:0 = CUP_SENSE(ARG:0)
+	LOCAL:1 = 0
+	IF LOCAL:0 >= 12000
+		LOCAL:1 = 16
+		IF CUP:(ARG:0):로주 > 0
+			TIMES CUP:(ARG:0):로주, 0.40
+		ENDIF
+	ELSEIF LOCAL:0 >= 8000
+		LOCAL:1 = 12
+		IF CUP:(ARG:0):로주 > 0
+			TIMES CUP:(ARG:0):로주, 0.50
+		ENDIF
+	ELSEIF LOCAL:0 >= 5000
+		LOCAL:1 = 8
+		IF CUP:(ARG:0):로주 > 0
+			TIMES CUP:(ARG:0):로주, 0.60
+		ENDIF
+	ELSEIF LOCAL:0 >= 3000
+		LOCAL:1 = 4
+		IF CUP:(ARG:0):로주 > 0
+			TIMES CUP:(ARG:0):로주, 0.70
+		ENDIF
+	ELSEIF LOCAL:0 >= 1000
+		LOCAL:1 = 2
+		IF CUP:(ARG:0):로주 > 0
+			TIMES CUP:(ARG:0):로주, 0.80
+		ENDIF
+	ELSEIF LOCAL:0 >= 300
+		LOCAL:1 = 1
+		IF CUP:(ARG:0):로주 > 0
+			TIMES CUP:(ARG:0):로주, 0.90
+		ENDIF
+	ENDIF
+	CALL CALC_ABLUP_EXP20(ARG:0)
+	LOCAL:1 = MIN(LOCAL:1, RESULT * 2)
+
+	EXP:(ARG:0):봉사경험치 += LOCAL:1
+ENDIF
+
+;●고통쾌락경험
+LOCAL:0 = CUP_SENSE(ARG:0)
+LOCAL:1 = 0
+IF LOCAL:0 >= 3000 && SOURCE:(ARG:0):고통 >= 2000
+	LOCAL:1 = 16
+	IF CUP:(ARG:0):로주 > 0
+		TIMES CUP:(ARG:0):로주, 0.40
+	ENDIF
+ELSEIF LOCAL:0 >= 2500 && SOURCE:(ARG:0):고통 >= 1500
+	LOCAL:1 = 12
+	IF CUP:(ARG:0):로주 > 0
+		TIMES CUP:(ARG:0):로주, 0.50
+	ENDIF
+ELSEIF LOCAL:0 >= 1500 && SOURCE:(ARG:0):고통 >= 1000
+	LOCAL:1 = 8
+	IF CUP:(ARG:0):로주 > 0
+		TIMES CUP:(ARG:0):로주, 0.60
+	ENDIF
+ELSEIF LOCAL:0 >= 1000 && SOURCE:(ARG:0):고통 >= 500
+	LOCAL:1 = 4
+	IF CUP:(ARG:0):로주 > 0
+		TIMES CUP:(ARG:0):로주, 0.70
+	ENDIF
+ELSEIF LOCAL:0 >= 600 && SOURCE:(ARG:0):고통 >= 300
+	LOCAL:1 = 2
+	IF CUP:(ARG:0):로주 > 0
+		TIMES CUP:(ARG:0):로주, 0.80
+	ENDIF
+ELSEIF LOCAL:0 >= 300 && SOURCE:(ARG:0):고통 >= 100
+	LOCAL:1 = 1
+	IF CUP:(ARG:0):로주 > 0
+		TIMES CUP:(ARG:0):로주, 0.90
+	ENDIF
+ENDIF
+EXP:(ARG:0):고통쾌락경험 += LOCAL:1
+
+;●노출 쾌락 경험
+LOCAL:0 = CUP_SENSE(ARG:0)
+LOCAL:1 = 0
+IF LOCAL:0 >= 10000 && SOURCE:(ARG:0):노출보존 >= 2000
+	LOCAL:1 = 16
+ELSEIF LOCAL:0 >= 6000 && SOURCE:(ARG:0):노출보존 >= 1500
+	LOCAL:1 = 12
+ELSEIF LOCAL:0 >= 3000 && SOURCE:(ARG:0):노출보존 >= 1000
+	LOCAL:1 = 8
+ELSEIF LOCAL:0 >= 1500 && SOURCE:(ARG:0):노출보존 >= 600
+	LOCAL:1 = 4
+ELSEIF LOCAL:0 >= 600 && SOURCE:(ARG:0):노출보존 >= 300
+	LOCAL:1 = 2
+ELSEIF LOCAL:0 >= 300 && SOURCE:(ARG:0):노출보존 >= 100
+	LOCAL:1 = 1
+ENDIF
+EXP:(ARG:0):노출경험치 += LOCAL:1
+
+;●트라우마경험의 취득
+LOCAL:0 = CUP:(ARG:0):포주
+IF LOCAL:0 >= 10000
+	EXP:(ARG:0):트라우마경험 += 16
+ELSEIF LOCAL:0 >= 5000
+	EXP:(ARG:0):트라우마경험 += 8
+ELSEIF LOCAL:0 >= 3000
+	EXP:(ARG:0):트라우마경험 += 4
+ELSEIF LOCAL:0 >= 1500
+	EXP:(ARG:0):트라우마경험 += 2
+ELSEIF LOCAL:0 >= 500
+	EXP:(ARG:0):트라우마경험 += 1
+ENDIF
+
+;-------------------------------------------------
+;성벽 설정에 응한 소스의 추가
+;-------------------------------------------------
+@ADD_SOURCE_TENDENCY(ARG:0)
+;이번 실행한 커맨드의 처리
+IF IS_MPLY(ARG:0)
+	SELECTCASE COM_TENDENCY:(ARG:0):SELECTCOM
+		CASE 1
+			SOURCE:(ARG:0):중독충족 += 200
+		CASE 2
+			SOURCE:(ARG:0):중독충족 += 500
+		CASE 3
+			SOURCE:(ARG:0):중독충족 += 1000
+	ENDSELECT
+ELSEIF IS_MTAR(ARG:0)
+	SELECTCASE COM_TENDENCY:(ARG:0):(SELECTCOM + 1000)
+		CASE 1
+			SOURCE:(ARG:0):중독충족 += 200
+		CASE 2
+			SOURCE:(ARG:0):중독충족 += 500
+		CASE 3
+			SOURCE:(ARG:0):중독충족 += 1000
+	ENDSELECT
+ELSE
+	SELECTCASE COM_TENDENCY:(ARG:0):(SELECTCOM + 2000)
+		CASE 1
+			SOURCE:(ARG:0):중독충족 += 100
+		CASE 2
+			SOURCE:(ARG:0):중독충족 += 250
+		CASE 3
+			SOURCE:(ARG:0):중독충족 += 500
+	ENDSELECT
+ENDIF
+
+;EQUIP 관계의 처리
+FOR LOCAL:0, 0, MAX_MEQUIP
+	IF MEQUIP:(LOCAL:0) >= 0
+		LOCAL:5 = 2
+		FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(LOCAL:0)
+			IF MEQUIP_PLAYER:(LOCAL:0):(LOCAL:1) == ARG:0
+				LOCAL:5 = 0
+				BREAK
+			ENDIF
+		NEXT
+		IF LOCAL:5 == 2
+			FOR LOCAL:1, 0, MEQUIP_TARGET_NUM:(LOCAL:0)
+				IF MEQUIP_TARGET:(LOCAL:0):(LOCAL:1) == ARG:0
+					LOCAL:5 = 1
+					BREAK
+				ENDIF
+			NEXT
+		ENDIF
+		IF SELECTCOM >= 0 && SELECTCOM <= 299
+			IF LOCAL:5 == 0
+				SELECTCASE COM_TENDENCY:(ARG:0):SELECTCOM
+					CASE 1
+						SOURCE:(ARG:0):중독충족 += 100
+					CASE 2
+						SOURCE:(ARG:0):중독충족 += 250
+					CASE 3
+						SOURCE:(ARG:0):중독충족 += 500
+				ENDSELECT
+			ELSEIF LOCAL:5 == 1
+				SELECTCASE COM_TENDENCY:(ARG:0):(SELECTCOM + 1000)
+					CASE 1
+						SOURCE:(ARG:0):중독충족 += 100
+					CASE 2
+						SOURCE:(ARG:0):중독충족 += 250
+					CASE 3
+						SOURCE:(ARG:0):중독충족 += 500
+				ENDSELECT
+			ELSE
+				
+				SELECTCASE COM_TENDENCY:(ARG:0):(SELECTCOM + 2000)
+					CASE 1
+						SOURCE:(ARG:0):중독충족 += 50
+					CASE 2
+						SOURCE:(ARG:0):중독충족 += 125
+					CASE 3
+						SOURCE:(ARG:0):중독충족 += 250
+				ENDSELECT
+			ENDIF
+		ENDIF
+	ENDIF
+NEXT
+

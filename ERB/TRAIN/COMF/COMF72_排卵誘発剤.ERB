@@ -1,0 +1,270 @@
+﻿
+;배란유발제
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME72
+LOCALS:0 = 배란유발제
+
+RESULTS:0 = %조사처리(LOCALS:0,"를")% 먹인다
+RESULTS:1 = %조사처리(LOCALS:0,"를")% 음당한다
+RESULTS:2 = %조사처리(LOCALS:0,"를")% 먹이게 한다
+RESULTS:3 = %조사처리(LOCALS:0,"를")% 먹게 된다
+RESULTS:4 = %조사처리(LOCALS:0,"를")% 먹이게 한다
+RESULTS:5 = %LOCALS:0%사용 과시하고
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE72
+;공통 부분
+CALL COM_ABLE_COMMON(72)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 1명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 1
+	RETURN 0
+;타겟은 1명 이상
+SIF MTAR_NUM <= 0 
+	RETURN 0
+;플레이어가 행동불능이라면 불가
+SIF !IS_PLAYABLE(MPLY:0)
+	RETURN 0
+;배란유발제가 필요
+SIF ITEM:배란유발제 < MTAR_NUM && ITEM:A_배란유발제 < MTAR_NUM
+	RETURN 0
+;플레이어가 구속중이라면 불가
+SIF IS_BIND(MPLY:0)
+	RETURN 0
+;플레이어가 풋잡·전기안마중이라면 불가
+SIF IS_EQUIP_PLAYER(MPLY:0, 14, 103)
+	RETURN 0
+FOR LOCAL, 0, MTAR_NUM
+	;타겟의 입이 막히고 있다면 불가
+	SIF IS_M_HOLD(MTAR:LOCAL)
+		RETURN 0
+	;타겟이 여자가 아니면 불가（마셨다는 의미 없겠지）
+	SIF !IS_FEMALE(MTAR:LOCAL)
+		RETURN 0
+	SIF TALENT:(MTAR:LOCAL):임신
+		RETURN 0
+	;이미 타겟이 배란유발제를 사용되고 있다면 불가
+	SIF TCVAR:(MTAR:LOCAL):65
+		RETURN 0
+	;타겟으로부터 플레이어에 삽입중에서 체위가 후배위·배면좌위라면 불가
+	SIF GROUPMATCH(GET_SEX_POSITION(MTAR:LOCAL, MPLY:0), 2, 4)
+		RETURN 0
+NEXT
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM72
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;배란유발제를 1개 감소시킨다(추가 아이템 사용시는 감소시키지 않다)
+IF ITEM:A_배란유발제 <= 0
+	ITEM:배란유발제 = MAX(ITEM:배란유발제 - MTAR_NUM, 0)
+ENDIF
+
+;●플레이어측의 처리
+
+;●타겟측의 처리
+FOR LOCAL, 0, MTAR_NUM
+	;배란유발제 사용 플래그를 세운다
+	TCVAR:(MTAR:LOCAL):65 = 1
+
+	IF TALENT:(MTAR:LOCAL):연모
+		;주인공이 플레이어라면 애정의 소스 추가
+		IF IS_MPLY(MASTER)
+			CALL ADD_SOURCE_AIZYOU(LOCAL:2, 50)
+		ENDIF
+	ELSE
+		LOCAL:1 = MAX(CFLAG:(MTAR:LOCAL):2, CFLAG:(MTAR:LOCAL):4)
+
+		IF LOCAL:1 < 500
+			SOURCE:(MTAR:LOCAL):반감 = 500
+			SOURCE:(MTAR:LOCAL):불안 = 800
+		ELSEIF LOCAL:1 < 800
+			SOURCE:(MTAR:LOCAL):반감 = 250
+			SOURCE:(MTAR:LOCAL):불안 = 500
+		ELSEIF LOCAL:1 < 1500
+			SOURCE:(MTAR:LOCAL):반감 = 150
+			SOURCE:(MTAR:LOCAL):불안 = 350
+		ELSE
+			SOURCE:(MTAR:LOCAL):불안 = 100
+		ENDIF
+
+		SELECTCASE ABL:(MTAR:LOCAL):출산
+			CASE 0
+			CASE 1
+				TIMES SOURCE:(MTAR:LOCAL):반감, 0.80
+				TIMES SOURCE:(MTAR:LOCAL):불안, 0.80
+				SOURCE:(MTAR:LOCAL):중독충족 = 50
+			CASE 2
+				TIMES SOURCE:(MTAR:LOCAL):반감, 0.60
+				TIMES SOURCE:(MTAR:LOCAL):불안, 0.60
+				SOURCE:(MTAR:LOCAL):중독충족 = 100
+			CASE 3
+				TIMES SOURCE:(MTAR:LOCAL):반감, 0.40
+				TIMES SOURCE:(MTAR:LOCAL):불안, 0.40
+				SOURCE:(MTAR:LOCAL):중독충족 = 200
+			CASE 4
+				TIMES SOURCE:(MTAR:LOCAL):반감, 0.20
+				TIMES SOURCE:(MTAR:LOCAL):불안, 0.20
+				SOURCE:(MTAR:LOCAL):중독충족 = 400
+			CASEELSE
+				SOURCE:(MTAR:LOCAL):반감 = 0
+				SOURCE:(MTAR:LOCAL):불안 = 0
+				SOURCE:(MTAR:LOCAL):중독충족 = 600 + (ABL:(MTAR:LOCAL):출산 - 5) * 3
+		ENDSELECT
+	ENDIF
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(MTAR:LOCAL, 40, 50)
+
+	;사정 개소와 대상을 세트
+	CALL STACK_SPERM(MPLY:0, MTAR:LOCAL, 0)
+NEXT
+
+;주도도 변화 기준치
+TFLAG:49 = 1
+
+;도착도 변화 기준치
+TFLAG:50 = 0
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 0
+
+;경과시간을 무리하게 1줄인다
+TFLAG:55 --
+
+RETURN 1
+
+;-------------------------------------------------
+;고유의 실행 판정(플레이어측)
+;-------------------------------------------------
+@COM_ORDER_PLAYER72(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 65
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 4)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 1, 10))
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -1)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 6)
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -1)
+ENDIF
+
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -10)
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE72
+IF MTAR_NUM > 1
+	LOCALS:0 = 들
+ELSE
+	LOCALS:0 = 
+ENDIF
+
+SELECTCASE GET_COM_INITIATIVE()
+	;플레이어에 주도권
+	CASE 0
+		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)% %LOCALS:0%에 배란유발제를 먹%TARGET_STR("였다", "여 왔다")%…
+	;타겟으로 주도권
+	CASE 1
+		PRINTFORML %ANAME(MTAR:0)% %조사처리(LOCALS:0,"는")% %ANAME(MPLY:0)%에 배란유발제를 먹이도록(듯이) 명령했다
+		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% (듣)묻는 대로 %ANAME(MTAR:0)% %LOCALS:0%에 배란유발제를 삼키게 했다…
+	;제삼자에게 주도권
+	CASEELSE
+		PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에게, %ANAME(MTAR:0)% %LOCALS:0%에 배란유발제를 먹이도록(듯이) 명령했다
+		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% (듣)묻는 대로 %ANAME(MTAR:0)% %LOCALS:0%에 배란유발제를 삼키게 했다…
+ENDSELECT
+;-------------------------------------------------
+;지문(실행 후)
+;-------------------------------------------------
+@COM_TEXT_AFTER72
+IF MTAR_NUM > 1
+	LOCALS:0 = 들
+ELSE
+	LOCALS:0 = 
+ENDIF
+IF MTAR:0 != MASTER
+	IF (TCVAR:(MTAR:0):52) || (TCVAR:(MTAR:0):53 == 1)
+		SIF TALENT:(MTAR:0):육아중
+			PRINT 아직 육아중에도 불구하고
+		PRINTFORML 의식이 없는 채 약에 의해 %ANAME(MTAR:0)% %LOCALS:0%의 몸은 %ANAME(MPLY:0)%의 아이를 임신하려고 하고 있다
+	ELSE
+		SIF TCVAR:(MTAR:0):51
+			PRINT 지쳐 동작하지 못한 채
+		SIF TALENT:(MTAR:0):요술지식 || TALENT:(MTAR:0):기사
+			PRINT 먹게 된 약의 효과에 마음에 짚여,
+		SIF EXP:(MTAR:0):출산경험 >= 1
+			PRINT 과거의 출산경험으로부터
+		IF IS_LOVER(MTAR:0) && MPLY:0 == MASTER
+			SIF TALENT:(MTAR:0):육아중
+				PRINT 벌써 육아중에도 불구하고
+			PRINTFORML %ANAME(MTAR:0)% %조사처리(LOCALS:0,"는")% %ANAME(MPLY:0)%의 아이를 임신하는 기대감에 뺨을 느슨해지게 하고 있다
+		ELSEIF ABL:(MTAR:0):출산 >= 3
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 아이를 임신하고 출산하는 것을 상상해, 흥분을 숨기지 못하고 있다
+		;포로 조교의 메인 타겟
+		ELSEIF FLAG:조교모드 == 2 && FINDELEMENT(PRISONER_TARGET, MTAR:0) != -1
+			SELECTCASE RAND:4
+				CASE 0
+					PRINTFORML %ANAME(MTAR:0)% %조사처리(LOCALS:0,"는")% %ANAME(MPLY:0)%의 아이를 임신하는 것을 상상해 공포에 얼굴을 경련이 일어나게 했다
+				CASE 1
+					PRINTFORML %ANAME(MTAR:0)% %조사처리(LOCALS:0,"는")% 바라지 않는 임신의 공포에 얼굴을 새파래지게 하고 있다
+				CASE 2
+					PRINTFORML 임신을 강제당하는 공포에 %ANAME(MTAR:0)% %조사처리(LOCALS:0,"는")% 떨고 있다
+				CASE 3
+					PRINTFORML 약이 가져오려고 하는 미래를 받아들일 수 있지 못하고, %ANAME(MTAR:0)% %조사처리(LOCALS:0,"는")% 마구 아우성치고 있다
+			ENDSELECT
+			SIF TALENT:(MTAR:0):아이인질
+				PRINTFORML 이지만, 아이가 인질에게 빼앗기고 있는 것을 생각해 낸 %ANAME(MTAR:0)% %조사처리(LOCALS:0,"는")%, %ANAME(MPLY:0)%의 기대에 따를 수밖에 없었다
+		ELSE
+			SIF TALENT:(MTAR:0):육아중
+				PRINT 아직 육아중을 위해서(때문에)
+				PRINTFORML %ANAME(MTAR:0)% %조사처리(LOCALS:0,"는")% 불안한 듯한 표정을 띄우고 있다
+		ENDIF
+	ENDIF
+ENDIF
+WAIT
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN72
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_72()
+RETURN POWER(2, 성적기호_도구를사용하고싶다)
+
+@COM_PREFERENCE_TARGET_72()
+RETURN POWER(2, 성적기호_도구를사용되고싶다) + POWER(2, 성적기호_임신하고싶다)
+

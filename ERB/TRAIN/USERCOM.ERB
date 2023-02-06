@@ -1,0 +1,1054 @@
+﻿;조교 커맨드의 기간 부분과 거기에 관련하는 처리
+
+;-------------------------------------------------
+;실행 가능한 커맨드의 기록
+;-------------------------------------------------
+@CREATE_COMABLE_LIST
+
+;리스트의 클리어
+VARSET COM_LIST, -1
+
+LOCAL:1 = 0
+;모드별의 커맨드를 주사
+FOR LOCAL:0, 0, VARSIZE("TRAINNAME")
+	SIF TRAINNAME:(LOCAL:0) == ""
+		CONTINUE
+	;실행 가능한가 어떤가를 판정
+	CALL CHECK_COMABLE(LOCAL:0)
+	;COM_LIST에 실행 가능 커맨드를 기록
+	SIF RESULT
+		COM_LIST:(LOCAL:1) = LOCAL:0
+	;리스트의 기록 위치를 하나 진행한다
+	LOCAL:1 ++
+NEXT
+
+;-------------------------------------------------
+;커맨드 ARG:0이 실행 가능하면 COM_LIST에 기록한다
+;-------------------------------------------------
+@CHECK_COMABLE(ARG:0)
+;TRAINNAME가 정의되어 있지 않으면 무시
+IF TRAINNAME:(ARG:0) != ""
+	;커맨드 필터
+	IF !COM_FILTER:(ARG:0)
+		;실행 가부를 판정
+		COM_ENABLE = 1
+		TRYCALLFORM COM_ABLE{ARG:0}
+		COM_ENABLE = 0
+		RETURN RESULT
+	ENDIF
+ENDIF
+RETURN 0
+
+;-------------------------------------------------
+;조교 커맨드의 표시＆실행 가능 커맨드의 기록
+;-------------------------------------------------
+@SHOW_COMMAND
+#DIM L_COUNTER
+#DIM AUTO_MAIN_CHARA
+
+;실행 가능한 커맨드의 기록
+CALL CREATE_COMABLE_LIST
+
+CALL TITLE_CATEGORY_GENERAL("커맨드")
+PRINTL 
+
+;역조교 또는 주인공이 행동불능
+IF GROUPMATCH(FLAG:조교모드, 조교_역조교특수, 조교_역조교통상, 조교_위안) || !IS_PLAYABLE(MASTER)
+	PRINTPLAINFORM %TOSTR_SPACE(14)%
+	PRINTBUTTON @"0[하는대로]", 0
+	PRINTL 
+
+	RETURN
+ENDIF
+
+;비우후후중에서 최종 턴이라면 커맨드 종별의 탭을 「특수」로 고정
+IF !FLAG:우후후플래그 && TFLAG:55 == TFLAG:56
+	TFLAG:7 = 6
+ENDIF
+
+;플레이어·타겟의 일람을 문자열으로서 기록
+LOCALS:0 = 
+LOCALS:1 = 
+LOCALS:2 = 
+FOR LOCAL:0, 0, MPLY_NUM
+	IF LOCAL:0 >= 1
+		LOCALS:0 += @"·%ANAME(MPLY:(LOCAL:0))%"
+	ELSE
+		LOCALS:0 += @"%ANAME(MPLY:(LOCAL:0))%"
+	ENDIF
+NEXT
+IF LOCALS:0 == ""
+	LOCALS:0 = ----
+ENDIF
+FOR LOCAL:0, 0, MTAR_NUM
+	IF LOCAL:0 >= 1
+		LOCALS:1 += @"·%ANAME(MTAR:(LOCAL:0))%"
+	ELSE
+		LOCALS:1 += @"%ANAME(MTAR:(LOCAL:0))%"
+	ENDIF
+NEXT
+IF LOCALS:1 == ""
+	LOCALS:1 = ----
+ENDIF
+
+IF FLAG:우후후플래그 && (TFLAG:7 != 5 || IS_EQUIP_PLAYER(MPLY:0, 200)) && TFLAG:7 != 6
+	PRINT     
+	IF IS_MPLY(MASTER)
+		IF FLAG:주도권소유자 < 0 || IS_MPLY(FLAG:주도권소유자)
+			PRINTFORML 「%LOCALS:0%」%조사만처리(LOCALS:0,"가")% 「%LOCALS:1%」에―-
+		ELSEIF IS_MTAR(FLAG:주도권소유자)
+			PRINTFORML 「%LOCALS:0%」%조사만처리(LOCALS:0,"가")% 「%LOCALS:1%」의 명령으로―-
+		ELSE
+			PRINTFORML 「%ANAME(FLAG:주도권소유자)%」의 명령으로 「%LOCALS:0%」%조사만처리(LOCALS:0,"가")% 「%LOCALS:1%」에―-
+		ENDIF
+	ELSEIF IS_MTAR(MASTER)
+		IF FLAG:주도권소유자 < 0 || IS_MTAR(FLAG:주도권소유자)
+			PRINTFORML 「%LOCALS:1%」%조사만처리(LOCALS:0,"가")% 「%LOCALS:0%」에 명령해―-
+		ELSEIF IS_MPLY(FLAG:주도권소유자)
+			PRINTFORML 「%LOCALS:1%」%조사만처리(LOCALS:0,"가")% 「%LOCALS:0%」에―-
+		ELSE
+			PRINTFORML 「%ANAME(FLAG:주도권소유자)%」의 명령으로 「%LOCALS:0%」%조사만처리(LOCALS:0,"가")% 「%LOCALS:1%」에―-
+		ENDIF
+	ELSE
+		IF FLAG:주도권소유자 < 0 || IS_MPLY(FLAG:주도권소유자)
+			PRINTFORML 「%LOCALS:0%」%조사만처리(LOCALS:0,"가")% 「%LOCALS:1%」에―-
+		ELSEIF IS_MTAR(FLAG:주도권소유자)
+			PRINTFORML 「%LOCALS:0%」%조사만처리(LOCALS:0,"가")% 「%LOCALS:1%」의 명령으로―-
+		ELSE
+			PRINTFORML 「%ANAME(FLAG:주도권소유자)%」의 명령으로 「%LOCALS:0%」%조사만처리(LOCALS:0,"가")% 「%LOCALS:1%」에―-
+		ENDIF
+	ENDIF
+ENDIF
+
+LOCAL:2 = 0
+FOR LOCAL:0, 0, 1000
+	;LOCAL:1에 실행 가능한 커맨드의 번호를 취득
+	LOCAL:1 = COM_LIST:(LOCAL:0)
+
+	;맡겨 주시길, 형편을 생략한다
+	IF LOCAL:1 >= 0 && LOCAL:1 != GET_TRAINNUM("맡긴다") && LOCAL:1 != 393
+		;커맨드가 어느 탭에 포함되는지를 취득
+		RESULT = 0
+		TRYCALLFORM COM_CATEGORY{LOCAL:1}
+
+		;현재 선택되고 있는 탭에 대응하는 커맨드만을 표시
+		IF RESULT == TFLAG:7
+			;커맨드 명칭의 취득
+			FOR LOCAL:3, 0, 6
+				RESULTS:(LOCAL:3) = 
+			NEXT
+			TRYCALLFORM COM_NAME{LOCAL:1}
+
+			;개행 처리
+			IF LOCAL:2 >= 1 && LOCAL:2 % 2 == 0
+				PRINTL 
+			ENDIF
+			LOCAL:2 ++
+
+			;주도권에 응해 표시하는 메세지를 변경
+			IF IS_MPLY(MASTER)
+				IF FLAG:주도권소유자 < 0 || IS_MPLY(FLAG:주도권소유자)
+					LOCALS:1 = %RESULTS:0%
+				ELSEIF IS_MTAR(FLAG:주도권소유자)
+					LOCALS:1 = %RESULTS:1%
+				ELSE
+					LOCALS:1 = %RESULTS:0%
+				ENDIF
+			ELSEIF IS_MTAR(MASTER)
+				IF FLAG:주도권소유자 < 0 || IS_MTAR(FLAG:주도권소유자)
+					LOCALS:1 = %RESULTS:2%
+				ELSEIF IS_MPLY(FLAG:주도권소유자)
+					LOCALS:1 = %RESULTS:3%
+				ELSE
+					LOCALS:1 = %RESULTS:0%
+				ENDIF
+			ELSE
+				IF FLAG:주도권소유자 < 0 || IS_MPLY(FLAG:주도권소유자)
+					LOCALS:1 = %RESULTS:0%
+				ELSEIF IS_MTAR(FLAG:주도권소유자)
+					LOCALS:1 = %RESULTS:1%
+				ELSE
+					LOCALS:1 = %RESULTS:0%
+				ENDIF
+			ENDIF
+
+			;커맨드의 계속 타입을 취득
+			RESULT = 0
+			TRYCALLFORM COM_IS_EQUIP{LOCAL:1}
+			LOCAL:4 = RESULT
+
+			IF LOCALS:1 != ""
+				PRINTPLAINFORM %LOCALS:1, 28, RIGHT% 
+				IF LOCAL:4 == 2
+					SETCOLOR 칼라_선택불가
+					PRINTPLAINFORM    [----]
+					RESETCOLOR
+				ELSEIF FLAG:조교모드 == 조교_육아 || TFLAG:7 == 6
+					PRINTBUTTON @"{LOCAL:0, 3}[실행]", LOCAL:0
+				ELSE
+					PRINTBUTTON @"{LOCAL:0, 3}[단발]", LOCAL:0
+				ENDIF
+				IF !(FLAG:조교모드 == 조교_육아 || TFLAG:7 == 6)
+					PRINTPLAIN  
+					IF LOCAL:4 == 0
+						SETCOLOR 칼라_선택불가
+						PRINTPLAINFORM    [----]
+						RESETCOLOR
+					ELSE
+						PRINTBUTTON @"{LOCAL:0 + 200, 3}[계속]", LOCAL:0 + 200
+					ENDIF
+				ELSE
+					PRINTPLAIN  
+					SETCOLOR 칼라_선택불가
+					PRINTPLAINFORM    [----]
+					RESETCOLOR
+				ENDIF
+			ELSE
+				SETCOLOR 칼라_선택불가
+				PRINTPLAINFORM %TOSTR_REPEAT("-", 10), 28, RIGHT%    [----]    [----]
+				RESETCOLOR
+			ENDIF
+		ENDIF
+	ENDIF
+NEXT
+PRINTL 
+
+CALL COLOR_LINE
+PRINTPLAIN             
+
+IF FLAG:우후후플래그
+	CALL PRINT_SELECT_BUTTON("800{애무}", 800, TFLAG:7 == 0)
+	PRINTPLAIN  
+	CALL PRINT_SELECT_BUTTON("801{성교}", 801, TFLAG:7 == 1)
+	PRINTPLAIN  
+	CALL PRINT_SELECT_BUTTON("802{도구}", 802, TFLAG:7 == 2)
+	PRINTPLAIN  
+	CALL PRINT_SELECT_BUTTON("803{ＳＭ}", 803, TFLAG:7 == 3)
+	PRINTPLAIN  
+	CALL PRINT_SELECT_BUTTON("804{수치}", 804, TFLAG:7 == 4)
+	PRINTPLAIN  
+	CALL PRINT_SELECT_BUTTON("805{촉수}", 805, TFLAG:7 == 5)
+	PRINTPLAIN  
+	CALL PRINT_SELECT_BUTTON("806{특수}", 806, TFLAG:7 == 6)
+ELSEIF TFLAG:55 == TFLAG:56
+	CALL PRINT_SELECT_BUTTON("806{특수}", 806, TFLAG:7 == 6)
+	PRINTPLAIN  
+ELSEIF FLAG:조교모드 == 조교_만난다
+	CALL PRINT_SELECT_BUTTON("800{교류}", 800, TFLAG:7 == 0)
+	PRINTPLAIN  
+	CALL PRINT_SELECT_BUTTON("801{훈련／내정}", 801, TFLAG:7 == 1)
+	PRINTPLAIN  
+	CALL PRINT_SELECT_BUTTON("806{특수}", 806, TFLAG:7 == 6)
+	PRINTPLAIN  
+ELSEIF FLAG:조교모드 == 조교_포로회화
+	CALL PRINT_SELECT_BUTTON("800{교류}", 800, TFLAG:7 == 0)
+	PRINTPLAIN  
+	CALL PRINT_SELECT_BUTTON("806{특수}", 806, TFLAG:7 == 6)
+	PRINTPLAIN  
+ENDIF
+
+;만나러간다 우후후오후 한정 「맡긴다」표시
+IF FLAG:조교모드 == 조교_만난다 && !FLAG:우후후플래그
+	AUTO_MAIN_CHARA = 0
+	FOR L_COUNTER, 0, CHARANUM
+		IF IS_AUTOSELECT_N(L_COUNTER)
+			AUTO_MAIN_CHARA = L_COUNTER
+			BREAK
+		ENDIF
+	NEXT
+	IF AUTO_MAIN_CHARA
+		;루프 시켜 표시상의 번호를 취한다
+		FOR L_COUNTER, 1, 1000
+			IF COM_LIST:L_COUNTER == 393
+				TRYCALLFORM COM_NAME393
+				IF RESULTS:0 != ""
+					PRINTBUTTON @"{L_COUNTER}[%RESULTS:0%]", L_COUNTER
+					PRINTL 
+					BREAK
+				ENDIF
+			ENDIF
+		NEXT
+	ENDIF
+;만나러간다 우후후온 or침실호출 한정 「맡긴다」표시  당신이 하는대로는 아니다
+ELSEIF GROUPMATCH(FLAG:조교모드, 조교_만난다, 조교_침실, 조교_포로회화) && IS_PLAYABLE(MASTER)
+	AUTO_MAIN_CHARA = 0
+	FOR L_COUNTER, 0, CHARANUM
+		IF IS_AUTOSELECT_N(L_COUNTER)
+			AUTO_MAIN_CHARA = L_COUNTER
+			BREAK
+		ENDIF
+	NEXT
+	IF AUTO_MAIN_CHARA
+		FOR L_COUNTER, 1, 1000
+			IF COM_LIST:L_COUNTER == GET_TRAINNUM("맡긴다")
+				TRYCALLFORM COM_NAME{GET_TRAINNUM("맡긴다")}
+				IF RESULTS:0 != ""
+					PRINTBUTTON @"{L_COUNTER}[%RESULTS:0%]", L_COUNTER
+					PRINTL 
+					BREAK
+				ENDIF
+			ENDIF
+		NEXT
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;조교 화면에 있어서의 「대상 캐릭터의 선택」란의 표시
+;-------------------------------------------------
+@SHOW_MTAR_SELECTOR
+#DIM 포로, VARSIZE("PRISONER_TARGET")
+#DIM 위안자, 8
+#DIM 카운터
+VARSET 포로, 0
+카운터 = 0
+
+LOCAL:1 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):조교참가플래그 || (FLAG:조교모드 != 조교_위안 && LOCAL:0 == MASTER)
+		;포로 조교의 메인 타겟은 뒷전
+		IF FLAG:조교모드 == 조교_포로조교 && FINDELEMENT(PRISONER_TARGET, LOCAL:0) != -1
+			포로:카운터 = LOCAL:1
+			카운터 ++
+		;위안계의 조교로 위안참가자가 아니다（하는 측이 아니다）캐릭터는 뒷전
+		ELSEIF FLAG:조교모드 == 조교_위안 && !CFLAG:(LOCAL):위안참가자
+			위안자:카운터 = LOCAL:1
+			카운터 ++
+		ELSE
+			CALL SHOW_MTAR_INFO(LOCAL:0, LOCAL:1)
+		ENDIF
+		LOCAL:1 ++
+	ENDIF
+NEXT
+
+카운터 = 0
+IF FLAG:조교모드 == 조교_포로조교
+	PRINTFORML %TOSTR_SPACE(7)%%TOSTR_REPEAT("-", 85)%
+	;포로 조교의 메인 타겟으로 붙어 처리
+	FOR LOCAL:0, 0, CHARANUM
+		IF FINDELEMENT(PRISONER_TARGET, LOCAL:0) != -1
+			CALL SHOW_MTAR_INFO(LOCAL:0, 포로:카운터)
+			카운터 ++
+		ENDIF
+	NEXT
+ELSEIF FLAG:조교모드 == 조교_위안
+	PRINTFORML %TOSTR_SPACE(7)%%TOSTR_REPEAT("-", 85)%
+	;백성위안의 메인 타겟의 처리
+	FOR LOCAL:0, 0, CHARANUM
+		IF CFLAG:LOCAL:조교참가플래그 && !CFLAG:(LOCAL):위안참가자
+			CALL SHOW_MTAR_INFO(LOCAL:0, 위안자:카운터)
+			카운터 ++
+		ENDIF
+	NEXT
+ENDIF
+
+;-------------------------------------------------
+;조교 화면에 있어서의 캐릭터 ARG:0의 정보 표시
+;-------------------------------------------------
+@SHOW_MTAR_INFO(ARG:0, ARG:1)
+
+LOCALS:0 = [＋]
+IF IS_MPLY(ARG:0)
+	LOCALS:0 = [－]
+	SETCOLOR 칼라_오렌지
+ENDIF
+
+LOCALS:1 = [＋]
+IF IS_MTAR(ARG:0)
+	LOCALS:1 = [－]
+	SETCOLOR 칼라_시안
+ENDIF
+
+IF !GROUPMATCH(TCVAR:(ARG:0):53, 0, 1)
+	SETCOLOR 칼라_선택불가
+ENDIF
+
+PRINTFORM   %SNAME(ARG:0), MAX_CHARANAME_LENGTH / 2, RIGHT%
+RESETCOLOR
+CALL PRINT_SEX(ARG:0, 1, 1, 4)
+
+IF !GROUPMATCH(FLAG:조교모드, 조교_역조교특수, 조교_역조교통상, 조교_위안)
+	PRINT  
+	IF (FLAG:조교모드 == 조교_포로조교 && FINDELEMENT(PRISONER_TARGET, ARG:0) != -1) || TCVAR:(ARG:0):51 || TCVAR:(ARG:0):52 || TCVAR:(ARG:0):53
+		PRINTPLAIN [×]
+	ELSEIF FLAG:주도권소유자 == ARG:0
+		PRINTBUTTON "[★]", ARG:1 + 2100
+	ELSE
+		PRINTBUTTON "[  ]", ARG:1 + 2100
+	ENDIF
+	PRINT  
+
+	IF TFLAG:44 >= 2
+		IF !GROUPMATCH(TCVAR:(ARG:0):53, 0, 1)
+			SETCOLOR 칼라_선택불가
+			PRINTPLAINFORM %LOCALS:0%[⇔]%LOCALS:1%[⇔]
+			RESETCOLOR
+		ELSE
+			PRINTBUTTON LOCALS:0, ARG:1 + 2000
+			PRINTBUTTON "[⇔]", ARG:1 + 2020
+			PRINTBUTTON LOCALS:1, ARG:1 + 2040
+			PRINTBUTTON "[⇔]", ARG:1 + 2060
+		ENDIF
+	ELSE
+		IF IS_MPLY(ARG:0)
+			PRINT <실행>
+		ELSEIF IS_MTAR(ARG:0)
+			PRINT <대상>
+		ENDIF
+	ENDIF
+ENDIF
+PRINTBUTTON "[정보]", ARG:1 + 2080
+
+;it's nice, WOOT
+SIF HAS_PENIS(ARG:0) && TALENT:(ARG:0):동정
+	SETCOLOR 칼라_핑크
+CALL PRINT_SHORT_PALAM1(ARG:0, 0, "Ｃ")
+RESETCOLOR
+SIF TALENT:(ARG:0):처녀 && HAS_VAGINA(ARG:0)
+	SETCOLOR 칼라_핑크
+CALL PRINT_SHORT_PALAM1(ARG:0, 1, "Ｖ", HAS_VAGINA(ARG:0))
+RESETCOLOR
+
+SIF TALENT:(ARG:0):애널처녀
+	SETCOLOR 칼라_핑크
+CALL PRINT_SHORT_PALAM1(ARG:0, 2, "Ａ")
+RESETCOLOR
+
+CALL PRINT_SHORT_PALAM1(ARG:0, 3, "Ｂ")
+
+SIF TALENT:(ARG:0):키스미경험
+	SETCOLOR 칼라_핑크
+CALL PRINT_SHORT_PALAM1(ARG:0, 4, "Ｍ")
+RESETCOLOR
+
+CALL PRINT_SHORT_PALAM1(ARG:0, 5, "정", HAS_PENIS(ARG:0))
+CALL PRINT_SHORT_PALAM1(ARG:0, 6, "유", TALENT:(ARG:0):모유체질)
+CALL PRINT_SHORT_PALAM2(ARG:0, 40, "윤")
+
+IF TFLAG:69 && TCVAR:(ARG:0):60
+	SETCOLOR 0xff1c99
+ELSEIF TFLAG:69
+	SETCOLOR 0xffaad9
+ELSEIF TCVAR:(ARG:0):60
+	SETCOLOR 0xff5eb7
+ENDIF
+CALL PRINT_SHORT_PALAM2(ARG:0, 20, "욕")
+
+CALL PRINT_SHORT_EMOTION(ARG:0)
+
+;「만나러간다」때 한정
+IF FLAG:조교모드 == 조교_만난다
+	CALL PRINT_SHORT_DRUNK(ARG:0)
+ENDIF
+;우후후중만
+IF FLAG:우후후플래그
+	CALL PRINT_SHORT_BASE1(ARG:0, 0, "체")
+	CALL PRINT_SHORT_BASE2(ARG:0, 1, "기")
+
+	IF TALENT:(ARG:0):Ｃ민감
+		CALL COLOR_PRINT("Ｃ", 칼라_핑크)
+	ELSEIF TALENT:(ARG:0):Ｃ둔감
+		CALL COLOR_PRINT("Ｃ", 칼라_선택불가)
+	ELSE
+		PRINT Ｃ
+	ENDIF
+	IF TALENT:(ARG:0):Ｖ민감
+		CALL COLOR_PRINT("Ｖ", 칼라_핑크)
+	ELSEIF TALENT:(ARG:0):Ｖ둔감
+		CALL COLOR_PRINT("Ｖ", 칼라_선택불가)
+	ELSE
+		PRINT Ｖ
+	ENDIF
+	IF TALENT:(ARG:0):Ａ민감
+		CALL COLOR_PRINT("Ａ", 칼라_핑크)
+	ELSEIF TALENT:(ARG:0):Ａ둔감
+		CALL COLOR_PRINT("Ａ", 칼라_선택불가)
+	ELSE
+		PRINT Ａ
+	ENDIF
+	IF TALENT:(ARG:0):Ｂ민감
+		CALL COLOR_PRINT("Ｂ", 칼라_핑크)
+	ELSEIF TALENT:(ARG:0):Ｂ둔감
+		CALL COLOR_PRINT("Ｂ", 칼라_선택불가)
+	ELSE
+		PRINT Ｂ
+	ENDIF
+	IF TALENT:(ARG:0):Ｍ민감
+		CALL COLOR_PRINT("Ｍ", 칼라_핑크)
+	ELSEIF TALENT:(ARG:0):Ｍ둔감
+		CALL COLOR_PRINT("Ｍ", 칼라_선택불가)
+	ELSE
+		PRINT Ｍ
+	ENDIF
+	PRINT  
+	LOCALS:0 = 
+	SIF TCVAR:(ARG:0):53 == 1
+		LOCALS:0 += "면"
+	SIF IS_EQUIP_PLAYER((ARG:0), 50)
+		LOCALS:0 += "밴"
+	SIF IS_EQUIP_PLAYER((ARG:0), 75)
+		LOCALS:0 += "콘"
+	SIF TCVAR:(ARG:0):62
+		LOCALS:0 += "뇨"
+	SIF TCVAR:(ARG:0):최면중 > 0
+		LOCALS:0 += "최"
+	PRINTFORM %LOCALS:0%
+	SIF TCVAR:(ARG:0):65 && IS_OVULATION(ARG:0)
+		SETCOLOR 칼라_핑크
+	SIF IS_OVULATION(ARG:0) || TCVAR:(ARG:0):65
+		PRINTFORM ♥
+		RESETCOLOR
+ENDIF
+;「포로의조교」때 한정 메인 타겟으로 정신력 게이지를 표시
+IF FLAG:조교모드 == 조교_포로조교 && FINDELEMENT(PRISONER_TARGET, ARG:0) != -1
+	PRINTL 
+	PRINT             정신력 
+	CALL PRINT_SHORT_MIND(ARG:0)
+ENDIF
+PRINTL 
+
+;-------------------------------------------------
+;단축판 파라미터 정보의 표시(쾌감계)
+;ARG:0은 캐릭터 번호, ARG:1은 PALAM 번호, ARGS:2는 단축명, ARG:3이 0이라면 회색 표시
+;-------------------------------------------------
+@PRINT_SHORT_PALAM1(ARG:0, ARG:1, ARGS:2, ARG:3 = 1)
+IF !ARG:3
+	SETCOLOR 칼라_선택불가
+ENDIF
+PRINTFORM %ARGS:2%
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):(ARG:1))
+SETCOLOR 0xFF00FF
+FOR LOCAL:1, 0, 2
+	IF LOCAL:0 >= LOCAL:1 + 5
+		PRINTFORM ♥
+	ELSEIF LOCAL:0 >= LOCAL:1 + 3
+		PRINTFORM ♡
+	ELSEIF LOCAL:0 >= LOCAL:1 + 1
+		PRINT -
+	ELSE
+		PRINT  
+	ENDIF
+NEXT
+RESETCOLOR
+
+;-------------------------------------------------
+;단축판 파라미터 정보의 표시(쾌감계 이외)
+;ARG:0은 캐릭터 번호, ARG:1은 PALAM 번호, ARGS:2는 단축명
+;-------------------------------------------------
+@PRINT_SHORT_PALAM2(ARG:0, ARG:1, ARGS:2)
+PRINTFORM %ARGS:2%
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):(ARG:1))
+IF LOCAL:0 >= 20
+	SETCOLOR 칼라_오렌지
+ELSEIF LOCAL:0 >= 10
+	SETCOLOR 칼라_주의
+ELSE
+	SETCOLOR 칼라_초록
+ENDIF
+PRINTFORM {LOCAL:0, 2, LEFT}
+RESETCOLOR
+
+;-------------------------------------------------
+;단축판 파라미터 정보의 표시(감정)
+;ARG:0은 캐릭터 번호
+;-------------------------------------------------
+@PRINT_SHORT_EMOTION(ARG:0)
+IF TALENT:(ARG:0):특수세력함락계
+	SETCOLOR 0xA000A0
+	IF !TCVAR:(ARG:0):마약
+		PRINTFORM  타  
+	ELSE
+		PRINTFORM 타
+	ENDIF
+	RESETCOLOR
+ELSE
+	SETCOLOR GETCOLOR_EMOTION(ARG:0)
+	IF !TCVAR:(ARG:0):마약
+		PRINTFORM  %TOSTR_EMOTION(ARG:0)%  
+	ELSE
+		PRINTFORM  %TOSTR_EMOTION(ARG:0)%
+	ENDIF
+	RESETCOLOR
+ENDIF
+
+IF TCVAR:(ARG:0):마약
+	SETCOLOR 칼라_경고
+	PRINTFORM 마
+	RESETCOLOR
+ENDIF
+
+;-------------------------------------------------
+;단축판 파라미터 정보의 표시(취기)
+;ARG:0은 캐릭터 번호
+;-------------------------------------------------
+@PRINT_SHORT_DRUNK(ARG:0)
+PRINT  
+IF PALAM:(ARG:0):취기 <= 0
+	PRINT 평
+ELSEIF PALAM:(ARG:0):취기 <= 500
+	SETCOLOR 0xA08080
+	PRINT 미
+ELSEIF PALAM:(ARG:0):취기 <= 1500
+	SETCOLOR 0xD0A0A0
+	PRINT 약
+ELSEIF PALAM:(ARG:0):취기 <= 3000
+	SETCOLOR 0xFFC0C0
+	PRINT 중
+ELSEIF PALAM:(ARG:0):취기 <= 6000
+	SETCOLOR 0xD08000
+	PRINT 강
+ELSE
+	SETCOLOR 0x804000
+	PRINT 만
+ENDIF
+RESETCOLOR
+PRINT   
+
+;-------------------------------------------------
+;단축판의 정신력 정보의 표시
+;ARG:0은 캐릭터 번호
+;-------------------------------------------------
+@PRINT_SHORT_MIND(ARG:0)
+IF MAXBASE:(ARG:0):정신력 > 0
+	LOCAL:0 = BASE:(ARG:0):정신력 * 100 / MAXBASE:(ARG:0):정신력
+ELSE
+	LOCAL:0 = 100
+ENDIF
+
+;CALL PRINT_SLIDER(-1000, MAXBASE:(LOCAL:0):정신력, BASE:(LOCAL:0):정신력, 44, 0 x4128cc, 0 xcb1267)
+
+IF LOCAL:0 < 0
+	LOCAL:1 = 0xA0A0A0
+ELSEIF LOCAL:0 <= 50
+	LOCAL:1 = 칼라_주의
+ELSEIF LOCAL:0 <= 75
+	LOCAL:1 = 0x00FF00
+ELSE
+	LOCAL:1 = 칼라_시안
+ENDIF
+
+CALL PRINT_COLORBAR(BASE:(ARG:0):정신력, MAXBASE:(ARG:0):정신력, 45, UNICODE(0x2585), UNICODE(0x2585), LOCAL:1, 0x404040)
+;PRINT  
+
+SETCOLOR LOCAL:1
+
+IF LOCAL:0 < 0
+	PRINT 절망
+ELSEIF LOCAL:0 <= 50
+	PRINT 굴복
+ELSEIF LOCAL:0 <= 75
+	PRINT 소모
+ELSE
+	PRINT 평상
+ENDIF
+RESETCOLOR
+PRINT  
+
+;-------------------------------------------------
+;단축판 BASE 정보의 표시(체력)
+;ARG:0은 캐릭터 번호, ARG:1은 BASE 번호, ARGS:2는 단축명
+;-------------------------------------------------
+@PRINT_SHORT_BASE1(ARG:0, ARG:1, ARGS:2)
+;PRINTFORM %ARGS:2%:
+
+LOCAL:0 = BASE:(ARG:0):(ARG:1) * 100 / MAXBASE:(ARG:0):(ARG:1)
+
+IF LOCAL:0 >= 70
+	SETCOLOR 0x8080FF
+ELSEIF LOCAL:0 >= 30
+	SETCOLOR 0x40FF40
+ELSEIF BASE:(ARG:0):(ARG:1) >= 500
+	SETCOLOR 0xD0D000
+ELSEIF BASE:(ARG:0):(ARG:1) > 0
+	SETCOLOR 0xD08000
+ELSE
+	SETCOLOR 0x808080
+ENDIF
+PRINTFORM {LOCAL:0, 3, RIGHT}
+
+IF TCVAR:(ARG:0):51
+	SETCOLOR 칼라_선택불가
+	PRINT -
+ELSEIF TCVAR:(ARG:0):66
+	SETCOLOR 0x40FF40
+	PRINT +
+ELSE
+	PRINT  
+ENDIF
+RESETCOLOR
+PRINT  
+
+;-------------------------------------------------
+;단축판 BASE 정보의 표시(기력)
+;ARG:0은 캐릭터 번호, ARG:1은 BASE 번호, ARGS:2는 단축명
+;-------------------------------------------------
+@PRINT_SHORT_BASE2(ARG:0, ARG:1, ARGS:2)
+;PRINTFORM %ARGS:2%:
+LOCAL:0 = BASE:(ARG:0):(ARG:1) * 100 / MAXBASE:(ARG:0):(ARG:1)
+IF LOCAL:0 >= 70
+	SETCOLOR 0x8080FF
+ELSEIF LOCAL:0 >= 30
+	SETCOLOR 0x40FF40
+ELSEIF BASE:(ARG:0):(ARG:1) >= 300
+	SETCOLOR 0xD0D000
+ELSEIF BASE:(ARG:0):(ARG:1) > 0
+	SETCOLOR 0xD08000
+ELSE
+	SETCOLOR 0x808080
+ENDIF
+PRINTFORM {LOCAL:0, 3, RIGHT}
+IF TCVAR:(ARG:0):52
+	SETCOLOR 칼라_선택불가
+	PRINT -
+ELSEIF TCVAR:(ARG:0):66
+	SETCOLOR 0x40FF40
+	PRINT +
+ELSE
+	PRINT  
+ENDIF
+RESETCOLOR
+
+PRINT  
+
+;---------------------------------------------------------
+;실행 판정을 호출해 커맨드 마다 체크하는 처리
+;TRYCCALLFORM를 사용하므로 식 안의 함수에는 할 수 없다
+;---------------------------------------------------------
+@PRE_COMORDER, ARG
+;[323]머리카락을 빗어 받는 커맨드만은 도중에 INPUT 있으므로 처리하지 않는다.
+SIF ARG == 323
+	RETURN 0
+
+TFLAG:46 = -10000
+TRYCCALLFORM COM_ORDER_{ARG}
+	;실행 할 수 없는 경우
+	IF TFLAG:46 < TFLAG:47
+		RETURN 1
+	;실행할 수 있는 경우
+	ELSE
+		RETURN 0
+	ENDIF
+CATCH
+	;원래 실행 판정이 없는 커맨드의 경우
+	RETURN 0
+ENDCATCH
+
+;-------------------------------------------------
+;독자 커맨드의 표시 처리
+;-------------------------------------------------
+@SHOW_USERCOM
+
+;-------------------------------------------------
+;독자 커맨드의 입력 처리
+;-------------------------------------------------
+@USERCOM
+#DIM FIRST_LINE
+;표시 처리
+IF RESULT == 3100
+	FLAG:화상설정 = !FLAG:화상설정
+ELSEIF RESULT == 3101
+	;그림표시 인원수 -
+	FLAG:그림표시 = MAX(FLAG:그림표시-1,1)
+ELSEIF RESULT == 3102
+	;그림표시 인원수 +
+	FLAG:그림표시 = MIN(FLAG:그림표시+1, 8)
+ELSEIF RESULT == 3103
+	;테두리 표시 ON/OFF
+	FLAG:화상범위표시 = !FLAG:화상범위표시
+ELSEIF RESULT == 3104
+	FLAG:스탠딩종류 = !FLAG:스탠딩종류
+ELSEIF RESULT == 3105
+	FLAG:의복표시 = !FLAG:의복표시
+;ELSEIF RESULT == 3105
+;	FLAG:삽화표시 = !FLAG:삽화표시
+;ELSEIF RESULT == 3106
+;	FLAG:애니메이션++
+;	SIF FLAG:애니메이션 >= 6
+;		FLAG:애니메이션 = 0
+;ELSEIF RESULT == 3107
+;	INVERTBIT FLAG:삽입애니메이션필터, 0
+
+
+;플레이어 추가·해제
+ELSEIF RESULT >= 2000 && RESULT < 2020 && TFLAG:44 >= 2
+	LOCAL:1 = 0
+	FOR LOCAL:0, 0, CHARANUM
+		IF IS_PARTICIPATE_TRAIN(LOCAL:0)
+			IF RESULT - 2000 == LOCAL:1 && !TCVAR:(LOCAL:0):53
+				IF IS_MPLY(LOCAL:0)
+					CALL DEL_MPLY(LOCAL:0)
+				ELSE
+					CALL ADD_MPLY(LOCAL:0)
+					CALL DEL_MTAR(LOCAL:0)
+				ENDIF
+				CLEARLINE LINECOUNT - LINES_TRAIN
+				;LINES_TRAIN = LINECOUNT
+				RETURN 1
+			ENDIF
+			LOCAL:1 ++
+		ENDIF
+	NEXT
+	CLEARLINE LINES_TRAIN
+	;LINES_TRAIN = LINECOUNT
+	RETURN 0
+
+;플레이어 변환
+ELSEIF RESULT >= 2020 && RESULT < 2040 && TFLAG:44 >= 2
+	LOCAL:1 = 0
+	FOR LOCAL:0, 0, CHARANUM
+		IF IS_PARTICIPATE_TRAIN(LOCAL:0)
+			IF RESULT - 2020 == LOCAL:1 && !TCVAR:(LOCAL:0):53
+				CALL CLEAR_MPLY
+				CALL ADD_MPLY(LOCAL:0)
+				CALL DEL_MTAR(LOCAL:0)
+				CLEARLINE LINECOUNT - LINES_TRAIN
+				;LINES_TRAIN = LINECOUNT
+				RETURN 1
+			ENDIF
+			LOCAL:1 ++
+		ENDIF
+	NEXT
+	CLEARLINE LINECOUNT - LINES_TRAIN
+	;LINES_TRAIN = LINECOUNT
+	RETURN 0
+
+;타겟 추가·해제
+ELSEIF RESULT >= 2040 && RESULT < 2060 && TFLAG:44 >= 2
+	LOCAL:1 = 0
+	FOR LOCAL:0, 0, CHARANUM
+		IF IS_PARTICIPATE_TRAIN(LOCAL:0)
+			IF RESULT - 2040 == LOCAL:1 && !TCVAR:(LOCAL:0):53
+				IF IS_MTAR(LOCAL:0)
+					CALL DEL_MTAR(LOCAL:0)
+				ELSE
+					CALL ADD_MTAR(LOCAL:0)
+					CALL DEL_MPLY(LOCAL:0)
+				ENDIF
+				CLEARLINE LINECOUNT - LINES_TRAIN
+				;LINES_TRAIN = LINECOUNT
+				RETURN 1
+			ENDIF
+			LOCAL:1 ++
+		ENDIF
+	NEXT
+	CLEARLINE LINECOUNT - LINES_TRAIN
+	;LINES_TRAIN = LINECOUNT
+	RETURN 0
+
+;타겟 변환
+ELSEIF RESULT >= 2060 && RESULT < 2080 && TFLAG:44 >= 2
+	LOCAL:1 = 0
+	FOR LOCAL:0, 0, CHARANUM
+		IF IS_PARTICIPATE_TRAIN(LOCAL:0)
+			IF RESULT - 2060 == LOCAL:1 && !TCVAR:(LOCAL:0):53
+				CALL CLEAR_MTAR
+				CALL ADD_MTAR(LOCAL:0)
+				CALL DEL_MPLY(LOCAL:0)
+				CLEARLINE LINECOUNT - LINES_TRAIN
+				;LINES_TRAIN = LINECOUNT
+				RETURN 1
+			ENDIF
+			LOCAL:1 ++
+		ENDIF
+	NEXT
+	CLEARLINE LINECOUNT - LINES_TRAIN
+	;LINES_TRAIN = LINECOUNT
+	RETURN 0
+;정보
+ELSEIF RESULT >= 2080 && RESULT < 2100
+	CLEARLINE 1
+	LOCAL:2 = RESULT - 2080
+	LOCAL:1 = 0
+	VARSET SHOP_CHARA_LIST, -1
+
+	FOR LOCAL:0, 0, CHARANUM
+		IF CFLAG:(LOCAL:0):조교참가플래그 || (FLAG:조교모드 != 조교_위안 && LOCAL == MASTER)
+			SHOP_CHARA_LIST:(LOCAL:1) = LOCAL:0
+			LOCAL:1 ++
+		ENDIF
+	NEXT
+	LOCAL:1 = 0
+	FOR LOCAL:0, 0, CHARANUM
+		SIF !CFLAG:(LOCAL:0):조교참가플래그 && LOCAL != MASTER
+			CONTINUE
+		IF SHOP_CHARA_LIST:(LOCAL:2) == LOCAL
+			CALL SHOW_INFO_WITH_UI(LOCAL:0, 1, FLAG:우후후플래그)
+			CLEARLINE LINECOUNT - LINES_TRAIN
+			RETURN 1
+		ENDIF
+		LOCAL:1 ++
+	NEXT
+	CLEARLINE LINECOUNT - LINES_TRAIN
+	;LINES_TRAIN = LINECOUNT
+	RETURN 0
+;주도권 변환
+ELSEIF RESULT >= 2100 && RESULT < 2120
+	LOCAL:1 = 0
+	LOCAL:2 = RESULT - 2100
+	FOR LOCAL:0, 0, CHARANUM
+		IF IS_PARTICIPATE_TRAIN(LOCAL:0)
+			IF LOCAL:1 == LOCAL:2 && !TCVAR:(LOCAL:0):51 && !TCVAR:(LOCAL:0):52 && !TCVAR:(LOCAL:0):53
+				;포로 조교의 메인 타겟은 주도권을 가질 수 없다
+				IF !(FLAG:조교모드 == 조교_포로조교 && FINDELEMENT(PRISONER_TARGET, LOCAL:0) != -1)
+					IF FLAG:주도권소유자 == LOCAL:0
+						FLAG:주도권소유자 = -1
+					ELSE
+						FLAG:주도권소유자 = LOCAL:0
+					ENDIF
+					;실행 가능한 커맨드의 기록
+					CALL CREATE_COMABLE_LIST
+					CLEARLINE LINECOUNT - LINES_TRAIN
+					;LINES_TRAIN = LINECOUNT
+					RETURN 1
+				ENDIF
+			ENDIF
+			LOCAL:1 ++
+		ENDIF
+	NEXT
+	CLEARLINE LINECOUNT - LINES_TRAIN
+	;LINES_TRAIN = LINECOUNT
+	RETURN 0
+
+;행동측 반전
+ELSEIF RESULT == 900 && GROUPMATCH(FLAG:조교모드, 조교_만난다, 조교_침실, 조교_포로조교, 조교_포로회화)
+	FOR LOCAL:0, 0, MPLY_NUM
+		LOCAL:(LOCAL:0 + 20) = MPLY:(LOCAL:0)
+	NEXT
+	FOR LOCAL:0, 0, MTAR_NUM
+		LOCAL:(LOCAL:0 + 40) = MTAR:(LOCAL:0)
+	NEXT
+	LOCAL:10 = MPLY_NUM
+	LOCAL:11 = MTAR_NUM
+	CALL CLEAR_MPLY
+	CALL CLEAR_MTAR
+	FOR LOCAL:0, 0, LOCAL:10
+		CALL ADD_MTAR(LOCAL:(LOCAL:0 + 20))
+	NEXT
+	FOR LOCAL:0, 0, LOCAL:11
+		CALL ADD_MPLY(LOCAL:(LOCAL:0 + 40))
+	NEXT
+	CLEARLINE LINECOUNT - LINES_TRAIN
+	;LINES_TRAIN = LINECOUNT
+	RETURN 1
+
+;명령시켜라
+ELSEIF RESULT == 901 && GROUPMATCH(FLAG:조교모드, 조교_만난다, 조교_침실, 조교_포로조교, 조교_포로회화)
+	CALL CLEAR_MPLY
+	CALL CLEAR_MTAR
+	;조교 참가자 전원을 타겟으로 추가
+	FOR LOCAL:0, 0, CHARANUM
+		SIF IS_PARTICIPATE_TRAIN(LOCAL:0) == 0 || TCVAR:(LOCAL:0):53
+			CONTINUE
+		;MASTER는 플레이어
+		IF LOCAL:0 == MASTER
+			CALL ADD_MPLY(LOCAL:0)
+			FLAG:10 = MASTER
+		ELSE
+			CALL ADD_MTAR(LOCAL:0)
+		ENDIF
+	NEXT
+	CLEARLINE LINECOUNT - LINES_TRAIN
+	;LINES_TRAIN = LINECOUNT
+	RETURN 1
+
+;EQUIP 해제
+ELSEIF RESULT >= 1000 && RESULT <= 1049
+	REDRAW 0
+	CLEARLINE 1
+	REDRAW 1
+	LOCAL = RESULT - 1000
+	TRYCALLFORM COM_BEFORE_RELEASE_EQUIP{MEQUIP:LOCAL}(LOCAL)
+	CALL RELEASE_EQUIP(LOCAL)
+	CLEARLINE LINECOUNT - LINES_TRAIN
+	;LINES_TRAIN = LINECOUNT
+;행동 종료
+ELSEIF RESULT == 999
+	;역조교·주인공이 행동불능 때는 자신의 의지로 종료 할 수 없다
+	IF GROUPMATCH(FLAG:조교모드, 조교_역조교특수, 조교_역조교통상) || !IS_PLAYABLE(MASTER)
+		RETURN 0
+	;포로 조교
+	ELSEIF FLAG:조교모드 == 조교_포로조교
+		PRINTFORMW （조교를 종료합니다）
+		BEGIN AFTERTRAIN
+	;우후후중
+	ELSEIF FLAG:우후후플래그
+		PRINTFORMW （밤시중을 종료합니다）
+		BEGIN AFTERTRAIN
+	ELSE
+		CALL TRAIN_EXIT()
+	ENDIF
+	RETURN 1
+
+;★디버그
+;ELSEIF RESULT >= 90000 && RESULT < 90099
+;	LOCAL:0 = RESULT - 90000
+;	IF SOURCENAME:(LOCAL:0) != ""
+;		PRINTFORML %SOURCENAME:(LOCAL:0)%의 소스를 주어 우츠호의 커맨드를 실행합니다
+;		PRINTFORML 소스량을 지정해 주세요(1～10000)
+;		INPUT
+;		LOCAL:1 = RESULT
+;		IF LOCAL:1 > 0 && LOCAL:1 <= 10000
+;			DOTRAIN 900
+;			SOURCE:(MTAR:0):(LOCAL:0) += LOCAL:1
+;		ENDIF
+;	ENDIF
+
+;탭 설정
+ELSEIF RESULT >= 800 && RESULT <= 806
+	IF FLAG:우후후플래그 || (FLAG:조교모드 == 조교_만난다 && GROUPMATCH(RESULT, 800, 801, 806)) || (FLAG:조교모드 == 조교_육아 && GROUPMATCH(RESULT, 800)) || (FLAG:조교모드 == 조교_포로회화 && GROUPMATCH(RESULT, 800, 806))
+		TFLAG:7 = RESULT - 800
+	ENDIF
+	CLEARLINE LINECOUNT - LINES_TRAIN
+	;LINES_TRAIN = LINECOUNT
+;역조교·행동불능시의 「하는대로」
+ELSEIF RESULT == 0 && (GROUPMATCH(FLAG:조교모드, 조교_역조교특수, 조교_역조교통상, 조교_위안) || !IS_PLAYABLE(MASTER))
+	;맡김 플래그 ON
+	TFLAG:0 = 1
+	TFLAG:45 = 1
+	CALL COM_AUTOSELECT
+
+;커맨드 및 독자 유틸리티 실행
+ELSEIF RESULT >= 0 && RESULT < 800
+	LOCAL:0 = -1
+	;주인공 주도, 단발
+	IF RESULT < 200
+		LOCAL:0 = RESULT
+		TFLAG:1 = 1
+	;	TFLAG:45 = 0
+	;주인공 주도, 계속
+	ELSEIF RESULT < 400
+		LOCAL:0 = RESULT - 200
+		TFLAG:1 = 0
+	;	TFLAG:45 = 0
+	;상대 주도, 단발
+	;ELSEIF RESULT < 600 && GROUPMATCH(FLAG:조교 모드, 조교_만나는, 조교_침실, 조교_포로 회화)
+	;	LOCAL:0 = RESULT - 400
+	;	TFLAG:1 = 1
+	;	TFLAG:45 = 1
+	;상대 주도, 계속
+	;ELSEIF RESULT < 800 && GROUPMATCH(FLAG:조교 모드, 조교_만나는, 조교_침실, 조교_포로 회화)
+	;	LOCAL:0 = RESULT - 600
+	;	TFLAG:1 = 0
+	;	TFLAG:45 = 1
+	ENDIF
+
+	IF LOCAL:0 >= 0 && COM_LIST:(LOCAL:0) >= 0
+		;290「하는대로」291 「맡긴다」
+		IF GROUPMATCH(COM_LIST:(LOCAL:0), 290, GET_TRAINNUM("맡긴다"))
+			;맡김 플래그 ON
+			TFLAG:0 = 1
+			TFLAG:45 = 1
+			CALL COM_AUTOSELECT
+		;393「맡긴다」
+		ELSEIF GROUPMATCH(COM_LIST:(LOCAL:0), GET_TRAINNUM("맡긴다"))
+			;맡김 플래그 ON
+			TFLAG:0 = 1
+			TFLAG:45 = 1
+			CALL COM_AUTOSELECT_N
+		ELSE
+			;맡김 플래그 OFF
+			TFLAG:0 = 0
+			DOTRAIN COM_LIST:(LOCAL:0)
+		ENDIF
+	ENDIF
+ENDIF
+RETURN 0

@@ -1,0 +1,487 @@
+﻿;-------------------------------------------------
+; 아이템 개발 이벤트
+;-------------------------------------------------
+@ITEM_DEVELOPMENT
+CALL SINGLE_DRAWLINE
+PRINTFORML  아이템 개발 보고
+CALL COLOR_LINE
+FOR LOCAL:0, 200, 300
+	IF ITEMTIME:(LOCAL:0) >= 1
+		IF ITEMTIME:(LOCAL:0) >= ITEMTERM:(LOCAL:0)
+			ITEMTIME:(LOCAL:0) = 0
+			IF LOCAL:0 < 280
+				ITEM:(LOCAL:0) ++
+			ENDIF
+			IF LOCAL:0 >= 250
+				ITEMSALES:(LOCAL:0) = 1
+			ENDIF
+			SETCOLOR 칼라_주의
+			PRINTFORMW 『%ITEMNAME:(LOCAL:0)%』가 완성되었습니다!
+			RESETCOLOR
+		ELSE
+			ITEMTIME:(LOCAL:0) ++
+		ENDIF
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+; 아이템의 개발 기간을 설정(뉴 게임·로드시에 불려 간다)
+;-------------------------------------------------
+@SET_ITEMTERM
+ITEMTERM:200 = 3
+ITEMTERM:201 = 5
+ITEMTERM:202 = 6
+ITEMTERM:203 = 3
+ITEMTERM:204 = 4
+ITEMTERM:206 = 5
+ITEMTERM:207 = 5
+ITEMTERM:208 = 2
+ITEMTERM:209 = 4
+ITEMTERM:210 = 6
+ITEMTERM:211 = 8
+ITEMTERM:212 = 3
+ITEMTERM:213 = 5
+ITEMTERM:214 = 4
+ITEMTERM:215 = 4
+ITEMTERM:216 = 5
+ITEMTERM:217 = 10
+ITEMTERM:218 = 3
+ITEMTERM:240 = 3
+ITEMTERM:241 = 3
+ITEMTERM:242 = 3
+ITEMTERM:243 = 1
+ITEMTERM:244 = 1
+ITEMTERM:245 = 1
+ITEMTERM:250 = 6
+ITEMTERM:251 = 5
+ITEMTERM:252 = 16
+ITEMTERM:253 = 25
+ITEMTERM:260 = 3
+ITEMTERM:261 = 3
+ITEMTERM:262 = 4
+ITEMTERM:263 = 5
+ITEMTERM:264 = 5
+ITEMTERM:265 = 5
+ITEMTERM:266 = 4
+ITEMTERM:267 = 4
+ITEMTERM:280 = 3
+ITEMTERM:281 = 4
+ITEMTERM:282 = 3
+ITEMTERM:283 = 4
+ITEMTERM:284 = 8
+ITEMTERM:285 = 6
+ITEMTERM:286 = 6
+ITEMTERM:287 = 6
+ITEMTERM:288 = 10
+ITEMTERM:289 = 4
+ITEMTERM:290 = 5
+ITEMTERM:291 = 5
+ITEMTERM:292 = 4
+ITEMTERM:293 = 10
+ITEMTERM:294 = 6
+ITEMTERM:295 = 7
+ITEMTERM:296 = 7
+
+;-------------------------------------------------
+;개발 아이템 ARG:0의 진정한 구입 가격을 취득
+;-------------------------------------------------
+@GET_PRICE(ARG:0)
+RESULT = ITEMPRICE:(ARG:0)
+TRYCALLFORM GET_PRICE{ARG:0}
+RETURN RESULT
+
+;-------------------------------------------------
+;개발 아이템의 구입 가격
+;-------------------------------------------------
+;●양조술
+@GET_PRICE250
+RETURN 3000
+
+;●과실주
+@GET_PRICE251
+RETURN 2000
+
+;●일본술
+@GET_PRICE252
+RETURN 4000
+
+;●증류주
+@GET_PRICE253
+RETURN 5000
+
+;●미약
+@GET_PRICE260
+RETURN 2000
+
+;●배란유발제
+@GET_PRICE261
+RETURN 3000
+
+;●절륜환
+@GET_PRICE262
+RETURN 3000
+
+;●마약
+@GET_PRICE263
+RETURN 10000
+
+;●피어스
+@GET_PRICE264
+RETURN 7000
+
+;●도원향
+@GET_PRICE265
+RETURN 3500
+
+;●비디오 테잎
+@GET_PRICE266
+RETURN 1000
+
+;●이상한 회중시계
+@GET_PRICE267
+RETURN 5000
+
+;●후타나리약
+@GET_PRICE280
+RETURN 30000
+
+;●성전환약
+@GET_PRICE281
+RETURN 30000
+
+;●이와가미노 비약
+@GET_PRICE282
+RETURN 20000
+
+;●짐승 변화의 비약
+@GET_PRICE283
+RETURN 40000
+
+;●재생의 비약
+@GET_PRICE284
+RETURN 100000
+
+;●개
+@GET_PRICE285
+RETURN 30000
+
+;●돼지
+@GET_PRICE286
+RETURN 30000
+
+;영구 제모제
+@GET_PRICE287
+RETURN 50000
+
+;문신 제거 수술
+@GET_PRICE288
+RETURN 100000
+
+;구멍 트레이닝
+@GET_PRICE289
+RETURN 50000
+
+;미용 수술
+@GET_PRICE290
+RETURN 50000
+
+;위험일않고들 해
+@GET_PRICE291
+RETURN 20000
+
+;피임약
+@GET_PRICE292
+RETURN 20000
+
+;낙태약
+@GET_PRICE293
+RETURN 50000
+
+;주도 반감법
+@GET_PRICE294
+RETURN 20000
+
+;마
+@GET_PRICE295
+RETURN 50000
+
+;원숭이
+@GET_PRICE296
+RETURN 50000
+
+;-------------------------------------------------
+;개발 아이템의 개발 조건
+;-------------------------------------------------
+;●애널바이브
+@ITEM_ABLE202
+;바이브를 개발이 끝난 상태
+IF ITEM:바이브 >= 1
+	RETURN 1
+ENDIF
+RETURN 0
+
+;●클리캡
+@ITEM_ABLE206
+;로터를 개발이 끝난 상태
+IF ITEM:로터 >= 1
+	RETURN 1
+ENDIF
+RETURN 0
+
+;●유두캡
+@ITEM_ABLE207
+;로터를 개발이 끝난 상태
+IF ITEM:로터 >= 1
+	RETURN 1
+ENDIF
+RETURN 0
+
+;●쌍두바이브
+@ITEM_ABLE208
+;페니스밴드를 개발이 끝난 상태
+IF ITEM:페니스밴드 >= 1
+	RETURN 1
+ENDIF
+RETURN 0
+
+;●촉수의방
+@ITEM_ABLE210
+;촉수의방의 관리가 가능한 캐릭터가 필요
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속 && CFLAG:(LOCAL:0):포로처 == 0 && TALENT:(LOCAL:0):요술지식 && (ABL:(LOCAL:0):촉수 >= 5 || LOCAL:0 == MASTER)
+		RETURN 1
+	ENDIF
+NEXT
+RETURN 0
+
+;●원격 통신용 스키마
+@ITEM_ABLE211
+;음구목록을 가지고 있다
+IF ITEM:음구목록
+	RETURN 1
+ENDIF
+RETURN 0
+
+;●목걸이
+@ITEM_ABLE212
+;음구목록을 가지고 있다
+IF ITEM:음구목록
+	RETURN 1
+ENDIF
+RETURN 0
+
+;●니들 앤드 잉크
+@ITEM_ABLE213
+;음구목록을 가지고 있다
+IF ITEM:음구목록
+	RETURN 1
+ENDIF
+RETURN 0
+
+;착유기
+@ITEM_ABLE216
+;유두캡을 개발이 끝난 상태
+IF ITEM:유두캡 >= 1
+	RETURN 1
+ENDIF
+RETURN 0
+
+;●최면술
+@ITEM_ABLE217
+;음구목록을 가지고 있어 주인공이 요술지식 떡
+IF ITEM:음구목록 && TALENT:MASTER:요술지식
+	RETURN 1
+ENDIF
+RETURN 0
+
+;●장난감주사기
+@ITEM_ABLE218
+;음구목록을 가지고 있다
+IF ITEM:음구목록
+	RETURN 1
+ENDIF
+RETURN 0
+
+
+;●과실주
+@ITEM_ABLE251
+;양조술을 개발이 끝난 상태
+IF ITEMSALES:양조술
+	RETURN 1
+ENDIF
+RETURN 0
+
+;●증류주
+@ITEM_ABLE253
+;양조술을 개발이 끝난 상태
+IF ITEMSALES:양조술
+	RETURN 1
+ENDIF
+RETURN 0
+
+;●절륜환
+@ITEM_ABLE262
+;미약을 개발이 끝난 상태
+IF ITEMSALES:미약
+	RETURN 1
+ENDIF
+RETURN 0
+
+;●마약
+@ITEM_ABLE263
+;음구목록을 가지고 있다
+IF ITEM:음구목록
+	RETURN 1
+ENDIF
+RETURN 0
+
+;●피어스
+@ITEM_ABLE264
+;음구목록을 가지고 있다
+IF ITEM:음구목록
+	RETURN 1
+ENDIF
+RETURN 0
+
+;●도원향
+@ITEM_ABLE265
+;미약을 개발 끝나, 한편 음구목록을 가지고 있다
+IF ITEMSALES:미약 && ITEM:음구목록
+	RETURN 1
+ENDIF
+RETURN 0
+
+;●회중시계
+@ITEM_ABLE267
+;음구목록을 가지고 있어 주인공이 요술지식 떡
+IF ITEM:음구목록
+	RETURN 1
+ENDIF
+RETURN 0
+
+;●후타나리약
+@ITEM_ABLE280
+;음구목록을 가지고 있다
+IF ITEM:음구목록
+	RETURN 1
+ENDIF
+RETURN 0
+
+;●성전환약
+@ITEM_ABLE281
+;음구목록을 가지고 있다
+IF ITEM:음구목록
+	RETURN 1
+ENDIF
+RETURN 0
+
+;●이와가미노 비약
+@ITEM_ABLE282
+;음구목록을 가지고 있다
+IF ITEM:음구목록
+	RETURN 1
+ENDIF
+RETURN 0
+
+;●짐승 변화의 비약
+@ITEM_ABLE283
+;음구목록을 가지고 있다
+IF ITEM:음구목록
+	RETURN 1
+ENDIF
+RETURN 0
+
+;●재생의 비약
+@ITEM_ABLE284
+;후타나리, 성전환, 짐승 변화중 2개 이상을 개발이 끝난 상태
+IF (ITEMSALES:후타나리약 != 0) + (ITEMSALES:성전환약 != 0) + (ITEMSALES:짐승변화의비약 != 0) >= 2
+	RETURN 1
+ENDIF
+
+;개와 돼지
+@ITEM_ABLE285
+;음구목록을 가지고 있다
+IF ITEM:음구목록
+	RETURN 1
+ENDIF
+RETURN 0
+
+@ITEM_ABLE286
+;음구목록을 가지고 있다
+IF ITEM:음구목록
+	RETURN 1
+ENDIF
+RETURN 0
+
+;영구 제모제
+@ITEM_ABLE287
+;후타나리, 성전환, 짐승 변화중 2개 이상을 개발이 끝난 상태
+IF (ITEMSALES:후타나리약 != 0) + (ITEMSALES:성전환약 != 0) + (ITEMSALES:짐승변화의비약 != 0) >= 2
+	RETURN 1
+ENDIF
+RETURN 0
+
+;문신 제거 수술
+@ITEM_ABLE288
+;니들＆잉크를 소지
+IF ITEM:문신바늘
+	RETURN 1
+ENDIF
+RETURN 0
+
+;구멍 트레이닝
+@ITEM_ABLE289
+;음구목록을 가지고 있다
+IF ITEM:음구목록
+	RETURN 1
+ENDIF
+RETURN 0
+
+;미용
+@ITEM_ABLE290
+;음구목록을 가지고 있다
+RETURN 1
+
+;위험일않고들 해
+@ITEM_ABLE291
+;음구목록을 가지고 있어, 배란유발제 개발이 끝난 상태
+IF ITEM:음구목록 && ITEMSALES:배란유발제
+	RETURN 1
+ENDIF
+RETURN 0
+
+
+;피임약
+@ITEM_ABLE292
+RETURN 1
+
+;낙태약
+@ITEM_ABLE293
+IF ITEM:음구목록
+	RETURN 1
+ENDIF
+RETURN 0
+
+;능동 수동
+@ITEM_ABLE294
+IF ITEM:음구목록
+	RETURN 1
+ENDIF
+RETURN 0
+
+;마
+@ITEM_ABLE295
+;음구목록을 가지고 있다
+IF ITEM:음구목록
+	RETURN 1
+ENDIF
+RETURN 0
+
+;원숭이
+@ITEM_ABLE296
+;음구목록을 가지고 있어 개와 돼지 개발이 끝난 상태
+IF ITEM:음구목록 && ITEMSALES:개 && ITEMSALES:돼지
+	RETURN 1
+ENDIF
+RETURN 0
+

@@ -1,0 +1,200 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+;
+;Module   :_Dictionary.ERB, _Dictionary.ERH
+;Facility :문자열을 연상 배열과 같이 취급하는 라이브라리
+;Licence  :라이센스 프리(CC0).
+;
+;Modification Data:
+;  Edit  Date          Author                   Reason
+;  001   2018/08/29    MinorShift(Emuera의 사람)   신규 작성
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+
+;문자열을 사용한 연상 배열도 물러나
+;[키:값]이라는 형식에서 잡다한 데이터를 보존한다.
+;예를 들면, 연상 배열용 문자열 STR가"[머리 모양:쇼트][머리색:록][동색:파랑]"일 때, DIC_GET(STR, "머리색")는 "초록"을 돌려준다.
+;또, STR가"[머리 모양:쇼트][머리색:록][동색:파랑]"일 때, DIC_SET(STR, "머리 모양", "롱")는"[머리 모양:롱][머리색:록][동색:파랑]"을 돌려준다.
+;제한으로서 키 또는 값에는"[", ":", "]"가 포함되어 있어서는 안 된다. 당연 상자에는 할 수 없다.
+;표준에서는 하나의 연상 배열중의 키의 최대수는 100개. _Dictionary.ERH를 변경하면 늘릴 수 있지만 실행 속도가 실용적이지 않다고 생각된다.
+;조금이라도 고속화하기 위해서 데이터 형식의 체크는 생략하고 있다. 그 때문에 부정한 형식의 데이터가 보내져 오면 무엇이 일어나는지 모른다.
+;데이터를 정리해 격납하기 위해서 아무쪼록.
+;_List와는 독립하고 있으므로 값으로 해서 가변장 배열을 격납한다, 또는 연상 배열의 가변장 배열을 작성할 수 있다. 상자로 하면 죽는다.
+
+
+;@DIC_SET(_DICTIONARY, _KEY, _VALUE) ;대상의 연상 배열의_KEY에_VALUE를 격납한 연상 배열을 돌려준다. 이미 키가 존재한다면 덧쓰기.
+;@DIC_GET(_DICTIONARY, _KEY) ;대상의 연상 배열의_KEY의 값을 취득한다. 키가 존재하지 않으면 빈 문자열.
+;@DIC_REMOVE(_DICTIONARY, _KEY) ;대상의 연상 배열의_KEY를 삭제한 연상 배열을 돌려준다. 키가 존재하지 않으면 입력인 채 돌려준다.
+;@DIC_CONTAINSKEY(_DICTIONARY, _KEY) ;대상의 연상 배열에_KEY가 존재할지 어떨지 판정한다. 존재하면 1, 하지 않으면 0.
+;@DIC_COUNT(_DICTIONARY) ;대상의 연상 배열에 포함되는 키의 수를 취득한다.
+;@DIC_FOREACH(_DICTIONARY, _FUNCNAME);대상의 연상 배열에 포함되는 요소 모두에 대해, CALLFORM %FUNCNAME%, _KEY, _VALUE; 를 실행한다.
+
+
+
+
+;================================================
+;@DIC_SET (#FUNCTIONS) 대상의 연상 배열의_KEY에_VALUE를 격납한 연상 배열을 돌려준다. 이미 키가 존재한다면 덧쓰기.
+;_DICTIONARY 대상의 연상 배열（문자열）
+;_KEY        추가하는 대상의 키
+;_VALUE      추가하는 값
+;RETURNF     추가 또는 변경된 연상 배열（문자열）
+;================================================
+@DIC_SET(_DICTIONARY, _KEY, _VALUE)
+#FUNCTIONS
+#DIMS _DICTIONARY
+#DIMS _KEY
+#DIMS _VALUE
+;_KEY가 이미 존재할지 어떨지 검증
+_DIC_INDEX_OPEN = STRFINDU(_DICTIONARY, "[" + _KEY + ":")
+;_KEY가 신규들[KEY:VALUE]를 추가한 문자열을 돌려주어 종료
+IF _DIC_INDEX_OPEN < 0
+	RETURNF _DICTIONARY + "[" + _KEY + ":" + _VALUE + "]"
+ENDIF
+;_KEY가 이미 존재한다면_DICTIONARY로부터 기존의[KEY:VALUE]를 제외한 문자열에 신규[KEY:VALUE]를 추가한다
+IF _DIC_INDEX_OPEN > 0
+	_DICTIONARY_LEFT '= SUBSTRINGU(_DICTIONARY,0,_DIC_INDEX_OPEN)
+ELSE
+	_DICTIONARY_LEFT '= ""
+ENDIF
+;"[KEY:"이후의 최초의"]"를 서치
+_DIC_INDEX_CLOSE = STRFINDU(_DICTIONARY, "]", _DIC_INDEX_OPEN)
+;기존의[KEY:VALUE]보다 오른쪽의 텍스트를_DICTIONARY_RIGHT에 취득
+IF _DIC_INDEX_CLOSE < 0
+	THROW 연상 배열용 문자열이 올바르지 않다→%_DICTIONARY%
+ELSEIF _DIC_INDEX_CLOSE+1 < STRLENSU(_DICTIONARY)
+	_DICTIONARY_RIGHT '= SUBSTRINGU(_DICTIONARY, _DIC_INDEX_CLOSE + 1 , -1)
+ELSE
+	_DICTIONARY_RIGHT '= ""
+ENDIF
+;더해 돌려준다
+RETURNF _DICTIONARY_LEFT + "[" + _KEY + ":" + _VALUE + "]" + _DICTIONARY_RIGHT
+
+
+
+;================================================
+;@DIC_CONTAINSKEY (#FUNCTION) ;대상의 연상 배열에_KEY가 존재할지 어떨지 판정한다. 존재하면 1, 하지 않으면 0.
+;_DICTIONARY 대상의 연상 배열（문자열）
+;_KEY        키
+;RETURNF     추가 또는 변경된 연상 배열（문자열）
+;================================================
+@DIC_CONTAINSKEY(_DICTIONARY, _KEY)
+#FUNCTION
+#DIMS _DICTIONARY
+#DIMS _KEY
+RETURNF STRFINDU(_DICTIONARY, "[" + _KEY + ":") >= 0
+
+
+;================================================
+;@DIC_REMOVE (#FUNCTIONS)) ;대상의 연상 배열의_KEY를 삭제한 연상 배열을 돌려준다. 키가 존재하지 않으면 입력인 채 돌려준다.
+;_DICTIONARY 대상의 연상 배열（문자열）
+;_KEY        키
+;RETURNF     키가 삭제된 연상 배열（문자열）
+;================================================
+@DIC_REMOVE(_DICTIONARY, _KEY)
+#FUNCTIONS
+#DIMS _DICTIONARY
+#DIMS _KEY
+;_KEY가 이미 존재할지 어떨지 검증
+_DIC_INDEX_OPEN = STRFINDU(_DICTIONARY, "[" + _KEY + ":")
+;_KEY가 존재하지 않으면 입력을 그대로 돌려주어 종료
+IF _DIC_INDEX_OPEN < 0
+	RETURNF _DICTIONARY
+ENDIF
+;_KEY가 이미 존재한다면_DICTIONARY로부터 기존의[KEY:VALUE]를 돌려준다
+IF _DIC_INDEX_OPEN > 0
+	_DICTIONARY_LEFT '= SUBSTRINGU(_DICTIONARY,0,_DIC_INDEX_OPEN)
+ELSE
+	_DICTIONARY_LEFT '= ""
+ENDIF
+;"[KEY:"이후의 최초의"]"를 서치
+_DIC_INDEX_CLOSE = STRFINDU(_DICTIONARY, "]", _DIC_INDEX_OPEN)
+;기존의[KEY:VALUE]보다 오른쪽의 텍스트를_DICTIONARY_RIGHT에 취득
+IF _DIC_INDEX_CLOSE < 0
+	THROW _Dictionary.ERB:연상 배열용 문자열이 올바르지 않다→%_DICTIONARY%
+ELSEIF _DIC_INDEX_CLOSE+1 < STRLENSU(_DICTIONARY)
+	_DICTIONARY_RIGHT '= SUBSTRINGU(_DICTIONARY, _DIC_INDEX_CLOSE + 1 , -1)
+ELSE
+	_DICTIONARY_RIGHT '= ""
+ENDIF
+;더해 돌려준다
+RETURNF _DICTIONARY_LEFT + _DICTIONARY_RIGHT
+
+
+;================================================
+;@DIC_GET (#FUNCTIONS)) ;대상의 연상 배열의_KEY의 값을 취득한다. 키가 존재하지 않으면 빈 문자열.
+;_DICTIONARY 대상의 연상 배열（문자열）
+;_KEY        키
+;RETURNF     키에 대응하는 값 또는 빈 문자열
+;================================================
+@DIC_GET(_DICTIONARY, _KEY)
+#FUNCTIONS
+#DIMS _DICTIONARY
+#DIMS _KEY
+;_KEY가 존재할지 어떨지 검증
+_DIC_INDEX_OPEN = STRFINDU(_DICTIONARY, "[" + _KEY + ":")
+;_KEY가 존재하지 않으면 빈 문자열을 돌려주어 종료
+IF _DIC_INDEX_OPEN < 0
+	RETURNF ""
+ENDIF
+;치의 개시 위치의 인덱스를 계산
+_DIC_INDEX_OPEN = _DIC_INDEX_OPEN + STRLENSU(_KEY) + 2
+;"[KEY:"이후의 최초의"]"를 서치
+_DIC_INDEX_CLOSE = STRFINDU(_DICTIONARY, "]", _DIC_INDEX_OPEN)
+IF _DIC_INDEX_CLOSE < 0
+	THROW _Dictionary.ERB:연상 배열용 문자열이 올바르지 않다→%_DICTIONARY%
+ENDIF
+RETURNF SUBSTRINGU(_DICTIONARY, _DIC_INDEX_OPEN, _DIC_INDEX_CLOSE - _DIC_INDEX_OPEN)
+
+
+
+;================================================
+;@DIC_COUNT (#FUNCTION) ;대상의 연상 배열에 포함되는 키의 수를 취득한다.
+;_DICTIONARY 대상의 연상 배열（문자열）
+;RETURNF     키의 수
+;================================================
+@DIC_COUNT(_DICTIONARY)
+#FUNCTION
+#DIMS _DICTIONARY
+#DIM _COUNT
+_DIC_INDEX_OPEN = -1
+_COUNT = 0
+WHILE 1
+	_DIC_INDEX_OPEN = STRFINDU(_DICTIONARY, "[" , _DIC_INDEX_OPEN + 1)
+	IF _DIC_INDEX_OPEN < 0
+		BREAK
+	ENDIF
+	_COUNT ++
+WEND
+RETURNF _COUNT
+
+
+
+;================================================
+;@DIC_FOREACH ;대상의 연상 배열에 포함되는 요소 모두에 대해, CALLFORM %FUNCNAME%, _KEY, _VALUE; 를 실행한다.
+;_DICTIONARY  대상의 연상 배열（문자열）
+;_FUNCNAME    실행하는 함수명(CALLFORM %FUNCNAME%, _KEY, _VALUE)
+;RESULT       특별히 이루어
+;================================================
+@DIC_FOREACH(_DICTIONARY, _FUNCNAME)
+#DIMS _DICTIONARY
+#DIMS _FUNCNAME
+#DIM _KEYCOUNT
+#DIM _CNT
+#DIMS _DIC_PAIRS,_DIC_MAX
+
+SPLIT _DICTIONARY, "[", _DIC_PAIRS
+IF RESULT > _DIC_MAX
+	THROW _Dictionary.ERB:연상 배열의 키수가 너무 많다→%_DICTIONARY%
+ENDIF
+_KEYCOUNT = RESULT
+FOR _CNT,0,_KEYCOUNT
+	;빈 문자열인가"키:값]"일 것
+	_DIC_INDEX_OPEN = STRFINDU(_DIC_PAIRS:_CNT, ":")
+	IF _DIC_INDEX_OPEN < 0
+		CONTINUE
+	ENDIF
+	;_KEY = SUBSTRINGU(_DIC_PAIRS:_CNT, 0, _DIC_INDEX_OPEN)
+	;_VALUE = SUBSTRINGU(_DIC_PAIRS:_CNT, _DIC_INDEX_OPEN + 1, STRLENSU(_DIC_PAIRS:_CNT) - (_DIC_INDEX_OPEN + 1) -1)
+	;CALLFORM %_FUNCNAME%, _KEY, _VALUE
+	CALLFORM %_FUNCNAME%, SUBSTRINGU(_DIC_PAIRS:_CNT, 0, _DIC_INDEX_OPEN), SUBSTRINGU(_DIC_PAIRS:_CNT, _DIC_INDEX_OPEN + 1, STRLENSU(_DIC_PAIRS:_CNT) - (_DIC_INDEX_OPEN + 1) -1)
+NEXT
+

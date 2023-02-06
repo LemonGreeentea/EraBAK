@@ -1,0 +1,75 @@
+﻿;-------------------------------------------------
+;「국고입금」의 명칭
+;-------------------------------------------------
+@SHOP_SLG_NAME61
+RESULTS:0 '= "국고입금"
+
+;-------------------------------------------------
+;「국고입금」의 선택 가부
+;-------------------------------------------------
+@SHOP_SLG_CHECK61
+SIF FLAG:클리어플래그
+	RETURN 0
+SIF FLAG:관전모드
+	RETURN 0
+SIF CFLAG:MASTER:소속 == 0
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「국고입금」의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_SLG_EVENTBUY61
+CALL SLG_TREASURY_DEPOSIT
+RETURN 1
+
+
+;-------------------------------------------------
+;「국고입금」본체
+;-------------------------------------------------
+@SLG_TREASURY_DEPOSIT
+#DIM FIRST_LINE
+#DIM 레이트
+레이트 = GET_SUM_ECONOMY(CFLAG:MASTER:소속) / 100000 + 1
+FIRST_LINE = LINECOUNT
+CALL SINGLE_DRAWLINE
+PRINTFORML 개인 자금을 국고에 입금할 수가 있습니다
+PRINTFORML 다만, 국고를 개인 자금으로 해서 인출할 수 없습니다
+PRINTFORM 현재의 레이트는 개인 자금
+CALL COLOR_PRINT(@"{레이트}", 칼라_주의)
+PRINTFORM 에 대해, 국고
+CALL COLOR_PRINT("1", 칼라_주의)
+PRINTFORML 입니다
+PRINTFORML 국고로 하고 있고 창고를 얻습니까? (0, 음수 입력으로 캔슬)
+CALL SINGLE_DRAWLINE
+FOR LOCAL, 1, 10
+	SIF 레이트 * POWER(10, LOCAL) <= MONEY
+		PRINTFORML [{POWER(10, LOCAL), 10}] 개인 자금{레이트 * POWER(10, LOCAL), 10}
+NEXT
+PRINTFORML [{MONEY / 레이트, 10}] 개인 자금{MONEY / 레이트 * 레이트, 10}
+PRINTFORML [0] 돌아온다
+INPUT
+IF RESULT <= 0
+	RETURN 0
+ELSEIF RESULT * 레이트 <= MONEY
+	LOCAL = RESULT
+	PRINTFORM 개인 자금
+	CALL COLOR_PRINT(@"{레이트 * LOCAL}", 칼라_주의)
+	PRINTFORM 를 입금해, 국고
+	CALL COLOR_PRINT(@"{LOCAL}", 칼라_주의)
+	PRINTFORML 를 얻습니다
+	PRINTFORML 좋습니까?
+	CALL ASK_YN()
+	IF RESULT == 1
+		RESTART
+	ELSE
+		PRINTFORM 국고
+		CALL COLOR_PRINT(@"{LOCAL}", 칼라_주의)
+		PRINTFORML 를 얻었습니다
+		MONEY -= LOCAL * 레이트
+		MONEY:(CFLAG:MASTER:소속) += LOCAL
+		RETURN 0
+	ENDIF
+ENDIF
+RESTART
+

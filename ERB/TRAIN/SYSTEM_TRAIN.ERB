@@ -1,0 +1,1684 @@
+﻿;조교 관련의 시스템 함수를 관리
+
+;-------------------------------------------------
+;조교 개시시의 처리
+;-------------------------------------------------
+@EVENTTRAIN
+#PRI
+
+LINES_TRAIN = LINECOUNT
+;조교에 참가하고 있는 인원수를 센다
+TFLAG:44 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):조교참가플래그
+		TFLAG:44 ++
+	ENDIF
+NEXT
+
+;기분 파라미터에 퇴피해 둔 값을 대입
+FOR LOCAL:0, 0, CHARANUM
+	FOR LOCAL:1, 0, 10
+		PALAM:(LOCAL:0):(LOCAL:1 + 10) = CFLAG:(LOCAL:0):(LOCAL:1 + 190)
+	NEXT
+NEXT
+
+;강제 우호화 플래그가 서 있다면, 부의 감정을 리셋트 한다
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):강제우호화
+		FOR LOCAL:1, 0, 10
+			SIF PALAM:(LOCAL:0):(LOCAL:1 + 10) > 0
+				PALAM:(LOCAL:0):(LOCAL:1 + 10) = 0
+		NEXT
+	ENDIF
+NEXT
+
+;「만나러간다」모드
+IF FLAG:조교모드 == 0
+	FOR LOCAL:0, 0, CHARANUM
+		;츤데레＆연모＆비연인의 경우
+		IF TALENT:(LOCAL:0):츤데레 && TALENT:(LOCAL:0):연모 && !TALENT:(LOCAL:0):연인
+			;최초부터 로·액의 감정이 높은 상태에
+			PALAM:(LOCAL:0):로주 = MAX(PALAM:(LOCAL:0):로주, 300 + RAND:100)
+			PALAM:(LOCAL:0):액주 = MAX(PALAM:(LOCAL:0):액주, 300 + RAND:100)
+		ENDIF
+	NEXT
+ENDIF
+
+;IF FLAG:조교 모드 == 2 && CFLAG:(FLAG:19):외교 조교 카운터 && TFLAG:44 == 1
+;	IF ABL:(FLAG:19):욕망 >= 3 && ABL:(FLAG:19):성지식 >= 3 && (ABL:(FLAG:19):주도도Ｕ >= 300 || TALENT:(FLAG:19):새드)
+;		PRINTFORMW ………………
+;		PRINTFORMW 이것은 어떻게 말하는 것일까?
+;		PRINTFORMW 깨달으면, %ANAME(FLAG:19)%에 완전하게 주도권을 빼앗겨 밧줄로 단단히 묶어져 버리고 있다
+;		PRINTFORMW 혹시, 조교하는 상대를 오인했는지도 모른다…
+;		FLAG:조교 모드 = 5
+;		FLAG:19 = -1
+;	ENDIF
+;ENDIF
+
+;시간의 설정
+IF FLAG:조교모드 == 0
+	;임월
+	IF CFLAG:(MTAR:0):행동불능상태 == 행동불능_임월
+		TFLAG:56 = 5
+	;육아중
+	ELSEIF CFLAG:(MTAR:0):행동불능상태 == 행동불능_육아
+		TFLAG:56 = 5
+	;상처
+	ELSEIF CFLAG:(MTAR:0):행동불능상태 == 3
+		TFLAG:56 = 3
+	ELSE
+		TFLAG:56 = 10
+	ENDIF
+ELSEIF FLAG:조교모드 == 3
+	TFLAG:56 = 5
+ELSEIF FLAG:조교모드 == 6
+	TFLAG:56 = 10
+ELSEIF FLAG:우후후플래그
+	TFLAG:56 = 20
+ENDIF
+
+IF ITEM:이상한회중시계 > 0 && GROUPMATCH(FLAG:조교모드, 조교_침실, 조교_포로조교)
+	PRINTFORML 이상한 회중시계를 사용합니까?
+	PRINTFORML 잔:{ITEM:이상한회중시계}
+	CALL ASK_YN()
+	IF RESULT == 0
+		CALL COLORPRINT(@"이상한 회중시계가 효과를 발휘했다", 칼라_주의, "W")
+		ITEM:이상한회중시계 --
+		TFLAG:56 += 15
+	ENDIF
+ENDIF
+
+;정보 표시 모드의 리셋트
+FLAG:능력표시모드 = 0
+
+;포로 조교·육아라면 항상 주인공이 주도권을 잡는다
+IF GROUPMATCH(FLAG:조교모드, 2, 3)
+	FLAG:주도권소유자 = MASTER
+;그 이외라면 통상은 「형편」로 개시
+ELSE
+	FLAG:주도권소유자 = -1
+ENDIF
+
+;EQUIP의 초기화
+CALL INIT_EQUIP()
+
+;포로 역조교라면 속박된 상태로부터 스타트
+IF GROUPMATCH(FLAG:조교모드, 4, 5) && !GROUPMATCH(1, FLAG:침실역조교)
+	CALL CLEAR_MPLY
+	CALL CLEAR_MTAR
+	FOR LOCAL:0, 0, CHARANUM
+		IF CFLAG:(LOCAL:0):조교참가플래그 && LOCAL:0 != MASTER
+			CALL ADD_MPLY(LOCAL:0)
+		ENDIF
+	NEXT
+	CALL ADD_MTAR(MASTER)
+	;밧줄은 포로일까 1/3
+	SIF CFLAG:(MASTER):포로처 || !RAND:3
+		CALL SET_EQUIP(85, 1)
+	SIF !RAND:3
+		CALL SET_EQUIP(84, 1)
+	SIF !RAND:3
+		CALL SET_EQUIP(86, 1)
+ENDIF
+
+IF CONFIG:10 && GROUPMATCH(FLAG:조교모드, 조교_침실, 조교_포로조교)
+	CALL CLEAR_MPLY
+	CALL CLEAR_MTAR
+	FOR LOCAL, 0, CHARANUM
+		IF IS_PARTICIPATE_TRAIN(LOCAL) && HAS_PENIS(LOCAL)
+			;고무가 없으면 보급
+			IF ITEM:콘돔 <= 0
+				IF ITEMPRICE:콘돔 > MONEY
+					PRINTFORML 콘돔 구입을 위한 자금이 부족합니다
+					BREAK
+				ELSE
+					PRINTFORML 콘돔을 보충합니다
+					ITEM:콘돔 ++
+					MONEY -= ITEMPRICE:콘돔
+				ENDIF
+			ENDIF
+			IF (LOCAL == MASTER && CONFIG:10 == 2) || LOCAL != MASTER
+				CALL ADD_MPLY(LOCAL)
+				ITEM:콘돔 --
+			ENDIF
+		ENDIF
+	NEXT
+	SIF MPLY_NUM > 0
+		CALL SET_EQUIP(GETNUM(TRAINNAME, "콘돔"), 1)
+ENDIF
+
+
+;특수 세력에 의한 조교는, 완성된 상태로부터 스타트
+IF FLAG:조교모드 == 조교_역조교특수
+	FOR LOCAL:0, 0, CHARANUM
+		IF CFLAG:(LOCAL:0):조교참가플래그
+			PALAM:(LOCAL:0):윤활 = 30000
+			PALAM:(LOCAL:0):욕정 = 30000
+		ENDIF
+	NEXT
+ENDIF
+
+;술못함이 아니고 임신하고 있지 않았으면, 이따금 몹시 취한 상태로 스타트
+;종족명이 오니의 경우고확률, 폭주가라도 적당한 확률
+;다만 오니가 아닌 경우, 포로 조교시는 포함하지 않는다
+IF FLAG:조교모드 == 조교_만난다
+	FOR LOCAL, 0, CHARANUM
+		IF CFLAG:(LOCAL:0):조교참가플래그 && !TALENT:(LOCAL:0):술못함 && !TALENT:(LOCAL:0):임신 && CFLAG:(LOCAL:0):행동불능상태 != 행동불능_아이
+			IF HAS_TAG(LOCAL:0, 태그_오니) && !RAND:3
+				PRINTFORMW %조사처리(ANAME(LOCAL:0),"는")% 몹시 취하고 있는 것 같다……
+				PALAM:(LOCAL:0):취기 = RAND(3000, 6000)
+			ELSEIF TALENT:(LOCAL:0):폭주가 && FLAG:조교모드 != 2 && !RAND:5
+				PRINTFORMW %조사처리(ANAME(LOCAL:0),"는")% 몹시 취하고 있는 것 같다……
+				PALAM:(LOCAL:0):취기 = RAND(1500, 3000)
+			ELSEIF FLAG:조교모드 != 2 && !RAND:10
+				PRINTFORMW %조사처리(ANAME(LOCAL:0),"는")% 몹시 취하고 있는 것 같다……
+				PALAM:(LOCAL:0):취기 = RAND(500, 1500)
+			ENDIF
+		ENDIF
+	NEXT
+ENDIF
+
+;플레이어와 타겟을 클리어
+CALL CLEAR_MPLY
+CALL CLEAR_MTAR
+
+;백성위안이외는 주인공을 플레이어로 설정
+SIF FLAG:조교모드 != 7
+	CALL ADD_MPLY(MASTER)
+
+;참가인수가 1명이라면 타겟을 고정
+IF TFLAG:44 == 1
+	FOR LOCAL:0, 0, CHARANUM
+		IF CFLAG:(LOCAL:0):조교참가플래그
+			CALL ADD_MTAR(LOCAL:0)
+			BREAK
+		ENDIF
+	NEXT
+ENDIF
+
+;대상 선택 간이화
+IF GROUPMATCH(FLAG:조교모드, 0, 1, 2, 6) && CONFIG:18 == 1
+	FOR LOCAL:0, 0, CHARANUM
+		SIF IS_PARTICIPATE_TRAIN(LOCAL:0) == 0
+			CONTINUE
+		;MASTER는 플레이어
+		IF LOCAL:0 == MASTER
+			CALL ADD_MPLY(LOCAL:0)
+			FLAG:10 = MASTER
+		ELSE
+			CALL ADD_MTAR(LOCAL:0)
+		ENDIF
+	NEXT
+ENDIF
+
+	
+
+;뇨잔량과 비잔량을 리셋트
+CVARSET TCVAR, 54, 1000
+CVARSET TCVAR, 55, 1000
+
+PLAYER = -1
+TARGET = -1
+TFLAG:31 = -1
+
+SIF EVENTTRAIN_CALLEE_NUM > 0
+	CALL TRAIN_CALL(0)
+
+IF TRAIN_PLACE == ""
+	IF FLAG:조교모드 == 조교_위안 && GROUPMATCH(FLAG:위안모드,1, 3)
+		TRAIN_PLACE = %IAN_PLACE:(FLAG:위안장소)%
+	ELSEIF FLAG:요바이
+		TRAIN_PLACE = %ANAME(PRISONER_TARGET:0)%의 침실
+	ELSEIF GROUPMATCH(FLAG:조교모드, 2, 4, 5)
+		TRAIN_PLACE = 감옥
+	ELSEIF CFLAG:MASTER:소속
+		TRAIN_PLACE = 궁전안
+	ELSE
+		TRAIN_PLACE = 가거점
+	ENDIF
+ENDIF
+
+PRINTL 
+
+;-------------------------------------------------
+;커맨드 실행전의 처리
+;-------------------------------------------------
+@EVENTCOM
+#PRI
+FOR LOCAL:0, 0, 20
+	CVARSET TCVAR, LOCAL:0, 0
+NEXT
+FOR LOCAL:0, 400, 420
+	CVARSET TCVAR, LOCAL:0, -1
+NEXT
+
+FOR LOCAL:0, 420, 440
+	CVARSET TCVAR, LOCAL:0, 0
+NEXT
+
+CVARSET TCVAR, 74, 0
+CVARSET TCVAR, 75, 0
+
+CVARSET TCVAR, 24, -10000
+CVARSET TCVAR, 25, 10000
+CVARSET TCVAR, 50, 0
+TFLAG:3 = 0
+TFLAG:5 = 0
+TFLAG:17 = 0
+TFLAG:18 = 0
+TFLAG:49 = 0
+TFLAG:50 = 0
+TFLAG:51 = 0
+TFLAG:52 = 0
+TFLAG:53 = 0
+TFLAG:58 = 0
+TFLAG:302 = 0
+
+;지문 컷 플래그를 OFF
+VARSET MEQUIP_CUT, 0
+
+;현재의 EXP를 보존
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0)
+		FOR LOCAL:1, 0, 100
+			TCVAR:(LOCAL:0):(LOCAL:1 + 100) = EXP:(LOCAL:0):(LOCAL:1)
+		NEXT
+	ENDIF
+NEXT
+
+;●주도권 판정
+;플레이어안에 행동불능의 캐릭터가 있으면, 모든 플레이어는 주도권을 잡히지 않는다
+LOCAL:5 = 0
+FOR LOCAL:0, 0, MPLY_NUM
+	IF !IS_PLAYABLE(MPLY:(LOCAL:0))
+		LOCAL:5 = 1
+		BREAK
+	ENDIF
+NEXT
+
+;타겟안에 행동불능의 캐릭터가 있으면, 모든 타겟은 주도권을 잡히지 않는다
+LOCAL:6 = 0
+FOR LOCAL:0, 0, MTAR_NUM
+	IF !IS_PLAYABLE(MTAR:(LOCAL:0))
+		LOCAL:6 = 1
+		BREAK
+	ENDIF
+NEXT
+;커맨드 「위협한다」는 반드시 플레이어가 주도권을 잡는다
+IF SELECTCOM == 80
+	LOCAL:6 = 1
+ENDIF
+
+;주도권을 잡는 것이 가능한 캐릭터를 LOCAL:50이후에 기록
+LOCAL:40 = 0
+IF !LOCAL:5
+	FOR LOCAL:0, 0, MPLY_NUM
+		LOCAL:1 = MPLY:(LOCAL:0)
+		CALL CHECK_COM_KNOWLEDGE(LOCAL:1, SELECTCOM)
+		IF RESULT
+			LOCAL:(LOCAL:40 + 50) = LOCAL:1
+			LOCAL:40 ++
+		ENDIF
+	NEXT
+ENDIF
+IF !LOCAL:6
+	FOR LOCAL:0, 0, MTAR_NUM
+		LOCAL:1 = MTAR:(LOCAL:0)
+		CALL CHECK_COM_KNOWLEDGE(LOCAL:1, SELECTCOM)
+		IF RESULT
+			LOCAL:(LOCAL:40 + 50) = LOCAL:1
+			LOCAL:40 ++
+		ENDIF
+	NEXT
+ENDIF
+
+;주도도가 최대의 캐릭터의 주도도를 요구한다
+;다만 최면중의 캐릭터는-1000으로 한다
+LOCAL:41 = -9999
+FOR LOCAL:0, 0, LOCAL:40
+	LOCAL:1 = LOCAL:(LOCAL:0 + 50)
+	IF LOCAL:1 == MASTER
+		LOCAL:41 = MAX(LOCAL:41, 0)
+	ELSEIF FLAG:우후후플래그
+		LOCAL:41 = MAX(LOCAL:41, TCVAR:(LOCAL:1):최면중 ? -1000 # ABL:(LOCAL:1):주도도Ｕ)
+	ELSE
+		LOCAL:41 = MAX(LOCAL:41, TCVAR:(LOCAL:1):최면중 ? -1000 #ABL:(LOCAL:1):주도도Ｎ)
+	ENDIF
+NEXT
+
+;주도도의 크기에 응해 랜덤에 주도권을 가지는 캐릭터를 결정
+LOCAL:42 = 0
+FOR LOCAL:0, 0, LOCAL:40
+	LOCAL:1 = LOCAL:(LOCAL:0 + 50)
+	IF LOCAL:1 == MASTER
+		LOCAL:42 += MAX(-LOCAL:41 + 800, 0)
+	ELSEIF FLAG:우후후플래그
+		LOCAL:42 += MAX(ABL:(LOCAL:1):주도도Ｕ - LOCAL:41 + 800, 0)
+	ELSE
+		LOCAL:42 += MAX(ABL:(LOCAL:1):주도도Ｎ - LOCAL:41 + 800, 0)
+	ENDIF
+NEXT
+IF LOCAL:42 <= 0
+	TFLAG:45 = MASTER
+ELSE
+	LOCAL:43 = RAND:(LOCAL:42)
+	FOR LOCAL:0, 0, LOCAL:40
+		LOCAL:1 = LOCAL:(LOCAL:0 + 50)
+		IF LOCAL:1 == MASTER
+			LOCAL:43 -= MAX(-LOCAL:41 + 800, 0)
+		ELSEIF FLAG:우후후플래그
+			LOCAL:43 -= MAX(ABL:(LOCAL:1):주도도Ｕ - LOCAL:41 + 800, 0)
+		ELSE
+			LOCAL:43 -= MAX(ABL:(LOCAL:1):주도도Ｎ - LOCAL:41 + 800, 0)
+		ENDIF
+		IF LOCAL:43 < 0
+			TFLAG:45 = LOCAL:1
+			BREAK
+		ENDIF
+	NEXT
+ENDIF
+;주도권을 가지는 캐릭터가 설정되어 있지 않은 경우는 이상으로 결정
+
+;주도권을 가지는 캐릭터가 설정되어 있다면, 기본적으로 그 캐릭터에게 주도권을 갖게한다
+;다만, 위에서 결정된 가짜의 주도권자와의 주도도에 큰 차이가 있으면, 그 차이에 응한 확률로 주도권을 빼앗긴다
+
+IF TFLAG:0 && FLAG:주도권소유자 >= 0
+	;맡김 플래그가 서 있다면 주도권 탈취는 일어나지 않는다
+	TFLAG:45 = FLAG:주도권소유자
+
+ELSEIF FLAG:주도권소유자 >= 0 && FLAG:주도권소유자 != TFLAG:45 && !(IS_MPLY(FLAG:주도권소유자) && IS_MPLY(TFLAG:45)) && !(IS_MTAR(FLAG:주도권소유자) && IS_MTAR(TFLAG:45))
+	IF FLAG:우후후플래그
+		LOCAL:9 = ABL:(FLAG:주도권소유자):주도도Ｕ
+		LOCAL:7 = ABL:(TFLAG:45):주도도Ｕ - LOCAL:9 - 300
+	ELSE
+		LOCAL:9 = ABL:(FLAG:주도권소유자):주도도Ｎ
+		LOCAL:7 = ABL:(TFLAG:45):주도도Ｎ - LOCAL:9 - 300
+	ENDIF
+
+	IF LOCAL:7 < 0
+		TFLAG:45 = FLAG:주도권소유자
+	ELSE
+		LOCAL:8 = MIN(LOCAL:7 * SQRT(LOCAL:7 * 10000) * 70 / 18520 + 500, 8500)
+		IF RAND:10000 >= LOCAL:8
+			TFLAG:45 = FLAG:주도권소유자
+		ELSE
+			IF FLAG:주도권소유자 == MASTER
+				PRINTFORMW %조사처리(ANAME(FLAG:주도권소유자),"가")% 주도권을 잡고 있었을 것이, 깨달으면 %ANAME(TFLAG:45)%에 주도권을 빼앗기고 있었다…
+			ELSEIF TFLAG:45 == MASTER
+				PRINTFORMW %ANAME(FLAG:주도권소유자)%에 주도권을 잡게 하고 있었을 것이, 깨달으면 %조사처리(ANAME(TFLAG:45),"가")% 주도권을 잡아 버리고 있었다…
+			ELSE
+				PRINTFORMW %조사처리(ANAME(FLAG:주도권소유자),"가")% 주도권을 잡고 있었을 텐데, 어느새인가 %조사처리(ANAME(TFLAG:45),"가")% 주도권을 빼앗고 있었다…
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;주도권이 「형편」의 경우의 메세지
+IF FLAG:주도권소유자 == -1
+	LOCAL:1 = 0
+	FOR LOCAL:0, 0, CHARANUM
+		IF IS_PARTICIPATE_TRAIN(LOCAL:0)
+			IF IS_PLAYABLE(LOCAL:0)
+				IF IS_MPLY(LOCAL:0)
+					LOCAL:1 |= 1
+				ELSEIF IS_MTAR(LOCAL:0)
+					LOCAL:1 |= 2
+				ELSE
+					LOCAL:1 |= 4
+				ENDIF
+			ENDIF
+		ENDIF
+	NEXT
+	;주도권이 자명의 경우에는 표시하지 않는다
+;	IF LOCAL:1 != 1 && LOCAL:1 != 2
+;		PRINTFORML %조사처리(ANAME(MASTER),"는")% 주도권을 그 자리의 분위기에 맡겼다
+;		PRINTL 
+;	ENDIF
+ENDIF
+
+;커맨드 명칭의 표시
+LOCALS:0 = 
+VARSET RESULTS, ""
+TRYCALLFORM COM_NAME{SELECTCOM}
+IF IS_MPLY(MASTER)
+	IF IS_INITIATIVE(MASTER)
+		LOCALS:0 = %RESULTS:0%
+	ELSE
+		LOCALS:0 = %RESULTS:1%
+	ENDIF
+ELSEIF IS_MTAR(MASTER)
+	IF IS_INITIATIVE(MASTER)
+		LOCALS:0 = %RESULTS:2%
+	ELSE
+		LOCALS:0 = %RESULTS:3%
+	ENDIF
+ELSE
+	IF FLAG:조교모드 == 조교_위안
+		IF MTAR_NUM == 0
+			LOCALS:0 = %RESULTS:0%
+		ELSEIF CFLAG:(MTAR:0):위안참가자 && CFLAG:(MPLY:0):위안참가자
+			LOCALS:0 = %RESULTS:5%
+		ELSEIF CFLAG:(MTAR:0):위안참가자
+			LOCALS:0 = %RESULTS:1%
+		ELSE
+			LOCALS:0 = %RESULTS:3%
+		ENDIF
+	ELSEIF IS_INITIATIVE(MASTER)
+		LOCALS:0 = %RESULTS:4%
+	ELSE
+		LOCALS:0 = %RESULTS:5%
+	ENDIF
+ENDIF
+IF LOCALS:0 == ""
+	LOCALS:0 = %TRAINNAME:SELECTCOM%
+ENDIF
+PRINTFORML <<%LOCALS:0%>>
+;PRINTFORML <<%LOCALS:0%>>   주도권:%ANAME(TFLAG:45)%
+
+;이번 커맨드 명칭을 보존
+SELECTCOM_NAME = %RESULTS%
+
+;실행 타입의 설정
+IF IS_MPLY(MASTER)
+	SELECTCOM_TYPE = 0
+ELSEIF IS_MTAR(MASTER)
+	SELECTCOM_TYPE = 1
+ELSE
+	SELECTCOM_TYPE = 2
+ENDIF
+
+;-------------------------------------------------
+;커맨드 실행 후의 처리
+;-------------------------------------------------
+@EVENTCOMEND
+#PRI
+VARSET LOCAL, 0
+;커맨드의 실행이 끝난 플래그를 ON로 한다
+FOR LOCAL:0, 0, MPLY_NUM
+	CALL SET_COM_FIRST_FLAG(MPLY:(LOCAL:0))
+NEXT
+FOR LOCAL:0, 0, MTAR_NUM
+	CALL SET_COM_FIRST_FLAG(MTAR:(LOCAL:0))
+NEXT
+
+;실행한 커맨드의 지식을 획득
+FOR LOCAL:0, 0, CHARANUM
+	;조교에 참가하고 있어도, 행동불능이라면 획득 할 수 없다
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0) && IS_PLAYABLE(LOCAL:0)
+		CALL SET_COM_KNOWLEDGE(LOCAL:0, SELECTCOM)
+	ENDIF
+NEXT
+
+;이번 커맨드를 전회의 커맨드와 치환
+PREVCOM = SELECTCOM
+PREVCOM_NAME = %SELECTCOM_NAME%
+PREVCOM_TYPE = SELECTCOM_TYPE
+
+;시간 경과
+TFLAG:55 ++
+IF TFLAG:57 > 0
+	TFLAG:57 ++
+ENDIF
+
+;계속 상태의 계속 턴을 가산
+FOR LOCAL:0, 0, MAX_MEQUIP
+	IF MEQUIP:(LOCAL:0) >= 0
+		MEQUIP_TURN:(LOCAL:0) ++
+	ENDIF
+NEXT
+
+IF GROUPMATCH(FLAG:조교모드, 2, 4, 5)
+	LOCALS:0 = 조교
+ELSEIF FLAG:우후후플래그
+	LOCALS:0 = 밤시중
+ELSE
+	LOCALS:0 = 행동
+ENDIF
+
+;강제 종료 플래그가 서 있는 경우는 조교를 중단
+IF TFLAG:38
+	BEGIN AFTERTRAIN
+	RETURN
+ENDIF
+
+;주인공이 행동불능(역조교 제외함)
+IF !GROUPMATCH(FLAG:조교모드, 4, 5, 7) && !IS_PLAYABLE(MASTER)
+	;우후후중은 계속 판정
+	IF FLAG:우후후플래그
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER && CFLAG:(LOCAL:0):조교참가플래그 && (ABL:(LOCAL:0):주도도Ｕ >= 500 || ABL:(LOCAL:0):욕망 >= 10)
+				;행동 가능해 우후후 주도도 300이상 또는 욕망 10이상의 캐릭터가 1명 이상 들어가면 계속
+				LOCAL:20 ++
+				IF !IS_AUTOSELECT(LOCAL:0)
+					LOCAL:21 ++
+				ENDIF
+			ENDIF
+		NEXT
+	ENDIF
+	IF LOCAL:20 <= 0
+		WAIT
+		PRINTL
+		PRINTFORMW （%조사처리(ANAME(MASTER),"가")% 행동불능이기 (위해)때문에, %조사처리(LOCALS:0,"를")% 종료합니다）
+		BEGIN AFTERTRAIN
+		RETURN
+	ELSEIF LOCAL:21 == LOCAL:20
+		WAIT
+		PRINTL
+		PRINTFORMW （%조사처리(LOCALS:0,"는")% 종료했습니다）
+		BEGIN AFTERTRAIN
+		RETURN
+	ENDIF
+ENDIF
+
+;역조교로 행동 가능한 조교자가 없으면 종료
+IF GROUPMATCH(FLAG:조교모드, 4, 5, 7)
+	LOCAL:10 = 0
+	FOR LOCAL:0, 0, CHARANUM
+		IF IS_AUTOSELECT(LOCAL:0)
+			LOCAL:10 ++
+		ENDIF
+	NEXT
+	IF LOCAL:10 <= 0
+		WAIT
+		PRINTL
+		PRINTFORMW （행동 가능한 조교자가 없기에, %조사처리(LOCALS:0,"를")% 종료합니다）
+		BEGIN AFTERTRAIN
+	ENDIF
+ENDIF
+
+LOCAL:2 = 1
+LOCAL:3 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):조교참가플래그
+		IF !TCVAR:(LOCAL:0):53
+			LOCAL:2 = 0
+		ENDIF
+		LOCAL:3 ++
+	ENDIF
+NEXT
+
+;조교 참가자 전원이 행동불능
+IF LOCAL:2 && !TFLAG:8
+	WAIT
+	PRINTL
+
+	;조교 참가자가 1명 때
+	IF LOCAL:3 == 1
+		FOR LOCAL:0, 0, CHARANUM
+			IF CFLAG:(LOCAL:0):조교참가플래그
+				IF TCVAR:(LOCAL:0):53 == 1
+					IF TFLAG:54 == 1
+						PRINTFORML 완전히 취해 무너진 %조사처리(ANAME(LOCAL:0),"는")% %ANAME(MASTER)%에 받아 가 자고 있다
+					ELSEIF TFLAG:54 == 7
+						PRINTFORML 완전히 취해 무너진 %조사처리(ANAME(LOCAL:0),"는")% 목욕통에 잠긴 채로 %ANAME(MASTER)%에 무방비인 모습으로 의지해, 자고 있다
+					ELSEIF TFLAG:54
+						PRINTFORML 완전히 취해 무너진 %조사처리(ANAME(LOCAL:0),"는")% 지면에\@ RAND:2 == 0 ? 술병을 껴안아 # 대자에 누워 \@자고 있다
+					ELSE
+						PRINTFORML 완전히 취해 무너진 %조사처리(ANAME(LOCAL:0),"는")% 마루 위에서\@ RAND:2 == 0 ? 술병을 껴안아 # 대자에 누워 \@자고 있다
+					ENDIF
+					PRINTFORML 이 분으로는, 조금이나 살그머니로는 눈을 뜨지 않을 것이다…
+					IF ABL:MASTER:성지식 <= 1
+						RESULT = 0
+					ELSEIF TFLAG:54
+						CALL ASK_YN("데려 돌아간다", "장난 한다")
+					ELSE
+						CALL ASK_YN("재워 돌아간다", "장난 한다")
+					ENDIF
+
+					IF RESULT == 0
+						IF TFLAG:54
+							IF ABL:(MASTER):무투 >= 60
+								PRINTFORMW %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(LOCAL:0),"를")% 메면, %조사처리(ANAME(LOCAL:0),"를")% 짊어진 채로 귀로에 들었다…
+							ELSE
+								PRINTFORMW %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(LOCAL:0),"를")% 질질 끌도록(듯이)하면서, 어떻게든 궁전까지 겨우 도착했다…
+							ENDIF
+						ELSE
+							PRINTFORMW %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(LOCAL:0),"를")% 침대에 재워, 방을 뒤로 했다…
+						ENDIF
+						PRINTFORMW (%조사처리(ANAME(LOCAL:0),"가")% 행동불능이기 (위해)때문에, %조사처리(LOCALS:0,"를")% 종료합니다)
+
+					;수간실행
+					ELSE
+						;이벤트 구상의 표시
+						CALL KOJO_EVENT(LOCAL:0, 110)
+						;수간중 플래그를ＯＮ
+						TFLAG:8 = 1
+						;우후후플래그를ＯＮ
+						FLAG:우후후플래그 = 1
+						;시간을 재설정
+						TFLAG:55 = 0
+						TFLAG:56 = 15
+						;탭 설정을 리셋트
+						TFLAG:7 = 0
+					ENDIF
+
+				ELSEIF GROUPMATCH(TCVAR:(LOCAL:0):53, 3, 4)
+					PRINTFORMW (%ANAME(LOCAL:0)%에 되돌려 보내져 버렸기 때문에, %조사처리(LOCALS:0,"를")% 종료합니다)
+				ELSEIF GROUPMATCH(TCVAR:(LOCAL:0):53, 5, 6)
+					PRINTFORMW (%조사처리(ANAME(LOCAL:0),"가")% 돌아가 버렸기 때문에, %조사처리(LOCALS:0,"를")% 종료합니다)
+				ELSE
+					PRINTFORMW (%조사처리(ANAME(LOCAL:0),"가")% 행동불능이기 (위해)때문에, %조사처리(LOCALS:0,"를")% 종료합니다)
+				ENDIF
+				BREAK
+			ENDIF
+		NEXT
+	;조교 참가자가 2명 이상 때
+	ELSE
+		PRINTFORMW （행동 가능한 캐릭터가 없기에, %조사처리(LOCALS:0,"를")% 종료합니다）
+	ENDIF
+
+	IF !TFLAG:8
+		BEGIN AFTERTRAIN
+		RETURN
+	ENDIF
+ENDIF
+
+;마감 시간
+IF TFLAG:55 >= TFLAG:56
+	CALL TRAIN_EXIT(0)
+	LINES_TRAIN = LINECOUNT
+	RETURN
+ENDIF
+
+;맡김중
+IF TFLAG:0
+	;맡김시의 자동 EQUIP 해제
+	CALL AUTO_EQUIP_RELEASE
+ENDIF
+
+;주인공이 행동불능 또한 조교가 계속했을 경우
+IF !TFLAG:2 && LOCAL:20
+	FOR LOCAL:0, 0, CHARANUM
+		IF LOCAL:0 != MASTER && CFLAG:(LOCAL:0):조교참가플래그 && IS_AUTOSELECT(LOCAL:0) && (ABL:(LOCAL:0):주도도Ｕ >= 500 || ABL:(LOCAL:0):욕망 >= 10)
+			TFLAG:2 = 1
+			IF LOCAL:20 >= 2
+				LOCALS:0 = 들
+			ELSE
+				LOCALS:0 = 
+			ENDIF
+			IF BASE:MASTER:기력 <= 0
+				LOCALS:1 = 기절해 의식이 없다
+			ELSE
+				LOCALS:1 = 완전히 지쳐 버려 움직일 수 없다
+			ENDIF
+
+			WAIT
+			PRINTL 
+			IF LOCAL:20 == 1
+				IF BASE:MASTER:기력 <= 0
+					CALL KOJO_EVENT(LOCAL:0, 111)
+				ELSE
+					CALL KOJO_EVENT(LOCAL:0, 112)
+				ENDIF
+			ENDIF
+			IF ABL:(LOCAL:0):주도도Ｕ >= 500
+				PRINTFORMW %ANAME(LOCAL:0)%%조사처리(LOCALS:0,"는")% 기학적인 표정을 띄우면, %LOCALS:1%%ANAME(MASTER)%의 몸을 희롱하기 시작했다
+			ELSE
+				PRINTFORMW %ANAME(LOCAL:0)%%조사처리(LOCALS:0,"는")% 성욕을 억제하지 못하고, %LOCALS:1%%ANAME(MASTER)%의 몸을 희롱하기 시작했다
+			ENDIF
+			BREAK
+		ENDIF
+	NEXT
+
+;역조교로 주인공이 피로·실신 상태가 되었을 경우
+ELSEIF !TFLAG:2 && GROUPMATCH(FLAG:조교모드, 4, 5) && !IS_PLAYABLE(MASTER)
+	TFLAG:2 = 1
+	LOCAL:1 = 0
+	FOR LOCAL:0, 0, CHARANUM
+		IF CFLAG:(LOCAL:0):조교참가플래그 && IS_PLAYABLE(LOCAL:0)
+			LOCAL:1 ++
+			LOCAL:2 = LOCAL:0
+		ENDIF
+	NEXT
+	IF LOCAL:1 == 1
+		IF BASE:MASTER:기력 <= 0
+			CALL KOJO_EVENT(LOCAL:2, 111)
+		ELSE
+			CALL KOJO_EVENT(LOCAL:2, 112)
+		ENDIF
+	ENDIF
+ENDIF
+;LINES_TRAIN를 갱신
+LINES_TRAIN = LINECOUNT
+
+;-------------------------------------------------
+;조교 종료시의 공통 처리  마감 시간이라면 ARG:0에 0을, 커맨드에 의한 종료라면 1을 지정한다
+;-------------------------------------------------
+@TRAIN_EXIT(ARG:0)
+;EQUIP의 초기화
+CALL INIT_EQUIP()
+
+;육아 모드
+IF FLAG:조교모드 == 3
+	PRINTL 
+	PRINTFORMW (슬슬 해가 집니다. 오늘은 여기까지로 해 천천히 보내기로 했습니다)
+	BEGIN AFTERTRAIN
+
+ELSEIF FLAG:조교모드 == 4 || FLAG:조교모드 == 5
+	PRINTL 
+	PRINTFORMW (아무래도 오늘의 조교는 종료한 것 같습니다…)
+	BEGIN AFTERTRAIN
+
+ELSEIF FLAG:조교모드 == 7
+	PRINTL
+	PRINTFORMW (위안의 시간이 종료했습니다…)
+	BEGIN AFTERTRAIN
+
+;우후후모드의 경우
+ELSEIF FLAG:우후후플래그
+	;수간중
+	IF TFLAG:8
+		PRINTL 
+		PRINTFORMW (눈을 떠지면 맛이 없기에, 뒤처리를 해 빨리 돌아가기로 했습니다)
+
+		;주인공이 타겟측의 경우, 타겟과 플레이어를 바꿔 넣어 둔다
+		;(MTAR:0이 반드시 만나러 간 상대를 가리키도록(듯이)해 둔다)
+		IF MTAR:0 == MASTER
+			SWAP MTAR:0, MPLY:0
+		ENDIF
+		;본명을 허락하는 이벤트
+;		CALL AFTER_ALLOW_NAME
+
+	;주인공이 행동불능
+	ELSEIF TFLAG:2
+		PRINTL 
+		PRINTFORMW (과연 밤도 깊어져 왔기 때문에, 어떻게든 해방 해 주어졌습니다)
+	;데이트중
+	ELSEIF TFLAG:54
+		PRINTL 
+		PRINTFORMW (이제(이미/벌써/더는/정말) 밤도 늦은 시간입니다. 오늘은 여기까지로 해 돌아가기로 했습니다)
+	ELSEIF FLAG:요바이
+		PRINTL 
+		PRINTFORMW (더 이상 머무는 것은 위험합니다. 오늘은 여기까지로 해 도망치기로 했습니다)
+	ELSE
+		PRINTL 
+		PRINTFORMW (이제(이미/벌써/더는/정말) 밤도 깊어지는 시간대입니다. 오늘은 여기까지로 해 자기로 했습니다)
+	ENDIF
+	BEGIN AFTERTRAIN
+
+
+ELSE
+	;주인공이 타겟측의 경우, 타겟과 플레이어를 바꿔 넣어 둔다
+	;(MTAR:0이 반드시 만나러 간 상대를 가리키도록(듯이)해 둔다)
+	IF MTAR:0 == MASTER
+		SWAP MTAR:0, MPLY:0
+	ENDIF
+
+	;본명을 허락하는 이벤트
+;	CALL AFTER_ALLOW_NAME
+
+	WAIT
+	CALL SINGLE_DRAWLINE
+	PRINTFORMW 슬슬 늦은 시간이 되어 왔습니다…
+	PRINTL 
+
+	PRINTPLAIN   
+	PRINTBUTTON "0[이대로 헤어진다]", 0
+	PRINTPLAIN     
+	IF GET_PLACENAME(TFLAG:54) == "성 주변 마을"
+		IF (IS_FEMALE(MASTER) && IS_MALE(MTAR:0)) || (GROUPMATCH(TALENT:MASTER:성별, 4, 5) && GROUPMATCH(TALENT:(MTAR:0):성별, 0, 3) && TALENT:(MTAR:0):연인)
+			PRINTBUTTON "1[숙소에 데리고 들어간다(숙대는 상대 소유)]", 1
+		ELSE
+			PRINTBUTTON "1[숙소에 데리고 들어간다(소지금-2000)]", 1
+		ENDIF
+	ELSEIF GET_PLACENAME(TFLAG:54) == "온천"
+		PRINTBUTTON "1[껴안는다]", 1
+	ELSE
+		PRINTBUTTON "1[쓰러트린다]", 1
+	ENDIF
+	PRINTPLAIN     
+	PRINTBUTTON "2[유혹한다]", 2
+	PRINTL 
+
+	$INPUT_LOOP
+	INPUT
+
+	LOCAL:1 = 0
+	LOCAL:2 = RESULT
+
+	;이대로 헤어진다
+	IF LOCAL:2 == 0
+		;무드가 60이상 또는 상대가 육변기로 통상 또는 육아중이라면 쓰러트리기／조르기의 판정
+		IF (TFLAG:37 >= 60 || GETBIT(TALENT:(MTAR:0):음란계, 소질_음란_정액변소)) && ARG:0 == 0 && GROUPMATCH(CFLAG:(MTAR:0):행동불능상태, 0, 2)
+			;쓰러트리기／조르기 판정
+			CALL PUSH_OVER
+			;밀어 쓰러트려졌을 경우
+			IF RESULT == 1
+				;우후후플래그를ＯＮ
+				FLAG:우후후플래그 = 1
+				;시간을 재설정
+				TFLAG:55 = 0
+				TFLAG:56 = 20
+				;탭 설정을 리셋트
+				TFLAG:7 = 0
+				;주도권을 상대 측에 건네준다
+				FLAG:주도권소유자 = MTAR:0
+			;졸라대졌을 경우
+			ELSEIF RESULT == 2
+				CALL ASK_YN("안는다", "보류")
+				IF RESULT == 0
+					LOCAL:1 = 1
+				ELSE
+					TCVAR:(MTAR:0):27 = 1
+					CALL KOJO_EVENT(MTAR:0, 103)
+					PRINTFORMW （%LOCALS:0%%조사처리(ANAME(MTAR:0),"와")% 일단 헤어졌습니다）
+					BEGIN AFTERTRAIN
+				ENDIF
+			;쓰러트리기／조르기가 발생하지 않고, 포로 회화가 아닌 경우
+			ELSEIF FLAG:조교모드 != 6
+				;상대로부터의 키스·고백의 판정
+				CALL CHECK_EXIT_ACTION
+			ENDIF
+		ENDIF
+	ENDIF
+
+	;쓰러트린다
+	IF LOCAL:2 == 1
+		;쓰러트리기시의 판정
+		CALL JUDGE_PUSHDOWN
+		IF RESULT
+			LOCAL:1 = 2
+		ENDIF
+	ENDIF
+
+	;유혹한다
+	IF LOCAL:2 == 2
+		IF HAS_VAGINA(MASTER) && HAS_PENIS(MTAR:0)
+			IF GET_BUSTSIZE(ARG:0) < 0
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 몸을 칠해 %조사처리(ANAME(MTAR:0),"를")% 유혹했다…
+			ELSE
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 가슴을 강압해 %조사처리(ANAME(MTAR:0),"를")% 유혹했다…
+			ENDIF
+		ELSE
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(MTAR:0)%의 몸을 초조하게 하도록(듯이) 만지작거려 유혹했다…
+		ENDIF
+		;유혹했을 때의 판정
+		CALL JUDGE_PUSHDOWN2
+		IF RESULT
+			LOCAL:1 = 3
+		ENDIF
+	ENDIF
+
+	;우후후 돌입의 경우
+	IF LOCAL:1
+		IF LOCAL:1 == 3
+			IF GET_PLACENAME(TFLAG:54) == "성 주변 마을"
+				PRINTFORMW 완전히 그럴 기분이 들었던 %조사처리(ANAME(MTAR:0),"는")%, %조사처리(ANAME(MASTER),"를")% 성 주변 마을의 숙소로 데리고 들어갔다…
+			ELSEIF GET_PLACENAME(TFLAG:54) == "온천"
+				PRINTFORMW 완전히 그럴 기분이 들었던 %조사처리(ANAME(MTAR:0),"는")%, 숨을 거칠게 해 %ANAME(MASTER)%의 몸에 껴안았다
+			ELSEIF GETBIT(TALENT:(MTAR:0):음란계, 소질_음란_정액변소)
+				PRINTFORMW 완전히 그럴 기분이 들었던 %조사처리(ANAME(MTAR:0),"는")%, %ANAME(MASTER)%에 자신을 사용해 주라고 부탁해 왔다…
+			ELSEIF GETBIT(TALENT:MASTER:음란계, 소질_음란_정액변소)
+				PRINTFORMW 완전히 그럴 기분이 들었던 %조사처리(ANAME(MTAR:0),"는")%, %조사처리(ANAME(MASTER),"를")% 사용하기로 한 것 같다
+			ELSE
+				PRINTFORMW 완전히 그럴 기분이 들었던 %조사처리(ANAME(MTAR:0),"는")%, 숨을 거칠게 해 %조사처리(ANAME(MASTER),"를")% 쓰러트렸다
+			ENDIF
+		ELSE
+			IF GET_PLACENAME(TFLAG:54) == "성 주변 마을"
+				PRINTFORMW %조사처리(ANAME(MASTER),"와")% %조사처리(ANAME(MTAR:0),"는")% 성 주변 마을의 숙소로 들어갔다…
+			ELSEIF GET_PLACENAME(TFLAG:54) == "온천"
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(MTAR:0),"를")% 껴안았다
+			ELSEIF GETBIT(TALENT:(MTAR:0):음란계, 소질_음란_정액변소)
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(MTAR:0),"를")% 사용해 주기로 했다
+			ELSEIF GETBIT(TALENT:MASTER:음란계, 소질_음란_정액변소)
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(MTAR:0)%에, 자신을 사용해 주라고 부탁했다…
+			ELSE
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(MTAR:0),"를")% 쓰러트렸다
+			ENDIF
+		ENDIF
+		;우후후플래그를ＯＮ
+		FLAG:우후후플래그 = 1
+		;시간을 재설정
+		TFLAG:55 = 0
+		TFLAG:56 = 20
+		;탭 설정을 리셋트
+		TFLAG:7 = 0
+	ENDIF
+
+	;우후후모드에 들어가지 않으면 종료
+	IF !FLAG:우후후플래그
+		PRINTFORMW （%LOCALS:0%%조사처리(ANAME(MTAR:0),"와")% 일단 헤어졌습니다）
+		BEGIN AFTERTRAIN
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;본명을 허락하는 이벤트
+;-------------------------------------------------
+;@AFTER_ALLOW_NAME
+;타겟이 복수 있는 경우는 돌아온다
+;IF MTAR_NUM != 1
+;	RETURN 0
+;ENDIF
+
+;이미 본명을 허락해 받았을 경우, 본명이 정의되어 있지 않은 경우는 돌아온다
+;IF CFLAG:(MTAR:0):8 || CALLNAME:(MTAR:0) == "" || CALLNAME:(MTAR:0) == NAME:(MTAR:0)
+;	RETURN 0
+;ENDIF
+;
+;호감도 500이상
+;IF CFLAG:(MTAR:0):2 < 500
+;	RETURN 0
+;ENDIF
+
+;PRINTL 
+;CALL SINGLE_DRAWLINE
+
+;수간을 실시했을 경우
+;IF TFLAG:8
+;	PRINTFORMW 후일, %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(MTAR:0),"로")%부터의 호출을 받았다…
+;ENDIF
+
+;구상 독자적인 이벤트
+;CALL KOJO_EVENT(MTAR:0, 10)
+
+;본명 허가 플래그
+;CFLAG:(MTAR:0):8 = 1
+
+;PRINTL 
+;SETCOLOR 칼라_주의
+;PRINTFORML %조사처리(ANAME(MTAR:0),"로")%부터 본명 「%CALLNAME:(MTAR:0)%」가 용서되었습니다
+;RESETCOLOR
+;CALL SINGLE_DRAWLINE
+;WAIT
+;RETURN 1
+
+;-------------------------------------------------
+;쓰러트리기시의 판정
+;-------------------------------------------------
+@JUDGE_PUSHDOWN
+;타겟이 복수 있는 경우는 돌아온다
+IF MTAR_NUM != 1
+	RETURN 0
+ENDIF
+
+;●실행치의 계산
+CVARSET TCVAR, 24, -10000
+CVARSET TCVAR, 25, 10000
+
+;실행치의 설정
+TCVAR:(MTAR:0):25 = 100
+
+CALL COM_ORDER(MTAR:0)
+
+CALL COM_ORDER_ELEMENT(MTAR:0, "욕정", GET_PALAMLV(PALAM:(MTAR:0):욕정))
+IF HAS_VAGINA(MTAR:0)
+	CALL COM_ORDER_ELEMENT(MTAR:0, "윤활", GET_PALAMLV(PALAM:(MTAR:0):윤활))
+ENDIF
+CALL COM_ORDER_ELEMENT(MTAR:0, "욕망", ABL:(MTAR:0):욕망 * 4)
+CALL COM_ORDER_ELEMENT(MTAR:0, "봉사", ABL:(MTAR:0):봉사 * 2)
+
+IF TALENT:(MTAR:0):정조관념
+	CALL COM_ORDER_ELEMENT(MTAR:0, "정조관념", -10)
+ENDIF
+
+IF TALENT:(MTAR:0):정조관념없음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "정조관념없음", 10)
+ENDIF
+
+IF TALENT:(MTAR:0):수줍음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "수줍음", -6)
+ENDIF
+
+IF TALENT:(MTAR:0):수치심옅음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "수치심옅음", 3)
+ENDIF
+
+IF TALENT:(MTAR:0):쾌감에솔직
+	CALL COM_ORDER_ELEMENT(MTAR:0, "쾌감에솔직", 5)
+ENDIF
+
+IF TALENT:(MTAR:0):쾌감을부정
+	CALL COM_ORDER_ELEMENT(MTAR:0, "쾌감을부정", -5)
+ENDIF
+
+IF TALENT:(MTAR:0):선을넘지않음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "선을넘지않음", -15)
+ENDIF
+
+IF TALENT:(MTAR:0):연모
+	CALL COM_ORDER_ELEMENT(MTAR:0, "연모", 12)
+ENDIF
+
+IF TALENT:(MTAR:0):친구
+	CALL COM_ORDER_ELEMENT(MTAR:0, "친구", 6)
+ENDIF
+
+IF TALENT:(MTAR:0):친애
+	CALL COM_ORDER_ELEMENT(MTAR:0, "친애", 20)
+ENDIF
+
+IF TALENT:(MTAR:0):연인
+	CALL COM_ORDER_ELEMENT(MTAR:0, "연인", 6)
+ENDIF
+
+IF TALENT:(MTAR:0):키스미경험
+	CALL COM_ORDER_ELEMENT(MTAR:0, "키스미경험", -5)
+ENDIF
+
+;무드 보너스
+IF TFLAG:37 < 60
+	CALL COM_ORDER_ELEMENT(MTAR:0, "무드", 0)
+ELSE
+	CALL COM_ORDER_ELEMENT(MTAR:0, "무드", 5 + TFLAG:37 / 30)
+ENDIF
+
+;호감도
+IF CFLAG:(MTAR:0):2 < 700
+	IF CFLAG:(MTAR:0):2 < 300
+		LOCAL:0 = -20
+	ELSEIF CFLAG:(MTAR:0):2 < 500
+		LOCAL:0 = -10
+	ELSE
+		LOCAL:0 = -5
+	ENDIF
+	CALL COM_ORDER_ELEMENT(MTAR:0, "호감도 부족", LOCAL:0)
+ENDIF
+
+;제삼자  00에 연모에 관한 처리
+;CALL JUDGE_PUSHDOWN_SUB
+
+;성지식
+IF ABL:(MTAR:0):성지식 == 0
+	CALL COM_ORDER_ELEMENT(MTAR:0, "성지식 없음", 80)
+ENDIF
+
+;합의
+IF TALENT:(MTAR:0):합의
+	CALL COM_ORDER_ELEMENT(MTAR:0, "합의", 10)
+ENDIF
+
+;판정 결과를 표시
+PRINTFORMW  = {TCVAR:(MTAR:0):24} %TOSTR_COMPARE(TCVAR:(MTAR:0):24, TCVAR:(MTAR:0):25)% 실행치{TCVAR:(MTAR:0):25}
+
+;실행 판정
+IF TCVAR:(MTAR:0):24 >= TCVAR:(MTAR:0):25
+	;이미[합의]가 끝난 상태
+	IF TALENT:(MTAR:0):합의
+		CALL KOJO_EVENT(MTAR:0, 7)
+
+	;취기에 의한 보정을 제외해도 성공
+	ELSEIF TCVAR:(MTAR:0):24 - PALAM:(MTAR:0):취기 / 150 >= 100
+		TFLAG:48 = 0
+		CALL KOJO_EVENT(MTAR:0, 5)
+		IF TCVAR:(MTAR:0):최면중 <= 0
+			PRINTFORMW %ANAME(MTAR:0)%의<합의>를 얻었다
+			TALENT:(MTAR:0):합의 = 1
+		ENDIF
+
+	;취한 기세로 성공
+	ELSE
+		TFLAG:48 = 1
+		CALL KOJO_EVENT(MTAR:0, 4)
+	ENDIF
+	RETURN 1
+
+;실패
+ELSE
+	CALL KOJO_EVENT(MTAR:0, 6)
+	IF !TALENT:(MTAR:0):합의 && !TALENT:(MTAR:0):연모 && !TALENT:(MTAR:0):친구
+		PRINTFORMW %ANAME(MTAR:0)%의 호감도가 100내렸습니다
+		CFLAG:(MTAR:0):2 -= 100
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;유혹했을 때의 판정
+;-------------------------------------------------
+@JUDGE_PUSHDOWN2
+;타겟이 복수 있는 경우는 돌아온다
+IF MTAR_NUM != 1
+	RETURN 0
+ENDIF
+
+;●실행치의 계산
+CVARSET TCVAR, 24, -10000
+CVARSET TCVAR, 25, 10000
+
+;실행치의 설정
+TCVAR:(MTAR:0):25 = 110
+
+CALL COM_ORDER(MTAR:0)
+
+CALL COM_ORDER_ELEMENT(MTAR:0, "욕정", GET_PALAMLV(PALAM:(MTAR:0):욕정) * 2)
+IF HAS_VAGINA(MTAR:0)
+	CALL COM_ORDER_ELEMENT(MTAR:0, "윤활", GET_PALAMLV(PALAM:(MTAR:0):윤활))
+ENDIF
+CALL COM_ORDER_ELEMENT(MTAR:0, "욕망", ABL:(MTAR:0):욕망 * 5)
+CALL COM_ORDER_ELEMENT(MTAR:0, "봉사", ABL:(MTAR:0):봉사 * 1)
+
+IF TALENT:(MTAR:0):정조관념
+	CALL COM_ORDER_ELEMENT(MTAR:0, "정조관념", -10)
+ENDIF
+
+IF TALENT:(MTAR:0):정조관념없음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "정조관념없음", 10)
+ENDIF
+
+IF TALENT:(MTAR:0):얌전함
+	CALL COM_ORDER_ELEMENT(MTAR:0, "얌전함", -8)
+ENDIF
+
+IF TALENT:(MTAR:0):수줍음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "수줍음", -8)
+ENDIF
+
+IF TALENT:(MTAR:0):수치심옅음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "수치심옅음", 3)
+ENDIF
+
+IF TALENT:(MTAR:0):선을넘지않음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "선을넘지않음", -15)
+ENDIF
+
+IF TALENT:(MTAR:0):쾌감에솔직
+	CALL COM_ORDER_ELEMENT(MTAR:0, "쾌감에솔직", 12)
+ENDIF
+
+IF TALENT:(MTAR:0):쾌감을부정
+	CALL COM_ORDER_ELEMENT(MTAR:0, "쾌감을부정", -10)
+ENDIF
+
+IF TALENT:(MTAR:0):보수적
+	CALL COM_ORDER_ELEMENT(MTAR:0, "보수적", -4)
+ENDIF
+
+IF TALENT:(MTAR:0):자제심
+	CALL COM_ORDER_ELEMENT(MTAR:0, "자제심", -10)
+ENDIF
+
+IF TALENT:(MTAR:0):연모
+	CALL COM_ORDER_ELEMENT(MTAR:0, "연모", 12)
+ENDIF
+
+IF TALENT:(MTAR:0):친구
+	CALL COM_ORDER_ELEMENT(MTAR:0, "친구", 6)
+ENDIF
+
+IF TALENT:(MTAR:0):친애
+	CALL COM_ORDER_ELEMENT(MTAR:0, "친애", 20)
+ENDIF
+
+IF TALENT:(MTAR:0):연인
+	CALL COM_ORDER_ELEMENT(MTAR:0, "연인", 6)
+ENDIF
+
+IF TALENT:(MTAR:0):키스미경험
+	CALL COM_ORDER_ELEMENT(MTAR:0, "키스미경험", -5)
+ENDIF
+
+IF HAS_PENIS(MTAR:0) && HAS_VAGINA(MPLY:0)
+	CALL COM_ORDER_ELEMENT(MTAR:0, "성별", 20)
+ENDIF
+
+;무드 보너스
+IF TFLAG:37 < 60
+	CALL COM_ORDER_ELEMENT(MTAR:0, "무드", 0)
+ELSE
+	CALL COM_ORDER_ELEMENT(MTAR:0, "무드", 5 + TFLAG:37 / 30)
+ENDIF
+
+;호감도
+IF CFLAG:(MTAR:0):2 < 700
+	IF CFLAG:(MTAR:0):2 < 300
+		LOCAL:0 = -20
+	ELSEIF CFLAG:(MTAR:0):2 < 500
+		LOCAL:0 = -10
+	ELSE
+		LOCAL:0 = -5
+	ENDIF
+	CALL COM_ORDER_ELEMENT(MTAR:0, "호감도 부족", LOCAL:0)
+ENDIF
+;
+;성지식
+IF ABL:(MTAR:0):성지식 == 0
+	CALL COM_ORDER_ELEMENT(MTAR:0, "성지식 없음", -80)
+ENDIF
+
+;합의
+IF TALENT:(MTAR:0):합의
+	CALL COM_ORDER_ELEMENT(MTAR:0, "합의", 10)
+ENDIF
+
+;판정 결과를 표시
+PRINTFORMW  = {TCVAR:(MTAR:0):24} %TOSTR_COMPARE(TCVAR:(MTAR:0):24, TCVAR:(MTAR:0):25)% 실행치{TCVAR:(MTAR:0):25}
+
+;실행 판정
+IF TCVAR:(MTAR:0):24 >= TCVAR:(MTAR:0):25
+	;이미[합의]가 끝난 상태
+	IF TALENT:(MTAR:0):합의
+		CALL KOJO_EVENT(MTAR:0, 107)
+
+	;취기에 의한 보정을 제외해도 성공
+	ELSEIF TCVAR:(MTAR:0):24 - PALAM:(MTAR:0):취기 / 150 >= 100
+		TFLAG:48 = 0
+		CALL KOJO_EVENT(MTAR:0, 105)
+		IF TCVAR:(MTAR:0):최면중 <= 0
+			PRINTFORMW %ANAME(MTAR:0)%의<합의>를 얻었다
+			TALENT:(MTAR:0):합의 = 1
+		ENDIF
+
+	;취한 기세로 성공
+	ELSE
+		TFLAG:48 = 1
+		CALL KOJO_EVENT(MTAR:0, 104)
+	ENDIF
+	RETURN 1
+
+;실패
+ELSE
+	CALL KOJO_EVENT(MTAR:0, 106)
+	IF !TALENT:(MTAR:0):합의 && !TALENT:(MTAR:0):연모 && !TALENT:(MTAR:0):친구
+		PRINTFORMW %ANAME(MTAR:0)%의 호감도가 50내렸습니다
+		CFLAG:(MTAR:0):2 -= 50
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;밀어 쓰러트려지고／조르기 판정(반환값:0=아무것도 하지 않는, 1=쓰러트리고, 2=조르기)
+;-------------------------------------------------
+@PUSH_OVER
+;이미 우후후중이라면 돌아온다
+IF FLAG:우후후플래그
+	RETURN 0
+ENDIF
+
+SIF TCVAR:(MTAR:0):최면중 > 0
+	RETURN 0
+
+
+;최악이어도[연모][연인][복종][낙인][육변기]중 한쪽이 필요
+IF !TALENT:(MTAR:0):연모 && !TALENT:(MTAR:0):연인 && !TALENT:(MTAR:0):복종 && !TALENT:(MTAR:0):낙인 && !GETBIT(TALENT:(MTAR:0):음란계, 소질_음란_정액변소)
+	RETURN 0
+ENDIF
+
+;성지식 Lv1 이상이 필요
+IF ABL:(MTAR:0):성지식 < 1
+	RETURN 0
+ENDIF
+
+;린노스케에 연모 or 린노스케의 연인이라면 돌아온다
+;IF TALENT:(MTAR:0):린노스케에 연모 || TALENT:(MTAR:0):린노스케의 연인
+;	RETURN
+;ENDIF
+
+;●실행치의 계산
+CVARSET TCVAR, 24, -10000
+CVARSET TCVAR, 25, 10000
+
+;◆↓표시 스킵 여기로부터↓◆
+SKIPDISP 1
+
+CALL COM_ORDER(MTAR:0)
+
+CALL COM_ORDER_ELEMENT(MTAR:0, "욕정", GET_PALAMLV(PALAM:(MTAR:0):욕정))
+CALL COM_ORDER_ELEMENT(MTAR:0, "윤활", GET_PALAMLV(PALAM:(MTAR:0):윤활))
+CALL COM_ORDER_ELEMENT(MTAR:0, "욕망", ABL:(MTAR:0):욕망 * 4)
+
+SIF TALENT:(MTAR:0):겁쟁이
+	CALL COM_ORDER_ELEMENT(MTAR:0, "겁쟁이", -6)
+SIF TALENT:(MTAR:0):반항적
+	CALL COM_ORDER_ELEMENT(MTAR:0, "반항적", -5)
+SIF TALENT:(MTAR:0):얌전함
+	CALL COM_ORDER_ELEMENT(MTAR:0, "얌전함", -10)
+SIF TALENT:(MTAR:0):프라이드높음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "프라이드높음", -6)
+SIF TALENT:(MTAR:0):츤데레
+	CALL COM_ORDER_ELEMENT(MTAR:0, "츤데레", 15)
+SIF TALENT:(MTAR:0):자제심
+	CALL COM_ORDER_ELEMENT(MTAR:0, "자제심", -15)
+SIF TALENT:(MTAR:0):무관심
+	CALL COM_ORDER_ELEMENT(MTAR:0, "무관심", -15)
+SIF TALENT:(MTAR:0):감정결핍
+	CALL COM_ORDER_ELEMENT(MTAR:0, "감정결핍", -15)
+SIF TALENT:(MTAR:0):낙관적
+	CALL COM_ORDER_ELEMENT(MTAR:0, "낙관적", 5)
+SIF TALENT:(MTAR:0):비관적
+	CALL COM_ORDER_ELEMENT(MTAR:0, "비관적", -5)
+SIF TALENT:(MTAR:0):선을넘지않음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "선을넘지않음", -20)
+SIF TALENT:(MTAR:0):정조관념
+	CALL COM_ORDER_ELEMENT(MTAR:0, "정조관념", -10)
+SIF TALENT:(MTAR:0):정조관념없음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "정조관념없음", 10)
+SIF TALENT:(MTAR:0):고고함
+	CALL COM_ORDER_ELEMENT(MTAR:0, "고고함", -10)
+SIF TALENT:(MTAR:0):억압
+	CALL COM_ORDER_ELEMENT(MTAR:0, "억압", -25)
+SIF TALENT:(MTAR:0):해방
+	CALL COM_ORDER_ELEMENT(MTAR:0, "해방", 10)
+SIF TALENT:(MTAR:0):수줍음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "수줍음", -12)
+SIF TALENT:(MTAR:0):수치심옅음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "수치심옅음", 4)
+SIF TALENT:(MTAR:0):연모
+	CALL COM_ORDER_ELEMENT(MTAR:0, "연모", 12)
+SIF TALENT:(MTAR:0):친애
+	CALL COM_ORDER_ELEMENT(MTAR:0, "친애", 20)
+SIF TALENT:(MTAR:0):연인
+	CALL COM_ORDER_ELEMENT(MTAR:0, "연인", 6)
+SIF TALENT:(MTAR:0):키스미경험
+	CALL COM_ORDER_ELEMENT(MTAR:0, "키스미경험", -15)
+
+;무드 보너스
+IF TFLAG:37 < 60
+	CALL COM_ORDER_ELEMENT(MTAR:0, "무드", 0)
+ELSE
+	CALL COM_ORDER_ELEMENT(MTAR:0, "무드", 5 + TFLAG:37 / 30)
+ENDIF
+
+CALL COM_ORDER_ELEMENT(MTAR:0, "호감도", CFLAG:(MTAR:0):2 / 500)
+CALL COM_ORDER_ELEMENT(MTAR:0, "의존도", CFLAG:(MTAR:0):3 / 500)
+
+IF TALENT:(MTAR:0):합의
+	;2회째 이후는 조건이 엄격해진다
+	TCVAR:(MTAR:0):25 = 240 + RAND:200
+ELSE
+	TCVAR:(MTAR:0):25 = 220
+ENDIF
+
+;판정 결과를 표시
+PRINTFORMW  = {TCVAR:(MTAR:0):24} %TOSTR_COMPARE(TCVAR:(MTAR:0):24, TCVAR:(MTAR:0):25)% 실행치{TCVAR:(MTAR:0):25}
+
+;◆↑표시 스킵 여기까지↑◆
+SKIPDISP 0
+
+;주인공의 주도권 포인트가 낮으면 쓰러트리기
+IF GET_INITIATIVE_RATE(MTAR:0) > 0
+	;취기 보정을 제외해도 성공
+	IF TCVAR:(MTAR:0):24 - PALAM:(MTAR:0):취기 / 150 >= TCVAR:(MTAR:0):25
+		;취한 기세 플래그 OFF
+		TFLAG:48 = 0
+
+		IF TALENT:(MTAR:0):합의
+			;구상 표시
+			CALL KOJO_EVENT(MTAR:0, 24)
+
+		;합의 없음
+		ELSE
+			;구상 표시
+			CALL KOJO_EVENT(MTAR:0, 22)
+
+			TALENT:(MTAR:0):합의 = 1
+			PRINTFORMW %ANAME(MTAR:0)%의<합의>를 얻었다
+		ENDIF
+		RETURN 1
+
+	;취한 기세
+	ELSEIF TCVAR:(MTAR:0):24 >= TCVAR:(MTAR:0):25
+		;취한 기세 플래그 ON
+		TFLAG:48 = 1
+
+		;합의 있어
+		IF TALENT:(MTAR:0):152
+			;구상 표시
+			CALL KOJO_EVENT(MTAR:0, 25)
+
+		;합의 없음
+		ELSE
+			;구상 표시
+			CALL KOJO_EVENT(MTAR:0, 23)
+		ENDIF
+		RETURN 1
+	ENDIF
+
+;주인공의 주도권 포인트가 높으면 조르기
+ELSE
+	;취기 보정을 제외해도 성공
+	IF TCVAR:(MTAR:0):24 - PALAM:(MTAR:0):취기 / 150 >= TCVAR:(MTAR:0):25
+		;취한 기세 플래그 OFF
+		TFLAG:48 = 0
+
+		IF TALENT:(MTAR:0):합의
+			;구상 표시
+			CALL KOJO_EVENT(MTAR:0, 28)
+
+		;합의 없음
+		ELSE
+			;구상 표시
+			CALL KOJO_EVENT(MTAR:0, 26)
+
+			TALENT:(MTAR:0):합의 = 1
+			PRINTFORMW %ANAME(MTAR:0)%의<합의>를 얻었다
+		ENDIF
+		RETURN 2
+
+	;취한 기세
+	ELSEIF TCVAR:(MTAR:0):24 >= TCVAR:(MTAR:0):25
+		;취한 기세 플래그 ON
+		TFLAG:48 = 1
+
+		;합의 있어
+		IF TALENT:(MTAR:0):152
+			;구상 표시
+			CALL KOJO_EVENT(MTAR:0, 29)
+
+		;합의 없음
+		ELSE
+			;구상 표시
+			CALL KOJO_EVENT(MTAR:0, 27)
+		ENDIF
+		RETURN 2
+	ENDIF
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;헤어질 때의 키스나 고백의 판정
+;-------------------------------------------------
+@CHECK_EXIT_ACTION
+;무드가 60 미만이라면 돌아온다
+IF TFLAG:37 < 60
+	RETURN
+ENDIF
+
+;동성 또한 바이는 아니면 돌아온다
+IF IS_SAMESEX(MPLY:0, MTAR:0) && !TALENT:(MTAR:0):바이
+	RETURN
+ENDIF
+
+;이미 연인 or 복종계라면 돌아온다
+IF TALENT:(MTAR:0):연인 || IS_SLAVE(MTAR:0) || IS_SLAVED_BY(MTAR:0)
+	RETURN
+ENDIF
+
+;린노스케에 연모 or 린노스케의 연인이라면 돌아온다
+;IF TALENT:(MTAR:0):린노스케에 연모 || TALENT:(MTAR:0):린노스케의 연인
+;	RETURN
+;ENDIF
+
+;●실행치의 계산
+CVARSET TCVAR, 24, -10000
+CVARSET TCVAR, 25, 10000
+
+;◆↓표시 스킵 여기로부터↓◆
+SKIPDISP 1
+
+CALL COM_ORDER_BASE(MTAR:0)
+
+CALL COM_ORDER_ELEMENT(MTAR:0, "추가 호감도 보정", CFLAG:(MTAR:0):2 / 50)
+
+SIF TALENT:(MTAR:0):겁쟁이
+	CALL COM_ORDER_ELEMENT(MTAR:0, "겁쟁이", -12)
+SIF TALENT:(MTAR:0):반항적
+	CALL COM_ORDER_ELEMENT(MTAR:0, "반항적", -15)
+SIF TALENT:(MTAR:0):꿋꿋함
+	CALL COM_ORDER_ELEMENT(MTAR:0, "꿋꿋함", 6)
+SIF TALENT:(MTAR:0):솔직함
+	CALL COM_ORDER_ELEMENT(MTAR:0, "솔직함", 5)
+SIF TALENT:(MTAR:0):얌전함
+	CALL COM_ORDER_ELEMENT(MTAR:0, "얌전함", -10)
+SIF TALENT:(MTAR:0):프라이드높음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "프라이드높음", -10)
+SIF TALENT:(MTAR:0):츤데레
+	CALL COM_ORDER_ELEMENT(MTAR:0, "츤데레", -25)
+SIF TALENT:(MTAR:0):자제심
+	CALL COM_ORDER_ELEMENT(MTAR:0, "자제심", -7)
+SIF TALENT:(MTAR:0):무관심
+	CALL COM_ORDER_ELEMENT(MTAR:0, "무관심", -20)
+SIF TALENT:(MTAR:0):감정결핍
+	CALL COM_ORDER_ELEMENT(MTAR:0, "감정결핍", -20)
+SIF TALENT:(MTAR:0):낙관적
+	CALL COM_ORDER_ELEMENT(MTAR:0, "낙관적", 15)
+SIF TALENT:(MTAR:0):비관적
+	CALL COM_ORDER_ELEMENT(MTAR:0, "비관적", -20)
+SIF TALENT:(MTAR:0):선을넘지않음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "선을넘지않음", -20)
+SIF TALENT:(MTAR:0):주목받기원함
+	CALL COM_ORDER_ELEMENT(MTAR:0, "주목받기원함", 10)
+SIF TALENT:(MTAR:0):정조관념
+	CALL COM_ORDER_ELEMENT(MTAR:0, "정조관념", -10)
+SIF TALENT:(MTAR:0):정조관념없음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "정조관념없음", 10)
+SIF TALENT:(MTAR:0):고고함
+	CALL COM_ORDER_ELEMENT(MTAR:0, "고고함", -15)
+SIF TALENT:(MTAR:0):억압
+	CALL COM_ORDER_ELEMENT(MTAR:0, "억압", -25)
+SIF TALENT:(MTAR:0):해방
+	CALL COM_ORDER_ELEMENT(MTAR:0, "해방", 12)
+SIF TALENT:(MTAR:0):수줍음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "수줍음", -12)
+SIF TALENT:(MTAR:0):수치심옅음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "수치심옅음", 4)
+SIF TALENT:(MTAR:0):연모
+	CALL COM_ORDER_ELEMENT(MTAR:0, "연모", 30)
+SIF TALENT:(MTAR:0):친애
+	CALL COM_ORDER_ELEMENT(MTAR:0, "친애", 30)
+SIF TALENT:(MTAR:0):키스미경험
+	CALL COM_ORDER_ELEMENT(MTAR:0, "키스미경험", -10)
+
+IF CFLAG:(MTAR:0):포로처 == CFLAG:MASTER:1
+	CALL COM_ORDER_ELEMENT(MTAR:0, "포로", -50)
+ENDIF
+
+CALL COM_ORDER_ELEMENT(MTAR:0, "주도권 기준치", GET_INITIATIVE_RATE(MTAR:0))
+
+IF TFLAG:37 < 10
+	LOCAL:0 = -20
+ELSEIF TFLAG:37 < 30
+	LOCAL:0 = -15
+ELSEIF TFLAG:37 < 50
+	LOCAL:0 = 0
+ELSEIF TFLAG:37 < 100
+	LOCAL:0 = (TFLAG:37 - 50) / 10
+ELSE
+	LOCAL:0 = MIN(10, (TFLAG:37 - 100) / 50 + 5)
+ENDIF
+CALL COM_ORDER_ELEMENT(MTAR:0, "무드", LOCAL:0)
+
+IF PALAM:(MTAR:0):취기 >= 150
+	CALL COM_ORDER_ELEMENT(MTAR:0, "취기", PALAM:(MTAR:0):취기 / 150)
+ENDIF
+
+;차인횟수의 영향
+LOCAL:0 = CFLAG:(MTAR:0):차인횟수 * 50
+SIF TALENT:(MTAR:0):낙관적
+	TIMES LOCAL:0, 0.50
+SIF TALENT:(MTAR:0):비관적
+	TIMES LOCAL:0, 2.50
+SIF TALENT:(MTAR:0):겁쟁이
+	TIMES LOCAL:0, 1.80
+SIF TALENT:(MTAR:0):꿋꿋함
+	TIMES LOCAL:0, 1.50
+SIF TALENT:(MTAR:0):수줍음
+	TIMES LOCAL:0, 1.50
+SIF TALENT:(MTAR:0):수치심옅음
+	TIMES LOCAL:0, 0.80
+SIF TALENT:(MTAR:0):얌전함
+	TIMES LOCAL:0, 1.30
+SIF TALENT:(MTAR:0):자제심
+	TIMES LOCAL:0, 1.50
+SIF TALENT:(MTAR:0):무관심
+	TIMES LOCAL:0, 1.50
+SIF TALENT:(MTAR:0):감정결핍
+	TIMES LOCAL:0, 1.50
+SIF TALENT:(MTAR:0):선을넘지않음
+	TIMES LOCAL:0, 1.50
+SIF TALENT:(MTAR:0):주목받기원함
+	TIMES LOCAL:0, 0.80
+SIF TALENT:(MTAR:0):해방
+	TIMES LOCAL:0, 0.60
+SIF TALENT:(MTAR:0):억압
+	TIMES LOCAL:0, 1.80
+SIF TALENT:(MTAR:0):헌신적
+	TIMES LOCAL:0, 1.40
+SIF TALENT:(MTAR:0):소악마
+	TIMES LOCAL:0, 0.80
+CALL COM_ORDER_ELEMENT(MTAR:0, "실연 회수", -LOCAL:0)
+
+;고백의 실행치를 설정
+TCVAR:(MTAR:0):25 = 190
+
+;판정 결과를 표시
+PRINTFORMW  = {TCVAR:(MTAR:0):24} %TOSTR_COMPARE(TCVAR:(MTAR:0):24, TCVAR:(MTAR:0):25)% 실행치{TCVAR:(MTAR:0):25}
+
+;◆↑표시 스킵 여기까지↑◆
+SKIPDISP 0
+
+;●고백 판정
+;최악이어도 연모가 필요
+IF TALENT:(MTAR:0):연모
+	;판정 성공
+	IF TCVAR:(MTAR:0):24 >= TCVAR:(MTAR:0):25
+		;구상 표시
+		CALL KOJO_EVENT(MTAR:0, 21)
+
+		;승낙했을 경우
+		IF TFLAG:4
+			;키스의 공통 처리
+			CALL KISS_COMMON(MTAR:0, @"%ANAME(MPLY:0)%의 입술", "고백을 받은 화간", 0)
+			CALL KISS_COMMON(MPLY:0, @"%ANAME(MTAR:0)%의 입술", "고백을 받은 화간", 0)
+
+			;연인이 되는 처리
+			CALL GET_LOVERS(MTAR:0)
+
+			SOURCE:(MTAR:0):환희 += 3000
+
+		;거절했을 경우
+		ELSE
+			;주인공에게 차인횟수를 가산
+			CFLAG:(MTAR:0):차인횟수 ++
+
+			SOURCE:(MTAR:0):반감 += 600
+			SOURCE:(MTAR:0):비애 += 6000
+		ENDIF
+	ENDIF
+ENDIF
+
+;◆↓표시 스킵 여기로부터↓◆
+SKIPDISP 1
+
+;키스의 실행치를 설정
+TCVAR:(MTAR:0):25 = 120
+
+;판정 결과를 표시
+PRINTFORMW  = {TCVAR:(MTAR:0):24} %TOSTR_COMPARE(TCVAR:(MTAR:0):24, TCVAR:(MTAR:0):25)% 실행치{TCVAR:(MTAR:0):25}
+
+;◆↑표시 스킵 여기까지↑◆
+SKIPDISP 0
+
+;●퍼스트 키스 판정
+;최악이어도 호감도 800이 필요, 적어도 한편이 키스 미경험, 린노스케·질역에의 연모가 있으면 발생하지 않는다
+IF CFLAG:(MTAR:0):2 >= 800 && (TALENT:(MTAR:0):키스미경험 || TALENT:(MPLY:0):키스미경험)
+	;판정 성공
+	IF TCVAR:(MTAR:0):24 >= TCVAR:(MTAR:0):25
+		;구상 표시
+		CALL KOJO_EVENT(MTAR:0, 20)
+
+		;키스의 공통 처리
+		CALL KISS_COMMON(MTAR:0, @"%ANAME(MPLY:0)%의 입술", "화간", 1)
+		CALL KISS_COMMON(MPLY:0, @"%ANAME(MTAR:0)%의 입술", "화간", 1)
+		EXP:(MTAR:0):키스경험 += 1
+		EXP:(MPLY:0):키스경험 += 1
+
+		SOURCE:(MTAR:0):환희 += 500
+	ENDIF
+ENDIF
+
+RETURN
+
+
+

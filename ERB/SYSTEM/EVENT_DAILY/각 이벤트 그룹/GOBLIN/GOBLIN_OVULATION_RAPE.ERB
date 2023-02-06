@@ -1,0 +1,84 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_GOBLIN_OVULATION_RATE()
+RETURN 75
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_GOBLIN_OVULATION_DECISION()
+#DIM 고블린
+고블린 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_홉고블린))
+SIF 고블린 == -1
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;특정의 조건을 채우는 캐릭터를 랜덤에 선택하는 경우에 이용
+;다른 함수는 필수이지만, 이것만은 없어도 좋다  라고 할까 퍼포먼스에 영향을 주므로 불필요하면 만들어서는 안 된다
+;대상이 존재하지 않고 데일리를 개시 할 수 없는 경우는 0을 돌려주는 것으로 데일리의 발생을 캔슬한다
+;---------------------
+@EVENT_DAILY_GOBLIN_OVULATION_SETTARGET()
+#DIM 고블린
+고블린 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_홉고블린))
+FOR LOCAL, 0, CHARANUM
+	;홉고블린 세력 소속으로 포로가 아니고 임신하고 있지 않고 위험일인 여성 캐릭터
+	SIF CFLAG:LOCAL:소속 != 고블린
+		CONTINUE
+	SIF CFLAG:LOCAL:포로처
+		CONTINUE
+	SIF CFLAG:LOCAL:임신기간
+		CONTINUE
+	SIF !IS_OVULATION(LOCAL)
+		CONTINUE
+	DAILY_TARGET:DAILY_TARGET_NUM = LOCAL
+	DAILY_TARGET_NUM ++
+NEXT
+SIF DAILY_TARGET_NUM < 1
+	RETURN 0
+RETURN 1
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_GOBLIN_OVULATION_GENRE()
+RETURN 데일리_장르_특수세력
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_GOBLIN_OVULATION
+#DIM 대상
+#DIM 고블린
+고블린 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_홉고블린))
+
+
+대상 = DAILY_TARGET:(RAND:DAILY_TARGET_NUM)
+
+PRINTFORML %조사처리(ANAME(대상),"를")% 홉고블린들이 둘러싸고 있다
+PRINTFORMW 위험일인 %조사처리(ANAME(대상),"를")% 윤간해, 임신하게 하자고 한다
+PRINTFORML 임신을 확실한 것으로 하기 위해서(때문에), %PRONOUN(대상)%에는 사전에 배란유발제가 투여되어 있다
+PRINTFORMW 지금부터 범해지고 임신해지자고 하는데, 노예로서 예의범절을 가르쳐진 %조사처리(ANAME(대상),"는")% 신체를 쑤시게 하고 있다
+PRINTFORML 눈앞에 무수한 페니스가 내며지면, %PRONOUN(대상)%는 뺨을 상기시켜, 범해 주도록(듯이) 간원 한다
+PRINTFORMW (들)물을 것도 없으면, 홉고블린들은 %ANAME(대상)%에 모여, 그 고기구멍에 대신하는 대신하는 자식을 계속 따랐다……
+
+;피임약을 무효화해, 배란유발제를 사용하고 있던 것으로 한다
+CFLAG:대상:피임약남은턴 = 0
+TCVAR:대상:65 = 1
+
+CALL FUCK_SP(대상, "욕망, 정애, 봉사, 성교, Ｖ, 윤간", "질내사정, 처녀상실", 고블린, GET_SPERM_ID("홉고블린"), @"홉고블린의 \@ RAND:2 ? 입술 # 페니스 \@", "홉고블린", "", "윤간")
+
+FOR LOCAL, 0, 10
+	CALL FUCK_SP(대상, "", "질내사정, 처녀상실", 고블린, GET_SPERM_ID("홉고블린"), @"홉고블린의 \@ RAND:2 ? 입술 # 페니스 \@", "홉고블린", "", "윤간")
+NEXT
+CALL COLOR_PRINTW(@"%ANAME(대상)%의 자궁에, 농후한 정액이 한껏 따라졌다", 칼라_핑크)
+
+RETURN 1

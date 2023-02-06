@@ -1,0 +1,49 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_CHALLENGE_DANMAKU_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_CHALLENGE_DANMAKU_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_CHALLENGE_DANMAKU(대상)
+#DIM 대상
+PRINTFORML 도를 걷고 있으면, 들요괴에 탄막놀이를 도전해졌다
+PRINTFORML 이기면 돈을 준다고 하지만……
+PRINTL
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "무투"))
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "지략"))
+CALL ASK_YN("받아 선다", "거절한다")
+IF RESULT == 1
+	PRINTFORML 그런 짬은 없다
+	PRINTFORML 거절했다
+	RETURN 1
+ENDIF
+
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF LIMIT(ABL:대상:무투 + ABL:대상:지략, 75, 150) > RAND:150
+	PRINTFORML 훌륭히 승리했다!
+	PRINTFORML 좋은 승부로 자신이 붙었다
+	CALL ICPRINT("상금으로 해서 금<5000>을 손에 넣었다", "L", 칼라_주의)
+	CALL PRINT_ADD_EXP(대상, "무투경험치", RAND:8 + 6, 1)
+	CALL PRINT_ADD_EXP(대상, "지략경험치", RAND:8 + 6, 1)
+	MONEY += 5000
+	RETURN 1
+ENDIF
+
+PRINTFORML 져 버렸다
+PRINTFORMW 들요괴에 져 자신을 잃었다…
+CALL ADD_COOLTIME(대상:0, 2)
+RETURN 1

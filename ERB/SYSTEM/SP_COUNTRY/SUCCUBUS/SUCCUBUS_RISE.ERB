@@ -1,0 +1,54 @@
+﻿;--------------------------------------
+;봉기 이벤트가 발생할까의 판정
+;--------------------------------------
+@SUCCUBUS_RISE_RATE()
+
+;이미 출현하고 있는지, 세력 없음 설정이라면 발동하지 않는다
+SIF SP_COUNTRY_APPEARED:특수세력_서큐버스 || !SP_COUNTRY_RANK:(특수세력_서큐버스)
+	RETURN 0
+
+;가득하면 안 돼
+SIF GET_NEW_COUNTRY() == -1
+	RETURN 0
+
+
+SIF !CHECK_SP_COUNTRY_RISE()
+	RETURN 0
+RETURN 1
+
+;--------------------------------------
+;서큐버스 출현 이벤트
+;출현할 수 있으면 1, 할 수 없으면 0을 돌려준다
+;--------------------------------------
+@SUCCUBUS_RISE(도시 = 0)
+#DIM 서큐버스
+#DIM 도시
+
+;서큐버스 세력을 작성
+CALL SUCCUBUS_INIT()
+서큐버스 = RESULT
+;만들 수 없으면 되돌린다
+SIF 서큐버스 == 0
+	RETURN 0
+
+CALL SP_COUNTRY_RISE(서큐버스, 도시)
+
+SIF !RESULT
+	RETURN 0
+
+SP_COUNTRY_APPEARED:특수세력_서큐버스 = 1
+RETURN 서큐버스
+
+;--------------------------------------
+;봉기 이벤트용 메세지 함수
+;--------------------------------------
+@SUCCUBUS_RISE_MSG(세력, 대상)
+#DIM 세력
+#DIM 대상
+
+CALL SINGLE_DRAWLINE
+SETCOLOR 칼라_경고
+PRINTFORMW 꿈의 세계의 거주자인 서큐버스들이, 갑자기 환상향에 흘러들어 왔습니다!
+PRINTFORMW 그녀들은 환상향을 추잡한 세계에 새로 만들 수 있도록, %CITY_NAME:(대상)%\@ GET_OWN_CITY(세력) > 1 ? 등 # \@를 점거한 것 같습니다
+PRINTFORMW 이것에 수반해, 환상향의 각 세력이 이변 해결의 준비를 시작한 것 같습니다…
+RESETCOLOR

@@ -1,0 +1,264 @@
+﻿;거점 페이즈에 있어서의 숍 화면의 처리
+
+;-------------------------------------------------
+;좌우 컬럼 표시 개시
+;사용）CALL START_COLUMN
+;상정）컨텐츠 표시시·페이지 이동시
+;비고）행 번호 리셋트와 COLUMN_LEFT_MENU_SHOW(0)의 호환
+;-------------------------------------------------
+@START_COLUMN
+FIRST_COLUMN_RIGHT_LINE = LINECOUNT
+CALL COLUMN_LEFT_MENU_SHOW(0)
+
+;-------------------------------------------------
+;숍 화면의 표시 처리(거점 페이즈)
+;-------------------------------------------------
+@SHOW_SHOP_LIFE
+
+VARSET LOCAL, 0
+
+;커맨드의 선택 가부 판정
+CALL CHECK_CHECKCHARA_SAVE
+
+;캐릭터 표시순서의 리스트를 작성
+CALL CREATE_SELECTOR_SORT_LIST
+
+;전원의 조교참가플래그를 클리어
+CVARSET CFLAG, 6, 0
+
+TRYCCALLFORM SHOP_LIFE_EVENTBUY_COLUMN_RIGHT_OFF_CHECK{FLAG:거점페이즈선택커맨드}
+	;오른쪽 컬럼 오프라면 최신의 오른쪽 컬럼에 표시가 있는 메뉴 번호로 FLAG:거점페이즈선택커맨드를 리셋트
+	FLAG:거점페이즈선택커맨드 = COLUMN_RIGHT_MENU_SAVE_NUM
+CATCH
+ENDCATCH
+
+;메뉴 번호 범위외라면, 메뉴의 선택 상태를 리셋트
+IF FLAG:거점페이즈선택커맨드 < 1 || FLAG:거점페이즈선택커맨드 > 99
+	FLAG:거점페이즈선택커맨드 = DEFAULT_MENU_NUM
+ENDIF
+
+;메뉴 번호 범위내이지만 실행 불능이라면, 메뉴의 선택 상태를 리셋트
+IF FLAG:거점페이즈선택커맨드 >= 1 || FLAG:거점페이즈선택커맨드 <= 99 && !SHOP_AVAIL:(FLAG:거점페이즈선택커맨드)
+	FLAG:거점페이즈선택커맨드 = DEFAULT_MENU_NUM
+ENDIF
+
+;시스템 설정이라면 리셋트
+IF FLAG:거점페이즈선택커맨드 > COLUMN_LEFT_MENU_END_VALUE
+	FLAG:거점페이즈선택커맨드 = DEFAULT_MENU_NUM
+ENDIF
+
+;Default 메뉴에 리셋트 해도 메뉴 실행 불능이라면, 메뉴의 선택 상태를 해제
+IF FLAG:거점페이즈선택커맨드 == DEFAULT_MENU_NUM && !SHOP_AVAIL:(FLAG:거점페이즈선택커맨드)
+	FLAG:거점페이즈선택커맨드 = 0
+ENDIF
+
+;각각의 행 번호에 할당하는 카테고리 번호와 메뉴 번호를 보존하는 배열의 리셋트
+CALL COLUMN_LEFT_MENULINE_SAVE
+
+;좌우 컬럼의 행 번호를 리셋트 해, 첫번째 메뉴（남은 행동 표시）를 표시
+CALL START_COLUMN
+
+;오른쪽 컬럼의 표시 처리 호출（오른쪽 컬럼용 개행 함수에 부수 하는 왼쪽 메뉴의 표시도 실시한다）
+TRYCCALLFORM SHOP_LIFE_EVENTBUY_SHOW{FLAG:거점페이즈선택커맨드}
+CATCH
+	;백지의 페이지의 경우
+	;이번 메뉴 번호가 오른쪽 컬럼 오프 한편
+	;최신의 오른쪽 컬럼에 표시가 있는 메뉴 번호도 실행 불가가 되어 있었을 경우
+	CALL COLUMN_RIGHT_CLEAR
+ENDCATCH
+
+;-------------------------------------------------
+;숍 화면의 입력 처리(거점 페이즈 0～99)
+;ARG:0에 입력한 값이 들어온다
+;처리를 실시했을 경우는 1을, 실시하지 않았던 경우는 0을 돌려준다
+;SHOP.ERB로 정리해 REDRAW 0 CLEARLINE 하고 싶은 경우는 0
+;-------------------------------------------------
+@EVENTBUY_LIFE(ARG:0)
+;왼쪽 컬럼의 입력 처리
+IF SHOP_AVAIL:(ARG:0) && ARG:0 >= COLUMN_LEFT_MENU_START_VALUE && ARG:0 <= COLUMN_LEFT_MENU_END_VALUE
+	;메뉴 이동했으므로 메뉴용의 범용 변수를 리셋트
+	VARSET MENUVAR, 0
+	;입력치를 메뉴 번호에 받는다
+	FLAG:거점페이즈선택커맨드 = ARG:0
+	TRYCCALLFORM SHOP_LIFE_EVENTBUY_COLUMN_RIGHT_OFF_CHECK{FLAG:거점페이즈선택커맨드}
+	CATCH
+		;오른쪽 컬럼 온이라면, 최신의 오른쪽 컬럼으로서 메뉴 번호를 보존한다
+		COLUMN_RIGHT_MENU_SAVE_NUM = FLAG:거점페이즈선택커맨드
+	ENDCATCH
+	;입력 처리 호출
+	TRYCALLFORM SHOP_LIFE_EVENTBUY{ARG:0}
+	RETURN RESULT
+
+;오른쪽 컬럼의 입력 처리 보조
+ELSEIF ARG:0 < COLUMN_LEFT_MENU_START_VALUE
+	TRYCALLFORM SHOP_LIFE_EVENTBUY_SUB{FLAG:거점페이즈선택커맨드}(ARG:0)
+	RETURN RESULT
+
+;공통 처리
+ELSE
+	;이전페이지
+	IF ARG:0 == SHOP_LIFE_LIST1_PAGE_BACK
+		FLAG:거점페이즈페이지 --
+		RETURN 0
+	;다음페이지
+	ELSEIF ARG:0 == SHOP_LIFE_LIST1_PAGE_NEXT
+		FLAG:거점페이즈페이지 ++
+		RETURN 0
+	;이전페이지
+	ELSEIF ARG:0 == SHOP_LIFE_LIST2_PAGE_BACK
+		FLAG:거점페이즈페이지2 --
+		RETURN 0
+	;다음페이지
+	ELSEIF ARG:0 == SHOP_LIFE_LIST2_PAGE_NEXT
+		FLAG:거점페이즈페이지2 ++
+		RETURN 0
+	ELSE
+		RETURN 0
+	ENDIF
+	RETURN 1
+ENDIF
+
+;-------------------------------------------------
+;숍 화면의 입력 처리(거점 페이즈 100～9999)
+;ARG:0에 입력한 값이 들어온다
+;-------------------------------------------------
+@USERSHOP_LIFE(ARG:0)
+LOCAL:0 = 0
+;오른쪽 컬럼 버튼 입력치를 캐릭터 번호로 변환하는 처리의 오프 판정이 있으면
+TRYCCALLFORM SHOP_LIFE_USERSHOP_COLUMN_RIGHT_CONVERT_CHARANUM_OFF_CHECK{FLAG:거점페이즈선택커맨드}
+	;입력치를 그대로 받아 직접 부른다
+	TRYCALLFORM SHOP_LIFE_USERSHOP{FLAG:거점페이즈선택커맨드}(ARG:0)
+	LOCAL:0 |= RESULT
+;없으면 
+CATCH
+	;통상의 캐릭터 리스트를 캐릭터 관계의 입력 처리를 통해 부른다
+	CALL USERSHOP_LIFE_CHARA1(NO_TO_CHARA(ARG:0 - SHOP_LIFE_LIST1_ADD_INPUT))
+	LOCAL:0 |= RESULT
+	CALL USERSHOP_LIFE_CHARA2(NO_TO_CHARA(ARG:0 - SHOP_LIFE_LIST2_ADD_INPUT))
+	LOCAL:0 |= RESULT
+ENDCATCH
+RETURN LOCAL:0
+
+;-------------------------------------------------
+;숍 화면에 있어서의 캐릭터 관계의 입력 처리(그 1)
+;ARG:0은 캐릭터 번호, 재묘화가 필요한 경우는 1을 돌려준다
+;-------------------------------------------------
+@USERSHOP_LIFE_CHARA1(ARG:0)
+#DIM FIRST_LINE
+
+;캐릭터가 존재하지 않으면 돌아온다
+IF ARG:0 < 0 || ARG:0 >= CHARANUM
+	RETURN 0
+ENDIF
+
+;선택 가능한 조건을 채우지 않은 캐릭터라면 돌아온다
+RESULT = 0
+TRYCALLFORM SHOP_LIFE_CHECKCHARA{FLAG:거점페이즈선택커맨드}(ARG:0)
+IF RESULT != 1
+	RETURN 0
+ENDIF
+
+FIRST_LINE = LINECOUNT
+
+;리스트 1 입력 처리 호출
+TRYCCALLFORM SHOP_LIFE_USERSHOP{FLAG:거점페이즈선택커맨드}(ARG:0)
+	RETURN RESULT
+CATCH
+	RETURN 0
+ENDCATCH
+
+;-------------------------------------------------
+;숍 화면에 있어서의 캐릭터 관계의 입력 처리(그 2)
+;ARG:0은 캐릭터 번호, 재묘화가 필요한 경우는 1을 돌려준다
+;-------------------------------------------------
+@USERSHOP_LIFE_CHARA2(ARG:0)
+
+;캐릭터가 존재하지 않으면 돌아온다
+IF ARG:0 < 0 || ARG:0 >= CHARANUM
+	RETURN 0
+ENDIF
+
+;선택 가능한 조건을 채우지 않은 캐릭터라면 돌아온다
+RESULT = 0
+TRYCALLFORM SHOP_LIFE_CHECKCHARA_SUB{FLAG:거점페이즈선택커맨드}(ARG:0)
+IF RESULT != 1
+	RETURN 0
+ENDIF
+
+;리스트 2 입력 처리 호출
+TRYCCALLFORM SHOP_LIFE_USERSHOP_SUB{FLAG:거점페이즈선택커맨드}(ARG:0)
+	RETURN RESULT
+CATCH
+	RETURN 0
+ENDCATCH
+
+;-------------------------------------------------
+;행동 개시시의 공통 처리
+;-------------------------------------------------
+@START_TRAIN_COMMON
+;모든 참가 캐릭터에 대해 처리
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):조교참가플래그
+		;현재의 기분을 보존
+		FOR LOCAL:1, 0, 10
+			CFLAG:(LOCAL:0):(LOCAL:1 + 190) = PALAM:(LOCAL:0):(LOCAL:1 + 10)
+		NEXT
+		;쵸로인 떡이라면 강제 우호화를 세운다
+		SIF TALENT:(LOCAL:0):쵸로인
+			CFLAG:(LOCAL:0):강제우호화 = 1
+		;참가가 끝난 상태에
+		CFLAG:(LOCAL:0):행동완료 = 1
+		IF GROUPMATCH(FLAG:조교모드, 조교_역조교통상, 조교_역조교특수) && LOCAL:0 != MASTER
+			CFLAG:(LOCAL:0):조교중BASE줄어들지않는다 = 1
+		ELSEIF FLAG:조교모드 == 조교_위안 && CFLAG:(LOCAL:0):위안참가자
+			CFLAG:(LOCAL:0):조교중BASE줄어들지않는다 = 1
+		ENDIF
+		SIF (CFLAG:LOCAL:포로조교의조수 || CFLAG:LOCAL:덮치는건조수) && TALENT:LOCAL:친구
+			CFLAG:(LOCAL:0):조교중돌아가지않는다 = 1
+	ENDIF
+NEXT
+SHOP_TIME += 1
+BEGIN TRAIN
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터를 조교 대상으로 해 세트 한다(대상이 한사람의 경우만)
+;-------------------------------------------------
+@TRAIN_TARGET_SETTING(ARG:0)
+;타겟을 설정
+CALL ADD_MTAR(ARG:0)
+
+;타겟의 조교참가플래그를ＯＮ
+CFLAG:(ARG:0):조교참가플래그 = 1
+
+RETURN 1
+
+;-------------------------------------------------
+;활동 가능 회수의 계산
+;ARG:0 =한사람 추방한 계산
+;-------------------------------------------------
+@CALC_SHOP_TIME(ARG:0 = 0)
+#FUNCTION
+#DIM 행동횟수
+#DIM 사관수
+#DIM NOW
+#DIM PREV
+
+SIF !CFLAG:MASTER:소속
+	RETURNF 3
+
+;GET_COMMANDER_NUM는 주인공도 걸어 오므로, 1당겨 제외
+사관수 = GET_COMMANDER_NUM(CFLAG:MASTER:소속) - GET_ANIMAL_NUM(CFLAG:MASTER:소속) - 1
+
+SIF ARG:0
+	사관수 --
+행동횟수 = 0
+PREV = 0
+NOW = 1
+DO
+	NOW += PREV
+	PREV = NOW - PREV
+	행동횟수 ++
+LOOP 사관수 >= NOW
+
+RETURNF MAX(행동횟수, 2)
+

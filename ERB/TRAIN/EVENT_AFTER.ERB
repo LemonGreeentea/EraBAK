@@ -1,0 +1,731 @@
+﻿;조교 종료시의 처리／이벤트
+
+;-------------------------------------------------
+;조교 종료
+;-------------------------------------------------
+@EVENTEND
+#LATER
+;체력 기력을 0～최대치의 범위에 거둔다
+CALL LIFE_LIMIT
+
+TRAIN_PLACE = 
+
+FLAG:요바이 = 0
+
+IF FLAG:조교모드 == 7
+	SELECTCASE FLAG:위안모드
+		CASE 1
+			CALL EVENTEND_IAN
+		CASE 2
+			CALL EVENTEND_ATEGAU
+	ENDSELECT
+	FLAG:위안모드 = 0
+ENDIF
+
+CUSTOMDRAWLINE ─
+CALL TITLE_CATEGORY_GENERAL("이번 조교")
+PRINTL 
+CALL COLOR_LINE
+FOR LOCAL:0, 0, CHARANUM
+	SIF !IS_PARTICIPATE_TRAIN(LOCAL)
+		CONTINUE
+	PRINTFORML ■%ANAME(LOCAL)%:
+	CALL NEW_PRINT_ORGASM(LOCAL)
+	CALL COLOR_LINE
+NEXT
+WAIT
+
+;위안용의 모브는 여기서 삭제한다
+LOCAL:2 = CHARANUM
+FOR LOCAL:0, 0, LOCAL:2
+	LOCAL:1 = LOCAL:2 - LOCAL:0 - 1
+	IF CFLAG:(LOCAL:1):위안모브
+		CALL DELETE_CHARA(LOCAL:1)
+	ENDIF
+NEXT
+
+
+;카메라 촬영하고 있었을 경우
+SIF TFLAG:70
+	CALL EVENTEND_VIDEO()
+
+
+;체력 기력의 성장
+FOR LOCAL, 0, CHARANUM
+	SIF !IS_PARTICIPATE_TRAIN(LOCAL) || IS_SP_CHARA(LOCAL)
+		CONTINUE
+
+	LOCAL:1 = MIN(SUM_EX(LOCAL) / 5, 20)
+	LOCAL:1 += RAND:MAX(TCVAR:LOCAL:21, 1)
+	SELECTCASE MAXBASE:LOCAL:체력
+		CASE IS > 5000
+			LOCAL:1 /= 10
+		CASE IS > 3000
+			LOCAL:1 /= 4
+	ENDSELECT
+
+	SIF LOCAL:1 <= 0
+		GOTO STR_GROW_END
+
+	PRINTFORML %ANAME(LOCAL)%의 체력 + {LOCAL:1}
+	MAXBASE:LOCAL:체력 += LOCAL:1
+
+	$STR_GROW_END
+
+	LOCAL:1 = MIN(SUM_EX(LOCAL) / 5, 10)
+	LOCAL:1 += RAND:MAX(TCVAR:LOCAL:22, 1)
+
+	SELECTCASE MAXBASE:LOCAL:기력
+		CASE IS > 5000
+			LOCAL:1 /= 10
+		CASE IS > 3000
+			LOCAL:1 /= 4
+	ENDSELECT
+
+	SIF LOCAL:1 <= 0
+		GOTO WILL_GROW_END
+
+	MAXBASE:LOCAL:기력 += LOCAL:1
+	PRINTFORML %ANAME(LOCAL)%의 기력 + {LOCAL:1}
+
+	$WILL_GROW_END
+NEXT
+
+
+;첫대면의 캐릭터의 대면이 끝난 플래그를ＯＮ
+FOR LOCAL:0, 0, CHARANUM
+	SIF LOCAL != MASTER && IS_PARTICIPATE_TRAIN(LOCAL) && !CFLAG:(LOCAL:0):안면
+		CFLAG:(LOCAL:0):안면 = 1
+NEXT
+
+;조교 참가자끼리의 인상치가 개선된다
+FOR LOCAL:0, 0, CHARANUM
+	SIF !IS_PARTICIPATE_TRAIN(LOCAL)
+		CONTINUE
+	FOR LOCAL:1, 0, CHARANUM
+		SIF LOCAL:1 == LOCAL || !IS_PARTICIPATE_TRAIN(LOCAL:1)
+			CONTINUE
+		CALL TRAIN_CHANGE_RELATION(LOCAL:0, LOCAL:1)
+	NEXT
+NEXT
+
+;현재의 취기를 취해 합계치에 가산
+FOR LOCAL:0, 0, CHARANUM
+	SIF IS_PARTICIPATE_TRAIN(LOCAL) && !IS_SP_CHARA(LOCAL)
+		CFLAG:(LOCAL:0):취기누적치 += PALAM:(LOCAL:0):취기
+NEXT
+
+
+FOR LOCAL:0, 0, CHARANUM
+	SIF CFLAG:LOCAL:강제우호화
+		CFLAG:LOCAL:강제우호화 = 0
+	SIF CFLAG:LOCAL:조교중BASE줄어들지않는다
+		CFLAG:LOCAL:조교중BASE줄어들지않는다 = 0
+NEXT
+
+;비우후후 한정
+IF !FLAG:우후후플래그
+	FOR LOCAL:0, 0, CHARANUM
+		IF IS_PARTICIPATE_TRAIN(LOCAL) && !IS_SP_CHARA(LOCAL) && LOCAL != MASTER
+			;조교 후 자위의 체크
+			CALL AFTER_SELF_CHECK(LOCAL:0)
+		ENDIF
+	NEXT
+ENDIF
+
+;성지식 업
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_PARTICIPATE_TRAIN(LOCAL) && ABL:(LOCAL:0):성지식 < 4
+		LOCAL:1 = MIN(SUM_EX(LOCAL:0) / MAX(ABL:(LOCAL:0):성지식 * 2, 1), 100)
+		CALL PRINT_ADD_EXP(LOCAL:0, "성지식경험치", LOCAL:1, 1)
+		CALL TRAIN_AUTO_ABLUP(LOCAL:0)
+	ENDIF
+NEXT
+
+
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_PARTICIPATE_TRAIN(LOCAL) && !IS_SP_CHARA(LOCAL:0)
+		;소질 변화에 관한 처리(연모의 취득 따위)
+		CALL TALENT_CHECK(LOCAL:0)
+	ENDIF
+NEXT
+
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_PARTICIPATE_TRAIN(LOCAL)
+		;성적 기호의 변화
+		;주었을 경우는 락 플래그를 세운다
+		CALL CHECK_SEXUAL_PREFERENCE(LOCAL:0)
+	ENDIF
+NEXT
+
+
+FOR LOCAL:0, 0, CUM_SLOT_NUM
+	CVARSET CUM_TO_COUNT, LOCAL
+	CVARSET CUM_GET_COUNT, LOCAL
+NEXT
+
+FOR LOCAL:0, 0, CHARANUM
+	IF TALENT:(LOCAL:0):촉수임신 || TALENT:(LOCAL:0):Ａ촉수임신
+		;부대의 소속을 해제
+		CALL FORCE_FREE(LOCAL:0)
+
+		IF RESULT && IS_PREGNANT_MSG(LOCAL:0)
+			SETCOLOR 칼라_주의
+			PRINTFORMW 촉수의 아이를 품은 %조사처리(ANAME(LOCAL:0),"는")% 부대로부터 빗나갔습니다
+			RESETCOLOR
+		ENDIF
+	ENDIF
+NEXT
+IF CONFIG:42
+	FOR LOCAL:0, 0, CHARANUM
+		CALL 성벽일괄변경(LOCAL,10000)
+		CALL 성벽일괄변경(LOCAL,12000)
+		CALL 성벽일괄변경(LOCAL,14000)
+	NEXT
+ENDIF
+;추가 아이템의 삭제
+FOR LOCAL:0, 500, 999
+	ITEM:(LOCAL:0) = 0
+NEXT
+
+;조수 기록을 삭제
+FOR LOCAL:0, 0, CHARANUM
+	SIF CFLAG:LOCAL:포로조교의조수
+		CFLAG:LOCAL:포로조교의조수 = 0
+	SIF CFLAG:LOCAL:덮치는건조수
+		CFLAG:LOCAL:덮치는건조수 = 0
+	SIF CFLAG:LOCAL:조교중돌아가지않는다
+		CFLAG:LOCAL:조교중돌아가지않는다 = 0
+NEXT
+
+FOR LOCAL, 0, CHARANUM
+	SIF CFLAG:LOCAL:능력고정플래그
+		CFLAG:LOCAL:능력고정플래그 = 0
+NEXT
+
+;최면 플래그만은 꺾는다(VIRGIN_COMMON 등에 둘 수 있는 TCVAR:최면중에서의 강제 덧쓰기가, 다른 곳에 영향을 주지 않게)
+FOR LOCAL:0, 0, CHARANUM
+	TCVAR:LOCAL:최면중 = 0
+NEXT
+
+
+;네야 역조교플래그를 꺾는다
+FLAG:침실역조교 = 0
+
+;플레이어와 타겟을 클리어
+CALL CLEAR_MPLY
+CALL CLEAR_MTAR
+;포로 조교의 타겟을 클리어
+VARSET PRISONER_TARGET, -1
+
+SIF EVENTEND_CALLEE_NUM > 0
+	CALL TRAIN_CALL(1)
+
+BEGIN TURNEND
+
+
+;-------------------------------------------------
+;위안의 처리
+;-------------------------------------------------
+@EVENTEND_IAN()
+#DIM 절정회수합계
+#DIM 감소량
+#DIM 보수
+#DIM 대상
+#DIM 경제추가
+#DIM 병수추가
+#DIM 최저보증
+#DIM 참가자
+
+참가자 = 0
+절정회수합계 = 0
+
+;위안참가자를 삭제
+FOR 대상, 0, CHARANUM
+	;참가자의 경우, 감소
+	IF IS_PARTICIPATE_TRAIN(대상) && 대상 != MASTER && !CFLAG:대상:위안참가자
+		IF SUM_EX(대상) > 50
+			절정회수합계 += 50 + (SUM_EX(대상) - 50) / 5
+		ELSE
+			절정회수합계 += SUM_EX(대상)
+		ENDIF
+
+		최저보증 = -1000
+		감소량 = LIMIT(300 + SUM_EX(대상) * 20, 0, MAX(CFLAG:대상:호감도, 0) / 10)
+		SIF CFLAG:대상:호감도 - 감소량 < 최저보증
+			감소량 = MAX(CFLAG:대상:호감도 - 최저보증, 0)
+		CFLAG:대상:호감도 = MAX(CFLAG:대상:호감도 - 감소량, 최저보증)
+		PRINTFORML %ANAME(대상)%의 호감도 -{감소량} (현재:{CFLAG:대상:호감도})
+
+		IF (TALENT:대상:친애 && CFLAG:대상:호감도 < 10000) || (TALENT:대상:연모 && CFLAG:대상:호감도 < 1500)
+			CALL COLOR_PRINTW(@"%ANAME(대상)%중(안)에서, %ANAME(MASTER)%에의 사모하는 마음을 쾌락이 웃돌았다……", 칼라_경고)
+			CALL LOSE_RELATION_TALENT(대상)
+		ENDIF
+
+		최저보증 = -1000
+		감소량 = LIMIT(300 + SUM_EX(대상) * 20, 0, MAX(CFLAG:대상:의존도, 0) / 10)
+		SIF CFLAG:대상:의존도 - 감소량 < 최저보증
+			감소량 = MAX(CFLAG:대상:의존도 - 최저보증, 0)
+		CFLAG:대상:의존도 = MAX(CFLAG:대상:의존도 - 감소량, 최저보증)
+		PRINTFORML %ANAME(대상)%의 의존도 -{감소량} (현재:{CFLAG:대상:의존도})
+
+		최저보증 = -1000
+		감소량 = LIMIT(300 + SUM_EX(대상) * 20, 0, MAX(CFLAG:대상:종속도, 0) / 10)
+		SIF CFLAG:대상:종속도 - 감소량 < 최저보증
+			감소량 = MAX(CFLAG:대상:종속도 - 최저보증, 0)
+		CFLAG:대상:종속도 = MAX(CFLAG:대상:종속도 - 감소량, 최저보증)
+		PRINTFORML %ANAME(대상)%의 종속도 -{감소량} (현재:{CFLAG:대상:종속도})
+
+		IF (TALENT:대상:예속 && CFLAG:대상:종속도 < 10000) || (TALENT:대상:복종 && CFLAG:대상:종속도 < 1500)
+			CALL COLOR_PRINTW(@"%ANAME(대상)%중(안)에서, %ANAME(MASTER)%에의 충성을 쾌락이 웃돌았다……", 칼라_경고)
+			CALL LOSE_RELATION_TALENT(대상)
+		ENDIF
+
+
+		최저보증 = -1000
+		감소량 = LIMIT(300 + SUM_EX(대상) * 20, 0, MAX(CFLAG:대상:지배도, 0) / 10)
+		SIF CFLAG:대상:지배도 - 감소량 < 최저보증
+			감소량 = MAX(CFLAG:대상:지배도 - 최저보증, 0)
+		CFLAG:대상:지배도 = MAX(CFLAG:대상:지배도 - 감소량, 최저보증)
+		PRINTFORML %ANAME(대상)%의 지배도 -{감소량} (현재:{CFLAG:대상:지배도})
+
+		IF (TALENT:대상:주인 && CFLAG:대상:지배도 < 10000) || (TALENT:대상:소유자 && CFLAG:대상:지배도 < 1500)
+			CALL COLOR_PRINTW(@"%ANAME(대상)%중(안)에서, %ANAME(MASTER)%에의 독점욕을 쾌락이 웃돌았다……", 칼라_경고)
+			CALL LOSE_RELATION_TALENT(대상)
+		ENDIF
+
+
+		참가자 ++
+	ELSEIF IS_PARTICIPATE_TRAIN(대상) && CFLAG:대상:위안참가자
+		절정회수합계 += SUM_EX(대상)
+		CFLAG:대상:위안참가자 = 0
+	ENDIF
+NEXT
+SIF FLAG:위안피임약
+	TIMES 절정회수합계, 0.7
+
+보수 = 절정회수합계 * RAND(40, 60) * MAX(참가자, 1)
+
+MONEY += 보수
+CALL ICPRINT(@"위안에 의해, 돈<{보수}>를 얻었습니다", "W", 칼라_주의)
+
+
+
+;-------------------------------------------------
+;위안할당의 처리
+;-------------------------------------------------
+@EVENTEND_ATEGAU()
+#DIM 절정회수합계
+#DIM 감소량
+#DIM 증가량
+#DIM 대상
+
+절정회수합계 = 0
+;호감도 관련의 처리
+FOR 대상, 0, CHARANUM
+	;참가자의 경우, 감소
+	IF IS_PARTICIPATE_TRAIN(대상) && 대상 != MASTER && !CFLAG:대상:위안참가자
+		IF SUM_EX(대상) > 50
+			절정회수합계 += 50 + (SUM_EX(대상) - 50) / 5
+		ELSE
+			절정회수합계 += SUM_EX(대상)
+		ENDIF
+		감소량 = MIN(300 + SUM_EX(대상) * 20, CFLAG:대상:호감도 / 3)
+		CFLAG:대상:호감도 = MAX(CFLAG:대상:호감도 - 감소량, -1000)
+
+		감소량 = MIN(300 + SUM_EX(대상) * 20, CFLAG:대상:종속도 / 3)
+		CFLAG:대상:종속도 = MAX(CFLAG:대상:종속도 - 감소량, -1000)
+
+		감소량 = MIN(300 + SUM_EX(대상) * 20, CFLAG:대상:의존도 / 3)
+		CFLAG:대상:의존도 = MAX(CFLAG:대상:의존도 - 감소량, -1000)
+	ENDIF
+NEXT
+
+FOR 대상, 0, CHARANUM
+	IF CFLAG:대상:조교참가플래그 && CFLAG:대상:위안참가자
+		IF SUM_EX(대상) > 50
+			절정회수합계 += 50 + (SUM_EX(대상) - 50) / 5
+		ELSE
+			절정회수합계 += SUM_EX(대상)
+		ENDIF
+	ENDIF
+NEXT
+
+FOR 대상, 0, CHARANUM
+	SIF !CFLAG:대상:조교참가플래그 || !CFLAG:대상:위안참가자
+		CONTINUE
+	증가량 = LIMIT(100 + 절정회수합계, 0, 1000)
+	CFLAG:대상:호감도 += 증가량
+	CFLAG:대상:종속도 += 증가량
+	CFLAG:대상:의존도 += 증가량
+	CFLAG:대상:위안참가자 = 0
+	CALL ICPRINT(@"침실의 즐거움을 제공한 것으로, %ANAME(대상)%의 호감을 얻었습니다", "W", 칼라_주의)
+NEXT
+
+
+;-------------------------------------------------
+;비디오촬영하고 있었을 때의 처리
+;-------------------------------------------------
+@EVENTEND_VIDEO()
+#DIM 절정회수합계
+#DIM 비디오레터가능
+#DIM 상영가능
+#DIM 여배우
+
+
+여배우 = -1
+절정회수합계 = 0
+FOR LOCAL, 0, CHARANUM
+	SIF !IS_PARTICIPATE_TRAIN(LOCAL)
+		CONTINUE
+	절정회수합계 += SUM_EX(LOCAL)
+	SIF IS_FEMALE(LOCAL) && GETBIT(TALENT:LOCAL:음란계, 소질_음란_ＡＶ여배우)
+		여배우 = LOCAL
+NEXT
+
+;촬영 개시시부터의 차분을 요구한다
+절정회수합계 -= TFLAG:71
+
+
+비디오레터가능 = 0
+상영가능 = 0
+
+IF FLAG:조교모드 == 조교_포로조교
+	;자세력 이외 목인가의 세력의 포로로, 군주 이외라면 비디오 레터 할 수 있다
+	FOR LOCAL, 0, VARSIZE("PRISONER_TARGET")
+		SIF PRISONER_TARGET:LOCAL == -1
+			CONTINUE
+		LOCAL:1 = PRISONER_TARGET:LOCAL
+		SIF !IS_COUNTRY(CFLAG:(LOCAL:1):소속) || CFLAG:(LOCAL:1):소속 == CFLAG:MASTER:소속 || GET_COUNTRY_BOSS(CFLAG:(LOCAL:1):소속) == LOCAL:1
+			CONTINUE
+		비디오레터가능 = 1
+	NEXT
+	;자세력 이외 목인가의 세력의 포로라면 상영할 수 있다
+	FOR LOCAL, 0, VARSIZE("PRISONER_TARGET")
+		SIF PRISONER_TARGET:LOCAL == -1
+			CONTINUE
+		LOCAL:1 = PRISONER_TARGET:LOCAL
+		SIF !IS_COUNTRY(CFLAG:(LOCAL:1):소속) || CFLAG:(LOCAL:1):소속 == CFLAG:MASTER:소속
+			CONTINUE
+		상영가능 = 1
+	NEXT
+ENDIF
+
+
+
+CALL COLOR_LINE
+PRINTFORML 이번 촬영한 비디오를, 어떻게 사용할까……
+CALL ASK_MULTI_JUDGE("보존", 1, "뒤루트에 흘린다", 1, "군사 캠페인에 사용", 1, "비디오 레터를 보낸다", 비디오레터가능, "소속 세력으로 상영한다", 상영가능)
+
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 개인용에 보존해 두기로 했다……
+	CASE 1
+		PRINTFORML 뒤의 루트에 흘리기로 했다……
+		IF 여배우 >= 0
+			PRINTFORML ＡＶ여배우로서 유명한 %ANAME(여배우)%의 출연작이라는 일로, 인기를 얻은 것 같다……
+			TIMES 절정회수합계, 1.25
+		ENDIF
+		CALL ICPRINT(@"금<{SQRT(절정회수합계) * 250}>를 얻었다", "W", 칼라_주의)
+		MONEY += SQRT(절정회수합계) * 250
+	CASE 2
+		PRINTFORML 군의 병사 모집 캠페인에 이용하기로 했다……
+		IF 여배우 >= 0
+			PRINTFORML ＡＶ여배우로서 유명한 %ANAME(여배우)%의 출연작이라는 일로, 인기를 얻은 것 같다……
+			TIMES 절정회수합계, 1.25
+		ENDIF
+		CALL ICPRINT(@"병<{SQRT(절정회수합계) * 150}>가 모였다", "W", 칼라_주의)
+		COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += SQRT(절정회수합계) * 150
+	CASE 3
+		PRINTFORML 포로가 건강하게 지내고 있는 취지를 알려 줄 수 있도록, 비디오 레터를 보냈다……
+		FOR LOCAL, 0, VARSIZE("PRISONER_TARGET")
+			SIF PRISONER_TARGET:LOCAL == -1
+				CONTINUE
+			LOCAL:1 = PRISONER_TARGET:LOCAL
+			SIF !IS_COUNTRY(CFLAG:(LOCAL:1):소속) || CFLAG:(LOCAL:1):소속 == CFLAG:MASTER:소속 || GET_COUNTRY_BOSS(CFLAG:(LOCAL:1):소속) == LOCAL:1
+				CONTINUE
+			LOCAL:2 = GET_COUNTRY_BOSS(CFLAG:(LOCAL:1):소속)
+			IF IS_SLAVE(LOCAL:2)
+				CALL COLOR_PRINTW(@"%조사처리(ANAME(LOCAL:2),"는")% 자신도 %ANAME(LOCAL:1)%같이해 주었으면 한다고 생각한 것 같다……", 칼라_주의)
+				CALL CHANGE_RELATION_C_TO_C(CFLAG:(LOCAL:1):소속, CFLAG:MASTER:소속, SQRT(절정회수합계) * 2, SQRT(절정회수합계) * -2)
+			ELSEIF IS_LOVER(LOCAL:2)
+				CALL COLOR_PRINTW(@"%조사처리(ANAME(LOCAL:2),"는")% 그런 것을 보내버려 온 %ANAME(MASTER)%에 기가 막히고 있는 것 같다……", 칼라_주의)
+			ELSE
+				CALL COLOR_PRINTW(@"%조사처리(ANAME(LOCAL:2),"는")% 그런 것을 보내버려 온 %ANAME(MASTER)%에 격노한 것 같다……", 칼라_주의)
+				CALL CHANGE_RELATION_C_TO_C(CFLAG:(LOCAL:1):소속, CFLAG:MASTER:소속, SQRT(절정회수합계) * -2, SQRT(절정회수합계) * 2)
+			ENDIF
+		NEXT
+	CASE 4
+		PRINTFORML 소속 세력에서, 치태를 대대적으로 상영해 주기로 했다……
+		FOR LOCAL, 0, VARSIZE("PRISONER_TARGET")
+			SIF PRISONER_TARGET:LOCAL == -1
+				CONTINUE
+			LOCAL:1 = PRISONER_TARGET:LOCAL
+			SIF !IS_COUNTRY(CFLAG:(LOCAL:1):소속) || GET_COUNTRY_BOSS(CFLAG:(LOCAL:1):소속) == CFLAG:MASTER:소속
+				CONTINUE
+			IF GET_COUNTRY_BOSS(CFLAG:(LOCAL:1):소속) == LOCAL:1
+				PRINTFORMW 군주인 %ANAME(LOCAL:1)%의 추잡한 행위에 대한 소문은, 눈 깜짝할 순간에 퍼진 것 같다……
+				PRINTFORMW %ANAME(LOCAL:1)%에의 부하로부터의 덕망이 손상되었다……
+				CALL CHANGE_RELATION_C_TO_O(CFLAG:(LOCAL:1):소속, LOCAL:1, SQRT(절정회수합계) * -2, SQRT(절정회수합계) * 2)
+			ELSE
+				PRINTFORMW 무장인 %ANAME(LOCAL:1)%의 추잡한 행위에 대한 소문은, 눈 깜짝할 순간에 퍼진 것 같다……
+				PRINTFORMW 민은 적잖게 동요해, 반대로 「좋은 것」를 보여 주었던 %ANAME(MASTER)%에 감사하고 있는 것 같다……
+				PRINTFORMW 경제를 {SQRT(절정회수합계) * 10}흡수했다
+				CALL SHIFT_ECONOMY(CFLAG:(LOCAL:1):소속, CFLAG:MASTER:소속, SQRT(절정회수합계) * 1000)
+			ENDIF
+		NEXT
+ENDSELECT
+
+TFLAG:70 = 0
+
+;-------------------------------------------------
+;조교 후 자위의 체크
+;-------------------------------------------------
+@AFTER_SELF_CHECK(ARG:0)
+;컷 플래그가 서 있으면 리턴
+;SIF CFLAG:98 & 2
+;	RETURN 0
+
+;특수상태가 서 있으면 돌아온다
+SIF CFLAG:(ARG:0):행동불능상태
+	RETURN 0
+
+;공허·붕괴라면 돌아온다
+SIF TALENT:(ARG:0):공허 || TALENT:(ARG:0):붕괴
+	RETURN 0
+
+;자위 또는 촉수자위의 지식이 필요
+LOCAL:0 = 0
+CALL CHECK_COM_KNOWLEDGE(ARG:0, 100)
+LOCAL:0 += RESULT
+CALL CHECK_COM_KNOWLEDGE(ARG:0, 211)
+LOCAL:0 += RESULT
+SIF !LOCAL:0
+	RETURN 0
+
+;조르기 플래그가 서 있으면 100%(조건 판정을 스르)
+IF !TCVAR:(ARG:0):27
+	;최악이어도 욕정이 3이상 필요
+	SIF PALAM:(ARG:0):욕정 < PALAMLV:3
+		RETURN 0
+
+	;기분이 어느 정도 좋을 때 한정
+	LOCALS:0 = %TOSTR_EMOTION(ARG:0)%
+	SIF !GROUPMATCH(LOCALS:0, "행복", "기쁨", "양호", "평안")
+		RETURN 0
+
+	;체력·기력이 제로, 혹은 적으면 실시하지 않는다
+	SIF BASE:(ARG:0):체력 <= 500 || BASE:(ARG:0):기력 <= 500
+		RETURN 0
+ENDIF
+
+;●자위할지 어떨지의 판정＆회수의 계산
+CALL CALC_SELF_PARAMETER(ARG:0, 1)
+LOCAL:2 = RESULT:0
+LOCAL:3 = RESULT:1
+LOCAL:4 = RESULT:2
+
+;자위의 실행 판정을 채우지 않으면 돌아온다
+SIF !LOCAL:2
+	RETURN 0
+
+;메세지의 공통 부분
+CALL COLOR_LINE
+PRINTFORM %조사처리(ANAME(MASTER),"와")% 헤어진 후,
+
+SIF TCVAR:(ARG:0):27
+	PRINTFORM 약속이 연기되었다
+
+PRINTFORM %조사처리(ANAME(ARG:0),"는")% 열정을 억제하지 않고,
+
+;ＣＢ자위
+IF LOCAL:3 == 0
+	IF HAS_PENIS(ARG:0)
+		PRINTFORML 스스로의 손가락으로 젖혀져 선 육봉을 위로했다…
+	ELSE
+		PRINTFORML 스스로의 손가락으로 달아오른 몸을 위로했다…
+	ENDIF
+
+	;구상의 표시
+	CALL KOJO_EVENT(ARG:0, 100)
+	SETCOLOR 칼라_실버
+	;경험의 가산과 표시
+	IF IS_MALE(ARG:0)
+		CALL FUCK(ARG:0, "Ｃ, 자위, 욕망, 사정")
+	ELSE
+		CALL FUCK(ARG:0, "Ｃ, Ｂ, 자위, 욕망, 사정")
+	ENDIF
+	RESETCOLOR
+;아나운서 무릎 관절
+ELSE
+	PRINTFORML 스스로의 엉덩이 구멍에 손가락을 넣어 쾌감을 탐냈다…
+
+	;구상의 표시
+	CALL KOJO_EVENT(ARG:0, 101)
+	SETCOLOR 칼라_실버
+	;경험의 가산과 표시
+	CALL FUCK(ARG:0, "Ａ, 자위, 욕망, 사정")
+ENDIF
+	RESETCOLOR
+
+;능력 상승 판정
+CALL TRAIN_AUTO_ABLUP(ARG:0)
+WAIT
+
+;-------------------------------------------------
+;자위의 판정(RESULT:0), 종류(RESULT:1), 회수(RESULT:2)를 돌려주는 함수
+;자위의 종류는  0:ＣＢ자위  1:아나운서 무릎 관절
+;ARG:1이 1이라면 PALAM등의 조교시의 1시 변수를 고려한다
+;-------------------------------------------------
+@CALC_SELF_PARAMETER(ARG:0, ARG:1)
+#DIM 자위실행도 ;(LOCAL:2)
+#DIM ＣＢ경향 ;(LOCAL:3)
+#DIM Ａ경향 ;(LOCAL:4)
+
+자위실행도 = ABL:(ARG:0):자위 * 7 + ABL:(ARG:0):욕망 * 4
+IF ARG:1
+	;무드(TFLAG:37)를 영향 시킨다  ※잠정적으로 무드 20 이하～70이상으로 0％～100％배율
+	자위실행도 = 자위실행도 * LIMIT(TFLAG:37 - 20 ,0 ,50) / 50
+	;에서도 므흣하면 관계없지요  지렛대로 욕정 게이지에는 배율 되지 않는다
+	자위실행도 += GET_PALAMLV(PALAM:(ARG:0):욕정) * 4
+ELSE
+	자위실행도 += 20
+ENDIF
+
+ＣＢ경향 = ABL:(ARG:0):Ｃ감 * 2 + ABL:(ARG:0):Ｂ감
+Ａ경향 = ABL:(ARG:0):Ａ감 * 3
+
+SIF TALENT:(ARG:0):자위하기쉬움
+	자위실행도 += 11
+
+SIF TALENT:(ARG:0):쾌감에솔직
+	자위실행도 += 5
+
+SIF TALENT:(ARG:0):쾌감을부정
+	자위실행도 -= 14
+
+;복종은 증가하지 않는다  예속으로 연모와 같은 레벨
+SIF TALENT:(ARG:0):연모 || TALENT:(ARG:0):예속
+	자위실행도 += 5
+
+;채워지고 있으므로 자위의 경향이 줄어드는 이미지
+SIF TALENT:(ARG:0):친애
+	자위실행도 -= 7
+
+SIF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음란)
+	자위실행도 += 7
+	
+SIF  GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음핵)
+	ＣＢ경향 += 6
+
+SIF  GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음유)
+	ＣＢ경향 += 4
+
+SIF  GETBIT(TALENT:(ARG:0):음란계, 소질_음란_항문광)
+	Ａ경향 += 8
+
+LOCAL:5 = (자위실행도 + MAX(ＣＢ경향, Ａ경향)) * 10
+
+IF LOCAL:5 > 0
+	IF ARG:1
+		;이것 어차피 자위 발생하는 비우후후라면 체력 기력 줄어드는 것 거의 없고 의미 없잖아?
+		LOCAL:5 = LOCAL:5 * BASE:(ARG:0):체력 * BASE:(ARG:0):기력 / (MAXBASE:(ARG:0):체력 * MAXBASE:(ARG:0):기력)
+	ELSE
+		TIMES LOCAL:5, 0.75
+	ENDIF
+ENDIF
+
+;조르기 플래그가 서 있으면 강제적으로 판정치를 클리어 하도록(듯이) 보정
+IF TCVAR:(ARG:0):27
+	;여기서 MAX 하는 의미가 좀 더 모른다（일단 허들의 끌어 올리기와 합해 최저치를+50의 250으로 한다）
+	LOCAL:5 = MAX(LOCAL:5 + 100, 250)
+ENDIF
+
+;실행치 부족하면 판정 OFF
+;연모·예속의 가산을 늘린 만큼, 허들도 끌어 올렸습니다（250 + 5 * 10 → 300）
+IF LOCAL:5 < 300
+	RESULT:0 = 0
+ELSE
+	RESULT:0 = 1
+ENDIF
+
+;종류의 판정
+RESULT:1 = (ＣＢ경향 < Ａ경향)
+
+;회수의 계산(상한은 30회)
+LOCAL:6 = MIN(SQRT(MAX(LOCAL:5 - 240, 0) / 10), 30)
+RESULT:2 = MAX(LOCAL:6 - RAND:(LOCAL:6 / 5 + 2), 1)
+
+RETURN RESULT:0
+
+;-------------------------------------------------
+;조교 후의 캐릭터 사이 인상치 개선 처리
+;-------------------------------------------------
+;(ARG:0)의 것(ARG:1)에 대한 인상을 조교 내용 나름으로 개선한다
+;※MASTER에 대한 호감도·종속도나 제삼자에게로의 친밀도와는 다르다
+;기분이 좋을 정도 좋은 인상치가 상승, 욕정·취기가 높을 정도 악인상치가 감소
+;주로 침실의 난교가 효과적
+;누가 누구에게 어떻게 했다는 등 끼지 않아 물러나고 말이야 지나 고려하고 있지 않다
+;더 지금의 곳 악화되는 일은 않는다（해도 괜찮지만 밸런스가 어렵다고 생각되고）
+@TRAIN_CHANGE_RELATION(ARG:0, ARG:1)
+#DIM 좋은인상증가치
+#DIM 악인상감소치
+
+;좋은 인상 증가치:기분으로부터 썩둑 대입합니다
+SELECTCASE TOSTR_EMOTION(ARG:0)
+	CASE "행복"
+		좋은인상증가치 = 16
+	CASE "기쁨"
+		좋은인상증가치 = 8
+	CASE "양호"
+		좋은인상증가치 = 4
+	CASE "평안"
+		좋은인상증가치 = 2
+ENDSELECT
+
+;악인상 감소치:그대로 욕정 Lv와 취해 Lv를 더한다（계 0～19 정도? ）
+악인상감소치 = GET_PALAMLV(PALAM:(ARG:0):욕정) + GET_PALAMLV(PALAM:(ARG:0):취기)
+
+;주인공 자신의 변동은 우선 어느 쪽도 10
+IF ARG:0 == MASTER
+	좋은인상증가치 = 10
+	악인상감소치 = 10
+ENDIF
+
+;상대의 소질로 변동
+;※조작 캐릭터에 따라서는 굉장히 편해지는 것이 아니어도 괜찮을지도
+IF TALENT:(ARG:1):하늘의사자
+	좋은인상증가치 += 2
+	악인상감소치 += 2
+ENDIF
+IF TALENT:(ARG:1):군주의그릇
+	좋은인상증가치 += 2
+	악인상감소치 += 2
+ENDIF
+IF TALENT:(ARG:1):구심력
+	좋은인상증가치 += 2
+	악인상감소치 += 2
+ENDIF
+IF TALENT:(ARG:1):매혹
+	좋은인상증가치 += 1
+ENDIF
+IF TALENT:(ARG:1):수수께끼의매력
+	좋은인상증가치 += 1
+	악인상감소치 += 1
+ENDIF
+IF TALENT:(ARG:1):인기
+	좋은인상증가치 += 1
+	악인상감소치 += 1
+ENDIF
+IF TALENT:(ARG:1):소악마
+	좋은인상증가치 += 1
+ENDIF
+
+;침실·육아라면 효과는（우선）4배
+IF FLAG:조교모드 == 1 || FLAG:조교모드 == 3
+	좋은인상증가치 = 좋은인상증가치 * 4
+	악인상감소치 = 악인상감소치 * 4
+ENDIF
+
+CALL CHANGE_RELATION_O_TO_O(ARG:0, ARG:1, 좋은인상증가치, -(악인상감소치))
+

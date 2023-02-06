@@ -1,0 +1,27 @@
+﻿;-------------------------------------------------
+;조교한다
+;-------------------------------------------------
+@DIPLOMACY_REQUEST_TRAIN(ARG:0)
+LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+LOCAL:5 = GET_COUNTRY_BOSS(ARG:0)
+
+IF COUNTRY_EVENT_ID:(ARG:0) == SP_COUNTRY_ID:(특수세력_도둑)
+	PRINTFORMW 도둑은 퇴짜놓아 왔습니다
+	RETURN 0
+ENDIF
+
+
+PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:5)%에게, 몸을 좋아하게 시켜라라고 요구했다
+
+CALL DIPLOMACY_REQUEST_COMMON(ARG:0, 300 + 20 * CFLAG:(LOCAL:5):외교조교카운터, 1)
+LOCAL:2 = RESULT
+SIF LOCAL:2 <= 0
+	RETURN 0
+
+SETCOLOR 칼라_주의
+PRINTFORML %조사처리(ANAME(LOCAL:5),"가")% 「포로의조교」메뉴로부터 조교 가능하게 되었습니다
+RESETCOLOR
+PRINTFORMW (조건을 채우고 있는 동안은 항상 조교 가능하게 됩니다)
+CFLAG:(LOCAL:5):외교조교중 = 1
+RETURN 1
+

@@ -1,0 +1,106 @@
+﻿;-------------------------------------------------
+;「임관한다」의 명칭
+;-------------------------------------------------
+@SHOP_SLG_NAME76
+RESULTS:0 '= "임관한다"
+
+;-------------------------------------------------
+;「임관한다」의 선택 가부
+;-------------------------------------------------
+@SHOP_SLG_CHECK76
+SIF CFLAG:MASTER:소속 != 0
+	RETURN 0
+SIF FLAG:관전모드
+	RETURN 0
+SIF FLAG:클리어플래그
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「임관한다」의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_SLG_EVENTBUY76
+CALL SHOP_SERVE_COUNTRY
+RETURN 1
+
+;-------------------------------------------------
+;임관한다
+;-------------------------------------------------
+@SHOP_SERVE_COUNTRY
+LOCAL:10 = 0
+
+$SHOW_LOOP
+
+CALL SINGLE_DRAWLINE
+PRINTL 관직에 오름처의 국가를 선택해 주세요
+PRINT 한 번 임관한다와
+SETCOLOR 칼라_주의
+PRINT 5
+RESETCOLOR
+PRINTL 기의 사이, 하야 할 수가 없습니다
+CALL SINGLE_DRAWLINE
+CALL SET_CITY_COLOR_COUNTRY
+CALL DRAWMAP
+CALL RESET_CITY_COLOR
+CALL SINGLE_DRAWLINE
+
+LOCAL:2 = ID_TO_CHARA(COUNTRY_BOSS:(LOCAL:10))
+
+IF LOCAL:2 < 0
+	PRINTL 도시를 클릭 하는 것으로, 그 세력의 정보를 얻을 수 있습니다
+	PRINTL 
+	PRINTBUTTON " 0[돌아온다]", 0
+	PRINTL 
+ELSE
+	PRINT 이 도시는 
+	SETCOLOR COUNTRY_COLOR:(LOCAL:10)
+	PRINTFORM %NAME_FORMAL(LOCAL:2)%
+	RESETCOLOR
+	PRINTL  의 세력하에 있습니다
+	IF COUNTRY_IS_CLOSED:(LOCAL:10)
+		SETCOLOR 칼라_선택불가
+		PRINTFORM  X[이 세력에는 관직에 오름 할 수 없습니다]
+		RESETCOLOR
+	ELSEIF FINDELEMENT(COUNTRY_PLAYER_BELONGED, LOCAL:10) != -1
+		SETCOLOR 칼라_선택불가
+		PRINTFORM  X[세력으로부터 이탈한지 얼마되지 않았습니다]
+		RESETCOLOR
+	ELSE
+		PRINTBUTTON " 1[이 세력에 임관한다]", 1
+	ENDIF
+	PRINTL 
+	PRINTBUTTON " 0[돌아온다]", 0
+	PRINTL 
+ENDIF
+
+REDRAW 0
+
+$INPUT_LOOP
+INPUT
+
+IF RESULT == 0
+	RETURN
+ELSEIF RESULT == 1 && !COUNTRY_IS_CLOSED:(LOCAL:10) && FINDELEMENT(COUNTRY_PLAYER_BELONGED, LOCAL:10) == -1
+	IF LOCAL:2 >= 0
+		CALL CHANGE_COUNTRY(MASTER, LOCAL:10)
+		TIME = 0
+		PRINTFORMW %ANAME(LOCAL:2)% 세력에 관직에 오름 합니다
+		PLAYER_HIRED_COUNTER  = 5
+		RETURN
+	ENDIF
+ELSEIF RESULT >= 1000 && RESULT < 1000 + MAX_CITY
+	LOCAL:3 = RESULT - 1000
+	LOCAL:4 = CITY_OWNER:(LOCAL:3)
+	IF IS_COUNTRY(LOCAL:4)
+		LOCAL:10 = LOCAL:4
+		CLEARLINE LINECOUNT - LINES_SHOP
+		GOTO SHOW_LOOP
+	ELSEIF GET_RELAYNAME(LOCAL:3) != "무명" && LOCAL:4 == 0
+		LOCAL:10 = 0
+		CLEARLINE LINECOUNT - LINES_SHOP
+		GOTO SHOW_LOOP
+	ENDIF
+ENDIF
+CLEARLINE 1
+GOTO INPUT_LOOP
+

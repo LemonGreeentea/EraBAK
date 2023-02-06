@@ -1,0 +1,274 @@
+﻿;피피어싱
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME92
+LOCALS:0 = 문신
+
+RESULTS:0 = %LOCALS:0%한다
+RESULTS:1 = %LOCALS:0%당한다
+RESULTS:2 = %LOCALS:0%시킨다
+RESULTS:3 = %LOCALS:0%된다
+RESULTS:4 = %LOCALS:0%시킨다
+RESULTS:5 = %LOCALS:0%과시하고
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE92
+;공통 부분
+CALL COM_ABLE_COMMON(92)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 1명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 1
+	RETURN 0
+;타겟은 최대로 1명까지
+SIF MTAR_NUM <= 0 || MTAR_NUM > 1
+	RETURN 0
+SIF ITEM:문신바늘 <= 0
+	RETURN 0
+;플레이어가 행동불능이라면 불가
+SIF !IS_PLAYABLE(MPLY:0)
+	RETURN 0
+;플레이어가 구속중이라면 불가
+SIF IS_BIND(MPLY:0)
+	RETURN 0
+;플레이어가 안면승마 되고 있다면 불가
+SIF IS_RIDDEN(MPLY:0)
+	RETURN 0
+;플레이어와 타겟이 삽입되고 있다면 불가
+SIF IS_INSERT_SINGLE(MPLY:0, "전") || IS_INSERT_SINGLE(MTAR:0, "전")
+	RETURN 0
+;타겟으로 1개소는 문신 할 수 있는 장소가 없으면 안 돼
+SIF !CAN_TATTOO_ANYWHERE(MTAR:0)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM92
+#DIM FIRST_LINE, 2
+
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+FIRST_LINE = LINECOUNT
+PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 말씀할 수 있 (어) 주기로 했다……
+PRINTFORML 어디에 조각해 넣어 줄까?
+PRINTFORML
+FOR LOCAL, 0, VARSIZE("TATTOO")
+	IF CAN_TATTOO(MTAR:0, LOCAL)
+		PRINTBUTTON @"[{LOCAL:0}] %GET_TATTOO_NAME(LOCAL:0), 8, LEFT%", LOCAL:0
+		PRINTBUTTON @"[{LOCAL:0 + 100}] %GET_TATTOO_NAME(LOCAL:0) + "(랜덤)", 20, LEFT%", LOCAL:0 + 100
+		PRINTL
+	ELSE
+		SETCOLOR 칼라_선택불가
+		PRINTPLAINFORM [{LOCAL:0}] %GET_TATTOO_NAME(LOCAL:0)%에는 이미 문신이 들어가 있다
+		RESETCOLOR
+		PRINTL
+	ENDIF
+NEXT
+PRINTFORML [99] 돌아온다
+$INPUT_LOOP
+INPUT
+LOCAL:1 = RESULT
+IF LOCAL:1 == 99
+	$CANCEL
+	PRINTFORML 역시 그만두었다
+	RETURN 0
+ELSEIF 0 <= LOCAL:1 && LOCAL:1 < VARSIZE("TATTOO") && CAN_TATTOO(MTAR:0, LOCAL:1)
+	PRINTFORML 뭐라고 조각해 넣을까……(미입력으로 캔슬)
+	INPUTS
+	SIF RESULTS:0 == ""
+		GOTO CANCEL
+	CALL SET_TATTOO(MTAR:0, LOCAL:1, RESULTS:0)
+ELSEIF 100 <= LOCAL:1 && LOCAL:1 < VARSIZE("TATTOO") + 100 && CAN_TATTOO(MTAR:0, LOCAL:1 - 100)
+	FIRST_LINE:1 = LINECOUNT
+	$RANDOM_LOOP
+	LOCALS:0 = %STR_FOR_TATTOO(LOCAL:1 - 100)%
+	PRINTFORML 「%LOCALS:0%」를 조각해 넣는 것은 어떨까……
+	CALL ASK_MULTI("조각한다", "별의로", "그만둔다")
+	IF RESULT == 0
+		CALL SET_TATTOO(MTAR:0, LOCAL:1 - 100, LOCALS:0)
+	ELSEIF RESULT == 1
+		CLEARLINE LINECOUNT - FIRST_LINE:1
+		GOTO RANDOM_LOOP
+	ELSEIF RESULT == 2
+		CLEARLINE LINECOUNT - FIRST_LINE:0
+		RESTART
+	ENDIF
+ELSE
+	GOTO INPUT_LOOP
+ENDIF
+
+;●플레이어에 대해 판정
+DOWNBASE:(MPLY:0):체력 += 100
+SOURCE:(MPLY:0):기학 = 150
+SOURCE:(MPLY:0):일탈 = 50
+SOURCE:(MPLY:0):접촉 = 30
+;주도권에 응한 우월·수동의 소스 추가
+CALL ADD_SOURCE_INITIATIVE_U(MPLY:0, 160, 60)
+DOWNBASE:(MTAR:0):체력 += 500
+;●타겟으로 붙어 판정
+SOURCE:(MTAR:0):고통 = 500
+SOURCE:(MTAR:0):노출 = 50
+SOURCE:(MTAR:0):일탈 = 150
+SOURCE:(MTAR:0):접촉 = 30
+;주도권에 응한 우월·수동의 소스 추가
+CALL ADD_SOURCE_INITIATIVE_U(MTAR:0, 50, 150)
+
+;주도도 변화 기준치
+TFLAG:49 = 5
+
+;도착도 변화 기준치
+TFLAG:50 = 7
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 7
+
+
+
+RETURN 1
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER92(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 110
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 4)
+CALL COM_ORDER_ELEMENT(ARG:0, @"새드 Lv{ABL:(ARG:0):새드}", ABL:(ARG:0):새드 * 3)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 1, 10))
+
+IF TALENT:(ARG:0):얌전함
+	CALL COM_ORDER_ELEMENT(ARG:0, "얌전함", -3)
+ENDIF
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -2)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 3)
+ENDIF
+IF TALENT:(ARG:0):Ｓ기질
+	CALL COM_ORDER_ELEMENT(ARG:0, "Ｓ기질", 6)
+ENDIF
+
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_새드)
+	CALL COM_ORDER_ELEMENT(ARG:0, "새드", 15)
+ELSE
+	IF ABL:(ARG:0):주도도Ｕ >= 500
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 15)
+	ELSEIF ABL:(ARG:0):주도도Ｕ >= 300
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 10)
+	ELSEIF ABL:(ARG:0):주도도Ｕ >= 100
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 5)
+	ELSEIF ABL:(ARG:0):주도도Ｕ > -100
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 0)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", -5)
+	ENDIF
+
+	IF ABL:(ARG:0):도착도 >= 800
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 20)
+	ELSEIF ABL:(ARG:0):도착도 >= 500
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 15)
+	ELSEIF ABL:(ARG:0):도착도 >= 300
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 10)
+	ELSEIF ABL:(ARG:0):도착도 >= 100
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 5)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 0)
+	ENDIF
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+;고유의 실행 판정(타겟측)
+;-------------------------------------------------
+@COM_ORDER_TARGET92(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 120
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 4)
+CALL COM_ORDER_ELEMENT(ARG:0, @"마조 Lv{ABL:(ARG:0):마조}", ABL:(ARG:0):마조 * 3)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 1, 10))
+
+IF TALENT:(ARG:0):얌전함
+	CALL COM_ORDER_ELEMENT(ARG:0, "얌전함", 3)
+ENDIF
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -5)
+ENDIF
+IF TALENT:(ARG:0):Ｍ기질
+	CALL COM_ORDER_ELEMENT(ARG:0, "Ｍ기질", 6)
+ENDIF
+
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_마조)
+	CALL COM_ORDER_ELEMENT(ARG:0, "마조", 15)
+ELSE
+	IF ABL:(ARG:0):주도도Ｕ <= -500
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 15)
+	ELSEIF ABL:(ARG:0):주도도Ｕ <= -300
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 10)
+	ELSEIF ABL:(ARG:0):주도도Ｕ <= -100
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 5)
+	ELSEIF ABL:(ARG:0):주도도Ｕ < 100
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", 0)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "주도도", -5)
+	ENDIF
+
+	IF ABL:(ARG:0):도착도 >= 800
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 20)
+	ELSEIF ABL:(ARG:0):도착도 >= 500
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 15)
+	ELSEIF ABL:(ARG:0):도착도 >= 300
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 10)
+	ELSEIF ABL:(ARG:0):도착도 >= 100
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 5)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 0)
+	ENDIF
+ENDIF
+
+RETURN 1
+
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE92
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN92
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_92()
+RETURN POWER(2, 성적기호_학대하고싶다)
+
+@COM_PREFERENCE_TARGET_92()
+RETURN POWER(2, 성적기호_시달리고싶다)
+

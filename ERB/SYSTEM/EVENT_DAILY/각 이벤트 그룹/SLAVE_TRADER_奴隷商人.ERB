@@ -1,0 +1,254 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_SLAVE_TRADER_RATE()
+RETURN 100
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_SLAVE_TRADER_DECISION()
+#DIM 도둑
+도둑 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
+
+;도둑 세력이 없었으면, 혹은 당신이 도둑 소속의 경우는 캔슬
+SIF 도둑 == -1 || CFLAG:MASTER:소속 == 도둑
+	RETURN 0
+
+;포로가 있을까 판정, 없는 경우는 캔슬
+FOR LOCAL, 0, CHARANUM
+	IF CFLAG:LOCAL:포로처 == CFLAG:MASTER:소속
+		BREAK
+	ENDIF
+NEXT
+
+SIF LOCAL == CHARANUM
+	RETURN 0
+
+RETURN 15 <= DAY
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_SLAVE_TRADER_GENRE()
+RETURN 데일리_장르_에로
+
+
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_SLAVE_TRADER
+#DIM 대상
+#DIM 포로번호, 3000
+#DIM 도둑
+
+도둑 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
+
+PRINTFORML 노예 상인이 왔다
+PRINTFORML 「이쪽에서 포로를 잡고 있다고 들어왔습니다」
+PRINTFORML 「만약 취급해 곤란하다면 우리가 매입합니다만, 어떻게 합시다?」
+PRINTFORMW 어떻게 하지?
+CALL ASK_YN("판다", "그만둔다")
+IF RESULT == 1
+	PRINTFORML 소중한 교섭 재료다, 그런 일은 할 수 없다
+	PRINTFORMW 단호히라고 거절하면 상인은 어깨를 움츠려 돌아갔다
+	RETURN 1
+ELSE
+	PRINTFORML 돈이 된다면 팔지 않는 손은 없다
+	PRINTFORML 노예 상인을 포로의 곳으로 안내했다
+	PRINTFORMW 그는 포로들 상태를 조사해 매입 가격을 제시했다
+ENDIF
+CALL SINGLE_DRAWLINE
+$SHOW_LOOP
+PRINTFORML 누구를 팔까?
+FOR LOCAL, 0, CHARANUM
+	IF CFLAG:LOCAL:포로처 == CFLAG:MASTER:소속
+		포로번호:(LOCAL:1) = LOCAL
+		PRINTFORM [{LOCAL:1}]%ANAME(LOCAL), 16, RIGHT% - 금{SLAVE_TRADER_PRICE(LOCAL), 6, RIGHT}
+		PRINTL
+		LOCAL:1 ++
+	ENDIF
+NEXT
+CALL SINGLE_DRAWLINE
+PRINTFORML [1000] 그만둔다
+$INPUT_LOOP
+INPUT
+IF RESULT == 1000
+	PRINTFORML 역시 소중한 교섭 재료다, 파는 것은 그만두자
+	PRINTFORMW 거절하면 상인은 어깨를 움츠려 돌아갔다
+	RETURN 1
+ELSEIF RESULT < 0 || RESULT >= LOCAL:1
+	GOTO INPUT_LOOP
+ELSE
+	대상 = 포로번호:(RESULT)
+	PRINTFORMW 「%조사처리(ANAME(대상),"를")% 팔아 주십니까?」
+	CALL ASK_YN(@"%조사처리(ANAME(대상),"를")% 판다", "다시 생각한다")
+	IF RESULT == 1
+		PRINTFORML 「이런? 유감이네요」
+		PRINTFORMW 「그럼, 어떤 분을 팔아 주십니까?」
+		CALL SINGLE_DRAWLINE
+		GOTO SHOW_LOOP
+	ELSE
+		PRINTFORML %조사처리(ANAME(대상),"를")% 파는 일로 했다
+		PRINTFORML 「감사합니다. 이쪽이 요금이 됩니다」
+		MONEY += SLAVE_TRADER_PRICE(대상)
+		PRINTFORMW 금{SLAVE_TRADER_PRICE(대상)}를 손에 넣었다
+		PRINTFORML %조사처리(ANAME(대상),"는")% %조사처리(ANAME(MASTER),"를")% 노려보면서 노예 상인에 질질 끌어져 갔다……
+		CFLAG:대상:호감도 -= 300
+		CFLAG:대상:종속도 -= 300
+		CALL CAPTURE(대상, 0)
+	ENDIF
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+	IF IS_FEMALE(대상)
+		SELECTCASE RAND:5
+			CASE 0
+				LOCALS = 부호
+			CASE 1
+				LOCALS = 야쿠자
+			CASE 2
+				LOCALS = 귀족
+			CASE 3
+				LOCALS = 요괴
+			CASE 4
+				LOCALS = 외래인
+		ENDSELECT
+		PRINTFORMW %조사처리(ANAME(대상),"는")% %LOCALS%에 사진 것 같다
+		PRINTFORML 
+		SELECTCASE RAND:20
+			CASE 0
+				PRINTFORML %조사처리(ANAME(대상),"는")% 침대 위에서 엎드려 있는 자세인 채 난폭하게 범해지고 있다
+				PRINTFORML 씩씩한 육봉으로 일발 찌르기마다 빠득빠득 질벽을 후벼파져, 그녀는 움찔움찔 몸을 진동시켜 좋아해 미친다
+				PRINTFORMW 이윽고 최안쪽으로 강렬한 열을 발해짐과 동시에, 그녀는 크게 몸을 뒤로 젖히게 하면서 절정 했다
+			CASE 1
+				PRINTFORML %조사처리(ANAME(대상),"는")% 정상위의 자세로 범해지면서 단정치 못한 소리를 높이고 있다
+				PRINTFORML %LOCALS%의 끈적한 허리 사용에 그녀의 자궁은 완전히 예의범절을 가르쳐지고 있어 눈을♥로 해 몸부림친다
+				PRINTFORMW 페니스가 질내에서 뛰는 것을 느낀 %조사처리(ANAME(대상),"는")%, 전신으로 그에게 매달려 질방편을 졸라댔다
+			CASE 2
+				PRINTFORML %조사처리(ANAME(대상),"는")%은 대면좌위의 자세로 페니스를 깊숙히 쑤셔 넣어지면서 키스 되고 있다
+				PRINTFORML 심하게 범해지고 계속된 %조사처리(ANAME(대상),"는")% 몸도 마음도 벌써 굴복 직전이 되어 있어, 그에 맞추어 온순하게 혀를 얽히게 할 수 있다
+				PRINTFORMW 갑자기 밀어올릴 수 있어 달콤한 허덕임과 함께 가볍게 달하게 되어, 그녀는 녹은 표정으로 부르릇 떨렸다
+			CASE 3
+				PRINTFORML %조사처리(ANAME(대상),"는")% 양팔을 쇠사슬로 구속된 채로, 그에게 난폭하게 범해지고 있다
+				PRINTFORML 격렬한 스트로크로 쓰다듬과 자궁을 찔러질 때에, 그녀는 신체를 뛰게 해 무심코 허덕여 버린다
+				PRINTFORMW 하복부로부터 전해지는 압도적인 쾌락에 점차 %ANAME(대상)%의 사고는 녹아 가 이윽고 스스로 허리를 흔들기 시작하고 있었다
+			CASE 4
+				PRINTFORML %조사처리(ANAME(대상),"는")% 그의 팔에 안기면서 응석부리는 것 같은 표정으로 숨을 거칠게 하고 있다
+				PRINTFORML %LOCALS%의 교묘한 테크닉에 의해 조교된 그녀는, 단순한 한마리의 암컷으로 되어 버리고 있었다
+				PRINTFORMW 그가 다시 %조사처리(ANAME(대상),"를")% 침대에 옆 참고 페니스를 내밀면, 그녀는 스스로 신체를 열었다
+			CASE 5
+				PRINTFORML 목걸이를 된 %조사처리(ANAME(대상),"는")%, 리드를 잡아지면서 서서뒷치기의 자세로 범해지고 있다
+				PRINTFORML 정수리까지 관철해지는 것 같은 격렬한 섹스에, 그녀는 삐걱삐걱 다리를 진동시키면서 어떻게든 참고 있다
+				PRINTFORMW 하지만 기습과 같이 질내사정을 되면, %조사처리(ANAME(대상),"는")% 한층 더 큰 교성을 올려 절정 해 버렸다
+			CASE 6
+				PRINTFORML 도푸도푸 대량의 정액을 따라지면서 %조사처리(ANAME(대상),"는")% 크게 등을 뒤로 젖혀 절정 하고 있다
+				PRINTFORML 심하게 범해진 그녀의 신체는 완전히 다 녹고 있어 자궁으로 %LOCALS%의 정액을 솔직하게 삼켜 간다
+				PRINTFORMW 페니스를 뽑아 내지면, 그녀는 암컷구멍으로부터 걸죽 백탁액을 늘어뜨리면서 야무지지 못한 아헤얼굴을 쬐고 있었다
+			CASE 7
+				PRINTFORML 그에게 덮어씌워지면서 드슨드슨궴 격렬한 피스톤을 받아 %조사처리(LOCALS,"는")% 경련하고 있다
+				PRINTFORML 일발 찌르기마다 자궁이 망쳐질 정도의 충격으로, 그녀는 머리가 새하얗게 되면서 목으로부터 떨린 신음소리를 흘린다
+				PRINTFORMW 페니스를 태내에 쑤셔 넣어지면서 사정되면, %조사처리(ANAME(대상),"는")% 단정치 못한 소리를 높여 절정 해 버렸다
+			CASE 8
+				PRINTFORML 엎드림의 자세로 그의 페니스를 쑤셔 넣어져, %조사처리(ANAME(대상),"는")% 베개를 잡으면서 숨을 거칠게 하고 있다
+				PRINTFORML 페니스로 동글동글 질육을 후벼파질 때에, 그녀는 머리가 튈 것 같은 쾌락에 습격당해보다 강하게 베개를 잡는다
+				PRINTFORMW 그가 질내사정을 예고하면, %조사처리(ANAME(대상),"는")% 기대로 군침을 늘어뜨리면서 오슬오슬 등줄기를 진동시켰다
+			CASE 9
+				PRINTFORML %조사처리(ANAME(대상),"는")% %조사처리(LOCALS,"와")% 함께 목욕통에 익으면서 요염한 신음소리를 올리고 있다
+				PRINTFORML 페니스로 관철해지면서 전신을 열심히 애무되어 목욕탕의 열기도 도와 그녀는 정신나간 것 같은 표정으로 허덕인다
+				PRINTFORMW 참지 못하고 허리를 구불거리게 할 수 있으면, 그도 격렬하게 허리를 흔들기 시작해, 목욕탕에 %ANAME(대상)%의 교성이 영향을 주기 시작했다
+			CASE 10
+				PRINTFORML %조사처리(ANAME(대상),"는")% 추잡한 의상을 착용하면서 그에 걸쳐 허리를 흔들고 있다
+				PRINTFORML 허리를 떨어뜨릴 때에 장대한 페니스로 자궁까지 쓸어올릴 수 있어, 그녀는 무의식 중에 야무지지 못한 암컷의 얼굴을 쬔다
+				PRINTFORMW %조사처리(LOCALS,"가")% 허리를 잡아 두응! (와)과 밀어올리면, 그녀는 흠칫 크게 몸을 뛰게 해 절정 했다
+			CASE 11
+				PRINTFORML %조사처리(ANAME(대상),"는")% 밀혈으로부터 정액을 늘어뜨리면서 그의 페니스에 무릎 꿇어 봉사를 하고 있다
+				PRINTFORML 이 씩씩한 육봉에 심하게 예의범절을 가르쳐진 그녀는 완전히 헤롱헤롱이 되어 버려, 열심히 혀를 기게 한다
+				PRINTFORMW 페니스가 다시 하늘을 찌를 정도로 휘어 끊으면, %조사처리(ANAME(대상),"는")% 다음을 기대해 스스로 침대에 가로놓여 몸을 열었다
+			CASE 12
+				PRINTFORML %LOCALS%에 밀어 쓰러트려지면서 격렬하게 페니스를 쳐박을 수 있어 %조사처리(ANAME(대상),"는")% 신음소리를 올리고 있다
+				PRINTFORML 용감한 피스톤과 씩씩한 육봉에 암컷의 본능을 자극 받으며, 범해지고 있기에도 구애받지 않고 점차 그녀의 소리가 열을 띠어 간다
+				PRINTFORMW 그리고 %ANAME(대상)%의 최안쪽에서 작열의 정액을 발해지면, 그녀는 이미 참지 못하고 교성과 함께 절정 했다
+			CASE 13
+				PRINTFORML 깊숙히 꽂힌 그의 페니스로 동글동글 질육을 자극 받으며, %조사처리(ANAME(대상),"는")% 교성을 올렸다
+				PRINTFORML 교묘하게 여자의 약점을 공격받은 그녀는 이미 그의 마음껏 허덕여질 뿐(만큼)의 암컷에 되어 내리고 있다
+				PRINTFORMW 떨리는 소리로 용서를 비는 것도 공격은 전혀 그치지 않고, 그가 만족할 때까지 그 신체를 끝없이 희롱해지고 계속했다
+			CASE 14
+				PRINTFORML %LOCALS%에 걸치면서, %조사처리(ANAME(대상),"는")% 공허한 표정으로 명령받는 대로 허리를 흔들고 있다
+				PRINTFORML 특제의 약을 맞아 인사불성 상태의 그녀는, 다만 주어지는 쾌락에 솔직하게 움직이는 고기 인형이 되어 있다
+				PRINTFORMW 상태의 좋은 점에 그가 낮게 신음해 질내사정을 하면, %조사처리(ANAME(대상),"는")% 공허한 미소를 띄우면서 절정 했다
+			CASE 15
+				PRINTFORML 그에게 심하게 난폭하게 범해진 %조사처리(ANAME(대상),"는")% 숨도 끊어질듯 끊어질듯해 침대에 눕고 있다
+				PRINTFORML %LOCALS%에 하복부를 어루만져지면서 「임신할 때까지 가르쳐 준다」라고 속삭여져 그녀는 부르릇 몸을 진동시켰다
+				PRINTFORMW 그 표정은 임신의 불안이나 공포 이상으로, 씩씩한 수컷에게 임신해지는 암컷으로서의 기쁨이라고 기대로 가득 차 있었다
+			CASE 16
+				PRINTFORML %조사처리(LOCALS,"는")% %ANAME(대상)%에 덮어씌워 번창한 개처럼 열중해 허리를 쳐박고 있다
+				PRINTFORML 전체중을 실은 격렬한 피스톤에 그녀는 몹시 놀라면서, 필사적으로 시트를 잡아 절정에 달하지 않게 참고 있다
+				PRINTFORMW 하지만 그의 끝없는 스태미너에는 필적하지 않고, 이윽고 페니스에 굴복 해 버려, 몇 번이나 절정 당하는 일이 되었다
+			CASE 17
+				PRINTFORML %LOCALS%의 애완동물로서 길러지고 있는 %조사처리(ANAME(대상),"는")% 쇠사슬로 연결되어 침대에 가로놓여 있다
+				PRINTFORML “주인님”에 마음에 든 그녀는 무엇 자유로운 대우가 주어져 매일밤 상냥하게 안기는 생활을 하고 있다
+				PRINTFORMW 당황할 정도의 대우에 서서히 %조사처리(ANAME(대상),"는")% 회유 되고이고라고 내려 스스로의 자궁에 그의 아이를 품는 기쁨에 눈을 뜨고 있었다
+			CASE 18
+				PRINTFORML 침대 위에서 그에게 범해지면서 %조사처리(ANAME(대상),"는")% 황홀한 표정을 띄워 몸을 진동시키고 있다
+				PRINTFORML 그의 끈적한 상냥한 애무와 교묘한 허리 사용에, 그녀의 이성은 순식간에 풀어져 한마리의 암컷으로 되고 있었다
+				PRINTFORMW 이미 자궁의 욱신거림에 견딜 수 없게 된 %조사처리(ANAME(대상),"는")%, 그의 목에 손을 써 야비하게 질내사정을 조르기 하기 시작했다
+			CASE 19
+				PRINTFORML %조사처리(ANAME(대상),"는")% 난폭하게 범해지면서 소리가 되지 않는 소리를 높여 거품을 토하고 있다
+				PRINTFORML 특제의 미약을 먹게 된 그녀는, 페니스가 출입할 때마다 머리가 폭발하는 것 같은 쾌락을 받아 끝없이 절정 하고 있다
+				PRINTFORMW 이윽고 자궁에 그의 자식을 따라지면, 그녀는 하복부에 전해지는 열로 정신을 잃을 정도의 강렬한 절정에 이르렀다
+		ENDSELECT
+		CALL FUCK_RAPE(대상, GET_SPERM_ID(LOCALS), @"%LOCALS%의 \@RAND:2 ? 페니스 # 입술\@", @"%LOCALS%")
+		PRINTFORMW 
+		PRINTFORML ·
+		PRINTFORML ·
+		PRINTFORMW ·
+		LOCAL:2 = RAND:16
+		IF LOCAL:2 == 0
+			PRINTFORML %LOCALS%에 마음에 들었던 %조사처리(ANAME(대상),"는")%, 그의 성노예로서 일생을 보내는 일이 되었다
+			PRINTFORMW 하지만 그 표정은 행복하게 가득 차 있어 이미 어떤 후회도 불안도 없고 스스로의 처지를 받아들이고 있었다……
+			CALL CHANGE_COUNTRY(대상, 0, 1, 1)
+		ELSEIF LOCAL:2 <= 4 && CFLAG:대상:소속 != 0 && CFLAG:대상:소속 != CFLAG:MASTER:소속
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 어떻게든 탈출해 원래의 세력에 복귀한 것 같다
+		ELSE
+			PRINTFORMW 심하게 범해진 뒤로 질릴 수 있었던 %조사처리(ANAME(대상),"는")%, 도둑에게 팔린 것 같다
+			CALL CAPTURE(대상, 도둑)
+		ENDIF
+	ELSE
+		PRINTFORML %조사처리(ANAME(대상),"는")% 도둑에게 팔린 것 같다
+		CALL CAPTURE(대상, 도둑)
+	ENDIF
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+;노예시장용, 노예의 금액 계산 함수
+;-------------------------------------------------
+@SLAVE_TRADER_PRICE(대상)
+#FUNCTION
+#DIM 대상
+#DIM 금액
+;기초치에 능력과 호색가 능력을 가산한다
+;노예시장의 가격의 반(정도)만큼
+금액 = 2500
+금액 += (ABL:대상:무투 + ABL:대상:방위 + ABL:대상:지략 + ABL:대상:정치) * 40
+금액 += (ABL:대상:가창 + ABL:대상:요리) * 20
+금액 += (ABL:대상:욕망 + ABL:대상:성기술 + ABL:대상:봉사 + ABL:대상:성교) * 250
+
+;처녀라면 고가로 팔린다
+SIF TALENT:대상:처녀 == 1
+	금액 += 10000
+;인기인이라면 고가로 팔린다
+SIF TALENT:대상:인기 == 1
+	금액 += 10000
+
+RETURNF 금액

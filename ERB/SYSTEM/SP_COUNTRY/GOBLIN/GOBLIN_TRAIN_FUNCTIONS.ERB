@@ -1,0 +1,56 @@
+﻿;-------------------------------------------------
+;조교 함수 존재 판정
+;-------------------------------------------------
+@GOBLIN_DOES_TRAIN()
+
+;-------------------------------------------------
+;조교 함락시 메세지
+;-------------------------------------------------
+@GOBLIN_FALLEN_MSG(대상)
+#DIM 대상
+IF !GETBIT(TALENT:대상:특수세력함락계, 특수세력_홉고블린)
+	PRINTFORMW 홉고블린들의 용서 없는 능욕으로 %ANAME(대상)%의 마음은 접혀, 그들을 위한 육변기로든지는이라고라고 끝냈다
+	PRINTFORMW 좀 더 그들에게 범해 「받는다」모아 두어 일생을 변기로서 보내는 것을 동의 해 버렸다……
+	IF TALENT:대상:낙인
+		PRINTFORML %조사처리(ANAME(대상),"가")% %ANAME(MASTER)%전용인 것을 나타내는 낙인 위로부터,
+		PRINTFORMW 새롭게 %조사처리(ANAME(대상),"가")% 홉고블린 전속의 육변기가 된 것을 나타내는 소인이 베풀어졌다
+		TALENT:대상:낙인 = 0
+	ELSE
+		PRINTFORMW %ANAME(대상)%의 몸에, 홉고블린 전속의 육변기가 된 것을 나타내는 소인이 베풀어졌다
+	ENDIF
+	IF TALENT:(대상):프라이드높음
+		PRINTL
+		PRINTFORMW 비굴한 표정을 띄우는 %ANAME(대상)%에, 이미 한 때의 모습은 남지 않았다
+		PRINTFORMW 홉고블린들의 성처리구멍으로서 계속 사용된 것 로, %ANAME(대상)%의 프라이드는 완전하게 접혀 버렸다……
+		CALL TALENT_LOSE_PRIDE(대상, 1, 1)
+	ENDIF
+ELSE
+	PRINTFORMW 홉고블린들의 용서 없는 능욕으로, %조사처리(ANAME(대상),"는")% 변기로서 다루어지는 것의 기쁨을 생각해 냈다
+	PRINTFORMW 그들의 육변기로서의 「일」을 해내기 (위해)때문에, %조사처리(ANAME(대상),"는")% 다시 그들아래에 도착하기로 했다……
+ENDIF
+
+;-------------------------------------------------
+;조교 함락시에 피어싱 하거나 하는 경우의 처리
+;-------------------------------------------------
+@GOBLIN_FALLEN_LEAVE_MARK(대상)
+#DIM 대상
+SELECTCASE RAND:10
+	CASE IS < 5
+		CALL SET_PIERCE_RANDOM(대상, 0)
+		SIF RESULT != -1
+			CALL COLOR_PRINTW(@"%ANAME(대상)%의 %GET_PIERCE_NAME(RESULT)%에, 복종의 증거의 피어스가 장착되었다……", 칼라_핑크)
+	CASE IS < 6
+		CALL SET_TATTOO_RANDOM(대상, STR_FOR_TATTOO(-1), 0)
+		SIF RESULT != -1
+			CALL COLOR_PRINTW(@"%ANAME(대상)%의 %GET_TATTOO_NAME(RESULT)%에, 「%TATTOO:대상:RESULT%」%조사만처리(TATTOO:대상:RESULT,"라")%고 문신이 새겨졌다……", 칼라_핑크)
+	CASEELSE
+		IF GET_INMOU(대상) >= 음모_표준
+		CALL COLOR_PRINTW(@"복종이 증거로 삼아, %ANAME(대상)%의 음모는 하트형에 정돈되었다……", 칼라_핑크)
+		TALENT:대상:음모목표치 = 음모_하트형
+		TALENT:대상:음모현재치 = 음모_하트형
+	ELSE
+		CALL COLOR_PRINTW(@"복종이 증거로 삼아, %ANAME(대상)%의 음모는 영구 제모되었다……", 칼라_핑크)
+		TALENT:대상:음모목표치 = 음모_백보지
+		TALENT:대상:음모현재치 = 음모_백보지
+	ENDIF
+ENDSELECT

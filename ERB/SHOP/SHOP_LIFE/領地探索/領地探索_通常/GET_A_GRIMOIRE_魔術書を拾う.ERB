@@ -1,0 +1,35 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_GET_A_GRIMOIRE_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_GET_A_GRIMOIRE_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_GET_A_GRIMOIRE(대상)
+#DIM 대상
+
+PRINTFORML 탐색 도중, 오래된 책을 찾아냈다
+PRINTFORMW 아무래도 마술서인 것 같다
+IF TALENT:대상:요술지식 == 1
+	PRINTFORML 중에는 요술에 관한 지식이 쓰여져 있었다
+	PRINTFORML 꽤 재미있는 내용이다
+	PRINTFORMW 마술서를 품에 간직하면, 탐색하러 돌아왔다
+	CALL PRINT_ADD_EXP(대상, "요술경험치", RAND:15 + 6, 1)
+ELSE
+	PRINTFORML ……페이지를 넘겨 봐도 무엇이 쓰여져 있는지도 모른다
+	PRINTFORML 어차피 내용은 터무니없을 것이다
+	PRINTFORMW 그 정도에 내던지면, 탐색하러 돌아왔다
+ENDIF
+RETURN 1
+

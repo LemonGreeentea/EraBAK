@@ -1,0 +1,39 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_VISIT_TO_GRAVE_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_VISIT_TO_GRAVE_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_VISIT_TO_GRAVE(대상)
+#DIM 대상
+PRINTFORML 여섯에 인기도 없는 묘지에, 여성이 서 있는것을 눈치챘다
+PRINTFORML 뭐든지, 이 무덤에 그녀의 남편이 들어가 있으면다
+PRINTFORML 허술한 무덤이지만, 훌륭한 무덤을 세울 여유는 없는 것 같다
+
+PRINTL
+CALL ASK_MULTI_JUDGE("아무것도하지않는다", 1,"착실한 무덤을 세워 준다", MONEY >= 3000)
+
+IF RESULT == 0
+	PRINTFORML %ANAME(대상)%에는 어떤 것도 할 수 없는 이야기다
+	PRINTFORML 적어도 여성에 위로의 말을 걸어, 거점에 돌아갔다
+ELSEIF RESULT == 1
+	PRINTFORML 자신이 죽으면 이런 무덤에 넣어질까
+	PRINTFORML 일말의 허무함을 느낀 %조사처리(ANAME(대상),"는")% 사재를 투자해 무덤을 제대로 한 것으로 해 주었다
+	MONEY -= 3000
+	CALL COLOR_PRINTW("금 3000을 지불했다", 칼라_주의)
+ENDIF
+
+
+RETURN 1

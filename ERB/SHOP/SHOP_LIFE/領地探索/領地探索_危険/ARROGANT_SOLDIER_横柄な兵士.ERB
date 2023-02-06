@@ -1,0 +1,79 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_ARROGANT_SOLDIER_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_ARROGANT_SOLDIER_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_ARROGANT_SOLDIER(대상)
+#DIM 대상
+
+PRINTFORML 술집에서 술을 마시고 있으면, 고함 소리가 들렸다
+PRINTFORMW 수명의 병사가 점원에게 관련되고 있는 것 같다
+PRINTFORML 
+CALL ASK_MULTI("주의한다", "방치한다")
+
+IF RESULT == 1
+	PRINTFORML 그런 일도 있을 것이다
+	PRINTFORML 방치했다
+	RETURN 1
+ENDIF
+
+PRINTFORML 과연 그대로 둘 수 없다
+PRINTFORML 주의했지만, 그들은 몹시 취하고 있는 것 같게 (듣)묻는 귀를 갖지 않다
+PRINTFORML 
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "무투"))
+CALL ASK_MULTI("성패 한다", "방치한다")
+
+IF RESULT == 1
+	PRINTFORML 어떻게든에 바르는 약은 없다
+	PRINTFORML 방치했다
+	RETURN 1
+ENDIF
+
+PRINTFORML 아주 조금만 「교육」해 주기로 했다
+PRINTFORML 무리를 도발해, 가게의 밖에 꾀어냈다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF LIMIT(ABL:대상:무투, 30, 80) > RAND:100
+	PRINTFORML 충분히 교육해 주었다
+	PRINTFORML 노비그들의 지갑으로부터 민폐비를 빼내, 가게에 건네주어 두었다
+	CALL PRINT_ADD_EXP(대상, "무투경험치", RAND:10 + 5)
+	CALL PRINT_ADD_EXP(대상, "방위경험치", RAND:10 + 5)
+	RETURN 1
+ELSEIF IS_MALE(대상)
+	PRINTFORML 당해 버렸다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 너덜너덜이 되면서 거점으로 돌아갔다
+	CALL ADD_COOLTIME(대상, 2)
+ELSE
+	PRINTFORML 당해 버렸다
+	PRINTFORMW 그들은 건방진 %조사처리(ANAME(대상),"를")% 「교육」해 주려고, 뒷골목에 데리고 들어갔다
+	PRINTFORML 
+	PRINTFORML 알몸에 벗겨진 %조사처리(ANAME(대상),"가")% 윤간되고 있다
+	PRINTFORML 한사람의 남자에게 기승위를 강요받아 양손을 사용해 다른 무리의 페니스를 잡아당긴다
+	PRINTFORML 조금이라도 움직임이 느슨해지면 가차 없이 맞으므로, %조사처리(ANAME(대상),"는")% 눈물을 흘리면서 필사적으로 봉사한다
+	PRINTFORML 페니스를 자극해 마지막 한 방울까지 남김없이 짜내도록(듯이) 지도되어 %조사처리(ANAME(대상),"는")% 꾹꾹 허리를 구불거리게 할 수 있다
+	PRINTFORMW 당연히 질내사정 되어 %STR_BODY("질:처녀 확인:시간 경과", 대상)%로 느끼는 뜨거운 감각에 %조사처리(ANAME(대상),"는")% 신체를 진동시킨다
+	PRINTFORML 그 사이도 쉬는 일 없이 봉사하고 있자, 곧바로 그들도 한계에 이르러 대량의 정액을 %ANAME(대상)%의 얼굴이나 %STR_BODY("가슴:성교:기승위", 대상)%에 털어 놓는다
+	PRINTFORML 벌써 정액으로 질척질척으로 된 %조사처리(ANAME(대상),"이지만")%, 그들은 가차 없이다음의 페니스를 쑤셔 넣어 온다
+	PRINTFORMW 그들이 만족할 때까지 몇 발도 범해지고 계속해, %조사처리(ANAME(대상),"는")% 점차 온순한 암노예에게 교육되어 갔다
+	CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교, 고통쾌락", "처녀상실, Ａ처녀상실, 질내사정, 키스상실, 장내사정, 구강사정", GET_SPERM_ID("병사"), @"병사의 \@RAND:2 ? 페니스 # 입술\@", "병사", "", "윤간")
+	PRINTFORML 
+	PRINTFORMW 밤이 희어지는 무렵까지 심하게 윤간된 후, %조사처리(ANAME(대상),"는")% 뒷골목의 쓰레기 버리는 곳에 방치되었다
+	CALL ADD_COOLTIME(대상, 2)
+ENDIF
+
+
+RETURN 1

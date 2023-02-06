@@ -1,0 +1,46 @@
+﻿;능력 상승 Ｃ감
+
+;-------------------------------------------------
+;능력 상승에 필요한 경험을 설정
+;-------------------------------------------------
+@ABLUP_EXPNAME0
+RESULTS = Ｃ감경험치
+
+;-------------------------------------------------
+;능력 상승에 필요한 경험량을 돌려주는 함수
+;-------------------------------------------------
+@CALC_ABLUP_EXP0(ARG:0)
+SELECTCASE ABL:(ARG:0):Ｃ감
+	CASE 0
+		LOCAL:0 = 5
+	CASE 1
+		LOCAL:0 = 15
+	CASE 2
+		LOCAL:0 = 30
+	CASE 3
+		LOCAL:0 = 100
+	CASE 4
+		LOCAL:0 = 200
+	CASEELSE
+		LOCAL:0 = 500 + 300 * (ABL:(ARG:0):Ｃ감 - 5)
+ENDSELECT
+
+IF ARG:0 == MASTER
+	TIMES LOCAL:0, 2.00
+ENDIF
+
+;소질에 의한 보정
+IF TALENT:(ARG:0):Ｃ둔감
+	TIMES LOCAL:0, 1.20
+ENDIF
+IF TALENT:(ARG:0):Ｃ민감
+	TIMES LOCAL:0, 0.80
+ENDIF
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음란)
+	TIMES LOCAL:0, 0.80
+ENDIF
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음핵)
+	TIMES LOCAL:0, 0.80
+ENDIF
+
+RETURN MAX(LOCAL:0, 1)

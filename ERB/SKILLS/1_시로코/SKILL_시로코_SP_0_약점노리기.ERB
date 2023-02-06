@@ -1,0 +1,98 @@
+﻿;-----------------------------------
+;기본치 계산에 앞서 처리하는 것
+;-----------------------------------
+@SKILL_1_SP_0_EXIST
+RETURN 1
+
+@SKILL_1_SP_0_NAME
+RESULTS = 약점 노리기
+
+;레벨은 1-5까지
+@SKILL_1_SP_0_LEVEL
+RETURN 4
+
+;대상 선택
+@SKILL_1_SP_0_SETTARGET(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+RETURN 1
+
+;발동 판정
+@SKILL_1_SP_0_CAN_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+대상측 = !발동측
+FOR LOCAL, 0, BATTLE_COMMANDER_NUM:대상측
+	SIF HAS_TAG(BATTLE_COMMANDER:대상측:LOCAL, 태그_요괴)
+		RETURN 1
+NEXT
+RETURN 0
+
+;발동 텍스트를 오바라이드 하고 싶을 때에.
+;「아무개의 스킬 발동!   00했다!」의 「00했다!」의 부분을 실장하고 싶은 경우는,
+;이것이 아니고 INVOKE로 쓰면 좋습니다.
+;@SKILL_1_SP_0_INVOKE_TEXT(발동자, 스킬, 장르)
+;#DIM 발동자
+;#DIM 스킬
+;#DIMS 장르
+
+;효과를 여기에 기술
+@SKILL_1_SP_0_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+대상측 = !발동측
+LOCAL:1 = 100
+FOR LOCAL, 0, BATTLE_COMMANDER_NUM:대상측
+	SIF HAS_TAG(BATTLE_COMMANDER:대상측:LOCAL, 태그_요괴)
+		TIMES BATTLE_무투파워:대상측:LOCAL, 0.85
+NEXT
+PRINTFORML 부적의 힘이 요괴를 휘두른다!
+PRINTFORML 적요괴의 무투가 저하!
+
+@SKILL_1_SP_0_EXPLANATION
+RESULTS = 적부대의 요괴 전원 무투를 저하시킨다.
+
+@SKILL_1_SP_0_CANT_TELL
+
+
+
+
+
+
+
+@SKILL_1_SP_0_RATE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+RETURN 300

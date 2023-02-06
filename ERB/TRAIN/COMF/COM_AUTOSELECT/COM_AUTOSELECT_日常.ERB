@@ -1,0 +1,137 @@
+﻿;-------------------------------------------------
+;# 커맨드의 자동 실행의 처리
+;	393 「맡긴다」일상 오토
+;-------------------------------------------------
+@COM_AUTOSELECT_N
+#DIM MAIN_PLAYER		;선택권을 가지는 캐릭터
+#DIM L_COUNTER			;FOR문용의 카운터 1
+#DIM L_COUNTER_CHECK	;FOR문용의 카운터 2
+#DIM TEMP_COM			;일시적인 결정 커맨드
+#DIM FINAL_COM			;최종적인 결정 커맨드
+#DIM RAND_NUM			;임의치 대입용
+#DIM CHECK_RANDOMIZED	;란택용
+
+[IF_DEBUG]
+	DEBUGPRINTFORML 
+	DEBUGPRINTFORML  자동 행동_일상_개시
+	DEBUGPRINTFORML      현재의 조교 모드는 {FLAG:조교모드}. %COM_AUTO_MODE_NAME()%
+[ENDIF]
+
+;-------------------------------------------------
+; 카테고리 설정
+;-------------------------------------------------
+CALL COM_AUTOSELECT_N_SET_COM_CATEGORY
+
+;-------------------------------------------------
+; 실행자（MAIN_PLAYER）를 설정
+;	대상자（MAIN_TARGET）는 MASTER
+;	여기서 말하는 실행자 대상자는 실제의 커맨드 행동으로 바뀌는 일이 있다
+;	행동 결정권을 가지는 캐릭터를 결정한다
+;	일상의 경우, 후보는 혼자인 것으로 그대로 취한다
+;-------------------------------------------------
+FOR L_COUNTER, 0, CHARANUM
+	IF L_COUNTER != MASTER && CFLAG:L_COUNTER:조교참가플래그
+		MAIN_PLAYER = L_COUNTER
+		BREAK
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+; 카테고리 우선도 설정
+;-------------------------------------------------
+CALL COM_AUTOSELECT_N_SET_CATEGORY_PRIORITY(MAIN_PLAYER, MASTER)
+
+;-------------------------------------------------
+; 커맨드 우선도 설정
+;-------------------------------------------------
+CALL COM_AUTOSELECT_N_SET_COM_PRIORITY(MAIN_PLAYER, MASTER)
+
+;-------------------------------------------------
+; 실행하는 커맨드를 결정 
+;-------------------------------------------------
+;리셋트
+CALL COM_AUTO_RANDOMIZED_WEIGHTED_START
+
+VARSET CHECK_RANDOMIZED
+FOR L_COUNTER, 300, ADD_NUM_대상이실행 + 1000
+	SIF COM_AUTO_COM_PRIORITY:L_COUNTER < 1
+		CONTINUE
+	CALL COM_AUTO_RANDOMIZED_WEIGHTED_VALUE(L_COUNTER, COM_AUTO_COM_PRIORITY:L_COUNTER)
+	CHECK_RANDOMIZED ++
+NEXT
+
+;하나도 후보가 없을 때 최저치 확보
+IF CHECK_RANDOMIZED < 1
+	IF COM_AUTO_COM_PRIORITY:GET_TRAINNUM("아무것도하지않는다") < 10
+		COM_AUTO_COM_PRIORITY:GET_TRAINNUM("아무것도하지않는다") = 10
+	ENDIF
+	CHECK_RANDOMIZED += COM_AUTO_COM_PRIORITY:GET_TRAINNUM("아무것도하지않는다")
+ENDIF
+
+;결과 취득
+TEMP_COM = COM_AUTO_RANDOMIZED_WEIGHTED_RESULT()
+IF TEMP_COM < 300 || TEMP_COM >= ADD_NUM_대상이실행 + 1000
+;	PRINTFORML ※가능한 행동이 발견되지 않았습니다. 아무것도 하지 않는 것을 대입합니다
+;	PRINTFORML ※침실은 보통으로 제한되고 있어 일어날 가능성이 있으므로, 여기에서는 에러 메세지를 표시하고 있지 않습니다만
+;	PRINTFORML ※일상맡김 쪽 에서 일어날 가능성은 없을 것으로, 표시해도 될지도 모릅니다
+;	PRINTFORML ※@COM_AUTOSELECT_N
+	TEMP_COM = GET_TRAINNUM("아무것도하지않는다")
+ENDIF
+
+[IF_DEBUG]
+	DEBUGPRINTFORML 
+	DEBUGPRINTFORML   DEBUG 결정한 커맨드
+	IF TEMP_COM >= ADD_NUM_대상이실행
+		DEBUGPRINTFORML {TEMP_COM, 4}. %TRAINNAME:(TEMP_COM - ADD_NUM_대상이실행), 20, LEFT%된다 %NUM_FORMAT(COM_AUTO_COM_PRIORITY:TEMP_COM), 10, RIGHT%
+	ELSE
+		DEBUGPRINTFORML {TEMP_COM, 4}. %TRAINNAME:(TEMP_COM), 20, LEFT%한다 %NUM_FORMAT(COM_AUTO_COM_PRIORITY:TEMP_COM), 10, RIGHT%
+	ENDIF
+[ENDIF]
+
+CALL CLEAR_MPLY()
+CALL CLEAR_MTAR()
+
+;메인의 실행자·대상자의 설정
+IF TEMP_COM < ADD_NUM_대상이실행
+	CALL ADD_MPLY(MAIN_PLAYER)
+	CALL ADD_MTAR(MASTER)
+ELSEIF TEMP_COM < ADD_NUM_대상이실행 + 1000
+	CALL ADD_MPLY(MASTER)
+	CALL ADD_MTAR(MAIN_PLAYER)
+ELSE
+ENDIF
+
+FINAL_COM = TEMP_COM % ADD_NUM_대상이실행
+
+;-------------------------------------------------
+; 계속 상태의 설정
+;-------------------------------------------------
+VARSET LOCAL, 0
+RESULT = 0
+TRYCALLFORM COM_IS_EQUIP{FINAL_COM}
+;계속 상태가 불가능한 커맨드의 경우
+IF RESULT == 0
+	;비계속 플래그 ON
+	TFLAG:1 = 1
+;항상 계속 상태로 실행되는 커맨드의 경우
+ELSEIF RESULT == 2
+	;비계속 플래그 OFF
+	TFLAG:1 = 0
+;계속, 비계속의 어디라도 가능한 커맨드의 경우
+ELSE
+	LOCAL:20 = 15
+	LOCAL:21 = 40
+	LOCAL:22 = 80
+	LOCAL:23 = 100
+	IF RAND:100 < LOCAL:(COM_TENDENCY:MAIN_PLAYER:FINAL_COM + 20)
+		;비계속 플래그 OFF
+		TFLAG:1 = 0
+	ELSE
+		;비계속 플래그 ON
+		TFLAG:1 = 1
+	ENDIF
+ENDIF
+
+;실행
+DOTRAIN FINAL_COM
+

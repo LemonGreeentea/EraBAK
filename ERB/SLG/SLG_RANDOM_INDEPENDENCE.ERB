@@ -1,0 +1,141 @@
+﻿;----------------------------------------------
+;모반을 일으키는 NPC의 후보를 선택해, 확률 롤
+;----------------------------------------------
+@SLG_RANDOM_INDEPENDENCE
+#DIM LCOUNT
+#DIM 인원수
+#DIM 후보, 3000
+#DIM 후보치, 3000
+#DIM 결과
+#DIM 판정치
+VARSET 인원수
+VARSET 후보
+VARSET 후보치
+;10기 이후
+SIF !(DAY >= 10)
+	RETURN 0
+
+;---이번 모반 후보를 취득---
+FOR LCOUNT, 1, CHARANUM
+	SIF !CAN_RANDOM_INDEPENDENCE(LCOUNT)
+		CONTINUE
+	후보:인원수 = LCOUNT
+	;선출 후보치는 야심을 그대로 이용
+	후보치:인원수 = RAND(0, MAX(1, ABL:LCOUNT:야심))
+	인원수 ++
+NEXT
+
+;후보가 없으면 RETURN
+SIF 인원수 < 1
+	RETURN 0
+
+LOCAL = MAXARRAY(후보치, 0, 인원수)
+FOR LCOUNT, 0, 인원수
+	IF 후보치:LCOUNT == LOCAL
+		결과 = 후보:LCOUNT
+		BREAK
+	ENDIF
+NEXT
+;---후보 취득 여기까지---
+
+판정치 = CALC_INDEPENDENCE_RATE(결과)
+
+;확률 롤에 실패하면 돌아온다
+IF 판정치 <= RAND:10000
+	RETURN 0
+ENDIF
+CALL NPC_INDEPENDENCE(결과)
+
+;----------------------------------------------
+;모반 할 수 있는 상태인가
+;----------------------------------------------
+@CAN_RANDOM_INDEPENDENCE(대상)
+#FUNCTION
+#DIM 대상
+;무소속이 아니다／몇개의 세력의 포로는 아니다／방랑 혹은 사망 상태가 아닌가
+SIF !IS_COUNTRY(CFLAG:대상:소속) || CFLAG:대상:포로처 || CFLAG:대상:특수상태
+	RETURNF 0
+;과연 군주가 모반 일으키면 안 됩니다.
+SIF GET_COUNTRY_BOSS(CFLAG:(대상):소속) == 대상
+	RETURNF 0
+;SP캐릭터도 모반을 일으키지 않는다
+SIF IS_SP_CHARA(대상)
+	RETURNF 0
+;특수 세력 소속이라면 안 돼
+SIF IS_SP_COUNTRY(CFLAG:대상:소속)
+	RETURNF 0
+;야심이 전무인 녀석도 모반을 일으키지 않는다
+SIF ABL:대상:야심 <= 0
+	RETURNF 0
+;주인공의 세력의 사관은, 함락 하고 있는 경우는 모반 하지 않는다
+;다만 인상치가 매우 나쁜 경우는 더욱 더 모반을 기획한다
+;역치 본인의 야심에 의해 변동한다
+{
+SIF CFLAG:대상:소속 == CFLAG:MASTER:소속 && GET_COUNTRY_BOSS(CFLAG:MASTER:소속) == MASTER && (IS_LOVER(대상) || IS_SLAVE(대상) || IS_SLAVED_BY(대상)) &&
+	REL_HATE:대상:MASTER - REL_LIKE:대상:MASTER < 1500 * (100 - ABL:대상:야심) / 100
+}
+	RETURNF 0
+RETURNF 1
+
+;----------------------------------------------
+;모반을 일으키는 확률을 산출
+;----------------------------------------------
+@CALC_INDEPENDENCE_RATE(대상)
+#FUNCTION
+#DIM 대상
+#DIM 판정치
+;야심과 REL_LIKE/HATE, 소유 도시수, DAY로부터 판정치를 산출
+판정치 = ABL:대상:야심 * 2
+SELECTCASE ABL:대상:야심
+	CASE IS >= 랭크역치:랭크_ＳＬＧ:랭크_A
+		TIMES 판정치, 1.5
+	CASE IS  >= 랭크역치:랭크_ＳＬＧ:랭크_B
+		TIMES 판정치, 1.25
+	CASE IS >= 랭크역치:랭크_ＳＬＧ:랭크_C
+		TIMES 판정치, 1.1
+ENDSELECT
+		
+판정치 -= REL_LIKE:대상:(GET_COUNTRY_BOSS(CFLAG:대상:소속)) / 30
+판정치 += REL_HATE:대상:(GET_COUNTRY_BOSS(CFLAG:대상:소속)) / 50
+;도시수가 많을 정도 배반 하기 쉽다
+판정치 += GET_OWN_CITY(CFLAG:대상:소속) * 2
+;종반은 배반 하기 어렵게 한다（그렇지 않아도 끝나지 않는 관전 모드가 한층 더 끝나지 않게 되므로）
+판정치 -= LIMIT(DAY / 2 - 50, 0, 200)
+SIF TALENT:대상:겁쟁이
+	판정치 -= 5
+SIF TALENT:대상:반항적
+	판정치 += 15
+SIF TALENT:대상:솔직함
+	판정치 -= 8
+SIF TALENT:대상:얌전함
+	판정치 -= 5
+SIF TALENT:대상:프라이드높음
+	판정치 += 20
+SIF TALENT:대상:거만함
+	판정치 += 10
+SIF TALENT:대상:프라이드낮음
+	판정치 -= 15
+SIF TALENT:대상:자제심
+	판정치 -= 5
+SIF TALENT:대상:보수적
+	판정치 -= 5
+SIF TALENT:대상:호기심
+	판정치 += 5
+SIF TALENT:대상:선을넘지않음
+	판정치 -= 15
+SIF TALENT:대상:억압
+	판정치 -= 5
+SIF TALENT:대상:해방
+	판정치 += 15
+SIF TALENT:대상:고고함
+	판정치 += 20
+
+;3능력이 200넘고 있으면 플러스 보정
+SIF ABL:대상:무투 + ABL:대상:방위 + ABL:대상:지략 + ABL:대상:정치 > 250
+	판정치 += MAX(ABL:대상:무투 + ABL:대상:방위 + ABL:대상:지략 + ABL:대상:정치 - 200, 50)
+
+;대상 캐릭터가 MASTER와 동일 세력에 소속해 있었을 경우는 호감도와 종속도로 보정
+SIF CFLAG:대상:소속 == CFLAG:MASTER:소속
+	판정치 -= MIN((CFLAG:대상:호감도 / 500 + CFLAG:대상:종속도 / 500 + CFLAG:대상:지배도), 100)
+
+RETURNF 판정치

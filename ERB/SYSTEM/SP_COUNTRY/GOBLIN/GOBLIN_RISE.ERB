@@ -1,0 +1,74 @@
+﻿;--------------------------------------
+;봉기 이벤트가 발생할까의 판정
+;--------------------------------------
+@GOBLIN_RISE_RATE()
+
+;이미 출현하고 있는지, 세력 없음 설정이라면 발동하지 않는다
+SIF SP_COUNTRY_APPEARED:특수세력_홉고블린 || !SP_COUNTRY_RANK:(특수세력_홉고블린)
+	RETURN 0
+
+;가득하면 안 돼
+SIF GET_NEW_COUNTRY() == -1
+	RETURN 0
+
+SIF !CHECK_SP_COUNTRY_RISE()
+	RETURN 0
+RETURN 1
+
+;--------------------------------------
+;홉고블린 출현 이벤트
+;출현할 수 있으면 1, 할 수 없으면 0을 돌려준다
+;--------------------------------------
+@GOBLIN_RISE(도시 = 0)
+#DIM 홉고블린
+#DIM 도시
+
+;홉고블린 세력을 작성
+CALL GOBLIN_INIT()
+홉고블린 = RESULT
+;만들 수 없으면 되돌린다
+SIF 홉고블린 == 0
+	RETURN 0
+
+CALL SP_COUNTRY_RISE(홉고블린, 도시)
+
+SIF !RESULT
+	RETURN 0
+
+SP_COUNTRY_APPEARED:특수세력_홉고블린 = 1
+RETURN 홉고블린
+
+;--------------------------------------
+;봉기 이벤트용 도시 선택 처리
+;--------------------------------------
+@GOBLIN_RISE_SELECT_CITY()
+#DIM 레밀리아
+#DIM 홍마관
+
+레밀리아 = GET_COUNTRY_FROM_BOSS_NAME("레밀리아")
+홍마관 = GET_CITYNUMBER("홍마관")
+
+;레밀리아가 군주 하고 있어, 홍마관이 맵에 존재해, 레밀리아의 도시수가 3이상으로, 레밀리아가 홍마관을 점거하고 있다면, 홍마관을 점령한다
+IF 레밀리아 != -1 && 홍마관 >= 0 && GET_OWN_CITY(레밀리아) >= 3 && CITY_OWNER:홍마관 == 레밀리아
+	LOCAL = 홍마관
+;그 어느 쪽도 아니면 랜덤
+ELSE
+	CALL SP_COUNTRY_RISE_SELECT_CITY
+	LOCAL = RESULT
+ENDIF
+
+RETURN LOCAL
+
+;--------------------------------------
+;봉기 이벤트용 메세지 함수
+;--------------------------------------
+@GOBLIN_RISE_MSG(세력, 대상)
+#DIM 세력
+#DIM 대상
+#DIM 레밀리아
+CALL SINGLE_DRAWLINE
+SETCOLOR 칼라_경고
+PRINTFORMW 평소부터 시달려 모여 있던 홉고블린들의 울분이, 드디어 폭발했습니다!
+PRINTFORMW 그들은 반기를 들어, %CITY_NAME:(대상)%\@ GET_OWN_CITY(세력) > 1 ? 등 # \@를 점거한 것 같습니다
+PRINTFORMW 이것에 수반해, 환상향의 각 세력이 이변 해결의 준비를 시작한 것 같습니다…
+RESETCOLOR

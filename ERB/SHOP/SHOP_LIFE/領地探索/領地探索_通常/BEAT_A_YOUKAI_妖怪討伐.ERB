@@ -1,0 +1,51 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_BEAT_A_YOUKAI_EXISTS()
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_BEAT_A_YOUKAI_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_BEAT_A_YOUKAI(대상)
+#DIM 대상
+PRINTFORML 이 근처에서 요괴가 날뛰고 있는 것 같다
+PRINTFORML 어떻게든 해 주고와 부탁받았다
+PRINTL
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "무투"))
+CALL ASK_YN("토벌을 시도한다", "그만둔다")
+
+IF RESULT == 1
+	PRINTFORML 위험하고, 그만두는 편이 좋을 것이다
+	PRINTFORMW 그만두기로 했다
+	RETURN 1
+ENDIF
+
+PRINTFORML 영지민에게 해가 미치는 것은 간과할 수 없다
+PRINTFORMW %조사처리(ANAME(대상),"는")% 요괴의 둥지로 탔다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+IF LIMIT(ABL:대상:무투, 50, 100) > RAND:100
+	PRINTFORML 했다!
+	PRINTFORML %조사처리(ANAME(대상),"는")% 훌륭히 요괴를 토벌 하는 것을 성공했다
+	CALL ICPRINT("보수로 해서 금<3000>을 손에 넣었다", "L", 칼라_주의)
+	CALL PRINT_ADD_EXP(대상, "무투경험치", RAND:8 + 1, 1)
+	MONEY += 3000
+	RETURN 1
+ENDIF
+
+PRINTFORML 당했다!
+PRINTFORML 요괴는 상상 이상으로 만만치 않고, 역관광에 있었던 %조사처리(ANAME(대상),"는")% 간신히 도망치고 돌아갔다
+CALL ADD_COOLTIME(대상, 2)
+
+RETURN 1

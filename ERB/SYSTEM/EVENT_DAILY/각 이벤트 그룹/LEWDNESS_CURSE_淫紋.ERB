@@ -1,0 +1,158 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_LEWDNESS_CURSE_RATE()
+RETURN 30
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_LEWDNESS_CURSE_DECISION()
+SIF DVAR:음문_발생플래그 < 0
+	RETURN 0
+SIF DVAR:음문_침식중캐릭터ID
+	RETURN 0
+RETURN 12 <= DAY
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_LEWDNESS_CURSE_GENRE()
+RETURN 데일리_장르_에로
+
+
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_LEWDNESS_CURSE
+#DIM 대상
+
+IF DVAR:음문_발생플래그 == 0
+	PRINTFORML 어느 날%ANAME(MASTER)%의 꿈 속에 악마가 나타났다
+	PRINTFORML 그 악마는 계약을 하면 강대한 힘을 주면 속삭여 왔다
+	PRINTFORML 그의 말에는 묘한 설득력을 느꼈다…
+	DVAR:음문_발생플래그 = 1
+ELSEIF DVAR:음문_발생플래그 == 1 && GETBIT(TALENT:MASTER:데일리계, 소질_데일리_음문)
+	PRINTFORML 다시 그 악마가 나타났다
+	PRINTFORML 그 모습을 보는 것만으로 %ANAME(MASTER)%의 자궁이 쑤셔, 암캐같이 발정해 버렸다
+	PRINTFORML %ANAME(MASTER)%의 그 모습을 봐 악마는 만족한 것 같게 웃어, 하복부를 돌리듯이 어루만지며 온다
+	PRINTFORML 부들부들떨리는 %ANAME(MASTER)%의 귓전으로 한층 더 계약을 강요해 왔다
+ELSE
+	PRINTFORML 다시 그 악마가 나타났다
+	PRINTFORML 심에 영향을 주는 소리로 계약을 강요해 온다…
+ENDIF
+PRINTFORMW 어떻게 하지?
+IF GETBIT(TALENT:MASTER:데일리계, 소질_데일리_음문)
+	CALL ASK_MULTI_JUDGE("계약한다" , 1, "거절한다" , 1, "범해 받는다", IS_FEMALE(MASTER))
+ELSE
+	CALL ASK_YN("계약한다", "거절한다")
+ENDIF
+IF RESULT == 1
+	PRINTFORML 그런 계약을 받을 수는 없다
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 거절하면 악마는 땅의 바닥으로부터 영향을 주는 것 같은 소리로 웃었다
+	PRINTFORMW 그리고 또 오는 것을 고하면 검은 안개가 되어 사라졌다
+	RETURN 1
+ELSEIF RESULT == 2
+	PRINTFORML 욱신거림이 멈추지 않는 %조사처리(ANAME(MASTER),"는")% 악마에 범해 받도록(듯이) 달라붙었다
+	PRINTFORML 악마는 크게 입을 비뚤어지게 해, 힐쭉 웃으면 %ANAME(MASTER)%의 눈앞에 내려 온다
+	PRINTFORML 그리고 갈팡질팡 하는 %ANAME(MASTER)%의 눈앞에 흉악한 페니스를 드러냈다
+	PRINTFORML 그것은 검붉게 그로테스크해 두근두근 격렬하게 맥동 하고 있었다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 너무나 농후한 수컷의 냄새에 자궁이 배란을 시작하는 것을 느끼면서, 황홀한 표정으로 거기에 입맞춤을 했다
+	PRINTFORML 
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% 악마의 페니스를 깊숙히 찔리면서 미친 것처럼 머리카락을 흩뜨려 허덕이고 있다
+	PRINTFORML 악마와의 섹스는 상상을 초월하는 쾌락을 줘, 일발 찌르기마다 %ANAME(MASTER)%의 이성이 파괴되는 것을 느낀다
+	PRINTFORML 하지만 그런 일은 지금의 %ANAME(MASTER)%에 있어서는 어떻든지 좋은 일로, 오로지 주어지는 쾌락에 좋아해 미치고 있다
+	PRINTFORMW 츄 응! (와)과 태내에 쑤셔 넣어질 정도로 한층 더 깊게 페니스를 쑤셔 넣어져 %조사처리(ANAME(MASTER),"는")% 크게 등을 뒤로 젖혀 절정 한다
+	PRINTFORML 아헤얼굴을 쬐어 움찔움찔 떨리는 %조사처리(ANAME(MASTER),"이지만")%, 그가 그것을 신경쓸 리도 없고 더욱 격렬한 피스톤을 개시한다
+	PRINTFORML 지금이다 절정을 계속하는 %조사처리(ANAME(MASTER),"는")% 페니스가 출입할 때에 더욱 강렬한 절정이 주어져 전신을 경련시켜 거품을 분다
+	PRINTFORML 지나친 쾌락에 눈물을 흘리면서 용서를 비는 %조사처리(ANAME(MASTER),"이지만")%, 그 소원은 받아 들일 수 있지 못하고 끝없이 절정 당한다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 완전히 악마의 완구가 되어 내려가, 밤새 그의 폭력적인 섹스로 몸도 마음도 정복 되어 버렸다
+	CALL FUCK_RAPE(MASTER, GET_SPERM_ID("악마"), @"악마의 \@ RAND:2 ? 페니스 # 입술\@", @"악마")
+	PRINTFORML 
+	PRINTFORML 다음날, 눈을 뜬 %조사처리(ANAME(MASTER),"는")% 자궁으로부터 전해지는 강렬한 쾌락으로 무심코 절정 했다
+	PRINTFORMW 숨을 거칠게 하면서 하복부에 손을 대면, 두근두근 악마의 정액이 거기서 날뛰고 있는 것을 느꼈다
+	RETURN 1
+ELSE
+	PRINTFORML 힘의 유혹은 저항하기 어렵고, %조사처리(ANAME(MASTER),"는")% 계약하는 일로 했다
+	PRINTFORML 악마는 수긍하면, 계약의 대상으로 해서 여자의 신체를 내미라고 해 왔다
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% 꿀꺽 군침을 마신다
+	PRINTFORMW 누구로 하자?
+	CALL SELECT_CHARA_LIST_ONLY_LOGIC_SEX("LEWDNESS_CURSE", "NONE")
+	대상 = RESULT
+	IF 대상 == -1
+		PRINTFORML ……아니, 역시 그런 계약을 받을 수는 없다
+		PRINTFORML %조사처리(ANAME(MASTER),"가")% 거절하면 악마는 땅의 바닥으로부터 영향을 주는 것 같은 소리로 웃었다
+		PRINTFORMW 그리고 또 오는 것을 고하면 검은 안개가 되어 사라졌다
+		RETURN 1
+	ELSE
+		IF 대상 == MASTER
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 떨리는 소리로 스스로의 신체를 바친다고 고했다
+			PRINTFORML 하면 악마는 힐쭉 기분 나쁜 미소를 띄워 승낙했다
+			PRINTFORML 그가 %ANAME(MASTER)%의 하복부에 손바닥을 가리면, %조사처리(ANAME(MASTER),"는")% 강렬한 열을 느껴 무심코 배를 눌러 웅크리고 앉았다
+			PRINTFORML 「확실히 제물을 받은, 이것으로 계약은 성립했다」
+			PRINTFORMW 당황하는 %ANAME(MASTER)%에 향하여 악마가 손바닥을 가리면, %ANAME(MASTER)%의 신체에 힘이 넘쳐 왔다!
+		ELSE
+			PRINTFORMW %조사처리(ANAME(대상),"를")% 제물로서 내몄다
+			PRINTFORML 악마는 만족한 것 같게 웃으면, 찰싹 손가락을 울렸다
+			PRINTFORML 「확실히 제물을 받은, 이것으로 계약은 성립했다」
+			PRINTFORMW 당황하는 %ANAME(MASTER)%에 향하여 악마가 손바닥을 가리면, %ANAME(MASTER)%의 신체에 힘이 넘쳐 왔다!
+		ENDIF
+		LOCAL = (100 - ABL:MASTER:무투) / 6
+		SIF LOCAL <= 0
+			LOCAL = 2
+		ABL:MASTER:무투 += LOCAL
+		LOCAL:1 = (100 - ABL:MASTER:지략) / 6
+		SIF LOCAL:1 <= 0
+			LOCAL:1 = 2
+		ABL:MASTER:지략 += LOCAL:1
+		LOCAL:2 = (100 - ABL:MASTER:정치) / 6
+		SIF LOCAL:2 <= 0
+			LOCAL:2 = 2
+		ABL:MASTER:정치 += LOCAL:2
+		LOCAL:3 = (100 - ABL:MASTER:방위) / 6
+		SIF LOCAL:3 <= 0
+			LOCAL:3 = 2
+		ABL:MASTER:방위 += LOCAL:3
+		CALL COLOR_PRINT(@"%ANAME(MASTER)%의 무투치가 {LOCAL} 상승했다!", 칼라_오렌지)
+		PRINTFORML 
+		CALL COLOR_PRINT(@"%ANAME(MASTER)%의 방위치가 {LOCAL:3} 상승했다!", 칼라_오렌지)
+		PRINTFORML 
+		CALL COLOR_PRINT(@"%ANAME(MASTER)%의 지략치가 {LOCAL:1} 상승했다!", 칼라_오렌지)
+		PRINTFORML 
+		CALL COLOR_PRINT(@"%ANAME(MASTER)%의 정치치가 {LOCAL:2} 상승했다!", 칼라_오렌지)
+		PRINTFORMW 
+		PRINTFORML 악마는 검은 안개가 되어 사라졌다
+		IF 대상 == MASTER
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 고양감에 휩싸여지면서, 다시 꿈 속으로 의식이 녹아 갔다
+			PRINTFORML 
+			PRINTFORML …다음날, 눈을 뜬 %조사처리(ANAME(MASTER),"는")% 스스로의 하복부를 갈았다
+			PRINTFORML 아무 변화도 없지만, 그 때의 열을 추억 밖에 비고공포가 머리를 쳐든다
+			PRINTFORML 하지만 %조사처리(ANAME(MASTER),"는")% 불안을 뿌리치면 침대를 빠져 갈아입음을 위해서(때문에) 잠옷을 벗었다
+			PRINTFORMW 그 하복부에는, 악마의 계약표가 희미하게 떠오르고 있었다……
+			CALL COLOR_PRINT(@"%ANAME(대상)%에 음문이 새겨졌다", 칼라_핑크)
+			PRINTFORMW 
+		ELSE
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 고양감에 휩싸여지면서, 다시 꿈 속으로 의식이 녹아 갔다
+			PRINTFORML 
+			PRINTFORML …동시각, %조사처리(ANAME(대상),"는")% 하복부에 강렬한 열을 느껴 튀어 일어났다
+			PRINTFORML 땀투성이가 되어 무슨 일일까하고 하복부를 갈지만 조금 전 느낀 열은 거짓말과 같이 떠나고 있었다
+			PRINTFORMW 기분탓일까하고 의심스러워 하면서도 다시 눕는 그녀의 하복부에는, 악마의 계약표가 희미하게 떠오르고 있었다……
+			CALL COLOR_PRINT(@"%ANAME(대상)%에 음문이 새겨졌다", 칼라_핑크)
+			PRINTFORMW 
+		ENDIF
+		DVAR:음문_침식중캐릭터ID = GET_ID(대상)
+		DVAR:음문_침식치 = 1
+	ENDIF
+ENDIF
+RETURN 1
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_LEWDNESS_CURSE(대상)
+#DIM 대상
+RETURN CFLAG:대상:행동불능상태 != 행동불능_아이 && CFLAG:대상:소속 == CFLAG:MASTER:소속 && !IS_ANIMAL(대상) && CFLAG:대상:포로처 == 0 && !IS_MALE(대상) && !GETBIT(TALENT:대상:데일리계, 소질_데일리_음문)

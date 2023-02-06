@@ -1,0 +1,174 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_WITH_ME_RATE()
+RETURN 50
+
+;---------------------
+;특정의 조건을 채우는 캐릭터를 랜덤에 선택하는 경우에 이용
+;다른 함수는 필수이지만, 이것만은 없어도 좋다  라고 할까 퍼포먼스에 영향을 주므로 불필요하면 만들어서는 안 된다
+;대상이 존재하지 않고 데일리를 개시 할 수 없는 경우는 0을 돌려주는 것으로 데일리의 발생을 캔슬한다
+;---------------------
+@EVENT_DAILY_WITH_ME_SETTARGET()
+#DIM 대상
+#DIM 후보, 3000
+#DIM 후보난수, 3000
+#DIM 후보수
+VARSET 후보, -1
+VARSET 후보난수, __INT_MIN__
+VARSET 후보수
+
+;호감도에 근거해 후보 배열을 준비
+FOR LOCAL, 0, CHARANUM
+	;소속이 MASTER와 동일해, 포로가 아니고, 임신하고 있지 않다
+	IF CFLAG:LOCAL:소속 == CFLAG:MASTER:소속 && !CFLAG:LOCAL:포로처 && CFLAG:LOCAL:행동불능상태 != 행동불능_아이
+		후보:후보수 = LOCAL
+		후보난수:후보수 = RAND:(MAX(CFLAG:LOCAL:호감도, 100))
+	ENDIF
+NEXT
+;후보가 없으면 되돌린다
+SIF 후보수 < 1
+	RETURN 0
+;호감도에 근거해 낸 후보 난수 가운데, 제일 비싼 값을 낸 캐릭터를 대상으로 한다.
+대상 = 후보:(FINDELEMENT(후보난수, MAXARRAY(후보난수, 0, 후보수), 0, 후보수))
+
+SIF 대상 < 0
+	RETURN 0
+
+DAILY_TARGET:0 = 대상
+DAILY_TARGET_NUM = 1
+
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_WITH_ME_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_WITH_ME
+#DIM 대상
+#DIM 금액
+
+대상 = DAILY_TARGET:0
+
+PRINTFORML %조사처리(ANAME(대상),"가")% 왔다
+PRINTFORMW 한가한 것으로 교제하면 좋은 같다
+PRINTFORML 어떻게 하지?
+CALL ASK_MULTI("마시러 간다" ,"놀러 간다" ,"방에 데리고 들어간다")
+IF RESULT == 0
+	PRINTFORMW 술자리에 데리고 가면 %조사처리(ANAME(대상),"는")% 추천의 가게가 있다고 했다
+	PRINTFORML 
+	IF ABL:MASTER:주량 >= 3 + RAND:4
+		PRINTFORML %ANAME(MASTER)%의 먹는 모습에 %조사처리(ANAME(대상),"를")% 시작해 손님으로부터 갈채가 올랐다
+		PRINTFORMW 어느새인가 점중이 연회같이 되어 있어 많이 분위기를 살렸다
+		CFLAG:대상:호감도 += RAND(100, 300)
+	ELSE
+		PRINTFORML 술은 맛있었지만 무심코 과음해 버렸다
+		PRINTFORMW 헤롱헤롱이 된 %조사처리(ANAME(MASTER),"를")% 봐 %조사처리(ANAME(대상),"는")% 웃고 있었다
+		CFLAG:대상:호감도 += RAND(50, 200)
+		CALL ADD_COOLTIME(대상, 1)
+	ENDIF
+	CALL PRINT_ADD_EXP(MASTER, "주량경험치", RAND(100, 200), 1)
+	CALL PRINT_ADD_EXP(대상, "주량경험치", RAND(100, 200), 1)
+	CALL ICPRINT("%ANAME(대상)%의 호감도가 올랐다", "L", 칼라_주의)
+	RETURN
+ELSEIF RESULT == 1
+	PRINTFORMW 둘이서 놀러 나갔다
+	PRINTFORML 
+	SELECTCASE RAND:5
+		CASE 0
+			PRINTFORML 꼭 축제를 하고 있었으므로 돌아봤다
+			PRINTFORMW 까불며 떠드는 %ANAME(대상)%에 교제해져, 무심코 낭비 해 버렸다
+		CASE 1
+			PRINTFORML 한가로운 신록 지대를 한가롭게 걸어 돌았다
+			PRINTFORMW 준비가 좋은 것에 %조사처리(ANAME(대상),"가")% 가져온 도시락을 함께 먹었다
+		CASE 2
+			PRINTFORML 번화한 환락가에서 놀기로 했다
+			PRINTFORMW 모처럼이니까 라며 %ANAME(대상)%에 여기저기의 가게를 이끌어 돌려졌다
+		CASE 3
+			PRINTFORML %ANAME(대상)%에 이끌리고 낚시를 하는 일이 되었다
+			PRINTFORMW 낚시질의 성과는 좀 더였지만, 한가롭게 한 좋은 분위기로 회화가 활기를 띠었다
+		CASE 4
+			PRINTFORML 우연히 지나간 극장이 신경이 쓰여 들어가 보았다
+			PRINTFORMW 꽤 재미있는 극이었다, %ANAME(대상)%도 마음에 든 것 같아 시종 웃는 얼굴이었다
+	ENDSELECT
+	금액 = 1000
+	SIF MONEY < 1000
+		금액 = MONEY
+	MONEY -= 금액
+	CFLAG:대상:호감도 += RAND(50, 300)
+	CALL ICPRINT(@"금{금액}를 소비했다", "L", 칼라_주의)
+	CALL ICPRINT("%ANAME(대상)%의 호감도가 올랐다", "L", 칼라_주의)
+	RETURN
+ENDIF
+
+PRINTFORMW 방에서 천천히 하지 않을까 권했다
+IF CFLAG:대상:호감도 < RAND:1000
+	PRINTFORMW 하지만 마음에 드시지 않았던 것 같고, 거절당했다
+	RETURN
+ENDIF
+PRINTFORML %조사처리(ANAME(대상),"는")% 기뻐해 %ANAME(MASTER)%의 방에 들어갔다
+PRINTFORMW …둘이서 방에서 한가로이 보냈다
+IF (IS_MALE(MASTER) && IS_MALE(대상)) || (IS_FEMALE(MASTER) && IS_FEMALE(대상))
+	CFLAG:대상:호감도 += RAND(200, 400)
+	CALL ICPRINT("%ANAME(대상)%의 호감도가 올랐다", "L", 칼라_주의)
+	RETURN
+ENDIF
+PRINTFORMW 그 안, 좋은 분위기가 되기 시작했다
+PRINTFORML 어떻게 하지?
+IF IS_MALE(MASTER)
+	CALL ASK_YN("어깨에 손을 쓴다" ,"이대로 보낸다")
+	IF RESULT == 0
+		PRINTFORMW %ANAME(대상)%의 어깨에 손을 썼다
+		IF !(CFLAG:대상:호감도 >= 1200 + RAND:300 + (DAY * 10) || TALENT:대상:합의 == 1)
+			PRINTFORML 하지만 그녀는 그러한 기분이 아니었던 것 같다
+			PRINTFORMW %ANAME(MASTER)%의 손을 뿌리치면 방을 나가 버렸다…
+			RETURN
+		ELSE
+			PRINTFORML 그녀는 %조사처리(ANAME(MASTER),"를")% 응시하고 부끄러운 듯이 미소지었다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 분위기에 맡겨, 입술을 차지해 그대로 쓰러트리기…
+			PRINTFORML 
+			PRINTFORML …%ANAME(MASTER)%의 방으로부터 요염한 소리가 새어 왔다
+			PRINTFORML 신음소리에 섞여, 때때로 %ANAME(MASTER)%의 이름을 부르는 목소리가 들린다
+			PRINTFORMW 조용한 오후, 희미한 미츠네는 잠시동안 계속 울렸다…
+			CALL FUCK(대상, "Ｃ, Ｂ, Ｖ, Ｍ, 욕망, 성교, 봉사, 정애, 펠라티오, 키스, Ｖ성교", "처녀상실, 키스상실, 질내사정", GET_ID(MASTER), @"%ANAME(MASTER)%의 \@RAND:2 ? 페니스 # 입술\@", ANAME(MASTER), "", "화간")
+			CALL FUCK(MASTER, "Ｃ, 사정", "동정상실", 0, "", "", @"%ANAME(대상)%의 질", "화간")
+			CFLAG:대상:호감도 += RAND(400, 600)
+			CALL ICPRINT("%ANAME(대상)%의 호감도가 올랐다", "L", 칼라_주의)
+		ENDIF
+	ENDIF
+ELSE
+	CALL ASK_YN("어깨에 받는다" ,"이대로 보낸다")
+	IF RESULT == 0
+		PRINTFORMW %ANAME(대상)%의 어깨에 받았다
+		IF !(CFLAG:대상:호감도 >= 1200 + RAND:300 + (DAY * 10) || TALENT:대상:합의 == 1)
+			PRINTFORML 하지만 그는 그러한 기분이 아니었던 것 같다
+			PRINTFORMW 온화하게 거절하면, 방을 나가 버렸다…
+			RETURN
+		ELSE
+			PRINTFORML 그는 %조사처리(ANAME(MASTER),"를")% 받아들여, 어깨에 손을 썼다
+			PRINTFORMW %조사처리(ANAME(MASTER),"가")% 그를 응시하면, 밀어 쓰러트려지면서 입술을 막혔다…
+			PRINTFORML 
+			PRINTFORML …%ANAME(MASTER)%의 방으로부터 요염한 소리가 새어 왔다
+			PRINTFORML 신음소리에 섞여, 때때로 %ANAME(대상)%의 이름을 부르는 목소리가 들린다
+			PRINTFORMW 조용한 오후, 희미한 미츠네는 잠시동안 계속 울렸다…
+			CALL FUCK(MASTER, "Ｃ, Ｂ, Ｖ, Ｍ, 욕망, 성교, 봉사, 정애, 펠라티오, 키스, Ｖ성교", "처녀상실, 키스상실, 질내사정", GET_ID(대상), @"%ANAME(대상)%의 \@RAND:2 ? 페니스 # 입술\@", ANAME(대상), "", "화간")
+			CALL FUCK(대상, "Ｃ, 사정", "동정상실", 0, "", "", @"%ANAME(MASTER)%의 질", "화간")
+			CFLAG:대상:호감도 += RAND(400, 600)
+			CALL ICPRINT("%ANAME(대상)%의 호감도가 올랐다", "L", 칼라_주의)
+		ENDIF
+	ENDIF
+ENDIF
+IF RESULT == 1
+	PRINTFORML 분위기를 부수고 싶지 않다
+	PRINTFORMW 그대로 둘이서 한가롭게 보냈다
+	CFLAG:대상:호감도 += RAND(200, 300)
+	CALL ICPRINT("%ANAME(대상)%의 호감도가 올랐다", "L", 칼라_주의)
+	RETURN
+ENDIF
+
+RETURN

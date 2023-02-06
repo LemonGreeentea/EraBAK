@@ -1,0 +1,537 @@
+﻿;촉촉수클리고문
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME203
+LOCALS:0 = 촉수클리고문
+
+RESULTS:0 = %LOCALS:0%한다
+RESULTS:1 = %LOCALS:0%당한다
+RESULTS:2 = %LOCALS:0%시킨다
+RESULTS:3 = %LOCALS:0%된다
+RESULTS:4 = %LOCALS:0%시킨다
+RESULTS:5 = %LOCALS:0%과시하고
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE203
+;공통 부분
+CALL COM_ABLE_COMMON(203)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 1명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 1
+	RETURN 0
+;타겟은 1명 이상
+SIF MTAR_NUM <= 0
+	RETURN 0
+;플레이어가 행동불능이라면 불가
+SIF !IS_PLAYABLE(MPLY:0)
+	RETURN 0
+;플레이어가 촉수소환중이 아니면 불가
+SIF !IS_EQUIP_PLAYER(MPLY:0, 200)
+	RETURN 0
+;플레이어가 구속중이라면 불가
+SIF IS_BIND(MPLY:0)
+	RETURN 0
+;모든 타겟으로 붙어 판정
+FOR LOCAL:0, 0, MTAR_NUM
+	;Ｖ가 필요
+	SIF !HAS_VAGINA(MTAR:(LOCAL:0))
+		RETURN 0
+	;타겟이 쿤닐링구스되고 있는, 클리캡 사용중이라면 불가
+	SIF IS_EQUIP_TARGET(MTAR:(LOCAL:0), 2, 63)
+		RETURN 0
+	;타겟이 안면승마중이라면 불가
+	SIF IS_RIDE(MTAR:(LOCAL:0))
+		RETURN 0
+NEXT
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM203
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;●플레이어에 대해 처리
+EXP:(MPLY:0):성기술경험치 += 1
+EXP:(MPLY:0):요술경험치 += 1
+EXP:(MPLY:0):촉수경험치 += 1
+
+SOURCE:(MPLY:0):봉사 = SERVE_HOUSHI(MPLY:0, 150)
+SOURCE:(MPLY:0):기학 = 30
+SOURCE:(MPLY:0):일탈 = 80
+SOURCE:(MPLY:0):촉수 = 30
+SOURCE:(MPLY:0):성행동 = 90
+
+;주도권에 응한 우월·굴종의 소스 추가
+CALL ADD_SOURCE_INITIATIVE_U(MPLY:0, 130, 30)
+
+;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+TCVAR:(MPLY:0):4 = 1
+
+;●모든 타겟으로 붙어 처리
+FOR LOCAL:0, 0, MTAR_NUM
+	LOCAL:2 = MTAR:(LOCAL:0)
+
+	EXP:(LOCAL:2):촉수경험치 += 1
+
+	SOURCE:(LOCAL:2):쾌Ｃ = SENSE_HOUSHI(MPLY:0, LOCAL:2, 1000 + ABL:(MPLY:0):요술 * 8) + (GETBIT(TALENT:(LOCAL:2):음란계, 소질_음란_모판) * 500)
+	SOURCE:(LOCAL:2):일탈 = 300 - (GETBIT(TALENT:(LOCAL:2):음란계, 소질_음란_모판) * 150)
+	SOURCE:(LOCAL:2):촉수 = 300 + (GETBIT(TALENT:(LOCAL:2):음란계, 소질_음란_모판) * 300)
+	SOURCE:(LOCAL:2):성행동 = 180 + (GETBIT(TALENT:(LOCAL:2):음란계, 소질_음란_모판) * 90)
+
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:2, 60, 60)
+
+	;공통 처리
+	CALL COM_COMMON203(LOCAL:2)
+NEXT
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = 3
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 1
+
+RETURN 1
+
+;-------------------------------------------------
+;계속 커맨드인가 어떤가를 설정
+;-------------------------------------------------
+@COM_IS_EQUIP203
+RETURN 1
+
+;-------------------------------------------------
+;계속 상태의 처리
+;-------------------------------------------------
+@COM_EQUIP203(ARG:0)
+LOCAL:2 = MEQUIP_PLAYER:(ARG:0):0
+
+SOURCE:(LOCAL:2):성행동 += 30
+
+;모든 타겟으로 붙어 판정
+FOR LOCAL:0, 0, MEQUIP_TARGET_NUM:(ARG:0)
+	LOCAL:3 = MEQUIP_TARGET:(ARG:0):(LOCAL:0)
+
+	;소스를 퇴피
+	CALL PUTOUT_SOURCE(LOCAL:3)
+
+	EXP:(LOCAL:3):촉수경험치 += 1
+
+	SOURCE:(LOCAL:3):쾌Ｃ += SENSE_HOUSHI(LOCAL:2, LOCAL:3, 800 + ABL:(LOCAL:2):요술 * 6) + (GETBIT(TALENT:(LOCAL:3):음란계, 소질_음란_모판) * 400)
+	SOURCE:(LOCAL:3):일탈 += 120 - (GETBIT(TALENT:(LOCAL:3):음란계, 소질_음란_모판) * 60)
+	SOURCE:(LOCAL:3):촉수 += 150 + (GETBIT(TALENT:(LOCAL:3):음란계, 소질_음란_모판) * 75)
+	SOURCE:(LOCAL:3):성행동 += 60 + (GETBIT(TALENT:(LOCAL:3):음란계, 소질_음란_모판) * 30)
+
+	;도착도 변화
+	TCVAR:(LOCAL:3):50 += 2
+
+	;공통 처리
+	CALL COM_COMMON203(LOCAL:3)
+
+	;퇴피한 소스를 가산
+	CALL SUM_SOURCE(LOCAL:3)
+NEXT
+
+;-------------------------------------------------
+;계속중의 표시
+;-------------------------------------------------
+@EQUIP_MESSAGE203(ARG:0)
+RESULTS = %EQUIP_TARGET_ANAME(ARG:0)%에게 %EQUIP_PLAYER_ANAME(ARG:0)%의 촉수가 클리 고문중
+
+;-------------------------------------------------
+;계속중의 지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE_EQUIP203(ARG:0)
+IF TALENT:(MEQUIP_TARGET:(ARG:0):0):Ｃ민감
+	PRINTFORM %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"가")% 조종하는 촉수가 %EQUIP_TARGET_ANAME(ARG:0)%의 \@ RAND:2 ? 민감한 # 사랑스럽다 \@클리토리스
+ELSE
+	PRINTFORM %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"가")% 조종하는 촉수가 %EQUIP_TARGET_ANAME(ARG:0)%의 클리토리스
+ENDIF
+	SELECTCASE RAND:14
+	CASE 0
+		PRINTL 를 쓸어올리고 있다…
+	CASE 1
+		PRINTL 를 희롱하고 있다…
+	CASE 2
+		PRINTL 를 돌리듯이 어루만지며 있다…
+	CASE 3
+		PRINTL 를 꽉 집어올리고 있다…
+	CASE 4
+		PRINTL 에 몇 번이나 키스를 퍼붓고 있다…
+	CASE 5
+		PRINTL 를 핑 연주하고 있다…
+	CASE 6
+		PRINTL 를 찔러 계속 자극하고 있다…
+	CASE 7
+		PRINTL 를 동글동글 마찰하고 있다…
+	CASE 8
+		PRINTL 를 동글동글 닦고 있다…
+	CASE 9
+		PRINTL 를 둘러싸 반죽하고 있다…
+	CASE 10
+		PRINTL 를 요령 있게 끼워 넣고 있다…
+	CASE 11
+		PRINTL 의 가죽을 벗겨 잡아당기고 있다…
+	CASE 12
+		PRINTL 를 아래로부터 밀어 올려 희롱하고 있다…
+	CASE 13
+		PRINTL 의 세부를 깨끗하게 청소하고 있다…
+	ENDSELECT
+;-------------------------------------------------
+;계속을 해제했을 때의 지문
+;-------------------------------------------------
+@COM_TEXT_RELEASE_EQUIP203(ARG:0)
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER203(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 120
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 2)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 3)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):촉수}", ABL:(ARG:0):촉수 * 6)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 1, 10))
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -2)
+ENDIF
+IF TALENT:(ARG:0):호기심
+	CALL COM_ORDER_ELEMENT(ARG:0, "호기심", 2)
+ENDIF
+IF TALENT:(ARG:0):보수적
+	CALL COM_ORDER_ELEMENT(ARG:0, "보수적", -7)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 4)
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -2)
+ENDIF
+
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_새드) || GETBIT(TALENT:(ARG:0):음란계, 소질_음란_마조) || ABL:(ARG:0):도착도 >= 800
+	CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 32)
+ELSEIF ABL:(ARG:0):도착도 >= 500
+	CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 24)
+ELSEIF ABL:(ARG:0):도착도 >= 300
+	CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 16)
+ELSEIF ABL:(ARG:0):도착도 >= 100
+	CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 8)
+ELSE
+	CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 0)
+ENDIF
+
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -10)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE203
+LOCAL:1 = 1
+FOR LOCAL:0, 0, MTAR_NUM
+	IF SEARCH_EQUIP(203, MPLY:0, MTAR:(LOCAL:0)) == -1
+		LOCAL:1 = 0
+	ENDIF
+NEXT
+
+;전원이 이미 촉수클리고문중이라면 분기
+IF LOCAL:1
+	;계속중의 지문을 컷
+	FOR LOCAL:0, 0, MTAR_NUM
+		LOCAL:2 = SEARCH_EQUIP(203, MPLY:0, MTAR:(LOCAL:0))
+		IF LOCAL:2 >= 0
+			MEQUIP_CUT:(LOCAL:2) = 1
+		ENDIF
+	NEXT
+
+	IF MTAR_NUM >= 3
+		LOCALS:1 = %ANAME(MTAR:0)%들
+	ELSEIF MTAR_NUM == 2
+		LOCALS:1 = %조사처리(ANAME(MTAR:0),"와")% %ANAME(MTAR:1)%
+	ELSE
+		LOCALS:1 = %ANAME(MTAR:0)%
+	ENDIF
+
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			SELECTCASE RAND:12
+			CASE 0
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 클리토리스를, 미끌거리는 촉수의 돌기로 한층 더 격렬하게 쓸어올%TARGET_STR("렸다", "려 왔다")%…
+			CASE 1
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 가는 촉수로 %LOCALS:1%의 클리토리스를 사이에 둬, 좀 더 격렬하게 쓸어올%TARGET_STR("렸다", "려 왔다")%…
+			CASE 2
+				PRINTFORMW %ANAME(MPLY:0)%칫솔과 같은 촉수로 %LOCALS:1%의 클리토리스를, 한층 더 더듬%TARGET_STR("었다", "어 왔다")%…
+			CASE 3
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 클리토리스를, 한층 더 촉수로 집어올려 농락%TARGET_STR("했다", "해 왔다")%…
+			CASE 4
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 클리토리스를, 몇 번이나 흡반과 같은 촉수로 키스를 해 자극%TARGET_STR("했다", "해 왔다")%…
+			CASE 5
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 클리토리스를, 핑 세운 촉수의 첨단으로 몇 번이나 튕%TARGET_STR("겼다", "겨 왔다")%…
+			CASE 6
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 밀집한 촉수로 %LOCALS:1%의 클리토리스를 억눌러, 스글스글 계속 자극%TARGET_STR("했다", "해 왔다")%…
+			CASE 7
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 클리토리스를, 반들반들한 촉수로 찌부러뜨리면 동글동글 마찰%TARGET_STR("했다", "해 왔다")%…
+			CASE 8
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 날카로워진 촉수로 %LOCALS:1%의 클리토리스를, 한층 더 리드미컬하게 연주해 농락%TARGET_STR("했다", "해 왔다")%…
+			CASE 9
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 클리토리스에 댄 촉수를 보다 크게 움직여, 음핵을 강하게 쓸어올%TARGET_STR("렸다", "려 왔다")%…
+			CASE 10
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 클리토리스의 주위의 도랑에 촉수의 첨단을 따르게 해 닦도록(듯이)해 자극%TARGET_STR("했다", "해 왔다")%…
+			CASE 11
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 클리토리스아래로부터 촉수를 밀어 올려, 동글동글 농락%TARGET_STR("했다", "해 왔다")%…
+			ENDSELECT
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORML %조사처리(LOCALS:1,"는")% %ANAME(MPLY:0)%에 대해, 클리토리스를 촉수로 한층 더 비비도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 클리에 댄 촉수를 보다 크게 움직여, 음핵을 강하게 쓸어올려 봉사했다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에게, %LOCALS:1%의 클리토리스를 촉수로 좀 더 격렬하게 꾸짖도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 클리에 댄 촉수를 보다 크게 움직여, 음핵을 강하게 쓸어올렸다…
+	ENDSELECT
+
+ELSE
+	IF MTAR_NUM >= 3
+		LOCALS:0 = 클리토리스
+		LOCALS:1 = %ANAME(MTAR:0)%들
+		LOCALS:2 = 동시에
+		LOCALS:3 = 전원의
+	ELSEIF MTAR_NUM == 2
+		LOCALS:0 = 클리토리스
+		LOCALS:1 = %조사처리(ANAME(MTAR:0),"와")% %ANAME(MTAR:1)%
+		LOCALS:2 = 동시에
+		LOCALS:3 = 두 명의
+	ELSE
+		IF IS_PIERCED(MTAR:0, 피어스_클리토리스)
+			LOCALS:0 = 피어스가 장착된
+		ELSE
+			LOCALS:0 = 
+		ENDIF
+		
+		IF PALAM:(MTAR:0):윤활 >= PALAMLV:7
+			LOCALS:0 = %LOCALS:0%번들번들 젖는다
+		ENDIF
+		
+		IF TALENT:(MTAR:0):체격 == 체격_작은체형
+			LOCALS:0 = %LOCALS:0%포피에 휩싸여졌다
+		ELSEIF PALAM:(MTAR:0):욕정 >= PALAMLV:7
+			LOCALS:0 = %LOCALS:0%욕정해 완전히 부풀어 올랐다
+		ENDIF
+		
+		LOCALS:0 = %LOCALS:0%클리토리스
+		LOCALS:1 = %ANAME(MTAR:0)%
+		LOCALS:2 = 격렬하게
+		LOCALS:3 = 자신의
+	ENDIF
+
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			SELECTCASE RAND:11
+			CASE 0
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 %LOCALS:0%에 촉수의 돌기를 꽉 눌러, %LOCALS:2%쓸어올%TARGET_STR("렸다", "려 왔다")%…
+			CASE 1
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 가는 촉수로 %LOCALS:1%의 %조사처리(LOCALS:0,"를")% 사이에 둬, 상냥하게 어루만%TARGET_STR("졌다", "져 왔다")%…
+			CASE 2
+				PRINTFORMW %ANAME(MPLY:0)%칫솔과 같은 촉수로 %LOCALS:1%의 %조사처리(LOCALS:0,"를")% 오로지 더듬%TARGET_STR("었다", "어 왔다")%…
+			CASE 3
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 %조사처리(LOCALS:0,"를")% 촉수로 집어올려, 오돌오돌 몇 번이나 농락%TARGET_STR("했다", "해 왔다")%…
+			CASE 4
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 가랑이로 흡반과 같은 촉수를 달라붙게 해 %LOCALS:0%에 키스를 해 자극%TARGET_STR("했다", "해 왔다")%…
+			CASE 5
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 %조사처리(LOCALS:0,"를")%, 핑 세운 촉수의 첨단으로 몇 번이나 튕%TARGET_STR("겼다", "겨 왔다")%…
+			CASE 6
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 밀집한 촉수로 %LOCALS:1%의 %조사처리(LOCALS:0,"를")% 억눌러, 스글스글 계속 자극%TARGET_STR("했다", "해 왔다")%…
+			CASE 7
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 %조사처리(LOCALS:0,"를")%, 반들반들한 촉수로 찌부러뜨리면 동글동글 마찰%TARGET_STR("했다", "해 왔다")%…
+			CASE 8
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 날카로워진 촉수로 %LOCALS:1%의 %조사처리(LOCALS:0,"를")%, 리드미컬하게 연주해 농락%TARGET_STR("했다", "해 왔다")%…
+			CASE 9
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 %LOCALS:0%에 촉수를 대어, 크게 움직여 음핵을 강하게 쓸어올%TARGET_STR("렸다", "려 왔다")%…
+			CASE 10
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 %LOCALS:0%의 주위의 도랑에 촉수의 첨단을 따르게 해 닦도록(듯이)해 자극%TARGET_STR("했다", "해 왔다")%…
+			CASE 10
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 %LOCALS:0%아래로부터 촉수를 밀어 올려, 동글동글 농락%TARGET_STR("했다", "해 왔다")%…
+			ENDSELECT
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORML %조사처리(LOCALS:1,"는")% %ANAME(MPLY:0)%에 대해, 촉수로 클리토리스를 비비어 기분 좋게 하도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 %LOCALS:0%에 촉수의 돌기를 꽉 눌러, (듣)묻는 대로 음핵을 쓸어올렸다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에게, %LOCALS:1%의 클리토리스를 촉수로 만지작거리도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:1%의 %LOCALS:0%에 촉수의 돌기를 꽉 눌러, (듣)묻는 대로 음핵을 쓸어올렸다…
+	ENDSELECT
+ENDIF
+
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST203
+
+IF MTAR:0 != MASTER
+	LOCAL:2 = CUP:(MTAR:0):쾌Ｃ
+
+		LOCALS:3 = %TOSTR_EMOTION(MTAR:0)%
+
+	IF TCVAR:(MTAR:0):52
+		;기절중
+		PRINTFORML 기절하고 있는 %조사처리(ANAME(MTAR:0),"는")% 촉수가 우글거릴 때에 소리를 흘리고 있다
+	ELSEIF LOCAL:2 > 10000
+		;최대때는 감정에 의해 반응이 다르다
+		SELECTCASE RAND:4
+		CASE 0
+			IF GROUPMATCH(LOCALS:3, "행복", "기쁨", "양호", "평안", "보통")
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 요염하게 몸부림치면서 관능적인 소리를 높여, 촉수의 몹시 사랑함을 받아들이고 있다
+			ELSEIF GROUPMATCH(LOCALS:3, "원한", "분노", "분개", "광기")
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 격렬하게 몸부림치면서 관능적인 소리를 높여, 촉수의 몹시 사랑함을 받아들이고 있다
+			ELSEIF GROUPMATCH(LOCALS:3, "붕괴", "공허", "슬픔", "우울", "암울", "공포", "겁냄")
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 안타깝게 몸부림치면서 관능적인 소리를 높여, 촉수의 몹시 사랑함을 받아들이고 있다
+			ELSE
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 요염하게 몸부림치면서 관능적인 소리를 높여, 촉수의 몹시 사랑함을 받아들이고 있다
+			ENDIF
+		CASE 1
+			IF GROUPMATCH(LOCALS:3, "행복", "기쁨", "양호", "평안", "보통")
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 녹은 눈초리로 계속 솟구치는 쾌감에 몸을 진동시키고 있다
+			ELSEIF GROUPMATCH(LOCALS:3, "원한", "분노", "분개", "광기")
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 귀까지 얼굴을 새빨갛게 염색해 내면서, 계속 솟구치는 쾌감에 몸을 진동시키고 있다
+			ELSEIF GROUPMATCH(LOCALS:3, "붕괴", "공허", "슬픔", "우울", "암울", "공포", "겁냄")
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 기분 좋음으로 눈물을 흘리면서도, 계속 솟구치는 쾌감에 몸을 진동시키고 있다
+			ELSE
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 녹은 눈초리로 계속 솟구치는 쾌감에 몸을 진동시키고 있다
+			ENDIF
+		CASE 2
+			IF GROUPMATCH(LOCALS:3, "행복", "기쁨", "양호", "평안", "보통")
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 촉수에 한층 더 괴롭히고를 요구해, 보다 범해지기 쉬운 자세를 취하려고 하고 있다
+			ELSEIF GROUPMATCH(LOCALS:3, "원한", "분노", "분개", "광기")
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 형태만은 저항하는 기색을 하면서도, 보다 범해지기 쉬운 자세를 취하려고 하고 있다
+			ELSEIF GROUPMATCH(LOCALS:3, "붕괴", "공허", "슬픔", "우울", "암울", "공포", "겁냄")
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 눈을 숙여 오가니즘을 느끼면서, 보다 범해지기 쉬운 자세를 취하려고 하고 있다
+			ELSE
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 촉수에 한층 더 괴롭히고를 요구해, 보다 범해지기 쉬운 자세를 취하려고 하고 있다
+			ENDIF
+		CASE 3
+			IF GROUPMATCH(LOCALS:3, "행복", "기쁨", "양호", "평안", "보통")
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 사랑을 한 것 같은 눈을 하면서, 촉수의 고문에 응석부리고 있다
+			ELSEIF GROUPMATCH(LOCALS:3, "원한", "분노", "분개", "광기")
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 입으로는 꾸짖을 수 있는 일을 부정하면서도, 촉수의 고문에 응석부리고 있다
+			ELSEIF GROUPMATCH(LOCALS:3, "붕괴", "공허", "슬픔", "우울", "암울", "공포", "겁냄")
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 비명을 올리면서도, 한층 더 행위를 요구해 촉수의 고문에 응석부리고 있다
+			ELSE
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 소리가 되지 않는 소리를 내, 한층 더 행위를 요구해 촉수의 고문에 응석부리고 있다
+			ENDIF
+		ENDSELECT
+	ELSEIF LOCAL:2 > 6000
+		SELECTCASE RAND:4
+		CASE 0
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 얼굴을 새빨갛게 염색해 내, 촉수가 괴롭히고를 받아들이고 있다
+		CASE 1
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 울려 퍼지는 음음에 조종되는것같이 몸을 움직이고 있다
+		CASE 2
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 촉수의 움직임에 맞추어 몸을 진동시켜 요염한 교성을 계속 올리고 있다
+		CASE 3
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 촉수에 깔아눌러져, 이따금 흠칫 뛰면서 하는대로가 되어 있다
+		ENDSELECT
+	ELSEIF LOCAL:2 > 3000 && ABL:(MTAR:0):촉수 >= 1|| LOCAL:2 > 300 && ABL:(MTAR:0):촉수 >= 5
+		IF TALENT:(MTAR:0):수줍음 || TALENT:(MTAR:0):억압 || TALENT:(MTAR:0):고고함 || TALENT:(MTAR:0):쾌감을부정
+			SELECTCASE RAND:4
+			CASE 0
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 작은 소리를 누설하면서, 덤벼 들어 오는 쾌락을 필사적으로 부정하고 있다
+			CASE 1
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 촉수와 자신의 몸이 서로 스쳐 출생하는 추잡한 소리를 부정하면서 촉수에 꾸짖어 계속되고 있다
+			CASE 2
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 덤벼 드는 쾌락에, 달콤한 소리와 신음소리를 교대로 올리면서 저항하고 있다
+			CASE 3
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 뿌리치려고로 하는 것도, 촉수로부터는 피할 수 있지 못하고 추격을 받고 있다
+			ENDSELECT
+		ELSE
+		SELECTCASE RAND:4
+		CASE 0
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 작은 소리를 누설하면서, 덤벼 들어 오는 쾌락에 몸을 바치고 있다
+		CASE 1
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 촉수와 자신의 몸이 서로 스쳐 출생하는 추잡한 소리를 들으면서 촉수에 꾸짖어 계속되고 있다
+		CASE 2
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 덤벼 드는 쾌락에, 달콤한 소리와 신음소리를 교대로 올리면서 몸을 바치고 있다
+		CASE 3
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 촉수에 안아져 난폭한 숨을 쉬면서 촉수에 희롱해지고 있다
+		ENDSELECT
+		ENDIF
+	ELSEIF LOCAL:2 > 300 || ABL:(MTAR:0):촉수 >= 3
+		SELECTCASE RAND:4
+		CASE 0
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 촉수가 가져오는 쾌감에 소리 없는 소리를 높이고 있다
+		CASE 1
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 촉수가 움직일 때마다 몸을 껴안고 쾌락으로부터 참고 있다
+		CASE 2
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 비부를 덮치는 촉수의 감각에 눈을 크게 열어 신음하고 있다
+		CASE 3
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 치부를 덮치는 감각에 대해체를 く 글자에 굽혀 참고 있다
+		ENDSELECT
+	ELSE
+		;촉수에 익숙하면 여기아래는 표시되지 않는다
+	SELECTCASE RAND:4
+	CASE 0
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 꿈틀거리는 촉수로부터 피할 수 있도록 필사적으로 몸을 발버둥치고 있는
+	CASE 1
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 어떻게든 고문으로부터 도망치려고 쓸데없는 저항을 하고 있다
+	CASE 2
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 어떻게든 촉수를 멈추려고 필사적으로 몸을 움직이고 있다
+	CASE 3
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 몸을 비틀어 촉수를 풀어 버리려고 날뛰고 있다
+	ENDSELECT
+	ENDIF
+ENDIF
+
+;--------------------------------------------------------
+;선택시와 계속 상태에서의 공통 처리
+;--------------------------------------------------------
+@COM_COMMON203(ARG:0)
+IF PALAM:(ARG:0):윤활 < PALAMLV:1
+	TIMES SOURCE:(ARG:0):쾌Ｃ, 0.60
+ELSEIF PALAM:(ARG:0):윤활 < PALAMLV:3
+	TIMES SOURCE:(ARG:0):쾌Ｃ, 0.75
+ELSEIF PALAM:(ARG:0):윤활 < PALAMLV:5
+	TIMES SOURCE:(ARG:0):쾌Ｃ, 0.90
+ELSE
+	TIMES SOURCE:(ARG:0):쾌Ｃ, 1.00
+ENDIF
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN203
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_203()
+RETURN POWER(2, 성적기호_촉수로범하고싶다) + POWER(2, 성적기호_애무하고싶다)
+
+@COM_PREFERENCE_TARGET_203()
+RETURN POWER(2, 성적기호_촉수로범해지고싶다) + POWER(2, 성적기호_애무되고싶다)
+

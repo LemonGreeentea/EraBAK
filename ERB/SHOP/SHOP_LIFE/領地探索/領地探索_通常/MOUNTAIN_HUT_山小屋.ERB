@@ -1,0 +1,83 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_MOUNTAIN_HUT_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_MOUNTAIN_HUT_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_MOUNTAIN_HUT(대상)
+#DIM 대상
+
+PRINTFORML 등산중, 완전히 미아가 되어 버렸다
+PRINTFORML 어찌할 바를 몰라하는 %조사처리(ANAME(대상),"였")%지만, 행운의 일에 오두막을 찾아냈다
+PRINTFORMW ……아무래도 먼저 온 손님이 있던 것 같다
+IF IS_FEMALE(대상)
+	PRINTFORML 사정을 이야기하면 등산가는 빤히 %조사처리(ANAME(대상),"를")% 봐, 묵게 하기를 원하면 금 3000인가, 신체로 지불해 왔다
+	PRINTL
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "무투"))
+	CALL ASK_MULTI_JUDGE("돈을 지불한다", MONEY >= 3000, "신체로 지불한다", 1, "자력으로 하산한다", 1)
+ELSE
+	PRINTFORML 사정을 이야기하면 관리인의 여성은 열정적인 눈동자로 %조사처리(ANAME(대상),"를")% 봐, 묵게 하기를 원하면 금 3000인가, 하룻밤 상대를 해 주었으면 한다고 말해 왔다
+	CALL PRINT_ABILITY(대상, GETNUM(ABL, "무투"))
+	CALL ASK_MULTI_JUDGE("돈을 지불한다", MONEY >= 3000, "상대를 한다", 1, "자력으로 하산한다", 1)
+ENDIF
+
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 등이 배는 대신할 수 없다……
+		PRINTFORML 돈을 지불해 묵기로 했다
+		CALL ICPRINT("금<3000>을 지불했다", "L", 칼라_주의)
+		PRINTFORML 
+		PRINTFORMW 다음날, 마을에 내리는 길을 가르쳐 받아 무사하게 하산하지 못했다
+	CASE 1
+		IF IS_FEMALE(대상)
+			PRINTFORML ……금은 지불할 수 없지만, 신체를 제공하자
+			PRINTFORML %조사처리(ANAME(대상),"가")% 그렇게 고하면, 남자는 빙그레 웃어, %조사처리(ANAME(대상),"를")% 오두막의 안에 안내했다
+			PRINTFORML 
+			PRINTFORML 오두막의 안으로부터 교성이 영향을 주고 있다
+			PRINTFORML 몇 번이나 남자와 사귀었던 %조사처리(ANAME(대상),"는")%, 남자에 걸치면서 자신으로부터 허리를 흔들고 있다
+			PRINTFORML 머릿속은 쾌락으로 다 메워져, %STR_BODY("가슴:감도:감촉", 대상)%를 진동시켜 섹스에 열중하고 있다
+			PRINTFORMW 남이 낮게 신음소리를 냄과 동시에 %ANAME(대상)%의 안쪽 깊고로 사정하면, %조사처리(ANAME(대상),"는")% 한층 더 큰 교성을 올려 몸을 뒤로 젖혔다
+			CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("등산가"), @"등산가의 \@RAND:2 ? 페니스 # 입술\@", "등산가", "", "화간")
+			PRINTFORML 
+			PRINTFORMW 이튿날 아침, 등산가에게 안내되어 무사하게 하산했다
+		ELSE
+			PRINTFORML ……금은 지불할 수 없지만, 하룻밤상대 하자
+			PRINTFORML %조사처리(ANAME(대상),"가")% 그렇게 고하면, 여성은 %ANAME(대상)%에 입맞춤해, 오두막의 안에 안내했다
+			PRINTFORML 
+			PRINTFORML 오두막의 안으로부터 교성이 영향을 주고 있다
+			PRINTFORML 여자는 탐욕에 %조사처리(ANAME(대상),"를")% 요구해, 몇 번이나 스스로의 안에 정액을 풀게 했다
+			PRINTFORML 사귀는 비부로부터는 다 들어가지 않았던 자식이 흘러넘치고 있어 이미 몇 번이나 사귄 것을 나타내고 있다
+			PRINTFORMW %조사처리(ANAME(대상),"가")% 낮게 신음소리를 냄과 동시에 여자 안쪽 깊고로 사정하면, 그녀는 한층 더 큰 교성을 올려 몸을 뒤로 젖혔다
+			CALL FUCK(대상, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "화간")
+			PRINTFORML 
+			PRINTFORMW 이튿날 아침, 그녀에게 안내되어 무사하게 하산했다
+		ENDIF
+	CASE 2
+		PRINTFORML 그런 금은 지불할 수 없다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 자력에서의 하산을 시도했다
+		PRINTFORML ·
+		PRINTFORML ·
+		PRINTFORMW ·
+		IF INRANGE(ABL:대상:무투 * 2, 50, 100) > RAND:100
+			PRINTFORMW 어떻게든 무사하게 하산할 수가 있었다!
+		ELSE
+			PRINTFORML 위!
+			PRINTFORML 하산 도중에 다리를 미끄러지게 해 버렸다
+			PRINTFORMW 어떻게든 마을까지 내려졌지만, 다쳐 버렸다…
+			CALL ADD_COOLTIME(대상:0, 2)
+		ENDIF
+ENDSELECT
+
+RETURN 1

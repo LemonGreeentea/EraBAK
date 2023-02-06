@@ -1,0 +1,98 @@
+﻿;-----------------------------------
+;기본치 계산에 앞서 처리하는 것
+;-----------------------------------
+@SKILL_10004_SP_0_EXIST
+RETURN 1
+
+@SKILL_10004_SP_0_NAME
+RESULTS = 촉수산란
+
+;레벨은 1-5까지
+@SKILL_10004_SP_0_LEVEL
+RETURN 4
+
+;대상 선택
+@SKILL_10004_SP_0_SETTARGET(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+대상측 = !발동측
+RETURN 1
+
+;발동 판정
+@SKILL_10004_SP_0_CAN_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+대상측 = !발동측
+대상측 = !발동측
+SIF BATTLE_COMMANDER_NUM:발동측 == 0
+	RETURN 0
+COMBAT_SKILL_TARGET = RAND:(BATTLE_COMMANDER_NUM:발동측)
+RETURN 	!BATTLE_SUMMONED_CHARA:발동측:COMBAT_SKILL_TARGET && IS_FEMALE(BATTLE_COMMANDER:발동측:COMBAT_SKILL_TARGET)
+
+;발동 텍스트를 오바라이드 하고 싶을 때에.
+;「아무개의 스킬 발동!   00했다!」의 「00했다!」의 부분을 실장하고 싶은 경우는,
+;이것이 아니고 INVOKE로 쓰면 좋습니다.
+;@SKILL_10004_SP_0_INVOKE_TEXT(발동자, 스킬, 장르)
+;#DIM 발동자
+;#DIM 스킬
+;#DIMS 장르
+
+;효과를 여기에 기술
+@SKILL_10004_SP_0_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+대상측 = !발동측
+PRINTFORML %ANAME(발동자)%는 %ANAME(BATTLE_COMMANDER:발동측:COMBAT_SKILL_TARGET)%를 모체에 증식 했다!
+
+CALL FUCK_GANGBANG_SP(BATTLE_COMMANDER:발동측:COMBAT_SKILL_TARGET, GET_SPERM_ID("촉수"), @"촉수", @"촉수", GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_촉수))
+
+CFLAG:(BATTLE_COMMANDER:발동측:COMBAT_SKILL_TARGET):촉수산란실행자 = GET_SPERM_ID("촉수")
+CFLAG:(BATTLE_COMMANDER:발동측:COMBAT_SKILL_TARGET):촉수Ａ산란실행자 = GET_SPERM_ID("촉수")
+TALENT:(BATTLE_COMMANDER:발동측:COMBAT_SKILL_TARGET):촉수임신 = 1
+TALENT:(BATTLE_COMMANDER:발동측:COMBAT_SKILL_TARGET):Ａ촉수임신 = 1
+
+CALL BATTLE_KNOCKOUT(발동측, COMBAT_SKILL_TARGET)
+CALL INCREASE_SOLDIER(발동세력, 발동부대, RAND(0, 1000 + SP_COUNTRY_RANK:(특수세력_촉수) * 400), 1)
+
+@SKILL_10004_SP_0_EXPLANATION
+RESULTS = 자부대의 여자 한사람을 전투 불능으로 한다. 자부대의 병수를 증가시킨다.
+
+@SKILL_10004_SP_0_IS_RATE_VARIABLE
+RETURN 1
+
+@SKILL_10004_SP_0_RATE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+RETURN 100 + SP_COUNTRY_RANK:(특수세력_촉수) * 50

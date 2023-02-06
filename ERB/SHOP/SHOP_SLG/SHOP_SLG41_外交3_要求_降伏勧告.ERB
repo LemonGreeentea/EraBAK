@@ -1,0 +1,193 @@
+﻿;-------------------------------------------------
+;항복 권고를 실시한다
+;-------------------------------------------------
+@DIPLOMACY_SURRENDER(ARG:0)
+LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+LOCAL:5 = GET_COUNTRY_BOSS(ARG:0)
+;세력끼리의 인접 관계 맵을 작성
+CALL TMP_CREATE_COUNTRY_NEIBORING_MAP
+CALL TMP_CREATE_SUM_ECONOMY_MAP
+CALL TMP_CREATE_SUM_SOLDIER_MAP
+CALL TMP_CREATE_POLITICS_POWER_MAP
+
+IF !TMP_COUNTRY_IS_NEIBORING:(ARG:0):(CFLAG:MASTER:소속)
+	PRINTW 인접하고 있지 않는 세력에 항복 권고를 실시할 수 없습니다
+	RETURN 0
+ENDIF
+
+IF IS_SP_COUNTRY(ARG:0)
+	PRINTFORMW 권고를 퇴짜놓아 왔습니다
+	RETURN 0
+ENDIF
+
+PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:5)%에게 항복하도록(듯이) 설득했다
+PRINTFORMW ………………
+PRINTFORMW ……
+
+
+;요구 받아들이고 판정
+IF DIPLOMACY_REQUEST_CHECK(CFLAG:MASTER:소속, ARG:0, 350)
+	SETCOLOR 칼라_주의
+	PRINTFORMW %조사처리(ANAME(LOCAL:5),"는")% 우리 나라의 권고를 받아들이고 항복했습니다
+	RESETCOLOR
+
+	;병 수의 이동
+	CALL CLEAR_ALL_UNIT(ARG:0)
+	COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += COUNTRY_SOLDIER:(ARG:0)
+	COUNTRY_SOLDIER:(ARG:0) = 0
+
+	;영지의 접수
+	PRINTL 
+	SETCOLOR 칼라_주의
+	PRINTFORML %ANAME(LOCAL:5)%의 영지였던 도시는 우리 나라의 영토가 되었습니다
+	RESETCOLOR
+	FOR LOCAL:0, 0, MAX_CITY
+		IF CITY_OWNER:(LOCAL:0) == ARG:0
+			CITY_OWNER:(LOCAL:0) = CFLAG:MASTER:소속
+			PRINTFORML %GET_CITYNAME(LOCAL:0)%를 우리 나라의 지배하에 두었습니다
+		ENDIF
+	NEXT
+	WAIT
+
+	PRINTL 
+	PRINTFORMW %ANAME(LOCAL:5)%군의 병사가 우리 나라의 병력으로서 더해졌습니다
+
+	;자동으로 등용
+	IF CONFIG:303 == 0
+		;사관의 편입
+		PRINTL 
+		SETCOLOR 칼라_주의
+		PRINTFORML %조사처리(ANAME(LOCAL:5),"를")% 시중들고 있던 사관은 우리 나라의 사관으로서 짜넣어졌습니다
+		RESETCOLOR
+		FOR LOCAL:0, 0, CHARANUM
+			IF CFLAG:(LOCAL:0):소속 == ARG:0
+				IF !CFLAG:(LOCAL:0):포로처 || CFLAG:(LOCAL:0):포로처 == CFLAG:MASTER:소속
+					CALL CHANGE_COUNTRY(LOCAL:0, CFLAG:MASTER:소속, 1)
+					PRINTFORML %조사처리(ANAME(LOCAL:0),"를")% 등용했습니다
+				ELSE
+					CALL CHANGE_COUNTRY(LOCAL:0, CFLAG:MASTER:소속)
+					SETCOLOR 칼라_시안
+					PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% %ANAME(GET_COUNTRY_BOSS(CFLAG:(LOCAL:0):포로처))%에 붙잡히고 있습니다
+					RESETCOLOR
+				ENDIF
+			ENDIF
+		NEXT
+		WAIT
+
+	;자동으로 투옥
+	ELSEIF CONFIG:303 == 1
+		;사관의 편입
+		PRINTL 
+		SETCOLOR 칼라_주의
+		PRINTFORML %조사처리(ANAME(LOCAL:5),"를")% 시중들고 있던 사관을 투옥했습니다
+		RESETCOLOR
+		FOR LOCAL:0, 0, CHARANUM
+			IF CFLAG:(LOCAL:0):소속 == ARG:0
+				IF !CFLAG:(LOCAL:0):포로처 || CFLAG:(LOCAL:0):포로처 == CFLAG:MASTER:소속
+					CALL CHANGE_COUNTRY(LOCAL:0, 0, 1)
+					CALL CAPTURE(LOCAL:0, CFLAG:MASTER:소속)
+					PRINTFORML %조사처리(ANAME(LOCAL:0),"를")% 투옥했습니다
+				ELSE
+					CALL CHANGE_COUNTRY(LOCAL:0, CFLAG:MASTER:소속)
+					SETCOLOR 칼라_시안
+					PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% %ANAME(GET_COUNTRY_BOSS(CFLAG:(LOCAL:0):포로처))%에 붙잡히고 있습니다
+					RESETCOLOR
+				ENDIF
+			ENDIF
+		NEXT
+		WAIT
+
+	;수동으로 선택
+	ELSE
+		CALL DIPLOMACY_SURRENDER_SET_TREATMENT(ARG:0)
+	ENDIF
+	
+	;ARG:0 세력의 포로가 되고 있던 캐릭터의 처리
+	;ARG:0 세력이 포로 가지고 있을까
+	IF CMATCH(CFLAG:포로처, ARG:0)
+		PRINTL
+		PRINTFORMW %ANAME(LOCAL:5)%에 붙잡히고 있던 포로를 찾아냈습니다
+		LOCAL:2 = 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF CFLAG:(LOCAL:0):포로처 == ARG:0
+				;자진영의 사관이라면, 그대로 원래대로 돌아간다
+				IF CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속
+					CALL CAPTURE(LOCAL:0, 0)
+					SETCOLOR 칼라_주의
+					PRINTFORML %ANAME(LOCAL:5)% 세력에 수 얻어지고 있었던 %조사처리(ANAME(LOCAL:0),"는")%, 우리 나라에 복귀했다
+					RESETCOLOR
+					LOCAL:2 = 1
+				ENDIF
+			ENDIF
+		NEXT
+		IF LOCAL:2
+			WAIT
+		ENDIF
+		FOR LOCAL:0, 0, CHARANUM
+			IF CFLAG:(LOCAL:0):포로처 == ARG:0
+				;제 3살력의 사관이라면, TREAT_PRISONER로 취급을 결정
+				CALL TREAT_PRISONER(LOCAL:0, ARG:0, CFLAG:MASTER:소속)
+			ENDIF
+		NEXT
+	ENDIF
+
+	;구세력의 뒤처리
+	CALL DESTROY_COUNTRY(ARG:0)
+	
+	;외교 보정의 가산 처리
+	DIPLOMACY_HATE:(CFLAG:MASTER:소속) += 5
+ELSE
+	PRINTFORMW 유감스럽지만, %조사처리(ANAME(LOCAL:5),"는")% 우리 나라의 항복 권고에 응하지 않았습니다…
+	;외교 보정의 가산 처리（타국의 경계가 올랐다고 생각해 받을 수 있으면）
+	DIPLOMACY_HATE:(CFLAG:MASTER:소속) += 5
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+;항복한 세력의 사관의 처우를 개별적으로 설정 ARG:0=항복한 세력
+;-------------------------------------------------
+@DIPLOMACY_SURRENDER_SET_TREATMENT(ARG:0)
+;캐릭터의 취급 설정용 변수
+#DIM COMMANDER_NUM
+
+;●사관의 인원수+포로의 인원수를 카운트
+COMMANDER_NUM = GET_COMMANDER_NUM(ARG:0)
+
+;사관이 한사람도 없으면 돌아온다
+IF COMMANDER_NUM == 0
+	DEBUGPRINTFORML {ARG:0}번호의 %ANAME(GET_COUNTRY_BOSS(ARG:0))% 세력에 사관이 아무도 없었습니다
+	RETURN
+ENDIF
+
+CALL SINGLE_DRAWLINE
+PRINTFORML %ANAME(GET_COUNTRY_BOSS(ARG:0))%를 시중들고 있던 사관 가운데, 등용하는 것을 선택해 주세요
+CALL SINGLE_DRAWLINE
+
+CALL SELECT_CHARA_LIST_MULTI_ONLY_LOGIC_SLG(-1, "SURRENDER_SET_TREATMENT", "SURRENDER_SET_TREATMENT")
+
+FOR LOCAL, 0, SELECTED_CHARA_NUM
+	LOCAL:1 = SELECTED_CHARA:(LOCAL)
+	CALL CHANGE_COUNTRY(LOCAL:1, CFLAG:MASTER:소속)
+	PRINTFORML %조사처리(ANAME(LOCAL:1),"를")% 등용했습니다
+NEXT
+
+CALL SINGLE_DRAWLINE
+PRINTFORML %ANAME(GET_COUNTRY_BOSS(ARG:0))%를 시중들고 있던 사관 가운데, 투옥하는 것을 선택해 주세요
+CALL SINGLE_DRAWLINE
+
+CALL SELECT_CHARA_LIST_MULTI_ONLY_LOGIC_SLG(-1, "SURRENDER_SET_TREATMENT", "SURRENDER_SET_TREATMENT")
+
+FOR LOCAL, 0, SELECTED_CHARA_NUM
+	LOCAL:1 = SELECTED_CHARA:(LOCAL)
+	CALL CAPTURE(LOCAL:1, CFLAG:MASTER:소속)
+	PRINTFORML %조사처리(ANAME(LOCAL:1),"를")% 투옥했습니다
+NEXT
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_SURRENDER_SET_TREATMENT(대상)
+#DIM 대상
+RETURN CFLAG:대상:소속 == DIPLOMACY_DIPLOMAT && !IS_SP_CHARA(대상)
+
+@SELECT_CHARA_LIST_SELECT_LOGIC_SURRENDER_SET_TREATMENT(대상)
+#DIM 대상
+RETURN CFLAG:대상:포로처 == 0 || CFLAG:대상:포로처 == CFLAG:MASTER:소속

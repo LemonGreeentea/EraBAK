@@ -1,0 +1,52 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_CAPTURE_TUTINOKO_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_CAPTURE_TUTINOKO_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_CAPTURE_TUTINOKO(대상)
+#DIM 대상
+
+PRINTFORML 이 근처에서 츠치노코가 나온 것 같다
+PRINTFORML 호사가가 상금을 내고 있다. 용돈 돈벌이가 될 것 같다
+PRINTL
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "지략"))
+
+CALL ASK_YN("포획을 시도한다", "그만둔다")
+
+IF RESULT == 1
+	PRINTFORML 그런 일을 할 만큼 한가하지 않아
+	PRINTFORML 그만두었다
+	RETURN 1
+ENDIF
+
+PRINTFORML %조사처리(ANAME(대상),"는")% 조속히, 함정을 치기로 했다……
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF LIMIT(ABL:대상:지략, 50, 100) > RAND:100
+	PRINTFORML 했다!
+	PRINTFORML %조사처리(ANAME(대상),"는")% 훌륭히 츠치노코를 포획 했다
+	PRINTFORMW 호사가로부터 상금을 받아, 거점으로 돌아갔다
+	MONEY += 3000
+	CALL ICPRINT("금<3000>을 손에 넣었다", "L", 칼라_주의)
+	RETURN 1
+ENDIF
+
+PRINTFORML 당했다!
+PRINTFORML 먹이만을 빼앗겨 버렸다
+PRINTFORMW 정말로 츠치노코가 있었을지도 알지 못한 채, %조사처리(ANAME(대상),"는")% 거점에 돌아왔다
+
+RETURN 1

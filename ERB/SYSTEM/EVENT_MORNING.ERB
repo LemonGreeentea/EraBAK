@@ -1,0 +1,69 @@
+﻿;아침 이벤트에 관한 처리
+
+;-------------------------------------------------
+;아침에 일어나는 이벤트
+;-------------------------------------------------
+@EVENT_MORNING
+;콘피그로 억제되고 있다면 돌아온다
+IF CONFIG:0 == 1
+	RETURN
+ENDIF
+
+;-------------------------------------------------
+;특수한 아침 이벤트
+;-------------------------------------------------
+@EVENT_MORNING_SP
+#DIM LIST_CHARA, 3000
+#DIM LIST_LAST
+
+;주인공이 포로 때
+IF CFLAG:MASTER:포로처 >= 1
+	;외래 세력과 호후고브 세력의 번호를 취득(ID:299로 300)
+	LOCAL:3 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_외래인))
+	LOCAL:5 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_홉고블린))
+	;역조교의 메인 조교자의 캐릭터 번호를 취득
+	LOCAL:4 = ID_TO_CHARA(FLAG:역조교메인조교자)
+
+	;주인공을 붙잡고 있는의 것이 외래 세력 이외로, 역조교의 메인 조교자가 존재해, 성지식 Lv3 이하, 포로가 아니다
+	IF CFLAG:MASTER:포로처 != LOCAL:3 && CFLAG:MASTER:포로처 != LOCAL:5 && LOCAL:4 >= 0 && ABL:(LOCAL:4):성지식 <= 3 && CFLAG:(LOCAL:4):소속 == CFLAG:MASTER:포로처 && ABL:(LOCAL:4):9 == 0
+		CALL SINGLE_DRAWLINE
+		;구상의 표시
+		CALL KOJO_EVENT(LOCAL:4, 241)
+
+		SELECTCASE ABL:(LOCAL:4):성지식
+			CASE 0
+				EXP:(LOCAL:4):성지식경험치 += 200
+			CASE 1
+				EXP:(LOCAL:4):성지식경험치 += 50
+			CASE 2
+				EXP:(LOCAL:4):성지식경험치 += 20
+			CASE 3
+				EXP:(LOCAL:4):성지식경험치 += 8
+		ENDSELECT
+		CALL TRAIN_AUTO_ABLUP(LOCAL:4)
+	ENDIF
+
+;주인공이 포로가 아닐 때
+ELSE
+	;성지식 Lv1～2로[연모]소유의 캐릭터는 자신으로부터 성지식을 배운다
+	LIST_LAST = 0
+	FOR LOCAL:0, 0, CHARANUM
+		IF LOCAL:0 != MASTER && TALENT:(LOCAL:0):연모 && GROUPMATCH(ABL:(LOCAL:0):성지식, 1, 2) && !TALENT:(LOCAL:0):공허 && CFLAG:(LOCAL:0):특수상태 == 0 && CFLAG:(LOCAL:0):포로처 == 0
+			LIST_CHARA:(LIST_LAST) = LOCAL:0
+			LIST_LAST ++
+		ENDIF
+	NEXT
+	;인원수가 많을 정도 고확률로 발생
+	IF RAND:(LIST_LAST + 1) >= 1
+		LOCAL:2 = LIST_CHARA:(RAND:LIST_LAST)
+
+		CALL SINGLE_DRAWLINE
+		;구상의 표시
+		CALL KOJO_EVENT(LOCAL:2, 240)
+
+		EXP:(LOCAL:2):성지식경험치 += 50
+		CALL TRAIN_AUTO_ABLUP(LOCAL:2)
+	ENDIF
+
+ENDIF
+

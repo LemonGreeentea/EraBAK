@@ -1,0 +1,208 @@
+﻿;--------------------------------------
+;턴 엔드시의 도둑의 처리
+;--------------------------------------
+@TURNEND_BANDIT
+#DIM 도둑
+
+;-------------------------------------------------
+;도둑의 추가
+;-------------------------------------------------
+@BANDIT_INIT(메세지 = 0)
+#DIM 메세지
+#DIM LCOUNT
+VARSET LOCAL
+
+SIF GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑) != -1
+	RETURN 0
+
+SIF SP_COUNTRY_RANK:특수세력_도둑 == 0
+	RETURN 0
+
+SIF GET_NEW_COUNTRY() == -1
+	RETURN 0
+
+CALL CREATE_SP_COUNTRY(특수세력_도둑)
+LOCAL = RESULT
+
+COUNTRY_IS_CLOSED:LOCAL = 1
+
+IF 메세지
+	CALL SINGLE_DRAWLINE
+	SETCOLOR 칼라_경고
+	PRINTFORMW 환상향의 치안 악화에 의해, 악한들이 모이고 있는 것 같습니다……
+	RESETCOLOR
+	CALL SINGLE_DRAWLINE
+ENDIF
+
+RETURN LOCAL
+
+;--------------------------------------
+;도둑이 포로를 얻었을 때에 확률로 발동하는 에로이 밴트
+;--------------------------------------
+@TREAT_PRISONER_BANDIT(대상)
+#DIM 대상
+#DIM 함락완료
+SIF !(RAND:100 < 3 && IS_FEMALE(대상)) || CONFIG:200
+	RETURN 0
+IF GETBIT(TALENT:대상:특수세력함락계, 특수세력_도둑)
+	함락완료 = 1
+ELSE
+	함락완료 = 0
+ENDIF
+
+SETCOLOR 칼라_핑크
+PRINTFORML ……
+SELECTCASE RAND:4
+	CASE 0
+		IF 함락완료
+			PRINTFORML %조사처리(ANAME(대상),"는")% 도둑에게 스스로 잡혀 그 %STR_BODY("신체", 대상)%를 맡겨 보인다
+			PRINTFORML 우리아래로부터 멀어지고 있는 동안 나막이라고 없는가 봐줄게와 도둑은 그녀의 옷을 벗겨내 간다
+			PRINTFORML %조사처리(ANAME(대상),"가")% 자신으로부터 가랑이를 열어 권하면, 흥분한 도둑은 1도 2에도 없고 그 가랑이에 당신의 하나의 물건을 쑤셔 넣었다
+			PRINTFORML 질내를 범하는 물건의 씩씩함에, %조사처리(ANAME(대상),"는")% 견딜 수 없다는 소리를 질러 좋아해, 허리를 흔들어 빼앗는다
+			PRINTFORML 이윽고, %ANAME(대상)%의 양구멍에, 「주인님」의 귀중한 종이 한껏 심어졌다……
+		ELSE
+			PRINTFORML %조사처리(ANAME(대상),"를")% 잡은 도둑은, 날뛰는 %조사처리(ANAME(대상),"를")% 후려갈기면, 지면에 깔아눌렀다
+			PRINTFORML 두목에게 서투른 여자보내서는 안 되는, 맛을 보지 않으면와 옷을 벗겨내 간다
+			PRINTFORML 그리고싫어하는 %ANAME(대상)%의 양다리를 무리하게에 열리면, 그 가랑이에 당신의 하나의 물건을 쑤셔 넣었다
+			PRINTFORML %STR_BODY("음순:처녀 확인:수식", 대상)%질내를 망쳐 도는 무서운 물건에, %조사처리(ANAME(대상),"는")% 반광란이 되어날뛴다가, 도둑은 그것을 시원스럽게 눌러 허리를 흔들어 빼앗는다
+			PRINTFORML 이윽고, %ANAME(대상)%의 양구멍에, 도둑의 추접한 종이 한껏 붙여져 버렸다……
+		ENDIF
+	CASE 1
+		IF 함락완료
+			PRINTFORML 도둑에게 스스로 몸을 내민 %조사처리(ANAME(대상),"는")%, 그 피부를 쬐어, 형벌 도구를 대어 받아, 그들의 행군에 시중들고 있다
+			PRINTFORML %조사처리(ANAME(대상),"는")% 완전히 그들의 트로피 취급을 되고 있어 때때로 멋대로 %STR_BODY("엉덩이", 대상)%나 %STR_BODY("가슴", 대상)%에 접할 수 있다
+			PRINTFORML 불합리하게 따져져 뺨이나 엉덩이를 펴져 맞을 때, %조사처리(ANAME(대상),"는")%싫어한다는 커녕 좀 더 희롱했으면 좋겠다고 말할듯한 요염한 소리를 높인다
+			PRINTFORML 이윽고 그들이 휴식에 들어가면, %조사처리(ANAME(대상),"는")% 스스로 자칭하기 나와, 그들의 위안역을 사 나왔다
+			PRINTFORML 결국, 그 양구멍이 닫지 않게 될 때까지, %조사처리(ANAME(대상),"는")% 그들의 욕망을 만족계속 시켰다……
+		ELSE
+			PRINTFORML 도둑에게 잡힌 %조사처리(ANAME(대상),"는")% 알몸에 벗겨져 형벌 도구를 댈 수 있었던 상태로, 그들의 행군에 교제해지고 있다
+			PRINTFORML %조사처리(ANAME(대상),"는")% 완전히 그들의 트로피 취급을 되고 있어 때때로 멋대로 %STR_BODY("엉덩이", 대상)%나 %STR_BODY("가슴", 대상)%에 접할 수 있다
+			PRINTFORML 조금이라도 그 손으로부터 피하려고 하면, 가차 없이 따져져 뺨이나 엉덩이를 펴져 맞는다
+			PRINTFORML 이윽고 그들이 휴식에 들어가면, 그들은 당연히 %ANAME(대상)%에 모여, 그녀를 범하기 시작했다
+			PRINTFORML 결국, 그 양구멍이 닫지 않게 될 때까지, %조사처리(ANAME(대상),"는")% 범해지고 계속했다……
+		ENDIF
+	CASE 2
+		IF 함락완료
+			PRINTFORML 도둑의 아지트에 데리고 들어가진 %조사처리(ANAME(대상),"는")%, 무기를 가지고 있지 않은 것을 증명하기 위해(때문에), 신체검사를 해 받았다
+			PRINTFORML 검사라고 해도 이름뿐의 것, 그실태는 능욕이지만, %조사처리(ANAME(대상),"는")% 그들의 제멋대로인 애무에, 적극적당신의 신체를 바치고 있다
+			PRINTFORML 아직 검사가 부족하면, 남자들이 그녀의 모든 구멍에 페니스를 쑤셔 넣어 가면, %조사처리(ANAME(대상),"는")% 흐려진 소리를 지르면서 격렬하게 절정 한다
+			PRINTFORML %조사처리(ANAME(대상),"는")% 쾌락에 좋아하면서도 추잡하게 허리를 흔들어, 그들의 종을 당신의 육 전으로 받아 들여 간다
+			PRINTFORML 이윽고 「검사」가 종료되면, %조사처리(ANAME(대상),"는")% 스스로 감옥에 들어가, 성교의 여운에 고조되는 신체를 위로하면서, 또 불릴 때를 기다리기 시작했다……
+		ELSE
+			PRINTFORML 도둑의 아지트에 데리고 돌아가진 %조사처리(ANAME(대상),"는")%, 무기를 숨겨 가지고 있지 않은가 조사하면, 신체검사에 걸쳐졌다
+			PRINTFORML 검사라고 해도 이름뿐의 것으로, 남자들의 손은 그녀의 %STR_BODY("가슴:수식", 대상)% 유방을, %조사처리(STR_BODY("엉덩이", 대상),"를")%, %STR_BODY("음순:처녀 확인:수식", 대상)%비부를 만지작거려, 무리하게에 쾌락을 꺼내 간다
+			PRINTFORML 그것만으로는 아직 검사가 불충분하다면, 그들은 당신의 하나의 물건을, %ANAME(대상)%의 모든 구멍에 쑤셔 넣어 간다
+			PRINTFORML 날뛰는 %조사처리(ANAME(대상),"를")% 무리하게에 억눌러서는, 다음으로부터 다음에 종을 옮겨 심어 간다
+			PRINTFORML 결국, %조사처리(ANAME(대상),"가")% 해방되어 감옥에 던져 넣어졌을 때에는, 그녀는 피폐 나누어 방심 상태가 되어 있었다……
+		ENDIF
+	CASE 3
+		IF 함락완료
+			PRINTFORML 도둑에게 스스로 몸을 내민 %조사처리(ANAME(대상),"는")%, 옷을 벗겨져 눈가리개나 형벌 도구나 밧줄로 구속된……그런 것 (이) 없더라도, 저항하지 않았을 것이지만
+			PRINTFORML 그들은 %조사처리(ANAME(대상),"를")% 메면, 부랑자의 집합소에 그녀의 신병을 방치했다
+			PRINTFORML 당연, %조사처리(ANAME(대상),"는")% 곧 부랑자에게 발견되었다. 지금부터 무엇을 될까 헤아린 %조사처리(ANAME(대상),"는")%, 기대에 가랑이를 적신다
+			PRINTFORML 그런 그녀를 변태다 음란하다면 비웃음 있으면서, 부랑자들은 추접스러운 페니스를 다음으로부터 다음에 %ANAME(대상)%에 쑤셔 넣어 간다……
+			PRINTFORML 야무지지 못한 아헤얼굴을 쬐어, 백탁 투성이로 생활쓰레기 버리는 곳에 방치된 %조사처리(ANAME(대상),"를")%, 도둑들은 코를 집으면서 데려 돌아갔다
+		ELSE
+			PRINTFORML 도둑에게 잡힌 %조사처리(ANAME(대상),"는")%, 옷을 벗겨져 무엇하나 저항 할 수 없게, 눈가리개나 형벌 도구나 밧줄로 굴레에 구속되었다
+			PRINTFORML 도둑들은 %조사처리(ANAME(대상),"를")% 메면, 부랑자의 집합소에 그녀의 신병을 방치했다
+			PRINTFORML 당연, %조사처리(ANAME(대상),"는")% 곧 부랑자에게 발견되었다. 도둑과 연결이 있는 그들에게, %조사처리(ANAME(대상),"를")% 구조해 내는 것 같은 양심 따위 당연 없다
+			PRINTFORML 그 뿐만 아니라, 여자 가뭄의 그들은, 추접스러운 페니스를 다음으로부터 다음에 %ANAME(대상)%에 쑤셔 넣어 간다……
+			PRINTFORML 백탁 투성이로 생활쓰레기 버리는 곳에 방치된 %조사처리(ANAME(대상),"를")%, 도둑들은 버릇버릇와 코를 집으면서 데려 돌아갔다
+		ENDIF
+ENDSELECT
+RESETCOLOR
+CALL FUCK_GANGBANG_SP(대상, GET_SPERM_ID("도둑"), @"도둑의 \@ RAND:2 ? 페니스 # 입술\@", "도둑", GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑))
+
+
+;-----------------------------------
+;도둑에게 잡혔을 때의 이벤트
+;-----------------------------------
+@MASTER_CAPTURED_BANDIT(ARG:0)
+PRINTFORMW 잡힌 %조사처리(ANAME(MASTER),"는")% 도둑의 앞에 끌어내졌다…
+IF IS_MALE(MASTER)
+	PRINTFORMW 도둑은 %조사처리(ANAME(MASTER),"를")% 보고, 병사에 딱 좋다고 판단한 것 같다
+	PRINTFORMW 우리들의 곁에 도착한다면, 좋은 생각을 시켜 주겠어?   라고 말했다
+	PRINTFORMW 노예라는 취급으로는 되는 것 같지만, 거부한다보다 대우는 좋게 되는 것 같다……
+	PRINTFORMW 받아들입니까?
+	CALL ASK_YN("받아들인다", "거부한다")
+	IF RESULT == 0
+		PRINTFORMW 투옥되는 것보다는 좋을 것이다. %조사처리(ANAME(MASTER),"가")% 수긍하면, 도둑은 힐쭉 웃는다
+		PRINTFORMW 무엇을 웃고 있는지 의심하는 %ANAME(MASTER)%에, 노예로서의 증거를 붙여 줄게와 그들은 말하기 시작했다
+		PRINTFORMW %ANAME(MASTER)%에, 튼튼한 목걸이를 끼워졌다……
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 도둑의 부하가 되었습니다
+		RESETCOLOR
+	ELSE
+		PRINTFORMW 너희들 따위에 손을 빌려 줄까. %조사처리(ANAME(MASTER),"는")% 의연히 해 단언한다	
+		PRINTFORMW 그런가와 그들은 그대로 흥미없는 것같이, %조사처리(ANAME(MASTER),"를")% 투옥했다……
+	ENDIF
+ELSEIF GETBIT(TALENT:MASTER:특수세력함락계, 특수세력_도둑)
+	PRINTFORMW 육변기짱이 돌아왔다구와 그들은 %조사처리(ANAME(MASTER),"를")% 둘러싼다
+	PRINTFORMW 눈앞에 페니스를 내밀어져 %ANAME(MASTER)%의 신체는, 그들에게 새겨진 쾌락을 생각해 내 젖어 버린다
+	PRINTFORMW %ANAME(MASTER)%의 소리가 달콤하게 녹기 시작했을 무렵, 또 우리들에게 올까?   와 그들은 묻는다
+	PRINTFORMW 받아들입니까?
+	CALL ASK_YN("받아들인다", "거부한다")
+	IF RESULT == 0
+		PRINTFORMW 그들에 의해 길러내진 암컷의 본성이, %조사처리(ANAME(MASTER),"를")% 수긍하게 했다
+		PRINTFORMW 다시 복종합니다라고 말하는 의사 표시로서 %조사처리(ANAME(MASTER),"는")% 내밀어진 페니스에 열렬한 키스했다……
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")%, 자신이 도둑의 성노예에 지나지 않는 것을 생각해 냈다
+		RESETCOLOR
+	ELSE
+		PRINTFORMW 거부된다는 일은 생각에 없었던 것 같고, 도둑들은 폭소했다
+		PRINTFORMW 그 허풍이 언제까지 계속될까나하고 %ANAME(MASTER)%에 침을 내뱉는다
+		PRINTFORMW 도둑들은 %ANAME(MASTER)%에 쇠사슬과 족쇄를 끼워, 투옥했다……
+	ENDIF
+ELSE
+	PRINTFORMW 도둑은 %ANAME(MASTER)%의 몸을 추잡한 눈으로 바라본다
+	PRINTFORMW 어차피 결과는 같으니까, 성노예가 되어 버려라고 말하기 시작했다
+	PRINTFORMW 굴욕적인 제안이지만, 받아들이지 않고도, 여자인 %조사처리(ANAME(MASTER),"가")% 되는 것은 바뀔 리 없다
+	PRINTFORMW 받아들입니까?
+	CALL ASK_YN("받아들인다", "거부한다")
+	IF RESULT == 0
+		PRINTFORMW 받아들이지 않아도, 어차피 되는 것은 변함없다
+		PRINTFORMW 라면, 온순한 자세를 보인 (분)편이, 아직 대우는 좋을 것이다……%조사처리(ANAME(MASTER),"는")% 힘 없게 수긍한다
+		PRINTFORMW 진짜로 받아들이고 자빠졌다구와 도둑들은 껄껄웃는다
+		PRINTFORMW 그들은 %조사처리(ANAME(MASTER),"를")% 붙잡아 그 아랫배에, 「성노예」의 3문자의 소인을 넣었다……
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 도둑의 성노예에게 되어 내렸다
+		RESETCOLOR
+	ELSE
+		PRINTFORMW 그런 일이 생길까. %조사처리(ANAME(MASTER),"가")% 단호히거부한다와 도둑은 실실 웃는다
+		PRINTFORMW 그 허풍이 언제까지 계속될까나하고 %ANAME(MASTER)%에 침을 내뱉는다
+		PRINTFORMW 도둑들은 %ANAME(MASTER)%에 쇠사슬과 족쇄를 끼워, 투옥했다……
+	ENDIF
+ENDIF
+IF RESULT == 0
+	CALL CHANGE_COUNTRY(MASTER, ARG:0, 1)
+	IF IS_FEMALE(MASTER)
+		SETBIT TALENT:MASTER:특수세력함락계, 특수세력_도둑
+		CALL PLAYER_FALLEN_TO_SP_COUNTRY(ARG:0)
+	ENDIF
+	RETURN 0
+ELSE
+	CALL CAPTURE(MASTER, ARG:0)
+	RETURN 2
+ENDIF
+
+;--------------------------------------
+;엔딩
+;--------------------------------------
+@BANDIT_ENDING
+PRINTFORML 환상향에 순식간에 퍼진 도둑의 세력은,
+PRINTFORMW 눈 깜짝할 순간에 환상향 전 국토를 다 가렸다
+PRINTFORML 그들의 거점에는 몇 사람, 아니 몇십인이라는 소녀가 잡혀 그들의 성욕의 희생이 되고 있다
+PRINTFORMW 이지만, 그것을 멈추는 사람은 없다. 그들에게 거슬리는 사람은 모두, 멸해져 버린 것이니까……
+IF CFLAG:MASTER:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑) && IS_FEMALE(MASTER)
+	PRINTFORMW 
+	PRINTFORMW 환상향 통일을 축하하는 주연에, %ANAME(MASTER)%의 모습도 있었다
+	PRINTFORMW 그녀는 도둑 세력이 여기까지 퍼지는 주인공이며, 이 군에 대해, 여자면서 비교적 대우는 좋다
+	PRINTFORMW ……여자로 해서는, 라는 단서 서로 돌출하지만
+	PRINTFORML 몹시 취한 도둑의 한사람이, 의미심장한 눈짓을 한다
+	PRINTFORML 하면, %조사처리(ANAME(MASTER),"는")% 옷을 벗어 던져, 소리를 내 그의 하나의 물건을 빨기 시작한다
+	PRINTFORMW 그 모양을 봐 흥분한 다른 남자가, %ANAME(MASTER)%의 비부에 육봉을 쑤셔 넣으면, %조사처리(ANAME(MASTER),"는")% 견딜 수 없다고 한 소리를 높여, 허리를 흔드는
+	PRINTFORML ……도둑의 중심에 있다는 일은, 제일 깊고 그들의 사상에 물들고 있다는 일이기도 함
+	PRINTFORMW 여자는 남자의 성노예. %ANAME(MASTER)%의 머리에는, 그것이 마음 속까지 새겨져 있다……
+ENDIF
+PRINTFORML 
+PRINTFORMW 이미 구세주 따위 없는 땅에, 그저 여자의 교성과 남자의 욕소리가 계속 울려 퍼진다……

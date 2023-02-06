@@ -1,0 +1,184 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_SAIMINSLAVE_RATE()
+RETURN 30
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_SAIMINSLAVE_DECISION()
+SIF DVAR:최면조교_발생플래그 < 0
+	RETURN 0
+RETURN 1
+
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_SAIMINSLAVE_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_SAIMINSLAVE()
+#DIM 대상
+
+PRINTFORML 최근, 영내의 치안이 좋지 않은 같다
+PRINTFORMW 누군가에게 돌아보러 가게 해야할 것인가도 모른다
+PRINTFORML 그런데, 누구에게 맡기자?
+CALL SELECT_CHARA_LIST_ONLY_LOGIC_SEX("SAIMINSLAVE", "DEFAULT")
+대상 = RESULT
+IF RESULT < 0
+	PRINTFORML 아니, 지금은 바쁘다
+	PRINTFORMW 순찰의 순회를 강화해 두었다
+	RETURN
+ELSEIF RESULT == MASTER
+	PRINTFORMW %ANAME(대상)%스스로 돌아봐에 향하는 일로 했다
+ELSE
+	PRINTFORMW %ANAME(대상)%에 맡기는 일로 했다
+ENDIF
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF IS_MALE(대상) || (HAS_PENIS(MASTER) && RAND:2)
+	SELECTCASE RAND:5
+		CASE 0
+			PRINTFORMW 아무 일도 없고 평화로웠다
+		CASE 1
+			PRINTFORMW 소녀가 강간될 것 같은 현장에 조우했다!
+			PRINTFORML %조사처리(ANAME(대상),"가")% 검을 뽑아 큰 소리로 달려들면 강간마들은 도망쳐 갔다
+			PRINTFORML 소녀는 너덜너덜로 눈물을 흘리고 있다
+			PRINTFORMW 그 표정과 옷의 틈새로부터 들여다 보는 피부에 훨씬 왔다
+			PRINTFORML 어떻게 해?
+			CALL ASK_YN("범한다" ,"집까지 보낸다")
+			IF RESULT == 1
+				PRINTFORML 무엇을 생각하고 있는거야
+				PRINTFORMW 사악한 생각을 지불해 그녀에게 윗도리를 입혀 집까지 보냈다
+				RETURN
+			ENDIF
+			PRINTFORML %조사처리(ANAME(대상),"는")% 참지 못하고 소녀를 그늘에 데리고 들어가 범했다
+			PRINTFORML 몸집이 작은 소녀를 억눌러 무리하게 범하는 행위에 흥분해 격렬하게 허리를 쳐박는다
+			PRINTFORMW 울부짖는 소녀의 비명도 합쳐져, 하나의 물건은 몇번정액을 발해도 쇠약해지는 일은 없었다
+			CALL FUCK(대상, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", @"소녀의 질", "강간")
+			PRINTFORMW 사후, 어안이 벙벙히 해 가로놓이는 그녀를 방치해 그 자리를 떠났다
+		CASE 2
+			PRINTFORMW …눈치채면 지갑을 소매치기 당해 버리고 있었다!
+			LOCAL = 1000 + (500 * (RAND:10 + 1))
+			SIF LOCAL > MONEY
+				LOCAL = MONEY
+			MONEY -= LOCAL
+			PRINTFORMW 금{LOCAL}를 잃었다
+		CASE 3
+			PRINTFORMW 혼잡 중(안)에서 치한 되고 있는 소녀를 발견했다!
+			PRINTFORML 발칙한 놈의 손을 꼬집으면 비명을 올려 도망쳐 갔다
+			PRINTFORML 소녀는 부끄러운 듯이 하면서도 답례를 고했다
+			PRINTFORMW 때등 얼굴로 부끄러워하는 표정에 불끈불끈 왔다
+			PRINTFORML 어떻게 해?
+			CALL ASK_YN("숙소에 데리고 들어간다" ,"집까지 보낸다")
+			IF RESULT == 1
+				PRINTFORML 무엇을 생각하고 있는거야
+				PRINTFORMW 사악한 생각을 지불해 그녀에게 윗도리를 입혀 집까지 보냈다
+				RETURN
+			ENDIF
+			PRINTFORML 안전한 곳까지 보내면 속여 숙소에 데리고 들어가 범했다
+			PRINTFORML 처음은 울부짖고 있던 그녀도 점차 체념한 것처럼 저항을 하지 않게 되어
+			PRINTFORMW 마지막에는 희미하게 신체를 진동시켜 사랑스러운 허덕임을 발하면서 %조사처리(ANAME(대상),"를")% 받아들이고 있었다
+			CALL FUCK(대상, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", @"소녀의 질", "강간")
+			PRINTFORMW 사후, 어안이 벙벙히 해 가로놓이는 그녀를 방치해 그 자리를 떠났다
+		CASE 4
+			PRINTFORML 거지의 소녀가 다가왔다
+			PRINTFORMW 흠칫흠칫 달린 밥공기를 내며 온다
+			PRINTFORML 어떻게 해?
+			CALL ASK_YN("무시해 떠난다" ,"소녀를 산다")
+			IF RESULT == 0
+				PRINTFORML 무시해 떠났다
+				PRINTFORMW 배후로부터 소녀의 원망스러운 것 같은 시선을 느꼈다
+				RETURN
+			ENDIF
+			PRINTFORML 자주(잘) 보면 꽤 돋우는 신체를 하고 있었다
+			PRINTFORMW 하룻밤 얼마일까하고 물으면 그녀는 머뭇머뭇 하면서 %ANAME(대상)%의 손을 잡아 당겼다
+			PRINTFORML 
+			PRINTFORML 검소한 보금자리에 안내된 %조사처리(ANAME(대상),"는")% 조속히 그녀와 몸을 겹쳤다
+			PRINTFORML 그녀는 작으면서 훌륭하게 여자의 신체를 열심히 뛰게 해 즐겁게 해 주었다
+			PRINTFORMW 지지 않으려고 밀어올리면 기쁨의 소리를 높이는 소녀에게 흥분해, 밤새도록 교접했다
+			CALL FUCK(대상, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", @"소녀의 질", "매춘")
+			PRINTFORMW 사후, 그녀에게 전송되면서 보금자리를 뒤로 했다
+	ENDSELECT
+	RETURN
+ENDIF
+PRINTFORML 순찰을 하고 있으면 인기척이 없는 골목에서 노점을 보기 시작했다
+PRINTFORML 변덕스럽게 접근해 보면 본 일이 없는 도구를 팔고 있었다
+PRINTFORMW 「어서오세요, 헷헷헤」
+PRINTFORML 점주의 남자가 이상한 듯한 미소를 띄우면서 손도 보고 했다
+PRINTFORML 「이쪽은 최면 상품이어요, 어떤 상대라도 자신의 뜻대로 할 수 있습니다」
+PRINTFORMW 남은 본인에게 막상막하 이상한 듯한 도구를 집어들고 설명 하기 시작했다
+PRINTFORML 어떻게 해?
+CALL ASK_YN("무시해 떠난다" ,"기가 막히면서도 이야기를 듣는다")
+IF RESULT == 0
+	PRINTFORML 너무 이상함
+	PRINTFORMW 무시해 떠났다
+	PRINTFORML 그 후의 순찰에서도 특히 아무 일도 없었다
+	RETURN
+ENDIF
+PRINTFORML 최면 같은거 바보 같이, 그런 상황이 좋은 것이 있을 리가 없다
+PRINTFORML 아마 아마추어를 속여 금을 받자고 하는 사기꾼일 것이다
+PRINTFORMW 「아, 의심하고 있습니까? 말해, 나도 처음은 그랬던 것이지만 말이죠, 헷헷헤」
+PRINTFORML 「실은 이것, 여행의 사람에게 받은 도구이랍니다, 이렇게 (해) 사냥감이 오는 것을 기다리고 있던 것으로 말야」
+PRINTFORML 이 남자는 무슨 말을 하고 있을까?
+PRINTFORMW 「그렇게 예를 들면 아가씨 같은? 아니, 내 취향의 신체를 하시고 있다」
+PRINTFORML 남의 싫은 것 같은 시선이 신체에 착 달라붙는 감각에 오싹 해 버린다
+PRINTFORML 아무래도 나에게 최면을 걸어 생각 했던 대로로 하고 싶은 것 같다, 터무니 없는 분수 알지 못하고다
+PRINTFORMW 그런 것에 걸릴 이유가 없는, 할 수 있는 것이라면 해 보면 된다
+PRINTFORML 너무나 남자의 실례인 태도에 무심코 그런 일을 입에 냈다
+PRINTFORML 「헷헷헤, 아니 그것이 실은 이제(이미/벌써/더는/정말) 최면이라면 걸치고 있습니다만, 이봐요」
+PRINTFORMW 남의 손이 뻗어 나의 가슴에 닿았다
+IF TALENT:대상:가슴크기 >= 1
+	PRINTFORML 「우오, 이 중량감, 겉모습 이상의 거물이군요」
+	PRINTFORMW 물렁물렁 손가락이 먹혀들 정도로 격렬하고 버릇없게 비비어 왔다
+ELSEIF TALENT:대상:가슴크기 == 0
+	PRINTFORML 「상당한 미유군요, 감촉도 무게도 딱 좋다」
+	PRINTFORMW 추잡한 손놀림으로 유방 전체를 비비어졌다
+ELSE
+	PRINTFORML 「이 적당한 사이즈, 정말로 내 취향이다아, 헷헷헤」
+	PRINTFORMW 조금 콤플렉스가 있는 가슴 전체를 손바닥으로 반죽해 돌리는 것처럼 만지작거려진다
+ENDIF
+PRINTFORML 꽤의 손놀림에 방심하고 있던 나는 조금 느껴 버려 무심코 움찔해 버렸다
+PRINTFORML 에서도 이 정도로 최면에 걸려 있을 리가 없다
+PRINTFORMW 집요하게 나의 가슴을 만지작거리는 남자에게 향해 도발적으로 말하면 그는 힐쭉 웃었다
+PRINTFORML 「바, 바보녀가, 그렇게 범해져의 것인가? 그러면 자신으로부터 허리 흔들어 권해 봐라」
+PRINTFORML 그에게 도발되고 돌려주어진 나는 짤그랑하며 왔다
+PRINTFORML 그렇게 까지 말해지면 입다물고 돌아갈 수 없다
+PRINTFORMW 나는 스커트를 걷어 붙이면 그에게 향해 추잡하게 허리를 흔들어 보였다
+PRINTFORML 이봐요 이봐요, 최면할 수 있는 것이라면 해 봐라, 이 무방비 바보 보지를 범해 봐라, 라고
+PRINTFORML 「구헷헷헤, 정말로 하고 자빠진, 이 녀석」
+PRINTFORMW 「좋을 것이다, 그러한다면 마음껏 범해 준다」
+PRINTFORML 감쪽같이 나의 도발을 탄 남자는 입맛을 다신다와 나의 허리에 손을 썼다
+PRINTFORML 바보 같은 남자다
+PRINTFORMW 나는 그를 내심 업신여기면서 비밀스런 장소를 손가락으로 만지작거려, 지금부터 범해질 준비를 한다
+PRINTFORML 이것으로 언제라도 범해지지만 그것은 최면에 의하는 것이 아니고 나의 의사에 의하는 것이다
+PRINTFORML 이 남자의 자지를 굴복시켜, 분수를 알려 그 후 사기의 용의로 잡아 감옥에 쳐박아 주자
+PRINTFORMW 나는 그런 일을 생각하면서 남자에게 안내되어 뒷골목에 있는 그의 보금자리로 데리고 들어가졌다
+PRINTFORML …
+PRINTFORML ……
+PRINTFORMW ………
+PRINTFORML 차분히 설득한 후, 남자와 헤어졌다
+PRINTFORML 그도 나와의 콘돔 없는 생 씨뿌리기 교미로 갱생 혀팔짱 이제(이미/벌써/더는/정말) 사기는 그만둔다고 해 주었다
+PRINTFORMW 「헷헷헤, 울분이 쌓였을 때는 또 상대 해 받겠어」
+PRINTFORML 「지금부터 내 취향에 차분히 조교해 주기 때문에 각오 해 둬」
+PRINTFORML 돌아갈 때에 그런 일을 말한, 열심인 일이다
+PRINTFORMW 갑자기 보지로부터 정액이 흘러넘칠 것 같게 되어 당황해 보지를 잡았다
+PRINTFORML 그에게 속옷을 빌려 주었으므로 지금의 스커트아래는 벌거숭이다
+PRINTFORML 이런 상황을 사람에게 보여질 수는 없다
+PRINTFORMW 보지를 잡았을 때에 가볍게 생각해 내 절정 하면서 나는 약간 빠른 걸음에 돌아보러 돌아왔다
+CALL FUCK_RAPE(대상, GET_SPERM_ID("최면 조련사"), @"최면 조련사의 \@ RAND:2 ? 페니스 # 입술\@", "최면 조련사")
+DVAR:최면조교_대상ID = GET_ID(대상)
+DVAR:최면조교_발생플래그 = -1
+
+RETURN 1
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_SAIMINSLAVE(대상)
+#DIM 대상
+CALL SELECT_CHARA_LIST_SHOW_LOGIC_DEFAULT(대상)
+RETURN RESULT && !GETBIT(TALENT:대상:데일리계, 소질_데일리_무자각최면노예)

@@ -1,0 +1,133 @@
+﻿;-------------------------------------------------
+;오른쪽 컬럼에 아무것도 표시하지 않는 경우
+;왼쪽 컬럼 메뉴의 버튼을 호출하기 위한 빈행 묻고
+;-------------------------------------------------
+@COLUMN_RIGHT_CLEAR
+FOR LOCAL:0, LINECOUNT - FIRST_COLUMN_RIGHT_LINE, LINES_SHOP_DRAW
+	CALL COLUMN_RIGHT_PRINTL
+NEXT
+RETURN 0
+
+;-------------------------------------------------
+;오른쪽 컬럼으로 PRINTL 대신에 사용한다
+;사용）CALL COLUMN_RIGHT_PRINTL
+;목적）왼쪽 컬럼의 버튼 표시 지정（행 번호 지정）를 없앤다
+;-------------------------------------------------
+@COLUMN_RIGHT_PRINTL
+;개행에 수반하는 처리이기 (위해)때문에 개행을 실시한다
+PRINTL 
+;컬럼의 행 번호를 계산해 돌려준다
+LOCAL:0 = LINECOUNT - FIRST_COLUMN_RIGHT_LINE
+;최대행수에 도달하고 있지 않으면 메뉴를 표시한다
+IF LOCAL:0 < LINES_SHOP_DRAW
+	CALL COLUMN_LEFT_MENU_SHOW(LOCAL:0)
+ENDIF
+
+;-------------------------------------------------
+;오른쪽 컬럼용 타이틀
+;주석을 가능한 한 유연하게 표시하기 위해(때문에) 모두 문자열으로 건네준다
+;인수의 지정이 많이 코피페 해 가지고 가지 않으면 기억하지 못할 감
+;주인공의 경우는 행동횟수를 소비, 다른 캐릭터의 경우는 행동완료가 된다 따위
+;주어나 결과의 헤어지는 것, CT에 대해를 어떻게 짧게 표현한 것인가
+;리스트 하단용의 것도 있으면 편한 것 같다
+;사용）
+;CALL COLUMN_RIGHT_TITLE("대상자 선택", TOSTER(선택 인원수), "8", "1", "30, 000", "아야 자수 충분하면")
+;CALL COLUMN_RIGHT_TITLE("선택 대상 주석", "선택 인원수", "최대 인원수", "소비 행동횟수", "소비 금액", "추가의 주석")
+;-------------------------------------------------
+@COLUMN_RIGHT_TITLE(선택대상, 선택인원수, 최대인원수, 소비행동횟수, 소비금액, 추가의주석)
+#DIMS 선택대상
+#DIMS 선택인원수
+#DIMS 최대인원수
+#DIMS 소비행동횟수
+#DIMS 소비금액
+#DIMS 추가의주석
+PRINT ★
+TRYCALLFORM SHOP_LIFE_NAME{FLAG:거점페이즈선택커맨드}
+PRINTFORM %RESULTS:0% 
+
+IF 선택대상 != "" 
+	PRINTPLAIN   
+	CALL COLORPRINT(선택대상, 칼라_주석)
+ENDIF
+
+;선택 인원수도 최대 인원수도 지정되고 있다
+IF 선택인원수 != "" && 최대인원수 != "" 
+	PRINTPLAIN   
+	;최대 인원수가 1명이라면 선택 인원수를 무시한다
+	IF TOINT(최대인원수) == 1
+		CALL COLOR_PRINT("선택 인원수:", 칼라_주석)
+		CALL COLOR_PRINT("1", 칼라_선택중)
+		CALL COLOR_PRINT("인", 칼라_주석)
+	;선택 인원수가 최대 인원수 이상이라면 선택중색으로 표시
+	ELSEIF TOINT(선택인원수) >= TOINT(최대인원수)
+		CALL COLOR_PRINT("선택 인원수:", 칼라_주석)
+		CALL COLORPRINT(선택인원수, 칼라_선택중)
+		CALL COLOR_PRINT("/", 칼라_주석)
+		CALL COLORPRINT(최대인원수, 칼라_선택중)
+		CALL COLOR_PRINT("인", 칼라_주석)
+	;그 이외라면 선택 인원수는 주석색, 최대 인원수는 선택중색으로 표시
+	ELSE
+		CALL COLOR_PRINT("선택 인원수:", 칼라_주석)
+		CALL COLORPRINT(선택인원수, 칼라_주석)
+		CALL COLOR_PRINT("/", 칼라_주석)
+		CALL COLORPRINT(최대인원수, 칼라_선택중)
+		CALL COLOR_PRINT("인", 칼라_주석)
+	ENDIF
+;최대 인원수만 지정되고 있다
+ELSEIF 최대인원수 != "" 
+	;최대 인원수가 1명이라면 그대로 표시해 외는 무시한다
+	IF TOINT(최대인원수) == 1
+		PRINTPLAIN   
+		CALL COLOR_PRINT("선택 인원수:", 칼라_주석)
+		CALL COLOR_PRINT("1", 칼라_선택중)
+		CALL COLOR_PRINT("인", 칼라_주석)
+	ENDIF
+ENDIF
+
+IF 소비행동횟수 != "" 
+	PRINTPLAIN   
+	CALL COLOR_PRINT("행동 소비:", 칼라_주석)
+	CALL COLORPRINT(소비행동횟수, 칼라_선택중)
+ENDIF
+
+IF 소비금액 != ""
+	PRINTPLAIN   
+	CALL COLOR_PRINT(@"소비 금액:", 칼라_주석)
+	CALL COLORPRINT(소비금액, 칼라_선택중)
+ENDIF
+
+IF 추가의주석 != ""
+	PRINTPLAIN   
+	CALL COLORPRINT(추가의주석, 칼라_주석)
+ENDIF
+RETURN
+
+;-------------------------------------------------
+;오른쪽 컬럼용 라인
+;사용）CALL COLUMN_RIGHT_LINE
+;상정）오른쪽 컬럼의 폭을 조정하고 싶을 때는 여기서-의 수를 조정
+;　　　선을 개행할 때는 상기의 오른쪽 컬럼용 개행으로 실시한다
+;비고）REPEAT_DASH(0)의 호환
+;-------------------------------------------------
+@COLUMN_RIGHT_LINE
+LOCAL:0 = 92
+;단락으로서 다용되고 있기 때문에
+;버튼이나 텍스트를 눈에 띄게 하기 위해서(때문에) 어두운으로 한다
+SETCOLOR 칼라_회색
+PRINTFORM %TOSTR_REPEAT("-", LOCAL:0)%
+RESETCOLOR
+
+;-------------------------------------------------
+;숫자를 문자열화해 3자리수 칸마를 붙이는 식 안의 함수
+;사용）%NUM_FORMAT(MONEY)%
+;-------------------------------------------------
+@NUM_FORMAT(ARG:0)
+#FUNCTIONS
+;0라고 표시되지 않기 때문에 퇴피
+IF ARG:0 == 0
+	LOCALS:0 '= "0"
+ELSE
+	LOCALS:0 '= TOSTR(ARG:0, "#,###")
+ENDIF
+RETURNF LOCALS:0
+

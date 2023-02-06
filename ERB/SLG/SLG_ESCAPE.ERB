@@ -1,0 +1,785 @@
+﻿;세력이 멸망 했을 경우나 포박 되었을 경우의 처리
+
+;-------------------------------------------------
+;ARG:1 세력이 ARG:0 세력을 멸망 시켰을 때의 패장의 처리
+;-------------------------------------------------
+@LOSERS_ACTION(멸망세력, 멸한세력)
+#DIM 멸망세력
+#DIM 멸한세력
+#DIM 멸망군주
+#DIM 멸한군주
+
+멸망군주 = GET_COUNTRY_BOSS(멸망세력)
+멸한군주 = GET_COUNTRY_BOSS(멸한세력)
+
+;플레이어 세력이 특수 세력에 멸해졌을 경우는 특수 이벤트
+IF 멸망세력 == CFLAG:MASTER:소속 && IS_SP_COUNTRY(멸한세력)
+	TRYCCALLFORM MASTER\CAPTURED_%SP_COUNTRY_NAME_ENG:SP_COUNTRY_TO_CONST(멸한세력)%(멸한세력)
+		;플레이어 세력의 소속 캐릭터, 없고 플레이어 세력의 포로는 모두 무소속이 되어, 특수 세력에 붙잡힌다
+		FOR LOCAL, 0, CHARANUM
+			IF CFLAG:LOCAL:소속 == 멸망세력 || CFLAG:LOCAL:포로처 == 멸망세력
+				CALL CHANGE_COUNTRY(LOCAL, 0, 1)
+				CALL CAPTURE(LOCAL, 멸한세력)
+			ENDIF
+		NEXT
+		RETURN 1
+	CATCH
+	ENDCATCH
+ENDIF
+
+;주인공 세력의 손으로 멸망 시켰을 경우
+IF 멸한세력 == CFLAG:MASTER:소속
+	WAIT
+	PRINTL 
+	PRINTW ………………
+	PRINTW ……
+	PRINTL 
+ENDIF
+
+FOR LOCAL, 0, CHARANUM
+	SIF LOCAL == MASTER
+		CONTINUE
+	SIF CFLAG:LOCAL:소속 != 멸망세력
+		CONTINUE
+	SIF !CFLAG:LOCAL:포로처
+		CONTINUE
+	SIF CFLAG:LOCAL:포로처 == CFLAG:MASTER:소속
+		CONTINUE
+	;특수 세력의 포로에게는 아무것도 하지 않는다(조교 저속해지고)
+	SIF IS_SP_COUNTRY(CFLAG:LOCAL:포로처)
+		CONTINUE
+	;멸망 한 세력 자신의 포로는, TREAT_PRISONER로 판단(잡힌 캐릭터로서 생각한다)
+	;현재 상태로서는 플레이어 스스로 투옥하고 있었을 경우
+	IF CFLAG:LOCAL:포로처 == 멸망세력
+		CALL TREAT_PRISONER(LOCAL, 멸망세력, 멸한세력)
+	;다른 CPU 세력의 포로가 되어 있으면 등용 판정을 실시한다. 실패하면 해방·방랑
+	ELSEIF JUDGE_ASSIGN(LOCAL, CFLAG:(LOCAL:0):소속, CFLAG:(LOCAL:0):포로처) == 1
+		CALL COLOR_PRINTL(@"붙잡히고 있었던 %조사처리(ANAME(LOCAL),"는")%, %ANAME(GET_COUNTRY_BOSS(CFLAG:(LOCAL:0):포로처))%에 등용되었다", 칼라_주의)
+		CALL CHANGE_COUNTRY(LOCAL, CFLAG:LOCAL:포로처, 1)
+	ELSE
+		CALL COLOR_PRINTL(@"%ANAME(GET_COUNTRY_BOSS(CFLAG:(LOCAL:0):포로처))%에 붙잡히고 있었던 %조사처리(ANAME(LOCAL),"는")% 해방되어 방랑했다", 칼라_주의)
+		CALL CHANGE_COUNTRY(LOCAL:0, 0, 1)
+	ENDIF
+NEXT
+
+;●우선 군주에 대해 처리한다(주인공을 포함한다)
+;도주 판정
+PRINTFORML ----------군주의 도망----------
+CALL JUDGE_ESCAPE(멸망군주, 멸망세력, 멸한세력)
+
+;도주 실패
+IF RESULT == 1
+	CALL TREAT_PRISONER(멸망군주, 멸망세력, 멸한세력)
+ENDIF
+
+
+PRINTFORML ----------사관의 도망----------
+;그 외 사관(주인공은 최후)
+FOR LOCAL:0, 0, CHARANUM
+	SIF CFLAG:LOCAL:소속 != 멸망세력 || CFLAG:LOCAL:포로처 || LOCAL == 멸망군주 || LOCAL == MASTER
+		CONTINUE
+	CALL JUDGE_ESCAPE(LOCAL, 멸망세력, 멸한세력)
+	SIF RESULT == 1
+		CALL TREAT_PRISONER(LOCAL, 멸망세력, 멸한세력)
+NEXT
+
+;멸망 한 세력의 포로의 처리
+;멸한 측의 사관이 앞
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):포로처 == 멸망세력 && CFLAG:LOCAL:소속 == 멸한세력
+		CALL CAPTURE(LOCAL:0, 0)
+		CALL COLOR_PRINTL(@"%ANAME(멸망군주)% 세력에 수 얻어지고 있었던 %조사처리(ANAME(LOCAL:0),"는")%, 원래의 세력에 복귀했다", 칼라_주의)
+	ENDIF
+NEXT
+;제 3살력의 사관이라면, 멸한 측이 취급을 결정
+FOR LOCAL:0, 0, CHARANUM
+	SIF CFLAG:(LOCAL:0):포로처 == 멸망세력
+		CALL TREAT_PRISONER(LOCAL, 멸망세력, 멸한세력)
+NEXT
+
+;주인공이 사관의 경우는 라스트가 된다
+IF CFLAG:MASTER:소속 == 멸망세력 && MASTER != 멸망군주
+	IF CFLAG:MASTER:포로처
+		CALL CHANGE_COUNTRY(MASTER, 0)
+	ELSE
+		CALL JUDGE_ESCAPE(MASTER, 멸망세력, 멸한세력)
+		SIF RESULT == 1
+			CALL TREAT_PRISONER(MASTER, 멸망세력, 멸한세력)
+	ENDIF
+ENDIF
+
+;이것이라도 더 소속이 멸망 세력인 채라면, 단번에 무소속으로 한다
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):소속 == 멸망세력
+		CFLAG:(LOCAL:0):소속 = 0
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;ARG:2번의 캐릭터의, 세력 멸망시의 도주 판정(ARG:0=멸망 한 세력, ARG:1=멸망 시킨 세력)
+;ARG:3……0=전투중, 1=멸망시
+;-------------------------------------------------
+@JUDGE_ESCAPE(대상, 멸망세력, 멸한세력)
+#DIM 대상
+#DIM 멸망세력
+#DIM 멸한세력
+#DIM 멸망군주
+#DIM 멸한군주
+#DIM 포박율
+
+
+멸망군주 = GET_COUNTRY_BOSS(멸망세력)
+멸한군주 = GET_COUNTRY_BOSS(멸한세력)
+
+;주인공은 도망칠 수 없다
+SIF 대상 == MASTER
+	RETURN 1
+
+;주인공 세력이 멸해, 대상이 함락완료
+IF 멸한세력 == CFLAG:MASTER:소속 && (IS_LOVER(대상) || IS_SLAVE(대상))
+	CALL KOJO_EVENT(대상, 331)
+	PRINTFORML %조사처리(ANAME(대상),"는")% 스스로 포박 되러 왔습니다
+	RETURN 1
+;오히려 멸한 측이 좋아해
+ELSEIF REL_LIKE:대상:멸한군주 - REL_LIKE:대상:멸망군주 > 300 && REL_HATE:대상:멸한군주 - REL_HATE:대상:멸망군주 < 300
+	IF 멸한세력 == CFLAG:MASTER:소속
+		CALL KOJO_EVENT(대상, 331)
+		PRINTFORML %조사처리(ANAME(대상),"는")% 얌전하고 포박 되었습니다
+	ELSE
+		PRINTFORML %조사처리(ANAME(대상),"는")% 잡힌 것 같습니다…
+	ENDIF
+	RETURN 1
+ENDIF
+
+SELECTCASE CONFIG:306
+	CASE 1
+		IF 대상 == 멸망군주
+			포박율 = 0
+		ELSE
+			포박율 = 2000
+		ENDIF
+	CASEELSE
+		IF 대상 == 멸망군주
+			포박율 = 1000
+		ELSE
+			포박율 = 3000
+		ENDIF
+ENDSELECT
+
+;능력4종이 높을 정도 포박율에의 보정이 작아진다（도망칠 기 쉬워진다）
+포박율 += (6000 - (ABL:대상:무투 * 2 + ABL:대상:방위 * 2 + ABL:대상:지략 + ABL:대상:정치) * 10)
+
+;부대에 없으면 도망치기 쉽다
+SIF IS_FREE(대상)
+	포박율 -= 1000
+
+;이벤트 캐릭터는 잡히지 않는다
+IF IS_SP_CHARA(대상)
+	포박율 = 0
+ELSE
+	SELECTCASE CONFIG:306
+		CASE 1
+			포박율 = LIMIT(포박율, 0, 6000)
+		CASEELSE
+			포박율 = LIMIT(포박율, 2000, 9000)
+	ENDSELECT
+	SIF IS_SP_COUNTRY(멸한세력) && 멸한세력 != CFLAG:MASTER:소속
+		포박율 = 10000
+ENDIF
+
+IF RAND:10000 < 포박율
+	IF 멸한세력 == CFLAG:MASTER:소속
+		CALL KOJO_EVENT(대상, 331)
+		PRINTFORML %조사처리(ANAME(대상),"를")% 포박 했습니다
+	ELSE
+		PRINTFORML %조사처리(ANAME(대상),"는")% 잡힌 것 같습니다…
+	ENDIF
+	RETURN 1
+ENDIF
+
+PRINTFORML %조사처리(ANAME(대상),"는")% 도주한 것 같습니다…
+;상태 플래그를 도주 상태에
+CFLAG:대상:특수상태 = 특수상태_방랑
+RETURN 0
+
+
+;-------------------------------------------------
+;잡은 포로의취급을 결정한다
+;반환값 0=등용 1=해방 2=투옥 3=처형
+;-------------------------------------------------
+@TREAT_PRISONER(대상, 패배세력, 승리세력)
+#DIM 대상
+#DIM 패배세력
+#DIM 승리세력
+#DIM 패배군주
+#DIM 카츠토시군주
+#DIM 우호도
+#DIM 적대도
+#DIM 요구액
+#DIM 지불한도
+
+카츠토시군주 = GET_COUNTRY_BOSS(승리세력)
+패배군주 = GET_COUNTRY_BOSS(패배세력)
+
+;멸망 시켰던 것이 주인공의 세력
+IF 승리세력 == CFLAG:MASTER:소속
+	;자동
+	IF GROUPMATCH(CONFIG:301, 1, 2)
+		CALL AUTO_PRISONER_TREATMENT(대상, 패배세력, 승리세력)
+	;수동
+	ELSE
+		CALL SELECT_PRISONER_TREATMENT(대상, 패배세력, 승리세력)
+	ENDIF
+	RETURN RESULT
+ENDIF
+
+IF IS_SP_COUNTRY(승리세력)
+	IF 대상 == MASTER
+		CALL MASTER_CAPTURED(승리세력)
+		RETURN RESULT
+	ENDIF
+	CALL CAPTURE(대상, 승리세력)
+	SIF COUNTRY_EVENT_ID:승리세력 == SP_COUNTRY_ID:특수세력_도둑 && SP_COUNTRY_IS_TRAINED(대상)
+		CALL TREAT_PRISONER_BANDIT(대상)
+	RETURN 2
+ENDIF
+
+;주인공의 경우는 전용의 처리
+IF 대상 == MASTER
+	CALL MASTER_CAPTURED(승리세력)
+	RETURN RESULT
+ELSE
+	;주인공 이외는 등용을 시도한다
+	SELECTCASE JUDGE_ASSIGN(대상, 패배세력, 승리세력)
+		CASE 1
+			$ASSIGN_ACCEPT
+			IF 대상 == 패배군주
+				PRINTFORMW 군주인 %조사처리(ANAME(대상),"는")% %ANAME(카츠토시군주)%의 전에 끌어내졌다…
+				PRINTFORMW %조사처리(ANAME(대상),"는")% 머리를 늘어뜨리며 %ANAME(카츠토시군주)%에 충성을 맹세했습니다
+			ELSE
+				IF CFLAG:대상:소속 == CFLAG:MASTER:소속
+					SETCOLOR 칼라_경고
+					PRINTFORMW %조사처리(ANAME(대상),"가")% 등용에 응했습니다
+				ELSE
+					SETCOLOR 칼라_주의
+					PRINTFORML %조사처리(ANAME(대상),"는")% 등용에 응한 것 같습니다
+				ENDIF
+				RESETCOLOR
+			ENDIF
+			CALL CHANGE_COUNTRY(대상, 승리세력, 1)
+			RETURN 0
+		CASE 2
+			IF 대상 != 패배군주
+				요구액 = JUDGE_ASSIGN_REQUIRE_MONEY(대상, 패배세력, 승리세력)
+				지불한도 = MIN(MONEY:승리세력, SCOUT_CALC_PRICE_BASIS(대상) * (1500 + REL_LIKE:카츠토시군주:대상 - REL_HATE:카츠토시군주:대상) / 1500)
+				PRINTFORML %조사처리(ANAME(대상),"는")% 돈{요구액}를 요구한 것 같습니다
+				IF 요구액　<= 지불한도
+					MONEY:승리세력 -= 요구액
+					PRINTFORML %ANAME(카츠토시군주)%는 받아들였습니다
+					GOTO ASSIGN_ACCEPT
+				ELSE
+					PRINTFORML %ANAME(카츠토시군주)%는 거부했습니다
+				ENDIF
+			ENDIF
+	ENDSELECT
+ENDIF
+
+;등용에 실패
+우호도 = REL_LIKE:카츠토시군주:대상
+적대도 = REL_HATE:카츠토시군주:대상
+
+;호감도가 낮게 적대치가 특히 높은 경우는 처형(처형 금지의 설정이라면 처형하지 않는다)
+IF 우호도 < 100 && 적대도 >= 800 && (CONFIG:304 == 0 || (CONFIG:304 == 2 && !IS_FIXED_CHARA(대상)))
+	;주인공 세력 소속
+	IF 패배세력 == CFLAG:MASTER:소속
+		SETCOLOR 칼라_경고
+		;군주
+		IF 대상 == 패배군주
+			PRINTFORMW 군주인 %조사처리(ANAME(대상),"는")% %ANAME(카츠토시군주)%의 전에 끌어내졌다…
+			PRINTFORMW %ANAME(대상)%에 너무 좋은 감정을 가지지 않는 %ANAME(카츠토시군주)%는, 주저 없게 부하에게 %ANAME(대상)%의 처형을 명했다
+			PRINTFORMW ………………
+		ELSEIF CFLAG:대상:포로처 == 패배세력
+			LOCALS:0 = %ANAME(GET_COUNTRY_BOSS(CFLAG:대상:포로처))%
+			PRINTFORMW 포로가 되고 있었던 %LOCALS:0% 세력의 %조사처리(ANAME(대상),"는")% 처형된 것 같습니다…
+		ELSE
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 처형된 것 같습니다…
+		ENDIF
+		RESETCOLOR
+	ELSE
+		CALL COLOR_PRINTL(@"%조사처리(ANAME(대상),"가")% 처형되었다는 보고가 들어가 있습니다", 칼라_주의)
+	ENDIF
+	CALL EXECUTION(대상)
+	CFLAG:대상:특수상태 = 특수상태_사망
+	RETURN 3
+;호감도가 특히 높게 적대치가 낮은 경우는 해방
+ELSEIF 우호도 >= 800 && 적대도 < 100
+	IF 패배세력 == CFLAG:MASTER:소속
+		IF 대상 == 패배군주
+			PRINTFORMW 군주인 %조사처리(ANAME(대상),"는")% %ANAME(카츠토시군주)%의 전에 끌어내졌다…
+			PRINTFORMW 이지만 %ANAME(카츠토시군주)%에 %ANAME(대상)%의 목을 잡을 생각은 없는 것 같다
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 해방되었습니다
+		ELSEIF CFLAG:대상:포로처 == 패배세력
+			LOCALS:0 = %ANAME(GET_COUNTRY_BOSS(CFLAG:대상:포로처))%
+			PRINTFORMW 포로가 되고 있었던 %LOCALS:0% 세력의 %조사처리(ANAME(대상),"는")% 해방된 것 같습니다
+		ELSE
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 해방된 것 같습니다
+		ENDIF
+	ELSE
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 해방된 것 같습니다
+	ENDIF
+	;대상이 무소속, 없고 소속 세력의 도시 0（멸망시）라면 방랑시킨다
+	IF !IS_COUNTRY(CFLAG:대상:소속) || GET_OWN_CITY(CFLAG:대상:소속) == 0
+		SIF CFLAG:대상:포로처
+			CALL CAPTURE(대상, 0)
+		CFLAG:대상:특수상태 = 특수상태_방랑
+	ELSE
+		;호감도를 상승, 적대치를 감소
+		CALL CHANGE_RELATION_O_TO_C(대상, 승리세력, 25, -25)
+	ENDIF
+	RETURN 1
+;그렇지 않으면 투옥
+ELSE
+	IF 패배세력 == CFLAG:MASTER:소속
+		IF 대상 == 패배군주
+			PRINTFORMW 군주인 %조사처리(ANAME(대상),"는")% %ANAME(카츠토시군주)%의 전에 끌어내졌다…
+			PRINTFORMW 이지만 %ANAME(카츠토시군주)%에 %ANAME(대상)%의 목을 잡을 생각은 없는 것 같다
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 투옥되었습니다
+		ELSEIF CFLAG:대상:포로처 == 패배세력
+			LOCALS:0 = %ANAME(GET_COUNTRY_BOSS(CFLAG:대상:포로처))%
+			PRINTFORMW 포로가 되고 있었던 %LOCALS:0% 세력의 %조사처리(ANAME(대상),"는")%, 계속 투옥된 것 같습니다
+		ELSE
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 투옥된 것 같습니다
+		ENDIF
+	ELSE
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 투옥된 것 같습니다
+	ENDIF
+	CALL CAPTURE(대상, 승리세력)
+	RETURN 2
+ENDIF
+
+;-------------------------------------------------
+;ARG:2번의 캐릭터의, 포로로서의 취급을 수동으로 결정하는 함수(ARG:0=포획 된 캐릭터의 세력, ARG:1=포획 한 세력)
+;전투에 의한 포획의 경우는 ARG:3에 1을 설정하는 것
+;반환값 0=등용 1=해방 2=투옥 3=처형
+;-------------------------------------------------
+@SELECT_PRISONER_TREATMENT(대상, 대상세력, 포획세력)
+#DIM 대상세력
+#DIM 포획세력
+#DIM 대상
+#DIM 거부플래그
+#DIM 요구액
+거부플래그 = 0
+
+
+$RESELECT_LOOP
+;포로의 경우
+CALL PRINT_STATE_IMAGE(대상)
+IF IS_COUNTRY(대상세력) && CFLAG:대상:포로처 == 대상세력
+	LOCAL:1 = GET_COUNTRY_BOSS(대상세력)
+	LOCAL:2 = GET_COUNTRY_BOSS(CFLAG:대상:소속)
+	PRINTFORML %LOCAL:1 != -1 ? ANAME(LOCAL:1) + "의" # ""%포로가 되고 있었던 %LOCAL:2 != -1 ? ANAME(LOCAL:2) + "소속의" # ""%%조사처리(ANAME(대상),"를")% 보호했습니다
+	PRINTFORML %ANAME(대상)%의 처우를 결정해 주세요
+ELSE
+	PRINTFORML %ANAME(대상)%의 처우를 결정해 주세요
+ENDIF
+CALL SHOW_SIMPLE_INFO(대상)
+IF !거부플래그
+	PRINTL [0] 등용
+ELSE
+	SETCOLOR 칼라_선택불가
+	PRINTPLAIN [0] 등용
+	PRINTL 
+	RESETCOLOR
+ENDIF
+PRINTL [1] 해방
+PRINTL [2] 투옥
+PRINTL [3] 처형
+PRINTL [4] 연금
+
+$INPUT_LOOP
+INPUT
+
+IF RESULT == 0 && !거부플래그
+	거부플래그 = 1
+	;등용에 응할지 어떨지를 판정
+	SELECTCASE JUDGE_ASSIGN(대상, 대상세력, 포획세력)
+		CASE 1
+			$ACCEPT
+			CALL KOJO_EVENT(대상, 332)
+			PRINTFORMW %조사처리(ANAME(대상),"를")% 등용했습니다
+			CALL CHANGE_COUNTRY(대상, 포획세력, 1)
+			;호감도를 상승, 적대치를 감소
+			CALL CHANGE_RELATION_O_TO_C(대상, 포획세력, 50, -50)
+		CASE 2
+			요구액 = JUDGE_ASSIGN_REQUIRE_MONEY(대상, 대상세력,　포획세력)
+			CALL ICPRINT(@"%조사처리(ANAME(대상),"는")% 돈<{요구액}>를 요구해 왔습니다", "L", 칼라_주의)
+			PRINTFORML 현재의 소지금:{MONEY}
+			CALL ASK_MULTI_JUDGE("지불한다", 요구액 <= MONEY, "지불하지 않는다", 1)
+			IF RESULT == 0
+				MONEY -= 요구액
+				GOTO ACCEPT
+			ENDIF
+			GOTO DENY
+		CASE 0
+			$DENY
+			CALL KOJO_EVENT(대상, 333)
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 응할 생각은 없는 것 같습니다…
+			;호감도를 상승, 적대치를 감소
+			CALL CHANGE_RELATION_O_TO_C(대상, 포획세력, 50, -50)
+			GOTO RESELECT_LOOP
+	ENDSELECT
+	RETURN 0
+ELSEIF RESULT == 1
+	CALL KOJO_EVENT(대상, 334)
+	PRINTFORMW %조사처리(ANAME(대상),"를")% 해방했습니다
+	IF CFLAG:대상:포로처 != 0
+		;포로 설정을 해제
+		CALL CAPTURE(대상, 0)
+	ELSE
+		;상태 플래그를 도주 상태에
+		CFLAG:(대상):특수상태 = 특수상태_방랑
+	ENDIF
+
+	;호감도를 상승, 적대치를 감소
+	CALL CHANGE_RELATION_O_TO_C(대상, 포획세력, 50, -50)
+	RETURN 1
+
+ELSEIF RESULT == 2
+	CALL KOJO_EVENT(대상, 335)
+	PRINTFORMW %조사처리(ANAME(대상),"를")% 투옥했습니다
+	CALL CAPTURE(대상, 포획세력)
+	RETURN 2
+
+ELSEIF RESULT == 4
+	CALL KOJO_EVENT(대상, 335)
+	PRINTFORMW %조사처리(ANAME(대상),"를")% 연금 했습니다
+	CALL CAPTURE(대상, 포획세력)
+	CFLAG:대상:연금중 = 1
+	RETURN 4
+
+ELSEIF RESULT == 3
+	CALL KOJO_EVENT(대상, 336)
+	PRINTFORMW ……………………
+	PRINTFORMW ……
+	PRINTFORMW %조사처리(ANAME(대상),"를")% 처형했습니다
+	CALL EXECUTION(대상)
+	CALL CHANGE_COUNTRY(대상, 0, 1, 1)
+	RETURN 3
+ELSE
+	GOTO INPUT_LOOP
+ENDIF
+
+;-------------------------------------------------
+;CONFIG:301이 서 있을 때의, 플레이어 세력에 의한 포로의 자동 처우
+;ARG:2번의 캐릭터의, 포로로서의 취급을 수동으로 결정하는 함수(ARG:0=포획 된 캐릭터의 세력, ARG:1=포획 한 세력)
+;전투에 의한 포획의 경우는 ARG:3에 1을 설정하는 것
+;반환값 0=등용 1=해방 2=투옥 3=처형
+;-------------------------------------------------
+@AUTO_PRISONER_TREATMENT(대상, 대상세력, 포획세력)
+#DIM 대상세력
+#DIM 포획세력
+#DIM 대상
+
+;등용에 응할지 어떨지를 판정
+IF JUDGE_ASSIGN(대상, 대상세력, 포획세력) == 1
+	CALL KOJO_EVENT(대상, 332)
+	PRINTFORMW %조사처리(ANAME(대상),"를")% 등용했습니다
+	CALL CHANGE_COUNTRY(대상, 포획세력, 1)
+	;호감도를 상승, 적대치를 감소
+	CALL CHANGE_RELATION_O_TO_C(대상, 포획세력, 50, -50)
+	RETURN 0
+ENDIF
+
+CALL KOJO_EVENT(대상, 333)
+PRINTFORMW %조사처리(ANAME(대상),"는")% 등용에 응할 생각은 없는 것 같습니다…
+;호감도를 상승, 적대치를 감소
+CALL CHANGE_RELATION_O_TO_C(대상, 포획세력, 50, -50)
+
+IF CONFIG:301 == 1
+	CALL KOJO_EVENT(대상, 334)
+	PRINTFORMW %조사처리(ANAME(대상),"를")% 해방했습니다
+	IF CFLAG:대상:포로처 != 0
+		;포로 설정을 해제
+		CALL CAPTURE(대상, 0)
+	ELSE
+		;상태 플래그를 도주 상태에
+		CFLAG:(대상):특수상태 = 특수상태_방랑
+	ENDIF
+
+	;호감도를 상승, 적대치를 감소
+	CALL CHANGE_RELATION_O_TO_C(대상, 포획세력, 50, -50)
+	RETURN 1
+ELSEIF CONFIG:301 == 2
+	CALL KOJO_EVENT(대상, 335)
+	PRINTFORMW %조사처리(ANAME(대상),"를")% 투옥했습니다
+	CALL CAPTURE(대상, 포획세력)
+	RETURN 2
+ENDIF
+
+;-------------------------------------------------
+;주인공이 ARG:0 세력에 잡혔을 경우의 처리
+;반환값 0=등용 1=해방 2=투옥 3=처형
+;-------------------------------------------------
+@MASTER_CAPTURED(세력)
+#DIM 세력
+#DIM 군주
+#DIM 우호도
+#DIM 적대도
+
+군주 = GET_COUNTRY_BOSS(세력)
+우호도 = REL_LIKE:군주:MASTER
+적대도 = REL_HATE:군주:MASTER
+
+FLAG:역조교메인조교자 = 0
+
+TRYCCALLFORM MASTER_CAPTURED_%SP_COUNTRY_NAME_ENG:SP_COUNTRY_TO_CONST(세력)%(세력)
+	RETURN RESULT
+CATCH
+ENDCATCH
+
+IF CFLAG:MASTER:포로처
+	PRINTFORMW 포로로서 잡혀지고 있었던 %조사처리(ANAME(MASTER),"는")%, %ANAME(군주)%의 전에 닫혀졌다…
+ELSE
+	PRINTFORMW 잡힌 %조사처리(ANAME(MASTER),"는")% %ANAME(군주)%의 전에 끌어내졌다…
+ENDIF
+
+;왕으로부터의 호감도가 낮게 적대치가 특히 높은 경우로, 왕의 호감도·의존도·의존도가 함께 500 미만이라면 선택지를 표시하지 않고 처형
+IF 우호도 < 100 && 적대도 >= 800 && MAX(CFLAG:군주:호감도, CFLAG:군주:의존도, CFLAG:군주:종속도, CFLAG:군주:지배도) < 500
+	PRINTFORMW %ANAME(MASTER)%에 너무 좋은 감정을 가지지 않는 %조사처리(ANAME(군주),"는")%, 주저 없게 부하에게 %ANAME(MASTER)%의 처형을 명했다
+	CALL EXECUTION(MASTER)
+	FLAG:강제엔드플래그 = 1
+	RETURN 3
+ENDIF
+
+IF CFLAG:MASTER:포로처
+	PRINTFORML %조사처리(ANAME(군주),"는")% %ANAME(MASTER)%에 대해, 도와줄 생각은 없을까 가져 걸어 왔다
+	CALL ASK_MULTI("나로 좋다면 기뻐해", "거절이다", "해방 해 주었으면 한다")
+
+	SELECTCASE RESULT 
+		CASE 0
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(군주)%의 사관이 되었습니다
+			PRINTFORMW 이후는 %ANAME(군주)% 세력으로서 행동합니다
+			CALL CHANGE_COUNTRY(MASTER, 세력, 1)
+			RETURN 0
+		CASE 1
+			IF 우호도 > 300 && 적대도 < 300
+				PRINTFORMW %조사처리(ANAME(MASTER),"가")% 관직에 오름을 거절하면, %조사처리(ANAME(군주),"는")% 조금 유감스러운 듯이 하면서도 %조사처리(ANAME(MASTER),"를")% 해방했다
+				CALL CAPTURE(MASTER, 0)
+				RETURN 1
+			ELSE
+				PRINTFORMW %조사처리(ANAME(MASTER),"가")% 관직에 오름을 거절하면, %조사처리(ANAME(군주),"는")% %조사처리(ANAME(MASTER),"를")% 투옥했다
+				CALL CAPTURE(MASTER, 세력)
+				RETURN 2
+			ENDIF
+		CASE 2
+			IF 우호도 > 300 && 적대도 < 300
+				PRINTFORMW %조사처리(ANAME(MASTER),"가")% 해방해 주고라고 부탁하면, %조사처리(ANAME(군주),"는")% 조금 유감스러운 듯이 하면서도 %조사처리(ANAME(MASTER),"를")% 해방했다
+				CALL CAPTURE(MASTER, 0)
+				RETURN 1
+			ELSE
+				PRINTFORMW %조사처리(ANAME(MASTER),"가")% 해방해 주고라고 부탁하면, %조사처리(ANAME(군주),"는")% 목을 옆에 흔들어, %조사처리(ANAME(MASTER),"를")% 투옥했다
+				CALL CAPTURE(MASTER, 세력)
+				RETURN 2
+			ENDIF
+	ENDSELECT
+ELSE
+	PRINTFORML 충성을 맹세해 도와준다면 생명은 돕는다, 라고이지만
+	CALL ASK_MULTI("받아들인다", "거부한다", "해방 해 주었으면 한다")
+	SELECTCASE RESULT
+		CASE 0
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(군주)%의 사관이 되었습니다
+			PRINTFORMW 이후는 %ANAME(군주)% 세력으로서 행동합니다
+			CALL CHANGE_COUNTRY(MASTER, 세력, 1)
+			RETURN 0
+		CASE 2
+			IF 우호도 > 300 && 적대도 < 300
+				PRINTFORMW %조사처리(ANAME(MASTER),"가")% 해방해 주고라고 부탁하면, %조사처리(ANAME(군주),"는")% 조금 유감스러운 듯이 하면서도 %조사처리(ANAME(MASTER),"를")% 해방했다
+				CALL CAPTURE(MASTER, 0)
+				RETURN 1
+			ELSE
+				PRINTFORMW %조사처리(ANAME(MASTER),"가")% 해방해 주고라고 부탁하면, %조사처리(ANAME(군주),"는")% 목을 옆에 흔들어, %조사처리(ANAME(MASTER),"를")% 투옥했다
+				CALL CAPTURE(MASTER, 세력)
+				RETURN 2
+			ENDIF
+		CASE 1
+			CALL MASTER_CAPTURED_DOES_EXECUTE(세력)
+			IF RESULT == 1
+				PRINTFORMW %조사처리(ANAME(MASTER),"가")% 관직에 오름을 거절하면, %조사처리(ANAME(군주),"는")% 유감스러운 듯이 하면서도 부하에게 %ANAME(MASTER)%의 처형을 명했다
+				CALL EXECUTION(MASTER)
+				FLAG:강제엔드플래그 = 1
+				RETURN 3
+			ELSE
+				CALL CAPTURE(MASTER, 세력)
+				RETURN 2
+			ENDIF
+	ENDSELECT
+ENDIF
+
+;-------------------------------------------------
+;주인공이 ARG:0 세력에 잡혀 등용을 거부했을 경우의 처형 판정
+;반환값 0=투옥 1=처형
+;-------------------------------------------------
+@MASTER_CAPTURED_DOES_EXECUTE(세력)
+#DIM 세력
+#DIM 군주
+#DIM 우호도
+#DIM 적대도
+#DIM 호감도보존	
+#DIM 의사표현캐릭터
+군주 = GET_COUNTRY_BOSS(세력)
+우호도 = REL_LIKE:군주:MASTER
+적대도 = REL_HATE:군주:MASTER
+
+
+의사표현캐릭터 = -1
+호감도보존 = 0
+FOR LOCAL:0, 0, CHARANUM
+	SIF CFLAG:(LOCAL:0):소속 != 세력 || CFLAG:(LOCAL:0):포로처
+		CONTINUE
+	SIF CFLAG:(LOCAL:0):호감도 < 500
+		CONTINUE
+	SIF ABL:(LOCAL:0):주도도Ｕ < 100 && !GETBIT(TALENT:(LOCAL:0):음란계, 소질_음란_새드)
+		CONTINUE
+	SIF LOCAL == 군주
+		CONTINUE
+	IF CFLAG:(LOCAL:0):호감도 > 호감도보존
+		;조건을 채우는 캐릭터 가운데, 호감도가 최대의 캐릭터를 탐색
+		의사표현캐릭터 = LOCAL
+		호감도보존 = CFLAG:LOCAL:호감도
+	ENDIF
+NEXT
+
+;조건을 채우는 캐릭터가 발견되었을 경우
+IF 의사표현캐릭터 >= 0
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 관직에 오름을 거절하면, 그것을 보며 있었던 %ANAME(의사표현캐릭터)%가 %ANAME(군주)%에게,
+	PRINTFORMW 자신에게 설득을 맡기면 좋겠다고 신청했다
+	PRINTFORMW %조사처리(ANAME(군주),"는")% %ANAME(의사표현캐릭터)%의 말을 들어주어, %ANAME(MASTER)%의 처우를 %ANAME(의사표현캐릭터)%에 맡겼다…
+	CALL COLOR_PRINTW(@"%조사처리(ANAME(MASTER),"는")% %ANAME(군주)%의 포로가 되었습니다", 칼라_주의)
+	FLAG:역조교메인조교자 = GET_ID(의사표현캐릭터)
+	RETURN 0
+ENDIF
+
+IF MAX(CFLAG:군주:호감도, CFLAG:군주:의존도, CFLAG:군주:종속도, CFLAG:군주:지배도) >= 1500
+	PRINTFORMW %ANAME(군주)%에는 %조사처리(ANAME(MASTER),"를")% 베는 것이 할 수 없는 것 같다…
+	PRINTFORMW %조사처리(ANAME(군주),"는")% 부하에 대해, %조사처리(ANAME(MASTER),"를")% 투옥하도록(듯이) 명했다
+	CALL COLOR_PRINTW(@"%조사처리(ANAME(MASTER),"는")% %ANAME(군주)%의 포로가 되었습니다", 칼라_주의)
+	RETURN 0
+ENDIF
+
+의사표현캐릭터 = -1
+호감도보존 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):소속 == 세력 && !CFLAG:(LOCAL:0):포로처 && CFLAG:(LOCAL:0):호감도 >= 1500
+		IF CFLAG:(LOCAL:0):호감도 > 호감도보존
+			;조건을 채우는 캐릭터 가운데, 호감도가 최대의 캐릭터를 탐색
+			의사표현캐릭터 = LOCAL
+			호감도보존 = CFLAG:LOCAL:호감도
+		ENDIF
+	ENDIF
+NEXT
+
+;조건을 채우는 캐릭터가 발견되었을 경우
+IF 의사표현캐릭터 >= 0
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% 관직에 오름을 거절하면, %조사처리(ANAME(군주),"는")% 부하에게 %ANAME(MASTER)%의 처형을 명했다
+	PRINTFORMW 하면, 그것을 보며 있었던 %ANAME(의사표현캐릭터)%가 %ANAME(군주)%에 달려들어, 필사적으로 %ANAME(MASTER)%의 조명을 탄원 했다…
+	PRINTFORML %ANAME(의사표현캐릭터)%의 기세에 밀린 %조사처리(ANAME(군주),"는")%,
+	PRINTFORMW 아무래도 %ANAME(MASTER)%의 목을 잡지 않고 포로로서 투옥해 두기로 한 것 같다
+	CALL COLOR_PRINTW(@"%조사처리(ANAME(MASTER),"는")% %ANAME(군주)%의 포로가 되었습니다", 칼라_주의)
+	RETURN 0
+ENDIF
+
+;3능력에 응한 확률로
+IF ABL:MASTER:무투 + ABL:MASTER:방위 + ABL:MASTER:지략 + ABL:MASTER:정치 >= RAND:400
+	PRINTFORMW %조사처리(ANAME(군주),"는")%, %조사처리(ANAME(MASTER),"와")% 같은 인재를 베는 것을 아낀 것 같다
+	PRINTFORMW %조사처리(ANAME(군주),"는")% 부하에 대해, %조사처리(ANAME(MASTER),"를")% 투옥하도록(듯이) 명했다
+	CALL COLOR_PRINTW(@"%조사처리(ANAME(MASTER),"는")% %ANAME(군주)%의 포로가 되었습니다", 칼라_주의)
+	RETURN 0
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터가 등용에 응할지 어떨지를 판정(ARG:1=등용측의 세력, ARG:2= ARG:0이 소속하는 세력
+;반환값 0=거부 1=응한다
+;-------------------------------------------------
+@JUDGE_ASSIGN(대상, 소속세력, 포박세력)
+#FUNCTION
+#DIM 대상
+#DIM 포박세력
+#DIM 소속세력
+#DIM 포박군주
+#DIM 소속군주
+#DIM 기준치
+#DIM 난수
+포박군주 = GET_COUNTRY_BOSS(포박세력)
+소속군주 = GET_COUNTRY_BOSS(소속세력)
+
+;특수 세력 소속이라면 1/2으로 판정을 무시해 응한다
+;SIF RAND:2 && IS_SP_COUNTRY(소속 세력)
+;	RETURNF 1
+
+;등용측이 특수 세력으로, 특수 세력에 떨어지지 않으면 각하 한다
+SIF RAND:2 && IS_SP_COUNTRY(포박세력) && !IS_FALLEN_TO_SP_COUNTRY(대상)
+	RETURNF 0
+
+;기본은 30%. 1000분 율
+기준치 = 3000
+
+;등용측에게로의 군주의 호감도·적대도로 보정한다
+SIF 포박군주 >= 0
+	기준치 += REL_LIKE:대상:포박군주 * 2 - REL_HATE:대상:포박군주
+
+;소속측에게로의 호감도·적대도로 보정한다
+SIF 소속군주 >= 0
+	기준치 -= REL_LIKE:대상:소속군주 * 3 - REL_HATE:대상:소속군주
+
+;주인공이 등용측
+IF CFLAG:MASTER:소속 == 포박세력
+	기준치 += MAX(CFLAG:대상:호감도, CFLAG:대상:의존도, CFLAG:대상:종속도, CFLAG:대상:지배도)
+;주인공이 소속측
+ELSEIF CFLAG:MASTER:소속 == 소속세력
+	기준치 -= MAX(CFLAG:대상:호감도, CFLAG:대상:의존도, CFLAG:대상:종속도, CFLAG:대상:지배도)
+ENDIF
+
+;자신이 군주
+IF 대상 == 소속군주
+	기준치 -= 1000
+;소속무
+ELSEIF 소속세력 == 0
+	기준치 += 2000
+ENDIF
+
+난수 = RAND:10000
+
+;기준치를 채우지 않지만, 난수의 것 3/4보다는 크면 돈을 요구한다
+SIF INRANGE(기준치, 난수 / 2, 난수)
+	RETURNF 2
+RETURNF 난수 < 기준치
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터가 조건부로 등용에 응할 때의 판정(ARG:1=등용측의 세력, ARG:2= ARG:0이 소속하는 세력
+;반환값 0=거부 1=응한다
+;-------------------------------------------------
+@JUDGE_ASSIGN_REQUIRE_MONEY(대상, 소속세력, 포박세력)
+#FUNCTION
+#DIM 대상
+#DIM 포박세력
+#DIM 소속세력
+#DIM 포박군주
+#DIM 소속군주
+#DIM 요구액
+포박군주 = GET_COUNTRY_BOSS(포박세력)
+소속군주 = GET_COUNTRY_BOSS(소속세력)
+
+;베이스는 스카우트 했을 때의 이마내지（국고의 10%로 10000으로 싼 (분)편）를 요구한다
+요구액 = MAX(SCOUT_CALC_PRICE_BASIS(대상), MIN(MONEY:포박세력 / 10, 10000))
+
+;등용측에게로의 군주의 호감도·적대도로 보정한다
+SIF 포박군주 >= 0
+	요구액 = 요구액 * (3000 - REL_LIKE:대상:포박군주 + REL_HATE:대상:포박군주) / 3000
+
+;등용측에게로의 군주의 호감도·적대도로 보정한다
+SIF 소속군주 >= 0
+	요구액 = 요구액 * (3000 - REL_HATE:대상:소속군주 + REL_LIKE:대상:소속군주) / 3000
+
+RETURNF 요구액

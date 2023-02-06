@@ -1,0 +1,57 @@
+﻿;-------------------------------------------------
+;조교 함수 존재 판정
+;-------------------------------------------------
+@GAIRAI_DOES_TRAIN()
+
+;-------------------------------------------------
+;조교 함락시 메세지
+;-------------------------------------------------
+@GAIRAI_FALLEN_MSG(대상)
+#DIM 대상
+IF !GETBIT(TALENT:대상:특수세력함락계, 특수세력_외래인)
+	PRINTFORMW 외래 사람들이 거듭되는 연구에 의해, %ANAME(대상)%의 자아는 붕괴했다
+	PRINTFORMW 지금은 %PRONOUN(대상)%는, 그들을 위한 실험동물에 지나지 않는다……
+	IF TALENT:대상:낙인
+		PRINTFORML %조사처리(ANAME(대상),"가")% %ANAME(MASTER)%전용인 것을 나타내는 낙인 위로부터,
+		PRINTFORMW 연구용의 실험동물인 것을 나타내는 낙인이 담금질
+		TALENT:대상:낙인 = 0
+	ELSE
+		PRINTFORMW %ANAME(대상)%의 몸에, 연구용의 실험동물인 것을 나타내는 낙인이 담금질
+	ENDIF
+	IF TALENT:(대상):프라이드높음
+		PRINTL
+		PRINTFORMW 공허한 표정으로 외래 사람들에게 수행하는 %ANAME(대상)%에, 이미 한 때의 모습은 남지 않았다
+		PRINTFORMW 인간으로서조차 다루어지지 않는 나날 중(안)에서, %ANAME(대상)%의 프라이드는 흔적도 없게 부수어져 버렸다……
+		CALL TALENT_LOSE_PRIDE(대상, 1, 1)
+	ENDIF
+ELSE
+	PRINTFORMW 최초야말로 저항하고 있었던 %조사처리(ANAME(대상),"였")%지만, 이미 외래인에 굴한 그 몸은 주어지는 쾌락에 민감하게 반응해 버린다
+	PRINTFORMW 접할 수 있을 때, 범해질 때, 당신이 실험동물에 지나지 않는 것을, %조사처리(ANAME(대상),"는")% 생각해 내 간다
+	PRINTFORMW 끊임없이 계속되는 능욕에, 얼마 지나지 않아 %조사처리(ANAME(대상),"는")% 쾌감을 받아들여, 행복한 표정으로 스스로 봉사를 시작했다…
+ENDIF
+
+;-------------------------------------------------
+;조교 함락시에 피어싱 하거나 하는 경우의 처리
+;-------------------------------------------------
+@GAIRAI_FALLEN_LEAVE_MARK(대상)
+#DIM 대상
+SELECTCASE RAND:10
+	CASE IS < 3
+		CALL SET_PIERCE_RANDOM(대상, 0)
+		SIF RESULT != -1
+			CALL COLOR_PRINTW(@"%ANAME(대상)%의 %GET_PIERCE_NAME(RESULT)%에, 실험동물인 것을 나타내는 피어스가 장착되었다……", 칼라_핑크)
+	CASE IS < 7
+		CALL SET_TATTOO_RANDOM(대상, "실험동물", 0)
+		SIF RESULT != -1
+			CALL COLOR_PRINTW(@"%ANAME(대상)%의 %GET_TATTOO_NAME(RESULT)%에, 「%TATTOO:대상:RESULT%」%조사만처리(TATTOO:대상:RESULT,"라")%고 문신이 새겨졌다……", 칼라_핑크)
+	CASEELSE
+		IF GET_INMOU(대상) >= 음모_표준
+		CALL COLOR_PRINTW(@"복종이 증거로 삼아, %ANAME(대상)%의 음모는 하트형에 정돈되었다……", 칼라_핑크)
+		TALENT:대상:음모목표치 = 음모_하트형
+		TALENT:대상:음모현재치 = 음모_하트형
+	ELSE
+		CALL COLOR_PRINTW(@"복종이 증거로 삼아, %ANAME(대상)%의 음모는 영구 제모되었다……", 칼라_핑크)
+		TALENT:대상:음모목표치 = 음모_백보지
+		TALENT:대상:음모현재치 = 음모_백보지
+	ENDIF
+ENDSELECT

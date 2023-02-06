@@ -1,0 +1,50 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_STRAY_DOG_DANGER_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_STRAY_DOG_DANGER_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_STRAY_DOG_DANGER(대상)
+#DIM 대상
+
+
+PRINTFORML 탐색중, 더러워진 개를 찾아냈다
+PRINTFORML 인간이 있는 것 같다, 원래는 기르는 개였을까
+PRINTFORMW 어떻게 하지?
+PRINTL
+CALL ASK_YN("데리고 돌아간다", "쫓아버린다")
+
+IF RESULT == 1
+	PRINTFORML 더러운 개를 기를 여유 따위 없다
+	PRINTFORMW 쉿 해와 개를 쫓아버렸다
+	RETURN 1
+ENDIF
+
+PRINTFORMW 불쌍하다, 데리고 돌아가기로 하자
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+PRINTFORML 개는 %ANAME(대상)%에 좋게 따랐다
+PRINTFORMW 훈련중이나 업무중, %ANAME(대상)%옆에 잠시 멈춰서는 늠름한 모습은 평판이 되었다
+IF IS_FEMALE(대상)
+	PRINTFORML 
+	PRINTFORML 하지만 두 명의 사이에는 비밀이 있었다
+	PRINTFORML 심야의 침실, 침대 위에서 개가 %ANAME(대상)%에 덮어씌워 맹렬하게 허리를 흔들고 있다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 복종의 포즈로 개의 페니스에 관철해지면서, 황홀한 표정으로 야무지지 못하게 혀를 늘어뜨리고 있다
+	PRINTFORML 밤이 되면 두 명의 주종 관계는 역전해, 개가 %ANAME(대상)%의 주인님이 된다
+	PRINTFORMW 주인님의 작열의 자식을 쏟아지면서, %조사처리(ANAME(대상),"는")% 짐승과 같은 교성을 올려 절정 했다
+	CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｍ, 키스, 펠라티오, 수간, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("개"), @"개의 \@RAND:2 ? 페니스 # 입술\@", "개", "", "화간")
+ENDIF
+

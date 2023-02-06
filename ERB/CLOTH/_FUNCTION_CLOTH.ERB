@@ -1,0 +1,217 @@
+﻿;-------------------------------------------------
+;의상의 초기화
+;-------------------------------------------------
+@CLOTH_INIT(대상)
+#DIM 대상
+TRYCALLFORM CLOTH_INIT_{NO:대상}
+
+;-------------------------------------------------
+;의상의 리셋트
+;-------------------------------------------------
+@CLOTH_RESET(대상)
+#DIM 대상
+FOR LOCAL, 0, CLOTH_PART_NUM
+	CLOTH:대상:LOCAL = 0
+NEXT
+
+
+;-------------------------------------------------
+;ARG:0번의 의상을 표시
+;-------------------------------------------------
+@SHOW_CLOTH(ARG:0)
+PRINTFORML ◆%ANAME(ARG:0)%의 의상◆
+FOR LOCAL, 0, CLOTH_PART_NUM
+	CALL GET_CLOTH_NAME(LOCAL, CLOTH:(ARG:0):LOCAL)
+	PRINTFORML   %CLOTH_PART_NAME:LOCAL, 10, LEFT% - %RESULTS%
+NEXT
+
+
+
+;-------------------------------------------------
+;지정 캐릭터의 지정 부위로 지정 ID의 의상을 장착한다
+;-------------------------------------------------
+@SET_CLOTH(대상, 부위, ID)
+#DIM 대상
+#DIM 부위
+#DIM ID
+TRYCCALLFORM CLOTH_NAME_%CLOTH_PART_NAME_ENG:부위%_{ID}
+CATCH
+	ID = 0
+ENDCATCH
+
+IF ID > 0
+	SELECTCASE 부위
+		CASE 의상부위_상의, 의상부위_하의
+			CLOTH:대상:의상부위_상하의 = 0
+		CASE 의상부위_상하의
+			CLOTH:대상:의상부위_상의 = 0
+			CLOTH:대상:의상부위_하의 = 0
+		CASE 의상부위_속옷상, 의상부위_속옷하
+			CLOTH:대상:의상부위_속옷세트 = 0
+		CASE 의상부위_속옷세트
+			CLOTH:대상:의상부위_속옷상 = 0
+			CLOTH:대상:의상부위_속옷하 = 0
+	ENDSELECT
+ENDIF
+
+CLOTH:대상:부위 = ID
+
+RETURN 1
+
+;-------------------------------------------------
+;명칭으로부터 의상을 설정하는 무겁기 때문에 다용하지 않는 것
+;-------------------------------------------------
+@SET_CLOTH_BY_NAME(대상, 부위, 명칭)
+#DIM 대상
+#DIM 부위
+#DIMS 명칭
+
+CALL GET_CLOTH_ID_BY_NAME(부위, 명칭)
+CALL SET_CLOTH(대상, 부위, RESULT)
+
+;-------------------------------------------------
+;명칭으로부터 의상을 취득하는 무겁기 때문에 다용하지 않는 것
+;-------------------------------------------------
+@GET_CLOTH_ID_BY_NAME(부위, 명칭)
+#DIM 부위
+#DIMS 명칭
+FOR LOCAL, 0, MAX_CLOTH_ID
+	TRYCCALLFORM CLOTH_NAME_%CLOTH_PART_NAME_ENG:부위%_{LOCAL}
+	SIF RESULTS == 명칭
+		RETURN LOCAL
+	CATCH
+	ENDCATCH
+NEXT
+
+RETURN 0
+
+;-------------------------------------------------
+;의상명을 취득하는 나팔 함수
+;-------------------------------------------------
+@GET_CLOTH_NAME(부위, ID)
+#DIM 부위
+#DIM ID
+
+TRYCCALLFORM CLOTH_NAME_%CLOTH_PART_NAME_ENG:부위%_{ID}()
+CATCH
+	RESULTS = 없음
+ENDCATCH
+
+
+;-------------------------------------------------
+;착용 의상 표시（버튼 붙어 있는）
+;-------------------------------------------------
+@SHOW_CLOTH_SETTING(대상, 버튼)
+#DIM 대상
+#DIM 버튼
+PRINTFORML ◆%ANAME(대상)%의 의상◆
+SIF FLAG:화상설정
+	CALL PRINT_STATE_IMAGE(대상)
+FOR LOCAL, 0, CLOTH_PART_NUM
+	IF 버튼
+		PRINTBUTTON @"%"[" + CLOTH_PART_NAME:LOCAL + "]", 12, LEFT%", LOCAL + 100
+	ELSE
+		PRINTFORM %CLOTH_PART_NAME:LOCAL, 12, LEFT%
+	ENDIF
+	CALL GET_CLOTH_NAME(LOCAL, CLOTH:대상:LOCAL)
+	PRINTFORML %RESULTS%
+NEXT
+
+;-------------------------------------------------
+;의상 설정 메뉴
+;-------------------------------------------------
+@CLOTH_SETTING_MENU(대상)
+#DIM 대상
+#DIM FIRST_LINE
+FIRST_LINE = LINECOUNT
+
+CALL SHOW_CLOTH_SETTING(대상)
+PRINTBUTTON "[돌아온다]", 999
+
+$INPUT_LOOP
+INPUT
+
+IF RESULT == 999
+	RETURN
+ELSEIF RESULT < 100 && RESULT >= CLOTH_PART_NUM + 100
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+CALL CLOTH_CHANGE_MENU(대상, RESULT - 100)
+
+CLEARLINE LINECOUNT - FIRST_LINE
+
+RESTART
+
+;-------------------------------------------------
+;의상용 메뉴 그 2
+;-------------------------------------------------
+@CLOTH_CHANGE_MENU(대상, 부위)
+#DIM 대상
+#DIM 부위
+#DIM 이용가부, MAX_CLOTH_ID
+#DIM 의상수
+#DIM FIRST_LINE
+#DIM 페이지수
+#DIM 페이지
+#DIM CONST 페이지마다의상수 = 15
+VARSET 이용가부, 0
+이용가부:0 = 1
+의상수 = 1
+FOR LOCAL, 1, MAX_CLOTH_ID
+	TRYCCALLFORM CLOTH_NAME_%CLOTH_PART_NAME_ENG:부위%_{LOCAL}()
+		이용가부:LOCAL = 1
+		의상수 ++
+	CATCH
+		이용가부:LOCAL = 0
+	ENDCATCH
+NEXT
+
+페이지수 = 의상수 / 페이지마다의상수 + 1
+페이지 = 1
+
+
+CALL SINGLE_DRAWLINE
+
+FIRST_LINE = LINECOUNT
+$SHOW_LOOP
+
+의상수 = 0
+FOR LOCAL, 0, MAX_CLOTH_ID
+	SIF 이용가부:LOCAL == 0
+		CONTINUE
+	의상수 ++
+	SIF 의상수 < 페이지마다의상수 * (페이지 - 1) || 의상수 >= 페이지 * 페이지마다의상수
+		CONTINUE
+	CALL GET_CLOTH_NAME(부위, LOCAL)
+	PRINTBUTTON @"[%RESULTS, 20, LEFT%]", LOCAL
+	IF CLOTH:대상:부위 == LOCAL
+		PRINT  착용중
+	ENDIF
+	PRINTL
+NEXT
+CALL SINGLE_DRAWLINE
+IF 페이지수 > 1
+	PRINTBUTTON "[이전페이지]", 9997
+	PRINTFORM  {페이지}/{페이지수}
+	PRINTBUTTON "[다음페이지]", 9998
+	PRINTL
+ENDIF
+PRINTBUTTON "[돌아온다]", 9999
+
+$INPUT_LOOP
+
+INPUT
+
+IF RESULT == 9999
+	RETURN
+ELSEIF RESULT == 9997 && 페이지수 > 1
+	페이지 = ROUND_DECREMENT(페이지, 1, 페이지수)
+ELSEIF RESULT == 9998 && 페이지수 > 1
+	페이지 = ROUND_INCREMENT(페이지, 1, 페이지수)
+ELSEIF RESULT >= 0 && RESULT < MAX_CLOTH_ID && 이용가부:RESULT
+	CALL SET_CLOTH(대상, 부위, RESULT)
+ENDIF
+
+CLEARLINE LINECOUNT - FIRST_LINE
+GOTO SHOW_LOOP

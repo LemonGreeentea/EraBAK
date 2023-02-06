@@ -1,0 +1,976 @@
+﻿
+;--------------------------------------------------------
+;@STR_BODY
+;지정한 부위에 대한 묘사를 돌려준다
+;--------------------------------------------------------
+@STR_BODY(ARGS , ARG)
+#FUNCTIONS
+#DIM 길이
+#DIMS 부위
+#DIM 속성
+#DIM 아야말지정
+
+아야말지정 = 0
+
+VARSET 길이
+VARSET 속성
+VARSET 아야말지정
+VARSET LOCAL
+VARSET LOCALS
+
+속성 = FLAG_STRBODY(ARGS)
+부위 = %RSELECT_STRBODY(ARGS)%
+
+VARSET LOCALS
+
+IF CHECK_STRBODY("장:단:처녀 확인", 속성)
+	길이 = RAND(1, 3)
+ELSEIF CHECK_STRBODY("장", 속성)
+	길이 = 2
+ELSEIF CHECK_STRBODY("단", 속성)
+	길이 = 1
+ENDIF
+
+SELECTCASE 부위
+CASE "가슴"
+	IF IS_MALE(ARG)
+		IF !CHECK_STRBODY("수식", 속성)
+			IF GROUPMATCH(TALENT:(ARG:0):체격, 체격_아이, 체격_작은체형)
+				LOCALS:0 = %SPLIT_R("가슴")%
+			ELSE
+				LOCALS:0 = %SPLIT_R("가슴:가슴판")%
+			ENDIF
+		ENDIF
+	ELSEIF 길이 == 0
+		IF IS_PIERCED(ARG, 피어스_유두) && CHECK_STRBODY("피어스", 속성)
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("피어스로 장식해지고 있는:피어스가 붙은")%
+		ELSEIF IS_TATTOOED(ARG, 문신_가슴) && CHECK_STRBODY("문신", 속성)
+			LOCALS:0 = %STR_BODY_MOD("문신", ARG, 속성, "가슴")%
+		ELSEIF CHECK_STRBODY("감도", 속성)
+			SELECTCASE ABL:(ARG:0):Ｂ감 + TALENT:(ARG:0):Ｂ민감 * 5 - TALENT:(ARG:0):Ｂ둔감 * 5 + GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음유) * 15
+			CASE IS > 30
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("이상한 감도의:쾌감에 거역할 수 없는:조교가 다 된")%
+			CASE IS > 20
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("너무 과민한:쾌감에 약한:약점 그 자체의")%
+			CASE IS > 10
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("감도가 너무 좋은:자극에 약한:약점의")%
+			CASE IS > 4
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("예민한:자극에 민감한:반응이 좋은:성감대의")%
+			CASE IS > 1
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("개발 도중의:감도 양호한")%
+			ENDSELECT
+		ELSEIF CHECK_STRBODY("정액 더러움", 속성) && !RAND:2
+			IF CHECK_STRBODY("윤간", 속성)
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("정액 투성이의:백탁 투성이의:희게 물든")%
+			ELSE
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("정액으로 더러워진:백탁으로 더러워진")%
+			ENDIF
+		ELSEIF CHECK_STRBODY("성교", 속성)
+			IF GET_BUSTSIZE(ARG:0) == 2
+				IF CHECK_STRBODY_OR("기승위:배면기승위:배면좌위", 속성) && !RAND:2
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("상하에 튀는:상하에 날뛰는:돌아다니는:크게 튀는")%
+				ELSE
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("격렬하게 흔들리는:부들부들 튀는:흔들흔들 흔들리는:부릉부릉 하고 날뛰는:돌아다니는")%
+				ENDIF
+			ELSEIF GET_BUSTSIZE(ARG:0) == 1
+				IF CHECK_STRBODY_OR("기승위:배면기승위:배면좌위", 속성) && !RAND:2
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("상하에 튀는:돌아다니는:크게 튀는")%
+				ELSE
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("흔들리는:격렬하게 흔들리는:부들부들 튀는:흔들흔들 흔들리는")%
+				ENDIF
+			ELSEIF GET_BUSTSIZE(ARG:0) == -1
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("떨리는:흔들흔들 떨리는:부들부들 흔들리는")%
+			ELSEIF GET_BUSTSIZE(ARG:0) != -2
+				IF CHECK_STRBODY_OR("기승위:배면기승위:배면좌위", 속성) && !RAND:2
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("상하에 튀는")%
+				ELSE
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("흔들리는:부들부들 흔들리는")%
+				ENDIF
+			ENDIF
+		ENDIF
+		IF CHECK_STRBODY("애무", 속성) && !RAND:2
+			IF GET_BUSTSIZE(ARG:0) == 2
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("손에 들어가지 않을 만큼의:안을 정도의")% %STR_BODY_MOD("가슴＿말미", ARG, 속성)%
+			ELSEIF GET_BUSTSIZE(ARG:0) == 1
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("손으로부터 흘러넘칠 정도의")% %STR_BODY_MOD("가슴＿말미", ARG, 속성)%
+			ELSEIF GET_BUSTSIZE(ARG:0) == -1
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("손에 푹 들어가는")% %STR_BODY_MOD("가슴＿말미", ARG, 속성)%
+			ELSEIF GET_BUSTSIZE(ARG:0) == 0
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("적당한 크기의")% %STR_BODY_MOD("가슴＿말미", ARG, 속성)%
+			ENDIF
+		ELSEIF CHECK_STRBODY("감촉", 속성)
+			IF GET_BUSTSIZE(ARG:0) > 0
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("부드러운:달라붙는 것 같은:중량감이 있는:포동포동한:쫄깃한:떡과 같이 부드러운:머시멜로우와 같은")% %STR_BODY_MOD("가슴＿말미", ARG, 속성, "단")%
+			ELSEIF GET_BUSTSIZE(ARG:0) == -1
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("부드러운:탄력 있는:지방의 얇은:말랑말랑 한")% %STR_BODY_MOD("가슴＿말미", ARG, 속성, "단")%
+			ELSEIF GET_BUSTSIZE(ARG:0) == -2
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("부푼 곳이 느껴지지 않는:지방의 얇은")% %STR_BODY_MOD("가슴＿말미", ARG, 속성, "단")%
+			ELSE
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("부드러운")% %STR_BODY_MOD("가슴＿말미", ARG, 속성, "단")%
+			ENDIF
+		ELSE
+			LOCALS:0 = %LOCALS:0% %STR_BODY_MOD("가슴＿말미", ARG, 속성)%
+		ENDIF
+	ELSE
+		IF 길이 > 1
+			IF CHECK_STRBODY("성교", 속성) && !RAND:2
+				IF GET_BUSTSIZE(ARG:0) == 2
+					IF CHECK_STRBODY_OR("기승위:배면기승위:배면좌위", 속성) && !RAND:2
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("밀어올림에 맞추어 흔들리는:화려하게 상하하는:상하에 마구 설치는")%
+					ELSEIF CHECK_STRBODY("후배위", 속성) && !RAND:2
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("엎드림으로 무너진:격렬하게 전후에 흔들리는")%
+					ELSEIF CHECK_STRBODY("대면좌위", 속성) && !RAND:2
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("밀착해 무너진:강압할 수 있어 무너진")%
+					ELSE
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("피스톤질에 맞추어 흔들리는:부릉부릉 하고 날뛰는:격렬하게 돌아다니는:(이)다 분이다 물컥 뛰는")%
+					ENDIF
+				ELSEIF GET_BUSTSIZE(ARG:0) == 1
+					IF CHECK_STRBODY_OR("기승위:배면기승위:배면좌위", 속성) && !RAND:2
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("밀어올림에 맞추어 흔들리는:화려하게 상하하는")%
+					ELSEIF CHECK_STRBODY("후배위", 속성) && !RAND:2
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("엎드림으로 무너진:격렬하게 전후에 흔들리는")%
+					ELSEIF CHECK_STRBODY("대면좌위", 속성) && !RAND:2
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("밀착해 무너진:강압할 수 있어 무너진")%
+					ELSE
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("피스톤질에 맞추어 흔들리는:부릉부릉 하고 날뛰는:흔들흔들 흔들리는:격렬하게 흔들리는:화려하게 흔들리는")%
+					ENDIF
+				ELSEIF GET_BUSTSIZE(ARG:0) == -1
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("피스톤질에 맞추어 흔들리는:흔들흔들 떨리는:부들부들 흔들리는")%
+				ELSEIF GET_BUSTSIZE(ARG:0) != -2
+					IF CHECK_STRBODY_OR("기승위:배면기승위:배면좌위", 속성) && !RAND:2
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("밀어올림에 맞추어 흔들리는:상하에 튀는")%
+					ELSEIF CHECK_STRBODY("후배위", 속성) && !RAND:2
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("전후에 흔들리는")%
+					ELSEIF CHECK_STRBODY("대면좌위", 속성) && !RAND:2
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("밀착한:강압할 수 있는")%
+					ELSE
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("피스톤질에 맞추어 흔들리는:부들부들 흔들리는")%
+					ENDIF
+				ENDIF
+			ELSEIF TALENT:(ARG:0):모유체질 && !RAND:3
+				LOCALS:0 = %SPLIT_R("모유의 스며나오는:밀크를 저축한")%
+			ENDIF
+		ENDIF
+		IF IS_PIERCED(ARG, 피어스_유두) && (CHECK_STRBODY("피어스", 속성) || 길이 > 1 && !RAND:5)
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("피어스로 장식해지고 있는:피어스가 붙은")% %STR_BODY_MOD("가슴＿말미장", ARG, 속성)%
+		ELSEIF IS_TATTOOED(ARG, 문신_가슴) && !CHECK_STRBODY("성교", 속성) && 길이 > 1 && !RAND:5
+			LOCALS:0 = %STR_BODY_MOD("문신", ARG, 속성, "가슴")% %STR_BODY_MOD("가슴＿말미장", ARG, 속성)%
+		ELSEIF CHECK_STRBODY("감도", 속성) || !CHECK_STRBODY_OR("외관:감촉", 속성) && CHECK_STRBODY_OR("애무", 속성) && (ABL:(ARG:0):Ｂ감 > 4 || TALENT:(ARG:0):Ｂ민감) && !RAND:4
+			IF ABL:(ARG:0):Ｂ감 == 0 && !TALENT:(ARG:0):Ｂ민감
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("미개발의:개발되어 있지 않은")%
+			ELSE
+				SELECTCASE ABL:(ARG:0):Ｂ감 + TALENT:(ARG:0):Ｂ민감 * 5 - TALENT:(ARG:0):Ｂ둔감 * 5 + GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음유) * 15
+					CASE IS > 30
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("추잡하게 개발 된:이상한 감도의:쾌감에 거역할 수 없는:조교가 다 된")%
+					CASE IS > 20
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("쾌락을 철저히 가르쳐진:너무 과민한:쾌감에 약한:약점 그 자체의")%
+					CASE IS > 10
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("충분히 개발 된:감도가 너무 좋은:자극에 약한:약점의")%
+					CASE IS > 4
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("쾌감을 느낀:예민한:자극에 민감한:반응이 좋은")%
+					CASE IS > 1
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("쾌감을 느끼고 있는:감도 양호한")%
+				ENDSELECT
+			ENDIF
+			LOCALS:0 = %LOCALS:0% %STR_BODY_MOD("가슴＿말미", ARG, 속성)%
+		ELSEIF CHECK_STRBODY("애무", 속성) && GET_BUSTSIZE(ARG:0) != -2 && !RAND:3
+			IF GET_BUSTSIZE(ARG:0) == 2
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("손에 들어가지 않을 만큼의:안을 정도의:흐늘흐늘 비뚤어지는")%
+			ELSEIF GET_BUSTSIZE(ARG:0) == 1
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("손으로부터 흘러넘칠 정도의:손에 맞추어 비뚤어지는")%
+			ELSEIF GET_BUSTSIZE(ARG:0) == -1
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("손에 푹 들어가는")%
+			ELSE
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("적당한 크기의")%
+			ENDIF
+			LOCALS:0 = %LOCALS:0% %STR_BODY_MOD("가슴＿말미", ARG, 속성, "단")%
+		ELSEIF CHECK_STRBODY("접촉", 속성) && !RAND:3 || CHECK_STRBODY("감촉", 속성)
+			IF GET_BUSTSIZE(ARG:0) > 0
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("부드러운:달라붙는 것 같은:중량감이 있는:포동포동한:쫄깃한:떡과 같이 부드러운:머시멜로우와 같은")%
+			ELSEIF GET_BUSTSIZE(ARG:0) == -1
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("부드러운:탄력 있는:지방의 얇은:말랑말랑 한")%
+			ELSEIF GET_BUSTSIZE(ARG:0) == -2
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("부푼 곳이 느껴지지 않는:지방의 얇은")%
+			ELSE
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("부드러운")%
+			ENDIF
+			LOCALS:0 = %LOCALS:0% %STR_BODY_MOD("가슴＿말미", ARG, 속성, "단")%
+		ELSE
+			IF GET_BUSTSIZE(ARG:0) == -2
+				IF TALENT:(ARG:0):체격 == 체격_아이 && !RAND:3
+					LOCALS:0 = %LOCALS:0%외관 상응하는 %STR_BODY_MOD("가슴＿말미장", ARG, 속성, "장")%
+				ELSEIF TALENT:(ARG:0):체격 == 체격_작은체형 && !RAND:3
+					LOCALS:0 = %LOCALS:0%마치 아이와 같은 %STR_BODY_MOD("가슴＿말미장", ARG, 속성, "장")%
+				ELSE
+					LOCALS:0 = %SPLIT_R("어떤 기복도 없는:전혀 부푼 곳이 없는:기복의 존재하지 않는")% %STR_BODY_MOD("가슴＿말미장", ARG, 속성, "단")%
+				ENDIF
+			ELSEIF GET_BUSTSIZE(ARG:0) == -1
+				IF TALENT:(ARG:0):체격 == 체격_아이 && !RAND:3
+					LOCALS:0 = %LOCALS:0%외관 상응하는 %STR_BODY_MOD("가슴＿말미장", ARG, 속성, "장")%
+				ELSEIF TALENT:(ARG:0):체격 == 체격_작은체형 && !RAND:3
+					LOCALS:0 = %LOCALS:0%몸집이 작은 신체에 알맞은 %STR_BODY_MOD("가슴＿말미장", ARG, 속성, "장")%
+				ELSE
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("조금 부풀어 오른:완만하게 부풀어 오른")% %STR_BODY_MOD("가슴＿말미장", ARG, 속성, "단")%
+				ENDIF
+			ELSEIF GET_BUSTSIZE(ARG:0) == 1
+				IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음유) && !RAND:3
+					LOCALS:0 = %LOCALS:0%추잡하게 성숙한 %STR_BODY_MOD("가슴＿말미장", ARG, 속성)%
+				ELSEIF TALENT:(ARG:0):체격 == 체격_아이 && !RAND:3
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("어림에 알맞지 않는:어린이답지 않은:신체에 어울리지 않는:발육의 좋은:어른 압도하는")% %STR_BODY_MOD("가슴＿말미장", ARG, 속성)%
+				ELSEIF TALENT:(ARG:0):체격 == 체격_작은체형 && !RAND:3
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("몸집이 작은 신체에 알맞지 않는")% %STR_BODY_MOD("가슴＿말미장", ARG, 속성)%
+				ELSE
+					IF !RAND:2
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("중량감이 있는:멜론과 같은")% %STR_BODY_MOD("가슴＿말미장", ARG, 속성, "단")%
+					ELSE
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("묵직한:존재감이 있는")% %STR_BODY_MOD("가슴＿말미장", ARG, 속성)%
+					ENDIF
+				ENDIF
+			ELSEIF GET_BUSTSIZE(ARG:0) == 2
+				IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음유) && !RAND:3
+					LOCALS:0 = %LOCALS:0%추잡하게 성숙한 %STR_BODY_MOD("가슴＿말미장", ARG, 속성)%
+				ELSEIF TALENT:(ARG:0):체격 == 체격_아이 && !RAND:3
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("어림에 알맞지 않는:어린이답지 않은:신체에 어울리지 않는:발육이 너무 좋은:어른 압도하는")% %STR_BODY_MOD("가슴＿말미장", ARG, 속성)%
+				ELSEIF TALENT:(ARG:0):체격 == 체격_작은체형 && !RAND:3
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("몸집이 작은 신체에 알맞지 않는:신체에 어울리지 않는")% %STR_BODY_MOD("가슴＿말미장", ARG, 속성)% %STR_BODY_MOD("가슴＿말미장", ARG, 속성)%
+				ELSE
+					IF !RAND:2
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("중량감이 있는:마치 소와 같은:흘러넘칠듯한 사이즈의:유별난 사이즈의:터질 것 같은:스이카와 같은")% %STR_BODY_MOD("가슴＿말미장", ARG, 속성, "단")%
+					ELSE
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("묵직한")% %STR_BODY_MOD("가슴＿말미장", ARG, 속성)%
+					ENDIF
+				ENDIF
+			ELSE
+				IF TALENT:(ARG:0):체격 == 체격_작은체형 && !RAND:3
+					LOCALS:0 = %LOCALS:0%몸집이 작은것에 비해 큰%STR_BODY_MOD("가슴＿말미장", ARG, 속성)%
+				ELSE
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("알맞은 크기의:탄력 있는")% %STR_BODY_MOD("가슴＿말미장", ARG, 속성)%
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+CASE "유두"
+	IF CHECK_STRBODY("감도", 속성)
+		SELECTCASE ABL:(ARG:0):Ｂ감 + TALENT:(ARG:0):Ｂ민감 * 5 - TALENT:(ARG:0):Ｂ둔감 * 5 + GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음유) * 15
+		CASE IS > 30
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("이상한 감도의:쾌감에 거역할 수 없는:조교가 다 된")%
+		CASE IS > 20
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("너무 과민한:쾌감에 약한:약점 그 자체의")%
+		CASE IS > 10
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("감도가 너무 좋은:자극에 약한:약점의")%
+		CASE IS > 4
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("예민한:자극에 민감한:반응이 좋은:성감대의")%
+		CASE IS > 1
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("개발 도중의:감도 양호한")%
+		ENDSELECT
+	ELSEIF TALENT:(ARG:0):모유체질 && !RAND:3
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("모유의 스며나오는:밀크를 흘리는")%
+	ELSEIF IS_PIERCED(ARG, 피어스_유두) && !RAND:2
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("피어스로 장식해지고 있는:피어스가 붙은")%
+	ENDIF
+	IF CHECK_STRBODY("미약", 속성) && !RAND:2
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("발정한:달아오른")%
+	ELSEIF CHECK_STRBODY("욕정", 속성)
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("펄떡펄떡이 된:핑 선:발기한:딱딱해진:딱딱하게 응어리진:부풀어 오른")%
+	ENDIF
+	SIF !CHECK_STRBODY("수식", 속성)
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("유두:유두")%
+CASE "엉덩이", "엉덩이살"
+	IF IS_MALE(ARG)
+		SIF !CHECK_STRBODY("수식", 속성)
+			LOCALS:0 = %부위%
+	ELSE
+		IF (CHECK_STRBODY("문신", 속성) || 길이 > 1 && !RAND:5) && IS_TATTOOED(ARG, 문신_엉덩이)
+				LOCALS:0 = %STR_BODY_MOD("문신", ARG, 속성, "엉덩이")%
+		ELSEIF CHECK_STRBODY("정액 더러움", 속성) && !RAND:3
+			IF CHECK_STRBODY("윤간", 속성)
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("정액 투성이의:백탁 투성이의:희게 물든")%
+			ELSE
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("정액이 방울져 떨어지는:백탁으로 더러워진")%
+			ENDIF
+		ELSEIF CHECK_STRBODY("성교", 속성) && (길이 == 0 || !RAND:2)
+			IF CHECK_STRBODY_OR("기승위:배면기승위", 속성)
+				IF GET_HIPSIZE(ARG) >= 1
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("상하에 뛰는:상하하는:물결치는:소리를 내 뛰는:화려하게 흔들리는:탐내도록(듯이) 뛰는:격렬하게 흔들어지고 있는:부릉부릉 뛰는:물결치면서 상하하는")%
+				ELSE
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("상하에 뛰는:상하하는:흔들리는:격렬하게 흔들어지고 있는")%
+				ENDIF
+			ELSE
+				IF GET_HIPSIZE(ARG) >= 1
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("물결치는:흔들리는:떨리는:격렬하게 흔들리는")%
+				ELSE
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("흔들리는:떨리는")%
+				ENDIF
+			ENDIF
+		ENDIF
+		IF 부위 == "엉덩이"
+			IF 길이 == 0 || 길이 < 2 && !RAND:3
+				IF RAND:3
+					IF TALENT:ARG:체격 != 체격_아이 && !RAND:5
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("둥근")%
+					ELSEIF TALENT:ARG:예쁜엉덩이
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("아름다운:예쁜:형태가 좋은")%
+					ELSEIF GET_HIPSIZE(ARG) >= 1
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("큰:풍만한:순산형의")%
+					ELSEIF TALENT:(ARG:0):체격 == 체격_아이
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("작은:얇은:어린")%
+					ELSEIF TALENT:ARG:체격 == 체격_작은체형
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("작은")%
+					ELSE
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("둥근")%
+					ENDIF
+				ENDIF
+				SIF !CHECK_STRBODY("수식", 속성)
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("엉덩이:엉덩이")%
+			ELSE
+				IF !RAND:2
+					IF !CHECK_STRBODY("외관", 속성) && !RAND:4 || CHECK_STRBODY("감촉", 속성)
+						IF TALENT:ARG:예쁜엉덩이
+							LOCALS:0 = %LOCALS:0% %SPLIT_R("부드러운:매끄러운:탄력 있는" + CHECK_STRBODY_ADD("애무", 속성, ":손에 달라붙는 것 같은"))%
+						ELSEIF GET_HIPSIZE(ARG) >= 1
+							LOCALS:0 = %LOCALS:0% %SPLIT_R("부드러운:쫄깃쫄깃한" + CHECK_STRBODY_ADD("애무", 속성, ":감당하기 힘들 정도의:한껏 한 반응의:비비어 반응이 있는"))%
+						ELSEIF TALENT:(ARG:0):체격 == 체격_아이
+							LOCALS:0 = %LOCALS:0% %SPLIT_R("부드러운:탄력 있는")%
+						ELSE
+							LOCALS:0 = %LOCALS:0% %SPLIT_R("부드러운")%
+						ENDIF
+					ELSE
+						IF TALENT:(ARG:0):체격 != 체격_아이 && !RAND:7
+							LOCALS:0 = %LOCALS:0% %SPLIT_R("둥그스름을 띈:포동포동 한")%
+						ELSEIF TALENT:ARG:예쁜엉덩이
+							LOCALS:0 = %LOCALS:0% %SPLIT_R("예쁜:형태가 좋은:둥근:아름다운:긴장된:매혹적인:아름다운 라인의:얼룩 한 점 없는:아름답고 가지런함")%
+						ELSEIF GET_HIPSIZE(ARG) >= 1
+							IF TALENT:(ARG:0):체격 == 체격_아이 && !RAND:4
+								LOCALS:0 = %LOCALS:0% %SPLIT_R("발육이 너무 좋은:아이라고는 생각되지 않는")%
+							ELSE
+								LOCALS:0 = %LOCALS:0% %SPLIT_R("큰:순산형의:둥근:풍만한:크게 부풀어 오른:중량감이 있는:포동포동한:터질 것 같은:한껏 한:한껏 고기가 붙은:포동포동 고기가 탄")%
+							ENDIF
+						ELSEIF TALENT:(ARG:0):체격 == 체격_아이
+							LOCALS:0 = %LOCALS:0% %SPLIT_R("지방의 얇은:발육 도상의:미발달:미성숙인:얇은")%
+						ELSE
+							LOCALS:0 = %LOCALS:0% %SPLIT_R("포동포동한:둥그스름을 띈:포동포동 한")%
+						ENDIF
+					ENDIF
+				ENDIF
+				IF !CHECK_STRBODY("수식", 속성)
+					IF TALENT:(ARG:0):체격 == 체격_아이 && !GET_HIPSIZE(ARG) >= 1
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("코지리:엉덩이:엉덩이")%
+					ELSEIF TALENT:ARG:예쁜엉덩이 && !RAND:2
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("분홍 엉덩이:예쁜엉덩이:엉덩이:엉덩이")%
+					ELSEIF GET_HIPSIZE(ARG) >= 1 && !RAND:2
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("분홍 엉덩이:큰엉덩이:큰 엉덩이:엉덩이:엉덩이")%
+					ELSE
+						LOCALS:0 = %LOCALS:0% %SPLIT_R("분홍 엉덩이:엉덩이:엉덩이")%
+					ENDIF
+				ENDIF
+			ENDIF
+		ELSE
+			IF !CHECK_STRBODY("외관", 속성) && !RAND:3 || CHECK_STRBODY("감촉", 속성)
+				IF TALENT:ARG:예쁜엉덩이
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("부드러운:매끄러운:탄력 있는" + CHECK_STRBODY_ADD("애무", 속성, ":손에 달라붙는 것 같은"))%
+				ELSEIF GET_HIPSIZE(ARG) >= 1
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("부드러운:쫄깃쫄깃한" + CHECK_STRBODY_ADD("애무", 속성, ":감당하기 힘들 정도의:한껏 한 반응의:비비어 반응이 있는"))%
+				ELSEIF TALENT:(ARG:0):체격 == 체격_아이
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("부드러운:탄력 있는")%
+				ELSE
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("부드러운")%
+				ENDIF
+			ELSEIF 길이 > 0
+				IF TALENT:(ARG:0):체격 != 체격_아이 && !RAND:5
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("포동포동한:부드러운:포동포동 한")%
+				ELSEIF TALENT:ARG:예쁜엉덩이
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("아름다운:탄력 있는:긴장된:얼룩 한 점 없는:아름답고 가지런함")%
+				ELSEIF GET_HIPSIZE(ARG) >= 1
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("풍부한:풍만한:크게 부풀어 오른:중량감이 있는:포동포동한:터질 것 같은:한껏 한:포동포동 고기가 탄")%
+				ELSEIF TALENT:(ARG:0):체격 == 체격_아이
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("미발달:얇은")%
+				ELSE
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("포동포동한:부드러운:포동포동 한")%
+				ENDIF
+			ELSE
+				IF TALENT:ARG:예쁜엉덩이
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("아름다운")%
+				ELSEIF GET_HIPSIZE(ARG) >= 1
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("풍부한:풍만한")%
+				ELSEIF TALENT:(ARG:0):체격 == 체격_아이
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("미발달:얇은")%
+				ELSE
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("부드러운")%
+				ENDIF
+			ENDIF
+			SIF !CHECK_STRBODY("수식", 속성)
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("엉덩이살")%
+		ENDIF
+	ENDIF
+CASE "질"
+	IF CHECK_STRBODY("처녀 확인", 속성) && VIRGIN(ARG)
+		IF CHECK_STRBODY("시간 경과", 속성)
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("아직 숫처녀였던:남자를 몰랐던:맑고 깨끗했던:누구에게도 사용되었던 적이 없었던:”여자”로 된")%
+		ELSE
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("아직 숫처녀의:남자를 모르는:아직 맑고 깨끗한:누구에게도 사용된 적이 없는:아가씨 인 채의")%
+		ENDIF
+	ENDIF
+	IF CHECK_STRBODY("감도", 속성)
+		SELECTCASE ABL:(ARG:0):Ｖ감 + TALENT:(ARG:0):Ｖ민감 * 5 - TALENT:(ARG:0):Ｖ둔감 * 5 + GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음호) * 15
+		CASE IS > 30
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("이상한 감도의:쾌감에 거역할 수 없는:조교가 다 된")%
+		CASE IS > 20
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("너무 과민한:쾌감에 약한:약점 그 자체의")%
+		CASE IS > 10
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("감도가 너무 좋은:자극에 약한:약점의")%
+		CASE IS > 4
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("예민한:자극에 민감한:반응이 좋은")%
+		CASE IS > 1
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("개발 도중의:감도 양호한")%
+		ENDSELECT
+	ELSEIF CHECK_STRBODY("Ｖ삽입", 속성)
+		IF CHECK_STRBODY("질내사정", 속성)
+			IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음호) || CHECK_STRBODY("욕정", 속성)
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("열중해 정액을 훌쩍거리는:정액을 다 마시자라고 꿈틀거리는:짜내도록(듯이) 수축하는")%
+			ELSEIF !CHECK_STRBODY("절정", 속성) || !RAND:2
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("한껏 씨뿌리기 된:백탁으로 다 메워진")%
+			ENDIF
+		ELSEIF CHECK_STRBODY("절정", 속성)
+			IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음호) || CHECK_STRBODY("욕정", 속성)
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("페니스에 빨아 붙는:열중해 단단히 조이는:더 없는 행복의 절정을 맛보고 있는:가고 있는 채의")%
+			ELSE
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("쾌감에 떨리는:남근을 조르는:격렬하게 수축하는")%
+			ENDIF
+		ELSEIF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음호) || CHECK_STRBODY("욕정", 속성)
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("페니스에 열중하고 있는:완전히 남근의 포로가 되어 있는:쾌락을 탐내는")%
+		ENDIF
+	ELSEIF CHECK_STRBODY("미약", 속성) && !RAND:2
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("발정한:달아오른")%
+	ELSEIF CHECK_STRBODY("욕정", 속성)
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("젖음:군침을 흘리는")%
+	ENDIF
+	IF TALENT:(ARG:0):체격 == 체격_아이 && !RAND:2
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("어린:미숙한")%
+	ELSEIF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음호) && !CHECK_STRBODY("감도", 속성) && !RAND:2
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("추잡한:음란한")%
+	ELSEIF TALENT:ARG:Ｖ민감 && !CHECK_STRBODY_OR("감도:처녀 확인", 속성) && !RAND:2
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("민감한:예민함")%
+	ENDIF
+	SIF !CHECK_STRBODY("수식", 속성)
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("질:질 구멍:암컷구멍:고기단지")%
+CASE "애널"
+	IF CHECK_STRBODY("감도", 속성)
+		SELECTCASE ABL:(ARG:0):Ａ감 + TALENT:(ARG:0):Ａ민감 * 5 - TALENT:(ARG:0):Ａ둔감 * 5 + GETBIT(TALENT:(ARG:0):음란계, 소질_음란_항문광) * 15
+		CASE IS > 30
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("이상한 감도의:쾌감에 거역할 수 없는:조교가 다 된")%
+		CASE IS > 20
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("너무 과민한:쾌감에 약한:약점 그 자체의")%
+		CASE IS > 10
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("성기화한:감도가 너무 좋은:자극에 약한:약점의")%
+		CASE IS > 4
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("성기 마찬가지의:예민한:자극에 민감한:반응이 좋은")%
+		CASE IS > 1
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("개발 도중의:감도 양호한")%
+		ENDSELECT
+	ELSEIF CHECK_STRBODY("Ａ삽입", 속성)
+		IF CHECK_STRBODY("질내사정", 속성)
+			IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_항문광) || CHECK_STRBODY("욕정", 속성)
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("열중해 정액을 훌쩍거리는:정액을 다 마시자라고 꿈틀거리는:짜내도록(듯이) 수축하는")%
+			ELSEIF !CHECK_STRBODY("절정", 속성) || !RAND:2
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("한껏 씨뿌리기 된:백탁으로 다 메워진")%
+			ENDIF
+		ELSEIF CHECK_STRBODY("절정", 속성)
+			IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_항문광) || CHECK_STRBODY("욕정", 속성)
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("페니스에 빨아 붙는:열중해 단단히 조이는:더 없는 행복의 절정을 맛보고 있는:가고 있는 채의")%
+			ELSE
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("쾌감에 떨리는:남근을 조르는:격렬하게 수축하는")%
+			ENDIF
+		ELSEIF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_항문광) || CHECK_STRBODY("욕정", 속성)
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("페니스에 열중하고 있는:완전히 남근의 포로가 되어 있는:쾌락을 탐내는")%
+		ENDIF
+	ENDIF
+	IF TALENT:(ARG:0):체격 == 체격_아이 && !RAND:2
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("어린:작은:좁은")%
+	ELSEIF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_항문광) && !CHECK_STRBODY("감도", 속성) && !RAND:2
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("추잡한:음란한:개발 끝난:개발 된")%
+	ELSEIF TALENT:ARG:Ａ민감 && !CHECK_STRBODY("감도", 속성) && !RAND:2
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("민감한:예민함")%
+	ENDIF
+	SIF !CHECK_STRBODY("수식", 속성)
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("애널:엉덩이 구멍:엉덩이의 구멍:국문")%
+CASE "허리"
+	SIF !CHECK_STRBODY("수식", 속성)
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("허리:가는 허리:버들가지 같이 가늘고 나긋나긋? ⌒")%
+CASE "음순"
+	IF CHECK_STRBODY("처녀 확인", 속성) && VIRGIN(ARG:0)
+		IF CHECK_STRBODY("시간 경과", 속성)
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("아직 숫처녀였던:남자를 몰랐던:맑고 깨끗했던:누구에게도 사용되었던 적이 없었던:”여자”로 된")%
+		ELSE
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("아직 숫처녀의:남자를 모르는:아직 맑고 깨끗한:누구에게도 사용된 적이 없는:아가씨 인 채의")%
+		ENDIF
+	ENDIF
+	IF IS_PIERCED(ARG, 피어스_음순) && (CHECK_STRBODY("피어스", 속성) || 길이 > 1 && !RAND:2)
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("피어스로 장식해지고 있는:피어스가 붙은")%
+	ENDIF
+	IF TALENT:(ARG:0):체격 == 체격_아이 && !RAND:2
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("어린:작은:좁은")%
+	ENDIF
+	SIF !CHECK_STRBODY("수식", 속성)
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("비부:비밀스런 장소:음순:비순:성기:질구")%
+CASE "클리"	
+	IF CHECK_STRBODY("감도", 속성)
+		SELECTCASE ABL:(ARG:0):Ｃ감 + TALENT:(ARG:0):Ｃ민감 * 5 - TALENT:(ARG:0):Ｃ둔감 * 5 + GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음핵) * 15
+		CASE IS > 30
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("이상한 감도의:쾌감에 거역할 수 없는:조교가 다 된")%
+		CASE IS > 20
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("너무 과민한:쾌감에 약한:약점 그 자체의")%
+		CASE IS > 10
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("감도가 너무 좋은:자극에 약한:약점의")%
+		CASE IS > 4
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("예민한:자극에 민감한:반응이 좋은")%
+		CASE IS > 1
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("개발 도중의:감도 양호한")%
+		ENDSELECT
+	ELSEIF IS_PIERCED(ARG, 피어스_클리토리스) && (CHECK_STRBODY("피어스", 속성) || 길이 > 1 && !RAND:2)
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("피어스로 장식해지고 있는:피어스가 붙은")%
+	ENDIF
+	IF CHECK_STRBODY("미약", 속성) && !RAND:2
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("발정한:달아오른")%
+	ELSEIF CHECK_STRBODY("욕정", 속성)
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("핑 선:충혈한:발기한:딱딱해진:부풀어 오른")%
+	ENDIF
+	IF TALENT:(ARG:0):체격 == 체격_아이 && !RAND:2
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("어린:미숙한:작은")%
+	ELSEIF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음핵) && !CHECK_STRBODY("감도", 속성) && !RAND:2
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("개발 된:큰")%
+	ELSEIF TALENT:ARG:Ｃ민감 && !CHECK_STRBODY("감도", 속성) && !RAND:2
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("민감한:예민함")%
+	ENDIF
+	SIF !CHECK_STRBODY("수식", 속성)
+		LOCALS:0 = %LOCALS:0% %SPLIT_R("음핵:클리토리스")%
+CASE "신체"	
+	IF IS_MALE(ARG)
+		SIF !CHECK_STRBODY("수식", 속성)
+			LOCALS:0 = %부위%
+	ELSE
+		IF TALENT:(ARG:0):체격 == 체격_아이
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("작은:미숙한:어린:몸집이 작은")%
+		ELSEIF TALENT:ARG:체격 == 체격_작은체형
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("작은:몸집이 작은")%
+		ELSEIF IS_BOIN(ARG) || GET_HIPSIZE(ARG) >= 1
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("풍만한:육감적인:남자가 좋아하는")%
+		ELSEIF TALENT:ARG:매혹
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("매혹적인:아름다운")%
+		ENDIF
+	SIF !CHECK_STRBODY("수식", 속성)
+		LOCALS:0 = %LOCALS:0%신체
+	ENDIF
+ENDSELECT
+RETURNF LOCALS:0
+
+;--------------------------------------------------------
+;@STR_BODY_MOD
+;--------------------------------------------------------
+@STR_BODY_MOD(ARGS:0, ARG:0 , ARG:1, ARGS:1)
+#FUNCTIONS
+#DIM 길이
+#DIMS 부위
+#DIM 속성
+#DIM 친속성
+
+친속성 = ARG:1
+VARSET 길이
+VARSET 속성
+VARSET LOCAL
+VARSET LOCALS
+
+IF ARGS:1 != ""
+	속성 = FLAG_STRBODY(ARGS:1)
+	부위 = %RSELECT_STRBODY(ARGS:1)%
+ELSE
+	속성 = 0
+	부위 = 
+ENDIF
+
+IF CHECK_STRBODY("장:단", 속성)
+	길이 = RAND(1, 3)
+ELSEIF CHECK_STRBODY("장", 속성)
+	길이 = 2
+ELSEIF CHECK_STRBODY("단", 속성)
+	길이 = 1
+ENDIF
+
+SELECTCASE ARGS:0
+CASE "가슴＿말미"
+	IF GET_BUSTSIZE(ARG:0) == 2
+		IF RAND:2 && !CHECK_STRBODY("수식", 친속성)
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("폭유:거유")%
+		ELSE
+			SIF 길이 != 1
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("큰:거대한:풍부한:풍만한")%
+			SIF !CHECK_STRBODY("수식", 친속성)
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("가슴:유방")%
+		ENDIF
+	ELSEIF GET_BUSTSIZE(ARG:0) == 1
+		IF RAND:2 && !CHECK_STRBODY("수식", 친속성)
+			LOCALS:0 = 거유
+		ELSE
+			SIF 길이 != 1
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("큰:풍부한:풍만한")%
+			SIF !CHECK_STRBODY("수식", 친속성)
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("가슴:유방")%
+		ENDIF
+	ELSEIF GET_BUSTSIZE(ARG:0) == -1
+		IF 길이 != 1
+			IF TALENT:(ARG:0):체격 == 체격_아이 && !RAND:2
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("어린:미성숙인:미발달 말야")%
+			ELSEIF TALENT:(ARG:0):체격 == 체격_작은체형 && !RAND:3
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("아이와 같은:소극적인")%
+			ELSE
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("작은:좀 작은:얇은")%
+			ENDIF
+		ENDIF
+		SIF !CHECK_STRBODY("수식", 친속성)
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("가슴:유방")%
+	ELSEIF GET_BUSTSIZE(ARG:0) == -2
+		IF 길이 != 1
+			IF TALENT:(ARG:0):체격 == 체격_아이 && !RAND:2
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("어린:미성숙인:미발달 말야")%
+			ELSE
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("평평한:평평한:평탄한")%
+			ENDIF
+		ENDIF
+		SIF !CHECK_STRBODY("수식", 친속성)
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("가슴")%
+	ELSE
+		IF 길이 != 1
+			IF TALENT:(ARG:0):체격 == 체격_아이 && !RAND:2
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("발육이 좋은")%
+			ENDIF
+		ENDIF
+		SIF !CHECK_STRBODY("수식", 친속성)
+			LOCALS:0 = %LOCALS:0% %SPLIT_R("가슴:유방")%
+	ENDIF
+CASE "가슴＿말미장"
+		IF GET_BUSTSIZE(ARG:0) == 2
+			IF RAND:2 && !CHECK_STRBODY("수식", 친속성)
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("폭유:풍만한 유방:거유:큰 젖")%
+			ELSE
+				SIF 길이 != 1
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("큰:무거운 것 같은:거대한:풍부한:풍만한")%
+				SIF !CHECK_STRBODY("수식", 친속성)
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("가슴:유방:유육:유괴")%
+			ENDIF
+		ELSEIF GET_BUSTSIZE(ARG:0) == 1
+			IF RAND:2 && !CHECK_STRBODY("수식", 친속성)
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("풍만한 유방:거유")%
+			ELSE
+				SIF 길이 != 1
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("큰:무거운 것 같은:풍부한:풍만한")%
+				SIF !CHECK_STRBODY("수식", 친속성)
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("가슴:유방:유육")%
+			ENDIF
+		ELSEIF GET_BUSTSIZE(ARG:0) == -1
+			IF 길이 == 2 || 길이 == 0 && RAND:2
+				IF TALENT:(ARG:0):체격 == 체격_아이 && !RAND:2
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("어린:미성숙인:미발달:발육 도중의")%
+				ELSEIF TALENT:(ARG:0):체격 == 체격_작은체형 && !RAND:3
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("아이와 같은:소극적인")%
+				ELSE
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("작은:좀 작은:조신한:얇은:사랑스러운")%
+				ENDIF
+			ENDIF
+			SIF !CHECK_STRBODY("수식", 친속성)
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("가슴:유방")%
+		ELSEIF GET_BUSTSIZE(ARG:0) == -2
+			IF 길이 == 2 || 길이 == 0 && RAND:2
+				IF TALENT:(ARG:0):체격 == 체격_아이 && !RAND:2
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("어린:미성숙인:미발달 말야")%
+				ELSE
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("평평한:평탄한")%
+				ENDIF
+			ENDIF
+			SIF !CHECK_STRBODY("수식", 친속성)
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("가슴")%
+		ELSE
+			IF 길이 == 2 || 길이 == 0 && RAND:2
+				IF TALENT:(ARG:0):매혹 && !RAND:2
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("아름다운:균정의 잡힌:매혹적인")%
+				ELSEIF TALENT:(ARG:0):체격 == 체격_아이 && !RAND:2
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("발육이 좋은")%
+				ELSEIF !RAND:3
+					LOCALS:0 = %LOCALS:0% %SPLIT_R("모양이 좋은")%
+				ENDIF
+			ENDIF
+			SIF !CHECK_STRBODY("수식", 친속성)
+				LOCALS:0 = %LOCALS:0% %SPLIT_R("가슴:유방")%
+		ENDIF
+CASE "문신"
+	SELECTCASE 부위
+		CASE "가슴"
+			LOCAL:1 = 문신_가슴
+		CASE "엉덩이"
+			LOCAL:1 = 문신_엉덩이
+	ENDSELECT
+	LOCALS:0 = 『%TATTOO:(ARG:0):(LOCAL:1)%』의 %SPLIT_R("문신:문신")%가 %SPLIT_R("조각해진:새겨진")%
+ENDSELECT
+RETURNF LOCALS:0
+
+;--------------------------------------------------------
+;@NUM_STRBODY
+;지정된 속성에 대응하는 비트를 돌려준다
+;--------------------------------------------------------
+@NUM_STRBODY(ARGS)
+#FUNCTION
+
+VARSET LOCAL
+
+SELECTCASE ARGS
+CASE "장"
+	LOCAL = 1
+CASE "단"
+	LOCAL = 2
+CASE "외관"
+	LOCAL = 3
+CASE "접촉"
+	LOCAL = 4
+CASE "사이즈"
+	LOCAL = 5
+CASE "심플"
+	LOCAL = 6
+CASE "노출 없음"
+	LOCAL = 7
+CASE "욕정"
+	LOCAL = 8
+CASE "처녀 확인"
+	LOCAL = 9
+CASE "윤간"
+	LOCAL = 10
+CASE "사전"
+	LOCAL = 11
+CASE "사후"
+	LOCAL = 12
+CASE "정액 더러움"
+	LOCAL = 13
+CASE "미약"
+	LOCAL = 14
+CASE "절정"
+	LOCAL = 15
+CASE "구속"
+	LOCAL = 16
+CASE "엉덩이살"
+	LOCAL = 17
+CASE "조교중"
+	LOCAL = 18
+CASE "시간 경과"
+	LOCAL = 19
+CASE "성교"
+	LOCAL = 20
+CASE "정상위"
+	LOCAL = 21
+CASE "후배위"
+	LOCAL = 22
+CASE "기승위"
+	LOCAL = 23
+CASE "배면기승위"
+	LOCAL = 24
+CASE "대면좌위"
+	LOCAL = 25
+CASE "배면좌위"
+	LOCAL = 26
+CASE "감도"
+	LOCAL = 27
+CASE "Ｖ삽입"
+	LOCAL = 28
+CASE "Ａ삽입"
+	LOCAL = 29
+CASE "질내사정"
+	LOCAL = 30
+CASE "피어스"
+	LOCAL = 31
+CASE "문신"
+	LOCAL = 32
+CASE "애무"
+	LOCAL = 33
+CASE "감촉"
+	LOCAL = 34
+CASE "수식"
+	LOCAL = 35
+CASEELSE
+	LOCAL = 0
+ENDSELECT
+
+RETURNF LOCAL
+
+;--------------------------------------------------------
+;@FLAG_STRBODY
+;각종 플래그를 기록
+;--------------------------------------------------------
+@FLAG_STRBODY(ARGS)
+#FUNCTION
+#DIM LCOUNT
+#DIM 분할수
+#DIMS 체위후보, 15
+#DIMS 체위
+
+VARSET 체위후보
+VARSET LOCAL
+VARSET LOCALS
+
+SPLIT ARGS, ":", LOCALS
+분할수 = RESULT
+
+FOR LCOUNT, 0, 분할수
+	LOCALS:11 = %LOCALS:LCOUNT%
+	SELECTCASE LOCALS:11
+		CASE "정상위", "후배위", "기승위", "배면기승위", "대면좌위", "배면좌위", "측위", "굴곡위"
+			IF LOCALS:13 == ""
+				LOCALS:13 '= LOCALS:11
+			ELSE
+				LOCALS:13 '= LOCALS:13 + ":" + LOCALS:11
+			ENDIF
+		CASEELSE
+			SETBIT LOCAL:0, NUM_STRBODY(LOCALS:11)
+	ENDSELECT
+NEXT
+
+
+;체위 후보로부터 랜덤에 하나를 선택한다
+IF LOCALS:13 != ""
+SPLIT LOCALS:13, ":", 체위후보
+LOCAL:1 = RESULT
+체위 = %체위후보:(RAND:(LOCAL:1))%
+SETBIT LOCAL:0, NUM_STRBODY(체위)
+ENDIF
+
+;연동하는 것을 여기서 설정해 둔다
+SIF CHECK_STRBODY("애무", LOCAL:0)
+	SETBIT LOCAL:0, NUM_STRBODY("접촉")	
+
+
+RETURNF LOCAL:0
+
+;--------------------------------------------------------
+;@RSELECT_STRBODY
+;지정된 부위에서 한곳을 선택한다
+;--------------------------------------------------------
+@RSELECT_STRBODY(ARGS)
+#FUNCTIONS
+#DIM LCOUNT
+#DIMS 부위후보, 15
+#DIMS 부위
+#DIM 부위수
+#DIM 분할수
+
+VARSET 부위후보
+
+부위 = ""
+부위수 = 0
+VARSET LOCAL
+VARSET LOCALS
+
+SPLIT ARGS, ":", LOCALS
+분할수 = RESULT
+
+FOR LCOUNT, 0, 분할수
+	LOCALS:11 = %LOCALS:LCOUNT%
+	SELECTCASE LOCALS:11
+		CASE "가슴", "유두" , "엉덩이", "질", "애널", "허리", "음순", "클리", "엉덩이살", "신체"
+			부위후보:부위수 = %LOCALS:11%
+			부위수 ++
+	ENDSELECT
+NEXT
+SIF 부위수 > 0
+	부위 = %부위후보:(RAND:부위수)%
+
+RETURNF 부위
+
+
+
+;--------------------------------------------------------
+;@CHECK_STRBODY
+;특정의 조건이 지정되고 있는지 체크한다
+;--------------------------------------------------------
+@CHECK_STRBODY(ARGS, ARG:0)
+#FUNCTION
+#DIM LCOUNT
+#DIM 분할수
+
+VARSET 분할수
+VARSET LOCAL
+VARSET LOCALS
+
+SPLIT ARGS, ":", LOCALS
+분할수 = RESULT
+LOCAL:0 = 1
+FOR LCOUNT, 0, 분할수
+	LOCALS:11 = %LOCALS:LCOUNT%
+	SIF !GETBIT(ARG:0, (NUM_STRBODY(LOCALS:11)))
+		RETURNF 0
+NEXT
+
+RETURNF 1
+
+;--------------------------------------------------------
+;@CHECK_STRBODY_OR
+;특정의 조건 어느쪽이든가 지정되고 있는지 체크한다
+;--------------------------------------------------------
+@CHECK_STRBODY_OR(ARGS, ARG:0)
+#FUNCTION
+#DIM LCOUNT
+#DIM 분할수
+
+VARSET LOCALS
+
+SPLIT ARGS, ":", LOCALS
+분할수 = RESULT
+
+FOR LCOUNT, 0, 분할수
+	LOCALS:11 = %LOCALS:LCOUNT%
+	SIF GETBIT(ARG:0, (NUM_STRBODY(LOCALS:11)))
+		RETURNF 1
+NEXT
+RETURNF 0
+
+;--------------------------------------------------------
+;@CHECK_STRBODY_ADD
+;지정된 조건을 채워 하고 있으면 ARGS:1의 텍스트를 돌려준다
+;--------------------------------------------------------
+@CHECK_STRBODY_ADD(ARGS:0, ARG, ARGS:1)
+#FUNCTIONS
+#DIM LCOUNT
+#DIM 분할수
+
+VARSET LOCAL
+VARSET LOCALS
+
+SPLIT ARGS:0, ":", LOCALS
+분할수 = RESULT
+
+FOR LCOUNT, 0, 분할수
+	LOCALS:11 = %LOCALS:LCOUNT%
+	SETBIT LOCAL:0, NUM_STRBODY(LOCALS:11)
+NEXT
+
+VARSET LOCALS
+
+SIF ARG & LOCAL:0
+	LOCALS:0 = %ARGS:1%
+
+RETURNF LOCALS:0
+
+
+
+;--------------------------------------------------------
+;@SPLIT_R
+;:그리고 단락지어진 문자열으로부터 랜덤에 하나를 돌려준다
+;--------------------------------------------------------
+@SPLIT_R(ARGS)
+#FUNCTIONS
+#DIM LCOUNT
+
+VARSET LOCAL
+VARSET LOCALS
+
+SPLIT ARGS, ":", LOCALS
+
+RETURNF LOCALS:(RAND:RESULT)
+
+
+
+

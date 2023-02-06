@@ -1,0 +1,319 @@
+﻿;촉수소환
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME200
+RESULTS:0 = %조사처리(ANAME(MPLY:0),"가")% 촉수소환 한다
+RESULTS:1 = %조사처리(ANAME(MPLY:0),"가")% 촉수소환 한다
+RESULTS:2 = %조사처리(ANAME(MPLY:0),"가")% 촉수소환 한다
+RESULTS:3 = %조사처리(ANAME(MPLY:0),"가")% 촉수소환 한다
+RESULTS:4 = %조사처리(ANAME(MPLY:0),"가")% 촉수소환 한다
+RESULTS:5 = %조사처리(ANAME(MPLY:0),"가")% 촉수소환 한다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE200
+;공통 부분
+CALL COM_ABLE_COMMON(200)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 1명 이상
+SIF MPLY_NUM <= 0
+	RETURN 0
+;모든 플레이어에 대해 판정
+FOR LOCAL:0, 0, MPLY_NUM
+	;행동불능이라면 불가
+	SIF !IS_PLAYABLE(MPLY:(LOCAL:0))
+		RETURN 0
+	;요술지식이 필요
+	SIF !TALENT:(MPLY:(LOCAL:0)):요술지식
+		RETURN 0
+	;구속중이라면 불가
+	SIF IS_BIND(MPLY:(LOCAL:0))
+		RETURN 0
+	;이미 촉수소환중이라면 불가
+	SIF IS_EQUIP_PLAYER(MPLY:(LOCAL:0), 200)
+		RETURN 0
+NEXT
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM200
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;모든 플레이어에 대해 판정
+FOR LOCAL:0, 0, MPLY_NUM
+	EXP:(MPLY:(LOCAL:0)):요술경험치 += 1
+	EXP:(MPLY:(LOCAL:0)):촉수경험치 += 1
+NEXT
+
+RETURN 1
+
+;-------------------------------------------------
+;계속 커맨드인가 어떤가를 설정
+;-------------------------------------------------
+@COM_IS_EQUIP200
+;계속 커맨드 한편 필터링 불가
+RETURN 2
+
+;-------------------------------------------------
+;계속 상태의 처리
+;-------------------------------------------------
+@COM_EQUIP200(ARG:0)
+
+;-------------------------------------------------
+;계속중의 표시
+;-------------------------------------------------
+@EQUIP_MESSAGE200(ARG:0)
+RESULTS = %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"가")% 촉수를 소환중
+
+;-------------------------------------------------
+;계속중의 지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE_EQUIP200(ARG:0)
+
+;-------------------------------------------------
+;계속을 해제하기 전에 하지 않으면 되지 않는 일
+;-------------------------------------------------
+@COM_BEFORE_RELEASE_EQUIP200(ARG:0)
+;촉수소환을 해제한 캐릭터가 플레이어가 되고 있는 모든 촉수계 EQUIP를 해제
+FOR LOCAL:0, 0, MEQUIP_TARGET_NUM:(ARG:0)
+	FOR LOCAL:1, 201, 215
+		CALL RELEASE_EQUIP_EX(LOCAL:1, MEQUIP_PLAYER:(ARG:0):(LOCAL:0), -1)
+	NEXT
+NEXT
+
+;-------------------------------------------------
+;계속을 해제했을 때의 지문
+;-------------------------------------------------
+@COM_TEXT_RELEASE_EQUIP200(ARG:0)
+PRINTFORMW %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"는")% 촉수를 되돌렸다
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER200(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 120
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 4)
+CALL COM_ORDER_ELEMENT(ARG:0, @"노출 Lv{ABL:(ARG:0):노출}", ABL:(ARG:0):노출 * 2)
+
+IF TALENT:(ARG:0):프라이드높음
+	CALL COM_ORDER_ELEMENT(ARG:0, "프라이드높음", -12)
+ENDIF
+IF TALENT:(ARG:0):호기심
+	CALL COM_ORDER_ELEMENT(ARG:0, "호기심", 10)
+ENDIF
+IF TALENT:(ARG:0):보수적
+	CALL COM_ORDER_ELEMENT(ARG:0, "보수적", -20)
+ENDIF
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -20)
+ENDIF
+IF TALENT:(ARG:0):수치심옅음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수치심옅음", 25)
+ENDIF
+IF TALENT:(ARG:0):정조관념
+	CALL COM_ORDER_ELEMENT(ARG:0, "정조관념", -15)
+ENDIF
+IF TALENT:(ARG:0):정조관념없음
+	CALL COM_ORDER_ELEMENT(ARG:0, "정조관념없음", 15)
+ENDIF
+IF TALENT:(ARG:0):주목받기원함
+	CALL COM_ORDER_ELEMENT(ARG:0, "주목받기원함", 12)
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -15)
+ENDIF
+
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_새드) || GETBIT(TALENT:(ARG:0):음란계, 소질_음란_마조) || ABL:(ARG:0):도착도 >= 800
+	CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 40)
+ELSEIF ABL:(ARG:0):도착도 >= 500
+	CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 30)
+ELSEIF ABL:(ARG:0):도착도 >= 300
+	CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 20)
+ELSEIF ABL:(ARG:0):도착도 >= 100
+	CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 10)
+ELSE
+	CALL COM_ORDER_ELEMENT(ARG:0, "도착도", 0)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE200
+FOR LOCAL:0, 0, MPLY_NUM
+	PRINTFORML %조사처리(ANAME(MPLY:(LOCAL:0)),"는")% 촉수를 소환했다
+NEXT
+WAIT
+
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST200
+
+FOR LOCAL:0, 0, MTAR_NUM
+	LOCAL:1 = MTAR:(LOCAL:0)
+	
+	IF LOCAL:1 != MASTER
+	 	IF TCVAR:(LOCAL:1):52
+	 		;기절중
+			PRINTFORML 의식을 잃었던 %ANAME(LOCAL:1)%의 몸에 촉수는 천천히 소리없이 다가왔다
+	 	ELSEIF TALENT:(LOCAL:1):공허 || TALENT:(LOCAL:1):붕괴
+	 		;공허, 붕괴중
+			PRINTFORML 공허한 그대로 사지를 내던지고 있는 %ANAME(LOCAL:1)%의 몸에 촉수는 천천히 소리없이 다가왔다
+		ELSEIF IS_EQUIP_TARGET(MTAR:0, 84)
+			;눈가리개중
+			IF  TALENT:(LOCAL:1):프라이드높음 ||TALENT:(LOCAL:1): 수줍음 ||TALENT:(LOCAL:1): 보수적 ||TALENT:(LOCAL:1): 정조관념 ||TALENT:(LOCAL:1): 겁쟁이
+				PRINTFORML 신변의 위험을 감지했는지, %조사처리(ANAME(LOCAL:1),"는")% 딱딱하게 준비했다
+			ELSEIF TALENT:(LOCAL:1):호기심 ||TALENT:(LOCAL:1): 주목받기원함 ||TALENT:(LOCAL:1): 낙관적 ||TALENT:(LOCAL:1): 거만함
+				PRINTFORML 촉수가 세운 소리가 신경이 쓰인다의 것인지, %조사처리(ANAME(LOCAL:1),"는")% 목을 기울이고 있다
+			ELSE
+				PRINTFORML 주위가 안보이는 %조사처리(ANAME(LOCAL:1),"는")% 불안한 듯이 하고 있다
+			ENDIF
+		ELSEIF ABL:(LOCAL:1):촉수 >= 10
+			;촉수는 연인
+			IF TALENT:(LOCAL:1):프라이드높음 || TALENT:(LOCAL:1): 츤데레 || TALENT:(LOCAL:1): 선을넘지않음
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 눈을 숙이면 나타난 촉수를 손에 들어, 가볍게 입맞춤을 했다
+			ELSEIF TALENT:(LOCAL:1):정조관념 || TALENT:(LOCAL:1):수줍음 || TALENT:(LOCAL:1):감정결핍
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 귀까지 붉게 하면서, 가랑이를 촉수에 향하여 습격당하는 것을 기다리고 있다
+			ELSEIF TALENT:(LOCAL:1):정조관념없음 || TALENT:(LOCAL:1):인기 || TALENT:(LOCAL:1): 주목받기원함
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 상기 한 얼굴로 촉수에 가랑이를 향해, 손가락으로 비부를 열어 유혹하고 있다
+			ELSEIF TALENT:(LOCAL:1):겁쟁이 || TALENT:(LOCAL:1):얌전함 || TALENT:(LOCAL:1): 헌신적
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 물기를 띤 눈으로 촉수를 응시하고 있다. 완전하게 포로가 되어 있는 것 같다
+			ELSEIF TALENT:(LOCAL:1):호기심 || TALENT:(LOCAL:1): 거만함 || TALENT:(LOCAL:1): 낙관적
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 촉수에 자신을 범하도록(듯이) 조르고 있다. 완전하게 포로가 되어 있는 것 같다
+			ELSE
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"로")%부터는 두근두근 고동의 소리가 들려 온다. 촉수에 범해지는 일을 기대하고 있는 것 같다
+			ENDIF
+		ELSEIF ABL:(LOCAL:1):촉수 >= 9 || GETBIT(TALENT:(LOCAL:1):음란계, 소질_음란_모판)
+			;촉수는 동지
+			IF TALENT:(LOCAL:1):프라이드높음 || TALENT:(LOCAL:1): 츤데레 || TALENT:(LOCAL:1): 선을넘지않음
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 얼굴을 붉히며 촉수에 자신의 몸을 내몄다
+			ELSEIF TALENT:(LOCAL:1):정조관념 || TALENT:(LOCAL:1):수줍음 || TALENT:(LOCAL:1):감정결핍
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 지금부터 행해지는 일을 상상했는지 가랑이를 머뭇머뭇 하고 있다
+			ELSEIF TALENT:(LOCAL:1):정조관념없음 || TALENT:(LOCAL:1):인기 || TALENT:(LOCAL:1): 주목받기원함
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 과장되게 놀라 보였다. 무방비인 포즈로 습격당하는 것을 기다리고 있다
+			ELSEIF TALENT:(LOCAL:1):겁쟁이 || TALENT:(LOCAL:1):얌전함 || TALENT:(LOCAL:1): 헌신적
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 나타난 촉수를 도취한 것 같은 눈으로 응시하고 있다.
+			ELSEIF TALENT:(LOCAL:1):호기심 || TALENT:(LOCAL:1): 거만함 || TALENT:(LOCAL:1): 낙관적
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 나타난 촉수에게 비부를 드러냈다
+			ELSE
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 촉수에 손에 익은 모습으로 접하고 있다
+			ENDIF
+		ELSEIF ABL:(LOCAL:1):촉수 >= 7
+			;촉수는 주인
+			IF TALENT:(LOCAL:1):프라이드높음 || TALENT:(LOCAL:1): 츤데레 || TALENT:(LOCAL:1): 선을넘지않음
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 촉수를 응시하면, 단념한 것처럼 몸을 내몄다
+			ELSEIF TALENT:(LOCAL:1):정조관념 || TALENT:(LOCAL:1):수줍음 || TALENT:(LOCAL:1):감정결핍
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 가슴에 손을 두어 작게 호흡하면서, 촉수의 행동을 기다리고 있다
+			ELSEIF TALENT:(LOCAL:1):정조관념없음 || TALENT:(LOCAL:1):인기 || TALENT:(LOCAL:1): 주목받기원함
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 촉수에 대해 포즈를 취해, 습격당하는 체를 하고 있다
+			ELSEIF TALENT:(LOCAL:1):겁쟁이 || TALENT:(LOCAL:1):얌전함 || TALENT:(LOCAL:1): 헌신적
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 수줍은 것처럼 시선을 비스듬하게 하면, 촉수에 향하여 가랑이를 열었다
+			ELSEIF TALENT:(LOCAL:1):호기심 || TALENT:(LOCAL:1): 거만함 || TALENT:(LOCAL:1): 낙관적
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 스스로 촉수에 닿아 촉감을 즐기고 있다
+			ELSE
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 기대와 불안이 섞인 눈으로 촉수를 응시하고 있다
+			ENDIF
+		ELSEIF ABL:(LOCAL:1):촉수 >= 5
+			;촉수는 섹스프렌드
+			IF TALENT:(LOCAL:1):프라이드높음 || TALENT:(LOCAL:1): 츤데레 || TALENT:(LOCAL:1): 선을넘지않음
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 촉수를 보면 금새 붉어졌다
+			ELSEIF TALENT:(LOCAL:1):정조관념 || TALENT:(LOCAL:1):수줍음 || TALENT:(LOCAL:1):감정결핍
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 촉수를 보면, 붉은 얼굴로 시선을 옆에 비켜 놓았다
+			ELSEIF TALENT:(LOCAL:1):정조관념없음 || TALENT:(LOCAL:1):인기 || TALENT:(LOCAL:1): 주목받기원함
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 머뭇머뭇 하면서, 촉수에 다가가려고 하고 있다
+			ELSEIF TALENT:(LOCAL:1):겁쟁이 || TALENT:(LOCAL:1):얌전함 || TALENT:(LOCAL:1): 헌신적
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 나타난 촉수에 대해, 상냥하게 하도록(듯이) 간절히 부탁하고 있다
+			ELSEIF TALENT:(LOCAL:1):호기심 || TALENT:(LOCAL:1): 거만함 || TALENT:(LOCAL:1): 낙관적
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 기대한 눈을 하면서 촉수의 움직임을 듣고 있다
+			ELSE
+			PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 나타난 촉수에 대한 행동에 당황하고 있다
+			ENDIF
+		ELSEIF ABL:(LOCAL:1):촉수 >= 3
+			;촉수는 친구 이상 연인 미만
+			IF TALENT:(LOCAL:1):프라이드높음 || TALENT:(LOCAL:1): 츤데레 || TALENT:(LOCAL:1): 선을넘지않음
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 조금 붉은 얼굴로 촉수로부터 눈을 돌리고 있다
+			ELSEIF TALENT:(LOCAL:1):정조관념 || TALENT:(LOCAL:1):수줍음 || TALENT:(LOCAL:1):감정결핍
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 조금 붉은 얼굴로 한숨을 흘렸다
+			ELSEIF TALENT:(LOCAL:1):정조관념없음 || TALENT:(LOCAL:1):인기 || TALENT:(LOCAL:1): 주목받기원함
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 조금 세키미가 걸린 얼굴로 촉수를 응시하고 있다
+			ELSEIF TALENT:(LOCAL:1):겁쟁이 || TALENT:(LOCAL:1):얌전함 || TALENT:(LOCAL:1): 헌신적
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 붉은 얼굴로 눈물을 머금으면서 우두커니 서고 있다
+			ELSEIF TALENT:(LOCAL:1):호기심 || TALENT:(LOCAL:1): 거만함 || TALENT:(LOCAL:1): 낙관적
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 농담을 두드리면서 촉수를 도발하고 있다
+			ELSE
+			PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 촉수에게 주어진 쾌락을 생각해 내, 얼굴을 붉히고 있다
+			ENDIF
+		ELSEIF ABL:(LOCAL:1):촉수 >= 2
+			;촉수 주의보
+			IF TALENT:(LOCAL:1):프라이드높음 || TALENT:(LOCAL:1): 츤데레 || TALENT:(LOCAL:1): 선을넘지않음
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 촉수를 보면 눈썹을 감추어 한숨을 쉬었다
+			ELSEIF TALENT:(LOCAL:1):정조관념 || TALENT:(LOCAL:1):수줍음 || TALENT:(LOCAL:1):감정결핍
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 이 장소를 어떻게든 벗어나는 방법을 찾고 있다
+			ELSEIF TALENT:(LOCAL:1):정조관념없음 || TALENT:(LOCAL:1):인기 || TALENT:(LOCAL:1): 주목받기원함
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 눈물을 머금으면서 촉수를 노려보고 있다
+			ELSEIF TALENT:(LOCAL:1):겁쟁이 || TALENT:(LOCAL:1):얌전함 || TALENT:(LOCAL:1): 헌신적
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 목을 흔들흔들 거절하면서, 촉수로부터 거리를 취하려고 하고 있다
+			ELSEIF TALENT:(LOCAL:1):호기심 || TALENT:(LOCAL:1): 거만함 || TALENT:(LOCAL:1): 낙관적
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 땀을 흘리면서 촉수를 경계하고 있다
+			ELSE
+			PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 촉수에게 주어진 쾌락을 생각해 내, 얼굴을 붉히고 있다
+			ENDIF
+		ELSEIF ABL:(LOCAL:1):촉수 >= 1
+			;촉수는 알게 되어
+			IF TALENT:(LOCAL:1):프라이드높음 || TALENT:(LOCAL:1): 츤데레 || TALENT:(LOCAL:1): 선을넘지않음
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 나타난 촉수를 노려봐, 악담을 붙어 있다
+			ELSEIF TALENT:(LOCAL:1):정조관념 || TALENT:(LOCAL:1):수줍음 || TALENT:(LOCAL:1):감정결핍
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 몸을 굳어지게 하면, 식은 땀을 흘리면서 뒷걸음을 했다
+			ELSEIF TALENT:(LOCAL:1):정조관념없음 || TALENT:(LOCAL:1):인기 || TALENT:(LOCAL:1): 주목받기원함
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 나타난 촉수로부터 도망치려고 했지만, 다리를 잡아져 굴렀다
+			ELSEIF TALENT:(LOCAL:1):겁쟁이 || TALENT:(LOCAL:1):얌전함 || TALENT:(LOCAL:1): 헌신적
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 이전의 기억을 생각해 냈는지, 눈물을 머금어 주저앉았다
+			ELSEIF TALENT:(LOCAL:1):호기심 || TALENT:(LOCAL:1): 거만함 || TALENT:(LOCAL:1): 낙관적
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 떨리면서도 촉수를 노려보고 있다
+			ELSE
+			PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 촉수에 더럽혀진 경험을 생각해 냈는지, 몸부림 하고 있다	
+			ENDIF
+		ELSE
+			;촉수는 도깨비
+			IF TALENT:(LOCAL:1):프라이드높음 || TALENT:(LOCAL:1): 거만함
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 무서운 촉수의 모습에 놀라, 날카롭게 노려봤다
+			ELSEIF TALENT:(LOCAL:1):정조관념 || TALENT:(LOCAL:1):겁쟁이
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 무서운 촉수의 모습에 비명을 질렀다
+			ELSE
+			PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 무서운 촉수가 나타난 것에 대해 무심코 굳어지고 있다
+			ENDIF
+		ENDIF
+	ENDIF
+NEXT
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN200
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_200()
+RETURN POWER(2, 성적기호_촉수로범하고싶다)
+
+@COM_PREFERENCE_TARGET_200()
+RETURN POWER(2, 성적기호_촉수로범해지고싶다)
+

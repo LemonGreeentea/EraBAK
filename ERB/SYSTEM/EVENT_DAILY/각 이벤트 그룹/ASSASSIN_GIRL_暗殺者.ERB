@@ -1,0 +1,151 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_ASSASSIN_GIRL_RATE()
+RETURN 30
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_ASSASSIN_GIRL_DECISION()
+SIF !HAS_PENIS(MASTER)
+	RETURN 0
+SIF DVAR:암살자_완료플래그
+	RETURN 0
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_ASSASSIN_GIRL_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_ASSASSIN_GIRL
+#DIM 대상
+
+PRINTFORMW 첩보원으로부터 암살자가 당신을 노리고 있다라는 정보를 (들)물었다
+PRINTFORML 어떻게 하지?
+CALL ASK_MULTI("함정을 친다" ,"병으로 굳힌다" ,"몸을 숨긴다")
+IF RESULT == 2
+	PRINTFORMW 한동안 몸을 숨겼다
+	PRINTFORMW …피해는 받지 않았지만, 그 사이는 움직일 수 없었다
+	CALL ADD_COOLTIME(MASTER, 1)
+ELSEIF RESULT == 1
+	PRINTFORMW 한동안 주위를 군사로 굳혔다
+	PRINTFORMW …피해는 받지 않았지만, 겁쟁이라고 소문되어 버렸다
+	FOR LOCAL, 1, MAX_COUNTRY
+		CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -50, 50)
+	NEXT
+	CALL COLOR_PRINTW(@"겁쟁이 군주가 있다고 여겨지고 타국의 평판이 내렸다…", 칼라_주의)
+ELSEIF RESULT == 0
+	PRINTFORMW 함정을 치기로 했다
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+	LOCAL = ((ABL:MASTER:방위 + ABL:MASTER:지략) / 10 * (RAND:6 + 1)) - (5 * (RAND:10 + 1))
+	IF LOCAL <= 0
+		PRINTFORMW 실패해 버렸다…
+		PRINTFORMW 위기의 순간에 살아났지만 큰 부상을 져 버렸다
+		CALL ADD_COOLTIME(MASTER, 3)
+		ABL:MASTER:무투 = MAX(ABL:MASTER:무투 - 2, 0)
+		CALL COLOR_PRINTW(@"무투가 2내렸다…", 칼라_경고)
+	ELSEIF LOCAL < 10
+		PRINTFORMW 성공했다!
+		PRINTFORMW 암살자는 놓쳤지만 이제 오지 않을 것이다
+		CALL PRINT_ADD_EXP(MASTER, "방위경험치", RAND:8 + 1, 1)
+		CALL PRINT_ADD_EXP(MASTER, "지략경험치", RAND:8 + 1, 1)
+		DVAR:암살자_완료플래그 = 1
+	ELSEIF LOCAL >= 10
+		PRINTFORMW 훌륭히 암살자를 잡았다!
+		PRINTFORML 무려 암살자는 가련한 소녀였다
+		PRINTFORMW 쇠사슬로 연결할 수 있던 채로 그녀는 당신을 노려보고 있다
+		PRINTFORML 어떻게 하지?
+		CALL ASK_MULTI_JUDGE("처형", 1,"병에게 준다", 1,"범한다", HAS_PENIS(MASTER))
+		IF RESULT == 0
+			PRINTFORMW 방치는 할 수 없다
+			PRINTFORMW 당신은 그녀를 처형했다
+			FOR LOCAL, 1, MAX_COUNTRY
+				CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, 50, -50)
+			NEXT
+			CALL COLOR_PRINTW(@"훌륭히 암살자를 역관광으로 한 당신의 무공에 의해 타국의 평판이 올랐다", 칼라_주의)
+		ELSEIF RESULT == 1
+			PRINTFORMW 병에게 주었다
+			PRINTFORMW 신선한 육변기가 주어져 병사들은 환희 했다
+			COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 3000
+			CALL COLOR_PRINTW(@"그녀는 평판이 되어 지원병이 3000명 증가했다", 칼라_주의)
+			PRINTFORMW
+		ELSEIF RESULT == 2
+			PRINTFORMW 당신은 보복으로서 그녀를 범했다
+			PRINTFORML 훈련된 암살자답고, 범해지고 있는 동안도 입을 꼬옥 하고 연결해 가만히 참고 있었다
+			PRINTFORML 하지만 자주(잘) 긴장된 신체는, 고기 오나홀로서 충분히 당신을 즐겁게 해 주었다
+			PRINTFORML 가차 없이질방편을 하면 그녀는 희미하게 몸을 진동시키고 작게 신음소리를 흘렸다
+			PRINTFORMW 가랑이로부터 세키 섞임의 백탁액을 흘려 보내면서도, 더욱 더 그녀는 다부지게 행동하고 있었다
+			IF !(ABL:MASTER:성기술 + RAND:3 >= 4)
+				PRINTFORMW 반응이 얇은 그녀에게 질린 당신은, 호사가에게 팔아치웠다
+				MONEY += 10000
+				CALL COLOR_PRINT(@"그녀는 금 10000으로 팔렸다", 칼라_주의)
+				PRINTFORMW 
+			ELSE
+				PRINTFORML 당신은 그 모습에 어떻게 해서든지 이 아이를 굴복 시키고 싶다고 생각 조교하기로 했다
+				PRINTFORML 완전히 지쳐 버리고 가로놓이는 그녀를 껴안으면 조교 방으로 옮겼다
+				PRINTFORMW 조교 방에게도 그녀는 다부지게 하고 있었지만, 그 어깨는 희미하게 떨고 있었다…
+				PRINTFORML 
+				PRINTFORMW 당신은 그녀를 쇠사슬로 이으면 조속히 조교를 개시했다
+				PRINTFORML 시에 격렬하게, 가끔 상냥하게, 손가락으로 직접, 혹은 도구를 사용해
+				PRINTFORML 오로지 애무를 반복하거나 가차 없이 G스팟을 페니스로 후벼파거나
+				PRINTFORMW 약을 섞거나 열심히 키스를 가르치거나 아픔을 주거나 방치하거나
+				PRINTFORML 짬만 있으면 그녀의 곁으로 다녀, 온갖 수단을 동원하면서 연일 귀여워했다
+				PRINTFORML 그녀는 거기에도 노력해 참고 있었지만, 나날이 신체가 민감하게 되어 가는 것이 알았다
+				PRINTFORMW 이윽고 신체는 완전히 완성되어, 참지 못하고 신음소리를 흘려 몸을 구불거리게 할 수 있는 냈다
+				PRINTFORML 그 모습에 당신이 그녀의 약점을 공격해대면, 결국 계속 참지 못하고 교성을 올려 절정 했다
+				PRINTFORML 수치와 굴욕으로 떨리는 소녀에 대해, 당신은 상냥하게 천천히 애무해, 감도를 올려 간다
+				PRINTFORMW 그리고 마무리로서 격렬하게, 그저 단순히 가고 있는 채가 될 때까지 마구 범해, 여자의 기쁨을 새겼다
+				PRINTFORMW 그 날, 그녀는 분수 절정을 반복하면서, 암살자로부터 암캐로 되어 내렸다
+				PRINTFORML 
+				PRINTFORML 당신의 테크닉에 그녀는 완전히 온순한 암컷이 되었다
+				PRINTFORMW 지금은 스스로 신체를 열어, 개처럼 다가서 포상을 졸라 오는 모양이다
+				PRINTFORML 어떻게 하지?
+				CALL ASK_YN("판다", "동료로 한다")
+				IF RESULT == 0
+					PRINTFORMW 질렸으므로 호사가에게 팔아치웠다
+					CALL COLOR_PRINT(@"조교된 그녀는 금 100000으로 팔렸다", 칼라_주의)
+					PRINTFORMW
+					MONEY += 100000
+				ELSEIF RESULT == 1
+					PRINTFORML 여기까지 손을 건 이상 손놓는 것은 아깝다
+					PRINTFORML 당신은 그녀를 동료로 하는 일로 했다
+					PRINTFORMW 앞으로도 귀여워해 준다고 고하면, 그녀는 기뻐해 목을 세로에 흔들었다
+					CALL CREATE_RANDOM_CHARA(0,0,1)
+					SIF RESULT == -1
+						RETURN 1
+					대상 = RESULT
+					ABL:대상:무투 = 40 + RAND:30
+					ABL:대상:방위 = 30 + RAND:20
+					ABL:대상:지략 = 30 + RAND:20
+					ABL:대상:정치 = 10 + RAND:10
+					ABL:대상:가창 = 15 + RAND:20
+					ABL:대상:요리 = 15 + RAND:20
+					CALL LEARN_SKILL_GENERAL_BY_NAME(대상, "기습＋＋")
+					TALENT:대상:합의 = 1
+					CALL CHANGE_COUNTRY(대상, CFLAG:MASTER:소속, 1)
+					CFLAG:대상:호감도 = 1200
+					CFLAG:대상:의존도 = 1000
+					CFLAG:대상:종속도 = 3000
+					CALL FUCK_MAKELOVE(대상, GET_ID(MASTER), @"%ANAME(MASTER)%의 입술", ANAME(MASTER))
+					CALL FUCK_MAKELOVE(대상, GET_ID(MASTER), @"%ANAME(MASTER)%의 입술", ANAME(MASTER))
+					CALL FUCK_MAKELOVE(대상, GET_ID(MASTER), @"%ANAME(MASTER)%의 입술", ANAME(MASTER))
+					CALL FUCK_MAKELOVE(대상, GET_ID(MASTER), @"%ANAME(MASTER)%의 입술", ANAME(MASTER))
+					CALL FUCK_MAKELOVE(대상, GET_ID(MASTER), @"%ANAME(MASTER)%의 입술", ANAME(MASTER))
+					CALL FUCK(MASTER, "Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", @"%ANAME(대상)%의 질")
+					CALL COLOR_PRINT(@"%조사처리(ANAME(대상),"가")% 우리 군에 들어갔습니다", 칼라_주의)
+					PRINTFORMW
+				ENDIF
+			ENDIF
+		ENDIF
+		DVAR:암살자_완료플래그 = 1
+	ENDIF
+ENDIF
+RETURN 1

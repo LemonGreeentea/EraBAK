@@ -1,0 +1,50 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_GET_INJURED_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_GET_INJURED_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_GET_INJURED(대상)
+#DIM 대상
+PRINTFORML 아프닷!
+PRINTFORML %조사처리(ANAME(대상),"는")% 산책중에 다쳐 버렸다
+PRINTL
+CALL ASK_MULTI("참는다", "의사에게 보이게 한다", "스스로치료한다")
+
+IF RESULT == 0
+	PRINTFORML 이 정도라면 참을 수 있을 것이다……
+	PRINTFORMW 
+	$MYSELF
+	IF RAND:3
+		PRINTFORML ……쓸데없게 악화되어 버렸다
+		CALL ADD_COOLTIME(대상, 3)
+	ELSE
+		PRINTFORML ……완치했다!
+		MAXBASE:대상:체력 += 100
+		CALL ICPRINT(@"체력 최대치가<100>올라,<{MAXBASE:대상:체력}>가 되었다", "L", 칼라_주의)
+	ENDIF
+ELSEIF RESULT == 1
+	PRINTFORML 의사에게 진찰 받는 편이 좋을 것이다……
+	PRINTFORMW 
+	PRINTFORML 의사의 덕분에 완치했다!
+	LOCAL = MIN(MONEY, 2000)
+	MONEY -= LOCAL
+	CALL ICPRINT(@"금<{LOCAL}>를 지불했다", "L", 칼라_주의)
+ELSE
+	PRINTFORMW 이 정도의 상처라면 자력으로 치료할 수 있을 것 같다
+	GOTO MYSELF
+ENDIF
+
+RETURN 1

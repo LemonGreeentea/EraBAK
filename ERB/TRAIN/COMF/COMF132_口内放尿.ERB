@@ -1,0 +1,350 @@
+﻿;입안방뇨
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME132
+IF IS_RIDE(MPLY:0)
+	LOCALS:0 = 안기입안방뇨
+ELSE
+	LOCALS:0 = 입안방뇨
+ENDIF
+
+RESULTS:0 = %LOCALS:0%한다
+RESULTS:1 = %LOCALS:0%당한다
+RESULTS:2 = %LOCALS:0%시킨다
+RESULTS:3 = %LOCALS:0%된다
+RESULTS:4 = %LOCALS:0%시킨다
+RESULTS:5 = %LOCALS:0%과시하고
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE132
+;공통 부분
+CALL COM_ABLE_COMMON(132)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 1명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 1
+	RETURN 0
+;타겟은 최대로 1명까지
+SIF MTAR_NUM <= 0 || MTAR_NUM > 1
+	RETURN 0
+;플레이어가 행동불능이라면 불가
+SIF !IS_PLAYABLE(MPLY:0)
+	RETURN 0
+;플레이어의 뇨잔량이 충분하지 않으면 불가
+SIF TCVAR:(MPLY:0):54 < 1000
+	RETURN 0
+;플레이어가 안면승마중에서, 플레이어에 장대가 있는 또는 타겟 이외의 캐릭터에 걸치고 있다면 불가
+SIF IS_RIDE(MPLY:0) && (HAS_PENIS(MPLY:0) || !IS_RIDE(MPLY:0, MTAR:0))
+	RETURN 0
+;플레이어에 장대가 없고, 타겟 이외의 캐릭터에게 쿤닐링구스되고 있다면 불가
+SIF !HAS_PENIS(MPLY:0) && IS_EQUIP_TARGET(MPLY:0, 1) && SEARCH_EQUIP(1, MPLY:0, MTAR:0) < 0
+	RETURN 0
+;플레이어가 타겟 이외의 캐릭터에게 페라되고 있다면 불가
+SIF IS_EQUIP_TARGET(MPLY:0, 11) && SEARCH_EQUIP(11, MPLY:0, MTAR:0) < 0
+	RETURN 0
+;플레이어가 타겟 이외의 캐릭터에게 파이즈리 되고 있다면 불가
+SIF IS_EQUIP_TARGET(MPLY:0, 12) && SEARCH_EQUIP(12, MPLY:0, MTAR:0) < 0
+	RETURN 0
+;플레이어가 타겟 이외의 캐릭터에게 귀두 페라되고 있다면 불가
+SIF IS_EQUIP_TARGET(MPLY:0, 107) && SEARCH_EQUIP(107, MPLY:0, MTAR:0) < 0
+	RETURN 0
+;플레이어가 스마타·엉덩이코키·전기안마·촉수오나홀 되고 있다면 불가
+SIF IS_EQUIP_TARGET(MPLY:0, 13, 15, 103, 205)
+	RETURN 0
+;플레이어가 삽입중이라면 불가
+SIF IS_INSERT_SINGLE(MPLY:0, "전") || IS_EQUIP(MPLY:0, 21, 22)
+	RETURN 0
+;타겟이 키스중, 다리 빨고 안, 또는 플레이어 이외에 안면승마 되고 있다면 불가
+SIF IS_EQUIP(MTAR:0, 20) || IS_EQUIP_PLAYER(MTAR:0, 104) || (IS_RIDDEN(MTAR:0) && !IS_RIDDEN(MTAR:0, MPLY:0))
+	RETURN 0
+;플레이어가 바닥에 엎드리며 있다면 불가
+SIF IS_EQUIP_PLAYER(MPLY:0, 110)
+	RETURN 0
+;타겟이 재갈 장착중이라면 불가
+SIF IS_EQUIP_TARGET(MTAR:0, 86)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM132
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;전플레이어에 대해 처리
+FOR LOCAL:0, 0, MPLY_NUM
+	LOCAL:2 = MPLY:(LOCAL:0)
+
+	EXP:(LOCAL:2):배설경험치 += 1
+	EXP:(LOCAL:2):기학경험치 += 1
+
+	LOCAL:3 = 800
+	LOCAL:4 = 300
+
+	SELECTCASE ABL:(LOCAL:2):배설
+		CASE 0
+			TIMES LOCAL:3, 0.00
+			TIMES LOCAL:4, 1.00
+		CASE 1
+			TIMES LOCAL:3, 0.10
+			TIMES LOCAL:4, 0.60
+		CASE 2
+			TIMES LOCAL:3, 0.20
+			TIMES LOCAL:4, 0.25
+		CASE 3
+			TIMES LOCAL:3, 0.40
+			TIMES LOCAL:4, 0.05
+		CASE 4
+			TIMES LOCAL:3, 0.70
+			TIMES LOCAL:4, 0.00
+		CASEELSE
+			LOCAL:3 = LOCAL:3 * (100 + (ABL:(LOCAL:2):배설 - 5) * 2) / 100
+			LOCAL:4 = 0
+	ENDSELECT
+
+	SOURCE:(LOCAL:2):노출 = 1200
+	SOURCE:(LOCAL:2):일탈 = 800
+	SOURCE:(LOCAL:2):성행동 = 150
+	SOURCE:(LOCAL:2):중독충족 = LOCAL:3
+	SOURCE:(LOCAL:2):반감 = LOCAL:4
+
+	;플레이어에 주도권이 있는 경우
+	IF IS_INITIATIVE(LOCAL:2)
+		SOURCE:(LOCAL:2):기학 = 300
+	ENDIF
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:2, 120, 150)
+
+	;뇨잔량을 0으로 한다
+	TCVAR:(LOCAL:2):54 = 0
+NEXT
+
+;주도권의 소재를 취득
+LOCAL:11 = GET_COM_INITIATIVE()
+
+;전 타겟으로 붙어 처리
+FOR LOCAL:0, 0, MTAR_NUM
+	LOCAL:1 = MTAR:(LOCAL:0)
+
+	EXP:(LOCAL:2):피학경험치 += 1
+
+
+	SOURCE:(LOCAL:1):성행동 = 90
+
+	;타겟으로 주도권
+	IF LOCAL:11 == 1 || LOCAL:11 == 2
+		SOURCE:(LOCAL:1):기학 = 150
+		SOURCE:(LOCAL:1):일탈 = 700
+	;타겟으로 주도권이 없다
+	ELSE
+		SOURCE:(LOCAL:1):일탈 = 1000
+		SOURCE:(LOCAL:1):공포 = MAX(200 - 50 * ABL:(LOCAL:1):욕망, 0)
+	ENDIF
+
+	;타겟이 기절하고 있는 경우
+	IF TCVAR:(LOCAL:1):52
+		SOURCE:(LOCAL:1):기절회복 = 500
+	ENDIF
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:1, 130, 170)
+
+	IF HAS_PENIS(MPLY:0)
+		;페니스에의 키스
+		CALL KISS_COMMON(LOCAL:1, @"%ANAME(MPLY:0)%의 페니스")
+	ENDIF
+
+
+NEXT
+
+;주도도 변화 기준치
+TFLAG:49 = 4
+
+;도착도 변화 기준치
+TFLAG:50 = 6
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 4
+
+RETURN 1
+
+;-------------------------------------------------
+;계속 커맨드인가 어떤가를 설정
+;-------------------------------------------------
+@COM_IS_EQUIP132
+RETURN 0
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER132(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 105
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 2)
+CALL COM_ORDER_ELEMENT(ARG:0, @"노출 Lv{ABL:(ARG:0):노출}", ABL:(ARG:0):노출 * 4)
+CALL COM_ORDER_ELEMENT(ARG:0, @"배설 Lv{ABL:(ARG:0):배설}", ABL:(ARG:0):배설 * 7)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 1, 10))
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -12)
+ENDIF
+IF TALENT:(ARG:0):수치심옅음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수치심옅음", 8)
+ENDIF
+IF TALENT:(ARG:0):자제심
+	CALL COM_ORDER_ELEMENT(ARG:0, "자제심", -6)
+ENDIF
+IF TALENT:(ARG:0):주목받기원함
+	CALL COM_ORDER_ELEMENT(ARG:0, "주목받기원함", 6)
+ENDIF
+IF TALENT:(ARG:0):도착적
+	CALL COM_ORDER_ELEMENT(ARG:0, "도착적", 8)
+ENDIF
+
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -10)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE132
+;플레이어가 안면승마중에서 장대가 없는 경우
+IF !HAS_PENIS(MPLY:0) && IS_RIDE(MPLY:0)
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 얼굴에 걸친 채로 입에 비순을 강압하면, %ANAME(MTAR:0)%의 입의 안으로 방뇨%TARGET_STR("했다", "해 왔다")%…
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 얼굴 위에 걸친 %ANAME(MPLY:0)%의 비순에 달라붙어, 그대로 입의 안으로 방뇨시켰다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에게, %ANAME(MTAR:0)%의 입의 안에 방뇨하도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 얼굴에 걸친 채로 입에 비순을 강압하면, %ANAME(MTAR:0)%의 입의 안으로 방뇨했다…
+	ENDSELECT
+
+;플레이어가 페라·귀두 페라되고 있는 경우
+ELSEIF IS_EQUIP_TARGET(MPLY:0, 11, 107)
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 페니스를 물게 한 채로, %ANAME(MTAR:0)%의 입의 안으로 방뇨%TARGET_STR("했다", "해 왔다")%…
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 페니스를 빨면서, %ANAME(MPLY:0)%에 입의 안으로 방뇨하도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% (듣)묻는 대로, %ANAME(MTAR:0)%의 입의 안으로 오줌을 쏟았다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에게, %ANAME(MTAR:0)%의 입의 안에 방뇨하도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% (듣)묻는 대로, %ANAME(MTAR:0)%의 입의 안으로 오줌을 쏟았다…
+	ENDSELECT
+
+;그 이외
+ELSE
+	;플레이어에 장대가 있는 경우
+	IF HAS_PENIS(MPLY:0)
+		SELECTCASE GET_COM_INITIATIVE()
+			;플레이어에 주도권
+			CASE 0
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 입에 페니스를 찔러 넣으면, %ANAME(MTAR:0)%의 입의 안으로 방뇨%TARGET_STR("했다", "해 왔다")%…
+			;타겟으로 주도권
+			CASE 1
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 입의 안으로 방뇨하도록(듯이) 명령해, %ANAME(MPLY:0)%의 페니스를 물었다
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% (듣)묻는 대로, %ANAME(MTAR:0)%의 입의 안으로 오줌을 쏟았다…
+			;제삼자에게 주도권
+			CASEELSE
+				PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에게, %ANAME(MTAR:0)%의 입의 안에 방뇨하도록(듯이) 명령했다
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 입에 페니스를 찔러 넣으면, %ANAME(MTAR:0)%의 입의 안으로 방뇨했다…
+		ENDSELECT
+
+	;플레이어에 장대가 없는 경우
+	ELSE
+		SELECTCASE GET_COM_INITIATIVE()
+			;플레이어에 주도권
+			CASE 0
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 입에 비순을 강압하면, %ANAME(MTAR:0)%의 입의 안으로 방뇨%TARGET_STR("했다", "해 왔다")%…
+			;타겟으로 주도권
+			CASE 1
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 입의 안으로 방뇨하도록(듯이) 명령해, %ANAME(MPLY:0)%의 비순에 달라붙었다
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% (듣)묻는 대로, %ANAME(MTAR:0)%의 입의 안으로 방뇨했다…
+			;제삼자에게 주도권
+			CASEELSE
+				PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에게, %ANAME(MTAR:0)%의 입의 안에 방뇨하도록(듯이) 명령했다
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 입에 비순을 강압하면, %ANAME(MTAR:0)%의 입의 안으로 방뇨했다…
+		ENDSELECT
+	ENDIF
+ENDIF
+
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST132
+FOR LOCAL:0, 0, MPLY_NUM
+	LOCAL:1 = MPLY:(LOCAL:0)
+
+	IF LOCAL:1 != MASTER && !TCVAR:(MTAR:0):52
+		IF ABL:(LOCAL:1):배설 >= 2
+			IF IS_INITIATIVE(LOCAL:1) && ABL:(LOCAL:1):새드 >= 3
+				PRINTFORMW %조사처리(ANAME(LOCAL:1),"는")% 배뇨의 해방감에 잠기면서, 만족한 것 같게 미소를 띄웠다
+			ELSE
+				PRINTFORMW %조사처리(ANAME(LOCAL:1),"는")% 보여지면서 방뇨하는 해방감에 황홀로 한 표정을 띄우고 있다
+			ENDIF
+		ELSEIF ABL:(LOCAL:1):배설 >= 1
+			PRINTFORMW %조사처리(ANAME(LOCAL:1),"는")% 수치에 얼굴을 붉히면서도, 배뇨의 해방감에 브르르 떨렸다
+		ELSE
+			PRINTFORMW %조사처리(ANAME(LOCAL:1),"는")% 방뇨하면서 얼굴을 붉히고 부끄러운 듯이 하고 있다
+		ENDIF
+	ENDIF
+NEXT
+FOR LOCAL:0, 0, MTAR_NUM
+	LOCAL:1 = MTAR:(LOCAL:0)
+	LOCAL:2 = CUP:(LOCAL:1):로주 + CUP:(LOCAL:1):액주
+
+	IF LOCAL:1 != MASTER && !TCVAR:(MTAR:0):52
+		IF LOCAL:2 < 0 && CUP:(LOCAL:1):욕정 >= 3000
+			PRINTFORMW %조사처리(ANAME(LOCAL:1),"는")% 토해내진 오줌을 모두 삼키면, 청소하는것같이 요도를 강하게 빨아 올렸다
+		ELSEIF LOCAL:2 < 0 && CUP:(LOCAL:1):욕정 >= 500
+			PRINTFORMW %조사처리(ANAME(LOCAL:1),"는")% 입안에 쏟아진 오줌을 꿀꺽꿀꺽소리를 내 삼켰다
+		ELSEIF LOCAL:2 < 0
+			PRINTFORMW %조사처리(ANAME(LOCAL:1),"는")% 입안에 쏟아진 오줌으로 숨이 막히면서도, 토해내는 일 없이 삼켰다
+		ELSEIF IS_INITIATIVE(LOCAL:1)
+			PRINTFORMW %조사처리(ANAME(LOCAL:1),"는")% 입안에 쏟아진 오줌을 토해내, %조사처리(ANAME(MPLY:0),"를")% 노려보았다
+		ELSE
+			PRINTFORMW %조사처리(ANAME(LOCAL:1),"는")% 입안에 쏟아진 오줌을 토해내려고, 격렬해져 구네있었다
+		ENDIF
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN132
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_132()
+RETURN POWER(2, 성적기호_욕보이고싶다)
+
+@COM_PREFERENCE_TARGET_132()
+RETURN POWER(2, 성적기호_봉사하고싶다) + POWER(2, 성적기호_욕보여지고싶다) + POWER(2, 성적기호_더럽혀지고싶다)
+

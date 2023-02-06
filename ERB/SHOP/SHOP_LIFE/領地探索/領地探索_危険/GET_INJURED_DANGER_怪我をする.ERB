@@ -1,0 +1,63 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_GET_INJURED_DANGER_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_GET_INJURED_DANGER_DECISION(대상)
+#DIM 대상
+RETURN IS_FEMALE(대상)
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_GET_INJURED_DANGER(대상)
+#DIM 대상
+PRINTFORML 아프닷!
+PRINTFORML %조사처리(ANAME(대상),"는")% 산책중에 다쳐 버렸다
+PRINTL
+CALL ASK_MULTI("참는다", "의사에게 보이게 한다", "스스로치료한다")
+
+IF RESULT == 0
+	PRINTFORML 이 정도라면 참을 수 있을 것이다……
+	PRINTFORMW 
+	$MYSELF
+	IF RAND:3
+		PRINTFORML ……쓸데없게 악화되어 버렸다
+		CALL ADD_COOLTIME(대상, 3)
+	ELSE
+		PRINTFORML ……완치했다!
+		MAXBASE:대상:체력 += 100
+		CALL ICPRINT(@"체력 최대치가<100>올라,<{MAXBASE:대상:체력}>가 되었다", "L", 칼라_주의)
+	ENDIF
+ELSEIF RESULT == 2
+	PRINTFORMW 이 정도의 상처라면 자력으로 치료할 수 있을 것 같다
+	GOTO MYSELF
+ELSE
+	PRINTFORML 근처에 있던 작은 진료소에 향했다
+	PRINTFORML 키가 구부러진, 천한 미소를 띄운 의사가 나타났다
+	PRINTFORMW 그야말로 야브 의사인 것 같지만, 겉모습으로 판단해서는 안 되면 진찰해 받았다
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+	PRINTFORML %조사처리(ANAME(대상),"는")% 마취를 맞아 수술대 위에서 자고 있다
+	PRINTFORML 의사는 입맛을 다신다와 혀와 손가락을 %ANAME(대상)%의 %STR_BODY("신체", 대상)%에 추잡하게 기어다니게 했다
+	PRINTFORML 애무에 반응해 희미하게 %조사처리(ANAME(대상),"가")% 흘리는 요염한 한숨에 인내 할 수 없게 된 의사는 육봉을 꺼내면
+	PRINTFORML %ANAME(대상)%의 양다리를 열게 해 %STR_BODY("질:처녀 확인:욕정", 대상)%의 안쪽 노려 근원까지 단번에 찔러 넣었다
+	PRINTFORMW 흠칫 뛰는 %ANAME(대상)%에 달라붙으면서, 그는 사납게 허리를 거절해 마음껏 그 신체를 다 범했다
+	CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 키스, 펠라티오, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 질내사정, 키스상실, 장내사정, 구강사정", GET_SPERM_ID("의사"), @"의사의 \@RAND:2 ? 페니스 # 입술\@", "의사", "", "제정신을 잃은 끝의 강간")
+	PRINTFORML 
+	PRINTFORML 겉모습과 달라 실력은 확실하다같다
+	PRINTFORML 완전히 상처가 나은 %조사처리(ANAME(대상),"는")% 의사에게 예를 말해 떠났다
+	PRINTFORMW 마취의 영향인가, 허벅지에 전해지는 정액에는 눈치채지 않았었다
+	LOCAL = MIN(MONEY, 2000)
+	MONEY -= LOCAL
+	CALL ICPRINT(@"금<{LOCAL}>를 지불했다", "L", 칼라_주의)
+ENDIF
+
+RETURN 1

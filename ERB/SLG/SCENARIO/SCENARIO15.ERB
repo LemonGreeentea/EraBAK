@@ -1,0 +1,558 @@
+﻿;-------------------------------------------------
+;시나리오 13
+;
+;-------------------------------------------------
+@SCENARIO_NAME_15
+RESULTS = 레밀리아의야망～난세편～
+RETURN
+
+@SCENARIO_MAPSELECT_15
+
+MAPID '= "Japan"
+PRINTFORML
+PRINTFORML 1467년의 오닌의 란이후 혼돈된 일본 사회는 1560년에 오다 노부나가가 오케하자마에서 이마가와 요시모토를 죽이는 무렵에는
+PRINTFORMW 전국에 전란의 세상이 퍼져 나가 천하를이라는 야망으로 가득 차고 흘러넘치고 있었다
+PRINTFORMW 가, 왜일까 무장이 동방 캐릭터가 되어 버렸다!
+PRINTFORML 당신은 이 세계에 질서를 가져와 총무사령을 발포할 수 있는 것인가
+PRINTFORML 그렇지 않으면 역사의 쓰레기로 화하는 것인가
+PRINTFORMW 일대 역사 그림 두루마기의 시작으로 문안 드림
+PRINTFORML
+
+@SCENARIO_INTRO_15
+
+;랜덤 캐릭터는 선택에 맡긴다
+FLAG:OP랜덤캐릭터사용 = 0
+
+
+@SCENARIO_PLACEMENT_15
+
+;세력 설정
+COUNTRY_BOSS:0 = 0
+COUNTRY_COLOR:0 = GETDEFCOLOR()
+
+;;--------오다가;--------
+
+COUNTRY_BOSS:1 = GET_ID(NAME_TO_CHARA("레밀리아"))
+COUNTRY_COLOR:1 = 0xB40404
+COUNTRY_AI_TYPE:1 = AI_호전
+;사이토, 육각과 근처의 것이 흡수되고 있습니다.
+CITY_OWNER:GET_CITYNUMBER("스에노모리성") = 1
+CITY_OWNER:GET_CITYNUMBER("이나바산죠우") = 1
+CITY_OWNER:GET_CITYNUMBER("목조성") = 1
+CITY_OWNER:GET_CITYNUMBER("관음사성") = 1
+
+;홍마관조
+CFLAG:(NAME_TO_CHARA("레밀리아")):1 = 1
+CFLAG:(NAME_TO_CHARA("사쿠야")):1 = 1
+CFLAG:(NAME_TO_CHARA("플랑도르")):1 = 1
+CFLAG:(NAME_TO_CHARA("메이링")):1 = 1
+CFLAG:(NAME_TO_CHARA("파츄리")):1 = 1
+CFLAG:(NAME_TO_CHARA("소악마")):1 = 1
+
+;;--------마츠다이라가;--------
+COUNTRY_BOSS:2 = GET_ID(NAME_TO_CHARA("마미조"))
+COUNTRY_COLOR:2 = 0x9f563a
+COUNTRY_AI_TYPE:2 = AI_외교
+
+CITY_OWNER:GET_CITYNUMBER("카미노향성") = 2
+
+
+;너구리팔동료들
+CFLAG:(NAME_TO_CHARA("마미조")):1 = 2
+CFLAG:(NAME_TO_CHARA("코코로")):1 = 2
+CFLAG:(NAME_TO_CHARA("코가사")):1 = 2
+CFLAG:(NAME_TO_CHARA("누에")):1 = 2
+
+;--------이마가와가;--------
+COUNTRY_BOSS:3 = GET_ID(NAME_TO_CHARA("유유코"))
+COUNTRY_COLOR:3 = 0xF5A9F2
+COUNTRY_AI_TYPE:3 = AI_방위
+;배반 직후（? ）로 뚝 떨어진 영토 있어
+CITY_OWNER:GET_CITYNUMBER("시타라성") = 3
+CITY_OWNER:GET_CITYNUMBER("히쿠마성") = 3
+CITY_OWNER:GET_CITYNUMBER("카케가와성") = 3
+CITY_OWNER:GET_CITYNUMBER("후츄성") = 3
+
+
+;요들꿈
+CFLAG:(NAME_TO_CHARA("유유코")):1 = 3
+CFLAG:(NAME_TO_CHARA("요우무")):1 = 3
+CFLAG:(NAME_TO_CHARA("요우키")):1 = 3
+CFLAG:(NAME_TO_CHARA("반령")):1 = 3
+
+
+;--------호죠가;--------
+COUNTRY_BOSS:4 = GET_ID(NAME_TO_CHARA("토요히메"))
+COUNTRY_COLOR:4 = 0x1e50a2
+COUNTRY_AI_TYPE:4 = AI_외교
+
+CITY_OWNER:GET_CITYNUMBER("흥국사성") = 4
+CITY_OWNER:GET_CITYNUMBER("오다와라성") = 4
+CITY_OWNER:GET_CITYNUMBER("니라산성") = 4
+CITY_OWNER:GET_CITYNUMBER("이즈오오시마") = 4
+CITY_OWNER:GET_CITYNUMBER("카와고에성") = 4
+CITY_OWNER:GET_CITYNUMBER("코우노다이성") = 4
+
+;월면조
+CFLAG:(NAME_TO_CHARA("토요히메")):1 = 4
+CFLAG:(NAME_TO_CHARA("요리히메")):1 = 4
+CFLAG:(NAME_TO_CHARA("달레이센")):1 = 4
+CFLAG:(NAME_TO_CHARA("달의문지기")):1 = 4
+CFLAG:(NAME_TO_CHARA("사구메")):1 = 4
+CFLAG:(NAME_TO_CHARA("세이란")):1 = 4
+CFLAG:(NAME_TO_CHARA("링고")):1 = 4
+
+;--------타케다…스와가다 이것;--------
+COUNTRY_BOSS:5 = GET_ID(NAME_TO_CHARA("사나에"))
+COUNTRY_COLOR:5 = 0xBEF781
+COUNTRY_AI_TYPE:5 = AI_호전
+
+CITY_OWNER:GET_CITYNUMBER("후카시죠우") = 5
+CITY_OWNER:GET_CITYNUMBER("스와우에하라성") = 5
+CITY_OWNER:GET_CITYNUMBER("두야마시로") = 5
+CITY_OWNER:GET_CITYNUMBER("이이다성") = 5
+CITY_OWNER:GET_CITYNUMBER("츠즈지가사키관") = 5
+CITY_OWNER:GET_CITYNUMBER("안개성") = 5
+CITY_OWNER:GET_CITYNUMBER("미노와성") = 5
+
+;모리야조
+CFLAG:(NAME_TO_CHARA("사나에")):1 = 5
+CFLAG:(NAME_TO_CHARA("스와코")):1 = 5
+CFLAG:(NAME_TO_CHARA("카나코")):1 = 5
+
+;--------무라카미가--------
+COUNTRY_BOSS:6 = GET_ID(NAME_TO_CHARA("헤카티아"))
+COUNTRY_COLOR:6 = 0Xea553a
+COUNTRY_AI_TYPE:6 = AI_방위
+
+CITY_OWNER:GET_CITYNUMBER("카츠라오성") = 6
+
+;감주전
+
+CFLAG:(NAME_TO_CHARA("순호")):1 = 6
+CFLAG:(NAME_TO_CHARA("클라운피스")):1 = 6
+CFLAG:(NAME_TO_CHARA("헤카티아")):1 = 6
+
+;--------아자이가--------
+COUNTRY_BOSS:7 = GET_ID(NAME_TO_CHARA("텐시"))
+COUNTRY_COLOR:7 = 0x2ca9e1
+COUNTRY_AI_TYPE:7 = AI_외교
+;MAP의 위치로서는 맞고 있을 것이지만 진구성이 그레이즈 하고 있다. 라고 말할까 아자이 요소 없다.
+CITY_OWNER:GET_CITYNUMBER("사와산성") = 7
+CITY_OWNER:GET_CITYNUMBER("후세야마성") = 7
+
+;천계조
+CFLAG:(NAME_TO_CHARA("텐시")):1 = 7
+CFLAG:(NAME_TO_CHARA("이쿠")):1 = 7
+
+;--------아네코우지가--------
+COUNTRY_BOSS:8 = GET_ID(NAME_TO_CHARA("오키나"))
+COUNTRY_COLOR:8 = 0x848350
+CITY_OWNER:GET_CITYNUMBER("사쿠라보라성") = 8
+CFLAG:(NAME_TO_CHARA("오키나")):1 = 8
+CFLAG:(NAME_TO_CHARA("마이")):1 = 8
+CFLAG:(NAME_TO_CHARA("사토노")):1 = 8
+
+;--------우에스기가--------
+COUNTRY_BOSS:9 = GET_ID(NAME_TO_CHARA("쇼우"))
+COUNTRY_COLOR:9 = 0xbf783a
+COUNTRY_AI_TYPE:9 = AI_호전
+
+CITY_OWNER:GET_CITYNUMBER("우오츠성") = 9
+CITY_OWNER:GET_CITYNUMBER("하루히야마시로") = 9
+CITY_OWNER:GET_CITYNUMBER("토야마성") = 9
+CITY_OWNER:GET_CITYNUMBER("판자문성") = 9
+CITY_OWNER:GET_CITYNUMBER("호죠성") = 9
+CITY_OWNER:GET_CITYNUMBER("쿠로타키성") = 9
+CITY_OWNER:GET_CITYNUMBER("잡태성") = 9
+;사조
+CFLAG:(NAME_TO_CHARA("쇼우")):1 = 9
+CFLAG:(NAME_TO_CHARA("미나미츠")):1 = 9
+CFLAG:(NAME_TO_CHARA("뱌쿠렌")):1 = 9
+CFLAG:(NAME_TO_CHARA("이치린")):1 = 9
+CFLAG:(NAME_TO_CHARA("운잔")):1 = 9
+CFLAG:(NAME_TO_CHARA("나즈린")):1 = 9
+
+
+;--------아사쿠라가--------
+COUNTRY_BOSS:10 = GET_ID(NAME_TO_CHARA("아큐"))
+COUNTRY_COLOR:10 = 0Xa1a46d
+COUNTRY_AI_TYPE:10 = AI_외교
+;나나오가를 우에스기에게 합류시킬까로 뚝 떨어진 영토가 싫은 것으로 이쪽에 합류.
+CITY_OWNER:GET_CITYNUMBER("이치조다니성") = 10
+CITY_OWNER:GET_CITYNUMBER("토가시관") = 10
+CITY_OWNER:GET_CITYNUMBER("나나오성") = 10
+
+;서적조
+CFLAG:(NAME_TO_CHARA("아큐")):1 = 10
+CFLAG:(NAME_TO_CHARA("코스즈")):1 = 10
+CFLAG:(NAME_TO_CHARA("토키코")):1 = 10
+CFLAG:(NAME_TO_CHARA("린노스케")):1 = 10
+
+;--------미요시가--------
+COUNTRY_BOSS:11 = GET_ID(NAME_TO_CHARA("유카리"))
+COUNTRY_COLOR:11 = 0x65318e
+COUNTRY_AI_TYPE:11 = AI_내정
+
+CITY_OWNER:GET_CITYNUMBER("토가와성") = 11
+CITY_OWNER:GET_CITYNUMBER("흰바탕성") = 11
+CITY_OWNER:GET_CITYNUMBER("쇼즈이성") = 11
+CITY_OWNER:GET_CITYNUMBER("키시와다성") = 11
+CITY_OWNER:GET_CITYNUMBER("네고로사") = 11
+CITY_OWNER:GET_CITYNUMBER("코시미즈성") = 11
+CITY_OWNER:GET_CITYNUMBER("스모토성") = 11
+CITY_OWNER:GET_CITYNUMBER("8카미시로") = 11
+
+;야쿠모가+폭탄
+CFLAG:(NAME_TO_CHARA("유카리")):1 = 11
+CFLAG:(NAME_TO_CHARA("란")):1 = 11
+CFLAG:(NAME_TO_CHARA("첸")):1 = 11
+CFLAG:(NAME_TO_CHARA("세이자")):1 = 11
+CFLAG:(NAME_TO_CHARA("신묘마루")):1 = 11
+
+;--------아시카가가--------
+COUNTRY_BOSS:12 = GET_ID(NAME_TO_CHARA("레이무"))
+COUNTRY_COLOR:12 = 0Xec5d71
+COUNTRY_AI_TYPE:12 = AI_외교
+;2조고세 겸임
+CITY_OWNER:GET_CITYNUMBER("장군야마시로") = 12
+
+;주인공
+CFLAG:(NAME_TO_CHARA("레이무")):1 = 12
+CFLAG:(NAME_TO_CHARA("마리사")):1 = 12
+
+;--------츠츠이가--------
+COUNTRY_BOSS:13 = GET_ID(NAME_TO_CHARA("미코"))
+COUNTRY_COLOR:13 = 0x895b8a
+COUNTRY_AI_TYPE:13 = AI_외교
+
+CITY_OWNER:GET_CITYNUMBER("츠츠이성") = 13
+
+;사당조
+CFLAG:(NAME_TO_CHARA("미코")):1 = 13
+CFLAG:(NAME_TO_CHARA("토지코")):1 = 13
+CFLAG:(NAME_TO_CHARA("후토")):1 = 13
+CFLAG:(NAME_TO_CHARA("청아")):1 = 13
+CFLAG:(NAME_TO_CHARA("요시카")):1 = 13
+
+;--------기타바타케가--------
+COUNTRY_BOSS:14 = GET_ID(NAME_TO_CHARA("앨리스"))
+COUNTRY_COLOR:14 = 0Xeddc44
+COUNTRY_AI_TYPE:14 = AI_외교
+
+CITY_OWNER:GET_CITYNUMBER("타키성") = 14
+
+;앨리스와 인형
+CFLAG:(NAME_TO_CHARA("앨리스")):1 = 14
+CFLAG:(NAME_TO_CHARA("샹하이인형")):1 = 14
+CFLAG:(NAME_TO_CHARA("호라이인형")):1 = 14
+CFLAG:(NAME_TO_CHARA("오오에도인형")):1 = 14
+CFLAG:(NAME_TO_CHARA("골리아테인형")):1 = 14
+
+
+
+;--------야마모토씨--------
+COUNTRY_BOSS:15 = GET_ID(NAME_TO_CHARA("서니밀크"))
+COUNTRY_COLOR:15 = 0Xffedab
+COUNTRY_AI_TYPE:15 = AI_내정
+
+CITY_OWNER:GET_CITYNUMBER("용마츠야마성") = 15
+;3 요정
+CFLAG:(NAME_TO_CHARA("서니밀크")):1 = 15
+CFLAG:(NAME_TO_CHARA("루나차일드")):1 = 15
+CFLAG:(NAME_TO_CHARA("스타사파이어")):1 = 15
+
+;--------초소카베가--------
+COUNTRY_BOSS:16 = GET_ID(NAME_TO_CHARA("라이코"))
+COUNTRY_COLOR:16 = 0x752100
+COUNTRY_AI_TYPE:16 = AI_호전
+
+CITY_OWNER:GET_CITYNUMBER("언덕토요키") = 16
+CITY_OWNER:GET_CITYNUMBER("슈쿠모우성") = 16
+CITY_OWNER:GET_CITYNUMBER("가을성") = 16
+
+;츠쿠모+1
+CFLAG:(NAME_TO_CHARA("라이코")):1 = 16
+CFLAG:(NAME_TO_CHARA("벤벤")):1 = 16
+CFLAG:(NAME_TO_CHARA("야츠하시")):1 = 16
+
+;--------코우노가--------
+COUNTRY_BOSS:17 = GET_ID(NAME_TO_CHARA("와카사기히메"))
+COUNTRY_COLOR:17 = 0Xabced8
+COUNTRY_AI_TYPE:17 = AI_호전
+
+CITY_OWNER:GET_CITYNUMBER("탕축성") = 17
+
+;민간
+CFLAG:(NAME_TO_CHARA("와카사기히메")):1 = 17
+CFLAG:(NAME_TO_CHARA("카게로")):1 = 17
+CFLAG:(NAME_TO_CHARA("세키반키")):1 = 17
+
+;--------사이온지 가--------
+COUNTRY_BOSS:18 = GET_ID(NAME_TO_CHARA("아야"))
+COUNTRY_COLOR:18 = 0Xfff1cf
+COUNTRY_AI_TYPE:18 = AI_호전
+
+CITY_OWNER:GET_CITYNUMBER("솔잎성") = 18
+;텐구
+CFLAG:(NAME_TO_CHARA("아야")):1 = 18
+CFLAG:(NAME_TO_CHARA("하타테")):1 = 18
+CFLAG:(NAME_TO_CHARA("모미지")):1 = 18
+
+;--------모리가--------
+COUNTRY_BOSS:19 = GET_ID(NAME_TO_CHARA("레이라"))
+COUNTRY_COLOR:19 = 0x00FA9A
+COUNTRY_AI_TYPE:19 = AI_호전
+
+CITY_OWNER:GET_CITYNUMBER("날개달린옷이시가키") = 19
+CITY_OWNER:GET_CITYNUMBER("미스미성") = 19
+CITY_OWNER:GET_CITYNUMBER("츠키야마토미타성") = 19
+CITY_OWNER:GET_CITYNUMBER("독도") = 19
+CITY_OWNER:GET_CITYNUMBER("시게츠성") = 19
+CITY_OWNER:GET_CITYNUMBER("석가산성") = 19
+CITY_OWNER:GET_CITYNUMBER("코오리야마성") = 19
+CITY_OWNER:GET_CITYNUMBER("갑미성") = 19
+
+;3 자매와 친부모（? ）
+CFLAG:(NAME_TO_CHARA("레이라")):1 = 19
+CFLAG:(NAME_TO_CHARA("루나사")):1 = 19
+CFLAG:(NAME_TO_CHARA("메를랑")):1 = 19
+CFLAG:(NAME_TO_CHARA("리리카")):1 = 19
+
+;--------우키타가--------
+COUNTRY_BOSS:20 = GET_ID(NAME_TO_CHARA("유카"))
+COUNTRY_COLOR:20 = 0Xfcc801
+COUNTRY_AI_TYPE:20 = AI_호전
+
+CITY_OWNER:GET_CITYNUMBER("학수성") = 20
+CITY_OWNER:GET_CITYNUMBER("숫돌성") = 20
+
+
+;유카와 동료
+CFLAG:(NAME_TO_CHARA("유카")):1 = 20
+CFLAG:(NAME_TO_CHARA("에리스")):1 = 20
+CFLAG:(NAME_TO_CHARA("쿠루미")):1 = 20
+
+
+;--------세키 마츠카-------
+COUNTRY_BOSS:21 = GET_ID(NAME_TO_CHARA("시키에이키"))
+COUNTRY_COLOR:21 = 0x31B404
+COUNTRY_AI_TYPE:21 = AI_방위
+CITY_OWNER:GET_CITYNUMBER("치옌청") = 21
+
+;피안조
+CFLAG:(NAME_TO_CHARA("시키에이키")):1 = 21
+CFLAG:(NAME_TO_CHARA("코마치")):1 = 21
+;--------야마나가--------
+COUNTRY_BOSS:22 = GET_ID(NAME_TO_CHARA("릴리화이트"))
+COUNTRY_COLOR:22 = 0Xefefef
+COUNTRY_AI_TYPE:22 = AI_외교
+;릴리
+CITY_OWNER:GET_CITYNUMBER("아마미야마시로") = 22
+CITY_OWNER:GET_CITYNUMBER("차우성") = 22
+;릴리
+CFLAG:(NAME_TO_CHARA("릴리화이트")):1 = 22
+CFLAG:(NAME_TO_CHARA("릴리블랙")):1 = 22
+
+;--------사토미가--------
+COUNTRY_BOSS:23 = GET_ID(NAME_TO_CHARA("쿄코"))
+COUNTRY_COLOR:23 = 0Xa8bf93
+COUNTRY_AI_TYPE:23 = AI_방위
+
+CITY_OWNER:GET_CITYNUMBER("구루리성") = 23
+CITY_OWNER:GET_CITYNUMBER("타테야마성") = 23
+;조수 탈을 쓰고 음악에 맞춰 춤을 춤
+CFLAG:(NAME_TO_CHARA("쿄코")):1 = 23
+CFLAG:(NAME_TO_CHARA("미스티아")):1 = 23
+
+;--------유우키+우츠노미야+사타케 연합--------
+COUNTRY_BOSS:24 = GET_ID(NAME_TO_CHARA("카구야"))
+COUNTRY_COLOR:24 = 0X2a83a2
+COUNTRY_AI_TYPE:24 = AI_외교
+
+CITY_OWNER:GET_CITYNUMBER("유우키성") = 24
+CITY_OWNER:GET_CITYNUMBER("우츠노미야성") = 24
+CITY_OWNER:GET_CITYNUMBER("오오타성") = 24
+;영원정
+CFLAG:(NAME_TO_CHARA("카구야")):1 = 24
+CFLAG:(NAME_TO_CHARA("에이린")):1 = 24
+CFLAG:(NAME_TO_CHARA("테위")):1 = 24
+CFLAG:(NAME_TO_CHARA("레이센")):1 = 24
+
+;--------겉멋가--------
+COUNTRY_BOSS:25 = GET_ID(NAME_TO_CHARA("치르노"))
+COUNTRY_COLOR:25 = 0xa1d8e2
+COUNTRY_AI_TYPE:25 = AI_호전
+
+CITY_OWNER:GET_CITYNUMBER("아이즈와카마츠성") = 25
+CITY_OWNER:GET_CITYNUMBER("스카가와성") = 25
+CITY_OWNER:GET_CITYNUMBER("나카무라성") = 25
+CITY_OWNER:GET_CITYNUMBER("요네자와성") = 25
+CITY_OWNER:GET_CITYNUMBER("마루모리성") = 25
+CITY_OWNER:GET_CITYNUMBER("명생성") = 25
+
+;치르노와 동료
+CFLAG:(NAME_TO_CHARA("치르노")):1 = 25
+CFLAG:(NAME_TO_CHARA("레티")):1 = 25
+CFLAG:(NAME_TO_CHARA("대요정")):1 = 25
+
+;;--------일색가--------
+COUNTRY_BOSS:26 = GET_ID(NAME_TO_CHARA("사토리"))
+COUNTRY_COLOR:26 = 0xFF00FF
+COUNTRY_AI_TYPE:26 = AI_방위
+
+CITY_OWNER:GET_CITYNUMBER("유미키성") = 26
+;지령전조
+CFLAG:(NAME_TO_CHARA("사토리")):1 = 26
+CFLAG:(NAME_TO_CHARA("코이시")):1 = 26
+CFLAG:(NAME_TO_CHARA("우츠호")):1 = 26
+CFLAG:(NAME_TO_CHARA("오린")):1 = 26
+
+
+;--------시마즈가--------
+COUNTRY_BOSS:27 = GET_ID(NAME_TO_CHARA("유우기"))
+COUNTRY_COLOR:27 = 0Xf8b500
+COUNTRY_AI_TYPE:27 = AI_호전
+
+CITY_OWNER:GET_CITYNUMBER("도노코오리성") = 27
+CITY_OWNER:GET_CITYNUMBER("타카미야성") = 27
+CITY_OWNER:GET_CITYNUMBER("시미즈성") = 27
+CITY_OWNER:GET_CITYNUMBER("슈리성") = 27
+CITY_OWNER:GET_CITYNUMBER("히토요시성") = 27
+
+;유우기와 그 외 지령전조
+CFLAG:(NAME_TO_CHARA("유우기")):1 = 27
+CFLAG:(NAME_TO_CHARA("야마메")):1 = 27
+CFLAG:(NAME_TO_CHARA("키스메")):1 = 27
+CFLAG:(NAME_TO_CHARA("파르시")):1 = 27
+
+
+
+;--------오오토모가--------
+COUNTRY_BOSS:28 = GET_ID(NAME_TO_CHARA("신키"))
+COUNTRY_COLOR:28 = 0X736d71
+COUNTRY_AI_TYPE:28 = AI_외교
+
+CITY_OWNER:GET_CITYNUMBER("고야성") = 28
+CITY_OWNER:GET_CITYNUMBER("고쇼잔성") = 28
+CITY_OWNER:GET_CITYNUMBER("훤절성") = 28
+CITY_OWNER:GET_CITYNUMBER("오오토모관") = 28
+
+;마계조
+CFLAG:(NAME_TO_CHARA("신키")):1 = 28
+CFLAG:(NAME_TO_CHARA("유메코")):1 = 28
+CFLAG:(NAME_TO_CHARA("유키")):1 = 28
+CFLAG:(NAME_TO_CHARA("마-이")):1 = 28
+CFLAG:(NAME_TO_CHARA("루이즈")):1 = 28
+CFLAG:(NAME_TO_CHARA("사라")):1 = 28
+
+
+;--------류우조지가--------
+COUNTRY_BOSS:29 = GET_ID(NAME_TO_CHARA("모코우"))
+COUNTRY_COLOR:29 = 0XE95464
+COUNTRY_AI_TYPE:29 = AI_외교
+
+CITY_OWNER:GET_CITYNUMBER("카나이시성") = 29
+CITY_OWNER:GET_CITYNUMBER("귀구성") = 29
+CITY_OWNER:GET_CITYNUMBER("에가와성") = 29
+CITY_OWNER:GET_CITYNUMBER("마을안성") = 29
+CITY_OWNER:GET_CITYNUMBER("일지강성") = 29
+
+;군요도 와
+CFLAG:(NAME_TO_CHARA("모코우")):1 = 29
+CFLAG:(NAME_TO_CHARA("케이네")):1 = 29
+
+;--------최상가（? ）--------
+COUNTRY_BOSS:30 = GET_ID(NAME_TO_CHARA("히나"))
+COUNTRY_COLOR:30 = 0x0B610B
+COUNTRY_AI_TYPE:30 = AI_외교
+
+CITY_OWNER:GET_CITYNUMBER("시바타성") = 30
+CITY_OWNER:GET_CITYNUMBER("혼죠성") = 30
+CITY_OWNER:GET_CITYNUMBER("야마가타성") = 30
+CITY_OWNER:GET_CITYNUMBER("규연성") = 30
+
+;히나와 니토리
+CFLAG:(NAME_TO_CHARA("히나")):1 = 30
+CFLAG:(NAME_TO_CHARA("니토리")):1 = 30
+
+
+;--------시바가（? ）--------
+COUNTRY_BOSS:31 = GET_ID(NAME_TO_CHARA("루미아"))
+COUNTRY_COLOR:31 = 0xFFFF00
+COUNTRY_AI_TYPE:31 = AI_호전
+
+CITY_OWNER:GET_CITYNUMBER("코즈카타관") = 31
+CITY_OWNER:GET_CITYNUMBER("시바관") = 31
+
+;루미아와 동료
+CFLAG:(NAME_TO_CHARA("루미아")):1 = 31
+CFLAG:(NAME_TO_CHARA("리글")):1 = 31
+
+
+;--------남부가（? ）--------
+COUNTRY_BOSS:32 = GET_ID(NAME_TO_CHARA("유메미"))
+COUNTRY_COLOR:32 = 0xC51E1F
+COUNTRY_AI_TYPE:32 = AI_내정
+
+CITY_OWNER:GET_CITYNUMBER("류기성") = 32
+CITY_OWNER:GET_CITYNUMBER("가타성") = 32
+CITY_OWNER:GET_CITYNUMBER("카시와바성") = 32
+CITY_OWNER:GET_CITYNUMBER("나미오카성") = 32
+CITY_OWNER:GET_CITYNUMBER("토쿠야마관") = 32
+
+;루미아와 동료
+CFLAG:(NAME_TO_CHARA("유메미")):1 = 32
+CFLAG:(NAME_TO_CHARA("치유리")):1 = 32
+
+;--------안동가（? ）--------
+COUNTRY_BOSS:33 = GET_ID(NAME_TO_CHARA("린"))
+COUNTRY_COLOR:33 = 0xe5a323
+COUNTRY_AI_TYPE:33 = AI_외교
+
+CITY_OWNER:GET_CITYNUMBER("히야마성") = 33
+CITY_OWNER:GET_CITYNUMBER("가쿠다테성") = 33
+
+;교수
+CFLAG:(NAME_TO_CHARA("린")):1 = 33
+
+;--------한반도--------
+COUNTRY_BOSS:34 = GET_ID(NAME_TO_CHARA("에키샤"))
+COUNTRY_COLOR:34 = 0xa3a3a2
+COUNTRY_AI_TYPE:34 = AI_외교
+
+CITY_OWNER:GET_CITYNUMBER("개성") = 34
+CITY_OWNER:GET_CITYNUMBER("한성") = 34
+CITY_OWNER:GET_CITYNUMBER("부산") = 34
+
+;에키샤
+CFLAG:(NAME_TO_CHARA("에키샤")):1 = 34
+
+;지정되지 않았던 캐릭터는 방랑 「당신」는 제외（MASTER 바꿔 넣었을 때에 방랑하는 것을 막는다）.
+FOR LOCAL:0, 1, CHARANUM
+	SIF CFLAG:(LOCAL:0):1 == 0  && CSTR:(LOCAL:0):99 != "당신"
+		CFLAG:(LOCAL:0):특수상태 = 1
+NEXT
+
+;병력의 초기 배치
+CALL INIT_ARMY
+;각국의 수비대의 초기 배치
+
+;무소속 도시의 병수는 경제의 7.5%
+FOR LOCAL:0, 0, MAX_CITY
+	SIF CITY_OWNER:(LOCAL:0) == 0
+		CITY_SOLDIER:(LOCAL:0) = CITY_ECONOMY:(LOCAL:0) * 75 / 1000
+NEXT
+
+;■관계 설정
+CALL SHARED_SETTING_RELATION
+
+;동맹 관계
+
+
+;관계 설정 
+;-------------------------------------------------
+;정례 이벤트
+;턴 엔드시에 불려 간다
+;-------------------------------------------------
+@SCENARIO_EVENT_15

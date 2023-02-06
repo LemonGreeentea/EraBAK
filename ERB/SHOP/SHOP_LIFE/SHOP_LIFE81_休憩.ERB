@@ -1,0 +1,87 @@
+﻿;※휴식은 특수한 메뉴로 메뉴 버튼의 표시 위치를 고정하고 있다
+;  번호를 바꾸는 경우는@COLUMN_LEFT_MENU_SHOW를 확인할 필요 있어
+;-------------------------------------------------
+;「휴식」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE_NAME81
+RESULTS:0 '= "휴식"
+
+;-------------------------------------------------
+;「휴식」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE_CHECK81
+SIF CFLAG:MASTER:포로처
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「휴식의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY81
+RESULT = 1
+LINES_SHOP = LINECOUNT
+CALL SHOP_REST
+SHOP_TIME = CALC_SHOP_TIME()
+BEGIN TURNEND
+
+;-------------------------------------------------
+;「휴식」의 오른쪽 컬럼 오프 판정
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_COLUMN_RIGHT_OFF_CHECK81
+
+;-------------------------------------------------
+;「휴식」의 처리
+;-------------------------------------------------
+;휴식을 선택했을 때의 잉여 행동횟수 소비
+@SHOP_REST
+#DIM 잉여
+
+FLAG:요바이 = 0
+
+;클리어 플래그 서고 있으면 없음
+SIF FLAG:클리어플래그
+	RETURN 0
+
+잉여 = CALC_SHOP_TIME() - SHOP_TIME
+CALL SINGLE_DRAWLINE
+SELECTCASE RAND:100
+	CASE IS < 40
+		PRINTFORMW 남은 행동횟수로 훈련을 실시했다……
+		SELECTCASE RAND:6
+			CASE 0
+				LOCAL = GETNUM(EXP, "무투경험치")
+			CASE 1
+				LOCAL = GETNUM(EXP, "지략경험치")
+			CASE 2
+				LOCAL = GETNUM(EXP, "방위경험치")
+			CASE 3
+				LOCAL = GETNUM(EXP, "정치경험치")
+			CASE 4
+				LOCAL = GETNUM(EXP, "가창경험치")
+			CASE 5
+				LOCAL = GETNUM(EXP, "요리경험치")
+		ENDSELECT
+
+		CALL PRINT_ADD_EXP(MASTER, EXPNAME:LOCAL, LIMIT(잉여, 1, 5), 1)
+
+		CALL TRAIN_AUTO_ABLUP(MASTER)
+		WAIT
+	CASE IS < 70
+		PRINTFORMW 남은 행동횟수로 동료와 교우가 깊어졌다……
+		FOR LOCAL, 1, CHARANUM
+			IF CFLAG:LOCAL:소속 == CFLAG:MASTER:소속 && !CFLAG:LOCAL:포로처
+				CALL CHANGE_RELATION_O_TO_O(LOCAL, MASTER, MIN(잉여, 5), MAX(-잉여, -5))
+				CALL CHANGE_RELATION_O_TO_O(MASTER, LOCAL, MIN(잉여, 5), MAX(-잉여, -5))
+			ENDIF
+		NEXT
+	CASEELSE
+		LOCAL = LIMIT(잉여 / 2, 1, 5) * 500
+		PRINTFORMW 남은 행동횟수로 용돈을 벌었다……
+		PRINTFORM 금
+		CALL COLOR_PRINT(@"{LOCAL}", 칼라_주의)
+		PRINTFORMW 를 손에 넣었다
+		MONEY += LOCAL
+ENDSELECT
+
+LINES_SHOP = LINECOUNT
+

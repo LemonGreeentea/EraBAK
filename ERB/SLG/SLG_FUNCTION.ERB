@@ -1,0 +1,2485 @@
+﻿;SLG 부분의 각종 함수 통계
+;-------------------------------------------------
+;현존 하는 세력수를 돌려주는 함수
+;-------------------------------------------------
+@GET_COUNTRY_NUM()
+#FUNCTION
+LOCAL:1 = 0
+FOR LOCAL, 0, MAX_COUNTRY
+	SIF IS_COUNTRY(LOCAL)
+		LOCAL:1 ++
+NEXT
+RETURNF LOCAL:1
+
+;-------------------------------------------------
+;ARG:0번의 세력의 존재 판정
+;-------------------------------------------------
+@IS_COUNTRY(ARG:0)
+#FUNCTION
+SIF !INRANGE(ARG:0, 0, MAX_COUNTRY - 1)
+	RETURNF 0
+RETURNF COUNTRY_BOSS:(ARG:0) >= 1
+
+;-------------------------------------------------
+;ARG:0번의 세력에 대해서, 수령의 캐릭터 번호를 돌려주는 함수
+;-------------------------------------------------
+@GET_COUNTRY_BOSS(ARG:0)
+#FUNCTION
+RETURNF ID_TO_CHARA(COUNTRY_BOSS:(ARG:0))
+
+;-------------------------------------------------
+;ARG:0번의 세력에 대해서, 방위 병력의 합계치를 돌려주는 함수
+;-------------------------------------------------
+@GET_SUM_ARMY_DF(ARG:0)
+#FUNCTION
+LOCAL:1 = 0
+FOR LOCAL:0, 0, MAX_CITY
+	SIF CITY_OWNER:(LOCAL:0) == ARG:0
+		LOCAL:1 += CITY_SOLDIER:(LOCAL:0)
+NEXT
+RETURNF LOCAL:1
+
+;-------------------------------------------------
+;ARG:0번의 세력에 대해서, 소지병수의 합계치를 돌려주는 함수
+;-------------------------------------------------
+@GET_SUM_SOLDIER(ARG:0)
+#FUNCTION
+LOCAL:1 = COUNTRY_SOLDIER:(ARG:0)
+FOR LOCAL:0, 0, MAX_CITY
+	SIF CITY_OWNER:(LOCAL:0) == ARG:0
+		LOCAL:1 += CITY_SOLDIER:(LOCAL:0)
+NEXT
+FOR LOCAL:0, 0, 10
+	LOCAL:1 += MAX(0, UNIT_SOLDIER:(ARG:0):(LOCAL:0))
+NEXT
+RETURNF LOCAL:1
+
+;-------------------------------------------------
+;ARG:0번의 세력에 대해서, 경제 규모의 합계치를 돌려주는 함수
+;-------------------------------------------------
+@GET_SUM_ECONOMY(ARG:0)
+#FUNCTION
+LOCAL:1 = 0
+FOR LOCAL:0, 0, MAX_CITY
+	SIF CITY_OWNER:(LOCAL:0) == ARG:0
+		LOCAL:1 += CITY_ECONOMY:(LOCAL:0)
+NEXT
+RETURNF LOCAL:1
+
+;-------------------------------------------------
+;ARG:0번의 세력에 대해서, 도시 방위력의 합계치를 돌려주는 함수
+;-------------------------------------------------
+@GET_SUM_GUARD(ARG:0)
+#FUNCTION
+LOCAL:1 = 0
+FOR LOCAL:0, 0, MAX_CITY
+	SIF CITY_OWNER:(LOCAL:0) == ARG:0
+		LOCAL:1 += CITY_GUARD:(LOCAL:0)
+NEXT
+RETURNF LOCAL:1
+
+
+;-------------------------------------------------
+;ARG:0번의 세력에 대해서, 지배 도시수를 돌려주는 함수
+;-------------------------------------------------
+@GET_OWN_CITY(ARG:0)
+#FUNCTION
+
+RETURNF MATCH(CITY_OWNER, ARG:0, 1, CITY_NUM + 1)
+
+;-------------------------------------------------
+;ARG:0번의 세력에 대해서, 사관수를 돌려주는 함수
+;-------------------------------------------------
+@GET_COMMANDER_NUM(ARG:0)
+#FUNCTION
+
+RETURNF CMATCH(CFLAG:1, ARG:0)
+
+;-------------------------------------------------
+;ARG:0번의 세력에 대해서, 동물의 수를 돌려주는 함수
+;-------------------------------------------------
+@GET_ANIMAL_NUM(ARG:0)
+#FUNCTION
+LOCAL:1 = 0
+FOR LOCAL, 0, CHARANUM
+	SIF IS_ANIMAL(LOCAL:0) && CFLAG:(LOCAL:0):소속 == ARG:0
+		LOCAL:1 ++
+NEXT
+RETURNF LOCAL:1
+
+;-------------------------------------------------
+;ARG:0번의 세력에 대해서, 현재의 부대의 수를 돌려주는 함수
+;-------------------------------------------------
+@GET_UNIT_NUM(ARG:0)
+#FUNCTION
+LOCAL:1 = 0
+IF IS_COUNTRY(ARG:0)
+	FOR LOCAL:0, 0, MAX_UNIT
+		SIF UNIT_SOLDIER:(ARG:0):(LOCAL:0) > 0
+			LOCAL:1 ++
+	NEXT
+ENDIF
+RETURNF LOCAL:1
+
+
+;-------------------------------------------------
+;ARG:1의 정부에 응해 GET_UNIT_COMMANDER_ALL와 GET_CITY_COMMANDER_ALL를 호출하는 함수
+;그근처 투과적으로 취급할 수 있도록(듯이)하기 위해(때문) 작성
+;-------------------------------------------------
+@GET_COMMANDER_ALL(ARG:0, ARG:1)
+IF ARG:1 < 0
+	CALL GET_CITY_COMMANDER_ALL(ARG:0)
+ELSE
+	CALL GET_UNIT_COMMANDER_ALL(ARG:0, ARG:1)
+ENDIF
+RETURN RESULT:0, RESULT:1, RESULT:2
+
+;-------------------------------------------------
+;ARG:1의 정부에 응해 CITY_SOLDER와 UNIT_SOLDIER를 취득하기 위한 함수
+;CITY_SOLDIER와 UNIT_SOLDIER를 투과적으로 취급하기 위해서(때문에) 작성.
+;-------------------------------------------------
+@GET_SOLDIER(ARG:0, ARG:1)
+#FUNCTION
+IF ARG:1 < 0
+	RETURNF CITY_SOLDIER:(ARG:0)
+ELSE
+	RETURNF UNIT_SOLDIER:(ARG:0):(ARG:1)
+ENDIF
+RETURNF -1
+
+;-------------------------------------------------
+;ARG:1의 정부에 응해 CITY_SOLDER와 UNIT_SOLDIER를 조작하기 위한 함수
+;CITY_SOLDIER와 UNIT_SOLDIER를 투과적으로 취급하기 위해서(때문에) 작성.
+;-------------------------------------------------
+@MODIFY_SOLDIER(ARG:0, ARG:1, ARG:2, ARG:3 = 0)
+IF ARG:1 < 0
+	LOCAL:1 = CITY_OWNER:(ARG:0)
+	LOCAL:2 = MAX(CITY_SOLDIER:(ARG:0) + ARG:2, 0)
+	SIF ARG:3
+		PRINTFORML %@"\@ GET_COUNTRY_BOSS(LOCAL:1) >= 0 ? %SNAME(GET_COUNTRY_BOSS(LOCAL:1))% # 무소속 \@", MAX_CHARANAME_LENGTH / 2, LEFT%군:{CITY_SOLDIER:(ARG:0), 6, RIGHT} → {LOCAL:2}
+	CITY_SOLDIER:(ARG:0) = LOCAL:2	
+ELSE
+	LOCAL:1 = ARG:0
+	LOCAL:2 = MAX(UNIT_SOLDIER:(ARG:0):(ARG:1) + ARG:2, 0)
+	SIF ARG:3
+		PRINTFORML %SNAME(GET_COUNTRY_BOSS(LOCAL:1)), MAX_CHARANAME_LENGTH / 2, LEFT%군:{UNIT_SOLDIER:(ARG:0):(ARG:1), 6, RIGHT} → {LOCAL:2}
+	UNIT_SOLDIER:(ARG:0):(ARG:1) = LOCAL:2
+ENDIF
+
+@INCREASE_SOLDIER(ARG:0, ARG:1, ARG:2, ARG:3 = 0)
+CALL MODIFY_SOLDIER(ARG:0, ARG:1, ABS(ARG:2), ARG:3)
+
+@DECREASE_SOLDIER(ARG:0, ARG:1, ARG:2, ARG:3 = 0)
+CALL MODIFY_SOLDIER(ARG:0, ARG:1, ABS(ARG:2) * -1, ARG:3)
+
+
+;-------------------------------------------------
+;ARG:1의 정부에 응해 CITY_SOLDER와 UNIT_SOLDIER를 조작하기 위한 함수
+;가감(상태)는 아니고 직접치를 세트 할 때 용
+;-------------------------------------------------
+@SET_SOLDIER(ARG:0, ARG:1, ARG:2, ARG:3 = 0)
+IF ARG:1 < 0
+	LOCAL:1 = CITY_OWNER:(ARG:0)
+	SIF ARG:3
+		PRINTFORML %@"\@ GET_COUNTRY_BOSS(LOCAL:1) >= 0 ? %SNAME(GET_COUNTRY_BOSS(LOCAL:1))% # 무소속 \@", MAX_CHARANAME_LENGTH / 2, LEFT%군:{CITY_SOLDIER:(ARG:0), 6, RIGHT} → {LOCAL:2}
+	CITY_SOLDIER:(ARG:0) = ARG:2
+ELSE
+	LOCAL:1 = ARG:0
+	SIF ARG:3
+		PRINTFORML %SNAME(GET_COUNTRY_BOSS(LOCAL:1)), MAX_CHARANAME_LENGTH / 2, LEFT%군:{UNIT_SOLDIER:(ARG:0):(ARG:1), 6, RIGHT} → {LOCAL:2}
+	UNIT_SOLDIER:(ARG:0):(ARG:1) = ARG:2
+ENDIF
+
+;-------------------------------------------------
+;ARG:0번의 도시에 대해서, ARG:첫 번째의 수장의 캐릭터 번호를 돌려주는 함수
+;-------------------------------------------------
+@GET_CITY_COMMANDER(ARG:0, ARG:1)
+#FUNCTION
+SIF !INRANGE_CITY(ARG:0) || !INRANGE_CITY_COMMANDER(ARG:1)
+	RETURNF -1
+
+RETURNF ID_TO_CHARA((CITY_COMMANDER:(ARG:0) >> (16 * ARG:1)) & 0xFFFF)
+
+;-------------------------------------------------
+;ARG:0번의 도시에 대해서, 장전원의 캐릭터 번호를 RESULT에 찔러 넣어 돌려주는 함수
+;-------------------------------------------------
+@GET_CITY_COMMANDER_ALL(ARG:0)
+FOR LOCAL, 0, MAX_CITY_COMMANDER
+	RESULT:LOCAL = GET_CITY_COMMANDER(ARG:0, LOCAL)
+NEXT
+RETURN RESULT:0, RESULT:1, -1
+
+;-------------------------------------------------
+;ARG:0번의 도시에 대해서, ARG:첫 번째의 수장을 ARG:2번의 캐릭터로 설정하는 함수
+;※ARG:3……0= ARG:2를 캐릭터 번호로 설정  0이외=ID로 설정
+;-------------------------------------------------
+@SET_CITY_COMMANDER(ARG:0, ARG:1, ARG:2, ARG:3 = 0)
+SIF !INRANGE_CITY(ARG:0) || !INRANGE_CITY_COMMANDER(ARG:1)
+	RETURN -1
+
+IF ARG:3 == 0
+	LOCAL:0 = GET_ID(ARG:2)
+ELSE
+	LOCAL:0 = ARG:2
+ENDIF
+CITY_COMMANDER:(ARG:0) &= ~(0xFFFF << (16 * ARG:1))
+SIF LOCAL:0 <= 0
+	RETURN 1
+
+CITY_COMMANDER:(ARG:0) |= (LOCAL:0 << (16 * ARG:1))
+RETURN 1
+
+;-------------------------------------------------
+;ARG:0번의 도시에 대해서, 비어있는 곳의 수장을 ARG:1번의 캐릭터로 설정하는 함수
+;설정할 수 있으면 그 위치가, 할 수 없으면 -1이 돌아온다
+;※ARG:2……0= ARG:1을 캐릭터 번호로 설정  0이외=ID로 설정
+;-------------------------------------------------
+@SET_CITY_COMMANDER_ANYWHERE(ARG:0, ARG:1, ARG:2 = 0)
+SIF !INRANGE_CITY(ARG:0)
+	RETURN -1
+IF GET_CITY_COMMANDER(ARG:0, 0) == -1
+	CALL SET_CITY_COMMANDER(ARG:0, 0, ARG:1)
+	RETURN 0
+ELSEIF GET_CITY_COMMANDER(ARG:0, 1) == -1
+	CALL SET_CITY_COMMANDER(ARG:0, 1, ARG:1)
+	RETURN 1
+ENDIF
+RETURN -1
+;-------------------------------------------------
+;ARG:0번의 도시에 대해서, ARG:첫 번째의 수장을 클리어 하는 함수
+;-------------------------------------------------
+@CLEAR_CITY_COMMANDER(ARG:0, ARG:1)
+#DIM REM_CITY_COMMANDER
+SIF !INRANGE_CITY(ARG:0) || !INRANGE_CITY_COMMANDER(ARG:1)
+	RETURN 0
+
+;클리어
+CALL SET_CITY_COMMANDER(ARG:0, ARG:1, -1)
+SELECTCASE ARG:1
+	CASE MAX_CITY_COMMANDER - 1
+		;원래 최후미인 것으로 아무것도 하지 않아 좋아
+	CASEELSE
+		;현재의 장을 기억
+		REM_CITY_COMMANDER = CITY_COMMANDER:(ARG:0)
+		;일단 전부 삭제하고 나서 한사람씩 다시 돌진한다
+		CITY_COMMANDER:(ARG:0) = 0
+		FOR LOCAL,0, MAX_CITY_COMMANDER
+			IF LOCAL < ARG:2
+				CITY_COMMANDER:(ARG:0) |= (REM_CITY_COMMANDER & 0xFFFF << 16 * LOCAL)
+			ELSEIF LOCAL > ARG:2
+				CITY_COMMANDER:(ARG:0) |= (REM_CITY_COMMANDER & 0xFFFF << 16 * LOCAL) >> 16
+			ENDIF
+		NEXT
+ENDSELECT
+
+;-------------------------------------------------
+;ARG:0번의 도시에 대해서, 수장의 수를 돌려주는 함수
+;-------------------------------------------------
+@GET_CITY_COMMANDER_NUM(ARG:0)
+#FUNCTION
+VARSET LOCAL:1
+FOR LOCAL:0, 0, MAX_CITY_COMMANDER
+	LOCAL:1 = GET_CITY_COMMANDER(ARG:0, LOCAL:0)
+	SIF LOCAL:1 >= 0
+		LOCAL:2 ++
+NEXT
+RETURNF LOCAL:2
+
+;-------------------------------------------------
+;ARG:0번의 도시에 대해서, ARG:1이 수장이라면 제외한다
+;설정할 수 있으면 그 위치가, 할 수 없으면 -1이 돌아온다
+;※ARG:2……0= ARG:1을 캐릭터 번호로 설정  0이외=ID로 설정
+;-------------------------------------------------
+@CLEAR_CITY_COMMANDER_FIND(ARG:0, ARG:1, ARG:2 = 0)
+SIF !INRANGE_CITY(ARG:0)
+	RETURN -1
+IF GET_CITY_COMMANDER(ARG:0, 0) == ARG:1
+	CALL CLEAR_CITY_COMMANDER(ARG:0, 0)
+	RETURN 0
+ELSEIF GET_CITY_COMMANDER(ARG:0, 1) == ARG:1
+	CALL CLEAR_CITY_COMMANDER(ARG:0, 1)
+	RETURN 1
+ENDIF
+RETURN -1
+;-------------------------------------------------
+;ARG:0 세력의 ARG:1 부대에 대해, ARG:2번째의 장의 캐릭터 번호를 돌려주는 함수
+;-------------------------------------------------
+@GET_UNIT_COMMANDER(ARG:0, ARG:1, ARG:2)
+#FUNCTION
+SIF !INRANGE_COUNTRY(ARG:0) || !INRANGE_UNIT(ARG:1) || !INRANGE_UNIT_COMMANDER(ARG:2)
+	RETURNF -1
+
+RETURNF ID_TO_CHARA((UNIT_COMMANDER:(ARG:0):(ARG:1) >> (16 * ARG:2)) & 0xFFFF)
+
+;-------------------------------------------------
+;ARG:0 세력의 ARG:1 부대의 장전원의 캐릭터 번호를 RESULT에 찔러 넣어 돌려주는 함수
+;-------------------------------------------------
+@GET_UNIT_COMMANDER_ALL(ARG:0, ARG:1)
+FOR LOCAL, 0, MAX_UNIT_COMMANDER
+	RESULT:LOCAL = GET_UNIT_COMMANDER(ARG:0, ARG:1, LOCAL)
+NEXT
+RETURN RESULT:0, RESULT:1, RESULT:2
+
+;-------------------------------------------------
+;ARG:0 세력의 ARG:1 부대에 대해, ARG:2번째의 장을 ARG:3번의 캐릭터로 설정하는 함수
+;※ARG:4……0= ARG:3을 캐릭터 번호로 설정  0이외=ID로 설정
+;-------------------------------------------------
+@SET_UNIT_COMMANDER(ARG:0, ARG:1, ARG:2, ARG:3, ARG:4 = 0)
+SIF !INRANGE_COUNTRY(ARG:0) || !INRANGE_UNIT(ARG:1) || !INRANGE_UNIT_COMMANDER(ARG:2)
+	RETURN 0
+
+IF ARG:4 == 0
+	LOCAL:0 = GET_ID(ARG:3)
+ELSE
+	LOCAL:0 = ARG:3
+ENDIF
+UNIT_COMMANDER:(ARG:0):(ARG:1) &= ~(0xFFFF << (16 * ARG:2))
+IF LOCAL:0 <= 0
+	RETURN 1
+ENDIF
+UNIT_COMMANDER:(ARG:0):(ARG:1) |= (LOCAL:0 << (16 * ARG:2))
+RETURN 1
+
+;-------------------------------------------------
+;ARG:0 세력의 ARG:1 부대에 대해, ARG:2번의 캐릭터를 비어있는 곳로 설정하는 함수
+;설정할 수 있으면 그 위치가, 할 수 없으면 -1이 돌아온다
+;※ARG:3……0= ARG:2를 캐릭터 번호로 설정  0이외=ID로 설정
+;-------------------------------------------------
+@SET_UNIT_COMMANDER_ANYWHERE(ARG:0, ARG:1, ARG:2, ARG:3 = 0)
+SIF !INRANGE_COUNTRY(ARG:0) || !INRANGE_UNIT(ARG:1)
+	RETURN 0
+FOR LOCAL, 0, 3
+	IF GET_UNIT_COMMANDER(ARG:0, ARG:1, LOCAL) == -1
+		CALL SET_UNIT_COMMANDER(ARG:0, ARG:1, LOCAL, ARG:2, ARG:3)
+		RETURN LOCAL
+	ENDIF
+NEXT
+RETURN -1
+
+;-------------------------------------------------
+;ARG:0 세력의 ARG:1 부대에 대해, ARG:2번째의 장을 클리어 해, 그 이후의 장을 만약을 위해 채우는 함수
+;-------------------------------------------------
+@CLEAR_UNIT_COMMANDER(ARG:0, ARG:1, ARG:2)
+#DIM REM_UNIT_COMMANDER
+SIF !INRANGE_COUNTRY(ARG:0) || !INRANGE_UNIT(ARG:1) || !INRANGE_UNIT_COMMANDER(ARG:2)
+	RETURN 0
+
+;클리어
+CALL SET_UNIT_COMMANDER(ARG:0, ARG:1, ARG:2, -1)
+SELECTCASE ARG:2
+	CASE MAX_UNIT_COMMANDER - 1
+		;원래 최후미인 것으로 아무것도 하지 않아 좋아
+	CASEELSE
+		;현재의 장을 기억
+		REM_UNIT_COMMANDER = UNIT_COMMANDER:(ARG:0):(ARG:1)
+		;일단 전부 삭제하고 나서 한사람씩 다시 돌진한다
+		UNIT_COMMANDER:(ARG:0):(ARG:1) = 0
+		FOR LOCAL,0, MAX_UNIT_COMMANDER
+			IF LOCAL < ARG:2
+				UNIT_COMMANDER:(ARG:0):(ARG:1) |= (REM_UNIT_COMMANDER & 0xFFFF << 16 * LOCAL)
+			ELSEIF LOCAL > ARG:2
+				UNIT_COMMANDER:(ARG:0):(ARG:1) |= (REM_UNIT_COMMANDER & 0xFFFF << 16 * LOCAL) >> 16
+			ENDIF
+		NEXT
+ENDSELECT
+
+;-------------------------------------------------
+;ARG:0 세력의 ARG:1 부대에 대해, ARG:2의 캐릭터가 있으면 클리어 해, 그 이후의 장을 만약을 위해 채우는 함수
+;-------------------------------------------------
+@CLEAR_UNIT_COMMANDER_FIND(ARG:0, ARG:1, ARG:2)
+#DIM REM_UNIT_COMMANDER
+SIF !INRANGE_COUNTRY(ARG:0) || !INRANGE_UNIT(ARG:1)
+	RETURN 0
+FOR LOCAL, 0, CHARANUM
+	IF GET_UNIT_COMMANDER(ARG:0, ARG:1, LOCAL) == ARG:2
+		CALL CLEAR_UNIT_COMMANDER(ARG:0, ARG:1, LOCAL)
+		RETURN LOCAL
+	ENDIF
+NEXT
+RETURN -1
+
+;-------------------------------------------------
+;ARG:0 세력의 ARG:1 부대를 지휘하는 장의 이름(NAME)을 돌려주는 함수 ARGS:2=복수의 장이 있는 경우에 간을 단락짓는 문자
+;-------------------------------------------------
+@GET_UNIT_COMMANDER_NAME(ARG:0, ARG:1, ARGS:2 = "·")
+#FUNCTIONS
+LOCALS:0 = 
+FOR LOCAL:0, 0, MAX_UNIT_COMMANDER
+	LOCAL:1 = GET_UNIT_COMMANDER(ARG:0, ARG:1, LOCAL:0)
+	IF LOCAL:1 >= 0
+		SIF LOCAL:0 >= 1
+			LOCALS:0 += @"%ARGS:2%"
+		LOCALS:0 += @"%SNAME(LOCAL:1)%"
+		IF CFLAG:(LOCAL:1):행동불능상태 == 행동불능_임월
+			LOCALS:0 += "(림)"
+		ELSEIF TALENT:(LOCAL:1):임신
+			LOCALS:0 += "(임)"
+		ELSEIF CFLAG:(LOCAL:1):행동불능상태 == 행동불능_육아
+			LOCALS:0 += "(육)"
+		ENDIF
+	ENDIF
+NEXT
+RETURNF LOCALS:0
+
+;-------------------------------------------------
+;ARG:0 세력의 ARG:1 부대를 지휘하는 장의 이름(CALLNAME)을 돌려주는 함수 ARGS:2=복수의 장이 있는 경우에 간을 단락짓는 문자
+;-------------------------------------------------
+@GET_UNIT_COMMANDER_CALLNAME(ARG:0, ARG:1, ARGS:2 = "·")
+#FUNCTIONS
+LOCALS:0 = 
+FOR LOCAL:0, 0, MAX_UNIT_COMMANDER
+	LOCAL:1 = GET_UNIT_COMMANDER(ARG:0, ARG:1, LOCAL:0)
+	IF LOCAL:1 >= 0
+		SIF LOCAL:0 >= 1
+			LOCALS:0 += @"%ARGS:2%"
+		LOCALS:0 += @"%ANAME(LOCAL:1)%"
+	ENDIF
+NEXT
+RETURNF LOCALS:0
+
+;-------------------------------------------------
+;ARG:0번의 세력의 ARG:1번 부대에 대해, 사관수를 돌려주는 함수
+;-------------------------------------------------
+@GET_UNIT_COMMANDER_NUM(ARG:0, ARG:1)
+#FUNCTION
+VARSET LOCAL
+FOR LOCAL:0, 0, MAX_UNIT_COMMANDER
+	LOCAL:1 = GET_UNIT_COMMANDER(ARG:0, ARG:1, LOCAL:0)
+	SIF LOCAL:1 >= 0
+		LOCAL:2 ++
+NEXT
+RETURNF LOCAL:2
+
+
+;-------------------------------------------------
+;ARG:0 세력의 ARG:1 부대의 정보를 PRINT 하는 함수
+;ARG:2가 진이라면?? 를 표시
+;-------------------------------------------------
+@PRINT_UNIT_INFO(ARG:0, ARG:1, ARG:2 = 0, ARG:3 = 1)
+IF ARG:2
+	CALL COLOR_PRINT(@"?? %"???? 군", 10, LEFT% ★:%"??", 4, LEFT% 병:%"????", 6, LEFT%공:%"????", 5, LEFT%방:%"????", 5, LEFT%지:%"????", 5, LEFT%", 칼라_선택불가)
+	RETURN
+ENDIF
+LOCAL:1 = GET_COUNTRY_BOSS(ARG:0)
+LOCALS:1 = %SNAME(LOCAL:1)%
+LOCALS:2 = %GET_UNIT_COMMANDER_NAME(ARG:0, ARG:1, " ")%
+;너무 길면 반각에
+SIF STRLENS(LOCALS:2) >= 25
+	LOCALS:2 = %TOHALF(LOCALS:2)%
+SETCOLOR COUNTRY_COLOR:(ARG:0)
+;부대 능력의 준비
+CALL GET_UNIT_COMMANDER_ALL(ARG:0, ARG:1)
+CALL SET_BATTLE_MIRROR_VAL(0, RESULT, RESULT:1, RESULT:2)
+PRINTFORM %LOCALS:1, MAX_CHARANAME_LENGTH / 2, LEFT%군:
+IF ARG:3
+	SELECTCASE CHECK_COUNTRY_RELATION_F(CFLAG:MASTER:소속, ARG:0)
+		CASE 0
+			IF IS_COUNTRY(CFLAG:MASTER:소속)
+				SETCOLOR 칼라_경고
+				PRINT 적
+			ELSE
+				PRINT   
+			ENDIF
+		CASE 1
+			SETCOLOR 칼라_정전
+			PRINT 정
+		CASE 2
+			SETCOLOR 칼라_연합
+			PRINT 련
+		CASE 3
+			SETCOLOR 칼라_동맹
+			PRINT 동
+		CASE 4
+			SETCOLOR 칼라_영구동맹
+			PRINT 영
+		CASE 5
+			SETCOLOR 칼라_시안
+			PRINT 자
+	ENDSELECT
+	SETCOLOR COUNTRY_COLOR:(ARG:0)
+	PRINT  
+ENDIF
+PRINTFORM  %LOCALS:2, 25, LEFT%
+PRINTFORM ★:{SUM_UNIT_STARS(ARG:0, ARG:1), 4, LEFT}
+PRINTFORM 병:{UNIT_SOLDIER:(ARG:0):(ARG:1), 6, LEFT}
+PRINTFORM 공:
+CALL PRINT_ALPHABET_RANK(랭크_부대, ATTACK_LEVEL(0, 0))
+SETCOLOR COUNTRY_COLOR:(ARG:0)
+PRINTFORM   방:
+CALL PRINT_ALPHABET_RANK(랭크_부대, DEFENSE_LEVEL(0, 0))
+SETCOLOR COUNTRY_COLOR:(ARG:0)
+PRINTFORM   지:
+CALL PRINT_ALPHABET_RANK(랭크_부대, INTELLIGENCE_LEVEL(0, 0))
+SETCOLOR COUNTRY_COLOR:(ARG:0)
+PRINTFORM   요:
+CALL PRINT_ALPHABET_RANK(랭크_부대, MAGIC_LEVEL(0, 0))
+SETCOLOR COUNTRY_COLOR:(ARG:0)
+PRINTFORM   피:
+PRINTFORM {UNIT_TIRED_COUNT:(ARG:0):(ARG:1), 2, LEFT}
+RESETCOLOR
+
+;-------------------------------------------------
+;도시 ARG:0의 정보를 PRINT 하는 함수
+;-------------------------------------------------
+@PRINT_CITY_INFO(ARG:0, ARG:1 = 1)
+LOCAL:1 = CITY_OWNER:(ARG:0)
+LOCAL:2 = GET_COUNTRY_BOSS(LOCAL:1)
+LOCALS:1 = %(LOCAL:2 != -1 ? SNAME(LOCAL:2) # "무소속")%
+LOCALS:2 = %GET_CITY_COMMANDER_NAME(ARG:0, " ")%
+;너무 길면 반각에
+SIF STRLENS(LOCALS:2) >= 25
+	LOCALS:2 = %TOHALF(LOCALS:2)%
+SETCOLOR COUNTRY_COLOR:(LOCAL:1)
+
+;부대 능력의 준비
+CALL GET_CITY_COMMANDER_ALL(ARG:0)
+CALL SET_BATTLE_MIRROR_VAL(0, RESULT, RESULT:1)
+PRINTFORM %LOCALS:1, MAX_CHARANAME_LENGTH / 2, LEFT%군:
+IF ARG:1
+	SELECTCASE CHECK_COUNTRY_RELATION_F(CFLAG:MASTER:소속, LOCAL:1)
+		CASE 0
+			IF IS_COUNTRY(CFLAG:MASTER:소속)
+				SETCOLOR 칼라_경고
+				PRINT 적
+			ELSE
+				PRINT   
+			ENDIF
+		CASE 1
+			SETCOLOR 칼라_정전
+			PRINT 정
+		CASE 2
+			SETCOLOR 칼라_연합
+			PRINT 련
+		CASE 3
+			SETCOLOR 칼라_동맹
+			PRINT 동
+		CASE 4
+			SETCOLOR 칼라_영구동맹
+			PRINT 영
+		CASE 5
+			SETCOLOR 칼라_시안
+			PRINT 자
+	ENDSELECT
+	SETCOLOR COUNTRY_COLOR:(LOCAL:1)
+	PRINT  
+	ENDIF
+PRINTFORM  %LOCALS:2, 25, LEFT%
+PRINTFORM ★:{SUM_CITY_STARS(ARG:0), 4, LEFT}
+PRINTFORM 병:{CITY_SOLDIER:(ARG:0), 6, LEFT}
+PRINTFORM 공:
+CALL PRINT_ALPHABET_RANK(랭크_부대, ATTACK_LEVEL(0, ARG:0))
+SETCOLOR COUNTRY_COLOR:(LOCAL:1)
+PRINTFORM   방:
+CALL PRINT_ALPHABET_RANK(랭크_부대, DEFENSE_LEVEL(0, ARG:0))
+SETCOLOR COUNTRY_COLOR:(LOCAL:1)
+PRINTFORM   지:
+CALL PRINT_ALPHABET_RANK(랭크_부대, INTELLIGENCE_LEVEL(0, ARG:0))
+SETCOLOR COUNTRY_COLOR:(LOCAL:1)
+PRINTFORM   요:
+CALL PRINT_ALPHABET_RANK(랭크_부대, MAGIC_LEVEL(0, ARG:0))
+RESETCOLOR
+
+;-------------------------------------------------
+;ARG:0 세력의 ARG:1 부대의 쇼우의 수를 돌려주는 함수
+;-------------------------------------------------
+@SUM_UNIT_STARS(ARG:0, ARG:1)
+#FUNCTION
+LOCAL:2 = 0
+FOR LOCAL:0, 0, MAX_UNIT_COMMANDER
+	LOCAL:1 =GET_UNIT_COMMANDER(ARG:0, ARG:1, LOCAL:0)
+	SIF LOCAL:1 >= 0
+		LOCAL:2 += TMP_CHARA_STARS:(LOCAL:1)
+NEXT
+RETURNF LOCAL:2
+
+;-------------------------------------------------
+;도시 ARG:0의 쇼우의 수를 돌려주는 함수
+;-------------------------------------------------
+@SUM_CITY_STARS(ARG:0)
+#FUNCTION
+LOCAL:2 = 0
+FOR LOCAL:0, 0, MAX_CITY_COMMANDER
+	LOCAL:1 = GET_CITY_COMMANDER(ARG:0, LOCAL:0)
+	SIF LOCAL:1 >= 0
+	LOCAL:2 += TMP_CHARA_STARS:(LOCAL:1)
+NEXT
+RETURNF LOCAL:2
+
+;-------------------------------------------------
+;도시 ARG:0의 방위 부대를 지휘하는 장의 이름(NAME)을 돌려주는 함수 ARGS:1=복수의 장이 있는 경우에 간을 단락짓는 문자
+;-------------------------------------------------
+@GET_CITY_COMMANDER_NAME(ARG:0, ARGS:1 = "·")
+#FUNCTIONS
+LOCALS:0 = 
+FOR LOCAL:0, 0, MAX_CITY_COMMANDER
+	LOCAL:1 = GET_CITY_COMMANDER(ARG:0, LOCAL:0)
+	IF LOCAL:1 >= 0
+		SIF LOCAL:0 >= 1
+			LOCALS:0 += @"%ARGS:1%"
+		LOCALS:0 += @"%SNAME(LOCAL:1)%"
+		IF CFLAG:(LOCAL:1):행동불능상태 == 행동불능_임월
+			LOCALS:0 += "(림)"
+		ELSEIF TALENT:(LOCAL:1):임신
+			LOCALS:0 += "(임)"
+		ELSEIF CFLAG:(LOCAL:1):행동불능상태 == 행동불능_육아
+			LOCALS:0 += "(육)"
+		ENDIF
+	ENDIF
+NEXT
+RETURNF LOCALS:0
+
+;-------------------------------------------------
+;도시 ARG:0의 방위 부대를 지휘하는 장의 이름(CALLNAME)을 돌려주는 함수 ARGS:1=복수의 장이 있는 경우에 간을 단락짓는 문자
+;-------------------------------------------------
+@GET_CITY_COMMANDER_CALLNAME(ARG:0, ARGS:1 = "·")
+#FUNCTIONS
+LOCALS:0 = 
+FOR LOCAL:0, 0, MAX_CITY_COMMANDER
+	LOCAL:1 = GET_CITY_COMMANDER(ARG:0, LOCAL:0)
+	IF LOCAL:1 >= 0
+		SIF LOCAL:0 >= 1
+			LOCALS:0 += @"%ARGS:1%"
+		LOCALS:0 += @"%ANAME(LOCAL:1)%"
+	ENDIF
+NEXT
+RETURNF LOCALS:0
+
+;-------------------------------------------------
+;도시 ARG:0의 경제치를 ARG:1만 조작한다  변수에 격납되고 있는 생의값（표시치의 100배）를 건네주는 것
+;-------------------------------------------------
+@MODIFY_CITY_ECONOMY(ARG:0, ARG:1, ARG:2 = 1)
+
+IF CITY_ECONOMY:(ARG:0) + ARG:1 > CITY_ECONOMY_LIMIT:(ARG:0)
+	CITY_ECONOMY_LIMIT:(ARG:0) += (CITY_ECONOMY:(ARG:0) + ARG:1 - CITY_ECONOMY_LIMIT:(ARG:0)) / 2
+	CITY_ECONOMY:(ARG:0) = CITY_ECONOMY_LIMIT:(ARG:0)
+ELSE
+	CITY_ECONOMY:(ARG:0) = MAX(CITY_ECONOMY:(ARG:0) + ARG:1, 1)
+ENDIF
+
+IF ARG:2
+	IF ARG:1 > 0
+		CALL COLOR_PRINTL(@"%CITY_NAME:(ARG:0)%의 경제 규모가 {ARG:1 / 100} 상승해, {CITY_ECONOMY:(ARG:0) / 100}가 되었다", 칼라_주의)
+	ELSE
+		CALL COLOR_PRINTL(@"%CITY_NAME:(ARG:0)%의 경제 규모가 {ARG:1 * -1 / 100} 감소해, {CITY_ECONOMY:(ARG:0) / 100}가 되었다", 칼라_경고)
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;비어있는 세력 번호 중(안)에서 가장 젊은 번호를 돌려주는 함수
+;-------------------------------------------------
+@GET_NEW_COUNTRY
+#FUNCTION
+FOR LOCAL:0, 1, MAX_COUNTRY
+	SIF !IS_COUNTRY(LOCAL:0)
+		RETURNF LOCAL:0
+NEXT
+RETURNF -1
+
+;-------------------------------------------------
+;ID가 ARG:0의 인물을 군주로 하는 세력의 번호를 돌려주는 함수
+;-------------------------------------------------
+@GET_COUNTRY_FROM_BOSS_ID(ARG:0)
+#FUNCTION
+IF ARG:0 >= 1
+	FOR LOCAL:0, 1, MAX_COUNTRY
+		SIF COUNTRY_BOSS:(LOCAL:0) == ARG:0
+			RETURNF LOCAL:0
+	NEXT
+ENDIF
+RETURNF -1
+
+;-------------------------------------------------
+;NAME가 ARGS:0의 인물을 군주로 하는 세력의 번호를 돌려주는 함수
+;-------------------------------------------------
+@GET_COUNTRY_FROM_BOSS_NAME(ARGS:0)
+#FUNCTION
+FOR LOCAL:0, 1, MAX_COUNTRY
+	IF COUNTRY_BOSS:(LOCAL:0) >= 1
+		LOCAL:1 = ID_TO_CHARA(COUNTRY_BOSS:(LOCAL:0))
+		SIF LOCAL:1 >= 0 && CSTR:(LOCAL:1):99 == ARGS:0
+			RETURNF LOCAL:0
+	ENDIF
+NEXT
+RETURNF -1
+
+;-------------------------------------------------
+;COUNTRY_EVENT_ID 가 ARG:0의 값을 가지는 세력의 번호를 돌려주는 함수
+;-------------------------------------------------
+@GET_COUNTRY_FROM_ID(ARG:0)
+#FUNCTION
+IF ARG:0 != 0
+	FOR LOCAL:0, 1, MAX_COUNTRY
+		SIF COUNTRY_EVENT_ID:(LOCAL:0) == ARG:0
+			RETURNF LOCAL:0
+	NEXT
+ENDIF
+RETURNF -1
+
+;-------------------------------------------------
+;건네받은 세력에 AI타입을 설정한다
+;-------------------------------------------------
+@SET_COUNTRY_AI_TYPE(ARG:0)
+#DIM 군주
+#DIM 능력, 4
+#DIM 소트, 4
+군주 = GET_COUNTRY_BOSS(ARG:0)
+
+능력:0 = ABL:군주:무투
+능력:1 = ABL:군주:방위
+능력:2 = ABL:군주:지략
+능력:3 = ABL:군주:정치
+
+;최고치를 요구할 뿐(만큼)이라면 FINDELEMENT(MAXARRAY)로 충분하지만
+ARRAYCOPY "능력", "소트"
+ARRAYSORT 소트, BACK
+
+IF 소트:0 < 소트:1 + 7
+	COUNTRY_AI_TYPE:(ARG:0) = AI_통상
+ELSEIF 소트:0 == ABL:군주:무투 && ABL:군주:무투 > ABL:군주:지략 + 30
+	COUNTRY_AI_TYPE:(ARG:0) = AI_만행
+ELSEIF 소트:0 == ABL:군주:무투
+	IF 소트:1 == ABL:군주:방위 && 소트:0 < 소트:1 + 10
+		COUNTRY_AI_TYPE:(ARG:0) = AI_방위
+	ELSE
+		COUNTRY_AI_TYPE:(ARG:0) = AI_호전
+	ENDIF
+ELSEIF 소트:0 == ABL:군주:방위
+	COUNTRY_AI_TYPE:(ARG:0) = AI_방위
+ELSEIF 소트:0 == ABL:군주:지략
+	COUNTRY_AI_TYPE:(ARG:0) = AI_외교
+ELSEIF 소트:0 == ABL:군주:정치
+	COUNTRY_AI_TYPE:(ARG:0) = AI_내정
+ELSE 
+	COUNTRY_AI_TYPE:(ARG:0) = AI_통상
+ENDIF
+
+;-------------------------------------------------
+;건네받은 AI타입을 문자열으로 한다
+;-------------------------------------------------
+@TOSTR_AI_TYPE(ARG:0)
+#FUNCTIONS
+SELECTCASE ARG:0
+	CASE AI_통상
+		RETURNF "통상"
+	CASE AI_호전
+		RETURNF "호전"
+	CASE AI_방위
+		RETURNF "방위"
+	CASE AI_외교
+		RETURNF "외교"
+	CASE AI_내정
+		RETURNF "내정"
+	CASE AI_만행
+		RETURNF "만행"
+	CASEELSE
+		RETURNF "불명"
+ENDSELECT
+
+RETURNF "통상"
+
+;-------------------------------------------------
+;ARG:0번의 세력의 정책을 문자열으로서 돌려주는 함수
+;-------------------------------------------------
+@TOSTR_POLICY(ARG:0)
+#FUNCTIONS
+SIF !INRANGE_COUNTRY(ARG:0)
+	CALLF ERROR(@"{ARG:0}는 세력으로서 있을 수 있는 범위를 넘고 있습니다")
+SELECTCASE COUNTRY_POLICY:(ARG:0)
+	CASE 정책_경제
+		RETURNF "경제(경제성장×1.5)"
+	CASE 정책_징병
+		RETURNF "징병(징병효율×1.2)"
+	CASE 정책_방위
+		RETURNF "방위(방위배율×1.5)"
+ENDSELECT
+RETURNF ""
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터가 장으로서을 실시할 수 있는 상태라면 1을, 그렇지 않으면 0을 돌려주는 함수
+;조건:포로가 아닌, 임월·육아중이 아닌, 부대·도시 어느 장에도 설정되어 있지 않다
+;이쪽에 조건을 추가했을 경우는, TMP_CREATE_IS_FREE_MAP에도 추가하는 것
+;-------------------------------------------------
+@IS_FREE(ARG:0)
+#FUNCTION
+
+;CFLAG의 체크
+SIF CFLAG:(ARG:0):포로처 || CFLAG:(ARG:0):특수상태 ||  CFLAG:(ARG:0):행동불능상태 == 행동불능_아이
+	RETURNF 0
+
+;K의 추가 요소에 맞추어 조건을 늘린다
+;소질 체크
+SIF TALENT:(ARG:0):촉수임신 || TALENT:(ARG:0):Ａ촉수임신 || IS_ANIMAL(ARG:0)
+	RETURNF 0
+
+;그 외의 체크
+SIF COOLTIME:(ARG:0):0 || (ARG:0 == GET_COOK())
+	RETURNF 0
+
+LOCAL:2 = CFLAG:(ARG:0):소속
+FOR LOCAL:0, 0, MAX_CITY
+	IF CITY_OWNER:(LOCAL:0) == LOCAL:2
+		FOR LOCAL:1, 0, 2
+			SIF GET_CITY_COMMANDER(LOCAL:0, LOCAL:1) == ARG:0
+				RETURNF 0
+		NEXT
+	ENDIF
+NEXT
+FOR LOCAL:0, 0, 10
+	IF UNIT_SOLDIER:(LOCAL:2):(LOCAL:0) > 0
+		FOR LOCAL:1, 0, 3
+			SIF GET_UNIT_COMMANDER(LOCAL:2, LOCAL:0, LOCAL:1) == ARG:0
+				RETURNF 0
+		NEXT
+	ENDIF
+NEXT
+RETURNF 1
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터가 부대에 들어가 있는 경우, 강제적으로 대로부터 제외하는 함수
+;해제를 실시했을 경우 1이 돌아간다
+;-------------------------------------------------
+@FORCE_FREE(ARG:0)
+SIF CFLAG:(ARG:0):소속 == 0
+	RETURN 0
+
+;방위 부대에 대해 판정
+FOR LOCAL:0, 0, MAX_CITY
+	IF CITY_COMMANDER:(LOCAL:0) != 0
+		FOR LOCAL:1, 0, MAX_CITY_COMMANDER
+			IF GET_CITY_COMMANDER(LOCAL:0, LOCAL:1) == ARG:0
+				CALL CLEAR_CITY_COMMANDER(LOCAL:0, LOCAL:1)
+				GOTO SUCCESS
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+
+;유격 부대에 대해 판정
+FOR LOCAL:0, 0, MAX_COUNTRY
+	IF IS_COUNTRY(LOCAL:0)
+		FOR LOCAL:1, 0, 10
+			IF UNIT_COMMANDER:(LOCAL:0):(LOCAL:1) != 0
+				FOR LOCAL:2, 0, 3
+					IF GET_UNIT_COMMANDER(LOCAL:0, LOCAL:1, LOCAL:2) == ARG:0
+						CALL CLEAR_UNIT_COMMANDER(LOCAL:0, LOCAL:1, LOCAL:2)
+						GOTO SUCCESS
+					ENDIF
+				NEXT
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+RETURN 0
+$SUCCESS
+RETURN 1
+
+;-------------------------------------------------
+;도시간을 이동하는 루트가 있을지 어떨지를 판정하는 함수(인수는 도시 번호)
+;반환값 0=없음 1=있어 2=있어(중계지점을 경유)
+;-------------------------------------------------
+@IS_ROUTE(ARG:0, ARG:1)
+#FUNCTION
+IF ARG:0 == ARG:1 || !INRANGE(ARG:0 , 1 , MAX_CITY) || !INRANGE(ARG:1 , 1 , MAX_CITY)
+	RETURNF 0
+ENDIF
+
+;직통 루트의 탐색
+FOR LOCAL:0, 0, 10
+	SIF CITY_ROUTE:(ARG:0):(LOCAL:0) == ARG:1
+		RETURNF 1
+NEXT
+
+SIF GET_RELAYPOINT(ARG:0, ARG:1) >= 0
+	RETURNF 2
+
+RETURNF 0
+
+;-------------------------------------------------
+;도시간을 연결하는 중계지점이 있으면, 그 번호를 돌려주는 함수(인수는 도시 번호)
+;중계지점이 없는 경우-1을 돌려준다
+;-------------------------------------------------
+@GET_RELAYPOINT(ARG:0, ARG:1)
+#FUNCTION
+IF ARG:0 == ARG:1 || !INRANGE(ARG:0 , 1 , MAX_CITY) || !INRANGE(ARG:1 , 1 , MAX_CITY)
+	RETURNF -1
+ENDIF
+
+;공통되는 중계지점을 탐색한다
+FOR LOCAL:0, 0, 10
+	IF CITY_TYPE:(CITY_ROUTE:(ARG:0):(LOCAL:0)) == 1
+		FOR LOCAL:1, 0, 10
+			SIF CITY_ROUTE:(ARG:1):(LOCAL:1) == CITY_ROUTE:(ARG:0):(LOCAL:0)
+				RETURNF CITY_ROUTE:(ARG:0):(LOCAL:0)
+		NEXT
+	ENDIF
+NEXT
+
+RETURNF -1
+
+
+;--------------------------------------------------------
+;ARG:0번의 도시의 리스크를 체크
+; 6 현재적부대가 존재한다
+; 5 인접하는 중계지에 적부대를 확인
+; 4 이웃나라가 적대（중계지 없음）
+; 3 그 외
+; 2 이웃나라는 정전내지 동맹중이지만, 이웃나라와 동맹하고 있는 나라가 때려 올 가능성이 있다
+; 1 이웃나라는 정전내지 동맹중이지만, 이웃나라와 동맹하고 있는 나라가 때려 올 가능성이 없다
+; 0 안전
+; 
+; TODO:이웃나라가 정전 이상의 관계이지만, 그 동맹국이 쳐들어가 오는 관계
+;--------------------------------------------------------
+@GET_CITY_RISK(ARG:0)
+#FUNCTION
+#DIM RET
+#DIM OWNER1
+#DIM OWNER2
+RET = 0
+
+SIF !INRANGE(ARG:0 , 1 , MAX_CITY)
+	RETURNF 0
+
+OWNER1 = CITY_OWNER:(ARG:0)
+
+;적부대가 있다면 문답 무용으로 리스크 6
+SIF IS_STAY_ENEMY_UNIT(ARG:0, OWNER1, 1) == 1
+	RETURNF 6
+
+RET = 0
+
+; 인접 도시를 주사
+FOR LOCAL:0, 0, 10
+	LOCAL:5 = CITY_ROUTE:(ARG:0):(LOCAL:0)
+
+	SIF LOCAL:5 == -1
+		BREAK
+
+	; 적부대가 있으면 위험도 5
+	IF IS_STAY_ENEMY_UNIT(LOCAL:5, OWNER1, 1) == 1
+		RETURNF 5
+	ENDIF
+
+	IF CITY_TYPE:(LOCAL:5) == 0
+	; 도시의 경우
+		OWNER2 = CITY_OWNER:(LOCAL:5)
+		SELECTCASE TMP_COUNTRY_RELATION:OWNER1:OWNER2
+			;인접하는 도시가 적국 소유이다
+			CASE 0
+				SIF  IS_COUNTRY(OWNER2)
+					RETURNF 4
+			;인접하는 도시가 적국 소유에서도 자국 소유도 아니다
+			CASE IS != 5
+				FOR LOCAL:1, 0, MAX_COUNTRY
+					;인접 도시의 소유국으로 동맹하고 있어, 한편 자국과 동맹하고 있지 않는 나라가 있다면, 때려 올 수 있는 것으로 위험도 2로 한다
+					SIF IS_COUNTRY(LOCAL:1) && !GROUPMATCH(LOCAL:1, OWNER1, OWNER2) && GROUPMATCH(TMP_COUNTRY_RELATION:OWNER2:(LOCAL:1), 3, 4)　&& TMP_COUNTRY_RELATION:OWNER1:(LOCAL:1) == 0
+						RETURNF 2
+				NEXT
+				;(거의 있을 수 없겠지만)도 하지 않으면, 위험도 1으로 한다
+				RETURNF 1
+		ENDSELECT
+	ELSE
+	; 중계지의 경우
+		; 그렇지 않으면 근처의 도시를 체크
+		FOR LOCAL:1, 0, 10
+			LOCAL:6 = CITY_ROUTE:(LOCAL:5):(LOCAL:1)
+			
+			SIF LOCAL:6 == -1
+				BREAK
+			
+			OWNER2 = CITY_OWNER:(LOCAL:6)
+			
+			; 도시의 경우
+			IF CITY_TYPE:(LOCAL:6) == 0
+				; 적이라면 위험도 3이상
+				SIF TMP_COUNTRY_RELATION:OWNER1:OWNER2 == 0 && IS_COUNTRY(OWNER2)
+					RET = MAX(RET, 3)
+				;자국이라면 0
+				SIF TMP_COUNTRY_RELATION:OWNER1:OWNER2 == 5
+					RET = MAX(RET, 0)
+				;그 도시의 소유국으로 동맹하고 있어, 한편 자국과 동맹하고 있지 않는 나라가 있다면, 때려 올 수 있는 것으로 위험도 1으로 한다
+				SIF IS_COUNTRY(LOCAL:1) && !GROUPMATCH(LOCAL:1, OWNER1, OWNER2) && GROUPMATCH(TMP_COUNTRY_RELATION:OWNER2:(LOCAL:1), 3, 4)　&& TMP_COUNTRY_RELATION:OWNER1:(LOCAL:1) == 0
+					RET = MAX(RET, 1)
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+
+RETURNF RET
+
+;--------------------------------------------------------
+;ARG:0번의 도시가 ARG:1의 나라로부터 침략할 수 있을까 체크
+;--------------------------------------------------------
+@IS_INVADABLE(ARG:0, ARG:1)
+#FUNCTION
+SIF !INRANGE(ARG:0 , 1 , MAX_CITY)
+	RETURNF 0
+
+; 지배국으로 적대하고 있지 않으면 안 돼
+SIF !(CITY_OWNER:(ARG:0) == 0 || CHECK_COUNTRY_RELATION_F(CITY_OWNER:(ARG:0),   ARG:1) <= 0)
+	RETURNF 0
+
+; 인접 도시를 주사
+FOR LOCAL:0, 0, 10
+	LOCAL:5 = CITY_ROUTE:(ARG:0):(LOCAL:0)
+	
+	SIF LOCAL:5 == 0
+		BREAK
+
+	IF CITY_TYPE:(LOCAL:5) == 0
+	; 도시의 경우는 통행 가능하면 1
+		SIF IS_PASSABLE(LOCAL:5, ARG:1)
+			RETURNF 1
+	ELSE
+	; 중계지라면 이제(이미/벌써/더는/정말) 1단 파고 들고
+		FOR LOCAL:1, 0, 10
+			LOCAL:6 = CITY_ROUTE:(LOCAL:5):(LOCAL:1)
+
+			SIF LOCAL:6 == -1
+				BREAK
+			
+			; 도시 또한 통행 가능하면 1
+			SIF CITY_TYPE:(LOCAL:6) == 0 && IS_PASSABLE(LOCAL:6, ARG:1)
+				RETURNF 1
+		NEXT
+	ENDIF
+NEXT
+
+RETURNF 0
+
+;--------------------------------------------------------
+;ARG:1의 나라가 ARG:0번의 도시를 통행 가능한가 체크
+;--------------------------------------------------------
+@IS_PASSABLE(ARG:0, ARG:1)
+#FUNCTION
+
+; 중계지가 아니고, 지배국과의 관계가 2이상
+IF CITY_TYPE:(ARG:0) == 0 && CHECK_COUNTRY_RELATION_F(CITY_OWNER:(ARG:0), ARG:1) >= 2
+	RETURNF 1
+ENDIF
+
+RETURNF 0
+
+;-------------------------------------------------
+;ARG:0번의 도시가 타국과 인접하고 있을지 어떨지를 판정하는 함수
+;-------------------------------------------------
+@IS_NEIBORING_ENEMY(ARG:0)
+#FUNCTION
+SIF !INRANGE(ARG:0 , 1 , MAX_CITY)
+	RETURNF 0
+
+FOR LOCAL:0, 0, MAX_CITY
+	SIF CITY_TYPE:(LOCAL:0) == 0 && IS_ROUTE(ARG:0, LOCAL:0) && CITY_OWNER:(ARG:0) != CITY_OWNER:(LOCAL:0)
+		RETURNF 1
+NEXT
+RETURNF 0
+
+;-------------------------------------------------
+;ARG:0번의 도시에 존재하는 부대를 취득하는 함수(최대 5 세력까지)
+;반환값 0～4:세력 번호
+;-------------------------------------------------
+@GET_STAY_UNIT(ARG:0)
+SIF !INRANGE(ARG:0 , 1 , MAX_CITY)
+	RETURN -1
+
+VARSET LOCAL, -1, 10, 15
+LOCAL:2 = 10
+FOR LOCAL:0, 0, MAX_COUNTRY
+	IF IS_COUNTRY(LOCAL:0)
+		FOR LOCAL:1, 0, 10
+			IF UNIT_SOLDIER:(LOCAL:0):(LOCAL:1) > 0 && UNIT_POSITION:(LOCAL:0):(LOCAL:1) == ARG:0
+				LOCAL:(LOCAL:2) = LOCAL:0
+				LOCAL:2 ++
+				BREAK
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+RETURN LOCAL:10, LOCAL:11, LOCAL:12, LOCAL:13, LOCAL:14
+
+
+;-------------------------------------------------
+;ARG:0번의 도시에 존재하는 것 외 세력 부대를 취득하는 함수(최대 5 세력까지)
+;반환값 0～4:세력 번호
+;-------------------------------------------------
+@GET_STAY_ENEMY_UNIT(ARG:0)
+SIF !INRANGE(ARG:0 , 1 , MAX_CITY)
+	RETURN -1
+
+VARSET LOCAL, -1, 10, 15
+LOCAL:2 = 10
+FOR LOCAL:0, 0, MAX_COUNTRY
+	IF IS_COUNTRY(LOCAL:0) && LOCAL:0 != CITY_OWNER:(ARG:0) && (!IS_COUNTRY(CITY_OWNER:(ARG:0)) || CHECK_COUNTRY_RELATION_F(CITY_OWNER:(ARG:0), LOCAL:0) == 0)
+		FOR LOCAL:1, 0, 10
+			IF UNIT_SOLDIER:(LOCAL:0):(LOCAL:1) > 0 && UNIT_POSITION:(LOCAL:0):(LOCAL:1) == ARG:0
+				LOCAL:(LOCAL:2) = LOCAL:0
+				LOCAL:2 ++
+				BREAK
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+RETURN LOCAL:10, LOCAL:11, LOCAL:12, LOCAL:13, LOCAL:14
+
+;-------------------------------------------------
+;ARG:0번의 도시에 부대가 존재할지 어떨지만을 단순하게 돌려주는 함수
+;도둑이 있는 경우는 2를 돌려준다
+;-------------------------------------------------
+@IS_STAY_UNIT(ARG:0)
+#FUNCTION
+SIF !INRANGE(ARG:0 , 1 , MAX_CITY)
+	RETURNF 0
+
+LOCAL:2 = 0
+FOR LOCAL:0, 0, MAX_COUNTRY
+	IF IS_COUNTRY(LOCAL:0)
+		FOR LOCAL:1, 0, 10
+			IF UNIT_SOLDIER:(LOCAL:0):(LOCAL:1) > 0 && UNIT_POSITION:(LOCAL:0):(LOCAL:1) == ARG:0
+				IF LOCAL:0 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_도둑))
+					LOCAL:2 = 2
+					BREAK
+				ELSE
+					LOCAL:2 = 1
+				ENDIF
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+RETURNF LOCAL:2
+
+;------------------------------------------------------------
+;ARG:0번의 도시에 적대 부대가 존재할지 어떨지를 돌려주는 함수
+;적대국이 있으면 1 → 기한부 동맹 이하가 있으면 2 → 그 이외로 0
+;ARG:2=1으로 도시를 가지지 않는 도둑은 무시한다
+;고속화 테이블 사용
+;------------------------------------------------------------
+@IS_STAY_ENEMY_UNIT(ARG:0, ARG:1 = 0, ARG:2 = 0)
+#FUNCTION
+#DIM RET
+RET = 0
+LOCAL:20 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_도둑))
+
+SIF ARG:1 == 0
+	ARG:1 = CFLAG:MASTER:소속
+
+SIF !INRANGE(ARG:0 , 1 , MAX_CITY)
+	RETURNF 0
+
+FOR LOCAL, 0, 20
+	LOCAL:10 = TMP_UNIT_ONCITY_CNT:(ARG:0):(LOCAL:0)
+		SIF LOCAL:10 == 0
+			RETURNF 0
+	
+		SIF GET_OWN_CITY(LOCAL:20) <= 0 && LOCAL:10 == LOCAL:20 && ARG:2
+			CONTINUE
+			
+		SIF TMP_COUNTRY_RELATION:(ARG:1):(LOCAL:10) == 0
+			RETURNF 1
+			
+		SIF TMP_COUNTRY_RELATION:(ARG:1):(LOCAL:10) < 4
+			RET = 2
+NEXT
+
+RETURNF RET
+
+;-------------------------------------------------
+;ARG:0번의 도시에 자군의 부대가 존재할지 어떨지만을 단순하게 돌려주는 함수
+;-------------------------------------------------
+@IS_STAY_MYUNIT(ARG:0)
+#FUNCTION
+SIF !INRANGE(ARG:0 , 1 , MAX_CITY)
+	RETURNF 0
+
+FOR LOCAL:0, 0, MAX_COUNTRY
+	IF IS_COUNTRY(LOCAL:0) && CFLAG:MASTER:소속 == LOCAL:0
+		FOR LOCAL:1, 0, 10
+			IF UNIT_SOLDIER:(LOCAL:0):(LOCAL:1) > 0 && UNIT_POSITION:(LOCAL:0):(LOCAL:1) == ARG:0
+				RETURNF 1
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+RETURNF 0
+
+
+;-------------------------------------------------
+;ARG:0번의 도시가 ARG:1번의 세력과 인접하고 있을지 어떨지를 판정하는 함수
+;인접하고 있다면 도시 번호를, 인접하고 있지 않으면 「-1」을 돌려준다
+;-------------------------------------------------
+@IS_NEIGHBORING_COUNTRY(ARG:0, ARG:1)
+#FUNCTION
+SIF !INRANGE(ARG:0, 1, MAX_CITY) || !INRANGE(ARG:1, 1, MAX_COUNTRY) || !IS_COUNTRY(ARG:1)
+	RETURNF -1
+
+FOR LOCAL:0, 0, MAX_CITY
+	SIF IS_ROUTE(ARG:0, LOCAL:0) && CITY_OWNER:(LOCAL:0) == ARG:1
+		RETURNF LOCAL:0
+NEXT
+RETURNF -1
+
+;-------------------------------------------------
+;ARG:0번의 세력과 ARG:1번의 세력의 관계를 돌려주는 함수（식중 타입）
+;RESULT:0……적대=0 정전=1 연합=2 기한부 동맹=3 영구 동맹=4 자국=5
+;RESULT:1……가장 우선도의 높은 관계의 나머지 기간
+;-------------------------------------------------
+@CHECK_COUNTRY_RELATION_F(ARG:0, ARG:1)
+#FUNCTION
+SIF GROUPMATCH(0, ARG:0, ARG:1)
+	RETURNF 0
+
+SIF ARG:0 == ARG:1
+	RETURNF 5
+
+;동맹의 판정
+FOR LOCAL:0, 0, MAX_TREATY_A
+
+	SIF TREATY_A_TERM:(LOCAL:0) <= 0
+		CONTINUE
+
+	LOCAL:2 = 0
+	LOCAL:3 = 0
+	FOR LOCAL:1, 0, MAX_TREATY_COUNTRY
+		SIF TREATY_A_COUNTRY:(LOCAL:0):(LOCAL:1) == ARG:0
+			LOCAL:2 = 1
+		SIF TREATY_A_COUNTRY:(LOCAL:0):(LOCAL:1) == ARG:1
+			LOCAL:3 = 1
+	NEXT
+	IF LOCAL:2 && LOCAL:3
+		SIF TREATY_A_TERM:(LOCAL:0) == 9999
+			RETURNF 4
+		RETURNF 3
+	ENDIF
+NEXT
+
+;연합의 판정
+FOR LOCAL:0, 0, MAX_TREATY_U
+	SIF TREATY_U_TERM:(LOCAL:0) <= 0
+		CONTINUE
+		
+	LOCAL:2 = 0
+	LOCAL:3 = 0
+	FOR LOCAL:1, 0, MAX_TREATY_COUNTRY
+		SIF TREATY_U_COUNTRY:(LOCAL:0):(LOCAL:1) == ARG:0
+			LOCAL:2 = 1
+		SIF TREATY_U_COUNTRY:(LOCAL:0):(LOCAL:1) == ARG:1
+			LOCAL:3 = 1
+	NEXT
+	SIF LOCAL:2 && LOCAL:3
+		RETURNF 2
+NEXT
+
+;정전의 판정
+FOR LOCAL:0, 0, MAX_TREATY_C
+	SIF TREATY_C_TERM:(LOCAL:0) <= 0
+		CONTINUE
+		
+	LOCAL:2 = 0
+	LOCAL:3 = 0
+	FOR LOCAL:1, 0, MAX_TREATY_COUNTRY
+		SIF TREATY_C_COUNTRY:(LOCAL:0):(LOCAL:1) == ARG:0
+			LOCAL:2 = 1
+		SIF TREATY_C_COUNTRY:(LOCAL:0):(LOCAL:1) == ARG:1
+			LOCAL:3 = 1
+	NEXT
+	SIF LOCAL:2 && LOCAL:3
+		RETURNF 1
+NEXT
+
+RETURNF 0
+
+;-------------------------------------------------
+;ARG:0번의 세력과 ARG:1번의 세력의 관계를 돌려주는 함수
+;RESULT:0……적대=0 정전=1 연합=2 기한부 동맹=3 영구 동맹=4 자국=5
+;RESULT:1……가장 우선도의 높은 관계의 나머지 기간
+;-------------------------------------------------
+@CHECK_COUNTRY_RELATION(ARG:0, ARG:1)
+RESULT:1 = 0
+
+SIF GROUPMATCH(0, ARG:0, ARG:1)
+	RETURN 0
+
+SIF ARG:0 == ARG:1
+	RETURN 5
+
+;동맹의 판정
+FOR LOCAL:0, 0, MAX_TREATY_A
+	SIF TREATY_A_TERM:(LOCAL:0) <= 0
+		CONTINUE
+		
+	LOCAL:2 = 0
+	LOCAL:3 = 0
+	FOR LOCAL:1, 0, MAX_TREATY_COUNTRY
+		SIF TREATY_A_COUNTRY:(LOCAL:0):(LOCAL:1) == ARG:0
+			LOCAL:2 = 1
+		SIF TREATY_A_COUNTRY:(LOCAL:0):(LOCAL:1) == ARG:1
+			LOCAL:3 = 1
+	NEXT
+	IF LOCAL:2 && LOCAL:3
+		RESULT:1 = TREATY_A_TERM:(LOCAL:0)
+		IF TREATY_A_TERM:(LOCAL:0) == 9999
+			RETURN 4
+		ENDIF
+		RETURN 3
+	ENDIF
+NEXT
+
+;연합의 판정
+FOR LOCAL:0, 0, MAX_TREATY_U
+	SIF TREATY_U_TERM:(LOCAL:0) <= 0
+		CONTINUE
+		
+	LOCAL:2 = 0
+	LOCAL:3 = 0
+	FOR LOCAL:1, 0, MAX_TREATY_COUNTRY
+		SIF TREATY_U_COUNTRY:(LOCAL:0):(LOCAL:1) == ARG:0
+			LOCAL:2 = 1
+		SIF TREATY_U_COUNTRY:(LOCAL:0):(LOCAL:1) == ARG:1
+			LOCAL:3 = 1
+	NEXT
+	IF LOCAL:2 && LOCAL:3
+		RESULT:1 = TREATY_U_TERM:(LOCAL:0)
+		RETURN 2
+	ENDIF
+NEXT
+
+;정전의 판정
+FOR LOCAL:0, 0, MAX_TREATY_C
+	SIF TREATY_C_TERM:(LOCAL:0) <= 0
+		CONTINUE
+
+	LOCAL:2 = 0
+	LOCAL:3 = 0
+	FOR LOCAL:1, 0, MAX_TREATY_COUNTRY
+		SIF TREATY_C_COUNTRY:(LOCAL:0):(LOCAL:1) == ARG:0
+			LOCAL:2 = 1
+		SIF TREATY_C_COUNTRY:(LOCAL:0):(LOCAL:1) == ARG:1
+			LOCAL:3 = 1
+	NEXT
+	IF LOCAL:2 && LOCAL:3
+		RESULT:1 = TREATY_C_TERM:(LOCAL:0)
+		RETURN 1
+	ENDIF
+NEXT
+
+RETURN 0
+
+;-------------------------------------------------
+;ARG:0번의 세력에 대해서, 소속하는 연합의 토벌대상세력을 돌려주는 함수
+;연합에 참가하고 있지 않으면-1을 돌려준다
+;-------------------------------------------------
+@GET_UNION_TARGET(ARG:0)
+#FUNCTION
+FOR LOCAL:0, 0, MAX_TREATY_U
+	FOR LOCAL:1, 0, MAX_TREATY_COUNTRY
+		SIF TREATY_U_COUNTRY:(LOCAL:0):(LOCAL:1) == ARG:0
+			RETURNF TREATY_U_TARGET:(LOCAL:0)
+	NEXT
+NEXT
+RETURNF -1
+
+;-------------------------------------------------
+;CSTR:99가 ARGS:0의 캐릭터로부터 CSTR:99가 ARGS:1의 캐릭터에 대한 호감도를 ARG:2, 적대치를 ARG:3으로 설정하는 함수
+;-------------------------------------------------
+@INIT_RELATION(ARGS:0, ARGS:1, ARG:2, ARG:3)
+LOCAL:2 = -1
+LOCAL:3 = -1
+FOR LOCAL:0, 0, CHARANUM
+	IF CSTR:(LOCAL:0):99 == ARGS:0
+		LOCAL:2 = LOCAL:0
+		BREAK
+	ENDIF
+NEXT
+FOR LOCAL:0, 0, CHARANUM
+	IF CSTR:(LOCAL:0):99 == ARGS:1
+		LOCAL:3 = LOCAL:0
+		BREAK
+	ENDIF
+NEXT
+REL_LIKE:(LOCAL:2):(LOCAL:3) = LIMIT(ARG:2, 0, 1500)
+REL_HATE:(LOCAL:2):(LOCAL:3) = LIMIT(ARG:3, 0, 1500)
+
+;-------------------------------------------------
+;캐릭터 ARG:0으로부터 ARG:1에 대한 호감도를 ARG:2, 적대치를 ARG:3만 가산하는 함수
+;궁합:호감도에 대해서는 그대로의, 적대치에 대해서는(300 - 궁합)/2의 보정이 걸린다
+;-------------------------------------------------
+@CHANGE_RELATION_O_TO_O(ARG:0, ARG:1, ARG:2, ARG:3)
+LOCAL:0 = RELATION:(ARG:0):(ARG:1) ? RELATION:(ARG:0):(ARG:1) # 100
+
+REL_LIKE:(ARG:0):(ARG:1) = LIMIT(REL_LIKE:(ARG:0):(ARG:1) + ARG:2 * LOCAL:0 / 100, 0, 1500)
+REL_HATE:(ARG:0):(ARG:1) = LIMIT(REL_HATE:(ARG:0):(ARG:1) + ARG:3 * (300 - LOCAL:0) / 200, 0, 1500)
+
+;-------------------------------------------------
+;ARG:0 세력의 소속 인물로부터 ARG:1 세력의 소속 인물에 대한 호감도를 ARG:2, 적대치를 ARG:3만 가산하는 함수(군주는 영향 강화하고)
+;-------------------------------------------------
+@CHANGE_RELATION_C_TO_C(ARG:0, ARG:1, ARG:2, ARG:3)
+
+LOCAL:6 = GET_COUNTRY_BOSS(ARG:1)
+
+SIF !IS_COUNTRY(ARG:0) || !IS_COUNTRY(ARG:1)
+	RETURN
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):소속 == ARG:0
+		FOR LOCAL:1, 0, CHARANUM
+			IF CFLAG:(LOCAL:1):소속 == ARG:1
+				LOCAL:2 = ARG:2
+				LOCAL:3 = ARG:3
+				; 보스 이외는 반감
+				IF LOCAL:1 != LOCAL:6
+					LOCAL:2 /= 2
+					LOCAL:3 /= 2
+				ENDIF
+				REL_LIKE:(LOCAL:0):(LOCAL:1) = LIMIT(REL_LIKE:(LOCAL:0):(LOCAL:1) + LOCAL:2, 0, 1500)
+				REL_HATE:(LOCAL:0):(LOCAL:1) = LIMIT(REL_HATE:(LOCAL:0):(LOCAL:1) + LOCAL:3, 0, 1500)
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;ARG:0 세력의 소속 인물로부터 캐릭터 ARG:1에 대한 호감도를 ARG:2, 적대치를 ARG:3만 가산하는 함수(군주는 영향 강화하고)
+;-------------------------------------------------
+@CHANGE_RELATION_C_TO_O(ARG:0, ARG:1, ARG:2, ARG:3)
+SIF !IS_COUNTRY(ARG:0)
+	RETURN
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):소속 == ARG:0
+		LOCAL:1 = RELATION:(LOCAL:0):(ARG:1) ? RELATION:(LOCAL:0):(ARG:1) # 100
+		LOCAL:2 = ARG:2
+		LOCAL:3 = ARG:3
+		REL_LIKE:(LOCAL:0):(ARG:1) = LIMIT(REL_LIKE:(LOCAL:0):(ARG:1) + LOCAL:2 * LOCAL:1 / 100, 0, 1500)
+		REL_HATE:(LOCAL:0):(ARG:1) = LIMIT(REL_HATE:(LOCAL:0):(ARG:1) + LOCAL:3 * (300 - LOCAL:1) / 200, 0, 1500)
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;캐릭터 ARG:0으로부터 ARG:1 세력의 소속 캐릭터에 대한 호감도를 ARG:2, 적대치를 ARG:3만 가산하는 함수(군주는 영향 강화하고)
+;-------------------------------------------------
+@CHANGE_RELATION_O_TO_C(ARG:0, ARG:1, ARG:2, ARG:3)
+SIF !IS_COUNTRY(ARG:1)
+	RETURN
+LOCAL:5 = GET_COUNTRY_BOSS(ARG:1)
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):소속 == ARG:1
+		LOCAL:2 = ARG:2
+		LOCAL:3 = ARG:3
+		IF LOCAL:0 != LOCAL:5
+			LOCAL:2 /= 2
+			LOCAL:3 /= 2
+		ENDIF
+		LOCAL:1 = RELATION:(ARG:0):(LOCAL:0) ? RELATION:(ARG:0):(LOCAL:0) # 100
+		REL_LIKE:(ARG:0):(LOCAL:0) = LIMIT(REL_LIKE:(ARG:0):(LOCAL:0) + LOCAL:2 * LOCAL:1 / 100, 0, 1500)
+		REL_HATE:(ARG:0):(LOCAL:0) = LIMIT(REL_HATE:(ARG:0):(LOCAL:0) + LOCAL:3 * (300 - LOCAL:1) / 200, 0, 1500)
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;ARG:0으로 ARG:1의 세력의 사이에 ARG:2 턴의 사이의 동맹을 성립시키는 함수
+;성공하면 1빈자리가 없으면 0
+;-------------------------------------------------
+@INIT_ALLIANCE(ARG:0, ARG:1, ARG:2)
+#DIM CUR_RELATION
+#DIM NEW_RELATION
+NEW_RELATION = (ARG:2 == 9999) ? 4 # 3
+IF !IS_COUNTRY(ARG:0) || !IS_COUNTRY(ARG:1)
+	THROW 인수 0번과 1번에는 각각 올바른 세력 번호를 지정해 주세요
+ELSEIF ARG:2 <= 0
+	THROW 인수 2번에는 0보다 큰 값을 지정해 주세요
+ENDIF
+
+FOR LOCAL:0, 0, MAX_TREATY_A
+	IF (TREATY_A_COUNTRY:(LOCAL:0):0 == ARG:0 && TREATY_A_COUNTRY:(LOCAL:0):1 == ARG:1) || (TREATY_A_COUNTRY:(LOCAL:0):0 == ARG:1 && TREATY_A_COUNTRY:(LOCAL:0):1 == ARG:0)
+		TREATY_A_TERM:(LOCAL:0) = ARG:2
+		TMP_COUNTRY_RELATION_TERM:(ARG:0):(ARG:1) = ARG:2
+		TMP_COUNTRY_RELATION_TERM:(ARG:1):(ARG:0) = ARG:2
+	ELSEIF TREATY_A_TERM:(LOCAL:0) <= 0
+		; 빈자리가 있으면 성립
+		; 관계 맵의 카운터를 되돌린다
+		CUR_RELATION = TMP_COUNTRY_RELATION:(ARG:0):(ARG:1)
+		SELECTCASE CUR_RELATION
+		CASE 1
+			COUNTRY_TREATY_NO:(ARG:0):1 --
+			COUNTRY_TREATY_NO:(ARG:1):1 --
+		CASE 3, 4
+			COUNTRY_TREATY_NO:(ARG:0):0 --
+			COUNTRY_TREATY_NO:(ARG:1):0 --
+		ENDSELECT
+
+		; 체결
+		TREATY_A_TERM:(LOCAL:0) = ARG:2
+		TREATY_A_COUNTRY:(LOCAL:0):0 = ARG:0
+		TREATY_A_COUNTRY:(LOCAL:0):1 = ARG:1
+		
+		; 관계 맵의 갱신
+		IF NEW_RELATION > CUR_RELATION
+			TMP_COUNTRY_RELATION:(ARG:0):(ARG:1) = NEW_RELATION
+			TMP_COUNTRY_RELATION:(ARG:1):(ARG:0) = NEW_RELATION
+			TMP_COUNTRY_RELATION_TERM:(ARG:0):(ARG:1) = ARG:2
+			TMP_COUNTRY_RELATION_TERM:(ARG:1):(ARG:0) = ARG:2
+			CUR_RELATION = NEW_RELATION
+		ENDIF
+		SELECTCASE CUR_RELATION
+		CASE 1
+			COUNTRY_TREATY_NO:(ARG:0):1 ++
+			COUNTRY_TREATY_NO:(ARG:1):1 ++
+		CASE 3, 4
+			COUNTRY_TREATY_NO:(ARG:0):0 ++
+			COUNTRY_TREATY_NO:(ARG:1):0 ++
+		ENDSELECT
+		RETURN 1
+	ENDIF
+NEXT
+RETURN 0
+
+;-------------------------------------------------
+;ARGS:0으로 ARGS:1을 각각 CSTR:99 짐캐릭터가 소속하는 세력의 사이에, ARG:2 턴의 사이의 동맹을 성립시키는 함수
+;-------------------------------------------------
+@INIT_ALLIANCE_BY_NAME(ARGS:0, ARGS:1, ARG:2)
+LOCAL:1 = CFLAG:(NAME_TO_CHARA(ARGS:0)):소속
+LOCAL:2 = CFLAG:(NAME_TO_CHARA(ARGS:1)):소속
+IF LOCAL:1 == -1 || LOCAL:2 == -1
+	THROW 인수 0번과 1번에는 각각 올바른 CSTR:99를 지정해 주세요
+ELSEIF ARG:2 <= 0
+	THROW 인수 2번에는 0보다 큰 값을 지정해 주세요
+ENDIF
+
+CALL INIT_ALLIANCE(LOCAL:1, LOCAL:2, ARG:2)
+RETURN RESULT
+
+;-------------------------------------------------
+;ARG:0으로 ARG:1의 세력의 사이에 ARG:2 턴의 사이의 정전을 성립시키는 함수
+;성공하면 1빈자리가 없으면 0
+;-------------------------------------------------
+@INIT_CEASEFIRE(ARG:0, ARG:1, ARG:2)
+#DIM CUR_RELATION
+#DIM NEW_RELATION
+NEW_RELATION = 1
+IF !IS_COUNTRY(ARG:0) || !IS_COUNTRY(ARG:1)
+	THROW 인수 0번과 1번에는 각각 올바른 세력 번호를 지정해 주세요
+ELSEIF ARG:2 <= 0
+	THROW 인수 2번에는 0보다 큰 값을 지정해 주세요
+ENDIF
+
+FOR LOCAL:0, 0, MAX_TREATY_C
+	IF TREATY_C_TERM:(LOCAL:0) <= 0
+		; 빈자리가 있으면 성립
+
+		; 관계 맵의 카운터를 되돌린다
+		CUR_RELATION = TMP_COUNTRY_RELATION:(ARG:0):(ARG:1)
+		SELECTCASE CUR_RELATION
+		CASE 1
+			COUNTRY_TREATY_NO:(ARG:0):1 --
+			COUNTRY_TREATY_NO:(ARG:1):1 --
+		CASE 3, 4
+			COUNTRY_TREATY_NO:(ARG:0):0 --
+			COUNTRY_TREATY_NO:(ARG:1):0 --
+		ENDSELECT
+
+		; 체결
+		TREATY_C_TERM:(LOCAL:0) = ARG:2
+		TREATY_C_COUNTRY:(LOCAL:0):0 = ARG:0
+		TREATY_C_COUNTRY:(LOCAL:0):1 = ARG:1
+		
+		; 관계 맵의 갱신
+		IF NEW_RELATION > CUR_RELATION
+			TMP_COUNTRY_RELATION:(ARG:0):(ARG:1) = NEW_RELATION
+			TMP_COUNTRY_RELATION:(ARG:1):(ARG:0) = NEW_RELATION
+			TMP_COUNTRY_RELATION_TERM:(ARG:0):(ARG:1) = ARG:2
+			TMP_COUNTRY_RELATION_TERM:(ARG:1):(ARG:0) = ARG:2
+			CUR_RELATION = NEW_RELATION
+		ENDIF
+		SELECTCASE CUR_RELATION
+		CASE 1
+			COUNTRY_TREATY_NO:(ARG:0):1 ++
+			COUNTRY_TREATY_NO:(ARG:1):1 ++
+		CASE 3, 4
+			COUNTRY_TREATY_NO:(ARG:0):0 ++
+			COUNTRY_TREATY_NO:(ARG:1):0 ++
+		ENDSELECT
+		RETURN 1
+	ENDIF
+NEXT
+RETURN 0
+
+;-------------------------------------------------
+;ARGS:0으로 ARGS:1을 각각 CSTR:99 짐캐릭터가 소속하는 세력의 사이에, ARG:2 턴의 사이의 정전을 성립시키는 함수
+;-------------------------------------------------
+@INIT_CEASEFIRE_BY_NAME(ARGS:0, ARGS:1, ARG:2)
+LOCAL:1 = CFLAG:(NAME_TO_CHARA(ARGS:0)):소속
+LOCAL:2 = CFLAG:(NAME_TO_CHARA(ARGS:1)):소속
+IF LOCAL:1 == -1 || LOCAL:2 == -1
+	THROW 인수 0번과 1번에는 각각 올바른 CSTR:99를 지정해 주세요
+ELSEIF ARG:2 <= 0
+	THROW 인수 2번에는 0보다 큰 값을 지정해 주세요
+ENDIF
+
+CALL INIT_CEASEFIRE(LOCAL:1, LOCAL:2, ARG:2)
+RETURN RESULT
+
+;-------------------------------------------------
+;동맹의 해산 처리
+;-----------------------------------------------
+@BREAK_ALLIANCE(참가세력:0, 참가세력:1, 조약)
+#DIM 참가세력, 2
+#DIM 참가군주, 2
+#DIM 이동처도시, 2
+#DIM 부대
+#DIM 조약
+#DIM 도시
+참가군주:0 = GET_COUNTRY_BOSS(참가세력:0)
+참가군주:1 = GET_COUNTRY_BOSS(참가세력:1)
+CALL COLOR_PRINTL(@"%ANAME(참가군주:0)%·%ANAME(참가군주:1)% 동맹은 해산했습니다", 칼라_주의)
+CALL COLOR_PRINTL(@"%ANAME(참가군주:1)%의 도시에 있는 %ANAME(참가군주:0)%의 부대, %ANAME(참가군주:0)%의 도시에 있는 %ANAME(참가군주:1)%의 부대는 이동합니다", 칼라_주의)
+FOR 도시, 1, GET_CITY_NUM() + 1
+	SIF GROUPMATCH(CITY_OWNER:도시, 참가세력:0, 참가세력:1)
+		이동처도시:(CITY_OWNER:도시 == 참가세력:0 ? 0 # 1) = 도시
+NEXT
+FOR 부대, 0, MAX_UNIT
+	SIF CITY_OWNER:(UNIT_POSITION:(참가세력:0):부대) == 참가세력:1
+		UNIT_POSITION:(참가세력:0):부대 = 이동처도시:0
+	SIF CITY_OWNER:(UNIT_POSITION:(참가세력:1):부대) == 참가세력:0
+		UNIT_POSITION:(참가세력:1):부대 = 이동처도시:1
+NEXT
+RESETCOLOR
+SIF GROUPMATCH(CFLAG:MASTER:소속, 참가세력:0, 참가세력:1)
+	CALL GO_TO_MASTERS_COUNTRY(참가세력:(CFLAG:MASTER:소속 == 참가세력:0 ? 1 # 0))
+TREATY_A_COUNTRY:조약:0 = 0
+TREATY_A_COUNTRY:조약:1 = 0
+TREATY_A_TERM:조약 = 0
+
+;-------------------------------------------------
+;정전 조약의 종료 처리
+;-----------------------------------------------
+@BREAK_CEASEFIRE(참가세력:0, 참가세력:1, 조약)
+#DIM 참가세력, 2
+#DIM 참가군주, 2
+#DIM 조약
+참가군주:0 = GET_COUNTRY_BOSS(참가세력:0)
+참가군주:1 = GET_COUNTRY_BOSS(참가세력:1)
+CALL COLOR_PRINTL(@"%ANAME(참가군주:0)%·%ANAME(참가군주:1)%의 정전 조약은 실효했습니다", 칼라_주의)
+TREATY_C_COUNTRY:조약:0 = 0
+TREATY_C_COUNTRY:조약:1 = 0
+TREATY_C_TERM:조약 = 0
+
+;-------------------------------------------------
+;연합의 종료 처리
+;-----------------------------------------------
+@BREAK_UNION(조약)
+#DIM 조약
+#DIM 군주
+군주 = GET_COUNTRY_BOSS(TREATY_U_TARGET:조약)
+CALL COLOR_PRINTL(@"%ANAME(군주)%토벌 조약은 실효했습니다", 칼라_주의)
+TREATY_U_TARGET:조약 = 0
+TREATY_U_TERM:조약 = 0
+
+FOR LOCAL, 0, MAX_TREATY_COUNTRY
+	IF TREATY_U_COUNTRY:조약:LOCAL == CFLAG:MASTER:소속
+		FOR LOCAL:1, 0, MAX_TREATY_COUNTRY
+			SIF IS_COUNTRY(TREATY_U_COUNTRY:조약:(LOCAL:1))
+				CALL GO_TO_MASTERS_COUNTRY(TREATY_U_COUNTRY:조약:(LOCAL:1))
+		NEXT
+	ENDIF
+NEXT
+
+FOR LOCAL, 0, MAX_TREATY_COUNTRY
+	TREATY_U_COUNTRY:조약:LOCAL = 0
+NEXT
+
+;-------------------------------------------------
+;세력 ARG:0의 정보를 표시한다
+;-------------------------------------------------
+@SHOW_COUNTRY_INFO(ARG:0)
+SIF !IS_COUNTRY(ARG:0)
+	RETURN
+CALL SINGLE_DRAWLINE
+SIF FLAG:화상설정
+	CALL PRINT_STATE_IMAGE(GET_COUNTRY_BOSS(ARG:0))
+PRINTFORML 군주:%NAME_FORMAL(GET_COUNTRY_BOSS(ARG:0))%
+CALL SINGLE_DRAWLINE
+PRINTFORML 경제:{GET_SUM_ECONOMY(ARG:0) / 100, 6} 병력:{GET_SUM_SOLDIER(ARG:0), 7}
+CALL SINGLE_DRAWLINE
+PRINTFORM 사관:
+FOR LOCAL, 0, CHARANUM
+	SIF LOCAL == GET_COUNTRY_BOSS(ARG:0)
+		CONTINUE
+	SIF CFLAG:LOCAL:소속 != ARG:0
+		CONTINUE
+	PRINTFORM %SNAME(LOCAL)% 
+NEXT
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTFORML 각국과의 관계
+PRINTFORM %"군주",10,LEFT%
+PRINTFORM %"관계",8, RIGHT%
+PRINTFORM %"인접",8, RIGHT%
+PRINTFORM %"인상",6, RIGHT%
+PRINTFORM %"우호", 7, RIGHT%
+PRINTFORM %"적대", 7, RIGHT%
+PRINTFORM %"붙잡고 있는", 26, RIGHT%
+PRINTFORML %"붙잡혀 있는", 26, RIGHT%
+
+FOR LOCAL, 0, MAX_COUNTRY
+	SIF !IS_COUNTRY(LOCAL) || LOCAL == ARG:0
+		CONTINUE
+	
+		LOCALS:0 =%SNAME(GET_COUNTRY_BOSS(LOCAL:0))%
+		CALL COLOR_PRINT(@"%LOCALS:0, MAX_CHARANAME_LENGTH / 2, LEFT%", COUNTRY_COLOR:LOCAL)
+
+		CALL TMP_SETCOLOR_COUNTRY_RELATION(ARG:0, LOCAL:0)
+		PRINTFORM %TMP_TOSTR_COUNTRY_RELATION(ARG:0, LOCAL:0, 1), 10, RIGHT%
+		RESETCOLOR
+		PRINTFORM %TMP_COUNTRY_IS_NEIBORING:(ARG:0):LOCAL == 1 ? "Ο" # "Χ", 6, RIGHT%
+		LOCAL:4 = GET_COUNTRY_BOSS(ARG:0)
+		LOCAL:5 = GET_COUNTRY_BOSS(LOCAL:0)
+		PRINT      
+		CALL TMP_PRINT_COUNTRY_RELATION2(LOCAL:5, LOCAL:4)
+
+;		PRINTFORM 
+		PRINTFORM {REL_LIKE:(LOCAL:5):(LOCAL:4), 7, RIGHT}
+		PRINTFORM {REL_HATE:(LOCAL:5):(LOCAL:4), 7, RIGHT}
+
+		;붙잡고 있는 포로의 표시
+		LOCALS:1 = 
+		FOR LOCAL:1, 0, CHARANUM
+			IF CFLAG:(LOCAL:1):소속 == LOCAL:0 && CFLAG:(LOCAL:1):포로처 == ARG:0
+				IF LOCALS:1 == ""
+					LOCALS:1 = %SNAME(LOCAL:1)%
+				ELSE
+					IF STRLENS(@"%LOCALS:1%、%SNAME(LOCAL:1)%") >= 24
+						LOCALS:1 = %LOCALS:1%, 외
+						BREAK
+					ELSE
+						LOCALS:1 = %LOCALS:1%、%SNAME(LOCAL:1)%
+					ENDIF
+				ENDIF
+			ENDIF
+		NEXT
+		SETCOLOR 칼라_오렌지
+		PRINTFORM %LOCALS:1, 26, RIGHT%
+		RESETCOLOR
+
+		;붙잡혀 있는 포로의 표시
+		LOCALS:1 = 
+		FOR LOCAL:1, 0, CHARANUM
+			IF CFLAG:(LOCAL:1):소속 == ARG:0 && CFLAG:(LOCAL:1):포로처 == LOCAL:0
+				IF LOCALS:1 == ""
+					LOCALS:1 = %SNAME(LOCAL:1)%
+				ELSE
+					IF STRLENS(@"%LOCALS:1%、%SNAME(LOCAL:1)%") >= 24
+						LOCALS:1 = %LOCALS:1%, 외
+						BREAK
+					ELSE
+						LOCALS:1 = %LOCALS:1%、%SNAME(LOCAL:1)%
+					ENDIF
+				ENDIF
+			ENDIF
+		NEXT
+		SETCOLOR 칼라_시안
+		PRINTFORM %LOCALS:1, 26, RIGHT%
+		RESETCOLOR
+		PRINTL 
+NEXT
+
+WAIT
+
+;-------------------------------------------------
+;ARG:0번의 세력 칼라를 변경하는 함수
+;ARG:1에 1을 설정하면 「변경하지 않고 돌아온다」가 금지된다
+;-------------------------------------------------
+@CHANGE_COUNTRY_COLOR(ARG:0, ARG:1 = 0)
+#DIM FILTER
+#DIM COUNTRY_H, 100
+#DIM COUNTRY_S, 100
+#DIM COUNTRY_V, 100
+#DIM COUNTRY_S2, 100
+#DIM COUNTRY_V2, 100
+#DIM FIRST_LINE
+FILTER = 0
+
+LOCAL:9 = 0
+FOR LOCAL:0, 1, MAX_COUNTRY
+	IF IS_COUNTRY(LOCAL:0) && LOCAL:0 != ARG:0
+		COUNTRY_H:(LOCAL:9) = RGB_TO_H(COUNTRY_COLOR:(LOCAL:0))
+		COUNTRY_S:(LOCAL:9) = RGB_TO_S(COUNTRY_COLOR:(LOCAL:0))
+		COUNTRY_V:(LOCAL:9) = RGB_TO_V(COUNTRY_COLOR:(LOCAL:0))
+		COUNTRY_S2:(LOCAL:9) = POWER(COUNTRY_S:(LOCAL:9), 2)
+		COUNTRY_V2:(LOCAL:9) = POWER(COUNTRY_V:(LOCAL:9), 2)
+		LOCAL:9 ++
+	ENDIF
+NEXT
+
+REDRAW 0
+FIRST_LINE = LINECOUNT
+$SHOW_LOOP
+
+FOR LOCAL:0, 0, 4
+	FOR LOCAL:1, 0, 4
+		LOCAL:3 = 24
+		FOR LOCAL:2, 0, LOCAL:3 + 1
+			IF LOCAL:2 == LOCAL:3
+				LOCAL:5 = 0
+				LOCAL:6 = 0
+				LOCAL:7 = 100 - (LOCAL:0 * 24 + LOCAL:1 * 6)
+			ELSE
+				LOCAL:5 = LOCAL:2 * 360 / LOCAL:3
+				LOCAL:6 = 90 - LOCAL:1 * 20
+				LOCAL:7 = 100 - LOCAL:0 * 20
+			ENDIF
+
+			LOCAL:13 = 0
+			IF FILTER >= 1
+				FOR LOCAL:4, 0, LOCAL:9
+					LOCAL:10 = COS_LIST:(ABS(LOCAL:5 - COUNTRY_H:(LOCAL:4)))
+					LOCAL:20 = POWER(LOCAL:6, 2)
+					LOCAL:21 = POWER(LOCAL:7, 2)
+					LOCAL:22 = COUNTRY_S2:(LOCAL:4)
+					LOCAL:23 = COUNTRY_V2:(LOCAL:4)
+					LOCAL:14 = (LOCAL:20 + 10000) * LOCAL:21
+					LOCAL:15 = (LOCAL:22 + 10000) * LOCAL:23
+					LOCAL:16 = 2 * LOCAL:7 * COUNTRY_V:(LOCAL:4) * (LOCAL:10 * LOCAL:6 * COUNTRY_S:(LOCAL:4) / 1000 + 10000)
+					IF LOCAL:14 + LOCAL:15 - LOCAL:16 < 10000000 * FILTER
+						LOCAL:13 = 1
+						BREAK
+					ENDIF
+				NEXT
+			ENDIF
+
+			IF LOCAL:13
+				SETCOLOR HSV_TO_RGB(LOCAL:5, LOCAL:6, LOCAL:7)
+				PRINTPLAIN □
+			ELSE
+				SETCOLOR HSV_TO_RGB(LOCAL:5, LOCAL:6, LOCAL:7)
+				PRINTBUTTON "■", 0x1000000 + (LOCAL:5 << 14) + (LOCAL:6 << 7) + LOCAL:7
+			ENDIF
+			PRINTPLAIN  
+		NEXT
+		PRINTL 
+	NEXT
+NEXT
+RESETCOLOR
+CALL SINGLE_DRAWLINE
+PRINTPLAIN 기존 세력의 색에 가까운 색을 제외함 
+PRINTBUTTON "[무]", 100
+PRINTBUTTON "[약]", 101
+PRINTBUTTON "[강]", 102
+PRINTL 
+IF ARG:1 == 0
+	CALL SINGLE_DRAWLINE
+	PRINTL [0] 변경하지 않는다
+ENDIF
+
+$INPUT_LOOP
+INPUT
+
+IF RESULT == 0 && ARG:1 == 0
+	REDRAW 1
+	RETURN
+ELSEIF RESULT == 100 && FILTER != 0
+	FILTER = 0
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 101 && FILTER != 1
+	FILTER = 1
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 102 && FILTER != 2
+	FILTER = 2
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT >= 0x1000000 && RESULT < 0x2000000
+	LOCAL:40 = (RESULT >> 14) & 0x1FF
+	LOCAL:41 = (RESULT >> 7) & 0x7F
+	LOCAL:42 = RESULT & 0x7F
+	IF LOCAL:40 >= 0 && LOCAL:40 <= 359 && LOCAL:41 >= 0 && LOCAL:41 <= 100 && LOCAL:42 >= 0 && LOCAL:42 <= 100
+		LOCAL:0 = HSV_TO_RGB(LOCAL:40, LOCAL:41, LOCAL:42)
+		;★
+		;PRINTFORMW 세력색 = {LOCAL:0}
+		COUNTRY_COLOR:(ARG:0) = LOCAL:0
+		CLEARLINE 1
+		REDRAW 1
+		RETURN
+	ENDIF
+ENDIF
+CLEARLINE 1
+GOTO INPUT_LOOP
+
+;-------------------------------------------------
+;능력치가 ARG:0 때의 실제의 영향력을 돌려주는 함수  ARG:1은 대상의 캐릭터 번호
+;-------------------------------------------------
+@ABL_POWER(ARG:0, ARG:1 = -1)
+#FUNCTION
+#DIM 이용치
+#DIM 보정치
+#DIM 상한
+#DIM 기초치
+#DIM 난이도보정
+#DIM 반환치
+
+기초치 = 500 + 400 * ARG:0
+
+;임신·임월·육아 주위의 보정
+IF ARG:1 >= 0
+	IF CFLAG:(ARG:1):행동불능상태 == 행동불능_임월
+		TIMES 기초치, 0.5
+	ELSEIF TALENT:(ARG:1):임신
+		TIMES 기초치, 0.75
+	ELSEIF CFLAG:(ARG:1):행동불능상태 == 행동불능_육아
+		TIMES 기초치, 0.9
+	ENDIF
+	IF TALENT:(ARG:1):붕괴
+		TIMES 기초치, 0.5
+	ELSEIF TALENT:(ARG:1):공허
+		TIMES 기초치, 0.8
+	ENDIF
+ENDIF
+
+;보정치  만분 율
+;주인공의 경우
+IF ARG:1 == MASTER
+	;함락 f혼자 머리 2% 다만 상한은 200% 즉 100명까지
+	보정치 = 10000 + MIN(FLAG:함락인원수 * 200, 20000)
+;캐릭터 지정이 없으면 100%
+ELSEIF ARG:1 < 0
+	보정치 = 10000
+;다른 세력 CONFIG:314의 난이도 보정이 탄다
+ELSEIF CFLAG:MASTER:소속 != CFLAG:(ARG:1):소속
+	난이도보정 = (GET_DIFFICULTY_CORRECTION() - 100) / 3
+	보정치 = 10000 + 10000 * 난이도보정 / 100
+;동일 세력에서도 주인자가 포로의 사이는 안 돼
+ELSEIF (CFLAG:MASTER:포로처 != 0 && CFLAG:MASTER:소속 == CFLAG:(ARG:1):소속)
+	보정치 = 10000
+;주인공 세력
+ELSE
+	보정치 = 10000
+	상한 = 2000
+	;호감도, 종속도, 의존도중에서 제일 높은 녀석을 이용한다
+	;의존도가 선행하는 것은 그렇게 없을 것이다………………
+	이용치 = MAX(CFLAG:(ARG:1):호감도, CFLAG:(ARG:1):종속도, CFLAG:(ARG:1):지배도)
+
+	;정실이라면 배까지 성장한다
+	IF TALENT:(ARG:1):정실
+		상한 = 10000
+	;첩이라면+50%
+	ELSEIF TALENT:(ARG:1):첩
+		상한 = 5000
+	ELSE
+		;함락계 소질은 보너스를 들인다
+		SIF TALENT:(ARG:1):친애
+			상한 += 1000
+		SIF TALENT:(ARG:1):연모 || TALENT:(ARG:1):친구
+			상한 += 500
+		SIF TALENT:(ARG:1):연인
+			상한 += 500
+		SIF TALENT:(ARG:1):예속
+			상한 += 1000
+		SIF TALENT:(ARG:1):복종
+			상한 += 500
+		SIF TALENT:(ARG:1):낙인
+			상한 += 300
+		SIF TALENT:(ARG:1):주인
+			상한 += 500
+		SIF TALENT:(ARG:1):소유자
+			상한 += 1000
+	ENDIF
+
+	;마음에든다에서도 보너스를 얻는다
+	SIF ID_TO_CHARA(FLAG:마음에든다지정캐릭터) == ARG:1
+		상한 += 5000
+
+	;치 5마다 파워에 0.01%의 보정을 얻는다. 다만 상한（돼지 20%. 소질에 의한 상한 인상을 무시하면 10000으로 도달）를 넘지 않는다
+	보정치 = 10000 + MIN(이용치 / 5, 상한)
+ENDIF
+
+RETURNF MAX(기초치 * 보정치 / 10000, 1)
+
+
+;-------------------------------------------------
+;병력의 초기 배치를 실시하는 함수
+;-------------------------------------------------
+@INIT_ARMY
+FOR LOCAL:0, 0, MAX_COUNTRY
+	;세력의 존재 판정
+	IF IS_COUNTRY(LOCAL:0)
+		;경제 규모에 대한 최대병수의 반을 얻는다
+		LOCAL:2 = GET_SUM_ECONOMY(LOCAL:0) / 20
+		COUNTRY_SOLDIER:(LOCAL:0) = LOCAL:2
+		LOCAL:3 = LOCAL:2 / (MAX(1, GET_OWN_CITY(LOCAL:0)) * 3 / 2) / 500 * 500
+		LOCAL:4 = (LOCAL:3 / 500 + 1) / 2 * 500
+
+		;방위 병력의 할당
+		FOR LOCAL:1, 0, MAX_CITY
+			IF COUNTRY_SOLDIER:(LOCAL:0) >= 1000
+				IF CITY_OWNER:(LOCAL:1) == LOCAL:0
+					IF IS_NEIBORING_ENEMY(LOCAL:1)
+						CITY_SOLDIER:(LOCAL:1) = LOCAL:3
+						COUNTRY_SOLDIER:(LOCAL:0) -= LOCAL:3
+					ELSE
+						CITY_SOLDIER:(LOCAL:1) = LOCAL:4
+						COUNTRY_SOLDIER:(LOCAL:0) -= LOCAL:4
+					ENDIF
+				ENDIF
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+
+
+;-------------------------------------------------
+;부대를 이동시키는 함수
+;TMP_UNIT_MAP를 조작한다. 그 필요가 없는 장면에서는 UNIT_POSITION를 직접 고쳐 써도 좋다
+;-------------------------------------------------
+@MOVE_UNIT(세력, 부대, 이동처, TARGET삭제 = 0)
+#DIM 세력
+#DIM 부대
+#DIM 이동처
+#DIM TARGET삭제
+CALL TMP_MODIFY_UNIT_MAP(세력, 부대, UNIT_POSITION:세력:부대, 이동처)
+UNIT_POSITION:세력:부대 = 이동처
+
+SIF TARGET삭제
+	UNIT_TARGET:세력:부대 = 0
+
+
+;-------------------------------------------------
+;ARG:0 세력의 ARG:1 부대를 해산시키는 함수
+;ARG:2 쿨 타임 붙이지 않는 플래그
+;-------------------------------------------------
+@CLEAR_UNIT(ARG:0, ARG:1, ARG:2 = 0)
+LOCAL:1 = GET_UNIT_COMMANDER(ARG:0, ARG:1, 0)
+LOCAL:2 = GET_UNIT_COMMANDER(ARG:0, ARG:1, 1)
+LOCAL:3 = GET_UNIT_COMMANDER(ARG:0, ARG:1, 2)
+;쿨 다운의 설정, 부상 따위 해 이미 2 턴 이상 설정되어 있으면 그 쪽을 남긴다
+IF !ARG:2
+	FOR LOCAL:0, 1, 1 + MAX_UNIT_COMMANDER
+		SIF LOCAL:(LOCAL:0) >= 0
+			COOLTIME:(LOCAL:(LOCAL:0)):0 = MAX(COOLTIME:(LOCAL:(LOCAL:0)):0 , 1)
+	NEXT
+ENDIF
+
+;부대 맵을 갱신
+CALL TMP_MODIFY_UNIT_MAP(ARG:0, ARG:1, UNIT_POSITION:(ARG:0):(ARG:1))
+
+COUNTRY_SOLDIER:(ARG:0) += UNIT_SOLDIER:(ARG:0):(ARG:1)
+UNIT_SOLDIER:(ARG:0):(ARG:1) = 0
+UNIT_POSITION:(ARG:0):(ARG:1) = 0
+UNIT_TARGET:(ARG:0):(ARG:1) = 0
+UNIT_COMMANDER:(ARG:0):(ARG:1) = 0
+UNIT_TIRED_COUNT:(ARG:0):(ARG:1) = 0
+UNIT_CAPTURE_CITY:(ARG:0):(ARG:1) = 0
+UNIT_FBATTLE:(ARG:0):(ARG:1) = 0
+
+;-------------------------------------------------
+;ARG:0번의 세력의 전부대를 해산시키는 함수
+;ARG:1 쿨 타임 붙이지 않는 플래그
+;-------------------------------------------------
+@CLEAR_ALL_UNIT(ARG:0, ARG:1 = 0)
+FOR LOCAL:0, 0, MAX_UNIT
+	CALL CLEAR_UNIT(ARG:0, LOCAL:0, ARG:1)
+NEXT
+
+;-------------------------------------------------
+; ARG:0의 세력의 ARG:1번 부대가 ARG:2의 쿨 타임
+;-------------------------------------------------
+@SET_COMMANDER_COOLTIME(ARG:0, ARG:1, ARG:2=1)
+FOR LOCAL:0, 0, 3
+	SIF GET_UNIT_COMMANDER(ARG:0, ARG:1, LOCAL:0) >= 0
+		COOLTIME:(GET_UNIT_COMMANDER(ARG:0, ARG:1, LOCAL:0)):0 = ARG:2
+NEXT
+
+;-------------------------------------------------
+;ARG:0번의 세력을 멸망 시키는 함수
+;이 함수를 호출하면, 대상세력의 장이 강제적으로 무소속이 되기 (위해)때문에, 사전에 장의 분배를 행해 두는 것
+;소속 도시의 해제는 실시하지 않기 때문에, 필요에 따라서 별도 처리하는 것
+;-------------------------------------------------
+@DESTROY_COUNTRY(ARG:0)
+LOCAL:3 = GET_COUNTRY_BOSS(ARG:0)
+
+;조교 요구를 되고 있던 or 하고 있던 세력 멸망시에 변수를 리셋트
+IF ARG:0 == CFLAG:MASTER:소속 || LOCAL:3 == DIPLOMACY_TRAINING_CHARA
+	DIPLOMACY_TRAINING_CHARA = 0
+	DIPLOMACY_TRAINED_DAY = 0
+ENDIF
+	
+FOR LOCAL:0, 0, MAX_TREATY_A
+	FOR LOCAL:1, 0, MAX_TREATY_COUNTRY
+		;동맹에 참가하고 있었을 경우
+		IF TREATY_A_COUNTRY:(LOCAL:0):(LOCAL:1) == ARG:0
+			TREATY_A_COUNTRY:(LOCAL:0):(LOCAL:1) = 0
+			LOCAL:4 = 0
+			FOR LOCAL:2, 0, MAX_TREATY_COUNTRY
+				SIF TREATY_A_COUNTRY:(LOCAL:0):(LOCAL:2) > 0
+					LOCAL:4 ++
+			NEXT
+			;이미 참가 세력이 하나 밖에 없으면 해산
+			IF LOCAL:4 <= 1
+				FOR LOCAL:2, 0, MAX_TREATY_COUNTRY
+					TREATY_A_COUNTRY:(LOCAL:0):(LOCAL:2) = 0
+				NEXT
+				TREATY_A_TERM:(LOCAL:0) = 0
+			ENDIF
+		ENDIF
+	NEXT
+NEXT
+
+FOR LOCAL:0, 0, MAX_TREATY_C
+	FOR LOCAL:1, 0, MAX_TREATY_COUNTRY
+		;정전 조약을 맺고 있었을 경우
+		IF TREATY_C_COUNTRY:(LOCAL:0):(LOCAL:1) == ARG:0
+			TREATY_C_COUNTRY:(LOCAL:0):(LOCAL:1) = 0
+			LOCAL:4 = 0
+			FOR LOCAL:2, 0, MAX_TREATY_COUNTRY
+				SIF TREATY_C_COUNTRY:(LOCAL:0):(LOCAL:2) > 0
+					LOCAL:4 ++
+			NEXT
+			;이미 참가 세력이 하나 밖에 없으면 해산
+			IF LOCAL:4 <= 1
+				FOR LOCAL:2, 0, MAX_TREATY_COUNTRY
+					TREATY_C_COUNTRY:(LOCAL:0):(LOCAL:2) = 0
+				NEXT
+				TREATY_C_TERM:(LOCAL:0) = 0
+			ENDIF
+		ENDIF
+	NEXT
+NEXT
+
+LOCAL = FINDELEMENT(TREATY_U_TARGET,ARG:0)
+
+SIF LOCAL != -1
+	CALL BREAK_UNION(LOCAL)
+
+FOR LOCAL:0, 0, MAX_TREATY_U
+	FOR LOCAL:1, 0, MAX_TREATY_COUNTRY
+		SIF TREATY_U_COUNTRY:LOCAL:(LOCAL:1) == ARG:0
+			TREATY_U_COUNTRY:LOCAL:(LOCAL:1) = 0
+	NEXT
+NEXT
+
+;조교 상태를 리셋트
+CFLAG:(LOCAL:3):외교조교중 = 0
+CFLAG:(LOCAL:3):외교요구성공플래그 = 0
+
+
+
+;사관을 무소속으로 한다
+;그 세력이 보유 하고 있던 포로는 돌려보낸다
+FOR LOCAL:0, 0, CHARANUM
+	SIF CFLAG:(LOCAL:0):소속 == ARG:0
+		CALL CHANGE_COUNTRY(LOCAL:0, 0)
+	IF CFLAG:(LOCAL:0):포로처 == ARG:0
+		IF IS_COUNTRY(CFLAG:(LOCAL:0):소속)
+			PRINTFORML %ANAME(LOCAL:3)%의 멸망에 의해, %조사처리(ANAME(LOCAL),"는")% %ANAME(GET_COUNTRY_BOSS(CFLAG:(LOCAL):소속))%에 돌아갔습니다
+		ELSE
+			PRINTFORML %ANAME(LOCAL:3)%의 멸망에 의해, %조사처리(ANAME(LOCAL),"는")% 방랑했습니다
+		ENDIF
+		CALL CAPTURE(LOCAL:0, 0)
+	ENDIF
+NEXT
+
+;이벤트 캐릭터를 삭제
+;대부분의 경우, 이 함수에 이를 때까지의 처리로 ARG:0 세력의 사관은 없어지고 있다
+;세이프티만한 의미 밖에 없다
+LOCAL:2 = CHARANUM
+FOR LOCAL:0, 0, LOCAL:2
+	LOCAL:1 = LOCAL:2 - LOCAL:0 - 1
+	IF CFLAG:(LOCAL:1):소속 == ARG:0 && IS_SP_CHARA(LOCAL:1) && LOCAL:1 != MASTER
+		CALL DELETE_CHARA(LOCAL:1)
+	ENDIF
+NEXT
+
+;특수 세력의 경우, 메세지를 표시해 해당 캐릭터를 삭제한다
+IF IS_SP_COUNTRY(ARG:0)
+	TRYCCALLFORM %SP_COUNTRY_NAME_ENG:SP_COUNTRY_TO_CONST(ARG:0)%_DESTROY_MSG
+	;해당 세력의 캐릭터를 삭제한다
+	LOCAL:1 = CHARANUM
+	FOR LOCAL:0, 0, LOCAL:1
+		LOCAL:2 = LOCAL:1 - LOCAL:0 - 1
+		IF TALENT:(LOCAL:2):특수세력소질 == SP_COUNTRY_TO_CONST(ARG:0) && IS_SP_CHARA(LOCAL:2) && LOCAL:2 != MASTER
+			CALL DELETE_CHARA(LOCAL:2)
+		ENDIF
+	NEXT
+	SP_COUNTRY_APPEARED:SP_COUNTRY_TO_CONST(ARG:0) = 2
+	CATCH
+	ENDCATCH
+ENDIF
+
+;세력에 관련되는 변수의 리셋트
+COUNTRY_BOSS:(ARG:0) = 0
+COUNTRY_COLOR:(ARG:0) = 0
+COUNTRY_POLICY:(ARG:0) = 0
+COUNTRY_SOLDIER:(ARG:0) = 0
+COUNTRY_AI_TYPE:(ARG:0) = 0
+COUNTRY_NOTARGET_TERM:(ARG:0) = 0
+COUNTRY_IS_CLOSED:(ARG:0) = 0
+COUNTRY_EVENT_ID:(ARG:0) = 0
+DIPLOMACY_HATE:(ARG:0) = 0
+AUTO_INVEST_PRICE:(ARG:0) = 0
+FOR LOCAL:0, 0, 10
+	UNIT_SOLDIER:(ARG:0):(LOCAL:0) = 0
+	UNIT_POSITION:(ARG:0):(LOCAL:0) = 0
+	UNIT_TARGET:(ARG:0):(LOCAL:0) = 0
+	UNIT_COMMANDER:(ARG:0):(LOCAL:0) = 0
+NEXT
+AI_DIPLOMACY_TERM:(ARG:0) = 0
+FOR LOCAL:0, 0, VARSIZE("AI_DIPLOMACY_TARGET", 1)
+	AI_DIPLOMACY_TARGET:(ARG:0):(LOCAL:0) = 0
+	AI_DIPLOMACY_PLAN:(ARG:0):(LOCAL:0) = -1
+NEXT
+
+
+FOR LOCAL, 0, MAX_CITY
+	PHEROMONE:(ARG:0):(LOCAL:0) = 0
+NEXT
+
+@INRANGE_CITY(ARG)
+#FUNCTION
+RETURNF INRANGE(ARG, 0, MAX_CITY - 1)
+
+@INRANGE_CITY_COMMANDER(ARG)
+#FUNCTION
+RETURNF INRANGE(ARG, 0, MAX_CITY_COMMANDER - 1)
+
+@INRANGE_COUNTRY(ARG)
+#FUNCTION
+RETURNF INRANGE(ARG,0, MAX_COUNTRY-1)
+
+@INRANGE_UNIT(ARG)
+#FUNCTION
+RETURNF INRANGE(ARG,0, MAX_UNIT-1)
+
+@INRANGE_UNIT_COMMANDER(ARG)
+#FUNCTION
+RETURNF INRANGE(ARG,0, MAX_UNIT_COMMANDER-1)
+
+;ARGS:0 세력이 도시 ARGS:1을 접수한다
+@TAKEOVER_CITY_FROM_NAME(ARGS:0, ARGS:1)
+SIF GET_CITYNUMBER(ARGS:1) == -1
+	THROW @TAKEOVER_CITY_FROM_NAME에게 건네진 인수%ARGS:1%의 도시는 존재하지 않습니다
+CALL TAKEOVER_CITY_FROM_NO(GET_COUNTRY_FROM_BOSS_NAME(ARGS:0), GET_CITYNUMBER(ARGS:1))
+
+;ARG:0 세력이 도시 ARG:1을 접수한다
+@TAKEOVER_CITY_FROM_NO(ARG:0, ARG:1)
+#DIM INVADER,5
+#DIM LCOUNTRY
+#DIM LUNIT
+#DIM CITY_OWNER_ORI
+#DIM STEAL
+
+;나머지 도시수 1의 곳으로부터 빼앗으려고 하면 돌아온다
+SIF IS_COUNTRY(CITY_OWNER:(ARG:1)) && GET_OWN_CITY(CITY_OWNER:(ARG:1)) == 1
+	RETURN
+
+CITY_OWNER_ORI = CITY_OWNER:(ARG:1)
+;그 도시에 있는 부대는 방어측이든지 공격측이든지 해체한다
+FOR LCOUNTRY, 0, MAX_COUNTRY
+	;모든 세력을 조사한다
+	IF IS_COUNTRY(LCOUNTRY)
+		FOR LUNIT, 0, MAX_UNIT
+			;부대가 존재해 현재 이 도시 위에 있다
+			IF UNIT_SOLDIER:LCOUNTRY:LUNIT > 0 && UNIT_POSITION:LCOUNTRY:LUNIT == ARG:1
+				CALL CLEAR_UNIT(LCOUNTRY, LUNIT, 1)
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+;그 도시의 수장과 병사는 해산한다
+SIF GET_CITY_COMMANDER(ARG:1, 0) >= 0
+	COOLTIME:GET_CITY_COMMANDER(ARG:1, 0):0 = 1
+SIF GET_CITY_COMMANDER(ARG:1, 1) >= 0
+	COOLTIME:GET_CITY_COMMANDER(ARG:1, 1):0 = 1
+CITY_COMMANDER:(ARG:1) = 0
+SIF IS_COUNTRY(CITY_OWNER:(ARG:1)) 
+	COUNTRY_SOLDIER:(CITY_OWNER:(ARG:1)) += MAX(CITY_SOLDIER:(ARG:1) - 500, 500)
+CITY_SOLDIER:(ARG:1) = MIN(CITY_SOLDIER:(ARG:1), 500)
+
+;도시 점령에 의한 약탈
+;LOCAL 10:그 도시에 비축되고 있던 재산
+;무소속의 도시는 경제 규모의 30%를 비축하고 있으면 간주한다
+IF CITY_OWNER_ORI > 0
+	STEAL = MONEY:(CITY_OWNER_ORI) * CITY_ECONOMY:(ARG:1) / GET_SUM_ECONOMY(CITY_OWNER_ORI)
+	MONEY:(CITY_OWNER_ORI) -= STEAL
+	MONEY:(ARG:0) += STEAL
+ELSE
+	STEAL = CITY_ECONOMY:(ARG:1) * 30 / (100 * 10)
+	MONEY:(ARG:0) += STEAL
+ENDIF
+
+
+;통치권을 위양 한다
+CITY_OWNER:(ARG:1) = ARG:0
+
+;-------------------------------------------------
+;부대 능력에 대한 평가
+;-------------------------------------------------
+@TOSTR_UNIT_POWER(ARG:0)
+#FUNCTIONS
+IF ARG:0 <= ABL_POWER(50, -1)
+	RETURNF "최저"
+ELSEIF ARG:0 < 6400
+	RETURNF "오합지졸"
+ELSEIF ARG:0 < 12800
+	RETURNF "약병"
+ELSEIF ARG:0 < 25600
+	RETURNF "정규병"
+ELSEIF ARG:0 < 51200
+	RETURNF "강병"
+ELSEIF ARG:0 < 102400
+	RETURNF "정예"
+ELSEIF ARG:0 < 204800
+	RETURNF "초일류"
+ELSEIF ARG:0 < 819200
+	RETURNF "천하 무쌍"
+ENDIF
+RETURNF "신의 영역"
+
+@TOSTR_UNIT_POWER_SHORT(ARG:0)
+#FUNCTIONS
+SELECTCASE TOSTR_UNIT_POWER(ARG:0)
+	CASE "최저"
+		RETURNF "최저"
+	CASE "오합지졸"
+		RETURNF "오합"
+	CASE "약병"
+		RETURNF "약병"
+	CASE "정규병"
+		RETURNF "정규"
+	CASE "강병"
+		RETURNF "강병"
+	CASE "정예"
+		RETURNF "정예"
+	CASE "초일류"
+		RETURNF "일류"
+	CASE "천하 무쌍"
+		RETURNF "무쌍"
+	CASEELSE
+		RETURNF "신사의 경내"
+ENDSELECT
+RETURNF "불명"
+
+;-------------------------------------------------
+;ARG:0의 캐릭터에게 쿨 타임 ARG:1을 설정한다
+;-------------------------------------------------
+@SET_COOLTIME(ARG:0, ARG:1, ARG:2 = 1)
+
+IF ARG:2
+	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 쿨 타임이 {ARG:1}턴이 되었다", 칼라_주의)
+	SIF ARG:0 == MASTER && ITEM:대역인형 > 0 && COOLTIME:MASTER:0 < ARG:1
+		CALL COLOR_PRINTL(@"……라고 생각했지만, 대역인형이 대역으로 되어 주었다(나머지:{ITEM:대역인형 - 1}개)", 칼라_주의)
+	IF TALENT:(ARG:0):행운 && RAND:2
+		CALL COLOR_PRINTL(@"……라고 생각했지만, 운 좋게 회피할 수 있던 것 같다", 칼라_주의)
+		RETURN
+	ENDIF	
+ENDIF
+
+IF ARG:0 == MASTER && ITEM:대역인형 > 0 && COOLTIME:MASTER:0 < ARG:1
+	ITEM:대역인형 --
+ELSE
+	COOLTIME:(ARG:0):0 = ARG:1
+	CALL FORCE_FREE(ARG:0)
+ENDIF
+
+;-------------------------------------------------
+;ARG:0의 캐릭터에게 쿨 타임 ARG:1을 가산한다
+;-------------------------------------------------
+@ADD_COOLTIME(ARG:0, ARG:1, ARG:2 = 1, ARG:3 = 1)
+
+IF ARG:2
+	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%에{ARG:1}턴의 쿨 타임이 가산되었다", 칼라_주의)
+	SIF ARG:0 == MASTER && ITEM:대역인형 > 0
+		CALL COLOR_PRINTL(@"……라고 생각했지만, 대역인형이 대역으로 되어 주었다(나머지:{ITEM:대역인형 - 1}개)", 칼라_주의)
+	IF TALENT:(ARG:0):행운 && RAND:2
+		CALL COLOR_PRINTL(@"……라고 생각했지만, 운 좋게 회피할 수 있던 것 같다", 칼라_주의)
+		RETURN
+	ENDIF	
+ENDIF
+
+IF ARG:0 == MASTER && ITEM:대역인형 > 0
+	ITEM:대역인형 --
+ELSE
+	COOLTIME:(ARG:0):0 += ARG:1
+	SIF ARG:3
+		CALL FORCE_FREE(ARG:0)
+ENDIF
+
+;-------------------------------------------------
+;ARG:0번의 도시에 도착해 주둔 부대를 포함한 방위 병력을 돌려주는 함수
+;수밖에 보지 않지만 적의 동맹군도 포함해 평가를 실시한다
+;-------------------------------------------------
+@GET_CITY_GUARD(ARG:0)
+#FUNCTION
+#DIM GUARD
+GUARD = CITY_SOLDIER:(ARG:0)
+SIF CITY_OWNER:(ARG:0) < 1
+	RETURNF GUARD
+
+FOR LOCAL, 1, MAX_COUNTRY
+	SIF CHECK_COUNTRY_RELATION_F(CITY_OWNER:(ARG:0), LOCAL) <= 1
+		CONTINUE
+	FOR LOCAL:1, 0, 10
+		SIF UNIT_SOLDIER:(LOCAL:0):(LOCAL:1) < 1
+			CONTINUE
+		SIF UNIT_POSITION:(LOCAL:0):(LOCAL:1) != ARG:0
+			CONTINUE
+		GUARD += UNIT_SOLDIER:(LOCAL:0):(LOCAL:1)
+	NEXT
+NEXT
+RETURNF GUARD
+
+
+;-------------------------------------------------
+;세력 ARG:0의 부대 ARG:1의 현재 위치를 결정하는 함수
+;최대중요 도시를 찾아 거기에 만든다（평가법은 수비 부대의 배분과 동일）
+;-------------------------------------------------
+@SET_NEW_UNIT_POSITION(ARG:0, ARG:1)
+#DIM CITY_COUNT               ;자세력에 소속하는 도시의 총수
+#DIM CITY_ID, MAX_CITY        ;자세력 도시의 ID의 일시 기록
+#DIM CITY_PHEROMONE, MAX_CITY ;자세력 도시의 페로몬의 일시 기록
+
+SIF GET_OWN_CITY(ARG:0) < 1
+	RETURN
+
+;도둑은 특수 처리가 필요한가?
+;IF COUNTRY_EVENT_ID:(LOCAL:0) == COUNTRY_BANDIT && GET_OWN_CITY(LOCAL:0) == 0
+;ENDIF
+
+VARSET CITY_COUNT
+VARSET CITY_ID
+VARSET CITY_PHEROMONE
+
+;자세력권 도시 ID와 페로몬 농도의 취득
+FOR LOCAL, 0, MAX_CITY
+	IF CITY_OWNER:(LOCAL:0) == ARG:0
+		CITY_PHEROMONE:LOCAL = PHEROMONE:(ARG:0):LOCAL
+		CITY_ID:CITY_COUNT = LOCAL:0
+		CITY_COUNT ++
+		SIF CITY_COUNT >= GET_OWN_CITY(ARG:0)
+			BREAK
+	ENDIF
+NEXT
+
+;놈소트 되는 것을 위키페로 찾아내고 시험한다
+FOR LOCAL, 1, CITY_COUNT
+	IF CITY_PHEROMONE:(CITY_ID:(LOCAL - 1)) < CITY_PHEROMONE:(CITY_ID:LOCAL)
+		SWAP CITY_ID:(LOCAL - 1), CITY_ID:LOCAL
+		LOCAL = MAX(LOCAL - 2, 0)
+	ENDIF
+NEXT
+
+UNIT_POSITION:(ARG:0):(ARG:1) = CITY_ID:0
+
+IF !(CITY_ID:0)
+	PRINTFORML 장소 결정의 이상
+	FOR LOCAL, 1, CITY_COUNT
+		PRINTFORML {CITY_ID:(LOCAL:1), 3}%CITY_NAME_SHORT:(CITY_ID:(LOCAL:1)), 8%:{CITY_PHEROMONE:(LOCAL:1)}
+	NEXT
+	WAIT
+ENDIF
+
+;-------------------------------------------------
+;대상은 포박 가능한 캐릭터인가
+;군주가 아닌, 특수 캐릭터가 아닌, 죽지 않은, CONFIG:300이 3이 아니다（100% 도망하는 설정이 아니다）가 조건.
+;-------------------------------------------------
+@CAN_CAPTURE(대상)
+#FUNCTION
+#DIM 대상
+SIF !INRANGE(대상, 0, CHARANUM)
+	RETURNF 0
+
+RETURNF 대상 != GET_COUNTRY_BOSS(CFLAG:대상:소속) && !IS_SP_CHARA(대상) && CFLAG:대상:특수상태 != 특수상태_사망 && !(대상 == MASTER && FLAG:전사엔드플래그)

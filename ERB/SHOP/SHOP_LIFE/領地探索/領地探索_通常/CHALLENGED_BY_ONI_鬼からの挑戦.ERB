@@ -1,0 +1,51 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_CHALLENGED_BY_ONI_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_CHALLENGED_BY_ONI_DECISION(대상)
+#DIM 대상
+RETURN ABL:대상:무투 > 랭크역치:랭크_ＳＬＧ:랭크_B && IS_COUNTRY(CFLAG:대상:소속)
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_CHALLENGED_BY_ONI(대상)
+#DIM 대상
+
+PRINTFORML 교외를 걷고 있으면, 눈앞에 오니가 가로막았다
+PRINTFORML %ANAME(대상)%의 소문을 (들)물어 온 것 같은, 능력을 시험해 봄을 하고 싶으면이다
+PRINTL
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "무투"))
+CALL ASK_YN("능력을 시험해 봄을 한다", "거절한다")
+
+IF RESULT == 1
+	PRINTFORML 거절하면 오니는 겁쟁이와 매도해 떠나 갔다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 실례인 녀석이라고 분개하면서 궁전에 돌아왔다
+	RETURN 1
+ENDIF
+
+PRINTFORMW 도전을 받으면 오니는 기쁜듯이 웃어 조속히 걸려 왔다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+IF ABL:대상:무투 > RAND:200
+	PRINTFORML 훌륭히 오니를 타도했다!
+	PRINTFORML 오니는 %ANAME(대상)%의 힘을 인정해, 부하 다 같이 동료로 하면 좋겠다고 말해 왔다
+	PRINTFORMW 동료가 증가하는 것은 대환영이다, 받아들여 주기로 했다
+	COUNTRY_SOLDIER:(CFLAG:대상:소속) += 5000
+	CALL ICPRINT("병이<5000>증가했다", "L", 칼라_주의)
+ELSE
+	PRINTFORML 오니는 상상 이상으로 강하고, 져 버렸다
+	PRINTFORMW 지면에 늘어진 %조사처리(ANAME(대상),"를")% 내려다 보면 오니는 고개를 저으면서 떠나 갔다
+	CALL ADD_COOLTIME(대상:0, 3)
+ENDIF
+
+RETURN 1

@@ -1,0 +1,167 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_PRECOCIOUS_BRAT_RATE()
+RETURN 30
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_PRECOCIOUS_BRAT_DECISION()
+
+SIF DVAR:에로꼬맹이_발생플래그 != 0
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_PRECOCIOUS_BRAT_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_PRECOCIOUS_BRAT
+#DIM 대상
+
+PRINTFORML 어떤 귀족으로부터 의뢰를 받았다
+PRINTFORMW 그의 아들의 가정교사를 부탁하고 싶다는 일이다
+PRINTFORML 귀족은 거물이지만 이야기의 아는 상대인 것으로 거절해도 화내는 일은 없을 것이다
+PRINTFORMW 아들은 10살 전후로 이기적임 마음껏인것 같다
+PRINTFORML 어떻게 하지?
+CALL ASK_YN("맡는다", "거절한다")
+IF RESULT == 1
+	$CANCEL
+	PRINTFORML 나쁘지만 지금은 바쁘면 거절했다
+	PRINTFORMW 그는 얌전하게 물러나 주었다
+	RETURN
+ENDIF
+
+PRINTFORMW 맡는 일로 했다
+PRINTFORML 그런데, 누구에게 맡기자?
+CALL SELECT_CHARA_LIST_ONLY_LOGIC_SEX("PRECOCIOUS_BRAT", "DEFAULT")
+대상 = RESULT
+IF RESULT < 0
+	GOTO CANCEL
+ELSEIF RESULT == MASTER
+	PRINTFORMW %ANAME(대상)%스스로 교육에 향하는 일로 했다
+ELSE
+	PRINTFORMW %ANAME(대상)%에 맡기는 일로 했다
+ENDIF
+PRINTFORMW 조속히 의뢰인의 저택에 향했다
+PRINTFORML 
+PRINTFORML 멀리서에서도 눈에 띄는 매우 큰 저택이다
+PRINTFORML 당황하고 있으면 많은 고용인에게 마중할 수 있었다
+PRINTFORML 무려 여기는 의뢰인의 아이 전용의 저택인것 같다
+PRINTFORMW 중요한 교육 대상은, 보기에도 건방질 것 같은 아이였다
+PRINTFORML 갖고 싶은 것은 뭐든지 주어져 왔다고 한눈에 안다
+PRINTFORML 잘난듯 한 표현에 때릴 것 같게 되는 것을 훨씬 참는다
+PRINTFORML 그는 %조사처리(ANAME(대상),"를")% 평가를 하는 것같이 바라보면 「뭐 그렇다」라고 중얼거렸다
+PRINTFORMW 조속히 그의 방에 안내되어 공부를 보는 일이 되었다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF IS_MALE(대상)
+	LOCAL = ABL:대상:봉사 + ABL:대상:지략 / 20 + RAND:20
+	IF LOCAL >= 12
+		PRINTFORMW 그를 만족시킬 수가 있었다
+		PRINTFORMW 보수를 받아 저택을 뒤로 했다
+		MONEY += LOCAL * 500
+		CALL COLOR_PRINT(@"금{LOCAL * 500}를 손에 넣었다", 칼라_주의)
+		PRINTFORMW 
+		CALL PRINT_ADD_EXP(대상, "지략경험치", RAND:15 + 6, 1)
+		CALL PRINT_ADD_EXP(대상, "봉사경험치", RAND:15 + 6, 1)
+		CALL TRAIN_AUTO_ABLUP(대상)
+	ELSE
+		PRINTFORMW 그를 만족 시킬 수 없었다
+		PRINTFORMW 보수는 조금 밖에 받을 수 없었다
+		MONEY += LOCAL * 200
+		CALL COLOR_PRINT(@"금{LOCAL * 200}를 손에 넣었다", 칼라_주의)
+		PRINTFORMW 
+	ENDIF
+	RETURN
+ENDIF
+
+PRINTFORML 공부를 가르치고 있으면 홍차를 넣어졌다
+PRINTFORMW %조사처리(ANAME(대상),"는")% 당연 아무 혐의도 없게 그것을 마셨지만, 직후에 몸이 저려오기 시작했다
+PRINTFORML 무심코 컵을 마루에 떨어뜨려 차를 융단에 흩뿌리면서 책상에 푹 엎드려 버린다
+PRINTFORML 무슨 일일까하고 혼란하면서 그를 올려본 %조사처리(ANAME(대상),"는")% 그 미소를 봐 약을 넣어졌다고 눈치챈다
+PRINTFORMW 그는 %ANAME(대상)%의 신체에 손을 뻗었지만 이미 저항은 할 수 없었다
+PRINTFORML 
+PRINTFORML 그는 %조사처리(ANAME(대상),"를")% 침대에 옮겨 쓰러트리고 난폭하게 옷을 벗겨냈다
+PRINTFORML 그리고 신체를 대충 더듬은 후, 입술을 핥으면서 여러가지 약을 투여했다
+PRINTFORMW 그 효과로 %조사처리(ANAME(대상),"는")% 곧바로 발정해 버려, 신체의 안쪽이 달아오르며 비밀스런 장소도 주륵주륵이 된다
+PRINTFORML 그는 흥분해 버린 모습으로 %ANAME(대상)%에 달려들면 전신에 달라붙으면서 끙끙 발기한 하나의 물건을 쑤셔 넣어 왔다
+IF TALENT:대상:처녀
+	PRINTFORMW 투덜투덜 처녀막이 피하는 감각을 맛보면서 %조사처리(ANAME(대상),"는")% 일순간 의식을 날려 신체를 날아 뛰게 했다
+ELSE
+	PRINTFORMW 즈읏! (와)과 일발 찌르기로 깊은 속까지 관철해져 %조사처리(ANAME(대상),"는")% 충격으로 의식을 날려 신체를 날아 뛰게 했다
+ENDIF
+PRINTFORML 정수리까지 관통하는 것 같은 충격에 일순간무엇이 일어났는지 모르는 채%조사처리(ANAME(대상),"는")% 비밀스런 장소로부터 프식과 조수를 분다
+PRINTFORML 그리고 절정의 여운으로 삐걱삐걱 전신을 진동시키면서 %조사처리(ANAME(대상),"는")% 스친 같은 신음소리를 목으로부터 짜냈다
+PRINTFORMW 그라고 하면 처음이었던 것 같고, 상상 이상의 쾌락에 한심한 소리를 높이면서 부들부들 떨고 있었다
+PRINTFORML 하지만 그는 곧바로 제 정신이 되면, %ANAME(대상)%의 허리를 잡으면 무아지경으로 격렬하게 허리를 흔들기 시작했다
+PRINTFORML 그 허리 사용은 변변치않으면서 일발 찌르기마다 녹진녹진의 미육은 경련해, 논쟁 서로 쾌락이 정수리까지 관통해 간다
+IF TALENT:대상:처녀
+	PRINTFORMW 약의 효과인가, 방금전까지 처녀였는데 고통도 거의 느끼지 않고, 신체는 마치 빗치같이 민감하게 반응한다
+ELSE
+	PRINTFORMW 약의 효과인가, 신체는 경험했던 적이 없을만큼 민감하게 반응해, 마치 빗치같이 자지를 물고 있다
+ENDIF
+PRINTFORML 그는 원숭이같이 허리를 쳐박아 와, 한 번 휘두름 마다 확실히 그 표정은 수컷의 것이 되어 간다
+PRINTFORML %조사처리(ANAME(대상),"는")% 마치 오나홀과 같이 다루어지면서도, 압도적인 쾌락의 전에 히익히익 거리며 허덕이는 일 밖에할 수 없다
+PRINTFORMW 질육은 경련하면서 그의 하나의 물건을 힘들게 잡아당겨, 자궁은 완전히 씨뿌리기를 애타게 기다려 내려 오고 있다
+PRINTFORML 그는 자신의 것이라고 할듯이 %ANAME(대상)%의 이름을 부르면서, 서서히 허리의 움직임을 가속시켜 간다
+PRINTFORML 그리고 그의 처음의 질방편이 발해짐과 동시에, %조사처리(ANAME(대상),"는")% 보기 흉한 아헤얼굴을 쬐어 절정 당해 버렸다
+PRINTFORML 힘차게 자궁에 발해지는 특농정액은 머리가 폭발하는 것 같은 열을 %ANAME(대상)%에 가져와, 몸부림치면서 이키 미친다
+PRINTFORMW …긴 사정을 끝내면 그는 %조사처리(ANAME(대상),"와")% 함께 침대에 쓰러져, 잠깐 서로 절정의 여운으로 숨을 거칠게 하고 있었다
+PRINTFORML 젊은 그의 성욕은 일발 정도로는 들어가지 않고, 곧바로 페니스가 건강하게 되어, 또%조사처리(ANAME(대상),"를")% 범하기 시작했다
+IF TALENT:대상:처녀
+	PRINTFORMW 조금 전까지 처녀였던 %ANAME(대상)%의 신체는 한껏 조교되고 그의 자지를 확실히 익혀져 갔다
+ELSE
+	PRINTFORMW 어리면서 흉포한 그의 자지에 의해 %조사처리(ANAME(대상),"는")% 압도적인 쾌락을 깊숙히 새겨져 버렸다
+ENDIF
+CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 구강사정", GET_SPERM_ID("아이"), @"에로꼬맹이의 \@RAND:2 ? 페니스 # 입술\@", @"에로꼬맹이", "", "조교")
+PRINTFORML 
+PRINTFORML 심하게 희롱해진 후, 간신히 몸의 자유가 돌아온 %조사처리(ANAME(대상),"는")% 그에게 항의한다
+PRINTFORMW 하지만 그는 뜻에 돌려주지 않고 비디오 카메라를 보여 왔다
+PRINTFORML 뭐라고 조금 전의 행위의 모두를 찍혀 버리고 있던 것 같다
+PRINTFORMW 그는 히죽히죽 웃으면서 이것을 흩뿌려지고 싶지 않으면…(와)과 위협해 온다
+PRINTFORML 어떻게 하지?
+CALL ASK_YN("따른다", "거절한다")
+IF RESULT == 1
+	PRINTFORMW 하지만 %조사처리(ANAME(대상),"는")% 단호히 거절해 저택을 뒤로 했다
+	PRINTFORML 
+	IF 대상 == MASTER
+		FOR LOCAL, 0, CHARANUM
+			IF !IS_ANIMAL(LOCAL)
+				CFLAG:(LOCAL):호감도 -= 300
+			ENDIF
+		NEXT
+		CALL COLOR_PRINT(@"그 후, 예의 비디오가 영내에 나돌아 %ANAME(대상)%의 평판이 크게 떨어져 버렸다…", 칼라_주의)
+		PRINTFORMW
+	ELSE
+		FOR LOCAL, 1, MAX_COUNTRY
+			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -150, 150)
+		NEXT
+		CALL COLOR_PRINT(@"그 후, 예의 비디오가 환상향안에 나돌아 타국의 평판이 크게 떨어져 버렸다…", 칼라_주의)
+		PRINTFORMW 
+	ENDIF
+ELSEIF RESULT == 0
+	PRINTFORML 노예가 될 수 있는 등과 농담이 아니다!
+	PRINTFORMW 하지만 거절했을 때을 생각하면 강하게 나올 수 없었다
+	PRINTFORML 결국, %조사처리(ANAME(대상),"는")% 고민한 끝에 그의 노예가 되는 일을 승낙 할 수밖에 없었다
+	PRINTFORMW 그는 지금까지 본 중에서 제일 천하게 보인 미소를 띄웠다
+	DVAR:에로꼬맹이_발생플래그 = 1
+	DVAR:에로꼬맹이_노예ID = GET_ID(대상)
+	CALL COLOR_PRINT(@"%조사처리(ANAME(대상),"는")% 귀족의 아들의 노예로서 계약을 맺었다", 칼라_주의)
+	PRINTFORMW
+ENDIF
+
+RETURN 1
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_PRECOCIOUS_BRAT(대상)
+#DIM 대상
+CALL SELECT_CHARA_LIST_SHOW_LOGIC_DEFAULT(대상)
+RETURN RESULT && !GETBIT(TALENT:대상:데일리계, 소질_데일리_에로꼬맹이의노예)

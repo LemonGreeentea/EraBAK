@@ -1,0 +1,113 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_SEX_AUCTION_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_SEX_AUCTION_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_SEX_AUCTION(대상)
+#DIM 대상
+
+PRINTFORML 밤의 번화가를 흔들거리고 있으면 남자가 말을 걸려졌다
+PRINTFORMW 이 앞의 가게에서 재미있는 구경거리를 하고 있다고 한다
+PRINTFORML 어떻게 하지?
+PRINTL
+CALL ASK_YN("가 본다" ,"떠난다")
+IF RESULT == 1
+	PRINTFORMW 이상하기 때문에 무시해 떠났다
+	RETURN
+ENDIF
+PRINTFORML 호기심에 져 가 보는 일로 했다
+PRINTFORMW 남에 안내되는 대로 지하의 바에 들어갔다
+PRINTFORML 
+PRINTFORML 무려 그곳에서는 섹스 옥션을 하고 있었다
+PRINTFORML 플레이트를 목으로부터 내린 알몸의 여성들이 마이대 위에 줄서
+PRINTFORML 손님이 그것을 천하게 보인 시선으로 바라보면서 한사람씩 경락시켜 간다
+PRINTFORMW 조금 전의 남자가 살그머니 %ANAME(대상)%도 참가하지 않을까 귀엣말했다
+PRINTFORML 어떻게 하지?
+PRINTL
+CALL ASK_YN("참가한다" ,"떠난다")
+IF RESULT == 1
+	PRINTFORML 이런 악취미인 구경거리에 참가할 수 없다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 빠른 걸음을 떠났다
+	IF IS_MALE(대상)
+		RETURN
+	ENDIF
+	PRINTFORML 하지만 남자에게 팔을 잡아졌다
+	PRINTFORML 상품이 부족하기 때문에 참가하라고 위협했다
+	PRINTFORMW 최초부터 그럴 생각이었던 것 같다
+	IF LIMIT(ABL:대상:방위, 30, 80) > RAND:100
+		PRINTFORMW 하지만 어떻게든 진 잘라는 다 도망칠 수 있었다
+		RETURN
+	ENDIF
+	PRINTFORMW 남의 힘은 강하고, %조사처리(ANAME(대상),"는")% 도망칠 수 있지 못하고 가게의 안쪽으로 데려가졌다…
+ELSEIF RESULT == 0
+	IF IS_MALE(대상) || (HAS_PENIS(대상) && RAND:2)
+		PRINTFORML 참가시켜 받는 일로 했다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 차분히 소녀들을 평가한다
+		PRINTFORMW 그 중에 한사람, 기호의 아가씨를 찾아낸 %조사처리(ANAME(대상),"는")% 그 아이를 낙찰하는 일로 결정했다
+		PRINTFORML …경매는 최고조에 달했지만 무사히 그녀를 손에 넣을 수가 있었다
+		PRINTFORMW 뺨을 붉히고숨을 거칠게 하는 그녀의 허리를 안으면서 준비된 독실에 향했다
+		PRINTFORML 
+		PRINTFORML %조사처리(ANAME(대상),"는")% 방에 들어가면 조속히 그녀에게 껴안아 전신에 달라붙었다
+		PRINTFORML 탄력이 있는 부드러운 살갗을 주무르면 그녀는 기쁜듯이 허덕여 몸을 구불거리게 할 수 있어 %조사처리(ANAME(대상),"를")% 유혹했다
+		PRINTFORMW 서로 참지 못하고 침대에 쓰러지면, %조사처리(ANAME(대상),"는")% 이미 녹진녹진의 비밀스런 장소로 하나의 물건을 쑤셔 넣었다
+		PRINTFORML 「앙♥앙♥안 돼애♥격렬해♥앙♥」
+		PRINTFORML 격렬하게 허리를 쳐박으면 그녀는 요염하게 미친듯이 자지러지는 신음소리를 내며, 휘감기는 밀육이 남근을 자극했다
+		PRINTFORML 허리를 돌려 꾸욱 질내를 후벼파면, 그녀는 크게 뒤로 젖혀 삐걱삐걱 전신을 진동시키고 교성을 미치게 했다
+		PRINTFORMW 그녀에게 졸라지는 것처럼 해 몇 번이나 몇 번이나 교접해, 요금 이상의 극락을 만끽되어 받았다……
+		CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", "상품의 소녀의 질", "매춘")
+		PRINTFORML 
+		PRINTFORMW 회장을 뒤로 할 때, 그녀에게 남몰래 연락처를 쓴 메모를 건네받았다
+		RETURN
+	ELSE
+		PRINTFORML 분위기에 대어진 %조사처리(ANAME(대상),"는")% 무심코 그의 권유에 수긍해 버렸다
+		PRINTFORMW 그는 힐쭉 웃으면 %조사처리(ANAME(대상),"를")% 가게의 안쪽으로 데려 갔다……
+	ENDIF
+ENDIF
+PRINTFORML 
+PRINTFORML %조사처리(ANAME(대상),"는")% 약을 맞고 알몸에 벗겨지고 다른 여성과 같게 늘어놓여졌다
+PRINTFORML 즉흥의 극히 품위 있게 관객으로부터는 환성이 올라, 경매는 많이 분위기를 살렸다
+PRINTFORMW 약의 탓으로 몽롱해지는 중, 남자들의 시선과 분위기에 대어진 %조사처리(ANAME(대상),"는")% 무심코 한숨을 흘렸다
+SELECTCASE RAND:3
+	CASE 0
+		PRINTFORML %조사처리(ANAME(대상),"는")% 기름기가 돈 부자 남성에 낙찰되었다
+		PRINTFORMW 그에게 엉덩이를 비비어지면서 준비된 독실로 향했다
+		PRINTFORML 
+		PRINTFORML 그는 방으로 들어가자%조사처리(ANAME(대상),"를")% 침대에 쓰러트리고 빠직빠직 발기한 하나의 물건을 쑤셔 넣어 왔다
+		PRINTFORML 대담한 페니스에 의한 자궁까지 찌부러뜨려지는 것 같은 강렬한 피스톤에 참지 못하고 신체가 뛰어 버린다
+		PRINTFORML 하지만 약의 영향이나 고통은 없고, 머리가 새하얗게 되는 정도의 쾌락에 %조사처리(ANAME(대상),"는")% 눈을♥로 해 그에게 껴안는다
+		PRINTFORMW 이윽고 그가 돼지같이 신음하면서 사정하면, %ANAME(대상)%도 크게 몸을 뒤로 젖히게 하면서 메스의 기쁨을 맛보았다……
+	CASE 1
+		PRINTFORML %조사처리(ANAME(대상),"는")% 근골 울퉁불퉁 몸집이 큰 요괴에 낙찰되었다
+		PRINTFORMW 그가 부풀어 오른 사타구니에 정신을 빼앗기면서 독실에 향했다
+		PRINTFORML 
+		PRINTFORML 1회전을 끝낸 %조사처리(ANAME(대상),"는")% 그의 사타구니에 무릎 꿇어 그 용감하게 번들거리는 페니스에 열심히 봉사하고 있다
+		PRINTFORML 상상 이상의 씩씩한 페니스와 정열적인 섹스로 귀여워해진 %조사처리(ANAME(대상),"는")% 지금은 완전히 그의 포로였다
+		PRINTFORML 열심인 봉사로 그가 다시 뭉실뭉실 우뚝 서면, %조사처리(ANAME(대상),"는")% 복종의 포즈를 취해 다음을 졸라댔다
+		PRINTFORMW 그 쪽도 %조사처리(ANAME(대상),"를")% 마음에 든 것 같아 시간 가득 그 신체를 마치 고기 오나홀과 같이 난폭하게 취급해 몇 번이나 사정했다……
+	CASE 2
+		PRINTFORML 뜻밖의 일에 %조사처리(ANAME(대상),"는")% 작은 남자아이에 낙찰되었다
+		PRINTFORMW 동정인것 같은 그의 거동에 당황하면서도 독실에 향했다
+		PRINTFORML 
+		PRINTFORML %조사처리(ANAME(대상),"는")% 침대에 재운 그의 위에 걸쳐 상냥하게 키스를 주고 받으면서 허리를 흔들고 있다
+		PRINTFORML 허리를 구불거리게 할 수 있을 때에 그가 허덕여, 자지가 움찔움찔 떨려, %조사처리(ANAME(대상),"는")% 오슬오슬 등줄기를 진동시킨다
+		PRINTFORML 그가 참지 못하고 퓻퓻 하고 사정할 때에, 암컷의 쾌감과 모성이 섞인 감각에 가슴이 뜨거워진다
+		PRINTFORMW 조금씩 수컷으로서 각성 해 나가는 대로 적극적으로 범해 오는 그에게, %조사처리(ANAME(대상),"는")% 되는 대로 기쁨의 소리를 높였다……
+ENDSELECT
+CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, Ａ, 키스, 펠라티오, Ｖ성교, Ａ성교", "처녀상실, 질내사정, 키스상실, 구강사정, Ａ처녀상실, 장내사정", GET_SPERM_ID("옥션손님"), @"옥션손님의 \@RAND:2 ? 페니스 # 입술\@", "옥션손님", "", "옥션으로 사진 매춘")
+PRINTFORML 
+PRINTFORML 이튿날 아침, %조사처리(ANAME(대상),"는")% 몸에 남은 열에 시달리도록(듯이) 휘청휘청 가게를 뒤로 했다
+
+RETURN 1

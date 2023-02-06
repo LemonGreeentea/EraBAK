@@ -1,0 +1,292 @@
+﻿;-------------------------------------------------
+;# 커맨드의 자동 실행의 처리
+;	「맡겨 주시길」나 「하는대로」
+;	1. 커맨드의 카테고리를 설정
+;		각 커맨드가 어느 카테고리에 들어맞을까의 분류를 실시한다
+;		등록 되어 있지 않은 커맨드가 없는가 체크를 실시한다
+;	2. 실행·대상 캐릭터를 설정
+;		실행자（MAIN_PLAYER）와 대상자（MAIN_TARGET）를 설정
+;		여기서의 실행자·대상자는 「된다」계 커맨드가 선택되었을 때 바뀐다
+;		실행자는 주도도Ｕ가 높은 캐릭터의 우선도가 높다
+;		대상자는 수동들Ｕ가 낮은 캐릭터의 우선도가 높다
+;		대상자는 포로 타겟인가 어떨까
+;		실행자와 비교해 함락소질이나 처녀성이나 성별조등도 본다
+;		위안의 경우, 위안모브·위안참가자 실행자는 동종의 대상자를 피한다
+;	3. 카테고리의 우선도를 설정
+;		실행자의 성적 기호에 맞는 것을 고평가로 해 각 카테고리의 우선도를 설정해 나간다
+;		콘피그로 금지 설정되어 있는 것은 우선도를-1으로 한다
+;		우선도 설정이 0의 카테고리가 없는가 체크를 실시한다
+;	4. 커맨드의 우선도를 설정
+;		실행자의 성적 기호에 맞는 것을 고평가로 해 각 커맨드의 우선도를 설정해 나간다
+;		다만 카테고리마다 금지되고 있는 경우는 우선도를-1으로 한다
+;		우선도 설정이 0의 커맨드가 없는가 체크를 실시한다
+;	5. 실행하는 커맨드를 결정
+;		이것까지 설정한 우선도를 바탕으로란택을 실시한다
+;		커맨드가 정해지면, 돕는 제삼자 캐릭터를 선택하거나
+;		실행이 제삼자에게 명령해 행동시킬 가능성 따위를 체크한다
+;	6. 복수 체크
+;		차례로삽입이나 번갈아삽입은 실행자 1 대상자 1에서의 체크라면
+;		반드시 실패하기 위해(때문에), 판정을 회피해 여기까지의 처리를 진행시키고 있다
+;		그 때문에 마지막 COM_ABLE 체크를 실시해, 결정한 커맨드가 불가라면
+;		그 커맨드의 우선도는 0으로 해 5에 돌아온다
+;-------------------------------------------------
+@COM_AUTOSELECT
+#DIM TEMP_COM			;일시적인 결정 커맨드
+#DIM FINAL_COM			;최종적인 결정 커맨드
+#DIM RAND_NUM			;임의치 대입용
+#DIM CHECK_RANDOMIZED	;란택용
+#DIM L_COUNTER			;FOR문용의 카운터
+#DIM LOOP_CNT			;엔들레스 루프 회피용 카운터
+#DIM MAIN_PLAYER		;선택권을 가지는 캐릭터
+#DIM MAIN_TARGET		;선택권을 가지는 캐릭터에게 대상으로 해 선택된 캐릭터
+
+[IF_DEBUG]
+	;GROUPMATCH(FLAG:조교 모드, 조교_만나는, 조교_침실, 조교_포로 조교, 조교_육아, 조교_역조교특수, 조교_역조교통상, 조교_포로 회화, 조교_위안)
+	DEBUGPRINTFORML 
+	DEBUGPRINTFORML  자동 행동_침실_개시
+	DEBUGPRINTFORML      현재의 조교 모드는 {FLAG:조교모드}. %COM_AUTO_MODE_NAME()%
+[ENDIF]
+
+;-------------------------------------------------
+; 커맨드의 카테고리 설정
+;-------------------------------------------------
+CALL COM_AUTOSELECT_SET_COM_CATEGORY
+
+;-------------------------------------------------
+; 캐릭터 설정
+;-------------------------------------------------
+;실행자 취득
+CALL COM_AUTOSELECT_DECIDE_PLAYER
+IF RESULT == -1
+	PRINTFORML ※아무것도 하지 않지만 선택됩니다
+	CALL CLEAR_MTAR()
+	CALL CLEAR_MPLY()
+	CALL ADD_MPLY(MASTER)
+	FINAL_COM = GET_TRAINNUM("아무것도하지않는다")
+	GOTO SKIPPED
+ENDIF
+MAIN_PLAYER = RESULT
+
+;대상자 취득（실행자를 건네주어 제외한다）
+CALL COM_AUTOSELECT_DECIDE_TARGET(MAIN_PLAYER)
+IF RESULT == -1
+	PRINTFORML ※아무것도 하지 않지만 선택됩니다
+	CALL CLEAR_MTAR()
+	CALL CLEAR_MPLY()
+	CALL ADD_MPLY(MASTER)
+	FINAL_COM = GET_TRAINNUM("아무것도하지않는다")
+	GOTO SKIPPED
+ENDIF
+MAIN_TARGET = RESULT
+
+;-------------------------------------------------
+; 디버그 캐릭터 설정
+;-------------------------------------------------
+[IF_DEBUG]
+	DEBUGPRINTFORML 
+	DEBUGPRINTFORML   DEBUG 캐릭터 설정
+	DEBUGPRINTFORML      MAIN_PLAYER : %ANAME(MAIN_PLAYER), MAX_CHARANAME_LENGTH, LEFT%  %TOSTR_SEX(TALENT:MAIN_PLAYER:성별), 6%
+	DEBUGPRINTFORML                    체력 {BASE:MAIN_PLAYER:체력}/{MAXBASE:MAIN_PLAYER:체력}  기력 {BASE:MAIN_PLAYER:기력}/{MAXBASE:MAIN_PLAYER:기력}
+	DEBUGPRINTFORML      MAIN_TARGET : %ANAME(MAIN_TARGET), MAX_CHARANAME_LENGTH, LEFT%  %TOSTR_SEX(TALENT:MAIN_TARGET:성별), 6%
+	DEBUGPRINTFORML                    체력 {BASE:MAIN_TARGET:체력}/{MAXBASE:MAIN_TARGET:체력}  기력 {BASE:MAIN_TARGET:기력}/{MAXBASE:MAIN_TARGET:기력}
+[ENDIF]
+
+$CHOOSE_END
+
+;-------------------------------------------------
+; 카테고리 우선도
+;-------------------------------------------------
+CALL COM_AUTOSELECT_SET_CATEGORY_PRIORITY(MAIN_PLAYER, MAIN_TARGET)
+
+;-------------------------------------------------
+; 커맨드 우선도
+;-------------------------------------------------
+CALL COM_AUTOSELECT_SET_COM_PRIORITY(MAIN_PLAYER, MAIN_TARGET)
+
+;-------------------------------------------------
+; 실행하는 커맨드를 결정
+;	실행하려고 해 COM_ABLE 판정에 실패하면
+;	실패한 커맨드는 후보로부터 제외해
+;	$RESTARTED로 날아 온다
+;-------------------------------------------------
+VARSET LOOP_CNT
+
+$RESTARTED
+
+[IF_DEBUG]
+	SIF LOOP_CNT
+		DEBUGPRINTFORML ※마지막 COM_ABLE 판정에 실패해 돌아왔다. LOOP_CNT.{LOOP_CNT}번째 
+[ENDIF]
+
+;리셋트
+CALL COM_AUTO_RANDOMIZED_WEIGHTED_START
+
+;후보 설정
+VARSET CHECK_RANDOMIZED
+FOR L_COUNTER, 0, ADD_NUM_대상이실행 + 1000
+	SIF COM_AUTO_COM_PRIORITY:L_COUNTER < 1
+		CONTINUE
+	CALL COM_AUTO_RANDOMIZED_WEIGHTED_VALUE(L_COUNTER, COM_AUTO_COM_PRIORITY:L_COUNTER)
+	CHECK_RANDOMIZED ++
+NEXT
+
+;하나도 후보가 없을 때 최저치 확보
+IF CHECK_RANDOMIZED < 1
+	IF COM_AUTO_COM_PRIORITY:GET_TRAINNUM("아무것도하지않는다") < 100
+		COM_AUTO_COM_PRIORITY:GET_TRAINNUM("아무것도하지않는다") = 100
+	ENDIF
+	CALL COM_AUTO_RANDOMIZED_WEIGHTED_VALUE(GET_TRAINNUM("아무것도하지않는다"), COM_AUTO_COM_PRIORITY:GET_TRAINNUM("아무것도하지않는다"))
+ENDIF
+
+;결과 취득
+TEMP_COM = COM_AUTO_RANDOMIZED_WEIGHTED_RESULT()
+IF TEMP_COM < 0 || TEMP_COM >= ADD_NUM_대상이실행 + 1000
+	DEBUGPRINTFORML ※가능한 행동이 발견되지 않았습니다. 아무것도 하지 않는 것을 대입합니다
+	DEBUGPRINTFORML ※보통으로 제한되고 있어 일어날 가능성이 있으므로, 여기에서는 에러 메세지를 표시하고 있지 않습니다
+	DEBUGPRINTFORML ※@COM_AUTOSELECT_DECIDE_TARGET @COM_AUTO_RANDOMIZED_WEIGHTED_RESULT
+	CALL CLEAR_MTAR()
+	CALL CLEAR_MPLY()
+	CALL ADD_MPLY(MAIN_PLAYER)
+	FINAL_COM = GET_TRAINNUM("아무것도하지않는다")
+	GOTO SKIPPED
+ENDIF
+
+;-------------------------------------------------
+; 디버그 결정한 커맨드
+;-------------------------------------------------
+[IF_DEBUG]
+	DEBUGPRINTFORML 
+	DEBUGPRINTFORML   DEBUG 결정한 커맨드
+	IF TEMP_COM >= ADD_NUM_대상이실행
+		DEBUGPRINTFORML {TEMP_COM, 4}. %TRAINNAME:(TEMP_COM - ADD_NUM_대상이실행), 20, LEFT%된다 %NUM_FORMAT(COM_AUTO_COM_PRIORITY:TEMP_COM), 10, RIGHT%
+	ELSE
+		DEBUGPRINTFORML {TEMP_COM, 4}. %TRAINNAME:(TEMP_COM), 20, LEFT%한다 %NUM_FORMAT(COM_AUTO_COM_PRIORITY:TEMP_COM), 10, RIGHT%
+	ENDIF
+[ENDIF]
+
+;메인의 플레이어·타겟의 설정
+CALL CLEAR_MPLY()
+CALL CLEAR_MTAR()
+IF TEMP_COM < ADD_NUM_대상이실행
+	CALL ADD_MPLY(MAIN_PLAYER)
+	CALL ADD_MTAR(MAIN_TARGET)
+ELSEIF TEMP_COM < ADD_NUM_제삼자에게실행
+	CALL ADD_MPLY(MAIN_TARGET)
+	CALL ADD_MTAR(MAIN_PLAYER)
+ENDIF
+
+;제삼자에게 도와 받는 패턴
+CALL AUTO_SET_THIRD_PERSON(MAIN_PLAYER, MAIN_TARGET, TEMP_COM)
+
+;제삼자에게 명령하는 패턴 동물은 명령하지 않는다
+IF !GROUPMATCH(TALENT:MAIN_PLAYER:위안모브, 위안_캐릭터_개, 위안_캐릭터_돼지, 위안_캐릭터_말, 위안_캐릭터_원숭이)
+	CALL AUTO_SET_REMOVE_MAIN(MAIN_PLAYER, MAIN_TARGET, TEMP_COM)
+ENDIF
+
+;-------------------------------------------------
+; 복수 체크
+;	캐릭터가 모였으므로 쭉 체크 회피하고 있었던 복수 플레이를 최종 체크
+;	안 되면 그 커맨드는 우선도 0으로 해 돌아온다
+;-------------------------------------------------
+COM_ENABLE = 1
+
+RESULT = 0
+TRYCALLFORM COM_ABLE{TEMP_COM % ADD_NUM_대상이실행}
+IF !RESULT
+	;실패한 커맨드는 우선도를 0으로 한다
+	IF TEMP_COM < ADD_NUM_대상이실행
+		COM_AUTO_COM_PRIORITY:TEMP_COM = 0
+	ELSEIF TEMP_COM < ADD_NUM_제삼자에게실행
+		COM_AUTO_COM_PRIORITY:(ADD_NUM_대상이실행 + TEMP_COM) = 0
+	ENDIF
+	LOOP_CNT ++
+	IF LOOP_CNT < 10
+		DEBUGPRINTFORML ※선택한 커맨드{TEMP_COM}가 실행 불가능했기 때문에 돌아옵니다
+		GOTO RESTARTED
+	ELSE
+		DEBUGPRINTFORML ※10회 선택한 커맨드의 판정에 실패했으므로 상황을 무시해,
+		DEBUGPRINTFORML   강제적으로 『아무것도하지않는다』를 선택합니다
+		CALL CLEAR_MTAR()
+		CALL CLEAR_MPLY()
+		CALL ADD_MPLY(MAIN_PLAYER)
+		FINAL_COM = GET_TRAINNUM("아무것도하지않는다")
+		COM_ENABLE = 0
+		LOOP_CNT = 0
+		GOTO SKIPPED
+	ENDIF
+ENDIF
+
+;COM_ABLE 체크시에 온으로 하는 플래그 리셋트
+COM_ENABLE = 0
+
+;재시도용 카운터 리셋트
+LOOP_CNT = 0
+
+;-------------------------------------------------
+; 다음번 카테고리 예약
+;	특정의 커맨드를 실시했을 경우는 다음번 선택하는 카테고리를 예약해 둔다
+;-------------------------------------------------
+TFLAG:30 = 0
+SELECTCASE TEMP_COM
+	CASE GET_TRAINNUM("로션")
+		TFLAG:30 = COM_AUTO_CATEGORY_NUM_성교한다
+	CASE GET_TRAINNUM("콘돔")
+		TFLAG:30 = COM_AUTO_CATEGORY_NUM_성교한다
+	CASE ADD_NUM_대상이실행 + GET_TRAINNUM("로션")
+		TFLAG:30 = COM_AUTO_CATEGORY_NUM_성교시킨다
+	CASE ADD_NUM_대상이실행 + GET_TRAINNUM("콘돔")
+		TFLAG:30 = COM_AUTO_CATEGORY_NUM_성교시킨다
+	CASE GET_TRAINNUM("페니스밴드장착")
+		TFLAG:30 = COM_AUTO_CATEGORY_NUM_성교한다
+	CASE ADD_NUM_대상이실행 + GET_TRAINNUM("페니스밴드장착")
+		TFLAG:30 = COM_AUTO_CATEGORY_NUM_성교시킨다
+	CASE GET_TRAINNUM("촉수소환")
+		TFLAG:30 = COM_AUTO_CATEGORY_NUM_촉수를취급한다
+	CASE ADD_NUM_대상이실행 + GET_TRAINNUM("촉수소환")
+		TFLAG:30 = COM_AUTO_CATEGORY_NUM_촉수를취급하게한다
+ENDSELECT
+
+FINAL_COM = TEMP_COM % ADD_NUM_대상이실행
+
+;-------------------------------------------------
+; 계속 상태의 설정
+;-------------------------------------------------
+RESULT = 0
+TRYCALLFORM COM_IS_EQUIP{FINAL_COM}
+;계속 상태가 불가능한 커맨드의 경우
+IF RESULT == 0
+	;비계속 플래그 ON
+	TFLAG:1 = 1
+;항상 계속 상태로 실행되는 커맨드의 경우
+ELSEIF RESULT == 2
+	;비계속 플래그 OFF
+	TFLAG:1 = 0
+;계속, 비계속의 어디라도 가능한 커맨드의 경우
+ELSE
+	;삽입 따위 일부의 커맨드는 항상 계속
+	IF (FINAL_COM >= GET_TRAINNUM("정상위") && FINAL_COM <= GET_TRAINNUM("Ａ대면입위")) || GROUPMATCH(FINAL_COM, GET_TRAINNUM("서서뒷치기"), GET_TRAINNUM("Ａ서서뒷치기"), GET_TRAINNUM("대딸"), GET_TRAINNUM("펠라치오"), GET_TRAINNUM("파이즈리"), GET_TRAINNUM("스마타"), GET_TRAINNUM("엉덩이코키"), GET_TRAINNUM("오나홀대딸"), GET_TRAINNUM("조개맞대기"), GET_TRAINNUM("쌍두바이브"), GET_TRAINNUM("차례로삽입"), GET_TRAINNUM("차례로Ａ삽입"), GET_TRAINNUM("번갈아삽입"), GET_TRAINNUM("번갈아Ａ삽입"), GET_TRAINNUM("이라마치오"), GET_TRAINNUM("자위"), GET_TRAINNUM("촉수삽입"), GET_TRAINNUM("촉수Ａ삽입"), GET_TRAINNUM("촉수클리고문"), GET_TRAINNUM("촉수가슴애무"), GET_TRAINNUM("촉수오나홀"), GET_TRAINNUM("촉수대딸"), GET_TRAINNUM("촉수착유"), GET_TRAINNUM("촉수펠라"))
+		;비계속 플래그 OFF
+		TFLAG:1 = 0
+	;그 외의 커맨드는 성벽 따위를 바탕으로 결정한다
+	ELSE
+		LOCAL:20 = 40
+		LOCAL:21 = 60
+		LOCAL:22 = 80
+		LOCAL:23 = 100
+		IF RAND:100 < LOCAL:(COM_TENDENCY:MAIN_PLAYER:FINAL_COM + 20)
+			;비계속 플래그 OFF
+			TFLAG:1 = 0
+		ELSE
+			;비계속 플래그 ON
+			TFLAG:1 = 1
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+; 실행
+;-------------------------------------------------
+$SKIPPED
+
+DOTRAIN FINAL_COM
+

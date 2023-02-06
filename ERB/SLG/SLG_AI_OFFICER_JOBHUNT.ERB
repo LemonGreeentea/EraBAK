@@ -1,0 +1,108 @@
+﻿@SLG_AI_OFFICER_JOBHUNT()
+#DIM 후보, 3
+#DIM 후보수
+#DIM 세력후보, MAX_COUNTRY
+#DIM 세력후보수
+#DIM 세력
+#DIM 세력군주
+#DIM 대상
+#DIM 특수세력만
+VARSET 후보, -1
+VARSET 후보수
+VARSET 세력후보, -1
+VARSET 세력후보수
+
+CALL FISHER_YATES_SHAFFLE(CHARANUM)
+
+;이 턴취활 하는 캐릭터의 선정
+FOR LOCAL, 0, CHARANUM
+	대상 = SHAFFLE_ARRAY:LOCAL
+
+	SIF CFLAG:대상:소속
+		CONTINUE
+	SIF CFLAG:대상:포로처
+		CONTINUE
+	SIF CFLAG:대상:특수상태 != 특수상태_방랑
+		CONTINUE
+	SIF FINDELEMENT(SCOUT_CANDIDATES, GET_ID(대상)) != -1 && RAND:3
+		CONTINUE
+	;강한 녀석만큼 자신을 팔지 않는다
+	SIF RAND:MAX(TMP_CHARA_STARS:대상, 1) / 2
+		CONTINUE
+
+	후보:후보수 = 대상
+	후보수 ++
+	SIF 후보수 == VARSIZE("후보")
+		BREAK
+NEXT
+
+;후보가 없으면 안 돼
+SIF 후보수 == 0
+	RETURN
+
+특수세력만 = 1
+FOR LOCAL, 0, MAX_COUNTRY
+	IF IS_COUNTRY(LOCAL) && !IS_SP_COUNTRY(LOCAL)
+		특수세력만 = 0
+		BREAK
+	ENDIF
+NEXT
+
+;취활처를 리스트업
+FOR LOCAL, 0, MAX_COUNTRY
+	SIF !IS_COUNTRY(LOCAL) || (!특수세력만 && IS_SP_COUNTRY(LOCAL))
+		CONTINUE
+	세력후보:세력후보수 = LOCAL
+	세력후보수 ++
+NEXT
+
+;세이프티
+SIF 세력후보수 == 0
+	RETURN
+
+FOR LOCAL, 0, VARSIZE("후보")
+	대상 = 후보:LOCAL
+
+	SIF 대상 == -1
+		BREAK
+
+	;취활하러 가는 세력을 결정한다
+	세력 = 세력후보:(RAND:세력후보수)
+	세력군주 = GET_COUNTRY_BOSS(세력)
+
+
+	;싫어 하고 있기에는 가지 않는다
+	SIF REL_LIKE:대상:세력군주 < REL_HATE:대상:세력군주 + DIPLOMACY_HATE:세력 * 30 - 300
+		CONTINUE
+
+	;주인공 세력만 특수 취급
+	IF 세력 == CFLAG:MASTER:소속
+		CALL COLOR_PRINTL(@"%조사처리(ANAME(대상),"가")% 관직에 오름을 신청했습니다", 칼라_주의)
+		CALL ASK_MULTI("받아들인다", "거부한다", "투옥한다")
+		SELECTCASE RESULT
+			CASE 0
+				PRINTFORML 받아들였습니다
+				CALL CHANGE_COUNTRY(대상, 세력, 1)
+				;스카우트 후보라면 퍼지
+				SIF FINDELEMENT(SCOUT_CANDIDATES, GET_ID(대상)) != -1
+					SCOUT_CANDIDATES:FINDELEMENT(SCOUT_CANDIDATES, GET_ID(대상)) = 0
+			CASE 1
+				PRINTFORML 거부했습니다
+			CASE 2
+				PRINTFORML 투옥했습니다
+				CALL CAPTURE(대상, 세력)
+		ENDSELECT
+	;통상 처리
+	ELSE
+		PRINTFORML %조사처리(ANAME(대상),"가")% %ANAME(세력군주)%에 관직에 오름을 신청했습니다
+		IF REL_LIKE:세력군주:대상 < REL_HATE:세력군주:대상 - 300
+			PRINTFORML %조사처리(ANAME(세력군주),"는")% 거부했습니다
+		ELSE
+			CALL COLOR_PRINTL(@"%조사처리(ANAME(세력군주),"는")% 받아들였습니다", 칼라_주의)
+			CALL CHANGE_COUNTRY(대상, 세력, 1)
+			;스카우트 후보라면 퍼지
+			SIF FINDELEMENT(SCOUT_CANDIDATES, GET_ID(대상)) != -1
+				SCOUT_CANDIDATES:FINDELEMENT(SCOUT_CANDIDATES, GET_ID(대상)) = 0
+		ENDIF
+	ENDIF
+NEXT

@@ -1,0 +1,265 @@
+﻿;--------------------------------------
+;턴 엔드시의 자경단의 처리
+;--------------------------------------
+@TURNEND_VIGILANTE
+#DIM 자경단
+자경단 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_자경단)
+
+;병력의 증가하는 처리
+IF DAY % 3 == 0
+	CALL SINGLE_DRAWLINE
+	LOCAL:0 = MAX(RAND:4000, 1000)
+	LOCAL:0 += RAND:500 * SP_COUNTRY_RANK:(특수세력_자경단)
+	PRINTFORML 자경단이 징병을 실시하고 있는 것 같습니다……
+	PRINTFORML 자경단의 병력이 {LOCAL:0} 증가했다
+	COUNTRY_SOLDIER:(자경단) += LOCAL:0
+ENDIF
+;4턴에 1회, 특별한 징병
+CALL VIGILANTE_SPECIAL_REQRUITMENT(DAY % 4 == 0)
+CALL VIGILANTE_KIDNAP(DAY % 5 == 0)
+;--------------------------------------
+;멸망시의 처리
+;--------------------------------------
+@VIGILANTE_DESTROY_MSG
+CALL SINGLE_DRAWLINE
+SETCOLOR 칼라_주의
+PRINTFORML
+PRINTFORML
+PRINTFORML
+PRINTFORMW 괴멸적인 피해를 받은 자경단은, 활동을 계속하는 것이 할 수 없게 된 것 같습니다……
+PRINTFORMW 그들은 해산해 버렸습니다
+PRINTFORM
+PRINTFORML
+PRINTFORML
+RESETCOLOR
+
+;--------------------------------------
+;자경단의 초기화 처리
+;--------------------------------------
+@VIGILANTE_INIT(ARG:0)
+#DIM LCOUNT
+VARSET LOCAL
+
+SIF GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_자경단) != -1
+	RETURN 0
+
+SIF SP_COUNTRY_RANK:특수세력_자경단 == 0
+	RETURN 0
+
+SIF GET_NEW_COUNTRY() == -1
+	RETURN 0
+
+CALL CREATE_SP_COUNTRY(특수세력_자경단)
+
+RETURN RESULT
+
+;--------------------------------------
+;자경단의 정기 이벤트.
+;함락이 끝난 캐릭터를 사용해 병수를 늘린다
+;--------------------------------------
+@VIGILANTE_SPECIAL_REQRUITMENT(조건 = 1)
+#DIM 자경단
+#DIM 조건
+#DIM 대상
+#DIM 메세지
+
+자경단 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_자경단))
+
+;자경단 세력이 있어, 조건을 채우고 있다
+SIF 자경단 == -1 || !조건
+RETURN -1
+
+CALL SELECT_CHARA_RANDOM("VIGILANTE_SPECIAL_REQRUITMENT")
+
+대상 = RESULT
+SIF 대상 == -1
+	RETURN
+
+LOCAL = MAX(RAND:3000, 1000)
+CALL SINGLE_DRAWLINE
+SETCOLOR 칼라_핑크
+SELECTCASE RAND:3
+	CASE 0
+		PRINTFORMW 자경단은 권유 활동을 실시하고 있다……
+		PRINTFORMW ……그 중에는, %ANAME(대상)%의 모습도 있었다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 몇 사람이나 되는 남성에 말을 걸어서는, 웃는 얼굴과 토크로 거점으로 권한다
+		PRINTFORML 거점에 데리고 들어간 남자들의 앞에서, %조사처리(ANAME(대상),"는")% 스스로 의복을 벗어 던진다
+		PRINTFORML 놀라는 남자들을 뒷전으로, %조사처리(ANAME(대상),"는")% 그들의 앞에 무릎 꿇어, 입이나 손으로 가지고 육봉에 봉사한다
+		PRINTFORMW %ANAME(대상)%에 있어 「권유」란, 즉 이런 행위였다
+		PRINTFORML 당황하는 남자들이었지만, 부글부글 라는 타액의 소리와 사타구니의 쾌락에는 거역할 수 없다
+		PRINTFORML 한사람이 %조사처리(ANAME(대상),"를")% 쓰러트리고, 이미 흠뻑 젖고 있던 고기구멍을 관철하면, 나머지는 순식간이었다
+		PRINTFORML 한사람이 사정해서는 또 다른 남자가와 그들은 차례차례%ANAME(대상)%의 신체에 정액을 발해 간다
+		PRINTFORMW %ANAME(대상)%도 기뻐해, 스스로 입이나 손, 유방에 양구멍을 바쳐 보였다
+		PRINTFORML 한껏 정액을 풀어, %ANAME(대상)%의 육체에 열중한 남자들은, 쾌히 승낙하는 일로 입단을 승낙한다
+		PRINTFORML 만족한 그들이 거점을 뒤로 하면, 동기의 단원이 「한 그릇 더」를 데려 온다
+		PRINTFORML 전신 정액 투성이가 된 추잡한 모습으로, %조사처리(ANAME(대상),"가")% 스스로 비순을 나누어 연다
+		PRINTFORMW 이번 남자들은 사정을 파악하고 있던 것 같고, 천하게 보인 미소를 띄우면서 %조사처리(ANAME(대상),"를")% 관철해 갔다……
+		PRINTFORMW %ANAME(대상)%의 노력에 의해, 입단 희망자는 대단히 증가한 것 같다……
+		CALL FUCK_SP(대상, "욕망, 정애, 성교, Ａ, Ｖ, Ｂ, Ｃ, Ｍ, 윤간, 펠라티오, Ｖ성교, Ａ성교", "질내사정, 처녀상실, Ａ처녀상실, 키스상실, 장내사정, 구강사정", 자경단, GET_SPERM_ID("지나가는 남자"), @"지나가는 남자의 \@ RAND:2 ? 입술 # 페니스 \@", "지나가는 남자", "", "윤간")
+	CASE 1
+		PRINTFORMW 자경단은 본고장의 유력자와 회합을 열고 있다……
+		PRINTFORMW ……대표자는, %조사처리(ANAME(대상),"였")%다
+		PRINTFORML 비만체의 남자와 %조사처리(ANAME(대상),"는")%, 침대 위에서 피부를 거듭하고 있다
+		PRINTFORML 휘어 서는 페니스에 소리를 내 달라붙어서 놓지 않으면서, 스스로 음부를 그의 안면에 강압한다
+		PRINTFORML 끈적한 혀가 음핵을 반죽해 돌리면, %조사처리(ANAME(대상),"는")% 달콤한 소리를 질러 좋아해 보인다
+		PRINTFORMW 남이 계속 참지 못하고 정액을 발하면, %조사처리(ANAME(대상),"는")% 눈동자를 탕이나 키, 소리를 내 백탁을 삼켜 간다
+		PRINTFORML 호흡을 정돈하는 그의 앞에서, %조사처리(ANAME(대상),"는")% 음구를 손에 들어, 스스로 자위 쇼를 피로 한다
+		PRINTFORML 질척질척 추잡한 소리를 내 바이브로 비밀의 틈을 휘젓는 것처럼, 남자도 곧바로 건강을 되찾은 것 같다
+		PRINTFORML 좀 더 좋은 것을 주려고 덥쳐 오는 남자를 앞에, %조사처리(ANAME(대상),"는")% 스스로의 음부를 손으로 숨겼다
+		PRINTFORML 좀 더 좋은 일을 하고 싶으면, 우리들에게 협력해 주세요
+		PRINTFORML %조사처리(ANAME(대상),"가")% 그처럼 요구하면, 초조해 할 수 있었던 남자는 쾌히 승낙하는 일로 승낙한다
+		PRINTFORMW 실룩거리는 암컷구멍에 발기한 하나의 물건이 삽입되면, %조사처리(ANAME(대상),"는")% 견딜 수 없다는 소리를 질러 좋아했다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 그 뒤도, 전부 하룻밤을 걸쳐, 그 신체로 가지고 남자로부터 모든 지원의 약속을 얻어냈다……
+		CALL FUCK_SP(대상, "욕망, 정애, 성교, Ａ, Ｖ, Ｂ, Ｃ, Ｍ, 윤간, 펠라티오, Ｖ성교, Ａ성교", "질내사정, 처녀상실, Ａ처녀상실, 키스상실, 장내사정, 구강사정", 자경단, GET_SPERM_ID("부호"), @"부호의 \@ RAND:2 ? 입술 # 페니스 \@", "부호", "", "매춘")
+	CASE 2
+		PRINTFORMW 자경단은 본고장의 건달들과 회합을 열고 있다……
+		PRINTFORMW ……대표자는, %조사처리(ANAME(대상),"다")%
+		PRINTFORMW 악행을 그만두어 자경단에 참가하도록, %조사처리(ANAME(대상),"는")% 그들에게 말하고 있다
+		PRINTFORMW 물론 그것만이 아니다. %ANAME(대상)%자신이 세트로 붙어 있었다
+		PRINTFORMW 건달의 머리에 명해져 %조사처리(ANAME(대상),"는")% 스스로 의복을 벗어 던진다
+		PRINTFORMW 그의 하의를 입으로 비켜 놓아, 육봉을 노출시키면, 요염한 입술로 맞아들인다
+		PRINTFORMW 소리를 내 비방해, 소리를 내 백탁을 삼킴하는 모양은, 지극히 추잡했다
+		PRINTFORMW 그 후, %조사처리(ANAME(대상),"는")% 남에 스스로 걸쳐, %STR_BODY("질:욕정:감도", 대상)%에서도는 페니스를 기쁘게 하기 시작한다
+		PRINTFORMW 남이 정액을 풀면, 기쁨의 소리를 지르면서, 끈적거리는 정액을 자궁으로 받아 들여 보였다
+		PRINTFORMW 물론 그래서 끝은 아니다
+		PRINTFORMW 두목이 %조사처리(ANAME(대상),"를")% 턱으로 떠, 주위를 둘러싸는 부하들에게도 봉사하도록(듯이) 명한다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 눈동자를 탕이나 키, 입이나 손, 유방에 양구멍에서 가지고, 만 하루 걸쳐 몇 사람이나 되는 남자들의 욕망을 받아 들여 갔다……
+		CALL FUCK_SP(대상, "욕망, 정애, 성교, Ａ, Ｖ, Ｂ, Ｃ, Ｍ, 윤간, 펠라티오, Ｖ성교, Ａ성교", "질내사정, 처녀상실, Ａ처녀상실, 키스상실, 장내사정, 구강사정", 자경단, GET_SPERM_ID("건달"), @"건달의 \@ RAND:2 ? 입술 # 페니스 \@", "건달", "", "윤간")
+ENDSELECT
+PRINTFORML 
+PRINTFORMW 자경단의 병수가 {LOCAL} 증가했다
+
+RESETCOLOR
+
+COUNTRY_SOLDIER:자경단 += LOCAL
+
+RETURN 1
+
+@SELECT_CHARA_RANDOM_LOGIC_VIGILANTE_SPECIAL_REQRUITMENT(대상)
+#DIM 대상
+RETURN IS_FEMALE(대상) && CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_자경단) && !CFLAG:대상:포로처 && !IS_SP_CHARA(대상)
+
+
+;--------------------------------------
+;자경단의 정기 이벤트.
+;캐릭터를 「권유」한다
+;--------------------------------------
+@VIGILANTE_KIDNAP(조건 = 1)
+#DIM 대상
+#DIM 조건
+#DIM 자경단
+자경단 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_자경단))
+
+;자경단 세력이 있어, 조건을 채우고 있다
+SIF 자경단 == -1 || !조건
+RETURN -1
+
+CALL SELECT_CHARA_RANDOM("VIGILANTE_KIDNAP")
+
+대상 = RESULT
+
+SIF 대상 == -1
+	RETURN
+
+CALL SINGLE_DRAWLINE()
+SETCOLOR 칼라_핑크
+PRINTFORML 돌연, %조사처리(ANAME(대상),"는")% 정체의 모르는 남자들에게 둘러싸졌다!
+PRINTFORML 입을 막혀, 곧 가까이의 건물에 데리고 들어가졌다
+PRINTFORMW ……거기는 자경단의 거점이었다
+PRINTFORML 군은 전망이 있을 듯 하다, 우리의 일원으로서 교육 해 주려고, 이상하게 눈동자를 반짝반짝 시킨 남자들은 말한다
+PRINTFORMW 그리고 %ANAME(대상)%의 옷을 벗겨내면, 사상 교육과 세트로 능욕하기 시작했다……
+PRINTFORML 
+PRINTFORML 
+PRINTFORML 
+CALL FUCK_SP(대상, "욕망, 정애, 성교, Ａ, Ｖ, Ｂ, Ｃ, Ｍ, 윤간, 펠라티오, Ｖ성교, Ａ성교", "질내사정, 처녀상실, Ａ처녀상실, 키스상실, 장내사정, 구강사정", 자경단, GET_SPERM_ID("자경단원"), @"자경단원의 \@ RAND:2 ? 입술 # 페니스 \@", "자경단원", "", "윤간")
+
+PRINTFORMW 격렬한 능욕으로, %조사처리(ANAME(대상),"는")% 완전히 체력을 사용해 완수해 버렸다
+PRINTFORMW 오늘은 이 정도로 해 두자, 내일로부터도 연수는 계속되기 때문에 준비해 두도록(듯이)와 남자들은 %조사처리(ANAME(대상),"를")% 실내에 가두었다……
+
+CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"가")% 자경단에 붙잡혔습니다", 칼라_경고)
+RESETCOLOR
+CALL CAPTURE(대상, 자경단)
+
+RETURN 1
+
+@SELECT_CHARA_RANDOM_LOGIC_VIGILANTE_KIDNAP(대상)
+#DIM 대상
+RETURN IS_APPEAR(대상) && CFLAG:대상:행동불능상태 != 행동불능_아이 && !TALENT:대상:유아 && IS_FEMALE(대상) && !IS_SP_CHARA(대상) && (CFLAG:대상:소속 || CFLAG:대상:특수상태 == 특수상태_방랑) && !CFLAG:대상:포로처 && CFLAG:대상:소속 != GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_자경단) && GET_COUNTRY_BOSS(CFLAG:대상:소속) != 대상
+
+;-----------------------------------
+;자경단에 잡혔을 때의 이벤트
+;-----------------------------------
+@MASTER_CAPTURED_VIGILANTE(ARG:0)
+PRINTFORMW 잡힌 %조사처리(ANAME(MASTER),"는")% 자경단원의 전에 끌어내졌다…
+IF GETBIT(TALENT:MASTER:특수세력함락계, 특수세력_자경단)
+	PRINTFORML 군은 단을 빠진 %조사처리(ANAME(MASTER),"가")% 아닌가
+	PRINTFORMW 본래 탈퇴자는 두 번 다시 돌아올 수 없는 규칙이지만, 너는 특별하기 때문에 복귀를 인정하자
+	PRINTFORMW 단원은 당연히, %ANAME(MASTER)%에 단의 의상을 입히려고 해 오지만……
+	CALL ASK_YN("받아들인다", "거부한다")
+	IF RESULT == 0
+		PRINTFORMW 이것을 붙이면, 또 단원으로서 여러분에 힘쓸 수가 있다
+		PRINTFORMW %ANAME(MASTER)%의 신체는 쑤셔, 스스로 제복에 소매를 통한다
+		PRINTFORMW 유니폼을 입는 것으로, 일체감·연대감이라고 한 것이 마음을 채워 간다
+		PRINTFORMW 에서는 복귀하기 전에, 한 번 확실히 「연수」를 받지 않으면와 단원은 %조사처리(ANAME(MASTER),"를")% 연행한다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 다시, 자경단의 사상아래 움직이는, 충실한 도구에 되어 내렸다……
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 다시, 자경단인이 되었습니다
+		RESETCOLOR
+	ELSE
+		PRINTFORMW 누가 그런 것. %조사처리(ANAME(MASTER),"는")% 물리친다
+		PRINTFORMW 하면 단원들은 격앙했다
+		PRINTFORMW 본래 용서되지 않는 탈퇴자에게 이 정도 관대하게 접하고 있다는데, 도대체 무엇이다 그 태도는
+		PRINTFORMW 그 뒤틀린 근성을 다시 쳐 주면, 단원들은 %조사처리(ANAME(MASTER),"를")% 붙잡아 연행했다……
+	ENDIF
+ELSE
+	PRINTFORML 단원은 이상하게 반짝반짝 한 눈동자와 웃는 얼굴로 %조사처리(ANAME(MASTER),"를")% 맞이해,
+	PRINTFORMW 군도 자경단의 일원으로서 일하지 않는가?   라고 말하기 시작했다
+	PRINTFORMW 우리의 일원이 되면 여기서 결정한다면, 「교육」의 순서는 얼마인가 줄일 수 있하고 있지만……
+	PRINTFORMW 받아들입니까?
+	CALL ASK_YN("받아들인다", "거부한다")
+	IF RESULT == 0
+		PRINTFORMW 투옥되는 것보다는 좋을 것이다. %조사처리(ANAME(MASTER),"가")% 수긍하면, 그들은 만족스럽게 수긍했다
+		PRINTFORMW 에서는 조속히 이것을 입어 줘와, 유니폼을 내몄다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 마음이 내키지 않으면서, 내밀어진 의상에 소매를 통했다……
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 자경단원이 되었습니다
+		RESETCOLOR
+	ELSE
+		PRINTFORMW 너희들 따위에 손을 빌려 줄까. %조사처리(ANAME(MASTER),"는")% 의연히 해 단언한다	
+		PRINTFORMW 우리가 모처럼 권유해 주었는데와 단원들은 격앙해, %조사처리(ANAME(MASTER),"를")% 입이 더럽게 매도하기 시작했다
+		PRINTFORMW 그 뒤틀린 근성을 다시 쳐 주면, 단원들은 %조사처리(ANAME(MASTER),"를")% 붙잡아 연행했다……
+	ENDIF
+ENDIF
+IF RESULT == 0
+	SETBIT TALENT:MASTER:특수세력함락계, 특수세력_자경단
+	CFLAG:MASTER:소속 = ARG:0
+	CALL PLAYER_FALLEN_TO_SP_COUNTRY(ARG:0)
+	RETURN 0
+ELSE
+	CALL CAPTURE(MASTER, ARG:0)
+	RETURN 2
+ENDIF
+
+
+
+;--------------------------------------
+;엔딩
+;--------------------------------------
+@VIGILANTE_ENDING
+
+PRINTFORML 자경단의 활동은, 나날이 커져 갔다
+PRINTFORML 화를 어지럽히는 것은 구축되어 그들에게 잡혀 「교육」을 받게 되었다
+PRINTFORMW ……그리고 드디어, 그들이 환상향을 석권 하는 날이 방문했다
+PRINTFORMW 처음은 자경단에 흥미가 없었던 소녀들도, 열심인 「교육」에 의해, 어느덧 단원으로서의 뜻을 얻게 되어 있었다
+PRINTFORMW 지금은 그녀들은, 그 육체로 단원을 권유하는 것을, 아무런 의문도 기억하지 않았다……
+IF CFLAG:MASTER:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_자경단) && IS_FEMALE(MASTER)
+	PRINTFORMW 
+	PRINTFORML ……단원중에, %ANAME(MASTER)%의 모습도 있었다
+	PRINTFORMW 권유 활동이라고 칭해, 무수한 남자에게 둘러싸져 봉사하고 있다
+	PRINTFORMW 양구멍 모두 평판인 %PRONOUN(MASTER)%는, 권유 능숙하다면 단원의 사이에서도 고평가였다
+	PRINTFORML 모든 구멍에 육봉을 문 %PRONOUN(MASTER)%의 모양은, 마치 성노예인 것 같다
+	PRINTFORMW 그러나 %조사처리(ANAME(MASTER),"는")%, 스스로를 비참함 등이라고는 일절 생각하지 않았다
+	PRINTFORMW 오히려, 숭고한 자경단의 이념에 몸을 바칠 수가 있어, 영광이라고조차 생각하고 있다……
+ENDIF
+PRINTFORML 
+PRINTFORMW 환상향은 향후도, 자경단의 이름아래에 평화롭고 계속할 것이다……

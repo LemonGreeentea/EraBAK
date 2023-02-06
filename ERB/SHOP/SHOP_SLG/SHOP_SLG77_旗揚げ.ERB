@@ -1,0 +1,103 @@
+﻿;-------------------------------------------------
+;「신세력시작」의 명칭
+;-------------------------------------------------
+@SHOP_SLG_NAME77
+RESULTS:0 '= "신세력시작"
+
+;-------------------------------------------------
+;「신세력시작」의 선택 가부
+;-------------------------------------------------
+@SHOP_SLG_CHECK77
+SIF CFLAG:MASTER:소속 != 0
+	RETURN 0
+SIF FLAG:클리어플래그
+	RETURN 0
+SIF FLAG:관전모드
+	RETURN 0
+;세력에 빈자리가 없으면 불가
+SIF GET_NEW_COUNTRY() == -1
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「신세력시작」의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_SLG_EVENTBUY77
+CALL SHOP_CREATE_COUNTRY
+RETURN 1
+
+;-------------------------------------------------
+;「신세력시작」본체
+;-------------------------------------------------
+@SHOP_CREATE_COUNTRY
+#DIM 도시
+#DIM 도시소지세력
+#DIM 신세력
+
+CALL SINGLE_DRAWLINE
+PRINTL 신세력시작 도시를 선택해 주세요
+CALL SINGLE_DRAWLINE
+CALL SET_CITY_COLOR_COUNTRY
+CALL DRAWMAP
+CALL RESET_CITY_COLOR
+CALL SINGLE_DRAWLINE
+
+PRINTBUTTON " 0[돌아온다]", 0
+PRINTL 
+
+REDRAW 0
+
+$INPUT_LOOP
+INPUT
+
+SIF RESULT == 0
+	RETURN
+
+IF !INRANGE(RESULT, 1000, 1000 + MAX_CITY - 1)
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+
+도시 = RESULT - 1000
+도시소지세력 = CITY_OWNER:도시
+
+IF CITY_TYPE:도시 == 1 || GET_RELAYNAME(도시) == "무명"
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+
+IF IS_COUNTRY(도시소지세력) && GET_OWN_CITY(도시소지세력) == 1
+	PRINTFORMW 나머지 도시수가 1의 세력으로부터 도시를 빼앗을 수 없습니다
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+
+
+PRINTFORML %GET_RELAYNAME(도시)%로 개양 합니까?
+CALL ASK_MULTI("신세력시작", "캔슬", "돌아온다")
+
+IF RESULT == 1
+	RETURN
+ELSEIF RESULT == 2
+	RESTART
+ENDIF
+
+신세력 = GET_NEW_COUNTRY()
+
+CITY_OWNER:도시 = 신세력
+COUNTRY_BOSS:신세력 = GET_ID(MASTER)
+COUNTRY_SOLDIER:신세력 = CITY_ECONOMY:도시 / 20
+CITY_SOLDIER:도시 = 2000
+
+SIF IS_COUNTRY(도시소지세력)
+	CALL CHANGE_RELATION_C_TO_C(도시소지세력, 신세력, -500, 500)
+
+CALL CHANGE_COUNTRY(MASTER, 신세력)
+
+CALL SINGLE_DRAWLINE
+PRINTL 새로운 세력의 색을 선택해 주세요
+CALL SINGLE_DRAWLINE
+CALL CHANGE_COUNTRY_COLOR(신세력, 1)
+
+TIME = 0
+RETURN

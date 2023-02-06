@@ -1,0 +1,561 @@
+﻿;-------------------------------------------------
+;포로의조교로 타겟이 한사람만의 때의 처리
+;-------------------------------------------------
+@PRISONER_TRAIT(ARG:0)
+#DIM FIRST_LINE
+#DIM CONST 선택지_조교 = 0
+#DIM CONST 선택지_허락한다 = 1
+#DIM CONST 선택지_본보기 = 2
+#DIM CONST 선택지_연금 = 3
+#DIM CONST 선택지_석방 = 4
+#DIM CONST 선택지_해방 = 5
+#DIM CONST 선택지_추방 = 6
+#DIM CONST 선택지_처형 = 7
+#DIM CONST 선택지_촉수처형 = 8
+#DIM CONST 선택지_캔슬 = 99
+
+FIRST_LINE = LINECOUNT
+
+;SHOW_INFO의 초기 화면을 기본 정보로 한다
+FLAG:능력표시모드 = 0
+
+;대상 캐릭터의 정보를 표시
+CALL SINGLE_DRAWLINE
+CALL SHOW_INFO(ARG:0)
+CALL SINGLE_DRAWLINE
+
+PRINTFORML %조사처리(ANAME(ARG:0),"를")% 어떻게 합니까?
+CALL SINGLE_DRAWLINE
+CALL PRISONER_TRAIT_PRINTBUTTONS(ARG:0)
+
+INPUT
+
+SELECTCASE RESULT
+	CASE 선택지_조교
+		CALL PRISONER_TRAIT_START_TRAIN(ARG:0)
+	CASE 선택지_허락한다
+		CALL PRISONER_TRAIT_FORGIVE(ARG:0)
+	CASE 선택지_본보기
+		CALL PRISONER_TRAIT_EXAMPLE(ARG:0)
+	CASE 선택지_연금
+		CALL PRISONER_TRAIT_LENIENT(ARG:0)
+	CASE 선택지_석방
+		CALL PRISONER_TRAIT_RELEASE(ARG:0)
+	CASE 선택지_해방
+		CALL PRISONER_TRAIT_FREE(ARG:0)
+	CASE 선택지_추방
+		CALL PRISONER_TRAIT_BANISH(ARG:0)
+	CASE 선택지_처형
+		CALL PRISONER_TRAIT_EXECUTE(ARG:0)
+	CASE 선택지_촉수처형
+		CALL PRISONER_TRAIT_EXECUTE_TENTACLE(ARG:0)
+	CASE 선택지_캔슬
+		RETURN 1
+ENDSELECT
+
+SIF RESULT == 1
+	RETURN 
+
+CLEARLINE LINECOUNT - FIRST_LINE
+RESTART
+
+;-------------------------------------------------
+;포로의조교로 타겟이 한사람만의 때의 처리중의 버튼 묘화 처리
+;-------------------------------------------------
+@PRISONER_TRAIT_PRINTBUTTONS(ARG:0)
+#DIM CONST 선택지_조교 = 0
+#DIM CONST 선택지_허락한다 = 1
+#DIM CONST 선택지_본보기 = 2
+#DIM CONST 선택지_연금 = 3
+#DIM CONST 선택지_석방 = 4
+#DIM CONST 선택지_해방 = 5
+#DIM CONST 선택지_추방 = 6
+#DIM CONST 선택지_처형 = 7
+#DIM CONST 선택지_촉수처형 = 8
+#DIM CONST 선택지_캔슬 = 99
+
+PRINTBUTTON "[조교]", 선택지_조교
+PRINTPLAIN   
+
+IF CFLAG:(ARG:0):외교조교중
+	PRINTBUTTON "[허락한다]", 선택지_허락한다
+	PRINTPLAIN   
+	PRINTBUTTON "[본보기]", 선택지_본보기
+	PRINTPLAIN   
+	PRINTBUTTON "[캔슬]", 선택지_캔슬
+	PRINTL
+	RETURN
+ENDIF
+
+IF CFLAG:(ARG:0):소속 != CFLAG:MASTER:소속
+	PRINTBUTTON "[연금]", 선택지_연금
+	PRINTPLAIN   
+	IF !FLAG:클리어플래그
+		PRINTBUTTON "[해방]", 선택지_해방
+		PRINTPLAIN   
+	ENDIF
+ELSE
+	PRINTBUTTON "[석방]", 선택지_석방
+	PRINTPLAIN   
+	IF !FLAG:클리어플래그
+		PRINTBUTTON "[추방]", 선택지_추방
+		PRINTPLAIN   
+	ENDIF
+ENDIF
+PRINTBUTTON "[처형]", 선택지_처형
+PRINTPLAIN   
+IF ITEM:촉수의방 && ID_TO_CHARA(FLAG:촉수의방관리자) >= 0
+	PRINTBUTTON "[촉수 처형]", 선택지_촉수처형
+	PRINTPLAIN   
+ENDIF
+PRINTBUTTON "[캔슬]", 선택지_캔슬
+PRINTL
+
+;-------------------------------------------------
+;포로의조교 조교 개시
+;-------------------------------------------------
+@PRISONER_TRAIT_START_TRAIN(ARG:0)
+CALL PRISONER_SCAPEGOAT(ARG:0)
+CALL DECIDE_PRISONER_MEMBER()
+RETURN 1
+
+;-------------------------------------------------
+;외교  허락한다
+;-------------------------------------------------
+@PRISONER_TRAIT_FORGIVE(ARG:0)
+
+SIF !CFLAG:(ARG:0):외교조교중
+	RETURN 0
+
+PRINTFORML %ANAME(ARG:0)%의 몸을 자유롭게 할 권리를 손놓습니다
+PRINTFORML 좋습니까?
+CALL ASK_YN
+
+SIF RESULT == 1
+	RETURN 0
+
+PRINTFORMW %조사처리(ANAME(ARG:0),"를")% 용서해 주었습니다
+
+CFLAG:(ARG:0):외교조교중 = 0
+SIF FINDELEMENT(PRISONER_TARGET, ARG:0) != -1
+	PRISONER_TARGET:(FINDELEMENT(PRISONER_TARGET, ARG:0)) = -1
+
+RETURN 1
+
+;-------------------------------------------------
+;본보기
+;-------------------------------------------------
+@PRISONER_TRAIT_EXAMPLE(ARG:0)
+
+SIF !CFLAG:(ARG:0):외교조교중
+	RETURN 0
+
+CVARSET CFLAG, GETNUM(CFLAG, "침실호출선택중"), 0
+CFLAG:(ARG:0):침실호출선택중 = 1
+CFLAG:(ARG:0):조교참가플래그 = 1
+CFLAG:(ARG:0):강제우호화 = 1
+
+;전원의 위안참가자 플래그를 클리어（위안할당 메뉴로 조작되기 (위해)때문에）
+CVARSET CFLAG, GETNUM(CFLAG, "위안참가자") , 0
+
+;위안모브의 생성
+LOCAL:1 = RAND(3, 6) - LOCAL:2
+FOR LOCAL, 0, LOCAL:1
+	CALL CREATE_IAN_MOB(위안_행선지_일반주택가, LOCAL + 1)
+	SIF RESULT == -1
+		BREAK
+NEXT
+
+FLAG:위안모드 = 3
+FLAG:위안장소 = 위안_행선지_일반주택가
+ITEM:A_로터 = 1
+ITEM:A_바이브 = 1
+ITEM:A_애널바이브 = 1
+ITEM:A_페니스밴드 = 1
+ITEM:A_오나홀 = 1
+ITEM:A_클리캡 = 1
+ITEM:A_유두캡 = 1
+ITEM:A_마약 = 99
+ITEM:A_밧줄 = 1
+ITEM:A_채찍 = 1
+ITEM:A_눈가리개 = 1
+ITEM:A_재갈 = 1
+ITEM:A_코걸이 = 1
+ITEM:A_매직 = 1
+ITEM:A_로션 = 99
+ITEM:A_콘돔 = 99
+ITEM:A_미약 = 99
+ITEM:A_배란유발제 = 99
+ITEM:A_도원향 = 99
+FLAG:조교모드 = 7
+;우후후플래그를 ON에
+FLAG:우후후플래그 = 1
+
+PRINTFORMW 알몸으로 한 %조사처리(ANAME(ARG:0),"를")% 마을의 광장까지 데려 왔다
+PRINTFORMW 영지민을 위로하는데, 겨우 도움이 되어 받는다고 하자……
+
+;행동 개시시의 공통 처리
+CALL START_TRAIN_COMMON
+
+RETURN 1
+
+;-------------------------------------------------
+;연금
+;-------------------------------------------------
+@PRISONER_TRAIT_LENIENT(ARG:0)
+
+SIF CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속
+	RETURN 0
+
+SIF CFLAG:(ARG:0):외교조교중
+	RETURN 0
+
+PRINTFORML %조사처리(ANAME(ARG:0),"를")% 감옥에서 내, 방을 주고 연금 합니다
+PRINTFORML 좋습니까?
+CALL ASK_YN
+SIF RESULT == 1
+	RETURN 0
+
+PRINTFORMW %조사처리(ANAME(ARG:0),"를")% 연금 했습니다
+
+CFLAG:(ARG:0):연금중 = 1
+SIF FINDELEMENT(PRISONER_TARGET, ARG:0) != -1
+	PRISONER_TARGET:(FINDELEMENT(PRISONER_TARGET, ARG:0)) = -1
+
+RETURN 1
+
+;-------------------------------------------------
+;석방
+;-------------------------------------------------
+@PRISONER_TRAIT_RELEASE(ARG:0)
+
+SIF CFLAG:(ARG:0):소속 != CFLAG:MASTER:소속
+	RETURN 0
+
+SIF CFLAG:(ARG:0):외교조교중
+	RETURN 0
+
+PRINTFORML %조사처리(ANAME(ARG:0),"를")% 감옥에서 냅니다
+PRINTFORML 좋습니까?
+CALL ASK_YN
+
+SIF RESULT == 1
+	RETURN 0
+
+PRINTFORMW %조사처리(ANAME(ARG:0),"를")% 감옥에서 냈습니다
+CALL CAPTURE(ARG:0, 0, TALENT:(ARG:0):붕괴)
+
+SIF FINDELEMENT(PRISONER_TARGET, ARG:0) != -1
+	PRISONER_TARGET:(FINDELEMENT(PRISONER_TARGET, ARG:0)) = -1
+
+RETURN 1
+
+;-------------------------------------------------
+;해방
+;-------------------------------------------------
+@PRISONER_TRAIT_FREE(ARG:0)
+
+SIF CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속
+	RETURN 0
+
+SIF CFLAG:(ARG:0):외교조교중
+	RETURN 0
+
+SIF FLAG:클리어플래그
+	RETURN 0
+
+PRINTFORML 정말로 %조사처리(ANAME(ARG:0),"를")% 해방합니까?
+CALL ASK_YN
+
+SIF RESULT == 1
+	RETURN 0
+
+CALL KOJO_EVENT(ARG:0, 340)
+PRINTFORMW %조사처리(ANAME(ARG:0),"를")% 해방했습니다
+CALL CAPTURE(ARG:0, 0, TALENT:(ARG:0):붕괴)
+
+SIF FINDELEMENT(PRISONER_TARGET, ARG:0) != -1
+	PRISONER_TARGET:(FINDELEMENT(PRISONER_TARGET, ARG:0)) = -1
+
+RETURN 1
+
+;-------------------------------------------------
+;추방
+;-------------------------------------------------
+@PRISONER_TRAIT_BANISH(ARG:0)
+
+SIF CFLAG:(ARG:0):소속 != CFLAG:MASTER:소속
+	RETURN 0
+
+SIF FLAG:클리어플래그
+	RETURN 0
+
+PRINTFORML 정말로 %조사처리(ANAME(ARG:0),"를")% 나라로부터 추방합니까?
+
+SIF CALC_SHOP_TIME(!IS_ANIMAL(ARG:0)) == SHOP_TIME
+	CALL COLOR_PRINTL("추방했을 경우, 최대 행동횟수 감소에 의해 즉시 금기의 거점 페이즈가 종료합니다!", 칼라_경고)
+
+CALL ASK_YN
+SIF RESULT == 1
+	RETURN 0
+
+CALL KOJO_EVENT(ARG:0, 340)
+PRINTFORMW %조사처리(ANAME(ARG:0),"를")% 추방했습니다
+
+CALL CHANGE_COUNTRY(ARG:0, 0, 1)
+CALL CAPTURE(ARG:0, 0, TALENT:(ARG:0):붕괴)
+
+SIF FINDELEMENT(PRISONER_TARGET, ARG:0) != -1
+	PRISONER_TARGET:(FINDELEMENT(PRISONER_TARGET, ARG:0)) = -1
+
+IF CALC_SHOP_TIME() == SHOP_TIME
+	PRINTFORMW 인원수 부족에 의한 일의 악영향에 의해 자유시간이 없어졌으므로 거점 페이즈를 종료합니다
+	LINES_SHOP = LINECOUNT
+	BEGIN TURNEND
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+;처형
+;-------------------------------------------------
+@PRISONER_TRAIT_EXECUTE(ARG:0)
+
+SIF CFLAG:(ARG:0):외교조교중
+	RETURN 0
+
+IF TALENT:(ARG:0):임신 && !TALENT:(ARG:0):아이인질
+	CALL PRISONER_TRAIT_EXECUTE_PREGNANT(ARG:0)
+	RETURN RESULT
+ENDIF
+
+PRINTFORML 정말로 %조사처리(ANAME(ARG:0),"를")% 처형합니까?
+SIF CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속 && CALC_SHOP_TIME(!IS_ANIMAL(ARG:0)) == SHOP_TIME
+	CALL COLOR_PRINTL("추방했을 경우, 최대 행동횟수 감소에 의해 즉시 금기의 거점 페이즈가 종료합니다!", 칼라_경고)
+
+CALL ASK_YN
+
+SIF RESULT == 1
+	RETURN 0
+
+CALL KOJO_EVENT(ARG:0, 341)
+PRINTFORMW ……………………
+PRINTFORMW ……
+PRINTFORMW %조사처리(ANAME(ARG:0),"를")% 처형했습니다
+PRINTL 
+CALL EXECUTION(ARG:0)
+WAIT
+
+CALL CHANGE_COUNTRY(ARG:0, 0, 1, 1)
+
+SIF FINDELEMENT(PRISONER_TARGET, ARG:0) != -1
+	PRISONER_TARGET:(FINDELEMENT(PRISONER_TARGET, ARG:0)) = -1
+
+IF CALC_SHOP_TIME() == SHOP_TIME
+	PRINTL 
+	PRINTFORMW 인원수 부족에 의한 일의 악영향에 의해 자유시간이 없어졌으므로 거점 페이즈를 종료합니다
+	LINES_SHOP = LINECOUNT
+	BEGIN TURNEND
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+;촉수 처형
+;-------------------------------------------------
+@PRISONER_TRAIT_EXECUTE_TENTACLE(ARG:0)
+#DIM 관리인
+#DIM 효과량
+
+관리인 = ID_TO_CHARA(FLAG:촉수의방관리자)
+
+SIF CFLAG:(ARG:0):외교조교중 
+	RETURN 0
+
+SIF !ITEM:촉수의방 || 관리인 < 0
+	RETURN 0
+
+IF !IS_SYOKUSYU_MANAGE(ID_TO_CHARA(FLAG:촉수의방관리자))
+	PRINTFORML 설정된 촉수의방의 관리자（%ANAME(관리인)%）가, 현재 관리 가능한 상황에 있지 않습니다
+	PRINTW 촉수의방의 관리자를 다시 설정해 주세요
+	RETURN 0
+ENDIF
+
+IF TALENT:(ARG:0):임신 && !TALENT:(ARG:0):아이인질
+	CALL PRISONER_TRAIT_EXECUTE_PREGNANT_TENTACLE(ARG:0)
+	RETURN RESULT
+ENDIF
+
+PRINTFORMW 촉수의방의 관리자인 %ANAME(관리인)%가 처형을 실행합니다
+PRINTFORML 정말로 %조사처리(ANAME(ARG:0),"를")% 처형합니까?
+
+SIF CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속 && CALC_SHOP_TIME(!IS_ANIMAL(ARG:0)) == SHOP_TIME
+	CALL COLOR_PRINTL("추방했을 경우, 최대 행동횟수 감소에 의해 즉시 금기의 거점 페이즈가 종료합니다!", 칼라_경고)
+
+CALL ASK_YN
+
+SIF RESULT == 1
+	RETURN 0
+
+CALL KOJO_EVENT(ARG:0, 343)
+PRINTFORMW ……………………
+PRINTFORMW ……
+PRINTFORMW %조사처리(ANAME(ARG:0),"를")% 처형했습니다
+PRINTL
+
+CALL CHANGE_COUNTRY(ARG:0, 0, 1, 1)
+SIF FINDELEMENT(PRISONER_TARGET, ARG:0) != -1
+	PRISONER_TARGET:(FINDELEMENT(PRISONER_TARGET, ARG:0)) = -1
+
+;손에 들어 오는 요술경험치를 계산해 취득＆표시
+PRINTFORML <%ANAME(관리인)%>
+
+효과량= 30 + BASE:(ARG:0):정신력 / 20 + ABL:(ARG:0):촉수 * 10
+
+CALL PRINT_ADD_EXP(관리인, "요술경험치", 효과량)
+CALL TRAIN_AUTO_ABLUP(관리인)
+WAIT
+
+IF CALC_SHOP_TIME() == SHOP_TIME
+	PRINTFORMW 인원수 부족에 의한 일의 악영향에 의해 자유시간이 없어졌으므로 거점 페이즈를 종료합니다
+	LINES_SHOP = LINECOUNT
+	BEGIN TURNEND
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;임산부 처형
+;-------------------------------------------------
+@PRISONER_TRAIT_EXECUTE_PREGNANT(ARG:0)
+
+PRINTFORML 처형장에 따라 올 수 있었던 %조사처리(ANAME(ARG:0),"는")%, 울면서 목숨구걸을 시작했다
+PRINTFORML 『두 번 다시 거역하지 않는, 어떤 일이라도 하기 때문에, 배의 아이만은 도와』라고, 필사적인 모습으로 간원 하고 있다
+PRINTL 
+PRINTFORML 정말로 %조사처리(ANAME(ARG:0),"를")% 처형합니까?
+
+SIF CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속 && CALC_SHOP_TIME(!IS_ANIMAL(ARG:0)) == SHOP_TIME
+	CALL COLOR_PRINTL("추방했을 경우, 최대 행동횟수 감소에 의해 즉시 금기의 거점 페이즈가 종료합니다!", 칼라_경고)
+
+CALL ASK_YN("처형한다", "자비를 걸친다")
+
+IF RESULT == 0
+	CALL KOJO_EVENT(ARG:0, 341)
+	PRINTFORMW ……………………
+	PRINTFORMW ……
+	PRINTFORMW %조사처리(ANAME(ARG:0),"를")% 배의 아이공처형했습니다
+	PRINTL 
+	CALL EXECUTION(ARG:0)
+	WAIT
+	;타국으로부터의 평가를 내린다
+	PRINTL 
+	PRINTFORMW 이 소행에 각 세력으로부터 비난의 소리가 쇄도하고 있습니다
+
+	FOR LOCAL, 1, MAX_COUNTRY
+		SIF !IS_COUNTRY(LOCAL) || LOCAL == CFLAG:MASTER:소속
+			CONTINUE
+
+		IF LOCAL == CFLAG:(ARG:0):소속
+			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -200, 300)
+		ELSE
+			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -100, 150)
+		ENDIF
+	NEXT
+
+	CALL CHANGE_COUNTRY(ARG:0, 0, 1, 1)
+	SIF FINDELEMENT(PRISONER_TARGET, ARG:0) != -1
+		PRISONER_TARGET:(FINDELEMENT(PRISONER_TARGET, ARG:0)) = -1
+
+	IF CALC_SHOP_TIME() == SHOP_TIME
+		PRINTFORMW 인원수 부족에 의한 일의 악영향에 의해 자유시간이 없어졌으므로 거점 페이즈를 종료합니다
+		LINES_SHOP = LINECOUNT
+		BEGIN TURNEND
+	ENDIF
+ELSE
+	CALL KOJO_EVENT(ARG:0, 344)
+	PRINTFORMW ……………………
+	PRINTFORMW ……
+	PRINTFORMW 집행인에 처형의 중지를 명했습니다
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")% 그 자리에 웅크리고 앉아, 고귀한 생명이 머문 배를 양팔로 지키도록(듯이) 안아, 떨리는 소리로 흐느껴 울었다
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%【아이를 인질】에 빼앗겼다…
+	CFLAG:(ARG:0):종속도 += 500
+	CFLAG:(ARG:0):호감도 -= 1000
+	EXP:(ARG:0):트라우마경험 += 16
+	TALENT:(ARG:0):아이인질 = 1
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+;임산부 촉수 처형
+;-------------------------------------------------
+@PRISONER_TRAIT_EXECUTE_PREGNANT_TENTACLE(ARG:0)
+#DIM 관리인
+#DIM 효과량
+
+PRINTL 
+PRINTFORML 촉수에 형성해진 처형 방에 따라 올 수 있었던 %조사처리(ANAME(ARG:0),"는")%, 울면서 목숨구걸을 시작했다
+PRINTFORMW 『두 번 다시 거역하지 않는, 어떤 일이라도 하기 때문에, 배의 아이만은 도와』라고, 필사적인 모습으로 간원 하고 있다
+PRINTL 
+PRINTFORML 정말로 %조사처리(ANAME(ARG:0),"를")% 처형합니까?
+
+SIF CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속 && CALC_SHOP_TIME(!IS_ANIMAL(ARG:0)) == SHOP_TIME
+	CALL COLOR_PRINTL("추방했을 경우, 최대 행동횟수 감소에 의해 즉시 금기의 거점 페이즈가 종료합니다!", 칼라_경고)
+
+CALL ASK_YN("처형한다", "자비를 걸친다")
+
+
+IF RESULT == 0
+	CALL KOJO_EVENT(ARG:0, 343)
+	PRINTFORMW ……………………
+	PRINTFORMW ……
+	PRINTFORMW %조사처리(ANAME(ARG:0),"를")% 배의 아이공처형했습니다
+	PRINTL 
+	WAIT
+	;타국으로부터의 평가를 내린다
+	PRINTL 
+	PRINTFORMW 이 소행에 각 세력으로부터 비난의 소리가 쇄도하고 있습니다
+
+	FOR LOCAL, 1, MAX_COUNTRY
+		SIF !IS_COUNTRY(LOCAL) || LOCAL == CFLAG:MASTER:소속
+			CONTINUE
+
+		IF LOCAL == CFLAG:(ARG:0):소속
+			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -200, 300)
+		ELSE
+			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -100, 150)
+		ENDIF
+	NEXT
+
+
+	CALL CHANGE_COUNTRY(ARG:0, 0, 1, 1)
+	SIF FINDELEMENT(PRISONER_TARGET, ARG:0) != -1
+		PRISONER_TARGET:(FINDELEMENT(PRISONER_TARGET, ARG:0)) = -1
+
+
+	;손에 들어 오는 요술경험치를 계산해 취득＆표시
+	PRINTFORML <%ANAME(관리인)%>
+
+	효과량= 30 + BASE:(ARG:0):정신력 / 20 + ABL:(ARG:0):촉수 * 10
+
+	CALL PRINT_ADD_EXP(관리인, "요술경험치", 효과량)
+	CALL TRAIN_AUTO_ABLUP(관리인)
+	WAIT
+	IF CALC_SHOP_TIME() == SHOP_TIME
+		PRINTFORMW 인원수 부족에 의한 일의 악영향에 의해 자유시간이 없어졌으므로 거점 페이즈를 종료합니다
+		LINES_SHOP = LINECOUNT
+		BEGIN TURNEND
+	ENDIF
+ELSE
+	CALL KOJO_EVENT(ARG:0, 345)
+	PRINTFORMW ……………………
+	PRINTFORMW ……
+	PRINTFORMW 굶은 촉수들에게 처형의 중지를 명했습니다
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")% 그 자리에 웅크리고 앉아, 고귀한 생명이 머문 배를 양팔로 지키도록(듯이) 안아, 떨리는 소리로 흐느껴 울었다
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%【아이를 인질】에 빼앗겼다…
+	CFLAG:(ARG:0):종속도 += 500
+	CFLAG:(ARG:0):호감도 -= 1000
+	EXP:(ARG:0):트라우마경험 += 16
+	TALENT:(ARG:0):아이인질 = 1
+ENDIF
+
+RETURN 1

@@ -1,0 +1,42 @@
+﻿@CHARACTER_EDIT_UI_ABL(대상)
+#DIM 대상
+LOCAL:1 = 0
+FOR LOCAL, 0, VARSIZE("ABL")
+	SIF ABLNAME:(LOCAL) == ""
+		CONTINUE
+	PRINTBUTTON @"% "[" + ABLNAME:LOCAL + "]" , 10, LEFT%:", LOCAL
+
+	IF GROUPMATCH(LOCAL, GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창"), GETNUM(ABL, "요술"), GETNUM(ABL, "야심"))
+		CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:대상:LOCAL)
+	ELSEIF LOCAL == GETNUM(ABL, "성지식")
+		CALL PRINT_ALPHABET_RANK(랭크_성지식, ABL:대상:LOCAL)
+	ELSE
+		CALL PRINT_ALPHABET_RANK(랭크_그외, ABL:대상:LOCAL)
+	ENDIF
+
+	PRINTFORM  {ABL:대상:LOCAL, 4, RIGHT} 
+	LOCAL:1 ++
+	SIF LOCAL:1 != 0 && LOCAL:1 % 5 == 0
+		PRINTL
+NEXT
+PRINTL
+PRINTL 전투계 수치를 제외한 나머지 패러미터는 10부터 S랭크로 취급되니 지나치게 높이지 말것
+
+@CHARACTER_EDIT_INPUT_ABL(대상, 입력치)
+#DIM 대상
+#DIM 입력치
+
+SIF !INRANGE(입력치, 0, VARSIZE("ABL") - 1)
+	RETURN 0
+
+PRINTFORML 치를 입력 현재가 {ABL:대상:입력치} 
+PRINTFORML %ABLNAME:입력치%를 편집중 {ABL_MIN:입력치}～{ABL_MAX:입력치})
+
+INPUT
+
+RESULT = LIMIT(RESULT, ABL_MIN:입력치, ABL_MAX:입력치)
+
+ABL:대상:입력치 = RESULT
+
+SIF ABL:대상:요술 > 0
+	TALENT:대상:요술지식 = 1

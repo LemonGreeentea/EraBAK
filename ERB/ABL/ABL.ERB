@@ -1,0 +1,79 @@
+﻿;능력 업 화면의 처리
+
+;-------------------------------------------------
+;커맨드 실행시의 자동 능력 상승 ARG:0……캐릭터 번호 ARG:1……1이라면 메세지를 비표시
+;-------------------------------------------------
+@TRAIN_AUTO_ABLUP(ARG:0, ARG:1 = 0)
+#DIM 초기치
+#DIM 능력
+#DIM 필요경험치
+#DIM 대응경험치
+;능력 고정 플래그가 서 있다면 처리하지 않는다
+IF CFLAG:(ARG:0):능력고정플래그
+	RETURN
+ENDIF
+
+FOR 능력, 0, 70
+	초기치 = ABL:(ARG:0):능력
+	IF ABLNAME:능력 == "성지식"
+		;성지식은 별도 기준
+		CALL TRAIN_AUTO_ABLUP_KNOWLEDGE(ARG:0, ARG:1)
+		CONTINUE
+	ENDIF
+
+	;능력에 대응하는 경험치의 명칭을 취득
+	RESULTS = 
+	TRYCALLFORM ABLUP_EXPNAME{능력}
+	SIF RESULTS == ""
+		CONTINUE
+
+	대응경험치 = GETNUM(EXP, RESULTS)
+
+	WHILE ABL:(ARG:0):능력 < 9999
+		;필요한 경험치의 계산
+		RESULT = 0
+		TRYCALLFORM CALC_ABLUP_EXP{능력}(ARG:0)
+		필요경험치 = RESULT
+
+		SIF 필요경험치 < 0 || EXP:(ARG:0):대응경험치 < 필요경험치
+			BREAK
+		ABL:(ARG:0):능력 ++
+		EXP:(ARG:0):대응경험치 -= 필요경험치
+	WEND
+
+	SIF 초기치 == ABL:(ARG:0):능력
+		CONTINUE
+
+	IF !ARG:1
+		SETCOLOR 칼라_오렌지
+		PRINTFORML %ANAME(ARG:0)%의 %조사처리(ABLNAME:(능력),"가")% 상승했습니다(Lv{초기치}→{ABL:(ARG:0):능력})
+		RESETCOLOR
+	ENDIF
+NEXT
+
+
+;-------------------------------------------------
+;성지식의 특수한 Lv상승 처리 ARG:0……캐릭터 번호 ARG:1……1이라면 메세지를 비표시
+;-------------------------------------------------
+@TRAIN_AUTO_ABLUP_KNOWLEDGE(ARG:0, ARG:1)
+;능력 고정 플래그가 서 있다면 처리하지 않는다
+IF CFLAG:(ARG:0):능력고정플래그
+	RETURN
+ENDIF
+
+WHILE ABL:(ARG:0):성지식 < 5
+	;항상 경험치 100으로 Lv상승
+	IF EXP:(ARG:0):성지식경험치 >= 100
+		ABL:(ARG:0):성지식 ++
+		EXP:(ARG:0):성지식경험치 = 0
+		IF ARG:1 == 0
+			SETCOLOR 칼라_오렌지
+			PRINTFORML %ANAME(ARG:0)%의 성지식이 상승했습니다(Lv{ABL:(ARG:0):성지식})
+			RESETCOLOR
+		ENDIF
+	ELSE
+		BREAK
+	ENDIF
+WEND
+
+

@@ -1,0 +1,97 @@
+﻿;-------------------------------------------------
+;수기간의 조교를 요구
+;ARG:0은 상대의 세력 번호, ARG:1은 요구의 무게. 요구를 마시면 1, 거절하면 0을 돌려준다
+;-------------------------------------------------
+@DIPLOMACY_REQUESTED_TRAIN(ARG:0, ARG:1)
+#DIM TRAINING_DAY
+
+;자국·상대 세력의 군주의 캐릭터 번호를 각각 취득
+LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+LOCAL:5 = GET_COUNTRY_BOSS(ARG:0)
+
+;항상 주인공이 대상
+IF CONFIG:307 == 1
+	LOCAL:6 = MASTER
+;항상 군주가 대상
+ELSEIF CONFIG:307 == 2
+	LOCAL:6 = LOCAL:4
+;대상이 상황에 의해 변화
+ELSE
+	;대상 캐릭터 판정치. 정이라면 군주, 부라면 주인공이 요구의 대상이 된다
+	LOCAL:10 = 0
+
+	;●대상 캐릭터의 결정(군주 or 주인공)
+	;군주에 대한 이미지가 나쁠 정도 군주를 욕보일 방향으로 기운다
+	IF REL_LIKE:(LOCAL:5):(LOCAL:4) >= 800
+		LOCAL:10 -= 20
+	ELSEIF REL_LIKE:(LOCAL:5):(LOCAL:4) >= 300
+		LOCAL:10 -= 10
+	ENDIF
+	IF REL_HATE:(LOCAL:5):(LOCAL:4) >= 800
+		LOCAL:10 += 30
+	ELSEIF REL_HATE:(LOCAL:5):(LOCAL:4) >= 300
+		LOCAL:10 += 15
+	ENDIF
+
+	;주인공과의 관계의 깊이에 응해 주인공의 봉사를 요구하는 (분)편에 기운다
+	IF TALENT:(LOCAL:5):친애
+		LOCAL:10 -= 40
+	ELSEIF TALENT:(LOCAL:5):연모
+		LOCAL:10 -= 20
+	ELSEIF TALENT:(LOCAL:5):연인
+		LOCAL:10 -= 10
+	ELSEIF TALENT:(LOCAL:5):친구
+		LOCAL:10 += 20
+	ELSEIF CFLAG:(LOCAL:5):2 >= 500
+		LOCAL:10 -= 5
+	ENDIF
+
+	;성별에 의한 판정
+	IF IS_MALE(LOCAL:5)
+		SIF IS_FEMALE(MASTER)
+			LOCAL:10 -= 10
+		SIF IS_FEMALE(LOCAL:4)
+			LOCAL:10 += 10
+	ENDIF
+	IF IS_FEMALE(LOCAL:5)
+		SIF IS_MALE(MASTER)
+			LOCAL:10 -= 10
+		SIF IS_MALE(LOCAL:4)
+			LOCAL:10 += 10
+	ENDIF
+
+	IF LOCAL:10 >= 0
+		LOCAL:6 = LOCAL:4
+	ELSE
+		LOCAL:6 = MASTER
+	ENDIF
+ENDIF
+
+;대상 캐릭터는 군주 또는 당신
+;내용은 다른 함수를 사용해, 능력·소질에 응해 분기
+
+;요구의 무게와 대상 캐릭터에게로의 판정치의 크기에 응해 일수를 산출  최대 7일간
+TRAINING_DAY = MIN(MAX(ABS(LOCAL:10)*(ARG:1), 1), 7)
+
+PRINTFORML %조사처리(ANAME(LOCAL:5),"는")% %ANAME(LOCAL:6)%에게, 이쪽의 제안을 마시는 대신에{TRAINING_DAY}일간 조교시켜라라고 요구했다
+
+CALL ASK_YN("받아들인다", "거절한다")
+IF RESULT == 1
+	RETURN 0
+ENDIF
+
+IF LOCAL:6 == MASTER
+	;역조교요구 일수를 설정
+	DIPLOMACY_TRAINED_DAY = TRAINING_DAY
+	DIPLOMACY_TRAINING_CHARA = LOCAL:5
+	PRINTL 
+ELSE
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:6)%에게, 요구를 마시도록(듯이) 설득했다…
+	;역조교요구 일수를 설정
+	DIPLOMACY_TRAINED_DAY -= TRAINING_DAY
+	DIPLOMACY_TRAINING_CHARA = LOCAL:5
+	PRINTL 
+ENDIF
+
+RETURN 1
+

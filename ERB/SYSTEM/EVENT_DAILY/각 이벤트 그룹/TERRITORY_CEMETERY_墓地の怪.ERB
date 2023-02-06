@@ -1,0 +1,175 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_TERRITORY_CEMETERY_RATE()
+RETURN 50
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_TERRITORY_CEMETERY_DECISION()
+#DIM 묘지
+묘지 = GET_CITYNUMBER("묘지")
+
+SIF 묘지 == -1
+	RETURN 0
+SIF CITY_OWNER:묘지 != CFLAG:MASTER:소속
+	RETURN 0
+SIF DVAR:묘지의괴_발생플래그 == 1
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_TERRITORY_CEMETERY_GENRE()
+RETURN 데일리_장르_에로
+
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_TERRITORY_CEMETERY
+#DIM 청아
+#DIM 묘지
+
+묘지 = GET_CITYNUMBER("묘지")
+
+청아 = NAME_TO_CHARA("청아")
+
+LOCAL:0 = 0
+
+PRINTFORML 최근 묘지에 도깨비가 나온다는 소문이 서 있다
+PRINTFORML 묘지의 도깨비라고 하면 여러명 짐작이 있지만…
+PRINTFORMW 이번은 그 어느쪽과도 다른 사람답다
+PRINTFORML 어떻게 하지?
+CALL ASK_MULTI_JUDGE("조사에 향한다", 1,"방치한다", 1)
+IF RESULT == 1
+	PRINTFORML 어차피 과장인 괴담일 것이다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 서로 빼앗지 않고 일하러 돌아왔다
+	RETURN
+ELSEIF RESULT == 0
+	PRINTFORML 단순한 괴담일지도 모르지만 신경이 쓰였다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 조사에 향하는 일로 했다
+ENDIF
+PRINTFORML 
+PRINTFORML 묘지에 일견 이상은 없는 것 같았지만 순찰을 실시하는 일로 했다
+PRINTFORML 한동안 돌아보고 있으면 어둠으로부터 이상한 듯한 목소리가 들려 왔다
+PRINTFORMW 경계하고 있으면 어둠의 안쪽으로부터 달각달각 소리를 울리면서 해골이 튀어 나왔다!
+IF LOCAL:0 == 1
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 검과 지폐를 지어 맞아 싸웠다!
+ELSE
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 검을 뽑아 맞아 싸웠다!
+ENDIF
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF ABL:MASTER:무투 / 10 + RAND:10 + (LOCAL:0 * 5) >= 10
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% 해골의 배후에 있던 다른 기색을 느낌 공격했다!
+	PRINTFORML 한다고 캬-! 그렇다는 비명이 올라, 누군가가 털썩 지면에 쓰러졌다
+	PRINTFORMW 그리고 동시에 해골이 움직임을 멈추었다
+	IF LOCAL:0 == 1
+		PRINTFORMW 청아로부터 받은 지폐도 도움이 된, 다음에 인사를 한다고 하자
+	ENDIF
+	PRINTFORML 아무래도 이 사령술사가 조종하고 있던 것 같다
+	PRINTFORMW 여기에 정착한 그녀가 이렇게 (해) 침입자를 쫓아버리고 있던 것 같다
+	IF HAS_PENIS(MASTER)
+		PRINTFORMW …몹시 놀라 넘어져 있는 그녀를 자주(잘) 보면 꽤 사랑스럽다
+		PRINTFORML 어떻게 하지?
+		CALL ASK_YN("잡는다" ,"범한다")
+		IF RESULT == 0
+			PRINTFORMW 이번은 솔직하게 잡는 일로 했다
+		ELSEIF RESULT == 1
+			PRINTFORML 지금이라면 주위에 아무도 없다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀를 거느리면 가까이의 빈집으로 옮겼다
+			PRINTFORML 
+			PRINTFORMW 빈집에는 딱 좋은 침대가 있어 %조사처리(ANAME(MASTER),"는")% 거기에 그녀를 쓰러트렸다
+			PRINTFORML 힘이 약한 그녀의 저항을 가볍게 억누르고 옷을 벗겨내면 옷 위로부터로는 몰랐다 풍만한 육체가 넘쳐 나왔다
+			PRINTFORML 얼굴을 새빨갛게 해 부끄러워해 우물거리는 그녀의 행동에 %조사처리(ANAME(MASTER),"는")% 무의식중에 사랑스러움을 느껴 발기해 버린다
+			PRINTFORML 떨리는 그녀에게 덥치면서 눈과 같이 흰 피부에 손가락을 기게 하면, 「햐앙」라고 사랑스러운 허덕임이 새었다
+			PRINTFORMW 눈을 감아 필사적으로 견디려고 하는 그녀의 민감한 곳을 열심히 애무해 주면 오슬오슬 등줄기를 진동시키고 몸부림친다
+			PRINTFORML 목덜미에 개-와 혀를 기게 하면 떨리는 목으로부터 달콤한 신음소리가 흘러넘쳐, 귓불을 살짝 깨물기와 꽉 허벅다리를 닫았다
+			PRINTFORML %조사처리(ANAME(MASTER),"가")% 거기에 억지로 손가락을 돌진해 균열의 입구를 쓸어올리면 그녀는 눈물을 흘리면서 목을 작게 거절한다
+			PRINTFORML 눈물이 흘러넘칠 것 같은 눈동자를 차분히 응시하면 그녀는 귀까지 새빨갛게 되어 눈을 유영하게 했다
+			PRINTFORMW 아무래도 낯가림하는 것 같고, 이러한 일경험도 지금까지 없었던 것 같다
+			PRINTFORML 그 반응에 더욱 더 경직은 딱딱함을 늘려, 드디어 인내 할 수 없게 된 %조사처리(ANAME(MASTER),"는")% 그녀의 다리를 움켜 쥐어 열게 했다
+			PRINTFORML 지금부터를 상상해 딱딱하게 긴장하면서도 못박음이 되어 있는 그녀의 얼굴을 보면서 천천히 페니스를 쑤셔 넣었다
+			PRINTFORML 「앗…! 개! 웃……!」
+			PRINTFORMW 신품의, 너무 힘든 구멍에 즈즈즉…과 천천히 허리를 가라앉혀 가면 그녀는 신음소리를 올리면서 매달려 온다
+			PRINTFORML 「읏…! 앗! 하아…앗! 아, 아프닷…!」
+			PRINTFORML 꾹 손톱을 먹혀들게 해 오는 그녀에게 상관하지 않고 %조사처리(ANAME(MASTER),"는")% 그대로 동글동글 허리를 밀어넣어 페니스를 쑤셔 넣는다
+			PRINTFORML 무리하게 넣어도 근원까지는 과연 무리였지만, 꽤의 억압에 %조사처리(ANAME(MASTER),"는")% 참지 못하고 피스톤을 시작한다
+			PRINTFORMW 그녀는 아픔의 너무 필사적으로 시트를 잡으면서 비명을 올려, 전신을 핑 늘려 부들부들진동시키고 있다
+			PRINTFORML 유두나 음핵을 만지작거리면서 서서히 허리의 움직임을 가속시켜 가면 점차 암컷구멍이 풀려, 피에 섞여 꿀이 흘러넘쳐 왔다
+			PRINTFORML 「후웃…! 웃…! 우웃…앗! 잇!」
+			PRINTFORMW 변함 없이 그녀에게 고통이 얼굴을 비뚤어지게 해 신음하지만, 그 중에 희미하게 달콤한 신음소리가 혼자갈이고라고 있었다
+			PRINTFORML 억압에 참지 못하고 1발째를 발하려고 깊게 허리를 가라앉혀 그녀를 껴안고 사정을 예고하면 일순간 비명을 올렸다
+			PRINTFORML 하지만 %조사처리(ANAME(MASTER),"는")% 그녀의 말에는 귀를 기울이지 않고 마음껏 그 최안쪽 목표로 해 정액을 발했다
+			PRINTFORML 그녀는 흠칫 몸을 뒤로 젖히게 해 그 반동으로 질전체가 경련해 장대를 자극해 요도에 남는 한 방울까지 사정을 재촉 된다
+			PRINTFORMW 그 상정외의 기분 좋음에 %ANAME(MASTER)%도 무심코 낮게 신음소리를 내면서 짜내지는 대로 사정을 계속했다
+			PRINTFORML 「읏! 읏! ～～～～! …하아! 하아! 하아………」
+			PRINTFORML 사정을 끝내 %조사처리(ANAME(MASTER),"가")% 페니스를 뽑아 내면 그녀는 한동안 경련한 후 구라고 와 힘 없게 침대에 쓰러졌다
+			PRINTFORMW 조금 전과 달라 완전히 열어 실룩거리는 보지로부터는 걸죽 정액과 피가 넘쳐 나오고 있어 매우 관능적이었다
+			PRINTFORMW …그녀의 상태가 마음에 들었던 %조사처리(ANAME(MASTER),"는")% 그녀가 반성할 때까지 밤새도록 그 육체를 맛보게 해 받았다
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "사령술사의 입술", "", "사령술사의 질", "강간")
+			PRINTFORML 
+			PRINTFORMW 선행을 쌓아 만족한 %조사처리(ANAME(MASTER),"는")% 그녀를 잡아 순찰에 인도했다
+		ENDIF
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀를 잡았다
+	ENDIF
+	PRINTFORML 이후, 묘지에서의 도깨비의 목격 정보는 없어졌다
+	CITY_GUARD:묘지 += 25
+	CALL COLOR_PRINTW("사건을 해결해 영지의 안전을 높인 일로 묘지의 방위치가 상승했다", 칼라_주의)
+ELSE
+	PRINTFORMW 져 버렸다……
+	IF IS_MALE(MASTER)
+		PRINTFORML 암야에 떠올라 낄낄 웃는 해골에 우려를 이루었던 %조사처리(ANAME(MASTER),"는")% 비명을 올리면서 도망치기 시작했다
+	ELSE
+		PRINTFORML %조사처리(ANAME(MASTER),"가")% 넘어지면 해골의 배후로부터 이상한 듯한 남자가 나타났다
+		PRINTFORML 아무래도 이 사령술사가 해골을 조종하고 있던 것 같다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 해골에 움켜 쥘 수 있어 어딘가로 옮겨졌다…
+		PRINTFORML 
+		PRINTFORML 그의 아지트에 데리고 들어가진 %조사처리(ANAME(MASTER),"는")% 실험대라는 명목으로 범해져 버렸다
+		PRINTFORML 강시에 사용하는 지폐를 붙여진 %조사처리(ANAME(MASTER),"는")% 저항하지 못하고, 그에 걸쳐 말하는대로인 채 허리를 흔들고 있다
+		PRINTFORML 명령 준수 만이 아니고 감각예민화의 지폐도 동시에 붙여지고 있어 %조사처리(ANAME(MASTER),"는")%허리를 흔드는 동안에 한심한 소리를 흘린다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 페니스가 자신의 안을 펴넓혀 출입하는 감각을 다이렉트에 느낌이라고 참지 못하고 몸부림쳐 버린다
+		PRINTFORML 그는 누워 그 상태를 봐 만족한 것 같게 힐쭉거리면서 변덕스럽게 유두나 음핵을 오돌오돌 굴려 온다
+		PRINTFORML 가볍게 접할 수 있는 것만으로 신경 그 자체가 애무된 것 같은 충격이 달려, 교성과 함께 흠칫 경련 당한다
+		PRINTFORMW 이미 육체는 쾌락으로 포화 상태에 있어, 끊임없이 주어지는 자극에 그저 보기 흉하게 반응해 그를 기쁘게 했다
+		PRINTFORML 그런데도 %조사처리(ANAME(MASTER),"는")% 어떻게든 이성을 빠듯한 곳에서 유지해, 눈물을 흘려 아헤얼굴을 쬐면서도 그를 노려본다
+		PRINTFORML 하지만 때때로 그가 밀어올려 오면 일순간으로 덧없는 이성의 벽도 날아가 버려, 조수를 뿜어 절정 당한다
+		PRINTFORML 한 번 절정 할 때에 %ANAME(MASTER)%의 이성은 근원으로부터 녹아 가는 대로 저항심도 없어져 가 버린다
+		PRINTFORMW 그는 그 모습을 즐기는것같이 단번에 지배하는 것은 아니고 조금씩 조금씩 몸과 마음을 계속 조교했다
+		PRINTFORML …몇번 절정 했을지도 다 셀 수 있지 않게 되었을 무렵, %조사처리(ANAME(MASTER),"는")% 단정치 못하게 미친듯이 자지러지는 신음소리를 내면서 허리를 흔들고 있었다
+		PRINTFORML 행복하게 가득 차고 황홀이라고 한 표정의 %ANAME(MASTER)%의, 발밑에는 조금 전까지 쳐지고 있던 명령의 지폐가 떨어지고 있다
+		PRINTFORML 이미 %조사처리(ANAME(MASTER),"는")% 몸도 마음도 완전히 소리 되어 스스로의 의사로 허리를 흔들어 단정치 못하게 쾌락을 조르기라고 있다
+		PRINTFORMW ! (와)과 힘차게 주인님의 정액이 발해지면 그때마다 사고가 튀어, 이 이상 없는 행복하게 달한다
+		PRINTFORML %ANAME(MASTER)%의 자궁은 완전히 내려 그의 페니스에 달라붙는 것처럼 하면서 탐욕에 한 방울 남김없이 정액을 다 마신다
+		PRINTFORML 그의 손가락이, 혀가 피부를 길 때에 전신에 강렬한 시비레가 달려%조사처리(ANAME(MASTER),"는")% 절정 하면서 더욱 절정을 반복한다
+		PRINTFORML 그는 완전히 만족한 것 같아 %ANAME(MASTER)%의 충성심과 성적 감각을 시험하는것같이 여러가지 플레이를 명해 왔다
+		PRINTFORMW %ANAME(MASTER)%에 있어서는 그에 따라 칭찬할 수 있는 귀여워해지는 것이 무엇보다의 행복하기 때문에 무슨 주저 없고 거기에 따랐다
+		PRINTFORMW …그의 실험은 새벽녘까지 끝없이 계속되어, %ANAME(MASTER)%의 신체는 저 좋은 대로 희롱해져 버렸다
+		CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, Ａ, Ｖ성교, Ａ성교", "키스상실, 처녀상실, 질내사정, Ａ처녀상실, 장내사정, 구강사정", GET_SPERM_ID("들요괴"), @"들요괴의 \@RAND:2 ? 페니스 # 입술\@", "들요괴", "", "강간")
+		CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, Ａ, Ｖ성교, Ａ성교", "키스상실, 처녀상실, 질내사정, Ａ처녀상실, 장내사정, 구강사정", GET_SPERM_ID("들요괴"), @"들요괴의 \@RAND:2 ? 페니스 # 입술\@", "들요괴", "", "강간")
+		PRINTFORML 
+		PRINTFORMW 이튿날 아침, 너덜너덜이 된 %조사처리(ANAME(MASTER),"가")% 묘지의 한 귀퉁이에 방치되어 있었다
+	ENDIF
+	IF CITY_GUARD:묘지 > 25
+		CITY_GUARD:묘지 -= 25
+	ELSE
+		CITY_GUARD:묘지 -= CITY_GUARD:묘지
+	ENDIF
+	CALL COLOR_PRINTW("사건은 해결하지 못하고 영지민의 불안이 높아진 결과, 묘지의 방위치가 감소했다…", 칼라_주의)
+ENDIF
+DVAR:묘지의괴_발생플래그 = 1
+
+RETURN 1

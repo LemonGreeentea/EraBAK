@@ -1,0 +1,55 @@
+﻿;-------------------------------------------------
+;추문을 퍼뜨린다
+;-------------------------------------------------
+@DIPLOMACY_CREATE_SCANDAL(ARG:0)
+#DIM 군주
+#DIM 상대군주
+#DIM FIRST_LINE
+#DIM CONST 지불액리스트 = 1, 5, 50, 100, 500, 1000, 2500, 5000, 10000, 15000, 20000, 30000, 40000, 50000
+#DIM 지불액
+#DIM 효과
+FIRST_LINE = LINECOUNT
+
+군주 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+상대군주 = GET_COUNTRY_BOSS(ARG:0)
+CALL SINGLE_DRAWLINE
+PRINTFORML 국고를 소비해, %ANAME(상대군주)%에 관한 추문을 타세력에 흘립니다.
+PRINTFORML 외 세력으로부터 %ANAME(상대군주)%에의 관계가 악화됩니다
+PRINTFORML 아무리 소비합니까? (손입력·버튼으로부터 입력, 0 이하로 캔슬, 최대 50000)
+FOR LOCAL, 0, VARSIZE("지불액리스트")
+	SIF MONEY:(CFLAG:MASTER:소속) < 지불액리스트:LOCAL
+		BREAK
+	PRINTBUTTON @"[{지불액리스트:LOCAL}지불한다]", 지불액리스트:LOCAL
+NEXT
+PRINTFORML
+PRINTBUTTON @"[{MONEY:(CFLAG:MASTER:소속)}지불한다]", MONEY:(CFLAG:MASTER:소속)
+PRINTL
+PRINTFORM [0] 돌아온다
+INPUT
+
+IF RESULT <= 0
+	RETURN 0
+ELSEIF MONEY:(CFLAG:MASTER:소속) < RESULT || RESULT > 50000
+	CLEARLINE LINECOUNT - FIRST_LINE
+	RESTART
+ENDIF
+지불액 = RESULT
+CALL ICPRINT(@"%조사처리(ANAME(MASTER),"는")% 돈<{지불액}>를 지불해, %ANAME(상대군주)%에 관한 추문을 퍼뜨렸다……", "W", 칼라_주의)
+MONEY:(CFLAG:MASTER:소속) -= 지불액
+효과 = CALC_SEND_MONEY_EFFECT(지불액)
+;호감도 상승·적대치 하강 기준치
+LOCAL:1 = SQRT(TMP_GET_COOKING_POWER(CFLAG:MASTER:소속)) / 10
+LOCAL:2 = SQRT(TMP_GET_POLITICS_POWER(CFLAG:MASTER:소속)) / 10
+
+
+효과 = MAX(효과 * (LOCAL:1 + LOCAL:2 + 100) / 100, 5)
+
+FOR LOCAL, 0 ,MAX_COUNTRY
+	SIF !IS_COUNTRY(LOCAL)
+		CONTINUE
+	SIF !GROUPMATCH(LOCAL, CFLAG:MASTER:소속, ARG:0)
+		CALL CHANGE_RELATION_C_TO_C(LOCAL, ARG:0, -효과, 효과)
+NEXT
+
+RETURN 1
+

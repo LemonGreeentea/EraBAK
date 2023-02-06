@@ -1,0 +1,217 @@
+﻿;-------------------------------------------------
+;공통 실행 판정
+;-------------------------------------------------
+@COM_ABLE_COMMON(ARG)
+IF !COM_ENABLE
+	RETURN 0
+ENDIF
+
+;맡김중은 제외함
+IF !TFLAG:0
+	;하는대로, 맡김은 예외
+	IF !GROUPMATCH(ARG, 290, GET_TRAINNUM("맡긴다"))
+		;행동불능의 캐릭터가 주도권을 잡고 있으면 커맨드 실행 불가
+		FOR LOCAL:0, 0, MPLY_NUM
+			IF !IS_PLAYABLE(MPLY:(LOCAL:0)) && IS_INITIATIVE_SETTING(MPLY:(LOCAL:0)) == 2
+				RETURN 0
+			ENDIF
+		NEXT
+		FOR LOCAL:0, 0, MTAR_NUM
+			IF !IS_PLAYABLE(MTAR:(LOCAL:0)) && IS_INITIATIVE_SETTING(MTAR:(LOCAL:0)) == 2
+				RETURN 0
+			ENDIF
+		NEXT
+	ENDIF
+
+	;하는대로는 예외
+	IF !GROUPMATCH(ARG, 290)
+		;주인공이 행동불능이라면 커맨드 실행 불가
+		IF !IS_PLAYABLE(MASTER)
+			RETURN 0
+		ENDIF
+	ENDIF
+ENDIF
+
+;주도권을 가지고 있는 캐릭터가, 그 행위의 지식을 가지고 있을 필요가 있다
+;페니스밴드를 구별
+IF ARG:0 == 50
+	LOCAL:2 = 1
+ELSEIF FLAG:주도권소유자 == -1
+	;「형편」의 경우, 플레이어·타겟중 누군가 한사람이 지식을 가지고 있으면 좋다
+	LOCAL:2 = 0
+	FOR LOCAL:0, 0, MPLY_NUM
+		CALL CHECK_COM_KNOWLEDGE(MPLY:(LOCAL:0), ARG:0)
+		IF RESULT
+			LOCAL:2 = 1
+			BREAK
+		ENDIF
+	NEXT
+	IF !LOCAL:2
+		FOR LOCAL:0, 0, MTAR_NUM
+			CALL CHECK_COM_KNOWLEDGE(MTAR:(LOCAL:0), ARG:0)
+			IF RESULT
+				LOCAL:2 = 1
+				BREAK
+			ENDIF
+		NEXT
+	ENDIF
+ELSE
+	CALL CHECK_COM_KNOWLEDGE(FLAG:주도권소유자, ARG:0)
+	LOCAL:2 = RESULT
+ENDIF
+IF !LOCAL:2
+	RETURN 0
+ENDIF
+
+FOR LOCAL:0, 0, MPLY_NUM
+	IF IS_QUADORUPED_ANIMAL(MPLY:(LOCAL:0)) && !QUADORUPED_ANIMAL_COMABLE_MPLY(ARG:0)
+		RETURN 0
+	ENDIF
+NEXT
+
+FOR LOCAL:0, 0, MTAR_NUM
+	IF IS_QUADORUPED_ANIMAL(MTAR:(LOCAL:0)) && !QUADORUPED_ANIMAL_COMABLE_MTAR(ARG:0)
+		RETURN 0
+	ENDIF
+NEXT
+
+;호모 필터
+IF CONFIG:201
+	;꼬리Ａ, 페라, 엉덩이코키, 키스, 각종 삽입계, 이라마의 경우, MTAR와 MPLY 양쪽 모두에 남자가 포함되어 있으면 불가
+	IF GROUPMATCH(ARG, 6, 7, 11, 15, 20, 23, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 53, 56, 58, 90, 161)
+		FOR LOCAL:0, 0, MPLY_NUM
+			IF IS_MALE(MPLY:(LOCAL:0))
+				FOR LOCAL:1, 0, MTAR_NUM
+					IF IS_MALE(MTAR:(LOCAL:1))
+						RETURN 0
+					ENDIF
+				NEXT
+			ENDIF
+		NEXT
+	ENDIF
+ENDIF
+
+CALL CHECK_COM_AVAILABLE(ARG:0)
+RETURN RESULT
+
+;-------------------------------------------------
+;desc  :상황에 따라 건네받은 커맨드가 실행 가능한가 판별한다
+;param :커맨드:커맨드의 번호
+;return:반환값:실행 가능하면 1
+;-------------------------------------------------
+@CHECK_COM_AVAILABLE(커맨드)
+#DIM 커맨드
+CALLFORM COM_AVAILABLE_WHEN{커맨드}
+
+SELECTCASE RESULT
+	CASE 커맨드_우후후
+		RETURN FLAG:우후후플래그
+	CASE 커맨드_육아
+		RETURN FLAG:조교모드 == 조교_육아
+	CASE 커맨드_일상
+		RETURN !FLAG:우후후플래그 && FLAG:조교모드 != 조교_육아
+	CASE 커맨드_공통
+		RETURN 1
+ENDSELECT
+RETURN 0
+
+;-------------------------------------------------
+;캐릭터 ARG:0에 커맨드 ARG:1의 지식을 획득시킨다(우후후코만드만 0～299)
+;-------------------------------------------------
+@SET_COM_KNOWLEDGE(ARG:0, ARG:1)
+
+CALL CHECK_COM_KNOWLEDGE(ARG:0, ARG:1)
+IF !RESULT
+	PRINTFORML %조사처리(ANAME(ARG:0),"는")% 「%TRAINNAME:(ARG:1)%」의 지식을 얻었습니다
+ENDIF
+COM_KNOWLEDGE:(ARG:0):(ARG:1) = 1
+
+
+;-------------------------------------------------
+;캐릭터 ARG:0이 ARG:1번의 커맨드를 주도 실행할 수 있는 지식이 있을지 어떨지를 판정
+;실행 가능하면 1, 불가능하면 0이 돌아간다
+;-------------------------------------------------
+@CHECK_COM_KNOWLEDGE(ARG:0, ARG:1)
+
+;동물은 다른 제어가 있기 때문에 성지식을 무시한다
+IF GROUPMATCH(TALENT:(ARG:0):위안모브, 위안_캐릭터_개, 위안_캐릭터_돼지, 위안_캐릭터_말, 위안_캐릭터_원숭이)
+	RETURN 1
+ENDIF
+
+;그 커맨드의 지식을 가지고 있는, 없고 성지식이 커맨드의 성지식에 이르고 있으면 OK
+IF COM_KNOWLEDGE:(ARG:0):(ARG:1)
+	RETURN 1
+ENDIF
+
+;필요한 성지식 Lv를 취득
+RESULT = 0
+TRYCALLFORM COM_KNOWLEDGE_LEVEL{ARG:1}
+
+;성지식 Lv가 필요치에 이르고 있으면 OK
+IF ABL:(ARG:0):성지식 >= RESULT
+	RETURN 1
+ENDIF
+RETURN 0
+
+;-------------------------------------------------
+;동물 캐릭터가 플레이어측 때의 실행 가능 커맨드를 통째로 제한하는 함수
+;실행 가능하면 1, 불가능하면 0
+;-------------------------------------------------
+@QUADORUPED_ANIMAL_COMABLE_MPLY(ARG:0)
+#FUNCTION
+;쿤닐링구스, 애널핥기, 펠라치오, 키스
+SIF GROUPMATCH(ARG:0, 2, 8, 11, 20)
+	RETURNF 1
+;정상위, 후배위, 기승위, 배면기승위, 2개삽입, 순번 삽입, 번갈아삽입, 그것들의Ａ판
+SIF GROUPMATCH(ARG:0, 30, 31, 34, 35, 36, 40, 41, 44, 45, 46, 55, 56, 57, 58)
+	RETURNF 1
+;이라마
+SIF GROUPMATCH(ARG:0, 90)
+	RETURNF 1
+;다리를빤다
+SIF GROUPMATCH(ARG:0, 104)
+	RETURNF 1
+;방뇨하는, 오줌을 걸치는, 입안방뇨
+SIF GROUPMATCH(ARG:0, 130, 131, 132)
+	RETURNF 1
+;맡긴다, 아무것도하지않는다
+SIF GROUPMATCH(ARG:0, 291, 292)
+	RETURNF 1
+RETURNF 0
+;-------------------------------------------------
+;동물 캐릭터가 타겟측 때의 실행 가능 커맨드를 통째로 제한하는 함수
+;실행 가능하면 1, 불가능하면 0
+;-------------------------------------------------
+@QUADORUPED_ANIMAL_COMABLE_MTAR(ARG:0)
+#FUNCTION
+;애무, 애널애무, 꼬리 애널 삽입, 애널핥기
+SIF GROUPMATCH(ARG:0, 0, 4, 7, 8)
+	RETURNF 1
+
+;대딸, 펠라치오, 파이즈리, 풋잡, 오나홀대딸, 꼬리대딸
+SIF GROUPMATCH(ARG:0, 10, 11, 12, 14, 17)
+	RETURNF 1
+
+;애널 정상위, 후배위, 차례로Ａ, 번갈아Ａ
+SIF GROUPMATCH(ARG:0, 40, 41, 56, 58)
+	RETURNF 1
+	
+;애널바이브, Ａ확장벌룬, 로션, 미약, 절륜환, 마약, 도원향
+SIF GROUPMATCH(ARG:0, 62, 66, 70, 71, 72, 74, 76)
+	RETURNF 1
+;스팽킹, 채찍, 바늘, 눈을 가려, 밧줄, 재갈, 애널피스트, 때리기, 이라마치오, 배빵
+SIF GROUPMATCH(ARG:0, 81, 82, 83, 84, 85, 86, 88, 89, 90, 97)
+	RETURNF 1
+;자위, 안면승마, Ａ안면승마, 전기안마, 다리 빨아, Ｗ안면승마, 귀두고문대딸와 페라, 꼬리 셀프, 꼬리 셀프Ａ, 도게자, 조르기, 셀프 오나홀
+SIF GROUPMATCH(ARG:0, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 116)
+	RETURNF 1
+;방뇨하는, 오줌을 걸치는, 입안방뇨, 포피, 암기포히
+SIF GROUPMATCH(ARG:0, 130, 131, 132, 150, 151)
+	RETURNF 1
+;맡긴다, 아무것도하지않는다
+SIF GROUPMATCH(ARG:0, 291, 292)
+	RETURNF 1
+;PENIBAN
+SIF GROUPMATCH(ARG:0, 50)
+	RETURNF 1
+RETURNF 0

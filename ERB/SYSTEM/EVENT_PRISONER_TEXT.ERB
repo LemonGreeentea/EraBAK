@@ -1,0 +1,1032 @@
+﻿;-------------------------------------------------
+;구류
+;-------------------------------------------------
+@EVENT_PRISONER_TEXT0(ARG:0)
+
+IF TALENT:(ARG:0):붕괴 || TALENT:(ARG:0):공허
+	PRINTFORML %조사처리(ANAME(ARG:0),"는")% 감옥 안에서 공허하게 시선을 방황하게 하고 있다
+ELSE
+	IF RAND:4
+		IF ABL:(ARG:0):지략 >= 70
+			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 감옥 안에서 얌전하게 하고 있다…
+		ELSEIF ABL:(ARG:0):무투 >= 70
+			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 감옥 안에서 날뛰고 있는 것 같다…
+		ELSEIF ABL:(ARG:0):정치 >= 70
+			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 감옥의 밖에 있는 간수와 이야기하고 있다…
+		ELSE
+			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 감옥 안에서 불안한 듯이 하고 있다…
+		ENDIF
+	ELSE
+		SELECTCASE RAND:4
+			CASE 0
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 감옥 안에서 가만히 하고 있다…
+			CASE 1
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 감옥 안에서 불평을 말하고 있다…
+			CASE 2
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 감옥 안에서 불안한 것 같게 하고 있다…
+			CASEELSE
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 감옥 안에서 불안한 듯이 하고 있다…
+		ENDSELECT
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;고문
+;-------------------------------------------------
+@EVENT_PRISONER_TEXT2(ARG:0)
+SELECTCASE RAND:10
+	CASE 0
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 알몸으로 되어 손목을 밧줄로 속박되어 천정에 매달리고 있다…
+		PRINTFORML 채찍을 가진 강인한 병사가, 파라는 높은 소리와 함께 그 피부에 무수한 반점을 새겨 간다
+	CASE 1
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 단단히 묶어져 입에 깔때기를 세트 되고 있다
+		PRINTFORML 깔때기에 다음으로부터 다음에 물이 따라져 그 위는 부풀어 오르고 있다……
+	CASE 2
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 알몸으로 되어 기둥에 묶어 붙여져 있다……
+		PRINTFORML 강인한 병사가, 몇 번이나 몇 번이나 그 배를 후려갈기고 있다
+	CASE 3
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 알몸으로 되어 삼각목마에 실려지고 있다
+		PRINTFORML 양 다리에는 누름돌이 붙여져 있어 중량감이 그녀의 다리와 사타구니에 데미지를 주어 간다
+	CASE 4
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 비무장인 채, 몇 사람이나 되는 무장한 병사와 대련 상대를 하게 하고 있다
+		PRINTFORML 당연히 가나는 두도 없고, 대련 상대는 곧 린치(사적제재)로 바뀌었다……
+	CASE 5
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 폭음 중(안)에서 생활 당하고 있다
+		PRINTFORML 두의 갈라지는 것 같은 소리안, %조사처리(ANAME(ARG:0),"는")% 보내고 있다……
+	CASE 6
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 자는 것이 용서되지 않았다
+		PRINTFORML 눈꺼풀이 내린 순간, 감시역의 병사가 안면에 물흔들어 깨운다……
+	CASE 7
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 손발에 밧줄을 묶어 붙여져 각각을 다를 방향으로 끌려가고 있다……
+		PRINTFORML 신체의 당겨 조각조각 흩어지는 직전으로, 힘을 느슨하게하는 것을, 고문관은 몇 번이나 반복하고 있다……
+	CASE 8
+		PRINTFORML %ANAME(ARG:0)%에는 이제 몇일도 음식이 주어지지 않았다
+		PRINTFORML 과연 %ANAME(ARG:0)%도, 이제 팔한 개 올리는 체력조차 남아 있지 않은 것 같다……
+	CASE 9
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 철의 기둥에 신체를 묶어 붙여져 있다……
+		PRINTFORML 기둥중에서는 불이 불타고 있다. 기둥은 자꾸자꾸뜨거워져, %ANAME(ARG:0)%의 고기를 태운다……
+ENDSELECT
+
+;-------------------------------------------------
+;신체개발
+;-------------------------------------------------
+@EVENT_PRISONER_TEXT3(ARG:0)
+PRINTFORML %조사처리(ANAME(ARG:0),"는")% 알몸으로 되어 구속대에 고정되고 있다…
+
+IF HAS_PENIS(ARG:0)
+	PRINTFORML 명령받은  궁녀들은 손가락이나 혀를 사용해, %ANAME(ARG:0)%의 페니스에 사정하지 않는 정도의 완만한 자극을 계속 주었다…
+	RETURN 0
+ELSE
+	SELECTCASE RAND:4
+		CASE 0
+			SELECTCASE RAND:5
+				CASE 0
+					PRINTFORML 명령받은  궁녀들은, %ANAME(ARG:0)%의 클리를 손이나 혀로 계속 오로지 괴롭혔다…
+					RETURN 0
+				CASE 1
+					PRINTFORML 명령받은  궁녀들은, %ANAME(ARG:0)%의 유방에 로터를 꽉 눌러, 오로지 절정 시켰다……
+				CASE 2
+					PRINTFORML 궁녀는 %ANAME(ARG:0)%의 가랑이에 버터를 발라, 개에게 클리토리스를 몇 번이나 빨게 했다……
+				CASE 3
+					PRINTFORML 명령받은  궁녀들은 %조사처리(ANAME(ARG:0),"가")% 스스로 졸라댈 때까지 철저하게 애태움 계속했다……
+				CASE 4
+					PRINTFORML 명령받은  궁녀들은, %조사처리(ANAME(ARG:0),"가")% 체력의 한계를 맞이해도 오로지 절정 시켰다……
+			ENDSELECT
+			RETURN 0
+		CASE 1
+			SELECTCASE RAND:5
+				CASE 0
+					PRINTFORML 명령받은  궁녀들은, %ANAME(ARG:0)%의 양의가슴을 주물러, 유두를 혀로 상냥하게 핥아댔다…
+				CASE 1
+					PRINTFORML 명령받은  궁녀들은, %ANAME(ARG:0)%의 유두에 로터를 꽉 눌러, 오로지 절정 시켰다……
+				CASE 2
+					PRINTFORML 궁녀는 %ANAME(ARG:0)%의 유방에 착유기를 달아, 오로지 계속 짰다……
+				CASE 3
+					PRINTFORML 명령받은  궁녀들은 %조사처리(ANAME(ARG:0),"가")% 스스로 졸라댈 때까지 철저하게 애태움 계속했다……
+				CASE 4
+					PRINTFORML 명령받은  궁녀들은, %조사처리(ANAME(ARG:0),"가")% 체력의 한계를 맞이해도 오로지 절정 시켰다……
+			ENDSELECT
+			RETURN 1
+		CASE 2
+			SELECTCASE RAND:3
+				CASE 0
+					PRINTFORML 명령받은  궁녀들은, %ANAME(ARG:0)%의 질구 얕게를 만지작거려, 몇 번이나 절정 시켰다……
+				CASE 1
+					PRINTFORML 명령받은  궁녀들은, %ANAME(ARG:0)%의 자궁을 배 위로부터 자극해, 몇 번이나 절정 시켰다……
+				CASE 2
+					PRINTFORML 명령받은  궁녀들은, %ANAME(ARG:0)%의 음순을 집요하게 꾸짖어, 몇 번이나 절정 시켰다……
+				CASE 3
+					PRINTFORML 명령받은  궁녀들은, %ANAME(ARG:0)%의 질을 손가락이나 혀로 계속 오로지 괴롭혔다……
+			ENDSELECT
+			RETURN 2
+		CASE 3
+			SELECTCASE RAND:3
+				CASE 0
+					PRINTFORML 명령받은  궁녀들은, %ANAME(ARG:0)%의 항문 얕게를 만지작거려, 몇 번이나 절정 시켰다……
+				CASE 1
+					PRINTFORML 명령받은  궁녀들은, %ANAME(ARG:0)%의 애널에 손가락을 빼고 꽂기 해, 몇 번이나 절정 시켰다……
+				CASE 2
+					PRINTFORML 명령받은  궁녀들은, %ANAME(ARG:0)%의 애널을 집요하게 꾸짖어, 몇 번이나 절정 시켰다……
+			ENDSELECT
+			RETURN 3
+	ENDSELECT
+ENDIF
+
+;-------------------------------------------------
+;설득
+;-------------------------------------------------
+@EVENT_PRISONER_TEXT4(ARG:0)
+PRINTFORML %조사처리(ANAME(ARG:0),"는")% 문관들에게 설득을 받고 있다……
+
+;-------------------------------------------------
+;성처리
+;-------------------------------------------------
+@EVENT_PRISONER_TEXT5(ARG:0)
+IF IS_MALE(ARG:0)
+	PRINTFORML 강인한 병사들이 %ANAME(ARG:0)%의 엉덩이 구멍을 차례차례로 범해 간다
+	PRINTFORML 게다가 남자들은 %ANAME(ARG:0)%의 입에 장대를 밀어넣어, 억지로 허리를 돌진해 간다
+	PRINTFORML %조사처리(ANAME(ARG:0),"는")% 도중에 몇 번이나 의식을 날리면서, 끝없이 남자들의 욕망에 노출해지고 계속했다
+	RETURN
+ENDIF
+
+SELECTCASE RAND:30
+	CASE 0
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 알몸으로 되어 기둥에 팔이 고정되고 있다……
+		PRINTFORML 강인한 병사들이 억지로 가랑이를 열게 해 %ANAME(ARG:0)%의 양쪽 모두의 구멍에 차례차례로 남성기를 삽입해 나간다
+		PRINTFORML 게다가 남자들은 %ANAME(ARG:0)%의 입에 장대를 밀어넣어, 억지로 허리를 돌진해 간다
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 격분하는 물건은 몇 번이나 잡아당겨져 정액을 흩뿌리고 있다
+		ENDIF
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 도중에 몇 번이나 의식을 날리면서, 끝없이 남자들의 욕망에 노출해지고 계속했다
+	CASE 1
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 알몸으로 되어 병사들이 봉사를 하게 하고 있다……
+		PRINTFORML 몇 사람이나 되는 병사가 %조사처리(ANAME(ARG:0),"를")% 둘러싸, 페니스를 내밀고 있다
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 그것들을 번갈아 물게 되어졌다……
+		PRINTFORML 당연, 다만 한사람의 그것도 입만으로 그 만큼의 수의 페니스를 만족 당할 리도 없다
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 결국 깔아눌러져 난폭하게 범해졌다……
+	CASE 2
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 알몸으로 되어 침대에 대자로 묶어 붙여져 있다……
+		PRINTFORML 몇 사람이나 되는 병사가 번갈아 %ANAME(ARG:0)%에 덮어씌워, 양쪽 모두의 구멍에 차례차례로 남성기를 삽입한다
+		PRINTFORML 게다가 다른 병사가 %ANAME(ARG:0)%의 얼굴에 올라타,\@ RAND:2 ? 무리하게 입으로 봉사시킨다 # 엉덩이 구멍을 빨게 하고 있다 \@(ARG:0)
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML %조사처리(ANAME(ARG:0),"가")% 야비하게도 발기하고 있는 것을 병사들은 비웃어, 격렬하게 다뤄 몇 번이나 무리하게 사정시킨다
+		ENDIF
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 밤새, 셀 수 없을 만큼의 남자의 노리겟감으로 되었다……
+	CASE 3
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 알몸에 목걸이를 붙여져 병사를 끌어 돌려졌다……
+		PRINTFORML 무수한 천하게 보인 시선을 그 피부에 따라져 %조사처리(ANAME(ARG:0),"는")% 몸을 딱딱하게 하고 있다
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 그 사타구니의 「추접스러운 물건」을, 병사들은 특별히 비웃는다
+		ENDIF
+		PRINTFORML 그리고 식당의 중앙, 몇 사람이나 되는 병사가 보고 있는 가운데, %조사처리(ANAME(ARG:0),"는")% 자위를 강요받았다
+		PRINTFORML %조사처리(ANAME(ARG:0),"가")% 절정 한 후, 흥분한 병사들은 그녀에게 모여 갔다……
+	CASE 4
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 알몸으로 되어 엎드려 있는 자세로부터 몇 번이나 범해지고 있다……
+		PRINTFORML 엉덩이 구멍을 범한지 얼마 안된 더러워진 페니스가, 이번은 질 구멍을 가차 없이 능욕한다
+		PRINTFORML 삽입질의 여행, 이미 몇 발도 발해진 정액이, 그녀의 양구멍으로부터 소리를 내 분 나무이고라고 있다
+		PRINTFORML 무자비한 삽입질의 사이에도, 그녀는 입에서의 봉사를 강요받고 있다……
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 그녀의 페니스는 범해지는 쾌락으로 몇 번이나 사정해, 마루를 더럽히고 있다……
+		ENDIF
+		PRINTFORML %조사처리(ANAME(ARG:0),"가")% 의식을 날릴 것 같게 되면, 병사는 가차 없이 그녀를 두드려 눈을 뜨게 했다……
+	CASE 5
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 병사에 둘러싸져 그들에게 거슬린 것을 도게자로 사죄 당하고 있다
+		PRINTFORML 굴욕에 떨리는 그녀의 머리를, 병사는 비웃으면서 짓밟았다
+		PRINTFORML 게다가 그 신체에 가차 없이 오줌을 걸치기 시작했다……
+		PRINTFORML 그 후, 그들은 그대로의 자세로 %조사처리(ANAME(ARG:0),"를")% 몇 번이나 범해 갔다……
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 능욕의 한중간에 발해진 %ANAME(ARG:0)%의 자식을, 병사들은 그녀 자신에게 빨고 받게 했다
+		ENDIF
+	CASE 6
+		PRINTFORML 식사로서 간수는 %ANAME(ARG:0)%에 마른 빵과 싱거운 스프를 옮겼다
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")%, 흠뻑으로 한 흰 것이 음식에 부착하고 있는 일을 눈치챘다
+		PRINTFORML 간수는 천하게 보인 눈으로 %조사처리(ANAME(ARG:0),"를")% 보고 있다. 이것은 그의 정액이다
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 한층 더 간수는 %ANAME(ARG:0)%에 자위를 명해 요리에 그녀의 정액을 브렌드 시켰다……
+		ENDIF
+		PRINTFORML 결국, %조사처리(ANAME(ARG:0),"는")% 간수가 보고 있는 앞에서, 정액 투성이의 요리를 한껏 맛봐졌다……
+		PRINTFORML 그 후, 흥분한 간수에, %조사처리(ANAME(ARG:0),"는")% 한껏 범해졌다……
+	CASE 7
+		PRINTFORML 약의 힘으로 새근새근 자는 %조사처리(ANAME(ARG:0),"를")%, 몇 사람이나 되는 병사가 둘러싸고 있다
+		PRINTFORML 그 양구멍을, 입을, 본인도 모르는 동안에 더럽혀 간다
+		PRINTFORML 때때로 괴로운 듯이 얼굴을 왜곡하는 %조사처리(ANAME(ARG:0),"이지만")%, 깊은 잠으로부터 깨는 일은 없다
+		PRINTFORML 결국, %ANAME(ARG:0)%경험 인원수는, 자고 있는 동안에 비약적으로 늘려졌다……
+	CASE 8
+		PRINTFORML 민에게로의 위안으로서 %조사처리(ANAME(ARG:0),"는")% 알몸에 목걸이를 붙여져 거리를 끌어 돌려졌다……
+		PRINTFORML 큰 길을 걸어진 %ANAME(ARG:0)%에, 남녀노소로부터 호기나 모멸의 눈, 매도의 말을 던질 수 있다……
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 특히 그 사타구니로 매달리는 물건은, 호기의 모습의 대상인 것 같다……
+		ENDIF
+		PRINTFORML 그리고 광장에서, 군중이 보고 있는 앞에서, 도게자에서의 사죄를 강요받았다……
+		PRINTFORML 그 뒤는 여러 사람 둘러싸여 바라보는 아래, 수명의 「행운」인 백성의 것으로 「반성」당한 것 같다……
+	CASE 9
+		PRINTFORML 마루에 엎드린 %ANAME(ARG:0)%에, 터무니없는 거체의 병사가 덮어씌우고 있다
+		PRINTFORML %ANAME(ARG:0)%의 신체는 고기에 방해되고 안보이게 되어 버리고 있다
+		PRINTFORML 라는 추잡한 소리와 비명 섞인 교성만이, %조사처리(ANAME(ARG:0),"가")% 범해지고 있는 것을 나타내고 있다
+		PRINTFORML 이윽고 고기의 덩어리의 움직임이 멈춘다. %ANAME(ARG:0)%에 한껏 종을 옮겨 심은 것 같다……
+	CASE 10
+		PRINTFORML 눈가리개를 된 %조사처리(ANAME(ARG:0),"는")%, 「효과 자지」되는 놀이에 참가 당하고 있다
+		PRINTFORML 물게 되어진 페니스가 누구의 것인가 맞힐 수 없으면, 벌로서 범해진다……
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 이상해 굴욕적인 행위일 것인데, %ANAME(ARG:0)%의 페니스는 발기해 버리고 있다……
+		ENDIF
+		PRINTFORML 당연 맞히는 것 따위할 수 있을 리도 없고, %조사처리(ANAME(ARG:0),"는")% 전신 새하얗게 될 때까지 몇 번이나 범해지고 계속했다……
+	CASE 11
+		PRINTFORML 눈가리개에 재갈을 물려 기둥에 얽매인 %조사처리(ANAME(ARG:0),"가")%, 몇 번이나 범해지고 있다
+		PRINTFORML 강인한 병사들이 차례차례로 그녀의 양구멍에 삽입해, 난폭하게 범해서는 종을 옮겨 심어 간다
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 꿈틀꿈틀 격분하는 페니스가, %ANAME(ARG:0)%의 흥분을 나타내고 있다……
+		ENDIF
+		PRINTFORML 재갈을 물리고 있는 %조사처리(ANAME(ARG:0),"는")%, 비명을 지르는 것조차 용서되지 않는다
+		PRINTFORML 한 바탕 즐긴 병사들은, %조사처리(ANAME(ARG:0),"를")% 그대로 방치해 어딘가에 나가 버렸다……
+	CASE 12
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 군중의 앞에전라로 끌어내져 병사들에게 범해지고 있다……
+		PRINTFORML 군에 참가하면 여자에게도 손을 대어 마음껏이라는 캠페인에 참가 당하고 있다
+		PRINTFORML 그리고 %조사처리(ANAME(ARG:0),"는")%, 끓어오르는 군중중에, 그대로 던져 넣어졌다
+		PRINTFORML 흥분한 군중은 %조사처리(ANAME(ARG:0),"가")% 고물 걸레같이 될 때까지, 계속 오로지 범했다……
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 몇 번이나 정액을 발한 %ANAME(ARG:0)%의 페니스는, 완전히 시들고 있다……
+		ENDIF
+	CASE 13
+		PRINTFORML 포로답지 않은 건방진 태도의 벌로서 %조사처리(ANAME(ARG:0),"는")% 육변기로 되고 있는 것 같다……
+		PRINTFORML 변기에 묶어 붙여진 %ANAME(ARG:0)%의 전에 병사들은 열을 만들어, 번갈아 능욕해 나간다
+		PRINTFORML %조사처리(ANAME(ARG:0),"가")% 울려고, 아우성치려고, 병사들은 용서하지 않는다. 「비품」을 다소 엉성하게 취급할려고도 문제는 없기 때문이다……
+		PRINTFORML 며칠 후에 해방된 %조사처리(ANAME(ARG:0),"는")% 완전하게 방심해, 모든 구멍에서 종을 넘치게 하는 인형이 되어 있었다……
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 누가 달았는지, 그 근원에는 사정을 경고하기 위한 링이 장착되고 있었다……
+		ENDIF
+	CASE 14
+		PRINTFORML 미약을 맞은 %조사처리(ANAME(ARG:0),"가")%, 병사 위에서 허리를 흔들고 있다……
+		PRINTFORML 이성의 바람에 날아간 %조사처리(ANAME(ARG:0),"는")% 스스로 추잡한 말을 늘어놓아 남자를 유혹하고 있다
+		PRINTFORML 양구멍에서 남자를 물어, 페니스를 내밀어져는 빨아, 몇 번이나 발해지는 농후한 정액을 맛보고 있다
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 또 스스로 당신의 페니스를 잡아당겨, 몇 번이나 사정하고 있다……
+		ENDIF
+		PRINTFORML 수시간 후에 해방되어도, 그녀는 백탁의 바다 속으로 음부를 질척질척 계속 휘젓고 있었다……
+	CASE 15
+		PRINTFORML 병사들의 파티에, %조사처리(ANAME(ARG:0),"는")% 그릇으로서 끌려간 것 같다
+		PRINTFORML 한가닥의 실 휘감지 않은 나신 위에, 요리가 번창해지고 있다
+		PRINTFORML 병사들은 요리를 먹으면서, 때때로 젓가락으로 그녀의 유방이나 음핵을 집어올렸다
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 또, 사타구니로 격분하는 일물을 잡아당겨, 「드레싱」을 내게 한다……
+		ENDIF
+		PRINTFORML 요리가 없어지는 무렵이 되면, 몹시 취한 병사에 몇 번이나 능욕되었다……
+	CASE 16
+		PRINTFORML 자백약을 먹게 된 %조사처리(ANAME(ARG:0),"는")%, 심문이라고 칭해 강간되고 있다
+		PRINTFORML 심문관은 정보를 알아내는 것 따위 무시로, 자신이 얼마나 느끼고 있을까의 자백을 %ANAME(ARG:0)%에 강요하고 있다
+		PRINTFORML 약의 효과에 의해, %조사처리(ANAME(ARG:0),"는")% 강한 수치를 느끼면서도, 추잡한 말을 늘어놓아 버렸다……
+	CASE 17
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 무기를 숨겨 가지고 있다는 의심을 받아 「신체검사」를 되고 있다……
+		PRINTFORML 그 입, 암컷구멍, 엉덩이 구멍에 무기를 숨기고 있을 것이라고, 몇 사람이나 되는 병사가 페니스로 가지고 그녀를 검사하고 있다……
+		PRINTFORML 그런 것은 가지고 있지 않다는 말은, 입에 쑤셔 넣어진 페니스에 의해 흐려진 소리 밖에 되지 않았다
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 이런 위험한 봉을 가지고 있지 않을까, 병사들은 %ANAME(ARG:0)%의 페니스를 몰아세운다……
+		ENDIF
+		PRINTFORML 당연히 무기 따위 발견되지 않았지만, 어차피 능숙하게 숨기고 있을 뿐이라는 일로, 병사들은 또 그녀를 범하기로 한 것 같다……
+	CASE 18
+		PRINTFORML 엎드린 자세로 된 %조사처리(ANAME(ARG:0),"를")% 개가 깔아눌러, 범하고 있다
+		PRINTFORML 몹시 취한 병사가, 병사로 기르고 있는 개를 %ANAME(ARG:0)%에 준 것이다
+		PRINTFORML 짐승에 범해지는 굴욕에 %조사처리(ANAME(ARG:0),"가")% 날뛰려고 할 때, 병사는 그 목 안쪽에 칼날을 들이대어 위협했다
+		PRINTFORML 결국, %조사처리(ANAME(ARG:0),"는")% 축생의종을 심어져 그 쾌락으로 몇 번이나 절정 해 버렸다……
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 개의 뜨거운 정액이 따라지는 감각에, %조사처리(ANAME(ARG:0),"는")% 보기 흉하게 사정했다……
+		ENDIF
+	CASE 19
+		PRINTFORML %조사처리(ANAME(ARG:0),"가")% 병사와 얽혀, 농후한 키스를 주고 받으면서 사귀고 있다
+		PRINTFORML 많이 술을 먹게 되어 만취해, 인사불성에 빠져 있다……
+		PRINTFORML 주어지는 쾌락을 %조사처리(ANAME(ARG:0),"는")% 온순하게 받아들여, 요구되는 대로 허리를 흔들고 있다
+		PRINTFORML 병사가 절정 하는 무렵이 되면, %조사처리(ANAME(ARG:0),"는")% 스스로 그에게 동글동글 허리를 강압해, 질내사정을 졸랐다……
+	CASE 20
+		PRINTFORML 하반신을 노출로 된 %조사처리(ANAME(ARG:0),"는")%, 그대로 벽에 비어있던 구멍에 고정되었다
+		PRINTFORML 이윽고 모습의 안보이는 누군가가 그녀의 하반신을 만지작거려, 또 페니스를 쑤셔 넣었다
+		PRINTFORML 그녀가날뛴다와 누군가는 엉덩이를 몇 번이나 몇 번이나 두드려 얌전하게 시켰다……
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 노출로 되고 있는 %ANAME(ARG:0)%의 페니스가, 슥싹슥싹 난폭하게 잡아당겨지고 있다
+		ENDIF
+		PRINTFORML 이윽고, %조사처리(ANAME(ARG:0),"는")% 얼굴조차 모르는 누군가에게 씨뿌리기 되어 버렸다
+		PRINTFORML 그래서 끝은 아니고, 녹초가 되는 그녀를, 한층 더 다른 누군가가 범하기 시작했다……
+	CASE 21
+		PRINTFORML 병사의 장난으로, %조사처리(ANAME(ARG:0),"는")% 의복을 모두 숨겨져 버렸다
+		PRINTFORML 옷을 찾아, 나신을 쬔 채로 병사중을 찾는 %조사처리(ANAME(ARG:0),"이지만")%, 아무래도 속옷이 발견되지 않는다
+		PRINTFORML 여기저기를 벌거벗은 채로 이리저리 다니는 그녀를, 병사들은 치녀다 치녀라면 흥을 돋운다
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 발기하고 있는 것처럼, 변태의 자지녀째라는 말까지 난무한다……
+		ENDIF
+		PRINTFORML 결국, 그녀의 모습을 봐 흥분한 병사들에게, %조사처리(ANAME(ARG:0),"는")% 몇 번이나 범해져 버렸다……
+	CASE 22
+		PRINTFORML 병사들이 이용하는 술집에서, %조사처리(ANAME(ARG:0),"는")% 무희로서 일해지고 있다
+		PRINTFORML 유두와 음부조차 숨기지 못할 같은, 전라보다 추잡합니다들 있는 작은 옷감 조각을 감겨, 그녀는 춤추고 있다
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 발기한 페니스는 귀두에게만 옷감을 씌울 수 있어 근원에는 사정을 경고하는 링을 끼워지고 있었다
+		ENDIF
+		PRINTFORML 격렬한 움직임에 옷감 조각은 곧바로 어긋나 숨겨야 할 곳을 드러내 버린다
+		PRINTFORML 그 뒤는 관객석의 사이를 대열지어 걸어, 병사들에게 요구되는 대로 입이나 질 구멍으로 봉사를 하게 했다……
+	CASE 23
+		PRINTFORML 병사들이 이용하는 술집에서, %조사처리(ANAME(ARG:0),"는")% 무희로서 일해지고 있다
+		PRINTFORML 무희, 춤과는 이름뿐으로, 실제로는 추잡한 자위 쇼다
+		PRINTFORML 황새 걸음을 넓히고 치부를 휘젓는 모양을 쬐는 그녀를, 병사들은 나와 흥을 돋우고 있다
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 발기한 페니스를 잡아당겨 세우고 사정하면, 병사들은 휘파람을 불었다
+		ENDIF
+		PRINTFORML 이윽고 흥분한 병사가 스테이지에 올라 그녀를 범하기 시작해, 자위 쇼는 도마 쇼로 상연 목록을 변경했다……
+	CASE 24
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 위안을 위해서(때문에), 병사들에게 제공되었다
+		PRINTFORML 몇 사람이나 되는 병사가 %ANAME(ARG:0)%에 모여, 노리겟감으로 하고 있다
+		PRINTFORML %조사처리(ANAME(ARG:0),"가")% 울려고, 아우성치려고, 능욕은 오로지 계속되었다……
+		PRINTFORML 그들이 만족하는 무렵에는, %조사처리(ANAME(ARG:0),"는")% 고물 걸레같이 되어 있었다
+	CASE 25
+		PRINTFORML 병사들이 이용하는 술집에서, %조사처리(ANAME(ARG:0),"는")% 급사로서 일해지고 있다
+		PRINTFORML 그 움직임이 분명하게 휘청거리고 있는 것은, 양구멍에 쑤셔 넣어진 장형의 탓이다
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 일물에는 전동 오나홀을 끼울 수 있어 몇 번이나 정액을 짜내 간다
+		ENDIF
+		PRINTFORML 병사들은 그녀를 장난에 불러내서는, 주문도 하지 않고 장형을 희롱해, 그녀를 느끼게 한다
+		PRINTFORML 한층 더 그녀는, 입이나 양구멍에서의 봉사를 여러번 강요받았다……
+	CASE 26
+		PRINTFORML 병사들의 훈련에, %조사처리(ANAME(ARG:0),"는")% 참가 당했다
+		PRINTFORML 일대일에서의 대련 상대지만, %조사처리(ANAME(ARG:0),"는")% 양손을 속박되어 비무장으로, 옷조차 입혀 받을 수 없다
+		PRINTFORML 당연 눈 깜짝할 순간에 덮어누를 수 있어 심하게 능욕된 후, 패배의 판정을 내려졌다……
+		PRINTFORML 그 뒤도 같은 형식의 대련 상대를 병사 전원과 하게 해 그 모두로 범해졌다……
+	CASE 27
+		PRINTFORML 영창행으로 된 병사에의 위안에 %조사처리(ANAME(ARG:0),"는")% 제공되었다
+		PRINTFORML 몇일이나 목욕탕에 들어가 있지 않은 치구 투성이의 페니스를, %조사처리(ANAME(ARG:0),"는")% 무리하게 물게 되어졌다
+		PRINTFORML 한층 더 다른 병사가 %조사처리(ANAME(ARG:0),"를")% 깔아눌러, 추접스러운 페니스를 젖지 않은 음렬에 쑤셔 넣는다
+		PRINTFORML %조사처리(ANAME(ARG:0),"가")% 해방되는 무렵에는, 그 신체는 땀이나 때나 정액 투성이로 되고 있었다……
+	CASE 28
+		PRINTFORML 전라에 쇠사슬과 족쇄를 붙여진 %조사처리(ANAME(ARG:0),"는")%, 거리의 광장에 끌어내졌다
+		PRINTFORML 거리의 거주자들은 저항 할 수 없는 %ANAME(ARG:0)%의 신체에 모여, 몇 번이나 계속 범했다……
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 범해지는 쾌락으로 비참하게 사정하는 %조사처리(ANAME(ARG:0),"를")%, 거주자들은 입이 더럽게 매도하고 있다
+		ENDIF
+		PRINTFORML 밤이 되어, 거주자들이 돌아간 뒤에는, 너덜너덜하게 된 %조사처리(ANAME(ARG:0),"가")% 남아 있었다……
+	CASE 29
+		PRINTFORML 소년병들을 「남자로 한다」모아 두어 %조사처리(ANAME(ARG:0),"는")% 주어졌다……
+		PRINTFORML 처음 보는 여체의 아름다움에, 소년들은 몹시 흥분하고 있다
+		PRINTFORML 사춘기 특유의 젊게도 정열적인 허리사용에, %조사처리(ANAME(ARG:0),"는")% 희롱해져 버렸다……
+		PRINTFORML %ANAME(ARG:0)%의 신체로, 군사들은 자신을 가진 것 같다
+ENDSELECT
+
+;-------------------------------------------------
+;촉수
+;-------------------------------------------------
+@EVENT_PRISONER_TEXT6(ARG:0)
+IF TALENT:(ARG:0):붕괴
+	PRINTFORML 심이 부서진 %조사처리(ANAME(ARG:0),"는")% 촉수의방의 안에서 알몸으로 되어 손목을 속박되어 천정으로부터 매달리고 있다…
+ELSEIF TALENT:(ARG:0):공허
+	PRINTFORML 공허한 눈을 한 %조사처리(ANAME(ARG:0),"는")% 촉수의방의 안에서 알몸으로 되어 손목을 속박되어 천정으로부터 매달리고 있다…
+ELSE
+	PRINTFORML %조사처리(ANAME(ARG:0),"는")% 촉수의방의 안에서 알몸으로 되어 손목을 속박되어 천정으로부터 매달리고 있다…
+ENDIF
+
+IF IS_MALE(ARG:0)
+	PRINTFORML 대량의 촉수가 %ANAME(ARG:0)%의 몸에 휘감겨, %ANAME(ARG:0)%의 엉덩이 구멍과 입을 차례차례로 범해 간다
+	PRINTFORML 한층 더 한층 더 굵은 촉수가 첨단의 착정구에서 페니스를 물어, 정액을 짜내려고 내부를 줄줄 벌름거릴 수 있다
+	PRINTFORML %조사처리(ANAME(ARG:0),"는")% 이형에 의한 용서가 없는 고문에, 전신을 삐걱삐걱 진동시키면서 흘려 보내도록(듯이) 계속 사정했다
+	RETURN
+ENDIF
+
+SELECTCASE RAND:51
+	CASE 0
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 대량의 촉수가 %ANAME(ARG:0)%의 몸에 휘감겨, 암컷구멍, 엉덩이 구멍, 입과 모든 구멍을 차례차례로 범해 간다
+			PRINTFORML 한층 더 한층 더 굵은 촉수가 첨단의 착정구에서 페니스를 물어, 정액을 짜내려고 내부를 줄줄 벌름거릴 수 있다
+			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 이형에 의한 용서가 없는 고문에, 전신을 삐걱삐걱 진동시키면서 흘려 보내도록(듯이) 계속 사정했다
+		ELSE
+			PRINTFORML 대량의 촉수가 %ANAME(ARG:0)%의 몸에 휘감겨, 암컷구멍, 엉덩이 구멍, 입과 모든 구멍을 차례차례로 범해 간다
+			PRINTFORML 한층 더 촉수들은, 그 미끌거리는 표피를 %ANAME(ARG:0)%의 전신에 문질러 성감대를 미끄덩미끄덩 애무해 나간다
+			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 이형에 의한 용서가 없는 고문에, 구욕을 계속하는 촉수의 틈새로부터 교성과도 비명이라고도 붙지 않는 신음을 흘렸다
+		ENDIF
+	CASE 1
+		PRINTFORML 무수한 촉수가 %ANAME(ARG:0)%의 암컷구멍, 엉덩이 구멍, 입와 범하고 있다
+		PRINTFORML 한층 더 가는 촉수가 %ANAME(ARG:0)%의 요도를 2, 세번 쿡쿡 찔렀다
+		PRINTFORML 설마, 하고 공포 하는 %ANAME(ARG:0)%의 예상대로, 촉수는 %ANAME(ARG:0)%의 요도에 비집고 들어갔다
+		PRINTFORML 흐려진 비명을 지르는 %조사처리(ANAME(ARG:0),"를")% 뒷전으로, 촉수는 %ANAME(ARG:0)%의 요도를 오로지 능욕해 갔다……
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 요도를 강간시키는 쾌감에, %조사처리(ANAME(ARG:0),"는")% 몇 번이나 사정했다……
+		ENDIF
+	CASE 2
+		PRINTFORML 무수한 촉수가 %ANAME(ARG:0)%의 암컷구멍, 엉덩이 구멍, 입와 범하고 있다
+		PRINTFORML 한층 더 가는 촉수가 %ANAME(ARG:0)%의 유두를 2, 세번 쿡쿡 찔렀다
+		PRINTFORML 설마, 하고 공포 하는 %ANAME(ARG:0)%의 예상대로, 촉수는 %ANAME(ARG:0)%의 유선에 비집고 들어갔다
+		PRINTFORML 흐려진 비명을 지르는 %조사처리(ANAME(ARG:0),"를")% 뒷전으로, 촉수는 %ANAME(ARG:0)%의 유선을 오로지 능욕해 갔다……
+	CASE 3
+		PRINTFORML 대량의 촉수가 %ANAME(ARG:0)%에 휘감겨, 구멍이라는 구멍을 범하고 있다
+		PRINTFORML 자궁입구를 꾸준히 하고 쿡쿡 찌르고 있던 촉수가, 당치 않게 그 중에까지 비집고 들어갔다!
+		PRINTFORML 고통과 쾌락에 몹시 놀라는 %조사처리(ANAME(ARG:0),"를")% 뒷전으로, 촉수는 그녀의 자궁을 몇 번이나 범한다
+		PRINTFORML 그리고, 넌더리나고 볼록 얼마든지 알을 심었다……
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 모판으로 되는 쾌락에, %ANAME(ARG:0)%의 페니스는 몇 번이나 정액을 발했다……
+		ENDIF
+	CASE 4
+		PRINTFORML 대량의 촉수가 %ANAME(ARG:0)%에 휘감겨, 구멍이라는 구멍을 범하고 있다
+		PRINTFORML 장내를 범하고 있던 촉수가, 질질 그 안쪽으로 나간다
+		PRINTFORML 모든 내장을 촉수가 기어다니는 감각에, %조사처리(ANAME(ARG:0),"는")% 몹시 놀란다
+		PRINTFORML 이윽고, 목의 안쪽으로부터 촉수가 기어 나왔다고 동시에, %조사처리(ANAME(ARG:0),"는")% 강렬한 절정을 맞이했다……
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 그 사이에도, 페니스에 휘감기는 촉수가, %조사처리(ANAME(ARG:0),"를")% 몇 번이나 사정시켰다……
+		ENDIF
+	CASE 5
+		PRINTFORML 거대한 촉수가 큰 입을 열어, %조사처리(ANAME(ARG:0),"를")% 삼켰다!
+		PRINTFORML 안쪽에 갖춰지는 무수한 섬모장의 촉수가, %ANAME(ARG:0)%의 전신을 애무해, 암컷구멍에 엉덩이 구멍, 입을 몇 번이나 범해 간다
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 빨고 탕 쉬는 것 같은 자극에, %ANAME(ARG:0)%의 페니스는 몇 번이나 자식을 추방한다……
+		ENDIF
+		PRINTFORML 나와라 나오라고 한 점액에는 최음작용이 있는지, 자꾸자꾸신체의 감도를 높여 간다
+		PRINTFORML 토해내질 때까지의 수시간, %조사처리(ANAME(ARG:0),"는")% 이것도 저것도 잊을 정도의 쾌락에 절정 계속 했다……
+	CASE 6
+		PRINTFORML 모든 구멍을 범해진 %ANAME(ARG:0)%에, 극세의 촉수가 가까워졌다
+		PRINTFORML 그것은 그녀의 귀로부터 체내로 비집고 들어가, 뇌에 전류를 흘려 조종하기 시작했다!
+		PRINTFORML 의지와도 신체 감각과도 관계가 없는 강제적인 절정에, %조사처리(ANAME(ARG:0),"는")% 오로지 희롱해지고 있다……
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML %ANAME(ARG:0)%의 페니스는, 망가진 수도꼭지같이 정액을 내뿜고 있다……
+		ENDIF
+	CASE 7
+		PRINTFORML 촉수에 능욕되고 있는 %ANAME(ARG:0)%의 눈에, 촉수가 흠뻑 들러붙었다
+		PRINTFORML 무슨 일일까하고 생각하는 그녀의 시야에 비친 것은, 촉수에 의한 능욕 조교를 받고 있는 자신이다. 이것은 과거의 영상이다!
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 그대로, 스스로의 치태를 보게 되면서, 몇 번이나 촉수의 종을 심어졌다……
+	CASE 8
+		PRINTFORML 촉수에 심하게 조교되어 축 늘어진 %ANAME(ARG:0)%에, 극세의 촉수가 가까워졌다
+		PRINTFORML 그것은 팔에 꽂혀, 이상한 듯한 액체를 따라 간다
+		PRINTFORML 하면, 피폐 나누고 있었던 %조사처리(ANAME(ARG:0),"는")% 순식간에 건강하게 되어 갔다!
+		IF HAS_PENIS(ARG:0)
+			PRINTFORML 해 나부껴는 있던 사타구니의 것도, 어느새인가 다시 격분하고 있다
+		ENDIF
+		PRINTFORML 건강하게 된 %ANAME(ARG:0)%에, 다시 촉수가 모여 간다
+		PRINTFORML 포로인 그녀는, 피폐 해 넘어지는 것조차 용서되지 않는 것이다……
+	CASE 9
+		PRINTFORML 고야와 같은 매우 굵은의 촉수가 %ANAME(ARG:0)%의 양구멍을 범해, 골반으로부터 확장하고 있다
+		PRINTFORML 격통과 동시에 덮쳐 오는 쾌락에, %조사처리(ANAME(ARG:0),"는")% 비명과 교성이 뒤섞임이 된 소리를 지른다
+		PRINTFORML 이윽고 촉수가 사정하면, %ANAME(ARG:0)%의 배는 임산부같이 부루퉁했다
+		PRINTFORML 촉수가 뽑아 내진 후, 양구멍와 백탁을 흘러넘치게 해 흠칫흠칫 꿈틀거려 닫지 않게 되어 있었다……
+	CASE 10
+		IF ARG:0 == NAME_TO_CHARA("와카사기히메") || ARG:0 == NAME_TO_CHARA("미마")
+			;토지코는 양다리인 것으로 넣지 않는다
+			PRINTFORML 촉수는 %ANAME(ARG:0)%의 아시오를 잡아 매달아 올려, 몸을 공중에 고정시켰다
+			PRINTFORML 정확히 눈앞에 온 여성기의 움푹 들어가에, 천천히 촉수는 삽입해, 출입을 반복해 간다
+		ELSE
+			PRINTFORML 촉수가 %ANAME(ARG:0)%의 양 다리를 열어 잡아, 몸을 공중에 고정시켰다
+			PRINTFORML 정확히 눈앞에 온 여성기에, 천천히 촉수는 삽입해, 출입을 반복해 간다
+		ENDIF
+		PRINTFORML %ANAME(ARG:0)%에 과시하면서 조금씩 속도는 올라 가 마지막에는 격렬한 피스톤 운동이 되었다
+		PRINTFORML 움직임을 뒤따라 갈 수 없게 된 %조사처리(ANAME(ARG:0),"는")% 정지하도록(듯이) 애원 했지만, 정신을 잃을 때까지 촉수의 움직임이 멈추는 일은 없었다……
+	CASE 11
+		PRINTFORML 백탁액으로 가득 찬, 마치 솥과 같은 촉수에 %조사처리(ANAME(ARG:0),"는")% 절임 붐비어지고 있었다
+		PRINTFORML 시선이 차단해져 %ANAME(ARG:0)%에는 안보이게 된 비밀의 틈으로 촉수가 우글거리고 있다!
+		IF TALENT:(ARG:0):자제심 || TALENT:(ARG:0):꿋꿋함
+			PRINTFORML 자신의 하반신이 어떤 상황이 되어 있는지, 공포로 얼굴이 비뚤어진 %조사처리(ANAME(ARG:0),"였")%지만
+		ELSE
+			PRINTFORML 자신의 하반신이 어떤 상황이 되어 있는지, 공포로 울부짖는 %조사처리(ANAME(ARG:0),"였")%지만
+		ENDIF
+		PRINTFORML 범해 다하여져 촉수로부터 해방되는 무렵에는, 녹고 자른 표정으로 쾌락에 빠지고 있었다……
+	CASE 12
+		PRINTFORML 가랑이에는 백 켤레의 몸 같은 생물이 있어 거기로부터는 열이 되도록(듯이) 무수한 촉수가 우뚝 솟고 있었다
+		IF ARG:0 == NAME_TO_CHARA("와카사기히메") || ARG:0 == NAME_TO_CHARA("미마")
+			PRINTFORML 백 켤레는 %조사처리(ANAME(ARG:0),"를")% 끼워 넣도록(듯이) 몸을 접어 구부리면, 촉수를 질에 꽂아 교미를 실시했다
+			PRINTFORML 격렬하게 팔딱팔딱 저항하는 것도 허무하고 %ANAME(ARG:0)%의 체내에 정액이 발해져 %ANAME(ARG:0)%의 눈에는 눈물이 어렸지만
+			PRINTFORML 그런 일은 상관없이와 백 켤레의 몸은 움직여, 즉석에서 다음의 촉수가 움푹한 곳으로 미끄러져 들어갔다……
+		ELSE
+			PRINTFORML 와 방해를 해지고 억지로 촉수의 한 개와 %조사처리(ANAME(ARG:0),"는")% 난폭한 교미를 실시한다
+			PRINTFORML 격렬하게 저항하는 것도 허무하고 %ANAME(ARG:0)%의 체내에 정액이 발해져 %ANAME(ARG:0)%의 눈에는 눈물이 어렸지만
+			PRINTFORML 그런 일은 상관없이와 백 켤레의 몸이 움직여, 다음의 촉수가 가랑이에 준비되었다……
+		ENDIF
+	CASE 13
+		PRINTFORML 구에 촉수가 비집고 들어가, 붕과 끈기가 있는 액체를 %ANAME(ARG:0)%의 목에 흘려 넣었다
+		PRINTFORML 잠시 하면 꽉! (와)과 심장의 고동이 높아져, 숨이 난폭하게 되어 간다……
+		PRINTFORML 그 후, 비부에 촉수를 앞애태움이라고 있으면, %ANAME(ARG:0)%의 몸은 촉수를 요구허리를 흔들기 시작해 버렸다!
+		IF TALENT:(ARG:0):자제심 || TALENT:(ARG:0):꿋꿋함 || TALENT:(ARG:0):쾌감을부정
+			;정신적 내성이 있는 사람은 쓸데없는 저항을 해 받는다
+			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 자신의 의지를 떨어져 움직이는 몸을 억제하려고 했지만, 움직임은 일행에 그치는 일은 없었다
+			PRINTFORML 하의입으로부터도 같은 액체를 따라져 쾌락과 필사적으로 혁맞는 %조사처리(ANAME(ARG:0),"는")% 허리를 계속 흔들었다
+		ELSE
+			PRINTFORML 그리고 아래의 입으로부터도 같은 액체를 따라져 녹는 것 같은 얼굴이 된 %조사처리(ANAME(ARG:0),"는")% 한가닥의 실불란에 허리를 계속 흔들었다
+		ENDIF
+	CASE 14
+		IF ARG:0 == NAME_TO_CHARA("와카사기히메") || ARG:0 == NAME_TO_CHARA("미마")
+			PRINTFORML 아시오를 잡아 고정된 %조사처리(ANAME(ARG:0),"를")%, 펌프 소리를 내 촉수가 두 구멍 꾸짖고 하고 있었다!
+		ELSE
+			PRINTFORML 八자에 다리를 열었던 %조사처리(ANAME(ARG:0),"를")%, 펌프 소리를 내 촉수가 두 구멍 꾸짖고 하고 있었다!
+		ENDIF
+		PRINTFORML 출입하는 촉수는 분명하게 너무 크고, %ANAME(ARG:0)%의 발밑에는 흘러넘치기 시작한 정액이 모여 김을 내고 있다
+		PRINTFORML 격렬한 고문에 의식을 잃는 일조차 할 수 없는 %조사처리(ANAME(ARG:0),"는")% 삐걱삐걱 떨려, 밤새 절정을 계속 반복했다……
+	CASE 15
+		PRINTFORML 구속되고 눈물을 머금은 %ANAME(ARG:0)%의 가랑이에는 한 장이 봉하고 지폐가 쳐지고 있었다
+		PRINTFORML %ANAME(ARG:0)%의 자궁중에는 촉수의 유체와 미약이 들어가고 있어 유체가 안으로부터 계속 범하고 있다!
+		PRINTFORML 안쪽으로부터 꾸짖을 수 있는 뚝뚝하고 애액이 늘어지지만, 그 정도로 지폐는 벗겨지는 일은 없고
+		PRINTFORML 유체가 충분한 힘을 몸에 익히고 지폐를 찢을 때까지 %조사처리(ANAME(ARG:0),"는")% 몇 번이나 절정 계속 하는 일이 되었다……
+	CASE 16
+		PRINTFORML 수시간 전부터 %조사처리(ANAME(ARG:0),"는")% 수면제에 의해 잠에 붙어 있다
+		PRINTFORML 새근새근 자는 모습에 상관해 없고, 촉수는 성감대를 괴롭히며 범하고 있었다……
+		IF TALENT:(ARG:0):유치
+			PRINTFORML 무의식 중에 성감을 높일 수 있었던 %조사처리(ANAME(ARG:0),"는")%, 숨을 내쉬면서 허리를 질척질척 울릴 수 있는 촉수를 탐내고 있다
+			PRINTFORML 꿈 속은 어떻게 되어 있는지, 땀을 흘린 %조사처리(ANAME(ARG:0),"는")% 근지러운 것 같은 얼굴을 해 음성을 흘리고 있었다……
+		ELSE
+			PRINTFORML 무의식 중에 성감을 높일 수 있었던 %조사처리(ANAME(ARG:0),"는")%, 숨을 내쉬면서 허리를 질척질척 울릴 수 있는 촉수를 탐내 암자
+			PRINTFORML 꿀단지가 녹진녹진이 되었을 무렵에 간신히 눈을 뜬 %조사처리(ANAME(ARG:0),"는")%, 눈앞의 참상에 관능적인 소리로 비명을 올렸다……
+		ENDIF
+	CASE 17
+		PRINTFORML 부드러운 촉수에 의해 %조사처리(ANAME(ARG:0),"는")% 몇 번이나 몇 번이나 절정을 하게 하고 있었다
+		PRINTFORML 허리나 다리에 착 달라붙은 촉수는 몸을 뛰는 %조사처리(ANAME(ARG:0),"를")% 예민한 체위에 유도해
+		PRINTFORML 온갖 자세로부터 %ANAME(ARG:0)%의 허리를 밀어올리고 리드미컬하게 범하고 있다
+		PRINTFORML 체를 비트는 만큼 늘어나 가는 쾌락에 저항하는 일은 하지 못하고, 촉수와 혼연일체가 된 %조사처리(ANAME(ARG:0),"는")% 교성을 계속 올렸다……
+	CASE 18
+		PRINTFORML 촉수들은 %조사처리(ANAME(ARG:0),"를")% 옆에 안아 올리면, 겨드랑이나 넓적다리에 끈적 휘감겨 쓸어올려,
+		PRINTFORML 점액의 늘어지는 첨단와 질 안쪽과 요도에 들어가게 할 수 있어 복부를 안으로부터 주물러 풀고 있다……
+		PRINTFORML 공주님 안기의 형태로 공중에 고정되어 감째 범해진 %조사처리(ANAME(ARG:0),"는")% 그것을 향수할 수밖에 선택지가 없고
+		PRINTFORML 눈을 숙여 신음하면서, 이 시간이 빨리 지나가 버리도록(듯이) 계속 바랐다……
+	CASE 19
+		IF TALENT:(ARG:0):무관심 || TALENT:(ARG:0):정조관념없음
+			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 몇개의 촉수에 억지로 억누를 수 있어 범해지고 있었다!
+		ELSE
+			PRINTFORML 촉수를 계속 싫어하는 %조사처리(ANAME(ARG:0),"는")%, 몇개의 촉수에 억지로 억누를 수 있어 범해지고 있었다!
+		ENDIF
+			PRINTFORML 한층 큰 촉수가 %ANAME(ARG:0)%의 내부로 침입해, 몇 번이나 복리를 쓸어올려 몸을 조교해 나간다……
+			PRINTFORML 일방적인 촉수의 몹시 사랑함에 힘 없게 고개 숙여, 눈으로부터 빛이 사라진 %조사처리(ANAME(ARG:0),"는")% 의식을 잃었다
+	CASE 20
+		IF TALENT:(ARG:0):겁쟁이
+			PRINTFORML 무서워해 울부짖는 %ANAME(ARG:0)%에 촉수는 모여 덤벼 들었다
+		ELSE
+			PRINTFORML 소란 욕소리를 퍼붓는 %ANAME(ARG:0)%에 촉수는 모여 덤벼 들었다
+		ENDIF
+		IF ARG:0 == NAME_TO_CHARA("샹하이인형") || ARG:0 == NAME_TO_CHARA("호라이인형") || ARG:0 == NAME_TO_CHARA("오오에도인형") || ARG:0 == NAME_TO_CHARA("골리아테인형") || ARG:0 == NAME_TO_CHARA("히나") || ARG:0 == NAME_TO_CHARA("VIVIT") || ARG:0 == NAME_TO_CHARA("루코토 ")
+			;아무도 신경쓰지 않을지도 모르지만 인형용
+			PRINTFORML 촉수는 집요하게 %ANAME(ARG:0)%의 음부를 몰아세워, 몇개의 이식관을 자궁에 수립했다!
+			PRINTFORML 자궁은 촉수의 요람이 되어, 촉수의 유체와 성장 촉진액이 흘려 넣어져 간다
+			PRINTFORML 하룻밤에 건강하게 자란 촉수를 낳으면서, %조사처리(ANAME(ARG:0),"는")% 절정에 달했다……
+		ELSE
+			PRINTFORML 촉수는 집요하게 %ANAME(ARG:0)%의 음부를 몰아세워, 몇개의 생식관을 자궁에 수립했다!
+			PRINTFORML 자궁은 촉수의 생산장이 되어, 최음액, 배란 유발액, 생식 정액, 성장 촉진액과 여러가지 액체가 흘려 넣어져 간다
+			PRINTFORML 자신의 난자를 이용해 늘려진 촉수를 낳으면서, %조사처리(ANAME(ARG:0),"는")% 절정에 달했다……
+		ENDIF
+	CASE 21
+		PRINTFORML 요염한 촉수가 가슴이나 비부에 달라붙어, %ANAME(ARG:0)%의 돌기에 무수한 키스를 계속 하고 있다
+		PRINTFORML 한층 더 구강에 혀와 같은 촉수가 비집고 들어가, 관련되면서 %ANAME(ARG:0)%에 발정 효과가 있는 액체를 흘려 넣었다
+		PRINTFORML 장시간 꾸짖고 괴롭힐 수 있는 여자로서 준비가 갖추어진 %조사처리(ANAME(ARG:0),"가")% 꿀꺽 목을 울리면
+		PRINTFORML 애액으로 넘쳐난 질에, 일제히 촉수는 모여 갔다……
+	CASE 22
+		PRINTFORML 갑자기%ANAME(ARG:0)%의 바로 위로부터 걸죽 흰 액체가 쏟아졌다
+		PRINTFORML 올려보면 점착질인 액체를 감긴 촉수가 몇개나 이쪽에 향하여 처지고 있다
+		PRINTFORML 당황하고 날뛰는 %조사처리(ANAME(ARG:0),"였")%지만, 매달아지고 있는 상황에서는 도망치는 일도 하지 못하고 촉수에 껴안을 수 있다
+		IF TALENT:(ARG:0):임신
+			PRINTFORML 대량의 정액을 쏟아져 체내가 새하얗게 될 때까지 더듬어졌다……
+		ELSE
+			PRINTFORML 공중으로 임산부같이 될 때까지 대량의 정액을 쏟아지고 마음껏 귀여워해졌다……
+		ENDIF
+	CASE 23
+		PRINTFORML 배에는 마력을 모으는 마법진이 그려지고 있어 여러가지 촉수가 %ANAME(ARG:0)%의 몸으로 모이고 있었다
+		PRINTFORML 자궁을 이대로 된 %조사처리(ANAME(ARG:0),"는")% 촉수에 마주 잡아를 되어 집중해 사타구니를 계속 습격당하고 있다……
+		PRINTFORML 쉬는 사이도 없고 %ANAME(ARG:0)%의 꿀단지는 범해져 몇개의 실이 지면으로 방울져 떨어져 흘러넘치고 있었다
+		IF TALENT:(ARG:0):꿋꿋함
+			;심 접히기 어려운 것 같은 사람들용
+			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 필사적으로 저항을 했지만, 촉수의 풀 코스는 멈추는 일 없이 영원과 계속되었다
+		ELSE
+			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 필사적으로 허가를 다뤘지만, 촉수의 풀 코스는 멈추는 일 없이 영원과 계속되었다
+		ENDIF
+	CASE 24
+		PRINTFORML 구속된 %ANAME(ARG:0)%의 하반신에는 굵은 촉수가 단단히 푸는 언제 있었다
+		IF TALENT:(ARG:0):임신
+			PRINTFORML 굵은 촉수의 끝으로부터는 무수한 가는 촉수가 성장하고 있어 후드득후드득 엉덩이 구멍을 휘저어 길들이고 있다……
+			PRINTFORML 그리고 마음껏 장내를 범해 차소순등 해를 끝낸 가는 촉수는, 레일이 되어 애널을 펴넓힘
+		ELSE
+			PRINTFORML 굵은 촉수의 끝으로부터는 무수한 가는 촉수가 성장하고 있어 후드득후드득 자궁질의 바닥을 휘저어 길들이고 있다……
+			PRINTFORML 그리고 마음껏 태내를 범해 차소순등 해를 끝낸 가는 촉수는, 레일이 되어 비순을 펴넓힘
+		ENDIF
+		PRINTFORML 부들부들 떨리면서 고개를 젓는 %ANAME(ARG:0)%에 큰 촉수종을 옮겨 들여 갔다……
+	CASE 25
+		PRINTFORML 촉수는 교묘하게 %조사처리(ANAME(ARG:0),"를")% 애태움이라고 절정 시키지 않게 해, 보류를 실시하고 있었다
+		PRINTFORML 가감(상태)된 애무를 받아, 농후한 냄새나 발하는 정자에 뿌려진 %조사처리(ANAME(ARG:0),"는")% 견딜 수 있지 못하고 넓적다리를 맞대고 비비고 있다
+		IF TALENT:(ARG:0):자제심 || TALENT:(ARG:0):선을넘지않음 ||  TALENT:(ARG:0):정조관념 ||  TALENT:(ARG:0):쾌감을부정
+			;절대 촉수 따위에 지거나 하지 않는다!
+			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 눈물을 머금어, 본능으로부터 오는 유혹에 목을 옆에 흔들어 참고 있었지만,
+		ELSEIF TALENT:(ARG:0):해방 || TALENT:(ARG:0):쾌감에솔직
+			;쵸로인. 일부의 온 바시라도 걸리지만 좋네요
+			PRINTFORML 심을 암컷으로서 각성 당한 %조사처리(ANAME(ARG:0),"는")%, 눈에 하트를 띄워 조르기를 하기 시작해 버려,
+		ELSE
+			PRINTFORML 체를 암컷으로서 각성 당한 %조사처리(ANAME(ARG:0),"는")%, 애액을 방울져 떨어지게 하면서 간원 반복해,
+		ENDIF
+		PRINTFORML 촉수가 미치는 것 같은 능욕을 개시하면, 요염한 소리를 내 그것을 받아들여 갔다……
+	CASE 26
+		PRINTFORML 발밑으로부터 무수한 촉수가 겨 올라, 가차 없이 그 몸을 침식하고 있었다
+		PRINTFORML 미지근한 정자를 몇 번이나 몸에 발해져 질내를 채우는 격렬한 생식 행위에 %조사처리(ANAME(ARG:0),"는")% 비명을 올리고 있다!
+		PRINTFORML 등줄기를 뒤로 젖혀지면서 %조사처리(ANAME(ARG:0),"는")%, 촉수의 광애를 받아 계속 뛰었다……
+	CASE 27
+		IF ARG:0 == NAME_TO_CHARA("와카사기히메")|| ARG:0 == NAME_TO_CHARA("미마")
+			PRINTFORML 촉수들은 %ANAME(ARG:0)%의 아시오를 잡아 고정해, 가랑이 구덩이를 몇 번이나 쓸어올렸다
+		ELSE
+			PRINTFORML 촉수들은 %ANAME(ARG:0)%의 다리를 닫게 해 완성된 삼각의 틈을 몇 번이나 쓸어올렸다
+		ENDIF
+			PRINTFORML 더욱 겨드랑 밑, 배를 손의 형태를 한 것 같은 촉수가 계속 간질이고 있다!
+		IF TALENT:(ARG:0):꿋꿋함
+			PRINTFORML ……어떻게든 자극에 참고 있는 %조사처리(ANAME(ARG:0),"는")%, 힘들게 촉수를 노려봤지만
+			PRINTFORML 다음에 덤벼 드는 촉수를 억제하지 않고, 달아오른 몸이 유린되었다
+		ELSE
+			PRINTFORML ……점차 체력을 소모해, 는-는-가는 충분하고와 고개 숙인 %조사처리(ANAME(ARG:0),"는")%
+			PRINTFORML 다음에 덤벼 드는 촉수에 저항도 하지 못하고, 달아오른 몸이 유린되었다
+		ENDIF
+	CASE 28
+		PRINTFORML 닥쳐오는 촉수에게 %조사처리(ANAME(ARG:0),"는")% 다리로 견제를 계속하고 있었다
+		IF TALENT:(ARG:0):회복느림
+			PRINTFORML 하지만 무진장한 상대를 계속 처리하려면 한계가 있어, 간단하게 %ANAME(ARG:0)%의 다리는 잡혀 버렸다!
+			PRINTFORML 무리를 하는 %조사처리(ANAME(ARG:0),"를")% 마음에 든 촉수는, %ANAME(ARG:0)%의 몸을 차분히 사랑했다……
+		ELSEIF ABL:(ARG:0):무투 >= 90
+			;오니라든지 그 옆상정
+			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 긴 일논쟁 계속했지만, 일순간의 틈을 찔려 다리를 잡혀 버렸다!
+			PRINTFORML 실로 건강한 육체를 마음에 든 촉수는, 자손을 남기기 (위해)때문에 정성스럽게 %ANAME(ARG:0)%의 몸을 사랑하기 시작했다……
+		ELSE
+			PRINTFORML 하지만 무진장한 상대를 계속 처리하려면 한계가 있어, 잠시 해 피폐 한 다리는 잡혀 버렸다!
+			PRINTFORML 건강이 좋은 모판을 마음에 든 촉수는, %ANAME(ARG:0)%의 몸을 한계가 올 때까지 계속 사랑했다……
+		ENDIF
+	CASE 29
+		PRINTFORML 야단이 대한 몇의 촉수가 %조사처리(ANAME(ARG:0),"를")% 둘러싸고 있었다
+		PRINTFORML 촉수는 %ANAME(ARG:0)%의 몸을 관 범해, 차분히 성감대의 해석을 실시하고 있다……
+		IF ARG:0 == NAME_TO_CHARA("코이시")
+			PRINTFORML 끈적한 시선을 느낀 %조사처리(ANAME(ARG:0),"는")%, 얼굴을 새빨갛게 물들이면서, 머뭇머뭇 몸을 비틀게 하고 있었지만
+		ELSEIF ARG:0 == NAME_TO_CHARA("사토리") || ARG:0 == NAME_TO_CHARA("미코") || ARG:0 == NAME_TO_CHARA("시키에이키") || ARG:0 == NAME_TO_CHARA("유카리") 
+			PRINTFORML 자신의 심신을 읽으시고 있는 일을 깨달은 %조사처리(ANAME(ARG:0),"는")%, 얼굴을 새빨갛게 물들이면서, 눈을 노려봐 돌려주고 있었지만
+		ELSE
+			PRINTFORML 그렇다고는 모르는 %조사처리(ANAME(ARG:0),"는")% 얼굴을 새빨갛게 물들이면서, 몸을 움추려 가드를 굳히고 있었지만
+		ENDIF
+		PRINTFORML 해석이 끝난 촉수에 약점을 계속해 몰아세울 수 있어 번민 이상 지옥과 같은 쾌락으로 이끌려 갔다
+	CASE 30
+		PRINTFORML 갑판을 짊어진 촉수가 %ANAME(ARG:0)%의 사타구니로 정조대같이 달라붙고 있었다
+		PRINTFORML 밀착한 촉수는 질내를 몇 번이나 범해, 결합부로부터 흐르기 시작할 정도로 대량의 정액을 계속 발했다!
+		PRINTFORML 가랑이에 흰 폭포를 생기는 만큼 사정된 %조사처리(ANAME(ARG:0),"는")%, 오열을 누설하면서 몸을 진동시키고 있었다……
+	CASE 31
+		PRINTFORML 그리고 납작한 촉수가 귀나 사타구니, 손바닥이나 발바닥에 연결되어지고 있었다
+		PRINTFORML 납작한 촉수로부터 칫솔과 같이 짧은 촉수가 많이 나 있어 접한 면이나 구멍안을 침식하고 있었다
+		PRINTFORML 주위의 소리가 차단된 %ANAME(ARG:0)%의 귀에는, 질척질척 곧 가까운 시일내에 범하는 소리만이 울려 퍼져,
+		PRINTFORML 촉수만을 가까이에 느끼는 감각에, %조사처리(ANAME(ARG:0),"는")% 필사적으로 참고 있었다……
+	CASE 32
+		PRINTFORML 그로테스크한 겉모습을 한, 근육질인 촉수가 음부를 요범해 추적하고 있다
+		PRINTFORML 촉수가 자궁 머리 부분까지 길을 크게 넓혀 찌르는 것을, %ANAME(ARG:0)%의 몸은 튀어,
+		PRINTFORML 안쪽에 도달하기까지 흩뿌려진 액체가 %ANAME(ARG:0)%의 질내를 이완시켜, 체를 느슨해지게 해 간다
+		PRINTFORML 촉수에 몸을 순라고 가는 %조사처리(ANAME(ARG:0),"는")%, 입을 빠끔빠끔 시키면서 이성과 쾌락의 경계를 계속 방황했다……
+	CASE 33
+		PRINTFORML 벽일면으로부터 성장하는 촉수와 %조사처리(ANAME(ARG:0),"는")% 교미를 계속 하고 있었다
+		PRINTFORML 촉수가 질내에 들어가, 격렬하게 움직여 %ANAME(ARG:0)%의 절정과 함께 정자를 발해, 실을 당겨 헤어진다
+		IF ARG:0 == NAME_TO_CHARA("야마메")
+			PRINTFORML 몇의 실과 연결되면서 생식 행위를 반복하는 %조사처리(ANAME(ARG:0),"는")%, 음미로운 거미의 여왕인 것 같았다……
+		ELSE
+			PRINTFORML 몇 번이나 생식 행위를 반복해 몇의 실과 연결된 %조사처리(ANAME(ARG:0),"는")%, 거미집에게 잡힌 사냥감인 것 같았다……
+		ENDIF
+	CASE 34
+		PRINTFORML 방에 데리고 들어가진 %조사처리(ANAME(ARG:0),"를")%, 촉수들은 장난감으로 해 희롱하고 있었다……
+		PRINTFORML 몇번 절정을 맞이할 수 있을까 시험하는것같이, 무수한 촉수가 %조사처리(ANAME(ARG:0),"를")% 둘러싸 괴롭히고 있다!
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 촉수들의 능욕에 저항하는 일도 하지 못하고 몸부림쳐, 망가진 것처럼 뛰어 오르며 있었다……
+	CASE 35
+		PRINTFORML 촉수와 함께 갇힌 %조사처리(ANAME(ARG:0),"는")% 철저하게 엉덩이 구멍을 후비어지고 있었다
+		PRINTFORML 장내를 핥고 돌리도록(듯이) 촉수에 빨려져 몇도 촉수의 알을 심어졌다
+		PRINTFORML 그리고 본래 생식기가 아닌 엉덩이 구멍으로 촉수의 유체를 태어나 그 유체에 또 엉덩이 구멍을 희롱해졌다!
+	CASE 36
+		PRINTFORML 한층 더 다리가 고정된 %ANAME(ARG:0)%의 배에는, 매직 스퀘어가 그려져 있었다
+		IF TALENT:(ARG:0):임신
+			;빙의합체!
+			PRINTFORML %ANAME(ARG:0)%에 그려진 매직 스퀘어가 붉게 빛나면, %ANAME(ARG:0)%의 아이가 돌연 움직이기 시작했다
+			PRINTFORML 질구로부터는 촉수가 살짝얼굴을 들여다 보게 해 %ANAME(ARG:0)%의 몸을 안으로부터 희롱하고 있다
+			PRINTFORML 일시적으로 태내의 아이를 촉수에 변화 당한 %조사처리(ANAME(ARG:0),"는")%, 밤새 아이의 희구가 되었다……
+		ELSE
+			PRINTFORML %ANAME(ARG:0)%에 그려진 매직 스퀘어가 붉게 빛나면, %ANAME(ARG:0)%의 배는 임산부같이 부루퉁해 갔다
+			PRINTFORML 질구로부터는 촉수가 살짝얼굴을 들여다 보게 해 %ANAME(ARG:0)%의 몸을 안으로부터 희롱하고 있다
+			PRINTFORML 자궁에 촉수와 양수 대신의 최음액을 직접 소환된 %조사처리(ANAME(ARG:0),"는")%, 밤새 촉수의 희구가 되었다……
+		ENDIF
+	CASE 37
+		IF ARG:0 == NAME_TO_CHARA("샹하이인형") || ARG:0 == NAME_TO_CHARA("호라이인형") || ARG:0 == NAME_TO_CHARA("오오에도인형") || ARG:0 == NAME_TO_CHARA("골리아테인형") || ARG:0 == NAME_TO_CHARA("히나") 
+			PRINTFORML 활과 같이 따른 자세로 %조사처리(ANAME(ARG:0),"는")%, 순환기같이 촉수와 마력 교환을 실시하고 있었다.
+			PRINTFORML %ANAME(ARG:0)%에 흐르는 마력을 혀와 같은 촉수나, 유두나 요도에 장착된 홀쪽한 촉수가 흡인을 실시하고 있다
+			PRINTFORML 그리고 입, 질 구멍, 엉덩이 구멍으로부터는 새어나올 정도의 정자가 쏟아져 %ANAME(ARG:0)%의 마력을 적셨다
+			PRINTFORML 촉수와 일체가 된 %조사처리(ANAME(ARG:0),"는")%, 새빨간 얼굴을 해 마력을 계속 흘렸다……
+		ELSEIF ARG:0 == NAME_TO_CHARA("VIVIT") || ARG:0 == NAME_TO_CHARA("루코토 ")
+			PRINTFORML 활과 같이 따른 자세로 %조사처리(ANAME(ARG:0),"는")%, 순환기같이 촉수와 에너지 교환을 실시하고 있었다.
+			PRINTFORML %ANAME(ARG:0)%에 흐르는 에너지를 혀와 같은 촉수나, 유두나 요도에 장착된 홀쪽한 촉수가 흡인을 실시하고 있다
+			PRINTFORML 그리고 입, 질 구멍, 엉덩이 구멍으로부터는 새어나올 정도의 정자가 쏟아져 %ANAME(ARG:0)%의 동력을 적셨다
+			PRINTFORML 촉수와 일체가 된 %조사처리(ANAME(ARG:0),"는")%, 새빨간 얼굴을 해 에너지를 계속 교환했다……
+		ELSE
+			PRINTFORML 활과 같이 따른 자세로 %조사처리(ANAME(ARG:0),"는")%, 순환기같이 촉수와 체액 교환을 실시하고 있었다.
+			PRINTFORML %조사처리(ANAME(ARG:0),"로")%부터 흐르는 땀이나 눈물을 혀와 같은 촉수가 빨고 취해, 유두나 요도에는 홀쪽한 촉수가 흡인을 실시하고 있다
+			PRINTFORML 그리고 입, 질 구멍, 엉덩이 구멍으로부터는 새어나올 정도의 정자가 쏟아져 %ANAME(ARG:0)%의 수분과 양분을 적셨다
+			PRINTFORML 촉수와 일체가 된 %조사처리(ANAME(ARG:0),"는")%, 새빨간 얼굴을 해 눈물과 꿀을 계속 흘렸다……
+		ENDIF
+	CASE 38
+		PRINTFORML 촉수는 %ANAME(ARG:0)%의 몸을 잡아, 엎드림의 자세로 공중에 들어 올렸다
+		PRINTFORML 한층 더 촉수는 그 주위를 둘러싸, 돔과 같이 다 같이 가려 버렸다!
+		PRINTFORML 밀봉된 돔 중(안)에서 엎드림인 채 고정된 %조사처리(ANAME(ARG:0),"는")%, 전방위로부터 구깃구깃에 범해지고
+		PRINTFORML 질척질척 울려 퍼지는 물소리를 들으면서, 계속 허덕여 하룻밤을 보냈다……
+	CASE 39
+		PRINTFORML 발밑으로부터 거대한 통과 같은 촉수가 성장해 %조사처리(ANAME(ARG:0),"를")% 삼켰다!
+		PRINTFORML 촉수 중(안)에서 %조사처리(ANAME(ARG:0),"는")% 유두나 클리토리스를 바늘을 찔려 이상한 액체가 주입되었다
+		PRINTFORML 게다가 몇개의 촉수를 몸의 구멍에 접속되어 %조사처리(ANAME(ARG:0),"는")% 감각이 개조되어 갔다……
+	CASE 40
+		PRINTFORML 눈앞에서 혹을 가진 촉수가 파치, 파치와 빛을 켜고 있었다
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 그리고 왜일까 한 눈을 팔지 못하고 계속 보고 있었지만
+		PRINTFORML 촉수가 툭%조사처리(ANAME(ARG:0),"를")% 천정으로부터 매단 로프를 자르면, %ANAME(ARG:0)%의 몸은 별로 멋대로 움직이기 시작해
+		PRINTFORML %ANAME(ARG:0)%의 의지를 무시해 봉사를하기 시작해, 스스로 촉수를 물어 버렸다……
+	CASE 41
+		PRINTFORML 방 안에는 녹는 것 같은 눈을 한 요정들이 수필대기하고 있었다
+		IF ARG:0 == NAME_TO_CHARA("서니밀크") || ARG:0 == NAME_TO_CHARA("루나차일드") || ARG:0 == NAME_TO_CHARA("스타사파이어") || ARG:0 == NAME_TO_CHARA("치르노") || ARG:0 == NAME_TO_CHARA("대요정") || ARG:0 == NAME_TO_CHARA("클라운피스") || ARG:0 == NAME_TO_CHARA("릴리화이트") || ARG:0 == NAME_TO_CHARA("릴리블랙")
+			PRINTFORML 요정들은 연극을 하는것같이 회화하면서 %조사처리(ANAME(ARG:0),"를")% 애무해, 협력해 몸을 정상위의 형태에 고정시켰다
+			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 동족으로서 설득을 시도하려고 했지만, 입에 가슴을 강압할 수 있는 말을 봉쇄되어 버렸다……
+			PRINTFORML 그리고 한마리의 요정은 수줍은 표정으로 태내로부터 촉수를 꺼내면, 기쁜듯이 %ANAME(ARG:0)%의 질에 삽입마저라고 말했다!
+			PRINTFORML ……%조사처리(ANAME(ARG:0),"는")% 그 후, 그 외의 요정에 지켜봐지면서 영원과 촉수에 범해져 매우 사랑스러운 소리를 높였다
+		ELSEIF GROUPMATCH(TALENT:(ARG:0):체격, 체격_아이, 체격_작은체형)
+			PRINTFORML 요정들은 작은 %조사처리(ANAME(ARG:0),"가")% 분명하게 젖도록(듯이) 확실히 쿤닐링구스를 하면, 사랑스러운 배를 상냥하게 문질렀다
+			PRINTFORML 그리고 한마리의 요정이 미소지은 표정으로 태내로부터 촉수를 꺼내면, 바동바동 날뛰는 %조사처리(ANAME(ARG:0),"를")% 포옹 하면서 촉수를 이끌었다
+			PRINTFORML ……%조사처리(ANAME(ARG:0),"는")% 그 후, 확실히 착상 할 때까지 범해져 촉수를 낳는 곳까지 요정에 안내되었다
+		ELSE
+			PRINTFORML 요정들은 달콤한 소리로 회화하면서 %조사처리(ANAME(ARG:0),"를")% 애무해, 협력해 몸을 정상위의 형태에 고정시켰다
+			PRINTFORML 그리고 한마리의 요정이 열희의 표정으로 태내로부터 촉수를 꺼내면, 얼굴을 경련이 일어나게 한 %ANAME(ARG:0)%에 뛰어들어 끌어들였다!
+			PRINTFORML ……%조사처리(ANAME(ARG:0),"는")% 그 후, 번갈아 요정들 전원의 숨겨 납입하고 있던 촉수에 범해갈 수 있었다
+		ENDIF
+	CASE 42
+		PRINTFORML 툭 해 눈과 구가 도착한 촉수가 %ANAME(ARG:0)%의 발밑에 있었다
+		PRINTFORML 자신은 나쁜 촉수가 아니기 때문에 선택지를 주면 말하는 촉수는 말해, 무수의 능욕 플랜을 제시했다……
+		IF TALENT:(ARG:0):공허 || TALENT:(ARG:0):붕괴
+			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 이야기를 듣지 않은 것인지, 시선을 그근처에 감돌게 하고 있다
+			PRINTFORML 말하는 촉수는 이쪽에서 결정해 두는군이라고 말하면, 제일 상냥한 능욕(분)편을 %ANAME(ARG:0)%에 부추겼다
+		ELSEIF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음란)
+			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 얼굴을 새빨갛게 염색해 내면서도, (듣)묻는 동안에 질밀이 늘어져 버렸다
+			PRINTFORML 말하는 촉수는 (들)물을 것도 없었지요라고 말하면서, 플랜을 차례로 %ANAME(ARG:0)%에 부추겼다
+		ELSEIF ABL:(ARG:0):성지식 == 0
+			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 그것들의 내용을 이해 다 할 수 있지 않고, 계속 하고 있으면
+			PRINTFORML 말하는 촉수는 시험하는 것이 빠르다라고 말하면서, 플랜을 차례로 %ANAME(ARG:0)%에 부추겼다
+		ELSEIF ARG:0 == NAME_TO_CHARA("사구메") 
+			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 얼굴을 새빨갛게 염색해 내, 그것들을 모두 부정하면
+			PRINTFORML 말하는 촉수는 어쩔 수 없다고 말하면서, 플랜을 역순서로 %ANAME(ARG:0)%에 부추겼다
+		ELSE
+			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 얼굴을 새빨갛게 염색해 내, 그것들을 모두 부정하면
+			PRINTFORML 말하는 촉수는 어쩔 수 없다고 말하면서, 플랜을 차례로 %ANAME(ARG:0)%에 부추겼다
+		ENDIF
+	CASE 43
+		PRINTFORML 굵은 촉수가 빙빙에 감아 붙어 %ANAME(ARG:0)%의 전신을 통 모양에 조른다……
+		PRINTFORML 조른 촉수는 빙글 상하를 회전해, %조사처리(ANAME(ARG:0),"를")% 바닥으로 한 컵과 같이 되었다
+		PRINTFORML 다른 촉수들은 질척질척 통의 내용을 범해 놀아, 샤워같이 서로 같이 달라붙는 정자를 흘려 넣으면
+		PRINTFORML %ANAME(ARG:0)%의 각간에 풀과 같은 생식 정액의 집합소를 만들어 냈다
+		PRINTFORML 하 마개가 된 %조사처리(ANAME(ARG:0),"는")% 그 중에 새로운 촉수를 낳을 때까지 해방되지 않았다……
+	CASE 44
+		PRINTFORML 투명의 촉수가 %조사처리(ANAME(ARG:0),"를")% 범하고 있었다. 촉수안에는 무수한 알이 있어 %ANAME(ARG:0)%안으로 옮겨 들여지고 있다
+		PRINTFORML 그 후, %조사처리(ANAME(ARG:0),"는")% 다른 생식관에 범해져 흘러넘치는 만큼 정자를 흘려 넣어졌다
+		IF TALENT:(ARG:0):임신
+			PRINTFORML 장내를 촉수의 수정에 사용된 %조사처리(ANAME(ARG:0),"는")%, 탁성을 흘리면서 수정란을 낳아 갔다……
+		ELSE
+			PRINTFORML 태내를 촉수의 수정에 사용된 %조사처리(ANAME(ARG:0),"는")%, 탁성을 흘리면서 수정란을 낳아 갔다……
+		ENDIF
+	CASE 45
+		PRINTFORML 촉수의 봉투가 지면으로부터 열어, %조사처리(ANAME(ARG:0),"를")% 둘러싸도록(듯이)해 삼켰다
+		PRINTFORML 봉투안은 걸죽한 백탁액으로 가득 차 있어 거기로부터 기어 나온 촉수가 %조사처리(ANAME(ARG:0),"를")% 싸 안으로 밀어넣어 간다
+		PRINTFORML 밀봉된 공간에 %조사처리(ANAME(ARG:0),"는")% 온전히 몸을 움직이는 일도 용서되지 않고 범해져 전신을 더럽혀져 갔다……
+	CASE 46
+		PRINTFORML 벗긴 과실과 같이 붉은 촉수가, %조사처리(ANAME(ARG:0),"로")%부터의 애액을 반질반질 몸에 감겨 계속 범하고 있다
+		PRINTFORML 마치 %ANAME(ARG:0)% 안에 있는 것이 올바른 모습인것같이 촉수는 자주(잘) 친숙해 져 있어
+		IF TALENT:(ARG:0):꿋꿋함 || TALENT:(ARG:0):고고함
+			PRINTFORML 이빨을 악물어 견디는 %ANAME(ARG:0)%의 비순으로, 몇 번이나 깊은 스트로크를 반복했다……
+		ELSEIF TALENT:(ARG:0):자제심
+			PRINTFORML 새빨간 얼굴로 시선을 피하는 %ANAME(ARG:0)%의 비순으로, 몇 번이나 깊은 스트로크를 반복했다……
+		ELSEIF TALENT:(ARG:0):프라이드높음
+			PRINTFORML 눈물을 머금고 어깨를 들썩이며 헐떡이는 %ANAME(ARG:0)%의 비순으로, 몇 번이나 깊은 스트로크를 반복했다……
+		ELSE
+			PRINTFORML 말괄량이 말괄량이 울며 아우성치는 %ANAME(ARG:0)%의 비순으로, 몇 번이나 깊은 스트로크를 반복했다……
+		ENDIF
+	CASE 47
+		PRINTFORML 부정형인 촉수에 범해진 %조사처리(ANAME(ARG:0),"는")%, 가랑이가 녹진녹진의 홍수같이 되어 있었다
+		PRINTFORML 젤 상태의 촉수는 힘태내에 비집고 들어간 후, 중력에 맡겨 체외에 빠지고 내리고를 반복
+		PRINTFORML %ANAME(ARG:0)%의 몸에 녹이는 것 같은 감각이나, 강한 가려움을 주면서 세포 활성화를 재촉하고 있다
+		PRINTFORML 촉수류의 에스테틱(미학)을 받은 %조사처리(ANAME(ARG:0),"는")%, 격렬하게 흐트러지고 미쳐 갔다……
+	CASE 48
+		PRINTFORML 방 안에는 눈물을 글썽인 요정 메이드가 대기하고 있었다
+		IF ARG:0 == NAME_TO_CHARA("서니밀크") || ARG:0 == NAME_TO_CHARA("루나차일드") || ARG:0 == NAME_TO_CHARA("스타사파이어") || ARG:0 == NAME_TO_CHARA("치르노") || ARG:0 == NAME_TO_CHARA("대요정") || ARG:0 == NAME_TO_CHARA("클라운피스") || ARG:0 == NAME_TO_CHARA("릴리화이트") || ARG:0 == NAME_TO_CHARA("릴리블랙")
+			PRINTFORML 요정 메이드는 %ANAME(ARG:0)%의 몸을 부드러운 혀로 빨아, 예쁘게 될 때까지 봉사했다
+			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 동족으로서 설득을 시도하려고 했지만, 요정 메이드는 완전히 귀를 기울이는 일 없이
+			PRINTFORML 목에 손을 써%조사처리(ANAME(ARG:0),"를")% 끌어들이면, 태내에 깃들고 있는 촉수를 %ANAME(ARG:0)%사붐비었다……
+			PRINTFORML ……그 후, 요정 메이드는 촉수와 교묘한 허리를 사용해 밤새%조사처리(ANAME(ARG:0),"를")% 계속 꾸짖었다
+		ELSE
+			PRINTFORML 요정 메이드는 %ANAME(ARG:0)%의 몸을 부드러운 혀로 빨아, 예쁘게 될 때까지 봉사하면
+			PRINTFORML 실례합니다. 이렇게 말해 스커트를 걷어올려, 자신의 태내에 깃들고 있는 촉수를 %조사처리(ANAME(ARG:0),"로")% 과시했다……
+			PRINTFORML ……그 후, 요정 메이드는 촉수와 교묘한 허리를 사용해 밤새%조사처리(ANAME(ARG:0),"를")% 계속 꾸짖었다
+		ENDIF
+	CASE 49
+		PRINTFORML 흡반이 붙은 촉수가 %ANAME(ARG:0)%에 덮어씌워 들러붙어 희롱하고 있었다
+		PRINTFORML 감싸진 유두나 클리토리스는 충혈해 일어서, 츗 개, 츗 탁 소리를 내면서 집어올릴 수 있다
+		PRINTFORML %ANAME(ARG:0)%의 암컷구멍에 비집고 들어간 촉수는 우글거리면서 태내에 키스를 내리게 해 갔다……
+	CASE 50
+		PRINTFORML 남성의 생식기와 같은 형태를 한 촉수가, 끊임없이 질척질척%ANAME(ARG:0)%의 허리의 안쪽을 휘젓고 있었다
+		SELECTCASE GET_BUSTSIZE(ARG:0)
+			CASE -2
+				PRINTFORML 촉수는 강한 자극취의 액체를 내면서, %ANAME(ARG:0)%의 슬렌더인 몸을 쓸어올려, 상냥하게 오데코나 뺨에 키스를 내리게 해,
+			CASE -1
+				PRINTFORML 촉수는 강한 자극취의 액체를 내면서, %ANAME(ARG:0)%의 얼마 안 되는가슴에 응석부리도록(듯이) 액체를 칠해 마킹 해,
+			CASE 0
+				PRINTFORML 촉수는 강한 자극취의 액체를 내면서, %ANAME(ARG:0)%의 부드러운 가슴에 협구를 유린해,
+			CASE 1
+				PRINTFORML 촉수는 강한 자극취의 액체를 내면서, %ANAME(ARG:0)%의 큰 가슴을 단단히 묶고 격렬하게 주물러,
+			CASE 2
+				PRINTFORML 촉수는 강한 자극취의 액체를 내면서, %ANAME(ARG:0)%의 유방에 꼭 끼게 감아 다해 흔들어, 유방을 후비어,
+		ENDSELECT
+		PRINTFORML 방안에 추잡한 소리를 미치게 해 심신을 범해, 조금씩 이성을 빼앗아 간다……
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 촉수에 노리겟감으로서 하룻밤 쭉 총애를 받았다……
+ENDSELECT
+
+;-------------------------------------------------
+;창관
+;-------------------------------------------------
+@EVENT_PRISONER_TEXT7(ARG:0)
+PRINTFORML %조사처리(ANAME(ARG:0),"는")% 창관에서 일해지고 있다……
+PRINTFORML 침대만이 놓여진 간소한 방에서, %조사처리(ANAME(ARG:0),"는")% 손님을 맞아들였다
+
+SIF IS_MALE(ARG:0)
+	RETURN
+
+SELECTCASE RAND:7
+	CASE 0
+		PRINTFORML 손님은 너덜너덜의 옷차림의, 어떻게 봐도 부랑자라고 아는 것 같은 남자다
+		PRINTFORML 열심히 모은 돈으로, %조사처리(ANAME(ARG:0),"를")% 샀을 것이다……
+		SELECTCASE RAND:7
+			CASE 0
+				PRINTFORML 눈을 핏발이 서게 한 남자는, 콧김도 난폭하고 %조사처리(ANAME(ARG:0),"를")%쓰러트린다
+				PRINTFORML 그리고 타액으로 적실 수 있었던 %ANAME(ARG:0)%의 음렬에, 치구 투성이의 페니스를 쑤셔 넣어 갔다……
+			CASE 1
+				PRINTFORML 눈을 핏발이 서게 한 남자는, %ANAME(ARG:0)%에 치구 투성이의 페니스를 내민다
+				PRINTFORML 기초가 되면서, %조사처리(ANAME(ARG:0),"는")% 그 입술로, 한껏 「청소」를 하게 했다……
+				PRINTFORML 그 후%조사처리(ANAME(ARG:0),"는")%, 아래의 입으로, 예쁘게 된 페니스의 상대를 하게 했다……
+			CASE 2
+				PRINTFORML 눈을 핏발이 서게 한 남자는, %조사처리(ANAME(ARG:0),"를")%쓰러트린다
+				PRINTFORML 그리고 엎드린 자세로 한 %ANAME(ARG:0)%의 국좌에, 치구 투성이의 페니스를 쑤셔 넣어 갔다……
+			CASE 3
+				PRINTFORML 눈을 핏발이 서게 한 남자는, %ANAME(ARG:0)%에 기승위로 봉사하도록 요구한다
+				PRINTFORML 거역할 수도 없는, %조사처리(ANAME(ARG:0),"는")% 더러워진 페니스에 스스로 봉사 당했다……
+			CASE 4
+				PRINTFORML 눈을 핏발이 서게 한 남자는, %ANAME(ARG:0)%의 신체를 날름날름 핥아대기 시작한다
+				PRINTFORML 그녀의 신체가 냄새나는 타액으로 질척질척이 되어, 그는 간신히 %조사처리(ANAME(ARG:0),"를")% 관철했다……
+			CASE 5
+				PRINTFORML 눈을 핏발이 서게 한 남자는, 전희도 조속히 %조사처리(ANAME(ARG:0),"를")% 관철했다
+				PRINTFORML 시간이 올 때까지, %ANAME(ARG:0)%의 양구멍을 오로지 계속 범했다……
+			CASE 6
+				PRINTFORML 남은 %조사처리(ANAME(ARG:0),"를")% 관철하면서, 사랑하는 인으로 하는 것 같은 키스를 하도록(듯이) 명령했다
+				PRINTFORML 나무 그런 악취를 풍기는 입안을, %조사처리(ANAME(ARG:0),"는")% 한껏 입으로애무 했다……
+		ENDSELECT
+	CASE 1
+		PRINTFORML 손님은 품위 있는 옷차림의, 백발의 노인이다
+		PRINTFORML 이런 곳에 오는 것 같은 인간에게는 생각되지 않지만, 그 눈동자에는 짐승의 욕망이 머물고 있다……
+		SELECTCASE RAND:7
+			CASE 0
+				PRINTFORML 노인은 엎드린 자세로 한 %조사처리(ANAME(ARG:0),"를")% 관철하면서, 그 엉덩이를 몇 번이나 두드렸다
+				PRINTFORML %조사처리(ANAME(ARG:0),"가")% 비명을 지를 때, 노인은 즐거운 듯이 웃고 있다……
+			CASE 1
+				PRINTFORML 노인은 %조사처리(ANAME(ARG:0),"를")% 밧줄로 단단히 묶어, 재갈을 끼워, 그 양구멍을 굵은 장형으로 후벼파고 있다
+				PRINTFORML %ANAME(ARG:0)%의 음란한 흐려진 소리를, 노인은 비웃음은 있다……
+			CASE 2
+				PRINTFORML 노인은 %조사처리(ANAME(ARG:0),"를")% 단단히 묶어 천정으로부터 매달아, 삼각목마에 걸치고 있다
+				PRINTFORML 양 다리에 동여 맬 수 있었던 누름돌이, 그녀에게 고통을 준다……
+			CASE 3
+				PRINTFORML 노인은 %ANAME(ARG:0)%에 자위를 강요하고 있다
+				PRINTFORML 야비하게 느끼고 있는 모양을, 노인은 비웃고 있다……
+			CASE 4
+				PRINTFORML 노인은 %조사처리(ANAME(ARG:0),"를")% 밧줄로 단단히 묶어, 채찍 치고 있다
+				PRINTFORML 피부에 새겨진 붉은 줄기를, 노인의 붉은 혀가 긴다……
+			CASE 5
+				PRINTFORML 노인은 %ANAME(ARG:0)%에 통로기를 끼워, 이라마치오 하고 있다
+				PRINTFORML 구%조사처리(ANAME(ARG:0),"를")% 질타 하면서, 목 안에 사정했다……
+			CASE 6
+				PRINTFORML 노인은 %조사처리(ANAME(ARG:0),"를")% 벽에 책으로 해, 범하고 있다
+				PRINTFORML 노회인 테크닉에, %조사처리(ANAME(ARG:0),"는")% 소리를 억제할 수 없이 있다……
+		ENDSELECT
+	CASE 2
+		PRINTFORML 손님은 한눈에 봐 그것이라고 아는 것 같은 똘마니다
+		PRINTFORML 남은 %조사처리(ANAME(ARG:0),"를")% 보든지, 「정답」(이)가 아닐까 천하게 보인 미소를 띄운다……
+		SELECTCASE RAND:6
+			CASE 0
+				PRINTFORML 남은 %조사처리(ANAME(ARG:0),"를")% 쓰러트리고 비밀의 틈에 페니스를 쑤셔 넣었다
+				PRINTFORML 그저 단순히허리를 흔들어, 당신의 쾌락을 탐내고 있다……
+			CASE 1
+				PRINTFORML 남은 위로 향해 되면 %ANAME(ARG:0)%에 기승위로 봉사시켰다
+				PRINTFORML 하로부터 밀어올리면서, 좀 더 허리를 흔들어와 격문을 날리고 있다……
+			CASE 2
+				PRINTFORML 남은 %ANAME(ARG:0)%에, 오로지 난폭하게 허리를 흔들고 싶어서 있다
+				PRINTFORML 폭력적이기까지 한 「수컷」에게 허덕이는 %조사처리(ANAME(ARG:0),"를")%, 남자는 비웃음은 있다……
+			CASE 3
+				PRINTFORML 남은 %ANAME(ARG:0)%의 입을 「사용해」있는 것 같다……
+				PRINTFORML 목 안까지 몇 번이나 찔러져 %조사처리(ANAME(ARG:0),"는")% 몹시 놀라고 있다
+			CASE 4
+				PRINTFORML 남은 %조사처리(ANAME(ARG:0),"를")% 엎드린 자세로 해, 덮어씌우도록(듯이)해 허리를 쳐박고 있다
+				PRINTFORML 깊은 곳을 빠득빠득 후벼파져 %조사처리(ANAME(ARG:0),"는")% 괴로운 듯이 허덕이고 있다……
+			CASE 5
+				PRINTFORML 「트레」라고 칭해, 남자는 그 밖에도 몇사람, 똘마니를 데려 온 것 같다
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 그대로, 남자들에게 윤간되어 버렸다……
+		ENDSELECT
+	CASE 3
+		PRINTFORML 손님은 어린아이의 연령의 정도도 가지 않는 소년이었다
+		PRINTFORML 이니까 이런 아이가, 라고는 생각하지만, 손님은 손님이다. %조사처리(ANAME(ARG:0),"는")% 대접하기로 했다……
+		SELECTCASE RAND:5
+			CASE 0
+				PRINTFORML 소년은 %ANAME(ARG:0)%에 껴안아, 응석부리면서 허리를 흔들고 있다
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 소년에게 미소지어, 그 머리를 어루만져 주었다……
+			CASE 1
+				PRINTFORML %조사처리(ANAME(ARG:0),"가")% 소년의 작은 것을 가볍게 빨아 주면, 소년은 그것만으로 허리를 진동시킨다
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 그대로, 입의 안에서 몇 번이나 소년의 것을 끝나게 해 주었다……
+			CASE 2
+				PRINTFORML 소년은 터무니없는 왕자지의 소유자였다
+				PRINTFORML %ANAME(ARG:0)%의 암컷구멍은 그 형태가 바뀌는 만큼 펴넓혀지고 있다……
+			CASE 3
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 소년의 신체를 씻어 주고 있다
+				PRINTFORML %조사처리(ANAME(ARG:0),"가")% 스스로의 신체를 스폰지 대신에 하면, 소년은 그 자극만으로 달했다……
+			CASE 4
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 소년과 열렬한 입맞춤을 주고 받고 있다
+				PRINTFORML 하는 김에손바닥중에서 소년의 것을 희롱해 주면, 그는 그것만으로 달한 것 같다……
+		ENDSELECT
+	CASE 4
+		PRINTFORML 손님은 평범한 청년이었다
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 창녀로서 손님의 상대했다……
+		SELECTCASE RAND:5
+			CASE 0
+				PRINTFORML 청년은 %ANAME(ARG:0)%의 육체에 열중해, 오로지 허리를 흔들고 있다
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 허리를 흔들어, 거기에 응하고 있다……
+			CASE 1
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 청년의 것을 입으로 사랑하고 있다
+				PRINTFORML 혀가 육간을 핥아대면, 청년은 견디지 않고, %ANAME(ARG:0)%의 입안에 정액을 토해냈다……
+			CASE 2
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 청년과 입맞춤을 주고 받으면서 교접하고 있다
+				PRINTFORML 청년이 신음하면서 토정 하면, %ANAME(ARG:0)%도 흐려진 소리를 질러 절정혀……
+			CASE 3
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 청년 위에 걸쳐, 허리를 흔들고 있다
+				PRINTFORML 헌신적인 태도에, 청년은 무심코 종을 발한 것 같다……
+			CASE 4
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 청년과 이야기를 주고 받고 있다
+				PRINTFORML 그의 꿈이나 불안에 대해 들어 준 뒤, 하는 것을 한 것 같다……
+		ENDSELECT
+	CASE 5
+		PRINTFORML 손님은 벼락 부자 취미의 중년남이었다
+		PRINTFORML 남은 %조사처리(ANAME(ARG:0),"를")% 보고, 느슨해진 안육을 벌어지게 했다……
+		SELECTCASE RAND:6
+			CASE 0
+				PRINTFORML 남은 %ANAME(ARG:0)%에 자위를 강요했다
+				PRINTFORML 천하게 보인 시선아래, 그녀는 스스로의 치태를 드러냈다……
+			CASE 1
+				PRINTFORML 남은 %ANAME(ARG:0)%에 덥쳐, 허리를 고정시키고 있다
+				PRINTFORML 묵직한 삽입질에, %조사처리(ANAME(ARG:0),"는")% 허덕여지고 있다……
+			CASE 2
+				PRINTFORML 남은 「애완동물」에게 %조사처리(ANAME(ARG:0),"를")% 준 것 같다
+				PRINTFORML 축생의의 것 등, 이라고는 생각하지만, 단골손님의 말하는 것을는 거역하지 못하고, %조사처리(ANAME(ARG:0),"는")% 동물과 교짚 되었다……
+			CASE 3
+				PRINTFORML 남은 스스로의 페니스에 벌꿀을 털어 놓아 %ANAME(ARG:0)%에 빨고 받게 하고 있다
+				PRINTFORML 구가 장황할 정도의 감미에 채워졌을 무렵, 쓴 맛이 내뿜었다……
+			CASE 4
+				PRINTFORML 남은 %ANAME(ARG:0)%의 신체를 그릇으로 해, 그 신체에 요리를 번창하게 했다……
+				PRINTFORML 젓가락으로 %ANAME(ARG:0)%의 민감한 곳을 심하게 괴롭히면서 요리를 즐긴 후, 「그릇」을 디저트로서 즐겼다……
+			CASE 5
+				PRINTFORML 남은 %ANAME(ARG:0)%에 거품춤을 시키고 있다
+				PRINTFORML 비누와 남자의 정액으로, %ANAME(ARG:0)%의 신체는 희게 더러워져 갔다……
+		ENDSELECT
+	CASE 6
+		PRINTFORML 손님은 용모 아름다운 여성이었다
+		PRINTFORML 이지만 그 가랑이에서는, 흉악할 정도의 페니스가 우뚝 솟고 있다……
+		SELECTCASE RAND:6
+			CASE 0
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 여성의 페니스에 몇 번이나 찔러지고 있다
+				PRINTFORML 그 정도의 남자와는 비교가 안 될 만큼의 「수컷」에게, %조사처리(ANAME(ARG:0),"는")% 넋을 잃고 허덕이고 있다……
+			CASE 1
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 여성의 것에 입으로 봉사하고 있다
+				PRINTFORML 그 향기라고 해 발해지는 정액이라고 해 몹시 농후해, %ANAME(ARG:0)%입는 편하들 해 버린다……
+			CASE 2
+				PRINTFORML %조사처리(ANAME(ARG:0),"와")% 여성은 서로 입으로 서로 봉사하고
+				PRINTFORML 여자만이 가능한, 어디가 느끼는지를 알고 있는 혀놀림에, %조사처리(ANAME(ARG:0),"는")% 몹시 흐트러지게 되어진다
+				PRINTFORML 여성은 만족기분에, 몇 번이나 몇 번이나 %조사처리(ANAME(ARG:0),"를")% 절정 시켰다……
+			CASE 3
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 여성에 걸쳐, 암컷구멍으로 가지고 봉사하고 있다
+				PRINTFORML 여자의 페니스에 봉사한다는 보통이라면 있을 수 없는 경험이, 그녀를 몹시 고조되게 한다……
+			CASE 4
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 여성의 페니스를 손으로애무 하고 있다
+				PRINTFORML 상대는 틀림없이 여자이지만, 지금 자신이 봉사하고 있는 것은 수컷의 그것이다. 그 도착이, %조사처리(ANAME(ARG:0),"를")% 고조되게 한다……
+			CASE 5
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 여성에 깔아눌러져 몇 번이나 찔리고 있다
+				PRINTFORML 여자가 느끼는 곳을 완벽하게 이해한 그 허리사용에, %조사처리(ANAME(ARG:0),"는")% 열중하고 있다……
+		ENDSELECT
+ENDSELECT
+
+
+;-------------------------------------------------
+;착유
+;-------------------------------------------------
+@EVENT_PRISONER_TEXT8(ARG:0)
+IF !TALENT:(ARG:0):모유체질
+	PRINTFORML %조사처리(ANAME(ARG:0),"는")% 모유체질에 다시 만드는 수술을 받고 있다……
+ELSE
+	SELECTCASE RAND:7
+			CASE 0
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 억지로 착유 기계에 장착되고 젖을 들이마셔지고 있다
+			CASE 1
+				PRINTFORML 착유기로부터 주어지는 자극에 %조사처리(ANAME(ARG:0),"는")% 신음하면서 모유를 분출하고 있다
+			CASE 2
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 알코올면으로 정성스럽게 유두가 살균되고 있다
+				PRINTFORML 가축과 같이 다루어지는 것을의 저항도 착유가 시작되자마자 사라졌다
+			CASE 3
+				PRINTFORML 사전 준비로서 %ANAME(ARG:0)%의 유방을 정성스럽게 마사지 했다
+				PRINTFORML 전조임을 버리고 나서 착유기를 달면 힘차게 모유가 분출했다
+			CASE 4
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 착유기를 본 것 뿐으로 유방이 뜨거워지는 것을 느꼈다
+				PRINTFORML 본인의 의지 (와)는 관계없는 것으로 그 몸은 보다 가축다워지고 있다
+			CASE 5
+				PRINTFORML %조사처리(ANAME(ARG:0),"는")% 착유 후의 손질을 받고 있다
+				PRINTFORML 살균 소독이나 촉진, 착유 기록등을 빼앗기는 것을 수치를 느꼈지만 얼굴을 돌리는 정도 밖에 용서되지 않았었다
+			CASE 6
+				PRINTFORML 착유기가 떼어내진다
+				PRINTFORML 할당량이 끝났는지라고 생각하는 %조사처리(ANAME(ARG:0),"였")%지만 그 유방을 정성스럽게 마사지 되었다
+				PRINTFORML 숨을 거칠게 하는 %ANAME(ARG:0)%에 다시 착유기가 장착되면 조금 전보다 기세 좋게 모유가 분출하기 시작했다
+	ENDSELECT
+ENDIF

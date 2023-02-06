@@ -1,0 +1,537 @@
+﻿;대면좌위
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME32
+IF IS_INSERT_SINGLE(MTAR:0, "Ａ") && IS_INSERT_MUTUAL(MPLY, MTAR:0) != 2
+	LOCALS:0 = 두 구멍 대면좌위
+ELSE
+	LOCALS:0 = 대면좌위
+ENDIF
+
+RESULTS:0 = %LOCALS:0%로 삽입
+RESULTS:1 = %LOCALS:0%로 삽입 당한다
+RESULTS:2 = %LOCALS:0%로 삽입시킨다
+RESULTS:3 = %LOCALS:0%로 삽입된다
+RESULTS:4 = %LOCALS:0%로 삽입시킨다
+RESULTS:5 = %LOCALS:0%과시하고
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE32
+;공통 부분
+CALL COM_ABLE_COMMON(32)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 1명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 1
+	RETURN 0
+;타겟은 최대로 1명까지
+SIF MTAR_NUM <= 0 || MTAR_NUM > 1
+	RETURN 0
+;플레이어가 행동불능이라면 불가
+SIF !IS_PLAYABLE(MPLY:0)
+	RETURN 0
+;대상으로Ｖ가 필요
+SIF !HAS_VAGINA(MTAR:0)
+	RETURN 0
+;실행자에게 장대가 없고, 페니스밴드장착 그 중에서 없으면 불가
+SIF !HAS_PENIS(MPLY:0) && !IS_EQUIP_PLAYER(MPLY:0, 50)
+	RETURN 0
+;플레이어와 타겟의 삽입 관계를 취득
+LOCAL:0 = IS_INSERT_MUTUAL(MPLY:0, MTAR:0)
+;타겟으로부터 플레이어에 삽입중이라면 불가
+SIF LOCAL:0 == 3 || LOCAL:0 == 4
+	RETURN 0
+;타겟의Ｖ가 플레이어의 장대 이외로 메워지고 있다면 불가
+SIF IS_V_HOLD(MTAR:0) && LOCAL:0 != 1
+	RETURN 0
+;타겟의Ａ가 다른 캐릭터의 장대로 메워지고 있어, 체위가Ａ배면좌위·Ａ기승위·Ａ배면기승위 이외라면 불가
+SIF IS_INSERT_SINGLE(MTAR:0, "Ａ") && LOCAL:0 != 2 && !GROUPMATCH(GET_SEX_POSITION_SINGLE(MTAR:0, "Ａ"), 4, 5, 6)
+	RETURN 0
+;플레이어가 안면승마 되고 있다면 불가
+SIF IS_RIDDEN(MPLY:0)
+	RETURN 0
+;플레이어가 안면승마중이라면 불가
+SIF IS_RIDE(MPLY:0)
+	RETURN 0
+;타겟이 안면승마 되고 있다면 불가
+SIF IS_RIDDEN(MTAR:0)
+	RETURN 0
+;플레이어가 바닥에 엎드리며 있다면 불가
+SIF IS_EQUIP_PLAYER(MPLY:0, 110)
+	RETURN 0
+;타겟이 바닥에 엎드리며 있다면 불가
+SIF IS_EQUIP_PLAYER(MTAR:0, 110)
+	RETURN 0
+;타겟이 안면승마중이라면 불가
+SIF IS_RIDE(MTAR:0)
+	RETURN 0
+;플레이어가 구속중이라면 불가
+SIF IS_BIND(MPLY:0)
+	RETURN 0
+;플레이어가 조개맞대기중·쌍두바이브 사용중이라면 불가
+SIF IS_EQUIP_PLAYER(MPLY:0, 21) || IS_EQUIP_TARGET(MPLY:0, 21) || IS_EQUIP_PLAYER(MPLY:0, 22) || IS_EQUIP_TARGET(MPLY:0, 22)
+	RETURN 0
+;플레이어가 조개맞대기중·쌍두바이브 사용중이라면 불가
+SIF IS_EQUIP_PLAYER(MTAR:0, 21) || IS_EQUIP_TARGET(MTAR:0, 21) || IS_EQUIP_PLAYER(MTAR:0, 22) || IS_EQUIP_TARGET(MTAR:0, 22)
+	RETURN 0
+;타겟이 플레이어에Ｗ대딸, Ｔ대딸중이라면 불가
+LOCAL:0 = SEARCH_EQUIP(10, MTAR:0, MPLY:0)
+SIF LOCAL:0 >= 0 && MEQUIP_PLAYER_NUM:(LOCAL:0) >= 2
+	RETURN 0
+;플레이어의 자지가 메워지고 있다면 안 돼
+SIF IS_P_HOLD(MPLY:0)
+	RETURN 0
+;타겟이 쿤닐링구스되고 있다면 불가
+SIF IS_EQUIP_TARGET(MTAR:0, 2)
+	RETURN 0
+;타겟으로부터 플레이어에 이라마중이라면 불가
+SIF SEARCH_EQUIP(90, MTAR:0, MPLY:0) >= 0
+	RETURN 0
+;플레이어로부터 타겟／타겟으로부터 플레이어에 다리 빨고 안이라면 불가
+SIF SEARCH_EQUIP_IC(104, MPLY:0, MTAR:0) >= 0
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM32
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;이미 삽입중이라면 현재의 체위를 취득
+TFLAG:17 = 0
+IF IS_INSERT_MUTUAL(MPLY:0, MTAR:0) == 1
+	SELECTCASE GET_SEX_POSITION(MPLY:0, MTAR:0)
+		CASE 1
+			TFLAG:17 = 2
+		CASE 2
+			TFLAG:17 = 3
+		CASE 3
+			TFLAG:17 = 1
+		CASE 4
+			TFLAG:17 = 3
+		CASE 5
+			TFLAG:17 = 2
+		CASE 6
+			TFLAG:17 = 3
+		CASE 7
+			TFLAG:17 = 3
+		CASE 8
+			TFLAG:17 = 2
+	ENDSELECT
+ENDIF
+IF TFLAG:17 == 0
+	SELECTCASE PREVCOM
+		CASE 30
+			TFLAG:17 = 2
+		CASE 31
+			TFLAG:17 = 3
+		CASE 32
+			TFLAG:17 = 1
+		CASE 33
+			TFLAG:17 = 3
+		CASE 34
+			TFLAG:17 = 2
+		CASE 35
+			TFLAG:17 = 3
+		CASE 37
+			TFLAG:17 = 3
+		CASE 38
+			TFLAG:17 = 2
+	ENDSELECT
+ENDIF
+
+;삽입 관계를 일시 리셋트
+CALL CLEAR_INSERT_FLAG(MPLY:0, "Ｐ")
+
+;●플레이어측의 처리
+DOWNBASE:(MPLY:0):체력 += 140
+
+EXP:(MPLY:0):성기술경험치 += 1
+EXP:(MPLY:0):성교경험치 += 2
+
+SOURCE:(MPLY:0):쾌Ｐ = SENSE_SEX_PLAYER_P(MTAR:0, MPLY:0, 900)
+SOURCE:(MPLY:0):노출 = 50
+SOURCE:(MPLY:0):성행동 = 450
+
+IF MTAR:0 == MASTER
+	CALL ADD_SOURCE_AIZYOU(MPLY:0, 130)
+ELSEIF MPLY:0 != MASTER
+	SOURCE:(MPLY:0):노출 += 200
+ENDIF
+
+;성교계의 공통 처리
+CALL COM_COMMON_SEX_P(MPLY:0, MTAR:0)
+
+;주도권에 응한 우월·굴종의 소스 추가
+CALL ADD_SOURCE_INITIATIVE_U(MPLY:0, 150, 80)
+
+;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+TCVAR:(MPLY:0):4 = 1
+
+;●타겟측의 처리
+DOWNBASE:(MTAR:0):체력 += 100
+
+EXP:(MTAR:0):성기술경험치 += 1
+EXP:(MTAR:0):성교경험치 += 2
+
+SOURCE:(MTAR:0):쾌Ｃ = SENSE_SEX_TARGET(MPLY:0, MTAR:0, 300)
+SOURCE:(MTAR:0):쾌Ｖ = SENSE_SEX_TARGET(MPLY:0, MTAR:0, 900)
+SOURCE:(MTAR:0):노출 = 200
+SOURCE:(MTAR:0):성행동 = 450
+
+IF MPLY:0 == MASTER
+	CALL ADD_SOURCE_AIZYOU(MTAR:0, 130)
+ELSEIF MTAR:0 != MASTER
+	SOURCE:(MTAR:0):노출 += 200
+ENDIF
+
+;성교계의 공통 처리
+CALL COM_COMMON_SEX_V(MTAR:0, MPLY:0)
+
+;쾌Ｃ의 보정
+IF PALAM:(MTAR:0):윤활 < PALAMLV:1
+	TIMES SOURCE:(MTAR:0):쾌Ｃ, 0.30
+ELSEIF PALAM:(MTAR:0):윤활 < PALAMLV:3
+	TIMES SOURCE:(MTAR:0):쾌Ｃ, 0.70
+ELSEIF PALAM:(MTAR:0):윤활 < PALAMLV:5
+	TIMES SOURCE:(MTAR:0):쾌Ｃ, 1.00
+ELSEIF PALAM:(MTAR:0):윤활 < PALAMLV:7
+	TIMES SOURCE:(MTAR:0):쾌Ｃ, 1.20
+ELSEIF PALAM:(MTAR:0):윤활 >= PALAMLV:7
+	TIMES SOURCE:(MTAR:0):쾌Ｃ, 1.40
+ENDIF
+
+IF MPLY:0 == MASTER
+	IF CFLAG:(MTAR:0):2 <= 100
+		TIMES SOURCE:(MTAR:0):쾌Ｃ, 0.50
+	ELSEIF CFLAG:(MTAR:0):2 <= 300
+		TIMES SOURCE:(MTAR:0):쾌Ｃ, 0.70
+	ELSEIF CFLAG:(MTAR:0):2 <= 500
+		TIMES SOURCE:(MTAR:0):쾌Ｃ, 0.80
+	ELSEIF CFLAG:(MTAR:0):2 <= 800
+		TIMES SOURCE:(MTAR:0):쾌Ｃ, 1.00
+	ELSEIF CFLAG:(MTAR:0):2 <= 1500
+		TIMES SOURCE:(MTAR:0):쾌Ｃ, 1.30
+	ELSE
+		SOURCE:(MTAR:0):쾌Ｃ = SOURCE:(MTAR:0):쾌Ｃ * ((CFLAG:(MTAR:0):2 - 1500) / 200 + 150) / 100
+	ENDIF
+ENDIF
+
+;주도권에 응한 우월·굴종의 소스 추가
+CALL ADD_SOURCE_INITIATIVE_U(MTAR:0, 150, 100)
+
+;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+TCVAR:(MTAR:0):4 = 1
+
+;노예의Ｖ⇔조교자의Ｐ의 더러움이 이동
+STAIN:(MTAR:0):3 |= STAIN:(MPLY:0):2
+STAIN:(MPLY:0):2 |= STAIN:(MTAR:0):3
+
+;사정 개소와 대상을 세트(타겟측)
+CALL STACK_SPERM(MTAR:0, MPLY:0, 0)
+
+;체위 플래그세트
+TCVAR:(MPLY:0):31 = 3
+TCVAR:(MTAR:0):33 = 3
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = -1
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 7
+
+RETURN 1
+
+;-------------------------------------------------
+;계속 커맨드인가 어떤가를 설정
+;-------------------------------------------------
+@COM_IS_EQUIP32
+RETURN 1
+
+;-------------------------------------------------
+;계속 상태의 처리
+;-------------------------------------------------
+@COM_EQUIP32(ARG:0)
+LOCAL:2 = MEQUIP_PLAYER:(ARG:0):0
+LOCAL:3 = MEQUIP_TARGET:(ARG:0):0
+
+;소스를 퇴피
+CALL PUTOUT_SOURCE(LOCAL:2)
+CALL PUTOUT_SOURCE(LOCAL:3)
+
+DOWNBASE:(LOCAL:2):체력 += 20
+
+EXP:(LOCAL:2):성기술경험치 += 1
+EXP:(LOCAL:2):성교경험치 += 1
+
+SOURCE:(LOCAL:2):쾌Ｐ += SENSE_SEX_PLAYER_P(LOCAL:3, LOCAL:2, 450)
+SOURCE:(LOCAL:2):노출 += 25
+SOURCE:(LOCAL:2):성행동 += 150
+
+;성교계의 공통 처리
+CALL COM_COMMON_SEX_P(LOCAL:2, LOCAL:3)
+
+;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+TCVAR:(LOCAL:2):4 = 1
+
+;도착도 변화 기준치
+TCVAR:(LOCAL:2):50 -= 1
+
+DOWNBASE:(LOCAL:3):체력 += 20
+
+EXP:(LOCAL:3):성기술경험치 += 1
+EXP:(LOCAL:3):성교경험치 += 1
+
+SOURCE:(LOCAL:3):쾌Ｃ += SENSE_SEX_TARGET(LOCAL:2, LOCAL:3, 150)
+SOURCE:(LOCAL:3):쾌Ｖ += SENSE_SEX_TARGET(LOCAL:2, LOCAL:3, 450)
+SOURCE:(LOCAL:3):노출 += 100
+SOURCE:(LOCAL:3):성행동 += 150
+
+;성교계의 공통 처리
+CALL COM_COMMON_SEX_V(LOCAL:3, LOCAL:2)
+
+;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+TCVAR:(LOCAL:3):4 = 1
+
+;도착도 변화 기준치
+TCVAR:(LOCAL:3):50 -= 1
+
+;퇴피한 소스를 가산
+CALL SUM_SOURCE(LOCAL:2)
+CALL SUM_SOURCE(LOCAL:3)
+
+;-------------------------------------------------
+;계속중의 표시
+;-------------------------------------------------
+@EQUIP_MESSAGE32(ARG:0)
+RESULTS = %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"가")% %EQUIP_TARGET_ANAME(ARG:0)%의 질에 대면좌위로 삽입중
+
+;-------------------------------------------------
+;계속중의 지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE_EQUIP32(ARG:0)
+	SELECTCASE RAND:2
+		CASE 0
+			PRINTFORML %EQUIP_TARGET_ANAME(ARG:0)%의 질이 %EQUIP_PLAYER_ANAME(ARG:0)%의 %BAR_NAME(MEQUIP_PLAYER:(ARG:0):0)%를 물고 있다…
+		CASE 1
+			LOCAL:0 = MEQUIP_TARGET:(ARG:0):0
+			;타겟이 행동불능
+			IF !IS_PLAYABLE(LOCAL:0)
+				PRINTFORML %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"는")% 기절한 %조사처리(EQUIP_TARGET_ANAME(ARG:0),"를")% 껴안은 채로, 격렬하게 허리를 밀어올리고 있다…
+			ELSE
+				SELECTCASE GET_COM_INITIATIVE()
+					;플레이어에 주도권
+					CASE 0
+						PRINTFORML %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"는")% %조사처리(EQUIP_TARGET_ANAME(ARG:0),"를")% 껴안은 채로, 한층 더 격렬하게 허리를 밀어올리고 있다…
+					;타겟으로 주도권
+					CASE 1
+						PRINTFORML %조사처리(EQUIP_TARGET_ANAME(ARG:0),"는")% %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"를")% 껴안는 팔에 힘을 쓰면, 스스로 쾌감을 탐내도록(듯이) 요염하게 허리를 흔들고 있다…
+					;제삼자에게 주도권
+					CASEELSE
+						PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %EQUIP_TARGET_ANAME(ARG:0)%에 대면좌위로 삽입하는 %EQUIP_PLAYER_ANAME(ARG:0)%에 대해, 좀 더 격렬하게 허리를 움직이도록(듯이) 명령해
+						PRINTFORML %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"는")% %EQUIP_TARGET_ANAME(ARG:0)%의 몸을 다시 껴안으면, 한층 더 힘을 집중해 %EQUIP_TARGET_ANAME(ARG:0)%의 질을 밀어올리고 있다…
+				ENDSELECT
+			ENDIF
+	ENDSELECT
+
+;-------------------------------------------------
+;계속을 해제했을 때의 지문
+;-------------------------------------------------
+@COM_TEXT_RELEASE_EQUIP32(ARG:0)
+PRINTFORMW %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"는")% %EQUIP_TARGET_ANAME(ARG:0)%의 질내로부터 %BAR_NAME(MEQUIP_PLAYER:(ARG:0):0)%를 뽑아 냈다…
+
+;-------------------------------------------------
+;고유의 실행 판정(플레이어측)
+;-------------------------------------------------
+@COM_ORDER_PLAYER32(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 100
+
+;질성교 공통
+CALL COM_ORDER_VSEX_P(ARG:0)
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE32
+IF IS_PIERCED(MTAR:0, 피어스_음순)
+	LOCALS:0 = 피어스가 장착된
+ELSE
+	LOCALS:0 = 
+ENDIF
+IF TALENT:(MTAR:0):처녀 == 1
+	LOCALS:0 = 아직 아가씨의
+ELSEIF PALAM:(MTAR:0):윤활 >= PALAMLV:7
+	LOCALS:0 = 흠뻑 젖었다
+ELSE
+	LOCALS:0 = 
+ENDIF
+IF IS_OVULATION(MTAR:0)
+	LOCALS:0 = %LOCALS:0%위험일의
+ENDIF
+
+IF TALENT:(MTAR:0):체격 == 체격_작은체형
+	LOCALS:0 = %LOCALS:0%어린 균열
+ELSE
+	LOCALS:0 = %LOCALS:0%비밀의 틈
+ENDIF
+
+;페니스밴드장착 안
+IF IS_EQUIP_PLAYER(MPLY:0, 50)
+	;이미 삽입 끝난 경우
+	IF TFLAG:17
+		SELECTCASE GET_COM_INITIATIVE()
+			;플레이어에 주도권
+			CASE 0
+				;전회가 대면좌위
+				IF TFLAG:17 == 1
+					PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"를")% 껴안은 채로, 한층 더 격렬하게 허리를 밀어올%TARGET_STR("렸다", "려 왔다")%…
+				;정상위·기승위
+				ELSEIF TFLAG:17 == 2
+					PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 삽입한 채로 %ANAME(MTAR:0)%의 몸을 껴안으면, 다시 허리를 움직이기 시작했다…
+				;후배위·배면좌위·배면기승위
+				ELSEIF TFLAG:17 == 3
+					PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 삽입한 채로 %ANAME(MTAR:0)%의 몸을 정면으로 향하면, %조사처리(ANAME(MTAR:0),"를")% 껴안아 허리를 밀어올%TARGET_STR("렸다", "려 왔다")%…
+				ENDIF
+			;타겟으로 주도권
+			CASE 1
+				;전회가 대면좌위
+				IF TFLAG:17 == 1
+					PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %조사처리(ANAME(MPLY:0),"를")% 껴안는 팔에 힘을 쓰면, 스스로 쾌감을 탐내도록(듯이) 요염하게 허리를 흔들%PLAYER_STR("었다", "어 왔다")%…
+				;정상위·기승위
+				ELSEIF TFLAG:17 == 2
+					PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 삽입한 채로 %ANAME(MPLY:0)%의 몸을 껴안으면, 밀착한 채로 스스로 쾌감을 탐내도록(듯이) 허리를 움직이기 시작했다…
+				;후배위·배면좌위·배면기승위
+				ELSEIF TFLAG:17 == 3
+					PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 정면으로 다시 향해 그 몸을 껴안으면, 밀착한 채로 스스로 쾌감을 탐내도록(듯이) 허리를 움직이기 시작했다…
+				ENDIF
+			;제삼자에게 주도권
+			CASEELSE
+				;전회가 대면좌위
+				IF TFLAG:17 == 1
+					PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MTAR:0)%에 대면좌위로 삽입하는 %ANAME(MPLY:0)%에 대해, 좀 더 격렬하게 허리를 움직이도록(듯이) 명령했다
+					PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 몸을 다시 껴안으면, 한층 더 힘을 집중해 %ANAME(MTAR:0)%의 질을 밀어올리기 시작했다…
+				;정상위·기승위
+				ELSEIF TFLAG:17 == 2
+					PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에 대해, 체위를 대면좌위로 바꾸어 다시 허리를 움직이도록(듯이) 명령했다
+					PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 삽입한 채로 %ANAME(MTAR:0)%의 몸을 껴안으면, 다시 허리를 움직이기 시작했다…
+				;후배위·배면좌위·배면기승위
+				ELSEIF TFLAG:17 == 3
+					PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에 대해, 체위를 대면좌위로 바꾸어 다시 허리를 움직이도록(듯이) 명령했다
+					PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 삽입한 채로 %ANAME(MTAR:0)%의 몸을 정면으로 향하면, %조사처리(ANAME(MTAR:0),"를")% 껴안아 허리를 밀어올렸다…
+				ENDIF
+		ENDSELECT
+
+	ELSE
+		SELECTCASE GET_COM_INITIATIVE()
+			;플레이어에 주도권
+			CASE 0
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"를")% 껴안으면서 딜도를 %조사처리(LOCALS:0,"로")% 삽입해, 허리를 밀어올%TARGET_STR("렸다", "려 왔다")%…
+			;타겟으로 주도권
+			CASE 1
+				PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %조사처리(ANAME(MPLY:0),"를")% 껴안으면서 딜도를 스스로의 %조사처리(LOCALS:0,"로")% 물어, 허리를 움직였다…
+			;제삼자에게 주도권
+			CASEELSE
+				PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에, 대면좌위로 %조사처리(ANAME(MTAR:0),"와")% 사귀도록(듯이) 명령했다
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"를")% 껴안으면서 딜도를 %조사처리(LOCALS:0,"로")% 삽입해, 허리를 밀어올렸다…
+		ENDSELECT
+	ENDIF
+
+;페니스밴드 미사용
+ELSE
+	;이미 삽입 끝난 경우
+	IF TFLAG:17
+		SELECTCASE GET_COM_INITIATIVE()
+			;플레이어에 주도권
+			CASE 0
+				;전회가 대면좌위
+				IF TFLAG:17 == 1
+					PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"를")% 껴안은 채로, 한층 더 격렬하게 허리를 밀어올%TARGET_STR("렸다", "려 왔다")%…
+				;정상위·기승위
+				ELSEIF TFLAG:17 == 2
+					PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 삽입한 채로 %ANAME(MTAR:0)%의 몸을 껴안으면, 다시 허리를 움직이기 시작했다…
+				;후배위·배면좌위·배면기승위
+				ELSEIF TFLAG:17 == 3
+					PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 삽입한 채로 %ANAME(MTAR:0)%의 몸을 정면으로 향하면, %조사처리(ANAME(MTAR:0),"를")% 껴안아 허리를 밀어올%TARGET_STR("렸다", "려 왔다")%…
+				ENDIF
+			;타겟으로 주도권
+			CASE 1
+				;전회가 대면좌위
+				IF TFLAG:17 == 1
+					PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %조사처리(ANAME(MPLY:0),"를")% 껴안는 팔에 힘을 쓰면, 요염하게 허리를 흔들어 %ANAME(MPLY:0)%의 페니스를 쓸어올%PLAYER_STR("렸다", "려 왔다")%…
+				;정상위·기승위
+				ELSEIF TFLAG:17 == 2
+					PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 삽입한 채로 %ANAME(MPLY:0)%의 몸을 껴안으면, 밀착한 채로 허리를 움직여 %ANAME(MPLY:0)%의 페니스를 쓸어올%PLAYER_STR("렸다", "려 왔다")%…
+				;후배위·배면좌위·배면기승위
+				ELSEIF TFLAG:17 == 3
+					PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 정면으로 다시 향해 그 몸을 껴안으면, 밀착한 채로 허리를 움직여 %ANAME(MPLY:0)%의 페니스를 쓸어올%PLAYER_STR("렸다", "려 왔다")%…
+				ENDIF
+			;제삼자에게 주도권
+			CASEELSE
+				;전회가 대면좌위
+				IF TFLAG:17 == 1
+					PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MTAR:0)%에 대면좌위로 삽입하는 %ANAME(MPLY:0)%에 대해, 좀 더 격렬하게 허리를 움직이도록(듯이) 명령했다
+					PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 몸을 다시 껴안으면, 한층 더 힘을 집중해 %ANAME(MTAR:0)%의 질을 밀어올리기 시작했다…
+				;정상위·기승위
+				ELSEIF TFLAG:17 == 2
+					PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에 대해, 체위를 대면좌위로 바꾸어 다시 허리를 움직이도록(듯이) 명령했다
+					PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 삽입한 채로 %ANAME(MTAR:0)%의 몸을 껴안으면, 다시 허리를 움직이기 시작했다…
+				;후배위·배면좌위·배면기승위
+				ELSEIF TFLAG:17 == 3
+					PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에 대해, 체위를 대면좌위로 바꾸어 다시 허리를 움직이도록(듯이) 명령했다
+					PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 삽입한 채로 %ANAME(MTAR:0)%의 몸을 정면으로 향하면, %조사처리(ANAME(MTAR:0),"를")% 껴안아 허리를 밀어올렸다…
+				ENDIF
+		ENDSELECT
+
+	ELSE
+		SELECTCASE GET_COM_INITIATIVE()
+			;플레이어에 주도권
+			CASE 0
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"를")% 껴안으면서 %조사처리(LOCALS:0,"로")% 삽입해, 허리를 밀어올%TARGET_STR("렸다", "려 왔다")%…
+			;타겟으로 주도권
+			CASE 1
+				PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %조사처리(ANAME(MPLY:0),"를")% 껴안으면서 허리를 내려, %조사처리(LOCALS:0,"로")% %ANAME(MPLY:0)%의 페니스를 삼%TARGET_STR("켰다", "켜 왔다")%…
+			;제삼자에게 주도권
+			CASEELSE
+				PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에, 대면좌위로 %조사처리(ANAME(MTAR:0),"와")% 사귀도록(듯이) 명령했다
+				PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"를")% 껴안으면서 %조사처리(LOCALS:0,"로")% 삽입해, 허리를 밀어올렸다…
+		ENDSELECT
+	ENDIF
+ENDIF
+
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST32
+SIF IS_PIERCED(MPLY:0, 피어스_페니스)
+	PRINTFORML %ANAME(MPLY:0)%의 페니스에 장착된 피어스가, %ANAME(MTAR:0)%의 질내를 빠득빠득 후벼파 간다……
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN32
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_32()
+RETURN POWER(2, 성적기호_성교하고싶다)
+
+@COM_PREFERENCE_TARGET_32()
+RETURN POWER(2, 성적기호_성교되고싶다)
+

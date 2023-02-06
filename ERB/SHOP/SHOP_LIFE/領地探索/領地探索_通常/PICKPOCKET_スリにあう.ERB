@@ -1,0 +1,30 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_PICKPOCKET_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_PICKPOCKET_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_PICKPOCKET(대상)
+#DIM 대상
+
+LOCAL = MIN(MONEY, 3000)
+
+PRINTFORML …어?
+PRINTFORML 어딘지 모르게 품을 조사하면 지갑이 없다!
+PRINTFORMW 아무래도, 스리에 있어 버린 것 같다
+MONEY -= LOCAL
+CALL COLOR_PRINTL(@"금{LOCAL}를 도둑맞았다", 칼라_주의)
+
+RETURN 1

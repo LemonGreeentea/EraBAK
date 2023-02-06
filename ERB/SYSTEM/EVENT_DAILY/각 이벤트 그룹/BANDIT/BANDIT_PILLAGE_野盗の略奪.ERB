@@ -1,0 +1,329 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_BANDIT_PILLAGE_RATE()
+RETURN 40
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_BANDIT_PILLAGE_DECISION()
+#DIM 도둑
+도둑 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_도둑))
+SIF 도둑 == -1
+	RETURN 0
+
+SIF CFLAG:MASTER:소속 != 도둑
+	RETURN 0
+
+SIF !HAS_PENIS(MASTER)
+	RETURN 0
+RETURN DAY >= 12
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_BANDIT_PILLAGE_GENRE()
+RETURN 데일리_장르_특수세력
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_BANDIT_PILLAGE
+#DIM 도둑
+#DIM 돈
+#DIM 병수
+#DIM 대상
+도둑 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_도둑))
+
+PRINTFORMW 요즈음, 물자가 부족보고다
+PRINTFORMW 보통이라면 상인으로부터 사들이는 곳이지만, %조사처리(ANAME(MASTER),"는")% 도둑이다
+PRINTFORMW 사는 정도라면 빼앗으면 되는……그런 도리로, 부근의 마을에까지 왔다
+PRINTFORML 자, 그럼, 어떻게 하지……
+CALL ASK_MULTI("상등품을 노린다", "무력한 마을사람을 노린다", "금품을 노린다", "지금은 얌전하게 해 두자")
+IF RESULT == 3
+	$CANCEL
+	PRINTFORMW ……아니, 생각해 보면, 마을로부터 약탈을 실시하면 당연히 화근이 남는다
+	PRINTFORMW 스스로 적을 늘리는 것은 영리한 행동이라고 해도 매
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 부하모두를 따라, 아지트로 돌아왔다……
+ELSEIF RESULT == 2
+	PRINTFORMW 여기는 도적인것 같게 금품을 노린다고 하자
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 부하를 거느려, 마을을 덮쳤다……
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+	IF !RAND:10
+		PRINTFORML 마을의 무리의 반항은, %ANAME(MASTER)%의 상상 이상으로 격렬했다
+		PRINTFORMW 부대는 전멸, %조사처리(ANAME(MASTER),"는")% 서투른 짓 해 잡혀 버렸다
+		PRINTFORMW 도둑인 %ANAME(MASTER)%에, 구제 따위 주어질 리도 없다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 쬐어 해고되었다……
+		FLAG:강제엔드플래그 = 1
+		DAILY_CANCEL = 1
+		RETURN 1
+	ELSE
+		돈 = ((ABL:MASTER:무투 + ABL:MASTER:지략) * 5 * (RAND:5 + 1))
+		PRINTFORMW 약탈을 실시했다!
+		PRINTFORMW {돈}의 금품을 빼앗았다!
+		MONEY += 돈
+		CALL COLOR_PRINT(@"제국의 반감을 산 것 같습니다", 칼라_주의)
+		PRINTFORMW
+		FOR LOCAL, 1, MAX_COUNTRY
+			SIF IS_COUNTRY(LOCAL)
+				CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -70, 70)
+		NEXT
+	ENDIF
+ELSEIF RESULT == 1
+	PRINTFORMW %ANAME(MASTER)%의 부대는 홀아비살림이다
+	PRINTFORMW 「위안」을하기 위한 젊은 여자……는 노예는 빠뜨릴 수 없다
+	PRINTFORMW 그러한 여자를 취하고 와라고 명령할 것도 없이, 부하들은 앞 다투어 여자들을 뒤쫓고 돌리기 시작했다……
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+	IF !RAND:10
+		PRINTFORML 마을의 무리의 반항은, %ANAME(MASTER)%의 상상 이상으로 격렬했다
+		PRINTFORMW 부대는 전멸, %조사처리(ANAME(MASTER),"는")% 서투른 짓 해 잡혀 버렸다
+		PRINTFORMW 도둑인 %ANAME(MASTER)%에, 구제 따위 주어질 리도 없다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 쬐어 해고되었다……
+		FLAG:강제엔드플래그 = 1
+		DAILY_CANCEL = 1
+		RETURN 1
+	ELSE
+		PRINTFORMW 가까이의 취락을 덮쳐, 적당한 마을 아가씨를 여러명 잡았다
+		PRINTFORMW 전리품을 가져 아지트로 귀환하면, 부하들은 조속히 그녀들에게 모였다
+		PRINTFORMW %ANAME(MASTER)%도 기호의 아가씨를 한사람 찾아내면, 무리하게 침상에 데리고 들어갔다
+		PRINTFORML 
+		SELECTCASE RAND:10
+			CASE 0 
+				PRINTFORMW 아가씨를 단단히 묶고 재갈을 끼면서, 배후로부터 격렬하게 범하고 있다
+				PRINTFORMW 페니스를 출납할 때마다, 결합부로부터 숫처녀의 증거였던 순혈과 정액이 섞여 늘어져 온다
+				PRINTFORMW 강한 조임에 자극 받으며, 다시 사정하면, 아가씨는 신음소리를 올리면서 흠칫 신체를 뛰게 했다
+				PRINTFORMW 눈물을 흘리면서 용서를 비는 그녀의 표정에 흥분해, 한층 더 능욕을 계속했다
+			CASE 1 
+				PRINTFORMW 날뛴다 아가씨를 쓰러트리고 옷을 벗겨내면, 전희도 하는 둥 마는 둥 페니스를 쑤셔 넣는다
+				PRINTFORMW 아 훨씬 신음소리를 지르고 경련하는 그녀를 무시해, 격렬하게 허리를 전후 해 삽입질을 반복한다
+				PRINTFORMW 어떻게든 도망치려고날뛴다그녀를 전신으로 억눌러, 단단히 조여 오는 질의 자극을 즐겼다
+				PRINTFORMW 이윽고 한계가 가까워져, 아가씨의 최안쪽에서 정액을 풀면, 그녀는 처음으로 맛보는 열에 등을 뒤로 젖혀 절규했다
+			CASE 2 
+				PRINTFORMW 아가씨에게 덥치면서 격렬하게 허리를 쳐박고 있다
+				PRINTFORMW 그녀는 저항도 하지 않고, 네에로 공허한 미소를 띄워%ANAME(MASTER)%에 껴안고 있다
+				PRINTFORMW 아무래도 약이 마음에 든 것 같다, 다음의 1정을 입으로 먹여 주면 더욱 질을 단단히 조여 왔다
+				PRINTFORMW 그녀의 자궁으로 정액을 발하면, 훌륭하게 암컷이 된 증거의 신음소리를 올렸다
+			CASE 3 
+				PRINTFORMW 아가씨를 침대에 전매하면, 눈물을 흘리면서 덜컹덜컹떨고 있다
+				PRINTFORMW 무서워하는 그녀의 전신을 천천히 애무하면서, 얌전하게 하고 있으면 손상시키지는 않으면 속삭여 회유 한다
+				PRINTFORMW 그녀는 아직도 흐느껴 우고 있지만, 차분히 시간을 들여 주면 점차 안타까운 한숨을 루등 하기 시작했다
+				PRINTFORMW 떨리는 그녀의 손을 잡으면서, 서서히 젖고 있는 암컷구멍에 천천히 허리를 가라앉혀 간다
+				PRINTFORMW 아파하는 그녀의 모습을 엿보면서 밤새 차분히 개발 해 주었다
+			CASE 4 
+				PRINTFORMW 아가씨는 야무지지 못하게 혀를 늘어뜨리면서 %ANAME(MASTER)% 위에서 허리를 흔들고 있다
+				PRINTFORMW 먹인 미약의 효과로, 이미 그녀의 머릿속은 쾌감을 얻는 것으로 다 메워지고 있는 것 같다
+				PRINTFORMW %조사처리(ANAME(MASTER),"가")% 갑자기 아래로부터 밀어올려 주면, 교성을 올리고 기뻐한다
+				PRINTFORMW 이윽고 그녀의 절정에 맞추어 %ANAME(MASTER)%도 사정하면, 크게 등을 뒤로 젖히면서 교성을 미치게 했다
+			CASE 5 
+				PRINTFORMW 그녀의 안에 몇 번째인가의 사정을 발하면, 크게 허덕여, 힘 없고 털썩 쓰러졌다
+				PRINTFORMW 침대 위에서 경련하면서 숨을 거칠게 해, 암컷구멍으로부터는 %조사처리(ANAME(MASTER),"가")% 발한 정액와 흘러넘치고 있다
+				PRINTFORMW 떨리는 그녀의 얼굴을 들여다 보면, 눈물을 흘리면서 이쪽을 노려봐 왔다
+				PRINTFORMW 아직도 건강의 같다, %조사처리(ANAME(MASTER),"는")% 여섯에 저항도할 수 없는 그녀를 덮어누르면 다시 범하기 시작했다
+			CASE 6 
+				PRINTFORMW 아가씨는 범해지는 직전이라는데 울음도 하지 않고 날뛰고도 하지 않고, 각오를 결정하고 있는지 눈감아 되는 대로다
+				PRINTFORMW 편한 것이긴 하지만 반응이 없는 것도 시시하다. %조사처리(ANAME(MASTER),"는")% 미약들이의 로션을 그녀의 신체에 쳐바른다
+				PRINTFORMW 그리고 차분히 애무를 계속해 주면, 점차 무표정의 얼굴에 세키 보고를 띠어 달콤한 한숨을 루등 하기 시작했다
+				PRINTFORMW 그녀에게 덮어씌워 페니스를 균열에 몇번인가 칠해 주면, 그녀는 부끄러운 듯이 작게 수긍했다
+			CASE 7 
+				PRINTFORMW 심하게날뛴다그녀를 힘으로 얌전하게 시킨다
+				PRINTFORMW 덮어씌우는 모습으로 무리하게 삽입하면, 그녀는 눈물을 흘려 외쳐, 피하려고 발버둥 친다
+				PRINTFORMW 허리를 그녀의 깊게까지 난폭하게 몇 번이나 몇 번이나 쳐박으면, 움찔움찔 몸을 진동시켜 몹시 놀라 신음했다
+				PRINTFORMW 이윽고 흐느껴 울면서, 상냥하게 해와 간원 한 그녀를, 키스를 하면서 상냥하게 범해 주었다
+			CASE 8 
+				PRINTFORMW 그녀 안쪽 깊게까지 페니스를 쑤셔 넣으면, 지나친 아픔으로 입을 뻐끔뻐금 시키고 있다
+				PRINTFORMW 눈물을 흘리는 그녀를 봐 허리의 움직임을 멈추어, 친숙해 질 때까지 가벼운 키스와 애무를 해 준다
+				PRINTFORMW 울면서 비난 해 오는 그녀를 달래면서, 애무와 느슨한 삽입질을 계속하고 있으면, 조금씩 신음소리가 새어나온다
+				PRINTFORMW 원래 소질이 있었는지, 당신을 한계를 향할 수 있는 무렵에는 그녀도 스스로 허리를 흔들기 시작하고 있었다
+			CASE 9 
+				PRINTFORMW 심하게 그녀를 범해 지친 %조사처리(ANAME(MASTER),"는")%, 털썩 침대에 쓰러졌다
+				PRINTFORMW 그녀는 당신의 팔안에 안긴 채로, 크게 호흡을 반복하면서 때때로 경련하고 있다
+				PRINTFORMW 문득 그녀와 시선이 마주치면, 갑자기 눈을 피해 되어 버렸지만, 하지만 도망칠려고도 하지 않는다
+				PRINTFORMW 그 사랑스러운 행동에 다시 흥분해, 그녀에게 덮어씌우면, 이미 그녀도 저항하지 않았다
+			CASE 10 
+				PRINTFORMW 왜일까 저항하지 않는 그녀에게 저항하지 않는 것인지라고 (들)물으면, 지금까지 변함없다고 고한다. 뭔가 뭔가 있음의 같다
+				PRINTFORMW 그 이상의 잔소리는 멈추어, 적당한 애무의 뒤, 페니스를 그녀의 암컷구멍에 삽입해 나간다
+				PRINTFORMW 꿈틀거리는 질육에 칠하는 것처럼 피스톤을 계속해 가면, 이윽고 그녀 쪽으로부터 껴안아 왔다
+				PRINTFORMW 숨기는 일도 없고 신음소리를 올리면서, 당신을을 받아들이는 그녀의 안에, 마음껏 고조됨을 발했다
+			CASE 11
+				PRINTFORMW 부탁 집에 돌려주어와 간원 하는 그녀에게, 자신을 만족 당하면 돌아가 준다고 고한다
+				PRINTFORMW 그녀는 %ANAME(MASTER)%의 페니스를 공포의 표정으로 응시하고 있었지만, 이윽고 흠칫흠칫 손을 뻗어 잡아당기기 시작했다
+				PRINTFORMW 변변치않은 움직임이었지만, 숫처녀 특유의 수줍음의 행동과 함께 오히려%ANAME(MASTER)%의 흥분을 재촉한다
+				PRINTFORMW 이윽고 %조사처리(ANAME(MASTER),"는")% 사정했지만, 아가씨는 아직 페니스가 딱딱한 채인 것을 봐 울면서 용서를 빈다
+				PRINTFORMW 하지만 %조사처리(ANAME(MASTER),"는")% 울며 아우성쳐싫어한다그녀를 억눌러, 무리하게에 페니스를 쑤셔 넣었다
+			CASE 12
+				PRINTFORMW 아가씨에게 목걸이를 입어 배후에서허리를 땅땅 쳐박고 있다
+				PRINTFORMW 처음은 싫어하고 있던 아가씨이지만, 지금은 필사적으로 아랫 입술을 씹어 교성을 억누르려고 하고 있는 것을 알 수 있다
+				PRINTFORMW 엉덩이를 손바닥와는 싶고와 그때마다 질을 꽉 단단히 조이고 안타까운 신음소리를 오른다
+				PRINTFORMW 이윽고 %ANAME(MASTER)%의 공격에 굴복 한 그녀는, 저항도 그만두어 솔직하게 교성을 올리기 시작했다
+			CASE 13
+				PRINTFORMW 상상 이상으로 살집이 좋은 아가씨의 신체를, 열심히 만지작거려 간다
+				PRINTFORMW 그녀는 공포로 변변히 저항도 하지 못하고, 되는 대로 되어 있다
+				PRINTFORMW 싫어한다표정을 보이지만, 하지만 그 뺨은 조금씩 상기 해 나간다
+				PRINTFORMW 이윽고 %조사처리(ANAME(MASTER),"가")% 페니스를 균열에 여러 번 칠하면, 상냥하게 해 주세요작게 중얼거렸다
+				PRINTFORMW 그녀에게 가볍게 입맞춤을 해 주어, 아픔을 완화시키도록(듯이) 시간을 들여 천천히 페니스를 넣어 갔다
+			CASE 14
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 아가씨를 껴안고 페니스 위에 무리하게 걸치게 하고 있다
+				PRINTFORMW 깊숙히 꽂힌 페니스의 아픔으로 아가씨는 %ANAME(MASTER)%에 껴안으면서 울고 있다
+				PRINTFORMW 아이를 어르도록(듯이) 허리를 흔들면서, 목덜미나 가슴에 혀나 손가락을 기게 하면, 때때로 몸을 진동시킨다
+				PRINTFORMW 그 안울음소리에 섞여 신음소리가 들리게 되어, 조금씩 허리의 움직임을 재촉해 둘이서 높은 곳에 올라 갔다
+		ENDSELECT
+		CALL FUCK(MASTER, "Ｃ, 성교, 사정, 봉사", "키스상실, 동정상실", 0, @"%ANAME(대상)%의 \@ RAND:2 ? 음부 # 입술\@", "", @"%ANAME(대상)%의 질")
+		PRINTFORML 
+		PRINTFORMW 약탈을 성공시켰다!
+		PRINTFORMW 소문을 우연히 들어, 넘쳐 흐름에 맡으려고 하는 불량배들이 동료가 되러 왔다
+		병수 = ((RAND:9 * 500) + 500)
+		COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수
+		PRINTFORML 병 수가 {병수} 증가했다!
+		CALL COLOR_PRINT(@"제국의 반감을 산 것 같습니다", 칼라_주의)
+		PRINTFORMW
+		FOR LOCAL, 1, MAX_COUNTRY
+			SIF IS_COUNTRY(LOCAL)
+				CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -70, 70)
+		NEXT
+	ENDIF
+ELSE
+	PRINTFORMW 위험하지만 상등품을 노린다고 하자
+	PRINTFORMW 그런데, 누구를 노린다고 할까……
+	CALL SINGLE_DRAWLINE
+	CALL SELECT_CHARA_LIST_ONLY_LOGIC_SLG("BANDIT_PILLAGE", "BANDIT_PILLAGE")
+	대상 = RESULT
+	IF 대상 == -1
+		GOTO CANCEL
+	ELSE
+		PRINTFORMW %조사처리(ANAME(대상),"를")% 노리는 것으로 하자……
+		PRINTFORMW 마을이 습격당하고 있다고 들어 달려온 %ANAME(대상)%에, %조사처리(ANAME(MASTER),"는")% 부하 다 같이 덤벼 들었다
+		PRINTFORML ·
+		PRINTFORML ·
+		PRINTFORMW ·
+		;대상과 주인공 각각의 무투와 지략의 합계치로 판정, 대상은 2배에서 6배, 주인공은 1배에서 5배의 보정이 붙는, 졌을 경우 처형
+		IF ((ABL:대상:무투 + ABL:대상:지략) * (RAND:5 + 2)) >= ((ABL:MASTER:무투 + ABL:MASTER:지략) * (RAND:5 + 1))
+			PRINTFORMW %ANAME(대상)%의 실력은 상상 이상이었다
+			PRINTFORMW 패배해 버렸다……
+			PRINTFORML 말을 남기는 일은 없을까, %조사처리(ANAME(대상),"는")% 물어 왔다
+			CALL ASK_MULTI("목숨구걸을 한다", "부하에게 위협해져 주었다고 주장한다", "죽여, 라고 전한다")
+			IF RESULT == 0
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 땅에 머리를 문질러, 목숨구걸을 했다
+				PRINTFORMW 이지만 맑지 않은 태도는, %ANAME(대상)%의 심증을 오히려 해쳐 버린 것 같다
+				PRINTFORMW 간원도 허무하고, %조사처리(ANAME(MASTER),"는")% 쬐어 해고되었다……
+			ELSEIF RESULT == 1
+				PRINTFORMW 자신이 살아나면 그것으로 좋다
+				PRINTFORMW 그렇게 생각한 %조사처리(ANAME(MASTER),"는")%, 부하를 팔기로 했다
+				PRINTFORMW ……이지만, 부하는 부하대로, %조사처리(ANAME(MASTER),"를")% 판 것 같다
+				PRINTFORMW 결국, %조사처리(ANAME(MASTER),"는")% 부하 다 같이 처형되어 버렸다……
+			ELSE
+				PRINTFORMW 이미 이것까지
+				PRINTFORMW 그렇게 깨달은 %조사처리(ANAME(MASTER),"는")%, 냉큼 자신의 목을 치도록(듯이) 전한다
+				PRINTFORMW 그 맑은 태도에 %조사처리(ANAME(대상),"는")% 감탄 한 것 같지만, 처형이 면제되는 일은 없었다……
+			ENDIF
+			FLAG:강제엔드플래그 = 1
+			DAILY_CANCEL = 1
+			RETURN 1
+		ELSE
+			IF RAND:2 == 0
+				PRINTFORMW 타겟으로 도망쳐져 버렸다……
+			ELSE
+				PRINTFORMW 타겟을 잡았다!
+				PRINTFORMW 아지트에 돌아가면 조속히 %조사처리(ANAME(대상),"를")% 침상으로 데리고 들어갔다
+				PRINTFORML 
+				SELECTCASE RAND:12
+					CASE 0 
+						PRINTFORMW %조사처리(ANAME(대상),"를")% 단단히 묶고 재갈을 끼면서, 배후로부터 격렬하게 범하고 있다
+						PRINTFORMW 페니스를 출납할 때마다, 결합부로부터 다 들어가지 않는 정액이 넘쳐 나온다
+						PRINTFORMW 강한 조임에 자극 받으며, 다시 사정하면, %조사처리(ANAME(대상),"는")% 신음소리를 올리면서 흠칫 신체를 뛰게 했다
+						PRINTFORMW 눈물을 흘리면서 용서를 비는 %ANAME(대상)%의 표정에 흥분해, 한층 더 능욕을 계속했다
+					CASE 1 
+						PRINTFORMW 날뛰는 %조사처리(ANAME(대상),"를")% 쓰러트리고 옷을 벗겨내면, 전희도 하는 둥 마는 둥 페니스를 쑤셔 넣는다
+						PRINTFORMW 아 훨씬 신음소리를 지르고 경련하는 그녀를 무시해, 격렬하게 허리를 전후 해 삽입질을 반복한다
+						PRINTFORMW 어떻게든 도망치려고 날뛰는 %조사처리(ANAME(대상),"를")% 전신으로 억눌러, 단단히 조여 오는 질의 자극을 즐겼다
+						PRINTFORMW 이윽고 한계가 가까워져, %ANAME(대상)%의 최안쪽에서 정액을 풀면, %조사처리(ANAME(대상),"는")% 하복부에 느끼는 열에 절규했다
+					CASE 2 
+						PRINTFORMW %ANAME(대상)%에 덥치면서 격렬하게 허리를 쳐박고 있다
+						PRINTFORMW 그녀는 저항도 하지 않고, 네에로 공허한 미소를 띄워%ANAME(MASTER)%에 껴안고 있다
+						PRINTFORMW 아무래도 약이 마음에 든 것 같다, 다음의 1정을 입으로 먹여 주면 더욱 질을 단단히 조여 왔다
+						PRINTFORMW %ANAME(대상)%의 자궁으로 정액을 발하면, 훌륭하게 암컷이 된 증거의 신음소리를 올렸다
+					CASE 3 
+						PRINTFORMW %조사처리(ANAME(대상),"를")% 침대에 전매하면, 희미하게 떨리면서 몸을 굳어지게 하고 있다
+						PRINTFORMW 무서워하는 그녀의 전신을 천천히 애무하면서, 얌전하게 하고 있으면 손상시키지는 않으면 속삭여 회유 한다
+						PRINTFORMW %조사처리(ANAME(대상),"는")% 처음구를 1문자에 닫고 있었지만, 차분히 시간을 들여 주면 점차 안타까운 한숨을 루등 하기 시작했다
+						PRINTFORMW 떨리는 %ANAME(대상)%의 손을 잡으면서, 서서히 젖고 있는 암컷구멍에 천천히 허리를 가라앉혀 간다
+						PRINTFORMW 숨을 거칠게 하는 그녀의 모습을 엿보면서 밤새 차분히 개발 해 주었다
+					CASE 4 
+						PRINTFORMW %조사처리(ANAME(대상),"는")% 야무지지 못하게 혀를 늘어뜨리면서 %ANAME(MASTER)% 위에서 허리를 흔들고 있다
+						PRINTFORMW 먹인 미약의 효과로, 이미 그녀의 머릿속은 쾌감을 얻는 것으로 다 메워지고 있는 것 같다
+						PRINTFORMW %조사처리(ANAME(MASTER),"가")% 갑자기 아래로부터 밀어올려 주면, 교성을 올리고 기뻐한다
+						PRINTFORMW 이윽고 %ANAME(대상)%의 절정에 맞추어 %ANAME(MASTER)%도 사정하면, 크게 등을 뒤로 젖히면서 교성을 미치게 했다
+					CASE 5 
+						PRINTFORMW %ANAME(대상)% 안에 몇 번째인가의 사정을 발하면, 크게 허덕여, 힘 없고 털썩 쓰러졌다
+						PRINTFORMW 침대 위에서 경련하면서 숨을 거칠게 해, 암컷구멍으로부터는 %조사처리(ANAME(MASTER),"가")% 발한 정액와 흘러넘치고 있다
+						PRINTFORMW 떨리는 그녀의 얼굴을 들여다 보면, 눈물을 흘리면서 이쪽을 노려봐 왔다
+						PRINTFORMW 아직도 건강의 같다, %조사처리(ANAME(MASTER),"는")% 여섯에 저항도할 수 없는 %조사처리(ANAME(대상),"를")% 덮어누르면 다시 범하기 시작했다
+					CASE 6 
+						PRINTFORMW %조사처리(ANAME(대상),"는")% 범해지는 직전이라는데 울음도 하지 않고 날뛰고도 하지 않고, 각오를 결정하고 있는지 눈감아 되는 대로다
+						PRINTFORMW 편한 것이긴 하지만 반응이 없는 것도, 거기서 %조사처리(ANAME(MASTER),"는")% 미약들이의 로션을 그녀의 신체에 쳐바른다
+						PRINTFORMW 그리고 차분히 애무를 계속해 주면, 점차 무표정의 얼굴에 세키 보고를 띠어 달콤한 한숨을 루등 하기 시작했다
+						PRINTFORMW 그녀에게 덮어씌워 페니스를 균열에 몇번인가 칠해 주면, 그녀는 부끄러운 듯이 작게 수긍했다
+					CASE 7 
+						PRINTFORMW 심하게 날뛰는 %조사처리(ANAME(대상),"를")% 힘으로 얌전하게 시킨다
+						PRINTFORMW 덮어씌우는 모습으로 무리하게 삽입하면, %조사처리(ANAME(대상),"는")% 눈물을 흘려 외쳐, 피하려고 발버둥 친다
+						PRINTFORMW 허리를 그녀의 깊게까지 난폭하게 몇 번이나 몇 번이나 쳐박으면, 움찔움찔 몸을 진동시켜 몹시 놀라 신음했다
+						PRINTFORMW 이윽고 흐느껴 울면서, 상냥하게 해와 간원한 %조사처리(ANAME(대상),"를")%, 키스를 하면서 상냥하게 범해 주었다
+					CASE 8 	
+						PRINTFORMW 갑자기%ANAME(대상)%의 안쪽 깊게까지 페니스를 쑤셔 넣으면, 아픔으로 입을 뻐끔뻐금 시키고 있다
+						PRINTFORMW 눈물을 흘리는 그녀를 봐 허리의 움직임을 멈추어, 친숙해 질 때까지 가벼운 키스와 애무를 해 준다
+						PRINTFORMW 울면서 비난 해 오는 그녀를 달래면서, 애무와 느슨한 삽입질을 계속하고 있으면, 조금씩 신음소리가 새어나온다
+						PRINTFORMW 원래 좋아물이었는가, 당신을 한계를 향할 수 있는 무렵에는 그녀도 스스로 허리를 흔들기 시작하고 있었다
+					CASE 9
+						PRINTFORMW 부탁 집에 돌려주어와 간원 하는 그녀에게, 자신을 만족 당하면 돌아가 준다고 고한다
+						PRINTFORMW 그녀는 %ANAME(MASTER)%의 페니스를 공포의 표정으로 응시하고 있었지만, 이윽고 흠칫흠칫 손을 뻗어 잡아당기기 시작했다
+						PRINTFORMW 변변치않은 움직임이었지만, 숫처녀 특유의 수줍음의 행동과 함께 오히려%ANAME(MASTER)%의 흥분을 재촉한다
+						PRINTFORMW 이윽고 %조사처리(ANAME(MASTER),"는")% 사정했지만, 아가씨는 아직 페니스가 딱딱한 채인 것을 봐 울면서 용서를 빈다
+						PRINTFORMW 하지만 %조사처리(ANAME(MASTER),"는")% 울며 아우성쳐싫어한다그녀를 억눌러, 무리하게에 페니스를 쑤셔 넣었다
+					CASE 10
+						PRINTFORMW %ANAME(대상)%에 목걸이를 입어 배후에서허리를 땅땅 쳐박고 있다
+						PRINTFORMW 처음은 싫어하고 있었던 %조사처리(ANAME(대상),"이지만")%, 지금은 필사적으로 아랫 입술을 씹어 교성을 억누르려고 하고 있는 것을 알 수 있다
+						PRINTFORMW 엉덩이를 손바닥와는 싶고와 그때마다 질을 꽉 단단히 조이고 안타까운 신음소리를 오른다
+						PRINTFORMW 이윽고 %ANAME(MASTER)%의 공격에 굴복 한 그녀는, 저항도 그만두어 솔직하게 교성을 올리기 시작했다
+					CASE 11	
+						PRINTFORMW %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"를")% 껴안고 페니스 위에 무리하게 걸치게 하고 있다
+						PRINTFORMW 깊숙히 꽂힌 페니스의 압박감으로, %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%에 껴안으면서 신음하고 있다
+						PRINTFORMW 아이를 어르도록(듯이) 허리를 흔들면서, 목덜미나 가슴에 혀나 손가락을 기게 하면, 때때로 몸을 진동시킨다
+						PRINTFORMW 그 안신음소리에 섞여 신음소리가 들리게 되어, 조금씩 허리의 움직임을 재촉해 둘이서 높은 곳에 올라 갔다
+				ENDSELECT
+				CALL FUCK_RAPE(대상, GET_ID(MASTER), @"%ANAME(MASTER)%의 \@ RAND:2 ? 페니스 # 입술\@", @"%ANAME(MASTER)%")
+				CALL FUCK(MASTER, "Ｃ, 성교, 사정, 봉사", "키스상실, 동정상실", 0, @"%ANAME(대상)%의 \@ RAND:2 ? 음부 # 입술\@", "", @"%ANAME(대상)%의 질")
+				PRINTFORML 
+				PRINTFORMW 약탈을 성공시켰다!
+				PRINTFORMW %조사처리(ANAME(대상),"를")% 잡았습니다!
+				CALL CAPTURE(대상, 도둑)
+				CALL COLOR_PRINT(@"제국의 반감을 산 것 같습니다", 칼라_주의)
+				PRINTFORMW
+				FOR LOCAL, 1, MAX_COUNTRY
+					SIF IS_COUNTRY(LOCAL)
+						CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -70, 70)
+				NEXT
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+RETURN 1
+
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_BANDIT_PILLAGE(대상)
+#DIM 대상
+RETURN CFLAG:대상:행동불능상태 != 행동불능_아이 && !IS_ANIMAL(대상) && CFLAG:대상:소속 != CFLAG:MASTER:소속 && GET_COUNTRY_BOSS(CFLAG:대상:소속) != 대상 && IS_COUNTRY(CFLAG:대상:소속) && !IS_SP_CHARA(대상) && !IS_MALE(대상)
+
+@SELECT_CHARA_LIST_SELECT_LOGIC_BANDIT_PILLAGE(대상)
+#DIM 대상
+RETURN CFLAG:대상:포로처 == 0

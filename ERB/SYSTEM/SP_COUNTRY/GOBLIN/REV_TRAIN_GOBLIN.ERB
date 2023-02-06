@@ -1,0 +1,101 @@
+﻿;-------------------------------------------------
+;정기 이벤트
+;-------------------------------------------------
+@GOBLIN_REV_TRAIN_REGULAR_EVENT(세력)
+#DIM 세력
+
+SIF FLAG:역조교회수 == 0 || FLAG:역조교회수 % 4 != 0
+	RETURN 0
+
+PRINTFORML 조교의 시간이 가까워지면, %조사처리(ANAME(MASTER),"는")% 여느 때처럼 조교 방에서 구속되어
+PRINTFORMW 후는 홉고블린들에게 더럽혀지는 것을 기다릴 뿐되었다
+PRINTFORML 온 홉고블린은, 어때, 슬슬 우리들의 노예가 될 마음이 생겼는지, 라고 물었다
+PRINTFORMW 노예가 되는 것을 인정하면, 어느 정도의 행동의 자유는 주겠어, 라고……
+PRINTFORML 이대로 거부해 계속해도, 이 녀석들은 자신을 계속 더럽힐 것이다
+PRINTFORML 목을 세로에 흔들면, 얼마 정도는 편해질 수 있을지도 모른다
+PRINTFORMW 어떻게 해야 할 것일까……
+CALL ASK_YN("단념해 받아들인다（노예화)", "이런 녀석들의 노예는 미안이다")
+IF RESULT == 0
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 수긍하면, 홉고블린은 힐쭉 웃었다
+	IF HAS_PENIS(MASTER)
+		CALL SET_PIERCE(MASTER, 피어스_페니스, 0)
+		IF RESULT
+			CALL COLOR_PRINTW(@"그리고 그 페니스에, 딱한 피어스를 달았다……", 칼라_핑크)
+		ELSE
+			CALL COLOR_PRINTW(@"그리고 그 페니스에, 두 번 다시 사라지지 않는 소인을 새겼다……", 칼라_핑크)
+		ENDIF
+	ELSE
+		CALL SET_PIERCE(MASTER, 피어스_유두, 0)
+		IF RESULT
+			CALL COLOR_PRINTW(@"그리고 그 유두에, 딱한 피어스를 달았다……", 칼라_핑크)
+		ELSE
+			CALL COLOR_PRINTW(@"그리고 그 유방에, 두 번 다시 사라지지 않는 소인을 새겼다……", 칼라_핑크)
+		ENDIF
+	ENDIF
+	PRINTFORMW 한층 더 그 목에, 가축용의 목걸이를 끼워졌다
+	SETCOLOR 칼라_주의
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 홉고블린의 성노예가 되었습니다
+	RESETCOLOR
+	SETBIT TALENT:MASTER:특수세력함락계, 특수세력_홉고블린
+	CALL CHANGE_COUNTRY(MASTER, 세력, 1)
+	CALL PLAYER_FALLEN_TO_SP_COUNTRY(세력)
+	RETURN 1
+ELSE
+	PRINTFORML 그런가 라고 %ANAME(MASTER)%의 거부를 특별히 신경쓴 바람도 아니게 홉고블린은 받아 들인다
+	PRINTFORML 라면 좀 더 범해, 자신의 입장이라는 것을 가르쳐 주지 않으면와 그 얼굴은 천하게 보인 미소를 띄웠다……
+	PRINTFORMW 그들은 그대로, %ANAME(MASTER)%에 모여 간다……
+ENDIF
+
+;-------------------------------------------------
+;아는 사람이 왔을 때의 이벤트
+;-------------------------------------------------
+@GOBLIN_REV_TRAIN_MSG(세력, 아는사람참가자, 아는사람참가수)
+#DIM 세력
+#DIM REF 아는사람참가자
+#DIM 아는사람참가수
+CALL SINGLE_DRAWLINE
+PRINTFORML 조교의 시간이 가까워지면, %조사처리(ANAME(MASTER),"는")% 여느 때처럼 조교 방에서 구속되어
+PRINTFORMW 후는 남자들에게 더럽혀지는 것을 기다릴 뿐되었다
+PRINTFORMW 온 홉고블린은, %조사처리(ANAME(MASTER),"가")% 자주(잘) 면식이 있던 상대를 데리고 와서 있었다
+PRINTFORMW %ANAME(아는사람참가자:0, 아는사람참가수)%…
+PRINTFORMW 목에는 가축용의 목걸이를 걸칠 수 있어 유방에는 딱한 피어스, 아랫배에 「노예」의 문자와 하트의 소인이 밀리고 있다
+PRINTFORMW 비참한 모습인 것이겠지만, 행복한 표정을 띄우고 있다. 그 눈동자가 어딘가 공허한 일만 엿보면
+PRINTFORMW 사전에 한껏 범해져 왔을 것이다, 전신 정액 투성이로, 모든 구멍으로부터는 대량의 정액이 방울져 떨어지고 있다
+IF HAS_PENIS(MASTER)
+	PRINTFORMW 성욕으로 가득 찬 시선은, %조사처리(ANAME(MASTER),"는")% 아니고, %ANAME(MASTER)%의 격분한 남근에 따라지고 있다
+	PRINTFORMW ……이지만, 「지금의 주인」의 것과 비교했을 것이다, 어딘가 물건 충분해 이기도 했다……
+ELSE
+	PRINTFORMW 성욕으로 가득 찬 시선은, %조사처리(ANAME(MASTER),"라")%는 것보다, %ANAME(MASTER)%의 몸에게 따라지고 있었다…
+ENDIF
+PRINTFORMW 홉고블린은 히죽히죽하면서, 우리의 노예를 너에게도 사용하게 해 줄게라고 말했다
+PRINTFORMW 일찍이 %ANAME(아는사람참가자:0, 아는사람참가수)%라고 아는 사람 「(이었)였다」일을, 잡고 있는 것 같다……
+PRINTFORMW 사용해 주기 때문에 가랑이, 홉고블린이 그처럼 말하면, %ANAME(아는사람참가자:0, 아는사람참가수)%는 온순하게 따랐다……
+
+
+;-------------------------------------------------
+;참가자 선택 알고리즘
+;-------------------------------------------------
+@GOBLIN_REV_TRAIN_CHOOSE_PARTICIPANT(세력)
+#DIM 세력
+FOR LOCAL:0, 0, 4
+	;확률로 견돈이 대상으로
+	IF !RAND:20
+		FOR LOCAL:1, 0, CHARANUM
+			IF CFLAG:(LOCAL:1):소속 == 세력 && IS_ANIMAL(LOCAL:1) && !CFLAG:(LOCAL:1):조교참가플래그
+				CFLAG:(LOCAL:1):조교참가플래그 = 1
+				BREAK
+			ENDIF
+		NEXT
+		CALL ADD_ANIMAL(세력, RAND:3 + 1)
+		CFLAG:(CHARANUM -1):조교참가플래그 = 1
+	;보통으로 도둑을 선출
+	ELSE
+		FOR LOCAL:1, 0, CHARANUM
+			IF TALENT:(LOCAL:1):특수세력소질 == 특수세력_홉고블린 && !CFLAG:(LOCAL:1):조교참가플래그 && CFLAG:(LOCAL:1):소속 == 세력
+				CFLAG:(LOCAL:1):조교참가플래그 = 1
+				CFLAG:(LOCAL:1):TEXT_LAST비표시 = 1
+				BREAK
+			ENDIF
+		NEXT
+	ENDIF
+NEXT

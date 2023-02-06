@@ -1,0 +1,457 @@
+﻿;쿤닐링구스
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME8
+LOCAL:0 = IS_RIDE(MPLY:0, MTAR:0)
+
+;남성 플레이어가 타겟으로 안면승마중
+IF LOCAL:0 && !HAS_VAGINA(MPLY:0)
+	LOCALS:0 = 안기애널핥기
+;비남성 플레이어가 타겟으로 안면승마중 or 타겟으로부터 플레이어에 페라·쿤닐링구스·애널핥기중
+ELSEIF LOCAL:0 || SEARCH_EQUIP(11, MTAR:0, MPLY:0) >= 0 || SEARCH_EQUIP(2, MTAR:0, MPLY:0) >= 0 || SEARCH_EQUIP(8, MTAR:0, MPLY:0) >= 0
+	LOCALS:0 = Ａ식스나인
+ELSE
+	LOCALS:0 = 애널핥기
+ENDIF
+
+RESULTS:0 = %LOCALS:0%한다
+RESULTS:1 = %LOCALS:0%당한다
+RESULTS:2 = %LOCALS:0%시킨다
+RESULTS:3 = %LOCALS:0%된다
+RESULTS:4 = %LOCALS:0%시킨다
+RESULTS:5 = %LOCALS:0%과시하고
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE8
+;공통 부분
+CALL COM_ABLE_COMMON(8)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 1명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 1
+	RETURN 0
+;타겟은 최대로 1명까지
+SIF MTAR_NUM <= 0 || MTAR_NUM > 1
+	RETURN 0
+;플레이어 행동불능이라면 불가
+SIF !IS_PLAYABLE(MPLY:0)
+	RETURN 0
+;삽입중은 불가
+SIF IS_INSERT_MUTUAL(MPLY:0, MTAR:0)
+	RETURN 0
+;성기에 애액, 모유 이외의 더러움이 있어, 실행자에게 불결무시가 없는 경우 불가
+;SIF (STAIN:(MTAR:0):3 & 14) && ! TALENT:(MPLY:0):불결무시
+;	RETURN 0
+;플레이어와 타겟이 함께 구속중이라면 불가
+SIF IS_BIND(MPLY:0) && IS_BIND(MTAR:0)
+	RETURN 0
+;플레이어가 안면승마 되고 있는 경우
+IF IS_RIDDEN(MPLY:0)
+	;타겟 이외의 캐릭터에게 안면승마 되고 있다면 불가
+	IF !IS_RIDDEN(MPLY:0, MTAR:0)
+		RETURN 0
+	ENDIF
+	;Ａ안면승마가 아니면 불가
+	IF !IS_EQUIP_PLAYER(MTAR:0, 102)
+		RETURN 0
+	ENDIF
+ELSE
+	;타겟이 플레이어 이외에 안면승마 하고 있다면 불가
+	IF IS_RIDE(MTAR:0)
+		RETURN 0
+	ENDIF
+ENDIF
+;플레이어가 가슴애무중이라면 불가
+SIF IS_EQUIP_PLAYER(MPLY:0, 1)
+	RETURN 0
+;플레이어의 입이 막히고 있다면 안 돼
+SIF IS_M_HOLD(MPLY:0)
+	RETURN 0
+;타겟이 애널바이브 장착중이라면 불가
+SIF IS_EQUIP_TARGET(MTAR:0, 62)
+	RETURN 0
+;타겟으로부터 플레이어에 다리 빨고 안이라면 불가
+SIF SEARCH_EQUIP_IC(104, MPLY:0, MTAR:0) >= 0
+	RETURN 0
+;엉덩이에 돌진해지고 있다면 안 돼
+SIF IS_INSERT_SINGLE(MTAR:0, "Ａ")
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM8
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;플레이어의 페라를 해제
+CALL RELEASE_EQUIP(SEARCH_EQUIP(11, MPLY:0, -1), 1, 0)
+
+;●플레이어에 대해 처리
+DOWNBASE:(MPLY:0):체력 += 120
+
+EXP:(MPLY:0):성기술경험치 += 1
+
+SOURCE:(MPLY:0):봉사 = SERVE_HOUSHI(MPLY:0, 300)
+SOURCE:(MPLY:0):접촉 = 50
+SOURCE:(MPLY:0):성행동 = 300
+
+;주도권에 응한 우월·굴종의 소스 추가
+CALL ADD_SOURCE_INITIATIVE_U(MPLY:0, 150, 100)
+
+;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+TCVAR:(MPLY:0):4 = 1
+
+;질구에의 키스
+CALL KISS_COMMON(MPLY:0, @"%ANAME(MTAR:0)%의 애널", GET_SITUATION_BY_TRAIN_MODE())
+
+;●타겟으로 붙어 처리
+DOWNBASE:(MTAR:0):체력 += 60
+
+SOURCE:(MTAR:0):액체추가 = 300
+SOURCE:(MTAR:0):노출 = 150
+SOURCE:(MTAR:0):일탈 = 50
+SOURCE:(MTAR:0):접촉 = 50
+SOURCE:(MTAR:0):쾌Ａ = SENSE_HOUSHI(MPLY:0, MTAR:0, 1500)
+SOURCE:(MTAR:0):성행동 = 300
+
+;주도권에 응한 우월·굴종의 소스 추가
+CALL ADD_SOURCE_INITIATIVE_U(MTAR:0, 150, 0)
+
+IF TALENT:(MPLY:0):혀놀림
+	TIMES SOURCE:(MTAR:0):쾌Ａ, 1.50
+ENDIF
+
+;노예의Ｖ⇔조교자의 입의 더러움이 이동
+STAIN:(MTAR:0):4 |= STAIN:(MPLY:0):0
+STAIN:(MPLY:0):0 |= STAIN:(MTAR:0):4
+
+;사정 개소와 대상을 세트
+CALL STACK_SPERM(MTAR:0, MPLY:0, 8)
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = 0
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 3
+
+RETURN 1
+
+;-------------------------------------------------
+;계속 커맨드인가 어떤가를 설정
+;-------------------------------------------------
+@COM_IS_EQUIP8
+RETURN 1
+
+;-------------------------------------------------
+;계속 상태의 처리
+;-------------------------------------------------
+@COM_EQUIP8(ARG:0)
+LOCAL:2 = MEQUIP_PLAYER:(ARG:0):0
+LOCAL:3 = MEQUIP_TARGET:(ARG:0):0
+
+;●플레이어의 처리
+DOWNBASE:(LOCAL:2):체력 += 20
+
+EXP:(LOCAL:2):성기술경험치 += 1
+
+SOURCE:(LOCAL:2):봉사 += SERVE_HOUSHI(LOCAL:2, 100)
+SOURCE:(LOCAL:2):접촉 += 25
+SOURCE:(LOCAL:2):성행동 += 100
+
+;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+TCVAR:(LOCAL:2):4 = 1
+
+;●타겟의 처리
+DOWNBASE:(LOCAL:3):체력 += 10
+
+SOURCE:(LOCAL:3):액체추가 += 150
+SOURCE:(LOCAL:3):노출 += 75
+SOURCE:(LOCAL:3):일탈 += 25
+SOURCE:(LOCAL:3):접촉 += 25
+SOURCE:(LOCAL:3):성행동 += 100
+
+IF TALENT:(LOCAL:2):혀놀림
+	SOURCE:(LOCAL:3):쾌Ａ += SENSE_HOUSHI(LOCAL:2, LOCAL:3, 1125)
+ELSE
+	SOURCE:(LOCAL:3):쾌Ａ += SENSE_HOUSHI(LOCAL:2, LOCAL:3, 750)
+ENDIF
+
+;사정 개소와 대상을 세트
+CALL STACK_SPERM(LOCAL:3, LOCAL:2, 8, 0)
+
+;-------------------------------------------------
+;계속중의 표시
+;-------------------------------------------------
+@EQUIP_MESSAGE8(ARG:0)
+RESULTS = %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"가")% %EQUIP_TARGET_ANAME(ARG:0)%에 애널핥기중
+
+;-------------------------------------------------
+;계속중의 지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE_EQUIP8(ARG:0)
+PRINTFORML %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"가")% %EQUIP_TARGET_ANAME(ARG:0)%의 애널을 혀로 빨고 있다…
+
+;-------------------------------------------------
+;계속을 해제했을 때의 지문
+;-------------------------------------------------
+@COM_TEXT_RELEASE_EQUIP8(ARG:0)
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER8(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 90
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 4)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 2, 20))
+
+IF TCVAR:(ARG:0):60
+	CALL COM_ORDER_ELEMENT(ARG:0, "미약", 6)
+ENDIF
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -1)
+ENDIF
+IF TALENT:(ARG:0):악취둔감
+	CALL COM_ORDER_ELEMENT(ARG:0, "악취둔감", 1)
+ENDIF
+IF TALENT:(ARG:0):악취민감
+	CALL COM_ORDER_ELEMENT(ARG:0, "악취민감", -3)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 6)
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -1)
+ENDIF
+;합의
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -10)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE8
+LOCAL:5 = SEARCH_EQUIP(101, MPLY:0, MTAR:0)
+LOCAL:6 = SEARCH_EQUIP(102, MPLY:0, MTAR:0)
+LOCAL:7 = SEARCH_EQUIP(11, MTAR:0, MPLY:0)
+LOCAL:8 = SEARCH_EQUIP(2, MTAR:0, MPLY:0)
+LOCAL:9 = SEARCH_EQUIP(101, MTAR:0, MPLY:0)
+
+IF TALENT:(MTAR:0):예쁜엉덩이
+	LOCALS:2 = %STR_BODY("엉덩이:엉덩이살:장:접촉", MTAR:0)%를 나누어 열어,
+ELSEIF GET_HIPSIZE(MTAR:0) >= 1
+	LOCALS:2 = %STR_BODY("엉덩이살:장:접촉", MTAR:0)%를 써 (뜻)이유,
+ELSE
+	LOCALS:2 = 
+ENDIF
+
+IF HAS_PENIS(MTAR:0)
+	LOCALS:1 = 장대의 밑의 근처로부터
+ELSEIF TALENT:(MTAR:0):체격 == 체격_아이
+	LOCALS:1 = 색소도 침착하고 있지 않다
+ELSEIF ABL:(MTAR:0):Ａ감 <= 1
+	LOCALS:1 = 아직도 서투른
+ELSE
+	LOCALS:1 = 
+ENDIF
+
+IF GET_INMOU_LEVEL(MTAR:0) >= 2
+	LOCALS:3 = 국좌 근처까지 털이 우거졌다
+ELSE
+	LOCALS:3 = 
+ENDIF
+
+IF CUM_GET_COUNT:(MTAR:0):사정부위_애널 > 0
+	LOCALS:4 = 백탁을 흘리고 있다
+ELSE
+	LOCALS:4 = 
+ENDIF
+
+
+;플레이어가 타겟으로 안면승마중 또한 남자의 경우
+IF LOCAL:5 >= 0 && !HAS_VAGINA(MPLY:0)
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 자신의 구슬을 빨게 하면서, %ANAME(MTAR:0)%의 %LOCALS:2% %LOCALS:1% %LOCALS:3% %LOCALS:4%애널을 빨%TARGET_STR("았다", "아 왔다")%…
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 구슬을 빨면서, %LOCALS:2% %ANAME(MPLY:0)%에 자신의 %LOCALS:1% %LOCALS:3% %LOCALS:4%애널을 빨게 했다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에 %ANAME(MTAR:0)%의 엉덩이구멍을 빨도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 자신의 구슬을 빨게 하면서, %ANAME(MTAR:0)%의 %LOCALS:2% %LOCALS:1% %LOCALS:3% %LOCALS:4%애널을 빨고 풀었다…
+	ENDSELECT
+	;안면승마의 지문을 컷
+	IF LOCAL:5 >= 0
+		MEQUIP_CUT:(LOCAL:5) = 1
+	ENDIF
+
+;비남성 플레이어가 타겟으로 안면승마중 or 타겟으로부터 플레이어에 페라·쿤닐링구스중
+ELSEIF LOCAL:5 >= 0 || LOCAL:6 >= 0 || LOCAL:7 >= 0 || LOCAL:8 >= 0
+	IF LOCAL:6 >= 0
+		LOCALS:0 = 애널
+	ELSEIF LOCAL:7 >= 0
+		LOCALS:0 = 페니스
+	ELSE
+		LOCALS:0 = 비순
+	ENDIF
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 자신의 %조사처리(LOCALS:0,"를")% 빨게 하면서, %ANAME(MTAR:0)%의 %LOCALS:2% %LOCALS:1% %LOCALS:3% %LOCALS:4%애널을 빨%TARGET_STR("았다", "아 왔다")%…
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 %조사처리(LOCALS:0,"를")% 빨면서, %LOCALS:2% %ANAME(MPLY:0)%에 자신의 %LOCALS:1% %LOCALS:3% %LOCALS:4%애널을 빨게 했다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %조사처리(ANAME(MPLY:0),"와")% %ANAME(MTAR:0)%에 식스나인의 몸의 자세로 얽히도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 자신의 %조사처리(LOCALS:0,"를")% 빨게 하면서, %ANAME(MTAR:0)%의 %LOCALS:2% %LOCALS:1% %LOCALS:3% %LOCALS:4%애널을 빨고 풀었다…
+	ENDSELECT
+	;안면승마·페라·쿤닐링구스의 지문을 컷
+	IF LOCAL:5 >= 0
+		MEQUIP_CUT:(LOCAL:5) = 1
+	ENDIF
+	IF LOCAL:6 >= 0
+		MEQUIP_CUT:(LOCAL:6) = 1
+	ENDIF
+	IF LOCAL:7 >= 0
+		MEQUIP_CUT:(LOCAL:7) = 1
+	ENDIF
+	IF LOCAL:8 >= 0
+		MEQUIP_CUT:(LOCAL:8) = 1
+	ENDIF
+
+;타겟으로부터 플레이어에 안면승마중
+ELSEIF LOCAL:8 >= 0
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"를")% 얼굴 위에 걸치게 한 채로, 아래로부터 %ANAME(MTAR:0)%의 %LOCALS:2% %LOCALS:3% %LOCALS:4%애널을 탐내도록(듯이) 빨%TARGET_STR("았다", "아 왔다")%…
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 얼굴에 걸친 채로, %LOCALS:2%동글동글 허리를 강압해 자신의 %LOCALS:3% %LOCALS:4%애널을 빨게 했다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에 %ANAME(MTAR:0)%의 엉덩이구멍을 빨도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"를")% 얼굴 위에 걸치게 한 채로, 아래로부터 %ANAME(MTAR:0)%의 %LOCALS:2% %LOCALS:3% %LOCALS:4%애널을 빨았다…
+	ENDSELECT
+	;안면승마의 지문을 컷 한다
+	MEQUIP_CUT:(LOCAL:8) = 1
+
+;플레이어가 구속중
+ELSEIF IS_BIND(MPLY:0)
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 %LOCALS:1% %LOCALS:3% %LOCALS:4%애널을 얼굴에 꽉 누르게 하면, %LOCALS:2%혀로 격렬하게 핥%TARGET_STR("았다", "아 왔다")%…
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %LOCALS:2%동작이 잡히지 않는 %ANAME(MPLY:0)%의 입에 %LOCALS:1% %LOCALS:3% %LOCALS:4%애널을 강압해, 빨게 한 봉사시켰다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MTAR:0)%에게, %ANAME(MPLY:0)%에 엉덩이구멍을 빨게 하도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %LOCALS:2%동작이 잡히지 않는 %ANAME(MPLY:0)%의 입에 %LOCALS:1% %LOCALS:3% %LOCALS:4%애널을 강압해, 빨게 했다…
+	ENDSELECT
+
+ELSE
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 %LOCALS:2% %LOCALS:1% %LOCALS:3% %LOCALS:4%애널을 혀로 빨%TARGET_STR("았다", "아 왔다")%…
+		;타겟으로 주도권
+		CASE 1
+			IF GETBIT(TALENT:(MTAR:0):음란계, 소질_음란_새드)
+				LOCALS:2 = 사디스텍크인 미소를 띄우면서,
+			ELSEIF GETBIT(TALENT:(MTAR:0):음란계, 소질_음란_음란)
+				LOCALS:2 = 황홀로 한 표정을 띄우면서,
+			ENDIF
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %LOCALS:2% %ANAME(MPLY:0)%의 입에 %LOCALS:1% %LOCALS:3% %LOCALS:4%애널을 강압해, 빨게 한 봉사시켰다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에 %ANAME(MTAR:0)%의 엉덩이구멍을 빨도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 %LOCALS:2% %LOCALS:1% %LOCALS:3% %LOCALS:4%애널을 혀로 빨았다…
+	ENDSELECT
+ENDIF
+
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST8
+IF MTAR:0 != MASTER
+	LOCAL:2 = CUP:(MTAR:0):쾌Ａ
+
+	IF TCVAR:(MTAR:0):52
+		;기절중
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 애널을 빨아질 때마다, 움찔움찔 몸을 진동시키고 있다
+	ELSEIF LOCAL:2 < 300
+		PRINTFORML %ANAME(MTAR:0)%의 애널은 딱딱하게 닫은 채다. 쾌락을 느끼려면 좀 더 걸릴지도 모른다
+	ELSEIF LOCAL:2 < 1000
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 애널핥기의 자극에 가만히 참고 있지만, 확실히 느껴 오고 있는 것 같다
+	ELSEIF LOCAL:2 < 3000
+		PRINTFORM 민감한 구멍을 빨 수 있다고 느끼는지, %조사처리(ANAME(MTAR:0),"는")%
+		IF TALENT:(MTAR:0):수줍음
+			PRINT 수치에 뺨을 붉게 물들이고 손으로 자신의 입을 억제해 소리가 나오는 것을 참고 있다
+		ELSEIF TALENT:(MTAR:0):해방 || TALENT:(MTAR:0):쾌감에솔직
+			PRINTL 뜨거운 한숨을 토하면서 쾌락에 몸을 맡기고 있다
+		ELSEIF TALENT:(MTAR:0):억압 || TALENT:(MTAR:0):고고함 || TALENT:(MTAR:0):쾌감을부정
+			PRINTL 쾌락을 부정하도록(듯이) 고개를 저어 참고 있다
+		ELSE
+			PRINTL 허리를 구불거리게 되어지면서 조금 작게 한숨을 흘렸다
+		ENDIF
+	ELSEIF LOCAL:2 < 6000
+		PRINTFORML %ANAME(MTAR:0)%의 엉덩이구멍을 혀로모습 돌려 주면 %조사처리(ANAME(MTAR:0),"는")% 사랑스러운 소리를 흘리면서 삐걱삐걱 신체를 흔들었다
+	ELSEIF LOCAL:2 < 10000
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 분명한 쾌락의 소리를 질러 무의식 중에 이쪽의 머리를 손으로 눌러 한층 더 그 부분을 강압해 왔다
+	ELSE
+		IF TALENT:(MTAR:0):Ａ민감
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 민감한 애널에의 고문에 격렬하게 몸부림 해, 뻥튀기도 없는 계속 소리를 질렀다
+		ELSE
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 애널에의 자극에 격렬한 신음소리를 올리면서 계속 몸부림쳤다
+		ENDIF
+	ENDIF
+	IF TALENT:(MTAR:0):예쁜엉덩이
+		PRINTFORML %STR_BODY("엉덩이살:장:외관", MTAR:0)%가 흔들흔들 떨고 있다……
+	ELSEIF GET_HIPSIZE(LOCAL:1) >= 1
+		PRINTFORML %STR_BODY("엉덩이살:장:외관", MTAR:0)%가 흔들흔들 떨고 있다……
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN8
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_8()
+RETURN POWER(2, 성적기호_봉사하고싶다)
+
+@COM_PREFERENCE_TARGET_8()
+RETURN POWER(2, 성적기호_봉사되고싶다)
+

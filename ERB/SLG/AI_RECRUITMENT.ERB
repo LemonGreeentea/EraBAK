@@ -1,0 +1,87 @@
+﻿@SLG_AI_RECRUITMENT(세력)
+#DIM 세력
+#DIM 군주
+#DIM 대상
+#DIM 후보
+#DIM 기초액
+#DIM 평가치, VARSIZE("SCOUT_CANDIDATES")
+#DIM 지불액
+#DIM 확률
+VARSET 평가치, __INT_MIN__
+
+군주 = GET_COUNTRY_BOSS(세력)
+
+;평가치를 작성한다
+;소지의 금으로 지불할 수 있는 한으로 가장 유능한 녀석을 기본적으로는 선택한다  다만 좋고 싫음도 영향을 주므로 응?
+FOR 후보, 0, VARSIZE("SCOUT_CANDIDATES")
+	대상 = ID_TO_CHARA(SCOUT_CANDIDATES:후보)
+	SIF 대상 == -1
+		CONTINUE
+	IF CFLAG:대상:특수상태 != 특수상태_방랑
+		SCOUT_CANDIDATES:후보 = 0
+		CONTINUE
+	ENDIF
+
+	기초액 = SCOUT_CALC_PRICE_BASIS(대상) * 2 / 3
+
+	;기본적으로 가격과 동일
+	평가치:후보 = 기초액
+
+	;군주로부터 본 그 녀석에게로의 관계성을 고려
+	평가치:후보 *= 1500 + REL_LIKE:군주:대상 - REL_HATE:군주:대상
+	평가치:후보 /= 1500
+
+	;금이 부족하면 평가치는 낮다（확실한 고용을 우선한다）
+	SIF MONEY:세력 < 기초액
+		평가치:후보 = 평가치:후보 * MONEY:세력 / 기초액
+
+	평가치:후보 = 평가치:후보 * RAND(80, 120) / 100
+NEXT
+
+;1턴 근처 3명까지 트라이 한다
+FOR LOCAL, 0, 3
+	후보 = FINDELEMENT(평가치, MAXARRAY(평가치))
+	대상 = ID_TO_CHARA(SCOUT_CANDIDATES:후보)
+	
+	SIF 대상 == -1
+		BREAK
+
+	지불액 = MIN(MONEY:세력, 평가치)
+	기초액 = SCOUT_CALC_PRICE_BASIS(대상)
+
+	SIF IS_SP_COUNTRY(세력)
+		TIMES 기초액, 1.5
+
+	;반액 없으면 단념한다
+	IF 지불액 < 기초액 / 2
+		평가치:후보 = __INT_MIN__
+		CONTINUE
+	ENDIF
+
+	확률 = 100 * 지불액 / 기초액
+	확률 = 확률 * (1500 + REL_LIKE:대상:군주 - REL_HATE:대상:군주 - DIPLOMACY_HATE:세력 * 30) / 1500
+
+	IF IS_SP_COUNTRY(세력)
+		PRINTFORML %조사처리(ANAME(군주),"는")% 노예상에 의뢰해, %ANAME(대상)%의 신병을 확보하려고 했다……
+		;통상의 1/6 ~ 1/2의 확률
+		IF RAND:100 < 확률 / 7 - SP_COUNTRY_RANK:SP_COUNTRY_TO_CONST(세력)
+			CALL COLOR_PRINTL(@"%조사처리(ANAME(대상),"는")% 노예상의 책에 걸렸다", 칼라_핑크)
+			CALL COLOR_PRINTL(@"%조사처리(ANAME(대상),"가")% %ANAME(군주)%에 잡혔다", 칼라_핑크)
+			CALL CAPTURE(대상, 세력, 1)
+			SCOUT_CANDIDATES:후보 = 0
+		ELSE
+			평가치:후보 = __INT_MIN__
+		ENDIF
+	ELSE
+		PRINTFORML %조사처리(ANAME(군주),"는")% 방랑중의 %ANAME(대상)%에 고용의 타진을 했다……
+		IF RAND:100 < 확률 
+			CALL COLOR_PRINTL(@"%조사처리(ANAME(대상),"는")% 고용의 타진을 받아들였다", 칼라_주의)
+			CALL COLOR_PRINTL(@"%조사처리(ANAME(대상),"가")% %ANAME(군주)%에 이적했다", 칼라_주의)
+			CALL CHANGE_COUNTRY(대상, 세력, 1)
+			SCOUT_CANDIDATES:후보 = 0
+		ELSE
+			평가치:후보 = __INT_MIN__
+		ENDIF
+	ENDIF
+NEXT
+

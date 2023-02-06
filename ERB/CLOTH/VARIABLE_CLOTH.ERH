@@ -1,0 +1,43 @@
+﻿#DIM CONST CLOTH_PART_NUM = 13
+#DIM CONST COVER_PART_NUM = 13
+#DIM CONST MAX_CLOTH_ID = 100
+#DIM SAVEDATA CHARADATA CLOTH, CLOTH_PART_NUM
+
+{
+#DIMS CONST CLOTH_PART_NAME = 
+"머리", "목", "상의", "하의", "윗도리", 
+"상하의", "속옷상", "속옷하", "속옷세트",
+ "팔", "양말", "구두", "악세사리"
+}
+{
+#DIMS CONST CLOTH_PART_NAME_ENG = 
+"HEAD", "NECK", "TOP", "BOTTOM", "OUTER",
+"BODYSUIT", "INNER_TOP", "INNER_BOTTOM", "INNER_BODYSUIT",
+"GLOVE", "SOCKS", "SHOES", "ACCESSORY"
+}
+#DIM CONST 의상부위_머리 =       0
+#DIM CONST 의상부위_목 =       1
+#DIM CONST 의상부위_상의 =     2
+#DIM CONST 의상부위_하의 =     3
+#DIM CONST 의상부위_윗도리 =     4
+#DIM CONST 의상부위_상하의 =   5
+#DIM CONST 의상부위_속옷상 =   6
+#DIM CONST 의상부위_속옷하 =   7
+#DIM CONST 의상부위_속옷세트 = 8
+#DIM CONST 의상부위_팔 =       9
+#DIM CONST 의상부위_양말 =     10
+#DIM CONST 의상부위_구두 =       11
+#DIM CONST 의상부위_악세사리=12
+
+#DIM CONST 피복부위_얼굴 =   0
+#DIM CONST 피복부위_입 =   1
+#DIM CONST 피복부위_목 =   2
+#DIM CONST 피복부위_팔 =   3
+#DIM CONST 피복부위_손 =   4
+#DIM CONST 피복부위_유방 = 5
+#DIM CONST 피복부위_유두 = 6
+#DIM CONST 피복부위_배 =   7
+#DIM CONST 피복부위_비부 = 8
+#DIM CONST 피복부위_엉덩이 =   9
+#DIM CONST 피복부위_다리 =   10
+#DIM CONST 피복부위_발 =   11

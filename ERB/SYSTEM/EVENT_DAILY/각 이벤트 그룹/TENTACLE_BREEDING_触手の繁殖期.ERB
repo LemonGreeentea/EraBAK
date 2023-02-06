@@ -1,0 +1,279 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_TENTACLE_BREEDING_RATE()
+RETURN 25
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_TENTACLE_BREEDING_DECISION()
+#DIM 촉수
+
+촉수 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_촉수))
+SIF 촉수 == -1
+	RETURN 0
+SIF CFLAG:MASTER:소속 != 촉수
+	RETURN 0
+SIF CFLAG:MASTER:포로처 != 0
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;특정의 조건을 채우는 캐릭터를 랜덤에 선택하는 경우에 이용
+;다른 함수는 필수이지만, 이것만은 없어도 좋다  라고 할까 퍼포먼스에 영향을 주므로 불필요하면 만들어서는 안 된다
+;대상이 존재하지 않고 데일리를 개시 할 수 없는 경우는 0을 돌려주는 것으로 데일리의 발생을 캔슬한다
+;---------------------
+@EVENT_DAILY_TENTACLE_BREEDING_SETTARGET()
+
+FOR LOCAL, 0, CHARANUM
+	;남 또한 촉수 또한 자국 소속 또한 포로가 아니고 한편 동물이 아니다
+	IF IS_MALE(LOCAL) && TALENT:LOCAL:특수세력소질 == 특수세력_촉수 && CFLAG:LOCAL:소속 == CFLAG:MASTER:소속 && !CFLAG:LOCAL:포로처 && !IS_ANIMAL(LOCAL)
+		DAILY_TARGET:DAILY_TARGET_NUM = LOCAL
+		DAILY_TARGET_NUM ++
+	ENDIF
+NEXT
+
+SIF DAILY_TARGET_NUM < 1
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_TENTACLE_BREEDING_GENRE()
+RETURN 데일리_장르_특수세력
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_TENTACLE_BREEDING
+#DIM 대상촉수
+#DIM 대상
+
+대상촉수 = DAILY_TARGET:(RAND:DAILY_TARGET_NUM)
+
+PRINTFORMW %ANAME(대상촉수)%가 번식기에 접어들어 흥분하고 있는 것 같다
+$SELECT_LOOP
+PRINTFORML 어떻게 하지?
+CALL ASK_MULTI("마을 아가씨를 바친다" ,"포로를 사용하게 한다" ,"모판을 사용하게 한다", "방치!")
+IF RESULT == 3
+	PRINTFORMW 서로 빼앗을 필요도 없을 것이다
+	PRINTFORMW 방치하기로 했다
+	RETURN 0
+ELSEIF RESULT == 0
+	PRINTFORMW 영지민으로부터 적당한 아가씨를 바치는 일로 했다
+	PRINTFORMW …꼭 자주(잘) 건강한 소녀가 발견되었다
+	SELECTCASE RAND:5
+		CASE 0
+			PRINTFORMW 무서워한다그녀를 번식 방에 던져 넣으면, 무수한 촉수가 그녀에게 덤벼 들었다……
+		CASE 1
+			PRINTFORMW %ANAME(대상촉수)%는 흥분한 것처럼 물결치면 도망치는 그녀를 잡아 번식 방에 데리고 들어갔다……
+		CASE 2
+			PRINTFORMW 암컷의 냄새에 흥분한 %ANAME(대상촉수)%는 그녀에게 마취하면 번식 방에 끌어들였다……
+		CASE 3
+			PRINTFORMW 번식 방에 아가씨를 던져 넣으면 중으로부터 비명이 울렸지만 곧바로 들리지 않게 되었다……
+		CASE 4
+			PRINTFORMW 제물로 된 소녀는 처음중 울부짖고 있었지만, 이윽고 웃는 만큼 되었다……
+	ENDSELECT
+	PRINTFORML 
+	PRINTFORML 한동안 후에 소녀는 해방되었다
+	PRINTFORMW 그 몸과 마음은 완전히 부수어져 훌륭한 모판으로 다시 태어나고 있었다
+	PRINTFORML 
+	FOR LOCAL, 1, MAX_COUNTRY
+		CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -30, 30)
+	NEXT
+	CALL COLOR_PRINT(@"영지민에게로의 이 처사는 타국으로부터 비난 되었다", 칼라_주의)
+	PRINTFORMW 
+ELSEIF RESULT == 1
+	PRINTFORML 꼭 좋기 때문에 포로를 사용하게 하기로 했다
+	CALL SINGLE_DRAWLINE
+	CALL SELECT_CHARA_LIST_ONLY_LOGIC_SEX("TENTACLE_BREEDING_CAPTIVE", "NONE")
+	IF RESULT == -1
+		PRINTFORMW 그녀들은 교섭 재료로도 되는, 그만두자
+		PRINTFORML 
+		GOTO SELECT_LOOP
+	ELSE
+		대상 = RESULT
+		PRINTFORMW %조사처리(ANAME(대상),"로")% 결정했다
+		PRINTFORML 필사적으로 저항하는 %조사처리(ANAME(대상),"를")% 특제의 번식 방에 던져 넣는다
+		PRINTFORMW 하면 흥분해 버린 %ANAME(대상촉수)%가 곧바로 그녀에게 덤벼 들었다
+		CALL TENTACLE_BREEDING_RAPE(대상)
+		PRINTFORML 
+		IF CFLAG:대상:소속 != 0
+			FOR LOCAL, 1, MAX_COUNTRY
+				SIF CFLAG:대상:소속 == LOCAL
+					CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -300, 300)
+			NEXT
+			CALL COLOR_PRINT(@"%ANAME(대상)%에의 처사는 소속국을 매우 화나게 한 것 같다", 칼라_주의)
+			PRINTFORMW 
+		ELSE
+			FOR LOCAL, 1, MAX_COUNTRY
+				CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -30, 30)
+			NEXT
+			CALL COLOR_PRINT(@"포로에게로의 이 처사는 타국으로부터 비난 되었다", 칼라_주의)
+			PRINTFORMW 
+		ENDIF
+	ENDIF
+ELSEIF RESULT == 2
+	PRINTFORML 여기에는 모판이 되어 있는 여자가 있다
+	PRINTFORMW 그녀들은 기뻐해 촉수를 위해서(때문에) 몸을 바칠 것이다
+	PRINTFORML 누구를 선택하자?
+	CALL SELECT_CHARA_LIST_ONLY_LOGIC_SEX("TENTACLE_BREEDING_SEEDBED", "TENTACLE_BREEDING_SEEDBED")
+	대상 = RESULT
+	IF RESULT < 0
+		PRINTFORMW 역시 소중한 전력을 사용하는 것은 한 번 더 없는, 다른 여자로 하자
+		PRINTFORML 
+		GOTO SELECT_LOOP
+	ELSEIF RESULT == MASTER
+		PRINTFORMW %ANAME(대상)%자신이 모판이 되기로 했다
+	ELSE
+		PRINTFORMW %조사처리(ANAME(대상),"로")% 결정했다
+	ENDIF
+	PRINTFORML %조사처리(ANAME(대상),"는")% 지금부터 되는 것을 가슴을 크게 울리게 하면서 번식 방에 향한다
+	PRINTFORMW %조사처리(ANAME(대상),"가")% 번식 방에 들어가자 곧바로 무수한 촉수에 덤벼 들어졌다
+	CALL TENTACLE_BREEDING_RAPE(대상)
+	CALL ADD_COOLTIME(대상, 1)
+ENDIF
+
+IF RAND:6 == 0
+	PRINTFORMW %ANAME(대상촉수)%와 소녀의 궁합은 발군에 좋았던 것 같다
+	PRINTFORMW %ANAME(대상촉수)%의 능력이 큰폭으로 강화되었다
+	CALL PRINT_ADD_EXP(대상촉수, "무투경험치", 10 + RAND:15, 1)
+	CALL PRINT_ADD_EXP(대상촉수, "방위경험치", 10 + RAND:15, 1)
+	CALL PRINT_ADD_EXP(대상촉수, "지략경험치", 10 + RAND:15, 1)
+ELSE
+	PRINTFORMW %ANAME(대상촉수)%는 한껏 번식을 반복해 강해진 것 같다
+	CALL PRINT_ADD_EXP(대상촉수, "무투경험치", 5 + RAND:10, 1)
+	CALL PRINT_ADD_EXP(대상촉수, "방위경험치", 5 + RAND:10, 1)
+	CALL PRINT_ADD_EXP(대상촉수, "지략경험치", 5 + RAND:10, 1)
+ENDIF
+
+RETURN 1
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_TENTACLE_BREEDING_CAPTIVE(대상)
+#DIM 대상
+RETURN !IS_MALE(대상) && CFLAG:대상:포로처 == CFLAG:MASTER:소속
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_TENTACLE_BREEDING_SEEDBED(대상)
+#DIM 대상
+RETURN CFLAG:대상:행동불능상태 != 행동불능_아이 && CFLAG:대상:소속 == CFLAG:MASTER:소속 && !IS_ANIMAL(대상) && !IS_MALE(대상)
+
+@SELECT_CHARA_LIST_SELECT_LOGIC_TENTACLE_BREEDING_SEEDBED(대상)
+#DIM 대상
+RETURN CFLAG:대상:포로처 == 0
+
+@TENTACLE_BREEDING_RAPE(ARG:0)
+
+PRINTFORML 
+PRINTFORMW 번식 방 안으로부터 희미하게 %ANAME(ARG:0)%의 소리가 새어 온다……
+PRINTFORML 
+SELECTCASE RAND:20
+	CASE 0
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 무수한 촉수로 체내가 유린되어 비명에 가까운 허덕임을 올린다
+		PRINTFORML 촉수들은 %ANAME(ARG:0)%의 비명 따위 개의치 않고 그 암컷구멍이 터질듯이 침입해 꿈틀거린다
+		PRINTFORML 질척질척 추잡한 미츠네가 울려 애액이 흩날려 사지가 삐걱삐걱 경련한다
+		PRINTFORMW 이윽고 대량의 종이 발해지면, %조사처리(ANAME(ARG:0),"는")% 의식을 날리면서 강렬한 절정에 이르렀다
+	CASE 1
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 엉덩이 구멍으로부터 체내를 관통한 촉수가 입으로부터 튀어나온 상태로 매달아지고 있다
+		PRINTFORML 문자 그대로 촉수에 꼬치로 된 %조사처리(ANAME(ARG:0),"는")% 눈을 뒤집어 삐걱삐걱 전신을 경련시킨다
+		PRINTFORML 고통과 그 이상의 쾌락이 전신을 뛰어 돌아다녀, %조사처리(ANAME(ARG:0),"는")% 참지 못하고 조수를 뿜어 절정 한다
+		PRINTFORMW %조사처리(ANAME(ARG:0),"는")% 체내 모두를 촉수와 그의 종으로 채워지면서 기쁨대로 정신을 잃었다
+	CASE 2
+		PRINTFORML 촉수에 구속된 %조사처리(ANAME(ARG:0),"는")% 격렬한 압력을 받으면서 미친듯이 자지러지는 신음소리를 내고 있다
+		PRINTFORML 너무 거대한 촉수를 안쪽 깊게까지 쑤셔 넣어져 자궁이 입으로부터 튀어나오는 것 같은 충격을 받는다
+		PRINTFORML 일발 찌르기마다 %ANAME(ARG:0)%의 신체는 절정 당해 암컷의 본능대로 촉수를 단단히 조여 간다
+		PRINTFORMW 그의 육욕은 들어가는 일을 알지 못하고 부수어질 정도의 충격의 물결과 함께 며칠에 건너 범해졌다
+	CASE 3
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 대자로 매달아진 상태로 낙지다리와 같은 촉수에 범해지고 경련하고 있다
+		PRINTFORML 흡반으로 질육을 흡인하면서의 피스톤에 의한 폭력적인 쾌락에 미친듯이 자지러지는 신음소리를 내버린다
+		PRINTFORML 갑자기 츄♥웃 자궁입구에 달라붙어져 한심한 소리를 흘리면서 크게 뒤로 젖혔다
+		PRINTFORMW 맛본 적이 없는 미지의 쾌감에 %조사처리(ANAME(ARG:0),"는")% 눈치채면 열중해 허리를 흔들고 있었다
+	CASE 4
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 반대 매담으로 용서 없는 피스톤으로 몰아세워져 가고 있는 채가 되어 있다
+		PRINTFORML ! (와)과 촉수가 %ANAME(ARG:0)%의 암컷구멍에 쇄도해 삽입 사정을 반복해 유린한다
+		PRINTFORML 유무를 말하게 하지 않는 압도적인 쾌감의 물결에 %조사처리(ANAME(ARG:0),"는")% 히익히익 거리며 좋아해 몸부림칠 수밖에할 수 없다
+		PRINTFORMW %조사처리(ANAME(ARG:0),"는")% 절정 기절 각성을 반복하면서 오로지 그의 끝없는 성욕으로 범해지고 다했다
+	CASE 5
+		PRINTFORML 체내의 구멍이라는 구멍에 촉수를 쑤셔 넣어져 %ANAME(ARG:0)%의 사고가 새하얗게 물들어 몸부림친다
+		PRINTFORML 질이 엉덩이 구멍이 입이, 손이 다리가 가슴이, 모두 촉수에 오로지 범해지고 유린되고 더럽혀져 간다
+		PRINTFORML 이미 %조사처리(ANAME(ARG:0),"는")% 인간인 일도 잊었다다 쾌락을 추구해 요갈만의 육 대라든지 하고 있었다
+		PRINTFORMW 지나친 충격에 %조사처리(ANAME(ARG:0),"는")% 해방 후도 한동안 촉수와의 교제를 생각해 내고 있을 뿐이었다
+	CASE 6
+		PRINTFORML 손발을 촉수에? %조사처리(ANAME(ARG:0),"가")% 촉수에 능욕 되면서 고개를 저어 좋아하고 있다
+		PRINTFORML 오돌오돌 촉수로 여자의 히지리 역을 망가질 것 같게 되는 정도로 후벼파지고 계속하고 가고 있는 채로 되고 있다
+		PRINTFORML 쾌락의 물결로 거품을 부는 %ANAME(ARG:0)%에 상관하지 않고, 촉수는 육욕대로 오로지 피스톤을 계속했다
+		PRINTFORMW 해방되었을 때에는 %ANAME(ARG:0)%의 질육은 구석구석까지 유린되어 새빨갛게 붓고 있었다
+	CASE 7
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 2 개회 해로 범해지면서 짐승과 같은 신음소리를 올려 몸부림친다
+		PRINTFORML 양구멍에 번갈아삽입과 씨뿌리기를 반복해져 이키 미칠 뿐(만큼)의 인형이 되고 있다
+		PRINTFORML 그는 벌써 몇십발도 사정하고 있는 아직 만족하고 있지 않고 한층 더 안쪽 깊고에 비틀어 들어 온다
+		PRINTFORMW 끝없는 성욕에 의해 %조사처리(ANAME(ARG:0),"는")% 하이쿠 짓는 사람 직전이 될 때까지 철저하게 능욕 되는 일이 되었다
+	CASE 8
+		PRINTFORML 배가 부푸는 만큼 대량의 정액을 쳐박아진 %조사처리(ANAME(ARG:0),"가")% 물고기같이 뛰고 있다
+		PRINTFORML 압박감과 작열로 시야는 비뚤어져, 떨리는 목으로부터는 신음과도 허덕임이라고도 붙지 않는 소리가 샌다
+		PRINTFORML 촉수의 알이 우글거려%ANAME(ARG:0)%의 히지리 역에 스며들어 뿌리 내리려고 하는 감각에 참지 못하고 가 버린다
+		PRINTFORMW 만족한 촉수에 배를 어루만져지면, %조사처리(ANAME(ARG:0),"는")% 경련하면서 공허하게 웃었다
+	CASE 9
+		PRINTFORML %ANAME(ARG:0)%의 암컷구멍에 대담한 촉수가 몇개나 쑤셔 넣어지고 격렬하게 날뛰고 있다
+		PRINTFORML 촉수가 체내에서 꿈틀거릴 때에 하복부가 불퉁불퉁 부풀어 올라, %조사처리(ANAME(ARG:0),"는")% 신음소리와 함께 경련한다
+		PRINTFORML 그 참상에도 불구하고 강렬한 쾌락이 시비레가 되어 달리기%조사처리(ANAME(ARG:0),"는")% 보기 흉하게 가게 된다
+		PRINTFORMW 그리고 일제히 촉수가 사정하면, %조사처리(ANAME(ARG:0),"는")% 큰 교성을 미치게 하면서 뒤로 젖혔다
+	CASE 10
+		PRINTFORML 한 개의 맥박치는 촉수가 구속되고 있는 %ANAME(ARG:0)%의 안쪽 깊게까지 쑤셔 넣어지고 있다
+		PRINTFORML 촉수는 자궁입구까지 도달하면 첨단을 열어 가는 촉수를 몇개나 내 체내에 침입해 나간다
+		PRINTFORML 쑤셔 넣어진 촉수에 태내를 낼름 빨아져 %조사처리(ANAME(ARG:0),"는")% 단정치 못한 소리를 높였다
+		PRINTFORMW 통상으로는 있을 수 없는 감각에 %조사처리(ANAME(ARG:0),"는")% 계속 참지 못하고 몇 번이나 인외의 절정을 맛보았다
+	CASE 11
+		PRINTFORML 촉수의 덩어리 거두어들여진 %조사처리(ANAME(ARG:0),"는")% 범해지면서 망가진 것처럼 웃고 있다
+		PRINTFORML 그의 체액의 성분으로 한계 이상으로 절정을 반복한 %조사처리(ANAME(ARG:0),"는")% 이미 쾌락 밖에 느끼지 않는다
+		PRINTFORML 주위를 다 메우는 무수한 촉수에 적극적으로 봉사해서는 씨뿌리기 되어, 기쁨의 소리를 높인다
+		PRINTFORMW 해방된 뒤도 %조사처리(ANAME(ARG:0),"는")% 에헤라에헤라와 웃으면서 자위를 반복하고 있었다
+	CASE 12
+		PRINTFORML 극도로 흥분한 촉수가 마치 해일과 같이 %ANAME(ARG:0)%에 무리암컷구멍에 쇄도해 나간다
+		PRINTFORML 너무나 난폭함%조사처리(ANAME(ARG:0),"는")%비명을올린다를 피할 수 있지 못하고 촉수의 물결에? 라고 끝낸다
+		PRINTFORML 뱃속로날뛴다촉수와 작열의 정액에 의해 %ANAME(ARG:0)%의 이성이 투덜투덜 파괴되어 간다
+		PRINTFORMW %조사처리(ANAME(ARG:0),"는")% 며칠에 이동그의 성욕 발산을 위한 육 대로 되어 그 사이 다만 신음하는 만큼 되어 있었다
+	CASE 13
+		PRINTFORML 거대한 촉수에 환? 봐로 된 %조사처리(ANAME(ARG:0),"가")% 흐려진 신음소리가 들려 온다
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 촉수 중(안)에서 전신의 안쪽 깊게까지 촉수를 쑤셔 넣어지고 눈을 뒤집어 경련하고 있다
+		PRINTFORML 때때로 브르브룩과 촉수 전체가 떨리면 작열의 자식이 따라지고 %조사처리(ANAME(ARG:0),"는")% 크게 몸부림친다
+		PRINTFORMW %조사처리(ANAME(ARG:0),"는")% 몸도 마음도 촉수의 동화한 같은 착각을 느끼면서 깊은 쾌락안에 가라앉아 갔다
+	CASE 14
+		PRINTFORML 촉수가 우글거리는 소리와 점막의 서로 스치는 소리, 그리고 여자의 신음소리만이 울리고 있다
+		PRINTFORML 빙빙 감아에 구속되고 씨뿌리기 절정을 반복한 %조사처리(ANAME(ARG:0),"는")% 공허한 표정으로 꿈틀거릴 뿐이다
+		PRINTFORML 촉수가 출입하는 비밀스런 장소는 새빨갛게 부어 오름 대량의 백탁액이 질질 흘림이 되어 있다
+		PRINTFORMW 번식기의 촉수의 성욕은 굉장하고, %조사처리(ANAME(ARG:0),"가")% 해방된 것은 며칠 후의 일이었다
+	CASE 15
+		PRINTFORML 거기에는 눈을 뒤집으면서 짐승과 같이 허덕이는 %ANAME(ARG:0)%의 모습이 있었다
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 대담한 촉수 2 개로 꼬치로 되고 질육과 함께 이성을 고리고와 깎아져 미친듯이 자지러지는 신음소리를 낸다
+		PRINTFORML 일반적이라면 비집고 들어갈 수 없는 곳까지 쑤셔 넣어지면서도 고통보다 강렬한 쾌감이 %조사처리(ANAME(ARG:0),"를")% 덮친다
+		PRINTFORMW 그가 부들 떨려 종을 발하면 %조사처리(ANAME(ARG:0),"는")% 전신으로부터 정액을 흘러넘치게 하면서 절정 했다
+	CASE 16
+		PRINTFORML 방의 중앙에서는 공중에 매달림으로 된 %조사처리(ANAME(ARG:0),"가")% 다수의 촉수에 격렬하게 범해지고 있다
+		PRINTFORML 끊임없는 공격에 의해 %조사처리(ANAME(ARG:0),"는")% 끝없이 절정 당하고 있고 그 이성은 고장나고 자르고 있다
+		PRINTFORML 전신은 질척질척이 되어 있어, 숨이 막히는 것 같은 수컷의 냄새가 한층 더%ANAME(ARG:0)%의 관능을 높인다
+		PRINTFORMW 영원이나 생각되는 쾌락의 물결로부터 해방된 %조사처리(ANAME(ARG:0),"는")% 한동안 에헤에헤와 웃을 뿐이었다
+	CASE 17
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 인형에게 얽힌 촉수에 백의 몸의 자세로 범해져 미친듯이 자지러지는 신음소리를 낸다
+		PRINTFORML 성욕 왕성한 촉수에 무시무시! (와)과 정수리까지 영향을 주는 것 같은 강렬한 찌르기로 의식이 날아갈 것 같은
+		PRINTFORML 그 씩씩한 섹스에 자궁은 벌써 함락 해 자식을 요구해 빠끔히열어 자르고 있었다
+		PRINTFORMW %조사처리(ANAME(ARG:0),"는")% 몸도 마음도 촉수의 신부에게 되어 내려, 오로지 아이 만들기에 세월을 보냈다
+	CASE 18
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 양구멍에 쑤셔 넣어진 촉수로 대롱대롱 매달림으로 되면서 눈을 뒤집고 있다
+		PRINTFORML 전체중으로 촉수가 안쪽 깊게까지 쑤셔 넣어져 %조사처리(ANAME(ARG:0),"는")% 촉수에 잡으면서 히히 허덕인다
+		PRINTFORML 때때로 촉수가 몸을 진동시킬 때에 내장이 후벼파지는 감각으로 참지 못하고 절정 당하고 조수를 분다
+		PRINTFORMW 그는 %ANAME(ARG:0)%의 신체를 마음에 든 것 같아, 만족할 때까지 완구같이 계속 과 같이 희롱했다
+	CASE 19
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 사지를 삼켜진 모습으로 전신에 촉수를 찔려 신음하고 있다
+		PRINTFORML 양구멍이나 입은 물론 유두나 귀, 배꼽에까지 촉수는 기어들어 꿈틀거림 자극을 주어 온다
+		PRINTFORML 인외의 자극에 %조사처리(ANAME(ARG:0),"는")% 계속 참지 못하고, 한동안 전부터 쭉 절정에서 내릴 수 없다
+		PRINTFORMW %조사처리(ANAME(ARG:0),"는")% 그저 쾌락에 몸을 바쳐 촉수의 사랑을 계속 받아들이는 일이 되었다
+ENDSELECT
+CALL FUCK(ARG:0, "욕망, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 봉사, 정애, 펠라티오, 성교, 촉수, 촉수, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("촉수"), "촉수", "촉수", "", "조교")
+CALL FUCK(ARG:0, "욕망, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 봉사, 정애, 펠라티오, 성교, 촉수, 촉수, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("촉수"), "촉수", "촉수", "", "조교")
+PRINTFORML 
+
+RETURN 1

@@ -1,0 +1,48 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_NOPPERABOU_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_NOPPERABOU_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_NOPPERABOU(대상)
+#DIM 대상
+PRINTFORML 밤길을 가는 %조사처리(ANAME(대상),"가")%, 속삭이는 것 같은 울음소리를 들었다
+PRINTFORML 강의 근처에 잠시 멈춰서는 야나기아래에, 소녀가 웅크리고 있다
+PRINTFORML 가출아가씨일까. 귀찮은 일이 아니면 좋겠지만……
+PRINTFORML 
+CALL ASK_YN("말을 건다", "떠난다")
+
+IF RESULT == 1
+	PRINTFORML 손대지 않는 신에 뒤탈 없음
+	PRINTFORML 빨리 떠나기로 했다
+	RETURN 1
+ENDIF
+
+PRINTFORML 방치하는 것도 무엇이라고, %조사처리(ANAME(대상),"는")% 소녀에게 말을 건다
+PRINTFORMW ……천천히 이쪽을 되돌아 보는 소녀에게는, 얼굴이 없었다!
+PRINTFORMW 다!
+
+IF LIMIT(MAXBASE:대상:기력, 1500, 2500) > RAND:3000
+	PRINTFORML %조사처리(ANAME(대상),"는")% 비명을 지를 것 같게 된 곳을 참는다
+	PRINTFORMW 정체를 현한 것게일갈 했다!
+	PRINTFORML 그 기세에 저 편이 겁에 질렸는지, 당황해 도망쳐 갔다……
+	CALL ICPRINT(@"%ANAME(대상)%의 기력이<50>상승해,<{MAXBASE:대상:기력}>가 되었다", "L", 칼라_주의)
+ELSE
+	PRINTFORML %조사처리(ANAME(대상),"는")% 지나친 일에 비명을 질러 도망치기 시작했다!
+	PRINTFORMW 도중 마음껏 굴러, 다쳐 버렸다……
+	CALL ADD_COOLTIME(대상, 1)
+ENDIF
+
+RETURN 1

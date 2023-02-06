@@ -1,0 +1,69 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_DIG_A_BEER_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_DIG_A_BEER_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_DIG_A_BEER(대상)
+#DIM 대상
+
+PRINTFORML 숲속을 걷고 있으면, 수풀의 안쪽에서 뭔가 바스락바스락하고 있는 남자를 찾아냈다
+PRINTFORML 아무래도 뭔가를 개간하려고 하고 있는 것 같다
+PRINTFORMLC 이상하다……
+PRINTL
+CALL ASK_YN("말을 건다", "방치한다")
+
+IF RESULT == 1
+	PRINTFORML 별로 나쁜 짓을 하고 있는 것도 아닌 것 같다
+	PRINTFORMW 방치하기로 해, 그 자리를 뒤로 했다
+	RETURN 1
+ENDIF
+
+PRINTFORML 말을 걸면 남자는 놀라 뛰어 올랐다
+PRINTFORML 무엇을 하고 있는지 물으면, 난처한 것 같게 웃는다
+PRINTFORML 아무래도 여기에 오니가 숨기는 것을 본 것 같다
+PRINTFORML 오니의 술은 터무니 없게 좋은 맛이라고 (듣)묻지만……
+
+PRINTL
+CALL ASK_MULTI("돕는다", "독점한다", "방치한다")
+
+IF RESULT == 2
+	PRINTFORML 별로 나쁜 짓을 하고 있는 것도 아니면 좋을 것이다
+	PRINTFORMW 그 자리를 뒤로 했다
+ELSEIF RESULT == 1
+	PRINTFORML 그렇게 맛있을 것 같은 술이라면 꼭 맛보고 싶다
+	PRINTFORML 물론 혼자서
+	PRINTFORML %조사처리(ANAME(대상),"는")% 눈앞의 남자를 베어 버렸다
+	PRINTFORML 그리고 남자가 파고 있던 장소를 파 진행하면, 술병을 찾아냈다
+	PRINTFORML 중에는 보통들과 술이 들어가 있었다
+	PRINTFORML 시험삼아 한입 마셔 본다
+	PRINTFORML …맛있어!
+	PRINTFORML 남이 말해 있었던 대로 큰 일 맛있어
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 술병을 가지고 돌아가, 한껏 만끽했다
+	CALL PRINT_ADD_EXP(대상, "주량경험치", RAND(50, 100), 1)
+ELSE
+	PRINTFORML 그런 일이라면 자신도 돕자
+	PRINTFORML %조사처리(ANAME(대상),"는")% 남자와 둘이서 지면을 파내 가면, 이윽고 술병을 찾아냈다
+	PRINTFORML 중에는 보통들과 술이 들어가 있었다
+	PRINTFORML 시험삼아 한입 마셔 본다
+	PRINTFORML …맛있어!
+	PRINTFORML 남이 말해 있었던 대로 큰 일 맛있어
+	PRINTFORMW 술을 둘이서 절반 하기로 했다
+	ITEM:과실주 += 3
+	CALL COLOR_PRINTW("과실주를 3개 손에 넣었다", 칼라_주의)
+ENDIF
+
+
+RETURN 1

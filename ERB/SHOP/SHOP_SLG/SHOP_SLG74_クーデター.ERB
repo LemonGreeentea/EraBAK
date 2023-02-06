@@ -1,0 +1,128 @@
+﻿;-------------------------------------------------
+;「쿠데타」의 명칭
+;-------------------------------------------------
+@SHOP_SLG_NAME74
+RESULTS:0 '= "쿠데타"
+
+;-------------------------------------------------
+;「쿠데타」의 선택 가부
+;-------------------------------------------------
+@SHOP_SLG_CHECK74
+#DIM KANRAKU_NUM
+SIF CFLAG:MASTER:소속 == 0
+	RETURN 0
+SIF CFLAG:MASTER:행동불능상태 != 0
+	RETURN 0
+SIF IS_SP_COUNTRY(CFLAG:MASTER:소속)
+	RETURN 0
+SIF GET_COUNTRY_BOSS(CFLAG:MASTER:소속) == MASTER
+	RETURN 0
+;[연모][친구][복종]의 어느쪽이든을 가지고 있는 사관의 수를 카운트
+KANRAKU_NUM = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF LOCAL:0 != MASTER && LOCAL:0 != GET_COUNTRY_BOSS(CFLAG:MASTER:소속) && CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속
+		IF TALENT:(LOCAL:0):연모 || TALENT:(LOCAL:0):친구 || TALENT:(LOCAL:0):복종 || TALENT:(LOCAL:0):주인
+			KANRAKU_NUM ++
+		ENDIF
+	ENDIF
+NEXT
+;자국의 반수 이상의 사관이 함락완료라면 쿠데타가 가능
+SIF KANRAKU_NUM * 2 >= GET_COMMANDER_NUM(CFLAG:MASTER:소속) - 1
+	RETURN 1
+;임금님이 친애나 예속에서도 오케이
+SIF TALENT:(GET_COUNTRY_BOSS(CFLAG:MASTER:소속)):친애 || TALENT:(GET_COUNTRY_BOSS(CFLAG:MASTER:소속)):예속 || TALENT:(GET_COUNTRY_BOSS(CFLAG:MASTER:소속)):소유자
+	RETURN 1
+RETURN 0
+
+;-------------------------------------------------
+;「쿠데타」의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_SLG_EVENTBUY74
+CALL PLAYER_COUP
+RETURN 1
+
+;-------------------------------------------------
+;「쿠데타」본체
+;-------------------------------------------------
+@PLAYER_COUP
+#DIM 세력
+#DIM 군주
+#DIM 국양도플래그
+PRINTFORML 현재의 군주를 잡아 새로운 군주를 세웁니다
+PRINTFORML 만약 현재의 군주가 강하고 함락 하고 있다면, 평화뒤에 대가 바뀜 할 수 있겠지요
+PRINTFORML 신군주는 %ANAME(MASTER)%자신이 되는지, 함락 하고 있는 사관중에서 선택할 수 있습니다
+PRINTFORML 정말로 쿠데타를 실행합니까?
+
+CALL ASK_YN()
+SIF RESULT == 1
+	RETURN
+
+;전부대의 해산
+CALL CLEAR_ALL_UNIT(CFLAG:MASTER:소속, 1)
+
+세력 = CFLAG:MASTER:소속
+군주 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+국양도플래그 = TALENT:군주:친애 || TALENT:군주:예속 || TALENT:군주:소유자
+
+;조교참가플래그를 클리어
+CVARSET CFLAG, 6, 0
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 새로운 군주를 결정해 주세요 캔슬로 %조사처리(ANAME(MASTER),"가")% 취임합니다
+CALL SINGLE_DRAWLINE
+CALL SELECT_CHARA_LIST_ONLY_LOGIC_SLG("PLAYER_INDEPENDENCE", "NONE")
+
+SIF RESULT == -1
+RESULT = MASTER
+
+COUNTRY_BOSS:(CFLAG:MASTER:소속) = GET_ID(RESULT)
+
+CALL COLOR_PRINTW(@"%ANAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))%가 새로운 군주가 되었습니다!", 칼라_주의)
+
+CALL SINGLE_DRAWLINE
+PRINTL 새로운 세력의 색을 선택해 주세요
+CALL SINGLE_DRAWLINE
+CALL CHANGE_COUNTRY_COLOR(CFLAG:MASTER:소속, 1)
+CALL SINGLE_DRAWLINE
+
+PRINTL 
+SETCOLOR 칼라_주의
+PRINTFORMW 혼란의 영향으로, 우리 세력의 병력이 감소했습니다
+PRINTFORMW 군을 재편하기 위해(때문에), 우리 군의 전부대를 해산시켰습니다
+RESETCOLOR
+
+FOR LOCAL:0, 0, MAX_CITY
+	SIF CITY_OWNER:LOCAL == CFLAG:MASTER:소속
+		TIMES CITY_SOLDIER:LOCAL, 0.8
+NEXT
+
+CALL CLEAR_ALL_UNIT(CFLAG:MASTER:소속, 1)
+TIMES COUNTRY_SOLDIER:(CFLAG:MASTER:소속), 0.8
+
+DIPLOMACY_HATE += 10
+
+;구군주가 부대에 배속되어 있는 경우 강제 해제
+CALL FORCE_FREE(군주)
+
+IF 국양도플래그
+	CALL COLOR_PRINTW(@"%ANAME(MASTER)%의 설득으로, %조사처리(ANAME(군주),"는")% 대가 바뀜에 동의 했다……", 칼라_주의)
+ELSEIF MIN(MAX(ABL:군주:무투, ABL:군주:방위, ABL:군주:지략, ABL:군주:정치), 80) < RAND:100
+	CALL COLOR_PRINTW(@"현군주인 %ANAME(군주)%의 신병을 확보했다!", 칼라_주의)
+	PRINTFORML 
+	CALL CHANGE_COUNTRY(군주, 0, 1)
+	CALL SELECT_PRISONER_TREATMENT(군주, CFLAG:군주:소속, 세력)
+;군주가 도망
+ELSE
+	CALL COLOR_PRINTL(@"현군주인 %ANAME(군주)%의 확보에 실패했습니다…", 칼라_주의)
+	IF GET_NEW_COUNTRY() == -1 || ABL:군주:야심 < RAND:100
+		$INDEPENDENCE_FAILED
+		PRINTFORMW %조사처리(ANAME(군주),"는")% 방랑한 모양입니다
+		CALL CHANGE_COUNTRY(군주, 0, 1)
+		CALL CHANGE_RELATION_O_TO_C(군주, CFLAG:MASTER:소속, -500, 1000)
+	ELSE
+		CALL NPC_INDEPENDENCE(군주)
+		SIF RESULT == -1
+			GOTO INDEPENDENCE_FAILED
+	ENDIF
+ENDIF
+

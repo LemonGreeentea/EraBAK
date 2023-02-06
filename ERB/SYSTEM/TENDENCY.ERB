@@ -1,0 +1,163 @@
+﻿;주도도·도착도에 관한 처리
+
+;-------------------------------------------------
+;소질에 응해 주도도·도착도를 초기설정
+;-------------------------------------------------
+@INIT_TENDENCY(ARG:0)
+;CSV 파일이 존재하는(고정 캐릭터)라면 CSV의 설정을 체크
+IF EXISTCSV(NO:(ARG:0))
+	LOCAL:10 = CSVABL(NO:(ARG:0), 90)
+	LOCAL:11 = CSVABL(NO:(ARG:0), 91)
+	LOCAL:12 = CSVABL(NO:(ARG:0), 92)
+ELSE
+	LOCAL:10 = 0
+	LOCAL:11 = 0
+	LOCAL:12 = 0
+ENDIF
+
+;CSV로 주도도Ｎ가 설정되어 있으면 그 쪽을 우선
+IF LOCAL:10 != 0
+	ABL:(ARG:0):주도도Ｎ = LOCAL:10
+ELSE
+	LOCAL:0 = 0
+
+	;겁쟁이(－)
+	SIF TALENT:(ARG:0):겁쟁이
+		LOCAL:0 -= 100
+
+	;반항적(＋)
+	SIF TALENT:(ARG:0):반항적
+		LOCAL:0 += 100
+
+	;꿋꿋함(＋)
+	SIF TALENT:(ARG:0):꿋꿋함
+		LOCAL:0 += 50
+
+	;솔직함(－)
+	SIF TALENT:(ARG:0):솔직함
+		LOCAL:0 -= 100
+
+	;얌전함(－)
+	SIF TALENT:(ARG:0):얌전함
+		LOCAL:0 -= 150
+
+	;프라이드높음(＋)
+	SIF TALENT:(ARG:0):프라이드높음
+		LOCAL:0 += 100
+
+	;거만함(＋)
+	SIF TALENT:(ARG:0):거만함
+		LOCAL:0 += 150
+
+	;프라이드낮음(－)
+	SIF TALENT:(ARG:0):프라이드낮음
+		LOCAL:0 -= 100
+
+	;자제심(－)
+	SIF TALENT:(ARG:0):자제심
+		LOCAL:0 -= 30
+
+	;무관심(－)
+	SIF TALENT:(ARG:0):무관심
+		LOCAL:0 -= 80
+
+	;감정결핍(－)
+	SIF TALENT:(ARG:0):감정결핍
+		LOCAL:0 -= 50
+
+	;호기심(＋)
+	SIF TALENT:(ARG:0):호기심
+		LOCAL:0 += 50
+
+	;보수적(－)
+	SIF TALENT:(ARG:0):보수적
+		LOCAL:0 -= 50
+
+	;낙관적(＋)
+	SIF TALENT:(ARG:0):낙관적
+		LOCAL:0 += 30
+
+	;비관적(－)
+	SIF TALENT:(ARG:0):비관적
+		LOCAL:0 -= 30
+
+	;주목받기원함(＋)
+	SIF TALENT:(ARG:0):주목받기원함
+		LOCAL:0 += 150
+
+	;수줍음(－)
+	SIF TALENT:(ARG:0):수줍음
+		LOCAL:0 -= 100
+
+	;수치심옅음(＋)
+	SIF TALENT:(ARG:0):수치심옅음
+		LOCAL:0 += 50
+
+	;헌신적(－)
+	SIF TALENT:(ARG:0):헌신적
+		LOCAL:0 -= 50
+
+	;Ｓ기질(＋)
+	SIF TALENT:(ARG:0):Ｓ기질
+		LOCAL:0 += 50
+
+	;Ｍ기질(－)
+	SIF TALENT:(ARG:0):Ｍ기질
+		LOCAL:0 -= 50
+
+	;소악마(＋)
+	SIF TALENT:(ARG:0):소악마
+		LOCAL:0 += 100
+
+	ABL:(ARG:0):주도도Ｎ = LIMIT(LOCAL:0, -1000, 1000)
+ENDIF
+
+;CSV로 주도도Ｕ가 설정되어 있으면 그 쪽을 우선
+IF LOCAL:11 != 0
+	ABL:(ARG:0):주도도Ｕ = LOCAL:11
+ELSE
+	LOCAL:0 = ABL:(ARG:0):주도도Ｎ / 10
+
+	;수줍음(－)
+	SIF TALENT:(ARG:0):수줍음
+		LOCAL:0 -= 50
+
+	;수치심옅음(＋)
+	SIF TALENT:(ARG:0):수치심옅음
+		LOCAL:0 += 25
+
+	;Ｓ기질(＋)
+	SIF TALENT:(ARG:0):Ｓ기질
+		LOCAL:0 += 300
+
+	;Ｍ기질(－)
+	SIF TALENT:(ARG:0):Ｍ기질
+		LOCAL:0 -= 300
+
+	;소악마(＋)
+	SIF TALENT:(ARG:0):소악마
+		LOCAL:0 += 100
+
+	ABL:(ARG:0):주도도Ｕ = LIMIT(LOCAL:0, -1000, 1000)
+ENDIF
+
+;CSV로 도착도가 설정되어 있으면 그 쪽을 우선
+IF LOCAL:12 != 0
+	ABL:(ARG:0):도착도 = LOCAL:12
+ELSE
+	LOCAL:0 = 0
+
+	;Ｓ기질(＋)
+	SIF TALENT:(ARG:0):Ｓ기질
+		LOCAL:0 += 100
+
+	;Ｍ기질(＋)
+	SIF TALENT:(ARG:0):Ｍ기질
+		LOCAL:0 += 100
+
+	;도착적(＋)
+	SIF TALENT:(ARG:0):도착적
+		LOCAL:0 += 300
+
+	ABL:(ARG:0):도착도 = LIMIT(LOCAL:0, 0, 1000)
+ENDIF

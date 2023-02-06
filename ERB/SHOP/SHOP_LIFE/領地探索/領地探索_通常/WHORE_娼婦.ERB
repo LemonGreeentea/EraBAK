@@ -1,0 +1,80 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_WHORE_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_WHORE_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_WHORE(대상)
+#DIM 대상
+
+
+IF IS_MALE(대상) || (HAS_PENIS(대상) && RAND:2)
+	PRINTFORML 유곽을 걷고 있으면, 창녀에 이끌렸다
+	PRINTFORML 하룻밤 어때?   와다
+	PRINTFORML 
+	CALL ASK_YN("상대를 해 받는다", "그만둔다")
+
+	IF RESULT == 1
+		PRINTFORML 그런 기분은 아니다
+		PRINTFORML 거절했다
+		RETURN 1
+	ENDIF
+	
+	PRINTFORMW 그녀는 상당한 기량이다
+	PRINTFORMW %조사처리(ANAME(대상),"가")% 수긍하면, 그녀는 %PRONOUN(대상)%를 가까이의 오두막에 데리고 들어갔다
+	PRINTFORML 
+	PRINTFORMW 그녀의 육체와 기술은 훌륭하고, %조사처리(ANAME(대상),"는")% 몇 번이나 정액을 발하고 있다
+	PRINTFORMW 일발 찌르기 할 때 마다 그녀는 견딜 수 없다고 하도록(듯이) 소리를 질러 요염하게 신체를 구불거리게 할 수 있다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 짐승과 같이 그녀와 계속 사귀었다……
+	CALL FUCK(대상, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "창녀의 입술", "", "창녀의 질", "화간")
+	LOCAL = MIN(MONEY, 3000)
+	MONEY -= LOCAL
+	CALL ICPRINT(@"금<{LOCAL}>를 지불했다", "L", 칼라_주의)
+	RETURN 1
+ENDIF
+
+
+PRINTFORML 유곽을 걷고 있으면, 창녀에 말을 걸려졌다
+PRINTFORML ……아무래도 이쪽을 동업자라고 생각하고 있는 것 같고, 일을 할당하려고 하고 있는 것 같다
+PRINTFORML 
+CALL ASK_YN("일을 부탁한다", "오해를 푼다")
+
+IF RESULT == 1
+	PRINTFORML 창녀가 될 생각은 없다
+	PRINTFORML 조속히 오해를 풀었다
+	RETURN 1
+ENDIF
+
+PRINTFORML 그녀는 %ANAME(대상)%에 창녀의 의상을 빌려 주었다
+PRINTFORMW 맨살갗이 비칠 만큼 얇고, 옷이라는 것보다 거의 속옷이다
+PRINTFORML %조사처리(ANAME(대상),"는")% 수치로 얼굴을 붉히면서도, 기대에 가슴을 크게 울리게 한다
+PRINTFORML 창녀와 함께 뒷골목에서 서 있자, 곧바로 남자가 말을 걸려졌다
+PRINTFORMW %조사처리(ANAME(대상),"는")% 그를 부르도록(듯이)%STR_BODY("가슴:애무",　대상)%를 강조하는 포즈를 취한다
+PRINTFORMW 그럴 기분이 든 남자는 %조사처리(ANAME(대상),"를")% 사, 가까이의 오두막으로 데리고 들어갔다
+PRINTFORML 
+PRINTFORMW %조사처리(ANAME(대상),"는")% 남자에게 입으로 봉사하고 있다
+PRINTFORMW 입술로 장대를 잡아당기면서, 떠오르는 혈관이나 칼리목을 혀로 훑는다
+PRINTFORMW 그의 인내가 한계에 이른 것을 헤아려, %조사처리(ANAME(대상),"는")% 가로놓여, 양다리를 열어 그를 부른다
+PRINTFORMW 그는 %ANAME(대상)%에 달려들어, 힘차게 페니스를 쑤셔 넣으면 격렬하게 허리를 흔들기 시작한다
+PRINTFORMW 창녀인것 같은 요염한 소리를 지르면서, %조사처리(ANAME(대상),"는")% 아첨한 말을 늘어놓는다
+PRINTFORMW 열이 들어간 %PRONOUN(대상)%는, 점차 진심으로 허리를 흔들기 시작한다
+PRINTFORMW %조사처리(ANAME(대상),"는")% 완전히 열중해, 받은 요금 이상으로 봉사했다……
+CALL FUCK(대상, "욕망, 봉사, 성기술, 성교, Ｖ, Ｍ, 펠라티오, 매춘, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("창관의 손님"), "손님의 페니스", "손님", "", "매춘")
+PRINTFORML 
+PRINTFORMW 일을 끝낸 %조사처리(ANAME(대상),"는")%, 몸도 마음도 완전히 창녀가 되어 있었다
+MONEY += 5000
+CALL ICPRINT("금<5000>을 손에 넣었다", "L", 칼라_주의)
+
+RETURN 1

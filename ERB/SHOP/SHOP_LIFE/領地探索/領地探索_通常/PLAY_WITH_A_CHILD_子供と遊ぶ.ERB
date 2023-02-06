@@ -1,0 +1,29 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_PLAY_WITH_A_CHILD_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_PLAY_WITH_A_CHILD_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_PLAY_WITH_A_CHILD(대상)
+#DIM 대상
+PRINTFORML 탐색중, 놀고 있는 아이들을 만났다
+PRINTFORML 견학하고 있으면, 졸라져 %ANAME(대상)%도 참가 당했다
+PRINTFORML 
+PRINTFORML ……결국 하루종일 교제하는 일이 되었다
+PRINTFORMW 아이들의 놀이에 교제해 %조사처리(ANAME(대상),"는")% 마음이 온화하게 되었다
+MAXBASE:대상:기력 += 50
+CALL ICPRINT(@"기력이<50>올라,<{MAXBASE:대상:기력}>가 되었다", "L", 칼라_주의)
+
+RETURN 1

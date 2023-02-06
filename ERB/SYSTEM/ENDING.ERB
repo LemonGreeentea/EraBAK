@@ -1,0 +1,500 @@
+﻿;엔딩에 관한 처리
+
+;-------------------------------------------------
+;엔딩의 체크
+;-------------------------------------------------
+@ENDING_CHECK
+;천하를 통일한 국가의 번호
+#DIM 통치세력
+#DIM 통치군주
+#DIM 분할통치플래그
+
+SIF FLAG:클리어플래그
+	RETURN
+
+;주인공이 사망했을 경우
+IF FLAG:강제엔드플래그 || FLAG:전사엔드플래그
+	CALL DEAD_END
+	RETURN
+ENDIF
+
+;천하를 통일한 국가의 번호를 취득
+통치세력 = GET_UNIFY_COUNTRY()
+
+;국가 관계 맵의 작성
+CALL TMP_CREATE_RELATION_MAP
+
+;분할 통치 엔드
+IF !IS_COUNTRY(통치세력) && CFLAG:MASTER:소속 >= 1 && IS_NOENEMY(CFLAG:MASTER:소속)
+	통치세력 = CFLAG:MASTER:소속
+	분할통치플래그 = 1
+ENDIF
+
+SIF !IS_COUNTRY(통치세력)
+	RETURN
+
+;무소속의 도시의 통합
+CALL UNIFY_FREE_CITY(통치세력)
+
+통치군주 = GET_COUNTRY_BOSS(통치세력)
+
+PRINTL 
+CALL COLOR_PRINTW(@"%ANAME(통치군주)%가 천하를 통일했습니다!", 칼라_주의)
+PRINTL 
+CUSTOMDRAWLINE *-
+WAIT
+
+IF IS_SP_COUNTRY(통치세력)
+	TRYCCALLFORM %SP_COUNTRY_NAME_ENG:SP_COUNTRY_TO_CONST(통치세력)%_ENDING
+	CATCH
+		CALL ENDING_TEXT(통치세력)
+	ENDCATCH
+ELSE
+	CALL ENDING_TEXT(통치세력, 분할통치플래그)
+ENDIF
+
+PRINTL
+ALIGNMENT CENTER
+PRINTL -----계속된다 -----
+ALIGNMENT LEFT
+PRINTL 
+WAIT
+FOR LOCAL:0, 0, 20
+	PRINTL 
+NEXT
+
+;도둑을 삭제
+SIF GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_도둑)) != -1 && 통치세력 != GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_도둑))
+	CALL DESTROY_COUNTRY(GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_도둑)))
+
+;부대를 해산
+FOR LOCAL:0, 1, MAX_COUNTRY
+	IF IS_COUNTRY(LOCAL:0)
+		;부대를 해산
+		CALL CLEAR_ALL_UNIT(LOCAL:0)
+	ENDIF
+NEXT
+;수장을 해제
+VARSET CITY_COMMANDER, 0
+
+;잔당의 일제 검거
+CALL CAPTURE_WANDERER(통치세력)
+
+;클리어 플래그를 세운다
+FLAG:클리어플래그 = 1
+
+FOR LOCAL:0, 0, 10
+	PRINTL
+NEXT
+
+SETCOLOR 칼라_주의
+PRINTFORMW 현시점에서의 데이터를 이용해, 「주회용 세이브」를 만들 수가 있습니다
+PRINTFORMW 주회용 세이브를 로드하는 것으로, 지금의 무장이나 아이템을 계승해 신규에 시나리오를 개시할 수 있습니다
+PRINTFORMW 주회용 세이브를 만들 수 있는 것은 지금 뿐입니다（클리어 후의 덤모드에 들어가면 이제 작성할 수 없습니다)
+RESETCOLOR
+
+FLAG:클리어직후플래그 = 1
+
+CALL SAVE_GAME
+
+FLAG:클리어직후플래그 = 0
+
+RETURN 0
+
+;-------------------------------------------------
+;죽었을 경우
+;-------------------------------------------------
+@DEAD_END
+CALL SINGLE_DRAWLINE
+
+;처형
+IF FLAG:강제엔드플래그
+	PRINTFORMW 처형을 명령받은 %ANAME(MASTER)%의 목 언저리에, 썰렁 차가운 철의 칼을 꽉 누를 수 있다…
+;전사
+ELSEIF FLAG:전사엔드플래그
+	PRINTFORMW 싸움 중(안)에서 치명상을 입었던 %조사처리(ANAME(MASTER),"는")%, 상처으로 대량의 피를 분출해 지면에 쓰러져 엎어지고 있었다
+	PRINTFORMW 말의 울음이나 칼이 접촉하는 금속음, 비명이나 광희의 뒤섞인 환성이 울리는 중, %ANAME(MASTER)%의 의식은 희미해져 간다…
+ENDIF
+
+PRINTL 
+PRINTW ………………
+PRINTW …………
+PRINTW ……
+PRINTL 
+
+;호감도가 가장 높은 캐릭터와 그 호감도를 요구한다
+LOCAL:1 = 0
+LOCAL:2 = -1
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):2 > LOCAL:1 && LOCAL:0 != MASTER && GROUPMATCH(CFLAG:(LOCAL:0):특수상태, 0, 1) && !IS_ANIMAL(LOCAL)
+		LOCAL:1 = CFLAG:(LOCAL:0):2
+		LOCAL:2 = LOCAL:0
+	ENDIF
+NEXT
+
+;호감도 5000이상의 캐릭터가 있는 경우
+IF LOCAL:1 >= 5000
+	;구상의 전용 엔딩이 있으면 호출한다
+	RESULT = 0
+	CALL KOJO_DEAD_ENDING(LOCAL:2)
+	IF !RESULT
+		PRINTFORMW 여기에, %ANAME(MASTER)%의 역사는 막을 닫았다…
+		PRINTFORMW                             - 종 -
+		WAIT
+	ENDIF
+;호감도 5000이상의 캐릭터가 없는 경우
+ELSE
+	PRINTFORMW 여기에, %ANAME(MASTER)%의 역사는 막을 닫았다…
+	PRINTFORMW                             - 종 -
+	WAIT
+ENDIF
+
+FOR LOCAL:0, 0, 10
+	PRINTL 
+NEXT
+;강제 엔드 플래그를 세운다. TURNEND말에서 BEGIN TITLE 된다（그렇게 하지 않으면 BEGIN SHOP에 덧쓰기된다）
+FLAG:강제엔드플래그 = 1
+
+
+
+;-------------------------------------------------
+;엔딩용 텍스트
+;-------------------------------------------------
+@ENDING_TEXT(통치국, 분할통치플래그)
+#DIM 통치국
+#DIM 군주
+#DIM 분할통치플래그
+군주 = GET_COUNTRY_BOSS(통치국)
+PRINTFORML 환상향을 다 굽듯이 불타고 퍼진 전란의 불길은,
+IF 분할통치플래그
+	PRINTFORMW 한사람 영웅의 손에 의해 떨어졌다.
+ELSE
+	PRINTFORMW 한사람 영웅의 손에 의해 수습할 수 있었다
+ENDIF
+PRINTFORMW 그 영웅의 이름은 %NAME_FORMAL(군주)%。
+PRINTFORMW %PRONOUN(군주)%의 위업은, 길게 후세에 구전되게 될 것이다.
+PRINTFORMW 여기에 천하는 정해져, 환상향에 잠깐의 평온의 시대가 찾아온 것이었다……
+
+SIF 통치국 != CFLAG:MASTER:소속
+	RETURN
+
+;주인공의 소속하는 국가가 통일했을 경우
+
+;호감도가 가장 높은 캐릭터와 그 호감도를 요구한다
+LOCAL:1 = 0
+LOCAL:2 = -1
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):2 > LOCAL:1 && LOCAL:0 != MASTER && CFLAG:(LOCAL:0):특수상태 == 0 && CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속 && !IS_ANIMAL(LOCAL)
+		LOCAL:1 = CFLAG:(LOCAL:0):2
+		LOCAL:2 = LOCAL:0
+	ENDIF
+NEXT
+
+;호감도 5000이상의 캐릭터가 있는 경우
+IF LOCAL:1 >= 5000
+	;구상의 전용 엔딩이 있으면 호출한다
+	RESULT = 0
+	CALL KOJO_SINGLE_ENDING(LOCAL:2)
+	IF !RESULT
+		PRINTFORMW 고요하게 축하의 연회로부터 빠져 나간 %조사처리(ANAME(MASTER),"와")% %조사처리(ANAME(LOCAL:2),"는")%, 모두 밤하늘을 올려보고 있었다.
+		PRINTFORMW 여기에 올 때까지, 둘이서 여러가지 고난을 넘어 왔지만, 지금 생각하면 순식간이었던 것 같은 생각도 든다.
+		PRINTFORMW 하나의 시대가, 하나의 이야기가, 지금, 끝을 고한 것이다.
+		PRINTFORMW 갑자기, %조사처리(ANAME(LOCAL:2),"가")% %ANAME(MASTER)%의 손을, 꼬옥 하고 잡았다.
+		PRINTFORMW 그 손을 %ANAME(MASTER)%도 잡아 돌려준다.
+		PRINTFORMW 결코 떨어지지 않도록, 결코 떼어 놓지 않도록……
+		IF TALENT:MASTER:3 || TALENT:(LOCAL:2):3
+			PRINTFORMW 상냥한 달빛에 비추어지면서―-
+			PRINTFORMW 두 명은 서로의 확실한 존재를 서로 느끼고 있었다.
+		ELSE
+			PRINTFORMW 두 명은, 서로의 존재를 서로 확인하도록(듯이), 서로 껴안아―-
+			PRINTFORMW 살그머니 입술을 거듭했다.
+			;키스의 공통 처리
+			CALL KISS_COMMON(MASTER, @"%ANAME(LOCAL:2)%의 입술", "화간")
+			CALL KISS_COMMON(LOCAL:2, @"%ANAME(MASTER)%의 입술", "화간")
+			EXP:MASTER:키스경험 += 1
+			EXP:(LOCAL:2):키스경험 += 1
+		ENDIF
+	ENDIF
+;호감도 5000이상의 캐릭터가 없는 경우
+ELSE
+	PRINTFORMW 고요하게 축하의 연회로부터 빠져 나간 %조사처리(ANAME(MASTER),"는")%, 일인하늘을 올려보고 있었다.
+	PRINTFORMW 천하가 정해진 것, 그 자체는 기쁜 것에 틀림없다.
+	PRINTFORMW 하지만, 쭉 전란 중(안)에서 있을 곳을 찾아내 온 %조사처리(ANAME(MASTER),"는")%, 마음의 어딘가에서 허무함을 느끼고 있었다.
+	PRINTFORMW 앞으로의 평온한 세상에, 자신이 있어야 할 장소는 있을까……?
+	PRINTL 
+	;호감도 50이상의 캐릭터가 있는 경우
+	IF LOCAL:1 >= 50
+		PRINTFORMW 누군가가 %조사처리(ANAME(MASTER),"를")% 부르는 소리가 난다.
+		PRINTFORMW 아무래도 %조사처리(ANAME(LOCAL:2),"가")% %조사처리(ANAME(MASTER),"를")% 찾으러 온 것 같다.
+		PRINTFORMW 새로운 있을 곳……그런 것은 지금부터 찾아 가면 좋을 것이다.
+		PRINTFORMW 싸움은 끝났다. 시간은 얼마든지 있다.
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:2)%에 대답을 하면, 취해 무너질 각오로 연회의 자리에 돌아와 갔다.
+	ELSE
+		PRINTFORMW 연회는 아직 계속되고 있는 것 같다.
+		PRINTFORMW ……이런 경사스러운 날에, 탐탁치 않은 일을 생각해도 어쩔 수 없다.
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 취해 무너질 각오를 결정하면, 연회의 자리에 돌아와 갔다.
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;천하를 통일한 세력이 있으면 그 세력 번호를 돌려주는 함수
+;-------------------------------------------------
+@GET_UNIFY_COUNTRY(ARG:0)
+#FUNCTION
+LOCAL:2 = 0
+FOR LOCAL:0, 0, MAX_CITY
+	IF CITY_TYPE:(LOCAL:0) == 0 && GET_CITYNAME(LOCAL:0) != "무명"
+		IF CITY_OWNER:(LOCAL:0) != 0
+			IF LOCAL:2 == 0
+				LOCAL:2 = CITY_OWNER:(LOCAL:0)
+			ELSEIF CITY_OWNER:(LOCAL:0) != LOCAL:2
+				RETURNF 0
+			ENDIF
+		ENDIF
+	ENDIF
+NEXT
+RETURNF LOCAL:2
+
+;-------------------------------------------------
+;ARG:0 세력이 동맹 엔드의 조건을 채웠는가 어떤가를 판정하는 함수
+;※사용전에 TMP_CREATE_RELATION_MAP 함수를 호출해 두는 것!
+;-------------------------------------------------
+@IS_NOENEMY(ARG:0)
+#FUNCTION
+
+;모든 도시가 무소속 혹은 자세력·영구 동맹 세력의 소유라면 1을 돌려준다
+FOR LOCAL:0, 0, MAX_CITY
+	IF CITY_TYPE:(LOCAL:0) == 0 && GET_CITYNAME(LOCAL:0) != "무명"
+		IF CITY_OWNER:(LOCAL:0) != 0 && TMP_COUNTRY_RELATION:(CFLAG:MASTER:소속):(CITY_OWNER:(LOCAL:0)) < 4
+			RETURNF 0
+		ENDIF
+	ENDIF
+NEXT
+RETURNF 1
+
+;-------------------------------------------------
+;ARG:0 세력에 의한 통일시에 호출한다. 만약 무소속의 도시가 존재하면 통일한 국가에 통합해, 메세지를 표시한다
+;-------------------------------------------------
+@UNIFY_FREE_CITY(ARG:0)
+LOCAL:2 = 1
+FOR LOCAL:0, 0, MAX_CITY
+	IF CITY_TYPE:(LOCAL:0) == 0 && GET_CITYNAME(LOCAL:0) != "무명" && CITY_OWNER:(LOCAL:0) == 0
+		;통일했던 것이 주인공 세력이라면 메세지를 표시
+		IF ARG:0 == CFLAG:MASTER:소속
+			IF LOCAL:2
+				LOCAL:2 = 0
+				PRINTL 
+				SETCOLOR 칼라_주의
+				PRINTFORMW 이미 여럿이 정했기 때문에, 무소속의 도시는 모두 우리 나라에 항복했습니다
+				RESETCOLOR
+			ENDIF
+			PRINTFORML %GET_CITYNAME(LOCAL:0)%를 우리 나라의 지배하에 두었습니다
+		ENDIF
+		CITY_OWNER:(LOCAL:0) = ARG:0
+	ENDIF
+NEXT
+IF !LOCAL:2
+	WAIT
+ENDIF
+
+;-------------------------------------------------
+;통일 후에 실시하는 잔당의 일제 검거 ARG:0에 병합처의 국가 번호를 설정
+;-------------------------------------------------
+@CAPTURE_WANDERER(ARG:0)
+;주인공 세력이 검거하는 경우 메세지와 선택지를 표시
+IF ARG:0 == CFLAG:MASTER:소속
+	LOCAL:9 = 0
+	FOR LOCAL:0, 0, CHARANUM
+		;방랑중의 사관이 있을까 조사한다
+		IF CFLAG:(LOCAL:0):특수상태 == 특수상태_방랑
+			IF !LOCAL:9
+				LOCAL:9 = 1
+				SETCOLOR 칼라_주의
+				PRINTW 잔당 및 방랑중의 사관을 일제히 검거했습니다
+				RESETCOLOR
+			ENDIF
+			PRINTFORML %조사처리(ANAME(LOCAL:0),"를")% 잡았습니다
+		ENDIF
+	NEXT
+	IF LOCAL:9
+		PRINTL 
+		PRINTL 검거한 인간의 처우를 결정해 주세요
+		PRINTL [0] 전원을 등용
+		PRINTL [1] 전원을 투옥
+		PRINTL [2] 전원을 연금
+		PRINTL [3] 개별적으로 지시
+
+		REDRAW 0
+
+		$INPUT_LOOP_KENKYO
+		INPUT
+
+		IF RESULT == 0
+			PRINTW 전원을 우리 나라의 사관으로서 맞이했습니다
+			FOR LOCAL:0, 0, CHARANUM
+				IF CFLAG:(LOCAL:0):특수상태 == 특수상태_방랑
+					CALL CHANGE_COUNTRY(LOCAL:0, CFLAG:MASTER:소속, 1)
+				ENDIF
+			NEXT
+		ELSEIF RESULT == 1
+			PRINTW 전원을 포로로서 투옥했습니다
+			FOR LOCAL:0, 0, CHARANUM
+				IF CFLAG:(LOCAL:0):특수상태 == 특수상태_방랑
+					CALL CHANGE_COUNTRY(LOCAL:0, 0, 1)
+					CALL CAPTURE(LOCAL:0, CFLAG:MASTER:소속)
+				ENDIF
+			NEXT
+		ELSEIF RESULT == 2
+			PRINTW 전원을 포로로서 연금 했습니다
+			FOR LOCAL:0, 0, CHARANUM
+				IF CFLAG:(LOCAL:0):특수상태 == 특수상태_방랑
+					CALL CHANGE_COUNTRY(LOCAL:0, 0, 1)
+					CALL CAPTURE(LOCAL:0, CFLAG:MASTER:소속)
+					CFLAG:(LOCAL:0):연금중 = 1
+				ENDIF
+			NEXT
+		ELSEIF RESULT == 3
+			CALL CAPTURE_WANDERER_EACH
+		ELSE
+			CLEARLINE 1
+			GOTO INPUT_LOOP_KENKYO
+		ENDIF
+
+		REDRAW 1
+	ENDIF
+
+;주인공 세력 이외가 검거한다면 자동으로 전원을 등용
+ELSE
+	FOR LOCAL:0, 0, CHARANUM
+		IF CFLAG:(LOCAL:0):특수상태 == 특수상태_방랑
+			CALL CHANGE_COUNTRY(LOCAL:0, ARG:0, 1)
+		ENDIF
+	NEXT
+ENDIF
+
+;-------------------------------------------------
+;통일 후의 잔당 검거로 개별적으로 취급을 설정
+;-------------------------------------------------
+@CAPTURE_WANDERER_EACH
+;캐릭터의 취급 설정용 변수
+#DIM CHARA_TREATMENT, 3000
+#DIM FIRST_LINE
+VARSET CHARA_TREATMENT, 0
+
+;●방랑 사관의 인원수를 카운트
+LOCAL:5 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):특수상태 == 특수상태_방랑
+		LOCAL:5 ++
+	ENDIF
+NEXT
+
+;방랑 사관이 한사람도 없으면 돌아온다
+IF LOCAL:5 == 0
+	RETURN
+ENDIF
+
+;●표시부분
+LOCAL:10 = (LOCAL:5 - 1) / 22 + 1
+LOCAL:11 = 1
+FIRST_LINE = LINECOUNT
+$SHOW_LOOP
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 각 사관의 처우를 결정해 주세요
+CALL SINGLE_DRAWLINE
+
+LOCAL:7 = 0
+LOCAL:8 = 0
+LOCAL:12 = (LOCAL:11 - 1) * 22
+LOCAL:13 = LOCAL:11 * 22
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):특수상태 == 특수상태_방랑
+		IF LOCAL:8 >= LOCAL:12 && LOCAL:8 < LOCAL:13
+			PRINTFORM %ANAME(LOCAL:0), MAX_CHARANAME_LENGTH, RIGHT% …… 
+			IF CHARA_TREATMENT:(LOCAL:0) == 0
+				SETCOLOR 칼라_선택중
+				PRINTPLAIN [등용]
+				RESETCOLOR
+				PRINTBUTTON "[투옥]", LOCAL:0 * 2 + 101
+			ELSE
+				PRINTBUTTON "[등용]", LOCAL:0 * 2 + 100
+				SETCOLOR 칼라_선택중
+				PRINTPLAIN [투옥]
+				RESETCOLOR
+			ENDIF
+			PRINTL 
+			LOCAL:7 ++
+		ENDIF
+		LOCAL:8 ++
+	ENDIF
+NEXT
+CALL SINGLE_DRAWLINE
+
+IF LOCAL:10 >= 2
+	LOCAL:7 += 2
+
+	LOCALS:0 = 
+	IF LOCAL:11 >= 2
+		LOCALS:0 = [8] 이전페이지
+	ENDIF
+	PRINTFORM %LOCALS:0, 25, LEFT%
+
+	LOCALS:0 = page{LOCAL:11}/{LOCAL:10}
+	PRINTPLAINFORM %LOCALS:0, 25, LEFT%
+
+	LOCALS:0 = 
+	IF LOCAL:11 < LOCAL:10
+		LOCALS:0 = [9] 다음페이지
+	ENDIF
+	PRINTFORM %LOCALS:0, 25, LEFT%
+	PRINTL 
+	CALL SINGLE_DRAWLINE
+ENDIF
+PRINT [1] 전원을 등용으로 설정
+PRINTPLAIN     
+PRINT [2] 전원을 투옥으로 설정
+PRINTL 
+CALL SINGLE_DRAWLINE
+PRINTL [0] 결정
+
+REDRAW 2
+
+$INPUT_LOOP
+INPUT
+
+IF RESULT == 0
+	FOR LOCAL:0, 0, CHARANUM
+		IF CFLAG:(LOCAL:0):특수상태 == 특수상태_방랑
+			IF CHARA_TREATMENT:(LOCAL:0) == 0
+				CALL CHANGE_COUNTRY(LOCAL:0, CFLAG:MASTER:소속, 1)
+			ELSE
+				CALL CHANGE_COUNTRY(LOCAL:0, 0, 1)
+				CALL CAPTURE(LOCAL:0, CFLAG:MASTER:소속)
+			ENDIF
+		ENDIF
+	NEXT
+	REDRAW 1
+	RETURN
+ELSEIF RESULT == 1
+	VARSET CHARA_TREATMENT, 0
+ELSEIF RESULT == 2
+	VARSET CHARA_TREATMENT, 1
+ELSEIF RESULT == 8 && LOCAL:11 >= 2
+	LOCAL:11 --
+ELSEIF RESULT == 9 && LOCAL:11 < LOCAL:10
+	LOCAL:11 ++
+ELSEIF RESULT >= 100
+	LOCAL:5 = (RESULT - 100) / 2
+	LOCAL:6 = (RESULT - 100) % 2
+	IF LOCAL:5 < CHARANUM && CFLAG:(LOCAL:5):특수상태 == 특수상태_방랑
+		IF CHARA_TREATMENT:(LOCAL:5) != LOCAL:6
+			CHARA_TREATMENT:(LOCAL:5) = LOCAL:6
+		ENDIF
+	ENDIF
+ELSE
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+CLEARLINE LINECOUNT - FIRST_LINE
+GOTO SHOW_LOOP

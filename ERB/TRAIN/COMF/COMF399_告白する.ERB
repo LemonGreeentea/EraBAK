@@ -1,0 +1,127 @@
+﻿;고백한다
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME399
+RESULTS:0 = 고백한다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE399
+;공통 부분
+CALL COM_ABLE_COMMON(399)
+SIF RESULT == 0
+	RETURN 0
+;주인공이 플레이어 때 한정
+SIF MPLY:0 != MASTER
+	RETURN 0
+
+SIF TALENT:(MTAR:0):연인 || IS_SLAVE(MTAR:0) || IS_SLAVED_BY(MTAR:0)
+	RETURN 0
+
+;키스중은 불가
+SIF IS_EQUIP(MPLY:0, 342)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM399
+;●실행치의 계산
+CVARSET TCVAR, 24, -10000
+CVARSET TCVAR, 25, 10000
+
+TCVAR:(MTAR:0):25 = 110
+
+CALL COM_ORDER(MTAR:0)
+
+CALL COM_ORDER_ELEMENT(MTAR:0, "호감도", CFLAG:(MTAR:0):2 / 50)
+
+IF TALENT:(MTAR:0):연모
+	CALL COM_ORDER_ELEMENT(MTAR:0, "연모", 30)
+ENDIF
+
+IF TALENT:(MTAR:0):친구
+	CALL COM_ORDER_ELEMENT(MTAR:0, "친구", 15)
+ENDIF
+
+IF TALENT:(MTAR:0):친애
+	CALL COM_ORDER_ELEMENT(MTAR:0, "친애", 30)
+ENDIF
+
+IF TALENT:(MTAR:0):키스미경험
+	CALL COM_ORDER_ELEMENT(MTAR:0, "키스미경험", -10)
+ENDIF
+
+IF TALENT:(MTAR:0):선을넘지않음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "선을넘지않음", -15)
+ENDIF
+
+IF CFLAG:(MTAR:0):포로처 == CFLAG:MASTER:소속
+	CALL COM_ORDER_ELEMENT(MTAR:0, "포로", -40)
+ENDIF
+
+IF TFLAG:37 < 10
+	LOCAL:0 = -10
+ELSEIF TFLAG:37 < 30
+	LOCAL:0 = -5
+ELSEIF TFLAG:37 < 50
+	LOCAL:0 = 0
+ELSEIF TFLAG:37 < 100
+	LOCAL:0 = (TFLAG:37 - 50) / 10
+ELSE
+	LOCAL:0 = MIN(10, (TFLAG:37 - 100) / 50 + 5)
+ENDIF
+CALL COM_ORDER_ELEMENT(MTAR:0, "무드", LOCAL:0)
+
+IF IS_SAMESEX(MASTER, MTAR:0) && !TALENT:(MTAR:0):바이
+	CALL COM_ORDER_ELEMENT(MTAR:0, "연애 대상외", -20)
+ENDIF
+
+;판정 결과를 표시
+PRINTFORMW  = {TCVAR:(MTAR:0):24} %TOSTR_COMPARE(TCVAR:(MTAR:0):24, TCVAR:(MTAR:0):25)% 실행치{TCVAR:(MTAR:0):25}
+
+;판정 성공
+IF TCVAR:(MTAR:0):24 >= TCVAR:(MTAR:0):25
+	;구상 표시
+	CALL KOJO_EVENT(MTAR:0, 2)
+
+	;연인이 되는 처리
+	CALL GET_LOVERS(MTAR:0)
+
+	;키스의 공통 처리
+	CALL KISS_COMMON(MPLY:0, @"%ANAME(MTAR:0)%의 입술", GET_SITUATION_BY_TRAIN_MODE())
+	CALL KISS_COMMON(MTAR:0, @"%ANAME(MPLY:0)%의 입술", GET_SITUATION_BY_TRAIN_MODE())
+	EXP:(MPLY:0):키스경험 += 1
+	EXP:(MTAR:0):키스경험 += 1
+
+	IF TALENT:(MTAR:0):연모 || TALENT:(MTAR:0):친구
+		SOURCE:(MTAR:0):환희 += 3000
+	ELSE
+		SOURCE:(MTAR:0):환희 += 500
+	ENDIF
+
+;판정 실패
+ELSE
+	;구상 표시
+	CALL KOJO_EVENT(MTAR:0, 3)
+	IF TALENT:(MTAR:0):연모 || TALENT:(MTAR:0):친구
+		SOURCE:(MTAR:0):반감 += 100
+		SOURCE:(MTAR:0):불안 += 200
+	ELSE
+		SOURCE:(MTAR:0):반감 += 500
+	ENDIF
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN399
+RETURN 커맨드_일상

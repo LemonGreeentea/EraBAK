@@ -1,0 +1,61 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_WEIRD_MERCHANT_DANGER_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_WEIRD_MERCHANT_DANGER_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_WEIRD_MERCHANT_DANGER(대상)
+#DIM 대상
+
+PRINTFORML 행상인에 말을 걸려졌다
+PRINTFORML 뭐든지 신발매의 약의 시공을 실시하고 있으면다
+PRINTFORML 정력이 붙는 자신작인것 같다
+PRINTL
+CALL ASK_YN("마신다", "그만둔다")
+
+IF RESULT == 1
+	PRINTFORML 그렇게 이상한 것 들어가지 않는다
+	PRINTFORML 거절했다
+	RETURN 1
+ENDIF
+
+PRINTFORML 재미있을 것 같다
+PRINTFORML 시험삼아 마셔 보기로 했다
+
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+IF IS_MALE(대상)
+	PRINTFORML 발기가 들어가지 않게 되어 버렸다!
+	PRINTFORML 효과에는 개인차가 있다고 해, 행상인은 냉큼 도망치기 시작해 버렸다
+	PRINTFORML 어떻게든 거점으로 돌아간 %조사처리(ANAME(대상),"는")%, 자위를 해 스스로를 진정시켰다……
+	CALL FUCK(대상, "자위, Ｃ, 사정")
+ELSE
+	PRINTFORML 돌연 하복부가 뜨거워져, 머릿속이 쾌락으로 다 메워지고 인내 할 수 없게 되었다
+	PRINTFORML 삐걱삐걱 떨려 숨을 거칠게 하는 모습을 행상인이에나 싱긋 웃으면서 보고 온다
+	PRINTFORMW 뭔가 있었다면 도와요?   등과 속이 빤하게 말해 온다
+	PRINTFORML 약의 탓이라고 알고 있어도 그 달아오름은 저항하기 어렵고, %조사처리(ANAME(대상),"는")% 행상인에 달라붙었다
+	PRINTFORMW 행상인은 %ANAME(대상)%의 신체에 손을 써 손가락과 혀로 더듬으면서, 가까이의 그늘에 데리고 들어갔다
+	PRINTFORML 
+	PRINTFORML 약의 효과로 발정한 %조사처리(ANAME(대상),"는")%, 스스로 %조사처리(STR_BODY("엉덩이", 대상),"를")% 내미는 모습이 되어 허리를 흔들어 남자를 유혹했다
+	PRINTFORML 그 %STR_BODY("질:처녀 확인", 대상)%는 이미 녹진녹진이 되어 있어, 실룩거려 남근을 애타게 기다리고 있다
+	PRINTFORML 남이 사양말고 페니스를 쑤셔 넣으면, %조사처리(ANAME(대상),"는")% 크게 등을 뒤로 젖혀 기쁨의 소리를 높인다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 교성을 올리면서 오로지 하복부로부터 주어지는 쾌락에 몰두했다
+	CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ａ, 약물의존, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 질내사정, 장내사정", GET_SPERM_ID("행상인"), @"행상인의 \@RAND:2 ? 페니스 # 입술\@", "행상인", "", "약을 섞어진 강간")
+	PRINTFORML 
+	PRINTFORMW %조사처리(ANAME(대상),"가")% 의식을 되찾았을 때에는, 전신을 백탁으로 더럽혀져 그늘에 방치되어 있었다
+ENDIF
+RETURN 1

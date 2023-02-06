@@ -1,0 +1,1001 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_FAIRY_LIFE_RATE()
+RETURN (DVAR:요정생활_동거플래그 > 0 ? 150 # 30)
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_FAIRY_LIFE_DECISION()
+SIF DAY < 12
+	RETURN 0
+SIF !HAS_PENIS(MASTER)
+	RETURN 0
+SIF DVAR:요정생활_동거플래그 == -1
+	RETURN 0
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_FAIRY_LIFE_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_FAIRY_LIFE
+
+;요정과의 만남 이벤트, 동거(同棲) 하고 있는 요정이 있는 경우는 발생하지 않는다
+IF DVAR:요정생활_동거플래그 == 0
+	SELECTCASE RAND:4
+		;밭을 망치는 요정
+		CASE 0
+			PRINTFORMW 영지민으로부터 밭을 망치는 요정이 있어 곤란해 하고 있으면 상담받았다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("병에게 순찰을 돌게한다" ,"함정을 건다" ,"아무것도하지않는다")
+			IF RESULT == 2
+				PRINTFORML 요정의 못된 장난 정도로 하나 하나 상관하고 있을 수 없다
+				PRINTFORMW (듣)묻지 않았던 것으로 했다
+			ELSEIF RESULT == 0
+				PRINTFORML 방치도할 수 없기에 병사에 순찰을 돌게하기로 했다
+				PRINTFORML ·
+				PRINTFORML ·
+				PRINTFORMW ·
+				PRINTFORML 며칠 후, 병사가 요정을 잡았다
+				PRINTFORML 그들은 벌이라고 칭해 그녀를 동반하고 귀가 감옥에 이었다
+				PRINTFORMW 그 후은 상상할 수 있었지만, 그들의 평소의 불만을 줄일 수 있다면과 묵인했다
+				PRINTFORML …그리고 잠시동안, 감옥의 일각부터는 밤낮 묻지 않고
+				PRINTFORMW 병사들의 노리겟감으로 되는 요정의 신음소리가 들려 왔다
+			ELSE
+				PRINTFORML 함정을 걸기로 했다
+				PRINTFORML 사냥꾼에게 도와 받아, 밭의 주위에 요정용의 함정을 걸고 한동안 상태를 보았다
+				PRINTFORML ·
+				PRINTFORML ·
+				PRINTFORMW ·
+				PRINTFORML 며칠 후, 요정을 잡는 것을 성공했다
+				PRINTFORML 그녀는 우리 중(안)에서 공포에 떨고 있다
+				PRINTFORMW 이야기를 하면 배가 비어있어 무심코 흑심이었던 것 같다
+				PRINTFORML 어떻게 하지?
+				CALL ASK_MULTI("인도한다" ,"숨겨둔다" ,"범한다")
+				IF RESULT == 2
+					PRINTFORML 요정의 신체를 바라보면, 어리면서 훌륭하게 여자를 풍길 수 있는 라인을 하고 있다
+					PRINTFORML 므흣이라고한 %조사처리(ANAME(MASTER),"는")% 그녀를 우리로부터 내 주면 가까이의 빈 오두막에 데리고 들어갔다
+					PRINTFORMW 그리고 그녀를 쓰러트리고 옷을 벗겨내면, 투명한 것 같은 피부에 달라붙었다
+					PRINTFORML 매끈매끈한 피부에 손가락을 기게 하면 스폰지같이 가라앉아, 그녀는 비통한 소리를 높인다
+					PRINTFORML 하지만 한동안 전신을 애무해 주면 그녀는 점차 달콤한 신음소리를 루등 하기 시작했다
+					PRINTFORML 이미 인내 할 수 없는 %조사처리(ANAME(MASTER),"는")% 예쁜 핑크색의 고기단지에 마음껏 하나의 물건을 쑤셔 넣었다
+					PRINTFORMW 비명을 올려 몸부림치는 그녀에 맞추어 경련하는 질육은 힘들고 %조사처리(ANAME(MASTER),"를")% 단단히 조여 온다
+					PRINTFORML 충분히 페니스를 감싸지는 감각에 %조사처리(ANAME(MASTER),"는")% 열중해 허리를 쳐박는다
+					PRINTFORML 경련하면서도 눈물을 흘려 용서를 비는 그녀의 표정도 또%ANAME(MASTER)%의 흥분을 부추겼다
+					PRINTFORML 정자가 복받쳐 오는 감각에 %조사처리(ANAME(MASTER),"가")% 허리의 움직임을 빨리 하면 그녀의 교성도 날카롭고 영향 낸다
+					PRINTFORMW 그리고 욕망대로 안쪽 깊이 사정하면, 그녀는 활처럼 신체를 뒤로 젖히면서 정신을 잃었다
+					PRINTFORMW 극상의 고기 오나홀을 한껏 맛본 후, 너덜너덜의 그녀를 방치해 오두막을 떠났다
+					CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", "요정의 질", "강간")
+					PRINTFORMW 
+					DVAR:요정생활_동거플래그 = -1
+				ELSEIF RESULT == 0
+					PRINTFORML 하지만 피해를 낸 것은 사실이다
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 피해에 있던 영지민에게 요정을 인도했다
+					PRINTFORML 요정은 그 후, 영지민들의 울분을 풀기 위해서(때문에) 성노예로 된 것 같다
+					PRINTFORMW 조금의 죄악감을 안으면서도, 능욕 되는 그녀를 상상해 사타구니가 뜨거워졌다
+					DVAR:요정생활_동거플래그 = -1
+				ELSE
+					PRINTFORML 나쁜 아이는 아닌 것 같다
+					PRINTFORML 그렇게 생각한 %조사처리(ANAME(MASTER),"는")% 자신이 책임을 가지면 영지민을 설득해 숨겨두는 일로 했다
+					PRINTFORMW 그녀는 초경계하고 있었지만, 상냥하게 설득해 주면 %ANAME(MASTER)%의 집에 따라 왔다
+					CALL COLOR_PRINT(@"명도 없는 요정이 %ANAME(MASTER)%의 집에 정착했습니다", 칼라_주의)
+					PRINTFORMW 
+					DVAR:요정생활_동거플래그 = 1
+				ENDIF
+			ENDIF
+		;비를 피하는 요정
+		CASE 1
+			PRINTFORML 가로 쉬고 있으면 돌연의 억수가 왔다
+			PRINTFORML 지나친 비의 기세에 창으로부터 밖을 보고 있으면, 문득 처마 밑에 작은 사람의 그림자를 보기 시작했다
+			PRINTFORMW 창으로부터 몸을 나서면 요정의 소녀와 시선이 마주친, 아무래도 비를 피하고 있는 것 같다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("가에 부른다" ,"쫓아버린다" ,"범한다")
+			IF RESULT == 2
+				PRINTFORML 요정의 신체를 바라보면, 어리면서 훌륭하게 여자를 풍길 수 있는 라인을 하고 있다
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 마음 속에서 입맛을 다심 하면서 상냥한 말로 그녀를 집안에 불렀다
+				PRINTFORMW 의심하는 일 없이 따라 오는 그녀를 침실에 데리고 들어가면, 억지로 침대에 쓰러트렸다
+				PRINTFORML 당연히 그녀는 격렬하게 날뛰었지만 여러 번 귀싸대기 해 주면, 얌전해졌다
+				PRINTFORML 그녀의 옷을 벗겨내면 투명한 것 같은 흰 피부와 상상 이상으로 어른스러워진 지체가 이슬이 된다
+				PRINTFORML 이미 인내 할 수 없게 된 %ANAME(MASTER)%도 알몸이 되면 그녀에게 덮어씌우는 것처럼 달라붙는다
+				PRINTFORMW 울면서 몸을 비트는 그녀의 표정도 또%ANAME(MASTER)%의 흥분을 부추겨, 열중해 전신을 애무한다
+				PRINTFORML 점차 그녀도 반응 하기 시작해, 성감대를 훑으면 흠칫 몸을 흔들게 한 달콤한 한숨을 흘렸다
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀를 옆으로 놓으면 허리를 잡아, 격분한 하나의 물건을 그 핑크의 비밀스런 장소에 쑤셔 넣었다
+				PRINTFORML 그녀는 고통에 비명을 올렸지만, %ANAME(MASTER)%하카마원않고 허리를 강탈 힘든 질육을 밀어 헤쳐 간다
+				PRINTFORMW 바둥바둥의 꿀단지는 페니스를 전방향으로부터 단단히 조여, 긴장을 늦추면 사정해 버릴 것 같게 된다
+				PRINTFORML 어리면서 훌륭한 암컷구멍에 %조사처리(ANAME(MASTER),"는")% 열중해 허리를 쳐박고 그녀의 안을 맛봐 간다
+				PRINTFORML 그녀는 눈물을 흘리면서 %ANAME(MASTER)%의 팔에 매달려, 움찔움찔 몸을 활에 경련한다
+				PRINTFORML 정자가 복받쳐 오는 감각에 %조사처리(ANAME(MASTER),"가")% 허리의 움직임을 빨리 하면 그녀의 교성도 날카롭고 영향 낸다
+				PRINTFORMW 그리고 욕망대로 안쪽 깊이 사정하면, 그녀는 활처럼 신체를 뒤로 젖히면서 정신을 잃었다
+				PRINTFORMW 비가 갤 때까지 극상의 고기 오나홀을 한껏 맛본 후, 너덜너덜의 그녀를 내던졌다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", "요정의 질", "강간")
+				PRINTFORMW 
+				PRINTFORML 
+				DVAR:요정생활_동거플래그 = -1
+			ELSEIF RESULT == 1
+				PRINTFORML 어떤 못된 장난을 되는지 모른다
+				PRINTFORMW 쉿 쉿쫓아버리면 그녀는 곤란한 같은 얼굴을 보이면서 억수의 빗속에 사라져 갔다
+				DVAR:요정생활_동거플래그 = -1
+			ELSE
+				PRINTFORML 그곳에서는 감기에 걸려 버릴 것이다, 안에 들어가세요
+				PRINTFORML %조사처리(ANAME(MASTER),"가")% 그렇게 부르면 그녀는 놀람 한 것 같아, 뛰어 올라 이쪽을 응시해 왔다
+				PRINTFORMW 놀래켜 버린 것을 사과 한 번 더 안에 부른다
+				PRINTFORML 그녀는 한동안%ANAME(MASTER)%의 얼굴과 비를 비교해 보고 주저하고 있었지만, 흠칫흠칫 집안에 들어 왔다
+				PRINTFORML 타올을 건네주어 따뜻한 차를 넣어 주면 그녀는 요정으로 해서는 예의 바르게 답례를 말했다
+				PRINTFORMW 잠깐 빗소리안, 그녀와 정신이 없는 회화를 한다
+				PRINTFORML 처음은 긴장하고 있던 그녀도 익숙해져 왔는지, 웃는 얼굴을 보여 재미있는 이야기를 들려주었다
+				PRINTFORML 이윽고 비가 그쳤지만, 이미 밖은 깜깜하게 되어 있었다
+				PRINTFORMW 이제 늦었으니까 묵어 가도록(듯이) 고하면 그녀는 에헤헤 웃어 수긍했다
+				PRINTFORMW …그리고 그녀는 왠지 모르게 %ANAME(MASTER)%의 집에 자리잡는 일이 되었다
+				CALL COLOR_PRINT(@"명도 없는 요정이 %ANAME(MASTER)%의 집에 정착했습니다", 칼라_주의)
+				PRINTFORMW 
+				DVAR:요정생활_동거플래그 = 1
+			ENDIF
+		;타 먹어 하는 요정
+		CASE 2
+			PRINTFORML 도를 걷고 있으면, 지장님의 공양물을 군것질하는 요정을 만났다
+			PRINTFORMW 그녀는 %조사처리(ANAME(MASTER),"로")% 보여져, 만두를 가득 넣으면서 흠칫 몸을 움추리고 경직되었다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("음식을 올린다" ,"잡는다" ,"떠난다")
+			IF RESULT == 2
+				PRINTFORML 별로 그것 정도 문제 없을 것이다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 아무것도 보지 않았던 것으로 해 그 자리를 떠났다
+				DVAR:요정생활_동거플래그 = -1
+			ELSEIF RESULT == 1
+				PRINTFORML 공양물을 먹는다고는 벌 받을 놈
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 휙 손을 뻗어 그녀를 잡았다
+				PRINTFORMW 그녀는 몸을 비틀게 한 용서해 주세요간원 하고 있다
+				PRINTFORML 어떻게 하지?
+				CALL ASK_YN("판다", "놓친다")
+				IF RESULT == 1
+					PRINTFORML 자주(잘) 생각하면 이것 정도로 눈꼬리를 세우는 일도 없다
+					PRINTFORMW 그녀도 반성하고 있는 것 같은 것으로 놓쳐 주었다
+					DVAR:요정생활_동거플래그 = -1
+				ELSE
+					PRINTFORML 모처럼 잡은 것이니까 놓치다니 터무니 없다
+					PRINTFORML 어떻게 하지 생각하고 있으면 그러고 보니 요정 취미의 남자가 있던 일을 생각해 낸다
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀를 단단히 묶으면 남자의 바탕으로 팔러 실시했다
+					PRINTFORML 그는 요정을 꽤나 마음에 들어, 맞돈으로 사 주었다
+					PRINTFORML 아마 그녀는 그의 애완동물로서 일생 귀여워해질 것이다
+					PRINTFORMW 그녀의 비통한 소리를 등으로 (들)물으면서, %조사처리(ANAME(MASTER),"는")% 금화를 세면서 귀로에 들었다
+					MONEY += 5000
+					CALL COLOR_PRINTL("금", GETDEFCOLOR(), "5000", 칼라_주의, "를 손에 넣었다", GETDEFCOLOR())
+					DVAR:요정생활_동거플래그 = -1
+					PRINTFORMW 
+				ENDIF
+			ELSE
+				PRINTFORML 상당히 배가 비어있을 것이다
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 품에 있던 남은 것의 과자를 그녀에게 보냈다
+				PRINTFORML 그녀는 일순간 주저 하면서도, 흠칫흠칫 그것을 받았다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 좋은 일을 했다고 만족해, 그녀에게 이별을 고해 귀로에 들었다
+				PRINTFORML …하지만 그녀가 따라 온다
+				PRINTFORMW 그 안어딘가에 갈 것이라고 생각하고 있었지만, 무려 집까지 따라 와 버렸다
+				PRINTFORML 어떻게 하지?
+				CALL ASK_MULTI("가에 부른다" ,"쫓아버린다" ,"범한다")
+				IF RESULT == 1
+					PRINTFORML 나쁘지만 요정의 상대는 미안이다
+					PRINTFORMW %조사처리(ANAME(MASTER),"가")% 쫓아버리면 그녀는 유감스러운 표정을 보여 떠나 갔다
+					DVAR:요정생활_동거플래그 = -1
+				ELSEIF RESULT == 2
+					PRINTFORML 되돌아 봐 응시하면, 그녀는 수줍은 것처럼 뺨을 물들이면서 숙였다
+					PRINTFORML 그 행동에 불끈불끈 온 %조사처리(ANAME(MASTER),"는")% 그녀의 팔을 잡으면 집안에 끌어들여 넣었다
+					PRINTFORMW 놀라 당황하는 그녀를 침실에 데리고 들어가면, 침대에 쓰러트리고 덮어씌운다
+					PRINTFORML 그녀는 무엇을 되는지 모르고 있는 같아 두근두근 한 모습으로 응시해 온다
+					PRINTFORML 일말의 죄악감을 느끼면서 %조사처리(ANAME(MASTER),"는")% 그녀에게 상냥하게 키스를 하면 옷을 벗게 한다
+					PRINTFORML 이윽고 눈과 같이 새하얀 피부가 드러나, 그녀는 부끄러운 듯이 머뭇머뭇 했다
+					PRINTFORMW %ANAME(MASTER)%도 옷을 벗어 버려 그녀를 껴안으면서 상냥하게 전신을 애무해 준다
+					PRINTFORML 그녀는 낯간지러운 듯이 몸을 비틀게 한 한숨을 흘려, 때때로 피쿡과 몸을 진동시켰다
+					PRINTFORML 잠깐 애무를 계속하고 있으면, 점차 그녀도 느끼기 시작한 것 같아 신음소리를 루등 하기 시작한다
+					PRINTFORML 핑크의 비밀스런 장소도 녹진녹진이 된 것을 확인한 %조사처리(ANAME(MASTER),"는")% 하나의 물건을 거기에 주었다
+					PRINTFORMW 불안한 듯이 떨리는 그녀의 이마에 키스를 하면서 천천히 허리를 가라앉혀 간다
+					PRINTFORML 그녀는 아픔에 신음하면서 %ANAME(MASTER)%에 꽈악 매달려 온다
+					PRINTFORML 그런 그녀를 신경쓰면서 천천히 질육을 푸는 것처럼 하면서 안쪽으로 나간다
+					PRINTFORML 암컷구멍은 힘들고 %조사처리(ANAME(MASTER),"를")% 단단히 조여, 긴장을 늦추면 사정해 버릴 것 같게 되는 것을 참는다
+					PRINTFORMW 이윽고 귀두의 앞이 작은 암컷구멍의 안쪽까지 간신히 도착하면, 그녀는 깊게 숨을 내쉬었다
+					PRINTFORML 아직 눈물을 흘리고 있는 그녀가 익숙해질 때까지 유행할 생각을 억제해 낙낙하게 허리를 움직여 준다
+					PRINTFORML 조금씩 그녀도 익숙해지고이고, 여자다운 신음소리를 흘리면서 꽈악 다리를 얽히게 되어져 왔다
+					PRINTFORML 정자가 복받쳐 오는 감각에 %조사처리(ANAME(MASTER),"가")% 허리의 움직임을 빨리 하면 그녀의 교성도 날카롭고 영향 낸다
+					PRINTFORMW 그리고 욕망대로 안쪽 깊이 사정하면, 그녀도 활처럼 신체를 뒤로 젖히면서 절정 했다
+					PRINTFORMW 밤새 한껏 서로 사랑한 후, 그녀는 재회를 약속해 떠나 갔다
+					CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", "요정의 질", "화간")
+					PRINTFORMW 
+				ELSE
+					PRINTFORML 집 앞으로 되돌아 봐 응시하면, 그녀는 쑥스러운 듯이 웃고 있었다
+					PRINTFORML 아무래도 악의는 없는 것 같다
+					PRINTFORMW 따라진 아이를 되돌려 보내는 것도 주눅이 들었으므로 일단가에 부르기로 했다
+					PRINTFORML 문을 열어 안에 부르면 그녀는 기쁜듯이 달려 다가왔다
+					PRINTFORML 그 밤은 그녀의 좋아하는 것이라는 햄버거를 만들어 주었다
+					PRINTFORMW …다음날도, 그 다음의 날도 그녀는 돌아가지 않고 어느새인가 %ANAME(MASTER)%의 집에 자리잡고 있었다
+					CALL COLOR_PRINT(@"명도 없는 요정이 %ANAME(MASTER)%의 집에 정착했습니다", 칼라_주의)
+					PRINTFORMW 
+					DVAR:요정생활_동거플래그 = 1
+				ENDIF
+			ENDIF
+		;탄막놀이 하는 요정
+		CASE 3
+			PRINTFORML 쇼핑 돌아가, 집의 근처까지 왔을 때에 상공으로부터로 소리가 났다
+			PRINTFORML 올려보면 탄막놀이를 하는 요정과 요괴를 보기 시작했다
+			PRINTFORMW 화려한 탄막이 근처에 나는 일인가는 있다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("참전한다" ,"지켜본다" ,"떠난다")
+			IF RESULT == 2
+				PRINTFORML 여기는 일상다반사다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 신경쓰지 않고 떠났다
+				CALL COLOR_PRINT("드슥!", 칼라_경고)
+				PRINTFORMW 
+				PRINTFORML …등에 유탄막을 맞혀져 버렸다!
+				PRINTFORMW 불의의 충격에 %조사처리(ANAME(MASTER),"는")% 푹 고꾸라져 굴러 버려 다쳤다
+				CALL ADD_COOLTIME(MASTER, 2)
+				DVAR:요정생활_동거플래그 = -1
+			ELSEIF RESULT == 1
+				PRINTFORML 모처럼인 것으로 승패를 지켜보기로 했다
+				PRINTFORML …이윽고 대결(결착)이 붙은 것 같아, 진 요정이 바로 옆에 떨어져 내렸다
+				PRINTFORMW 모습을 엿보고 있으면 요괴도 내려 와무서워한다요정에 가까워져 간다
+				PRINTFORML 그 하나의 물건은 격분해 있어 입맛을 다심을 하고 있다
+				PRINTFORMW 아무래도 그녀는 요괴의 사냥감이었던 것 같다
+				PRINTFORML 어떻게 하지?
+				CALL ASK_YN("돕는다", "떠난다")
+				IF RESULT == 1
+					PRINTFORML 승부의 결과라면 어쩔 수 없을 것이다
+					PRINTFORML %조사처리(ANAME(MASTER),"는")% 도움을 요구하는 요정의 시선을 무시해 떠났다
+					PRINTFORMW 배후로부터는 범해지는 요정의 비통한 신음소리가 울려 왔다
+					DVAR:요정생활_동거플래그 = -1
+				ELSE
+					PRINTFORML 과연 소녀가 범해지는 것을 보는 것은 참을 수 없다
+					PRINTFORML %조사처리(ANAME(MASTER),"는")% 단념해 주도록(듯이) 요괴를 설득했다
+					PRINTFORML 처음은 화나 있던 요괴도 이윽고 쇠약해졌는지 마지못해 떠나 갔다
+					PRINTFORMW 너덜너덜의 요정에 손을 내민다고 그녀는 깊이 감사했다
+					PRINTFORML 상처의 치료에 집에 들러 가도록(듯이) 고하면 그녀는 주저하면서도 따라 왔다
+					PRINTFORML 가로 치료하면서 이야기를 들으면, 그녀의 세력권이 예의 요괴에 침범되어 버린 것 같다
+					PRINTFORML 이제 돌아가는 곳이 없으면 곤란한 그녀에게 한동안 집에 있으면 좋으면 제안한다
+					PRINTFORMW 사양하는 그녀를 잠깐 설득하면, 이윽고 끄덕 수긍했다
+					CALL COLOR_PRINT(@"명도 없는 요정이 %ANAME(MASTER)%의 집에 정착했습니다", 칼라_주의)
+					PRINTFORMW 
+					DVAR:요정생활_동거플래그 = 1
+				ENDIF
+			ELSE
+				PRINTFORML 모처럼인 것으로 참전하기로 했다
+				PRINTFORMW 두 명은 돌연의 난입자에게 놀라면서도 향해 왔다
+				PRINTFORML ·
+				PRINTFORML ·
+				PRINTFORMW ·
+				IF ABL:MASTER:무투 * (RAND:5 + 1) >= 40 * (RAND:8 + 1)
+					PRINTFORML 승리했다!
+					PRINTFORMW 요괴는 놓쳐 버렸지만, 다친 요정은 지면에 쓰러지고 있다
+					PRINTFORML 어떻게 하지?
+					CALL ASK_MULTI("금을 받는다" ,"놓친다" ,"범한다")
+					IF RESULT == 1
+						PRINTFORML 단순한 변덕의 승부로 가지고 싶은 것도 없다
+						PRINTFORMW 놓쳐 주었다
+					ELSEIF RESULT == 0
+						PRINTFORML 금을 요구하면 그녀는 마지못해 금화를 내몄다
+						PRINTFORMW 생각하지 않는 임시 수입에 싱글싱글이 되면서 집으로 갔다
+						MONEY += 5000
+						CALL COLOR_PRINTL("금", GETDEFCOLOR(), "5000", 칼라_주의, "를 손에 넣었다", GETDEFCOLOR())
+						PRINTFORMW 
+						DVAR:요정생활_동거플래그 = -1
+					ELSE
+						PRINTFORML 진 의복으로부터 보이는 흰 피부가 눈에 띄었다
+						PRINTFORML 그녀는 요정으로 해서는 건방지게도 맛있을 것 같은 몸을 하고 있다
+						PRINTFORML 불끈불끈한 %조사처리(ANAME(MASTER),"는")% 그녀를 가까이의 수풀로 데리고 들어갔다
+						PRINTFORMW 그리고 무리하게 남은 옷을 벗겨내, 그 부드러운 살갗에 달라붙었다
+						PRINTFORML 그녀는 저항하지만 힘은 없고 오히려 몸을 비틀게 하는 표정이 %ANAME(MASTER)%의 흥분을 부추긴다
+						PRINTFORML 인내 할 수 없게 된 %조사처리(ANAME(MASTER),"는")% 그녀를 엎드린 자세로 시키면 하나의 물건을 비밀스런 장소에 쑤셔 넣었다
+						PRINTFORML 처녀였던 그녀는 크게 몸을 뛰게 한 비통의 소리를 높인다
+						PRINTFORMW 질육은 삐걱삐걱에 단단히 조여 와 %조사처리(ANAME(MASTER),"는")% 허리가 뜰 것 같게 되는 것을 훨씬 참는다
+						PRINTFORML 그리고 울며 아우성치는 그녀를 억누르면서 동글동글 암컷구멍의 안쪽으로 침입해 나간다
+						PRINTFORML 경련하는 미육은 페니스에 끊임없이 휘감겨, 쾌락인 나머지 무심코 신음소리를 내 버린다
+						PRINTFORML 그녀의 허리를 잡으면서 격렬하게 허리를 쳐박아, 극상의 고기단지를 마음껏 만끽되어 받는다
+						PRINTFORMW 이윽고 인내의 한계에 이르른 %조사처리(ANAME(MASTER),"가")% 사정하면, 그녀는 크게 등을 뒤로 젖히면서 정신을 잃었다
+						PRINTFORMW 육 오나홀과 같이 한껏 만끽한 후, 너덜너덜의 그녀를 내던져 떠났다
+						CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", "요정의 질", "강간")
+						PRINTFORMW 
+						DVAR:요정생활_동거플래그 = -1
+					ENDIF
+				ELSE
+					PRINTFORMW 져 버렸다…
+					IF MONEY > 0
+						PRINTFORMW 지갑이 요구되었으므로 얌전하게 내밀 수밖에 없었다
+						LOCAL = MONEY / 4
+						SIF LOCAL > 50000
+							LOCAL = 50000
+						MONEY -= LOCAL
+						CALL COLOR_PRINT(@"금{LOCAL}를 지불했다", 칼라_주의)
+						PRINTFORMW 
+					ENDIF
+				ENDIF
+			ENDIF
+	ENDSELECT
+;요정과의 일상 이벤트, 발생마다 요정 생활_에로 카운트가 쌓인다
+ELSEIF DVAR:요정생활_동거플래그 == 1 && DVAR:요정생활_에로카운트 < 5
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 이름도 없는 요정과 함께 살고 있다…
+	PRINTFORML 
+	SELECTCASE RAND:20
+		CASE 0
+			PRINTFORMW 어느 날, 침실을 들여다 보면 요정이 이불에 휩싸이고 있는 것을 찾아냈다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("덮어씌운다" ,"이불을 벗겨낸다" ,"방치한다")
+			IF RESULT == 2
+				PRINTFORML 굳이 무시했다
+				PRINTFORML 그녀는 한동안 하면 땀투성이가 되어 이불로부터 나왔다
+				PRINTFORML 그리고 무시된 일에 뺨을 부풀려 뾰롱통 해져 버렸다
+				PRINTFORMW 하지만 밥의 시간을 고하면, 라고 곧바로 웃는 얼굴이 되어 달려 다가왔다
+			ELSEIF RESULT == 0
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 화악 덮어씌웠다
+				PRINTFORML 하지만 반응은 없고, 힘차게 이불에 쓰러져 버렸다
+				PRINTFORML 놀라고 있으면 벽장이 열려, 요정이 웃으면서 나왔다
+				PRINTFORMW 감쪽같이 못된 장난에 걸려 버린 %조사처리(ANAME(MASTER),"는")% 웃을 수밖에 없었다
+			ELSE
+				PRINTFORML 그 수법에는 넘어가지 않는, %조사처리(ANAME(MASTER),"는")% 이불을 벗겨냈다
+				PRINTFORML 아니나 다를까, 이불의 내용은 베개만으로 요정은 없었다
+				PRINTFORML …근처를 둘러보면 벽장이 살짝 벌려지며 있다
+				PRINTFORML %조사처리(ANAME(MASTER),"가")% 이번은 마음껏 벽장을 열면, 그녀가 비명을 올려 튀어나와 왔다
+				PRINTFORMW 못된 장난을 간파한 %조사처리(ANAME(MASTER),"는")% 요정과 얼싸안아 빙글빙글 돌면서 서로 웃었다
+			ENDIF
+		CASE 1
+			PRINTFORMW 툇마루에서 요정이 길고양이와 재롱부리고 있다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("먹이를 건네준다" ,"강아지풀을 건네준다" ,"지켜본다")
+			IF RESULT == 2
+				PRINTFORML 정신이 없는 평화로운 주고받음을 지켜보기로 했다
+				PRINTFORML 그녀는 고양이에 막상막하 자유롭고 변덕스럽게 서로 장난하고 있다
+				PRINTFORML 한동안 하면 그녀는 놀아 지쳤는지 고양이를 껴안은 채로 자 버렸다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그 평화로운 잠자는 얼굴에 쓴웃음하면서 모포를 걸쳐 주었다
+			ELSEIF RESULT == 1
+				PRINTFORML %ANAME(MASTER)%치고 개는들 해를 그녀에게 건네주었다
+				PRINTFORML 그녀가 매우 기뻐해 강아지풀을 거절하면, 고양이가 피용피용 날아 뛴다
+				PRINTFORML 하지만 너무 우쭐해진 그녀는 고양이에 달려들어지고 굴러 버렸다
+				PRINTFORMW 고양이에 세게 긁어져 울 것 같은 그녀를 위로하면서, 수당을 해 주었다
+			ELSE
+				PRINTFORML 그녀에게 비료용 정어리를 건네준다고 기뻐해 고양이에게 주었다
+				PRINTFORML 고양이가 열중해 먹고 있는 것을 봐 그녀도 또 입에 옮겼다
+				PRINTFORML 아무래도 입맛에 맞은 것 같게 그녀는 고양이에 막상막하 열중해 정어리를 먹기 시작한다
+				PRINTFORML 과연 과식한다고 판단해 나머지를 집어들면 2마리로 함께 항의되어 버렸다
+				PRINTFORMW 하지만 대신에 밥의 시간이라고 말한다고 기뻐해 테이블로 날아 갔다
+			ENDIF
+		CASE 2
+			PRINTFORMW 요정이 툇마루에서 둥글게 되어 낮잠자고 있다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("못된 장난한다" ,"모포를 걸친다" ,"함께 잔다")
+			IF RESULT == 2
+				PRINTFORML 기분 좋은 것 같아서 함께 자기로 했다
+				PRINTFORML 그녀의 곁에 누우면 잠에 취한 그녀가 %ANAME(MASTER)%에 다가서 왔다
+				PRINTFORML 그녀의 머리를 어루만져 주면 기분 좋은 것 같은 소리를 흘린다
+				PRINTFORMW 그 행복한 잠자는 얼굴을 보면서 %ANAME(MASTER)%도 졸아 갔다
+			ELSEIF RESULT == 1
+				PRINTFORML 감기에 걸리면 안 되기 때문에 모포를 걸쳐 준다
+				PRINTFORML 한다고 그녀는 잠꼬대로 불쑥%ANAME(MASTER)%의 이름을 불렀다
+				PRINTFORMW 두를 어루만지면서 대답을 해 주면 그녀는 행복하게 미소지었다
+			ELSE
+				PRINTFORML 무방비에 가로놓이는 지체에 무심코 불끈불끈 해 버린다
+				PRINTFORML 그녀를 일으키지 않게 살그머니 허벅지를 어루만지면 꿈틀 몸을 떨게 한다
+				PRINTFORML 일으켰는지와 일순간 준비했지만, 곧바로 그녀는 또 숨소리를 내기 시작했다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 우쭐해져서 그녀의 신체를 더듬어, 즐겁게 해 받았다
+			ENDIF
+		CASE 3
+			PRINTFORML 요정이 반짝반짝 한 것을 주워 왔다
+			PRINTFORMW 아무래도 유리의 파편인것 같다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("과자와 교환한다" ,"돈과 교환한다" ,"버리게 한다")
+			IF RESULT == 2
+				PRINTFORML 있고 것으로 버리세요라고 하면 그녀는 저항했다
+				PRINTFORML 싫어한다그녀를 어르고 달래 어떻게든 버리게 할 수가 있었다
+				PRINTFORML 멍하니 하는 그녀의 모습에 과연 마음이 상한다
+				PRINTFORMW 비위를 맞추기 위해서(때문에) 좋아하는 것을 만들어 주면 간신히 웃는 얼굴이 되어 주었다
+			ELSEIF RESULT == 1
+				PRINTFORML 위험한 것으로 돈과 교환 해 주는 일로 했다
+				PRINTFORML 그녀는 뛰어 올라 기쁨, 소중히 사용한다고 해 저금통에 넣었다
+				PRINTFORMW 훌륭해와 어루만지면 그녀는 에헤헤 쑥스러운 듯이 웃었다
+			ELSE
+				PRINTFORML 위험한 것으로 과자와 교환 해 주는 일로 했다
+				PRINTFORML 그녀는 기꺼이 달려들어, 맛있을 것 같게 과자를 가득 넣는다
+				PRINTFORML 그 모습을 응시하고 있으면 그녀는 과자를 하나 %ANAME(MASTER)%에 내몄다
+				PRINTFORMW 툇마루에서 둘이서 천천히 과자를 먹었다
+			ENDIF
+		CASE 4
+			PRINTFORML 놀러 나오고 있던 요정이 진흙투성이로 돌아왔다
+			PRINTFORMW 네에에-와 웃는 얼굴도 흙투성이다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("목욕탕에 넣는다" ,"샤워를 하고 다툰다" ,"꾸짖는다")
+			IF RESULT == 2
+				PRINTFORML 그여승가에 오르려고 하는 그녀를 꾸짖었다
+				PRINTFORML 쓸쓸히 하는 그녀에게 말이 지나쳤다라고 생각해, 몸을 씻으면 간식으로 하려고 고한다
+				PRINTFORML 그녀는 곧바로 비위를 맞추어 되돌려, 옷을 마구 벗으면서 목욕탕으로 달려 갔다
+				PRINTFORMW 그 모습에 요정인것 같으면 쓴웃음하면서, 그녀가 벗은 옷을 선택롱에 던져 넣었다
+			ELSEIF RESULT == 1
+				PRINTFORML 이대로 집에 올릴 수는 없는 마당에 데리고 나갔다
+				PRINTFORML 그리고 옷을 벗게 한 드로와 일인분이 된 그녀에게 샤워를 퍼부었다
+				PRINTFORML 꺄꺄와 까불며 떠들어 돌아다니는 그녀에게 실려져 무심코 그대로 물장난에 흥겨워해 버렸다
+				PRINTFORMW 결국%ANAME(MASTER)%도 침수가 될 때까지 물장난은 계속되었다
+			ELSE
+				PRINTFORML 이대로 집에 올릴 수도 없는 그녀를 거느려 목욕탕에 향했다
+				PRINTFORML 모두 옷을 벗어 신체를 씻어, 조금 빠르지만 그대로 목욕탕에 들어갔다
+				PRINTFORML 즐거운 듯이 까불며 떠드는 그녀에 대해, %조사처리(ANAME(MASTER),"는")% 이상한 기분이 일어나지 않게 신경을 써 버린다
+				PRINTFORML 그런 %ANAME(MASTER)%의 걱정도 눈치채지 못하고, 그녀는 그 부드러운 지체를 강압해 왔다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 실수를 일으키기 전에 조속히 목욕탕을 나왔지만, 그녀의 알몸이 눈에 늘어붙어 버렸다
+			ENDIF
+		CASE 5
+			PRINTFORML 요정이 세탁물로 놀고 있다
+			PRINTFORMW 이대로라면 또 씻지 않으면 안 되는 것 같다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("꾸짖는다" ,"함께 논다" ,"별의 완구를 건네준다")
+			IF RESULT == 2
+				PRINTFORML 그것은 견딜 수 없기에 다른 완구를 건네주었다
+				PRINTFORML 그녀는 최초 꺼리고 있었지만 %조사처리(ANAME(MASTER),"가")% 즐거운 듯이 그 완구로 놀아 보이면 달려들어 왔다
+				PRINTFORMW 완구로 까불며 떠드는 그녀에게 쓴웃음 지으면서 다소 주름이 생기게 된 세탁물을 다시 말렸다
+			ELSEIF RESULT == 1
+				PRINTFORML 네있고, 이렇게 되면 함께 놀아 주자
+				PRINTFORML %조사처리(ANAME(MASTER),"가")% 시트를 써 도깨비의 흉내를 내면, 그녀는 즐거운 듯 하는 비명을 올려 도망 다녔다
+				PRINTFORML 그녀를 잡고 시트안에 말려들게 하면, 기쁜듯이 웃으면서 %ANAME(MASTER)%에 껴안아 왔다
+				PRINTFORMW 잠깐 둘이서 논 후, 함께 세탁물을 재조사했다
+			ELSE
+				PRINTFORML 세탁물을 집어들어, 논다면 다른 것으로 해 주세요 꾸짖었다
+				PRINTFORML 그녀는 쓸쓸히 하고 있었지만, 반성한 것 같아 함께 세탁물을 다시 말렸다
+				PRINTFORML 그 포상이라는 몸으로 함께 마을까지 놀러 가려고 제안하면 그녀는 파앗 웃는 얼굴이 된다
+				PRINTFORMW 그녀에게 재촉해지고 세탁물을 말려 끝내면, 조속히 마을로 향했다
+			ENDIF
+		CASE 6
+			PRINTFORML 슬슬 점심을 먹을까하고 부엌을 들여다 보면, 요정이 요리를 만들고 있었다
+			PRINTFORMW 작은 몸으로 발돋움을 하면서도 열심히 요리하고 있다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("지켜본다" ,"함께 만든다" ,"알몸 에이프런 시킨다")
+			IF RESULT == 2
+				PRINTFORML 번쩍인 %조사처리(ANAME(MASTER),"는")% 그녀에게 에이프런을 건네주었다
+				PRINTFORML 멍청히 하는 그녀에게 알몸으로 에이프런을 붙이면 더러워지지 않아도 괜찮으면 날조한다
+				PRINTFORML 그녀는 의심하지 않고 속옷 모습이 되면 에이프런을 붙였다
+				PRINTFORMW 조금 죄악감을 기억하면서도 좀처럼 볼 수 없는 모습을 즐겁게 해 받았다
+			ELSEIF RESULT == 1
+				PRINTFORML 조금 위태롭기 때문에 함께 만들기로 했다
+				PRINTFORML 그녀의 손을 잡으면서 지시를 내려 주면, 그녀는 열심히 따랐다
+				PRINTFORML …완성된 요리는 조금형은 나쁘지만 꽤 맛있었다
+				PRINTFORMW 이것이라면 신부에게도 갈 수 있구나 라고 칭찬하면 그녀는 만면의 미소를 띄웠다
+			ELSE
+				PRINTFORML 조금 위태롭지만 열심히모습을 지켜보기로 했다
+				PRINTFORML 때때로 기름이 치거나 밥공기를 떨어뜨릴 것 같게 되어 하늘하늘 했지만 무사히 요리를 할 수 있던 것 같다
+				PRINTFORML %조사처리(ANAME(MASTER),"가")% 말을 걸면, 그녀는 보여지고 있던 일을 알아차려, 부끄러운 듯이 웃었다
+				PRINTFORML 혼자서 잘할 수 있었다고 칭찬하면 그녀는 기쁜듯이 미소를 띄웠다
+				PRINTFORMW 달콤한 팬케이크를 둘이서 맛있게 받았다
+			ENDIF
+		CASE 7
+			PRINTFORML 일을 하고 있으면 요정이 무릎에 앉아 왔다
+			PRINTFORMW 내리도록(듯이) 말하면 한가하기 때문에 상관해와 멋대로를 말해 왔다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("쫓아버린다" ,"그대로 일한다" ,"못된 장난한다")
+			IF RESULT == 2
+				PRINTFORML 무방비에 접해 오는 그녀에게 불끈불끈한 %조사처리(ANAME(MASTER),"는")% 못된 장난하기로 했다
+				PRINTFORML 그녀의 부드러운 팔이나 허벅지에 간질이는 것처럼 손가락을 기게 한다
+				PRINTFORML 하면 그녀는 낯간지러운 듯이 웃음 신체를 비틀게 했다
+				PRINTFORML 그 무구한 반응에 더욱 더 흥분해, 좀 더 대담하게 몸에 손가락을 기게 했다
+				PRINTFORMW 한동안 그렇게 소녀의 부드러운 살갗을 만끽되어 받았다
+			ELSEIF RESULT == 1
+				PRINTFORML 굳이 무시해 그대로 일을 계속했다
+				PRINTFORML 그녀는 시작하고 시시한 것같이 하고 있었지만, %ANAME(MASTER)%의 기분을 끌려고 못된 장난을 걸어 왔다
+				PRINTFORML 간지러워지거나 시야를 막히거나 팔을 잡아지거나 했지만 일을 계속했다
+				PRINTFORMW 그 중 %ANAME(MASTER)%도 미소가 흘러넘쳐 와 서로 둘이서 웃으면서 일과 못된 장난을 계속했다
+			ELSE
+				PRINTFORML 일의 방해인 것으로 쫓아버렸다
+				PRINTFORML 그녀는 시시한 것같이 어딘가에 가 버렸다
+				PRINTFORML 방해가 없어진 %조사처리(ANAME(MASTER),"는")% 한동안 일에 집중했다
+				PRINTFORMW 일도 진전되어 슬슬 점심을 먹을까하고 생각하면 뭔가 좋은 냄새가 감돌아 온다
+				PRINTFORML 부엌을 들여다 보면 그녀가 열심히 요리를 만들고 있었다
+				PRINTFORML 그녀는 %조사처리(ANAME(MASTER),"를")% 눈치채면, 일로 지친 것 같으니까, 라고 횡설수설하게 된다
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 그런 그녀에게 치유되고 머리를 어루만져 주면, 그녀는 에헤헤 기쁜듯이 웃었다
+				PRINTFORMW 조금 짰지만 둘이서 함께 먹은 점심은 맛있었다
+			ENDIF
+		CASE 8
+			PRINTFORMW 좋은 날씨이니까 산책하러 가려고 권해졌다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("산책하러 간다" ,"가로 뒹굴뒹굴 한다" ,"쇼핑을 부탁한다")
+			IF RESULT == 2
+				PRINTFORML 자신은 일이 있으므로 갈 수 없다
+				PRINTFORML 대신에 그녀에게 쇼핑을 부탁하기로 했다
+				PRINTFORMW 일을 맡겨진 그녀는 힘을 내 나갔다
+				PRINTFORML …한동안 해 돌아온 그녀는 제대로 쇼핑 되어있었다
+				PRINTFORMW 거스름돈으로 과자를 사 온 그녀에게 졸라져 함께 간식으로 하기로 했다
+			ELSEIF RESULT == 1
+				PRINTFORML 오늘은 뭔가 나른하기 때문에 거절했다
+				PRINTFORML 그녀가 뾰롱통 해져 어쩔 수 없기에 무릎에 태워 책을 읽어 주기로 했다
+				PRINTFORML 한동안 하면 그녀도 완전히 기분이 회복된 것 같아, 책에 빠져 있었다
+				PRINTFORMW 낙낙하게 온화한 하루를 보냈다
+			ELSE
+				PRINTFORML 확실히 좋은 날씨다, 함께 나가는 일로 했다
+				PRINTFORML 행선지도 결정하지 않고, 그녀에게 끌려가는 대로 흔들흔들 한다
+				PRINTFORML 그녀는 비밀의 장소라고 말해 요정들의 집회장에 데려가 주었다
+				PRINTFORMW 마치 아이들의 비밀기지와 같은 장소가 흐뭇하고, 함께 즐겼다
+			ENDIF
+		CASE 9
+			PRINTFORML 어느 날, 일도구를 숨겨져 버렸다
+			PRINTFORMW 그녀를 캐물으면 오늘은 함께 놀면 좋겠다고 졸라졌다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("논다" ,"벌 한다" ,"장난감을 숨긴다")
+			IF RESULT == 2
+				PRINTFORML 복수이라는 듯이 장난감을 숨겼다
+				PRINTFORML 하면 그녀는 보물 찾기 짓거리를 시작한이 아닌가
+				PRINTFORMW 즐거운 듯이 까불며 떠드는 그녀에게 져, 결국%ANAME(MASTER)%도 함께 보물 찾기했다
+			ELSEIF RESULT == 1
+				PRINTFORML 벌로서 엉덩이나무를 휘둘렀다
+				PRINTFORML 그녀는 말괄량이 말괄량이 울면서 사죄했다
+				PRINTFORMW 질질 끄는 그녀를 잠깐 방치해 반성시키기로 해 일니토리 걸렸다
+			ELSE
+				PRINTFORML 어쩔 수 없기에 놀아 주는 일로 했다
+				PRINTFORML 그녀는 파앗 웃는 얼굴이 되어 달려들어 왔다
+				PRINTFORML 그 날은 하루 일을 잊어 그녀와 다 놀았다
+				PRINTFORMW 건강한 그녀에게 좌지우지되어 기진맥진이 되었지만, 매우 가치가 있었다
+			ENDIF
+		CASE 10
+			PRINTFORML 월인 예쁜 밤, 그녀에게 달을 보면서 술을 마심을 권해졌다
+			PRINTFORMW 내일은 일이 있지만
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("교제한다" ,"가득 만" ,"거절한다")
+			IF RESULT == 2
+				PRINTFORML 미안하지만 거절했다
+				PRINTFORMW 실망하는 그녀에게 또 이번에 권해 주라고 말하면, 생긋 웃었다
+			ELSEIF RESULT == 1
+				PRINTFORML 가득만 교제하는 일로 했다
+				PRINTFORML 그녀는 %ANAME(MASTER)%의 컵에 보통들과 술을 따랐다
+				PRINTFORML 쓴웃음 지으면서 그녀와 밤바람에 해당되면서 달을 보면서 술을 마심을 즐겼다
+			ELSE
+				PRINTFORML 모처럼의 권유다, 교제하는 일로 하자
+				PRINTFORML 그녀는 어디에서 준비했는지 경단까지 냈다
+				PRINTFORMW 둘이서 밤바람에 해당되면서 달을 보면서 술을 마심을 즐겼다
+				PRINTFORMW …이튿날 아침, 역시 숙취가 되어 늦잠자 버렸지만
+			ENDIF
+		CASE 11
+			PRINTFORML 그녀가 마당에서 주저앉고 있는 것 찾아냈다
+			PRINTFORMW 무엇을 하고 있는지 들여다 보면, 개미의 둥지를 관찰하고 있었다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("개미의 둥지 대구르르" ,"함께 관찰한다" ,"방치한다")
+			IF RESULT == 2
+				PRINTFORML 흐뭇한 광경이다
+				PRINTFORMW 방해를 하지 않게 그 자리를 뒤로 했다
+			ELSEIF RESULT == 1
+				PRINTFORML 그녀의 근처에 주저앉아 함께 관찰하기로 했다
+				PRINTFORML 그녀는 %ANAME(MASTER)%의 상태를 보면 기쁜듯이, 개미들의 모습을 보고했다
+				PRINTFORML 개미들이 큰 사냥감을 열심히 옮기고 있는 모습을 함께 응원했다
+				PRINTFORMW 한동안 시간을 잊어 동심에 돌아갔다
+			ELSE
+				PRINTFORML 개미의 둥지 대구르르를 설치했다
+				PRINTFORML 그녀는 불쌍한 듯하다고 말했지만 어른이 된다 라고 슬픈 일이야…
+				PRINTFORMW %ANAME(MASTER)%의 말에 그녀는 고개를 갸웃하고 있었다
+				PRINTFORML …다음날, 개미의 둥지는 전멸 하고 있었다
+				PRINTFORMW 제행 무상
+			ENDIF
+		CASE 12
+			PRINTFORML 비오는 날, 집에서 멍-하니 하고 있으면 요정이 창 밖을 응시하고 있었다
+			PRINTFORMW 때때로 %ANAME(MASTER)%쪽을 봐서는 눈으로 지루하다고 호소해 온다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("이대로 멍-하니 한다" ,"게임이라도 한다" ,"함께 밖에 나온다")
+			IF RESULT == 2
+				PRINTFORML 가끔씩은 빗속을 걷는 것도 좋을 것이다
+				PRINTFORMW %조사처리(ANAME(MASTER),"가")% 산책으로 이끌면 그녀는 기쁜듯이 장화를 냈다
+				PRINTFORMW 빗속, 둘이서 젖으면서도 온화해 자극적인 산책을 즐겼다
+			ELSEIF RESULT == 1
+				PRINTFORML 게임이라도 하려고 권하면 그녀는 타박타박 접근해 왔다
+				PRINTFORML 보드게임이나 카드 게임을 보이면 흥미진진이라는 모습이었다
+				PRINTFORMW 둘이서 오후 가득, 여러가지 게임에서 즐겼다
+			ELSE
+				PRINTFORML 하지만 무엇을 할 생각도 일어나지 않고 그대로 멍-하니 하고 있었다
+				PRINTFORMW 그 중 그녀도 %ANAME(MASTER)%의 근처에 앉아, 신체를 맡겨 왔다
+			ENDIF
+		CASE 13
+			PRINTFORML 귀가하면 요정이 막과자를 가득 안아 달려 왔다
+			PRINTFORMW 곤란해 하고 있는 할머니를 도왔더니 받은 것 같다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("전부 함께 먹는다" ,"하나만 먹인다")
+			IF RESULT == 1
+				PRINTFORML 모두를 먹으면 밥을 먹을 수 없게 된다
+				PRINTFORMW 하나만 해 두세요라고 말하면, 그녀는 브 늘어지면서 과자를 골라냈다
+				PRINTFORML 하지만 처음 보는 과자의 산에 그녀는 헤매어, 좀처럼 선택할 수 없는 것 같았다
+				PRINTFORMW 심하게 고민한 뒤로 하나를 선택하면, 나머지를 보물과 같이 소중히 해 기다리고 있었다
+			ELSE
+				PRINTFORML 한 번에 먹으면 밥을 먹을 수 없게 될 것 같다
+				PRINTFORML 하지만 기쁜듯이 어떤 것으로부터 먹을까하고 고민하는 그녀를 보고 있으면 가끔씩은 좋을까 생각했다
+				PRINTFORMW 산적한 과자를 하나하나 설명 해 줄 때에 그녀는 눈을 빛내고 있었다
+			ENDIF
+		CASE 14
+			PRINTFORML 마당으로부터 요정이 부르는 목소리가 들렸으므로 들여다 보러 가면, 그녀가 큰 밀짚모자자를 쓰고 있었다
+			PRINTFORMW 어딘가로부터 바람으로 옮겨져 왔을 것인가?
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("어울리고 있다고 한다" ,"별의 모자를 사 준다" ,"소유자에게 돌려주러 간다")
+			IF RESULT == 2
+				PRINTFORML 누군가의 모자가 날아 왔을 것이다
+				PRINTFORMW 소유자를 찾으려는 그녀는 뾰롱통 해지고 있었지만, 얌전하게 모자를 %ANAME(MASTER)%에 건네주었다
+				PRINTFORML …소유자는 의외로 시원스럽게 발견되었다
+				PRINTFORML 그 사람은 모자를 받으면 조금 생각하고 나서, 요정에 밀짚모자자를 씌웠다
+				PRINTFORMW 그녀는 깜짝 놀라고 있었지만 만면의 미소를 띄워 소유자에게 인사했다
+				PRINTFORMW 돌아가는 길, 그녀는 언제나 기분이었다
+			ELSEIF RESULT == 1
+				PRINTFORML 이 모자는 소유자에게 돌려주려는 그녀는 쇼크를 받은 것처럼 고개 숙인다
+				PRINTFORML 불쌍하게 되었으므로 다른 모자를 사 준다고 고하면 그녀는 쫙 웃는 얼굴이 되었다
+				PRINTFORMW 어떤 모자를 살까하고 룬룬 기분의 그녀와 마을까지 모자를 보내러 갔다
+			ELSE
+				PRINTFORML 어울리고 있다고 하면 그녀는 수줍은 것처럼 웃어 빙글 돌았다
+				PRINTFORMW 마음에 든 것 같아 한동안 그 모자를 언제나 쓰고 있었다
+			ENDIF
+		CASE 15
+			PRINTFORML 소파에서 드러눕는 그녀를 문득 보면, 어디에서 손에 넣었는지 아이스를 먹고 있었다
+			PRINTFORMW %ANAME(MASTER)%의 시선을 눈치챈 그녀는 에에-와 웃어 아이스를 내몄다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_YN("한입 받는다" ,"사양한다")
+			IF RESULT == 1
+				PRINTFORML 모처럼이지만 사양하면 그녀는 탁탁 뛰어 오르면 강압해 왔다
+				PRINTFORMW %조사처리(ANAME(MASTER),"가")% 고개를 저어 거부해도 쭉쭉 강압해 온다
+				PRINTFORML 체념해 입을 열면 그녀는 팍 아이스를 집어들었다
+				PRINTFORMW 어이를 상실하는 %ANAME(MASTER)%에 대해, 그녀는 못된 장난한 듯이 웃으면 아이스를 가득 넣었다
+			ELSE
+				PRINTFORML 한입 받으면 차가운 아이스가 입 가득 퍼졌다
+				PRINTFORML 맛있어? 라고 물어 오는 그녀에게 수긍하면 기쁜듯이 웃어 그녀도 아이스를 베어 물었다
+				PRINTFORMW 맛있게 아이스를 먹는 그녀를 어루만지면 벌써 한입 주었다
+			ENDIF
+		CASE 16
+			PRINTFORML 편히 쉬고 있으면 갑자기 퍽하고 후두부를 털어졌다
+			PRINTFORML 되돌아 보면 요정이 신문지로 할 수 있던 투구와 검을 가지고 있었다
+			PRINTFORMW 그녀는 걸려 와라라는 듯이 자랑스럽게 검을 적극적이다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("좀 더 굉장한 검을 만든다" ,"검을 집어든다" ,"물총으로 대항한다")
+			IF RESULT == 2
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 허리를 올리면 창고(헛간)으로부터 물총을 꺼냈다
+				PRINTFORML 그녀는 몹시 당황하며 도망치려고 했지만 가차 없이 등을 공격했다
+				PRINTFORMW 캬-캬-말하면서 도망치는 그녀와 술래잡기가 시작되었다
+				PRINTFORMW …너무 까불며 떠든 탓으로 집안 구석구석이 물이고가 되어 버렸다
+			ELSEIF RESULT == 1
+				PRINTFORML 집안에서 날뛰면 큰 일인 것이 된다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 갑자기 그녀의 자랑의 검을 집어들고 쓰레기통에 던져 넣었다
+				PRINTFORMW 그 날의 오후는, 놀아 주지 않았던 것에 항의하는 그녀에게 매달려지며 보냈다
+			ELSE
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 후후응과 코로 웃으면 신문지를 취득 좀 더 굉장한 검을 만들었다
+				PRINTFORML 그 길이에 그녀는 눈을 빛내 줘! 줘! (와)과 졸라 왔다
+				PRINTFORMW 외에서 놀도록(듯이) 약속해 건네주면 그녀는 기쁜듯이 검을 가져 밖으로 날아 갔다
+			ENDIF
+		CASE 17
+			PRINTFORML 놀이로부터 돌아온 그녀로부터 요츠바의 클로버-를 내밀어졌다
+			PRINTFORMW 자주(잘) 보면 여기저기 더러워져 있는, 노력해 찾은 것 같다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_YN("그녀에게 건네주어 돌려준다" ,"서표로 한다")
+			IF RESULT == 1
+				PRINTFORML 고마워요 말하면 그녀는 쑥스러운 듯이 웃었다
+				PRINTFORMW 모처럼인 것으로 서표로 하자고 하면 그녀는 흥미진진이라는 모습이었다
+				PRINTFORML 함께 요츠바의 서표를 만들면, 마치 마법을 보았는지같이 눈을 크게 열려 있었다
+				PRINTFORMW 그녀의 그림책에 찔러넣어 주면 그녀는 소중히 하네요! (와)과 만면의 미소를 띄웠다
+			ELSE
+				PRINTFORML 고마워요 말하면 그녀는 쑥스러운 듯이 웃었다
+				PRINTFORML 에서도 네가 노력해 찾은 것이니까 너의 것이야와 머리카락에 찔러 주면 깜짝 놀라고 있었다
+				PRINTFORMW 조금 당황하고 있었지만, %조사처리(ANAME(MASTER),"가")% 어울리고 있다고 하면 에헤헤 웃었다
+				PRINTFORMW 그녀는 그 날 하루 4개잎을 트레이드마크로 하며 보냈다
+			ENDIF
+		CASE 18
+			PRINTFORML 어느 날, 마당에서 볼을 주워 왔다
+			PRINTFORML 어딘가로부터 굴러 들어왔을 것인가
+			PRINTFORMW 그녀는 새로운 완구를 던지거나 굴리거나 열중하고 있다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_YN("함께 논다" ,"노는 것을 바라본다")
+			IF RESULT == 1
+				PRINTFORML 흐뭇한 광경을 방해 하지 않고 바라보기로 했다
+				PRINTFORML 그녀는 벽치는 것을 하거나 늘어놓은 돌을 목표로 하거나 사람의 아이같이 까불며 떠들어 돈다
+				PRINTFORML 훌륭히 스트라이크를 결정한 솜씨에 박수를 보내면 그녀는 즐거운 듯이 웃었다
+			ELSE
+				PRINTFORML 모처럼인 것으로 함께 놀기로 했다
+				PRINTFORML 벽치는 것이나 볼링 따위 여러가지 노는 방법을 가르치면 그녀는 어느 것에도 열중했다
+				PRINTFORML 잠깐 둘이서 시간을 잊어 까불며 떠들어 돌았다
+				PRINTFORML 저녁, 또 다른 놀이를 가르쳐와 졸라져 또 이번에와 약속하면, 그녀는 즐거운 듯이 웃었다
+			ENDIF
+		CASE 19
+			PRINTFORML 아침, 침상에서 졸고 있으면 그녀가 기어들어 왔다
+			PRINTFORML 무슨 일일까하고 생각하고 있으면 그녀는 꼼질꼼질 이불을 빠져나가고 얼굴을 내밀었다
+			PRINTFORMW 그리고 뭔가를 호소하는것같이 가만히 응시해 왔다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("아침 밥을 준비한다" ,"놀아 준다" ,"하지만 졸음에는 이길 수 없었다")
+			IF RESULT == 2
+				PRINTFORML 하지만 졸음에는 이길 수 없었다
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀를 거느리도록(듯이)하면서 눈시울을 닫았다
+				PRINTFORMW 그녀는 불만인 것처럼 꼼질꼼질 하고 있었지만, 그 중 %조사처리(ANAME(MASTER),"와")% 함께 코골기를 세우고 있었다
+			ELSEIF RESULT == 1
+				PRINTFORML 반드시 놀기를 원할 것이라고 헤아린 %조사처리(ANAME(MASTER),"는")% 몸을 일으켰다
+				PRINTFORMW %조사처리(ANAME(MASTER),"가")% 일어난 것을 확인한 그녀는 기쁜듯이 외출의 준비를하기 시작했다
+				PRINTFORML 즐거운 듯이 준비하는 모습에 문득 뺨이 느슨해진다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 잠에 취한 머리를 무리하게 일으켜, 그녀를 위해서(때문에) 준비를 시작했다
+			ELSE
+				PRINTFORML 반드시 배가 비어있을 것이라고 헤아린 %조사처리(ANAME(MASTER),"는")% 몸을 일으켰다
+				PRINTFORMW 오늘의 밥은―? 라고 묻는 그녀에게 하품을 하면서 냉장고의 내용 사정이라고 답한다
+				PRINTFORML 그런데도 그녀는 와~있고! 라고 기뻐해 부엌까지 달려 갔다
+				PRINTFORMW 그 모습에 쓴웃음 짓게 하면서도 %ANAME(MASTER)%도 그녀의 뒤를 쫓았다
+			ENDIF
+	ENDSELECT
+	DVAR:요정생활_에로카운트 ++
+;요정과의 엣찌 이벤트, 요정이 음란하게 된다
+ELSEIF DVAR:요정생활_동거플래그 == 1 && DVAR:요정생활_에로카운트 >= 5
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 이름도 없는 요정과 함께 살고 있다…
+	PRINTFORML 
+	PRINTFORML 어느 날, 자고 있으면 %ANAME(MASTER)%의 이불에 요정이 기어들어 왔다
+	PRINTFORML 놀라고 있으면 그녀는 %ANAME(MASTER)%에 껴안아, 물기를 띤 눈동자로 올려봐 온다
+	PRINTFORMW 그리고 가슴의 안쪽이 뜨거운, 가라앉히면 좋겠다고 조르기했다
+	PRINTFORML 어떻게 하지?
+	CALL ASK_MULTI("안는다" ,"풀어 버린다" ,"달랜다")
+	IF RESULT == 1
+		PRINTFORML 돌연의 일에 놀란 %조사처리(ANAME(MASTER),"는")% 무심코 그녀를 풀어 버려 버렸다
+		PRINTFORMW 그녀는 강한 쇼크를 받은 것 같아, 고개를 숙인 채 자신의 방으로 돌아갔다
+		PRINTFORML ·
+		PRINTFORML ·
+		PRINTFORMW ·
+		PRINTFORML 이튿날 아침, 눈치채면 그녀는 없어지고 있었다
+		PRINTFORMW 강한 후회를 느끼면서도, 원래로부터 없었던 것이라고 타이르는 일로 했다
+		CALL COLOR_PRINT("요정과의 동거(同棲) 생활이 해소되었습니다", 칼라_주의)
+		PRINTFORMW 
+		DVAR:요정생활_동거플래그 = 0
+		DVAR:요정생활_에로카운트 = 0
+	ELSEIF RESULT == 2
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 놀라면서도 상냥하게 그녀를 달랬다
+		PRINTFORMW 그 밤은, 울 것 같은 얼굴의 그녀를 껴안고 함께 자 주기로 했다
+		PRINTFORML ·
+		PRINTFORML ·
+		PRINTFORMW ·
+		PRINTFORML 이튿날 아침, 그녀는 언제나 대로 건강하게 인사를 해 주었다
+		PRINTFORMW 아무래도 원의 그녀에게 돌아온 것 같다
+		DVAR:요정생활_에로카운트 = 0
+	ELSE
+		PRINTFORML 돌연의 일에 놀라 당황하는 %조사처리(ANAME(MASTER),"였")%지만
+		PRINTFORML 부드러운 피부의 감촉과 비강을 간질이는 여자의 냄새에 이끌리고 무심코 발기해 버린다
+		PRINTFORMW 그녀를 응시하면 쑥스러운 듯이 하면서도 %조사처리(ANAME(MASTER),"를")% 가만히 응시해 온다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 뜻을 정하면 그녀를 껴안고 키스를 해, 옷을 벗게 했다
+		PRINTFORML 그녀는 되는 대로 알몸이 되어, 벌렁 침대에 가로놓였다
+		PRINTFORML 새하얘 투명한 것 같은 피부와 여자를 주장하는 라인에, %조사처리(ANAME(MASTER),"는")% 무심코 군침을 마신다
+		PRINTFORMW %ANAME(MASTER)%도 옷을 벗어 떠나 덮어씌우면, 불안한 듯한 그녀의 이마에 키스를 한다
+		PRINTFORML 네에에, 라고 사랑스럽게 웃는 그녀를 껴안아, 혀와 손가락을 피부에 기게 하면 달콤한 한숨을 흘린다
+		PRINTFORML 달라붙는 것 같은 피부의 감촉과 사랑스러운 반응에 %조사처리(ANAME(MASTER),"는")% 열중해 애무를 계속한다
+		PRINTFORML 이윽고 그녀의 신체가 달아오르기 시작해 비밀스런 장소에서 촉촉하게 애액이 넘쳐 나온다
+		PRINTFORMW 그것을 확인한 %조사처리(ANAME(MASTER),"는")% 그녀를 다시 옆으로 놓으면 하나의 물건을 비밀스런 장소로 주었다
+		PRINTFORML 가슴을 크게 울리게 해 응시해 오는 그녀에게 한 번 키스를 하면, 천천히 허리를 가라앉혔다
+		PRINTFORML 그녀는 흠칫 몸을 진동시키고 비명을 억누르면서 꽈악 매달려 온다
+		PRINTFORML 그런 그녀를 신경쓰면서 질육을 푸는 것처럼 천천히 허리를 흔들어 간다
+		PRINTFORMW 바둥바둥의 밀혈은 움찔움찔 경련하면서 단단히 조여 와 무심코 사정할 것 같게 된다
+		PRINTFORML 참으면서, 그녀와 키스를 주고 받으면서 천천히 천천히 허리를 가라앉혀 간다
+		PRINTFORML 그리고 귀두가 최안쪽에 접하면 그녀는 작고 신음소리를 흘려 꽉 질을 잡았다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀가 익숙해질 때까지 잠깐허리를 끊어, 힘든 밀혈의 감촉을 즐겼다
+		PRINTFORMW 질육이 풀리는 것을 느낀 %조사처리(ANAME(MASTER),"는")% 그녀를 껴안으면서 천천히 허리를 흔들기 시작한다
+		PRINTFORML 그녀는 눈물을 흘리면서도 얌전하게 흔들어져 한숨에는 응석부리는 것 같은 영향이 섞임 낸다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 극상의 꿀단지에 열중해, 잠깐 시간을 잊어 그녀를 탐냈다
+		PRINTFORML 이윽고 한계를 맞이한 %조사처리(ANAME(MASTER),"가")% 허리의 움직임을 빨리 하면, 그녀도 꽈악 매달려 온다
+		PRINTFORMW 그리고 %조사처리(ANAME(MASTER),"는")% 그녀를 껴안고 혀를 얽히게 되어지면서 욕망의 모든 것을 그 중에 풀었다
+		PRINTFORML 그녀는 태내에 따라지는 열에 한층 더 큰 교성을 올리면서 크게 신체를 뒤로 젖혔다
+		PRINTFORML 단단히 조이는 질육에 정자는 멈추지 않고, 두근두근 그녀의 자궁으로 계속 따른다
+		PRINTFORML 긴 사정에 허리가 떨리기 시작해도 %조사처리(ANAME(MASTER),"는")% 그녀를 계속 껴안아, 그 시간을 계속 맛본다
+		PRINTFORMW 이윽고 %조사처리(ANAME(MASTER),"가")% 한숨을 돌려 페니스를 뽑아 내면, 빨강과 흰색이 섞인 체액이 넘쳐 나왔다
+		PRINTFORML 그녀는 처음의 섹스, 그리고 절정에 숨을 거칠게 하면서 침대에 대자에 가로놓인다
+		PRINTFORML 그리고 어안이 벙벙히 한 표정으로 스스로의 비밀스런 장소를 응시해 넘쳐 나오는 백탁액을 바라보고 있었다
+		PRINTFORML %조사처리(ANAME(MASTER),"가")% 그녀를 신경써 머리를 어루만지면, 눈물을 흘리면서 기쁜듯이 미소지었다
+		PRINTFORMW 흥분은 그것만으로는 들어가지 않고, %조사처리(ANAME(MASTER),"는")% 그녀와 함께 밤새 한껏 서로 사랑했다
+		CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", "요정의 질", "화간")
+		PRINTFORML 
+		CALL COLOR_PRINT("요정은 조금 엣치하게 되었습니다", 칼라_핑크)
+		PRINTFORMW 
+		DVAR:요정생활_동거플래그 = 2
+	ENDIF
+;음란 요정과의 일상 이벤트
+ELSEIF DVAR:요정생활_동거플래그 == 2
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 이름도 없는 요정과 함께 살고 있다…
+	PRINTFORML 
+	SELECTCASE RAND:10
+		CASE 0
+			PRINTFORML 요정이 툇마루에서 빼빼로-를 먹고 있다
+			PRINTFORMW 응시하고 있으면 문 채로 빼빼로-를 내몄다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_YN("빼빼로-의 첨단을 문다", "집어들어 보통으로 먹는다")
+			IF RESULT == 1
+				PRINTFORML 집어들어 보통으로 먹었다
+				PRINTFORML 그녀는 뾰롱통 해져 따끈따끈때려 온다
+				PRINTFORMW 사과에 키스를 하면 그녀는 뾰롱통 해지면서도 뺨을 세키
+			ELSE
+				PRINTFORML 빼빼로-의 첨단을 물어, 둘이서 긁적긁적 먹었다
+				PRINTFORML 이윽고 빼빼로-가 짧아져 그녀와 입술이 닿는다
+				PRINTFORML 츗 달콤한 키스를 하면, 그녀는 부끄러운 듯이 웃었다
+				PRINTFORMW 그 웃는 얼굴에 므흣 온 %조사처리(ANAME(MASTER),"는")% 그녀를 쓰러트렸다
+				PRINTFORMW 초콜렛이 맛이 나는 키스를 주고 받으면서 툇마루에서 격렬하게 교접했다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", "요정의 질", "화간")
+			ENDIF
+		CASE 1
+			PRINTFORML 아침, 요정이 %ANAME(MASTER)%에 걸쳐 일으키러 왔다
+			PRINTFORMW 그녀를 보면 무려 알몸 에이프런의 모습을 하고 있다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_YN("침대안에 끌어들인다", "앞으로 5분…")
+			IF RESULT == 1
+				PRINTFORML 하지만 졸음이 이겼다
+				PRINTFORML 앞으로 5분
+				PRINTFORMW 그렇게 고하면 그녀는 뾰롱통 해져 나가 버렸다
+				PRINTFORMW …아침 밥은 몇시라도보다 짰다
+			ELSE
+				PRINTFORML 가랑이를 문지르고 암컷의 얼굴로 유혹해 오는 그녀의 모습에 모이지 않고 발기해 버린다
+				PRINTFORML 그것을 눈치챈 그녀는 낼름 입맛을 다심을 해 키스했다
+				PRINTFORMW 여기까지 와 아무것도 하지 않을 수는 없는, %조사처리(ANAME(MASTER),"는")% 그녀를 침대에 끌어들였다
+				PRINTFORMW 아침부터 그녀의 부드러운 신체를 한껏 만끽되어 받았다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", "요정의 질", "화간")
+			ENDIF
+		CASE 2
+			PRINTFORML 천천히 욕실에 잠기고 있으면 요정이 들어 왔다
+			PRINTFORMW 등을 하고 있지만 다 이미 씻어 있다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_YN("그녀의 등을 씻는다", "함께 뜨거운 물에 익는다")
+			IF RESULT == 1
+				PRINTFORML 그녀를 손짓해 함께 목욕통에 잠겼다
+				PRINTFORML 그녀의 작은 몸을 %ANAME(MASTER)% 위에 올라타게 해 잠깐 존다
+				PRINTFORML 하면 그녀는 피부를 붙이고 %ANAME(MASTER)%의 하나의 물건을 잡아 왔다
+				PRINTFORML 발정한 같은 표정으로 올려봐 오는 그녀에게 %ANAME(MASTER)%의 하나의 물건은 곧바로 딱딱해진다
+				PRINTFORMW 엣치한 요정의 못된 장난에 실려져 그녀를 껴안고 키스했다
+				PRINTFORMW 올리는 직전까지 목욕통 중(안)에서 러브러브 섹스를 즐겼다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", "요정의 질", "화간")
+			ELSE
+				PRINTFORML 그녀의 등을 씻어 주는 일로 했다
+				PRINTFORML 작고 부드러운 피부에 손가락을 기게 하면 그녀는 작게 허덕인다
+				PRINTFORML 그 반응에 흥분한 %조사처리(ANAME(MASTER),"가")% 가슴이나 가랑이를 밝혀내면 그녀는 기쁜듯이 몸을 구불거리게 할 수 있었다
+				PRINTFORMW 복수이라는 듯이 그녀는 %ANAME(MASTER)%의 하나의 물건을 잡으면, 거품투성이의 손가락으로 열심히 개 문질러 광을 냈다
+				PRINTFORMW 이미 흥분은 들어가지 않고, %조사처리(ANAME(MASTER),"는")% 몸의 밖이나 안도 구석구석까지 씻어 주었다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", "요정의 질", "화간")
+			ENDIF
+		CASE 3
+			PRINTFORML 일을 하고 있으면 요정이 고무를 물어 눈을 치켜 뜨고 유혹해 왔다
+			PRINTFORMW 일에 집중하지 않으면 안 되는데 이 요정…
+			PRINTFORML 어떻게 하지?
+			CALL ASK_YN("침대에 옮긴다", "그 자리에서 안는다")
+			IF RESULT == 1
+				PRINTFORML 너무나 선정적인 그 행동에 %ANAME(MASTER)%의 하나의 물건도 곧바로 임전 태세가 되었다
+				PRINTFORML 그리고 일을 내던지면, 그녀를 쓰러트리고, 그 자리에서 격렬하게 안아 주었다
+				PRINTFORML 그녀는 난폭하게 범해지면서도 환희의 소리를 높이고 신체를 쳐 떤다
+				PRINTFORMW 그리고 %조사처리(ANAME(MASTER),"가")% 사정하는 것과 동시에 그녀도 또 교성을 올려 절정에 이르렀다
+				PRINTFORMW 고무부에서는 만족 할 수 없게 된 %조사처리(ANAME(MASTER),"는")% 생으로 한껏 그녀를 맛보았다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", "요정의 질", "화간")
+			ELSE
+				PRINTFORML 인내 할 수 없게 된 %조사처리(ANAME(MASTER),"는")% 유혹해 오는 그녀를 안아 올리면 침대에 옮겼다
+				PRINTFORML 침대에 옆으로 놓는다고 그녀는 기대를 담은 시선으로 %조사처리(ANAME(MASTER),"를")% 응시해 온다
+				PRINTFORML 그런 그녀의 기대에 응할 수 있도록 %조사처리(ANAME(MASTER),"는")% 즉시 그 신체에 달라붙었다
+				PRINTFORML 그녀는 %ANAME(MASTER)%의 애무에 견딜 수 없다고 한 소리를 높여 선정적으로 몸을 구불거리게 할 수 있다
+				PRINTFORMW 소악마적인 그 행동에, %ANAME(MASTER)%도 곧바로 인내 할 수 없게 되어 페니스를 쑤셔 넣었다
+				PRINTFORMW 기쁨의 소리를 높여 뛰는 그녀와 일을 잊어 완전히 지쳐 버릴 때까지 사귀었다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", "요정의 질", "화간")
+			ENDIF
+		CASE 4
+			PRINTFORML 부엌에서 요정이 오늘의 저녁밥을 만들고 있다
+			PRINTFORML 하지만 보통 모습은 아니고 알몸 에이프런이다
+			PRINTFORMW 살랑살랑 사랑스러운 엉덩이를 흔들면서 콧노래 섞임으로 요리를 하고 있다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_YN("못된 장난한다", "그 광경을 즐긴다")
+			IF RESULT == 1
+				PRINTFORML 굳이 손을 대지 않고 그 광경을 즐기기로 했다
+				PRINTFORML 사랑스러운 여자아이에게 이런 일을 시키고 있다니 알려지면 대문제일 것이다
+				PRINTFORML 하지만 그 배덕감이 마음 좋았다
+				PRINTFORMW 눈요기의 뒤의 요리는 언제나 이상으로 맛있었다
+			ELSE
+				PRINTFORML 불끈불끈 해 인내 할 수 없게 된 %조사처리(ANAME(MASTER),"는")% 그녀에게 못된 장난하기로 했다
+				PRINTFORML 요리하는 그녀의 배후에 서, 예쁜 엉덩이를 비비면 흠칫 몸을 진동시켰다
+				PRINTFORML 그녀는 요리중이니까 조금 기다리고라고 말하면서도 그 말에는 응석부리는 것 같은 영향이 섞인다
+				PRINTFORMW 세면대에 손을 붙게 한 그녀를 배후로부터 암 찔러 하자, 곧바로 아첨한 암컷의 소리를 높였다
+				PRINTFORMW 결국 요리 무시로 섹스를 계속해, 저녁밥은 밤 늦게 되고 나서가 되었다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", "요정의 질", "화간")
+			ENDIF
+		CASE 5
+			PRINTFORML 그녀와 함께 마을까지 직매하러 갔다
+			PRINTFORML 쇼핑 돌아가, 회화를 하고 있으면 그녀가 다가서 왔다
+			PRINTFORMW 옷의 위로부터도 아는 부푼 곳이 %ANAME(MASTER)%의 팔에 꽉 누를 수 있다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("그늘에 데리고 들어간다" ,"가까지 참는다" ,"회화를 즐긴다")
+			IF RESULT == 2
+				PRINTFORML 덮치고 싶은 충동을 훨씬 참고 회화하러 돌아왔다
+				PRINTFORMW 둘이서 한가롭게 돌아가는 길을 걸으면서, 여러 가지 회화를 즐겼다
+		PRINTFORML 
+			ELSEIF RESULT == 1
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 꿀꺽 군침을 마시면 그녀의 팔을 붙잡기 귀로를 서둘렀다
+				PRINTFORML 그리고 집에 도착하면 짐을 내던져, 그녀를 침대에쓰러트린다
+				PRINTFORML 그녀도 알고 있는 것 같아 뺨을 붉히면서 양손을 열어 %조사처리(ANAME(MASTER),"를")% 불렀다
+				PRINTFORMW 참고 있던 흥분함을 마음껏 부딪쳐, 몇 번이나 그녀와 함께 절정 해, 정액을 쏟았다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", "요정의 질", "화간")
+			ELSE
+				PRINTFORML 인내 할 수 없게 된 %조사처리(ANAME(MASTER),"는")% 그녀를 가까이의 그늘에 데리고 들어갔다
+				PRINTFORML 스커트를 걷어올리는 것처럼 명령하면 그녀는 수줍으면서도 따른다
+				PRINTFORML 그 비밀스런 장소로부터는 쓰윽 애액이 방울져 떨어지고 있어 수컷의 본능을 자극했다
+				PRINTFORML 전희도 생략 해 삽입하면, 그녀는 기쁨의 소리를 높여 %조사처리(ANAME(MASTER),"를")% 받아들였다
+				PRINTFORMW 그 음미로운 표정에 이끌리는 대로 %조사처리(ANAME(MASTER),"는")% 격렬하게 허리를 쳐박았다
+				PRINTFORMW %ANAME(MASTER)%도 그녀도 사람이 (듣)묻는 위험도 잊고 해가 질 때까지 오로지 교접했다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", "요정의 질", "화간")
+			ENDIF
+		CASE 6
+			PRINTFORML 일이 빨리 끝났으므로 그녀를 놀래키려고 몰래 귀가했다
+			PRINTFORML 집안은 아주 조용해지고 있어 나가 있는지 생각하면서 침실에 향한다
+			PRINTFORML 하면 %ANAME(MASTER)%의 셔츠를 냄새 맡으면서 알몸으로 자위를 하고 있는 요정을 보기 시작했다
+			PRINTFORML 그녀는 열중하고, %ANAME(MASTER)%의 귀가에도 눈치채지 않은 같다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("덤벼 든다" ,"차분히 바라본다" ,"보지 않았던 것으로 한다")
+			IF RESULT == 2
+				PRINTFORML 과연 봐서는 나쁘다
+				PRINTFORML 그렇게 생각한 %조사처리(ANAME(MASTER),"는")% 보지 않았던 것으로 해 집을 나왔다
+			ELSEIF RESULT == 1
+				PRINTFORML 봐서는 나쁘다고 생각하면서도 그녀의 단정치 못한 모습에 %ANAME(MASTER)%의 눈은 못박음이 되었다
+				PRINTFORML %ANAME(MASTER)%의 이름을 부르면서 격렬하게 손가락으로 위로하는 모습은 이 이상 없고 추잡해 무심코 군침을 마신다
+				PRINTFORML 이윽고 그녀는 절정에 이르러, 조수를 뿜면서 움찔움찔 경련했다
+				PRINTFORMW 와 침대에 가로놓이는 그녀의 모습을 눈에 새긴 %조사처리(ANAME(MASTER),"는")% 발견되기 전에 일단가를 나왔다
+			ELSE
+				PRINTFORML 이것은 나쁜 아이다, %조사처리(ANAME(MASTER),"는")% 벌 하기 위해서 침실로 들어갔다
+				PRINTFORML %조사처리(ANAME(MASTER),"가")% 들어 왔는데 깨달은 그녀는 심하게 낭패 해, 횡설수설하게 변명 한다
+				PRINTFORML 하지만 %조사처리(ANAME(MASTER),"는")% 귀를 기울이지 않고 그녀의 입술을 차지하면, 그대로 침대에 쓰러트렸다
+				PRINTFORMW 귓전으로 추잡한 아이라고 속삭이면 그녀는 부들 몸부림 해 발정한 같은 표정을 했다
+				PRINTFORMW 그 뒤는 추잡한 요정이 만족할 때까지 한껏 귀여워해 주었다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", "요정의 질", "화간")
+			ENDIF
+		CASE 7
+			PRINTFORML 일을 끝내 귀가하면 그녀가 마중해 주었다
+			PRINTFORML 「욕실로 해? 밥으로 해? 그렇지 않으면, 나, 나, 나?」
+			PRINTFORMW 그녀는 얼굴을 새빨갛게 하면서 어디선가 (들)물은 것 같은 대사를 고했다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("욕실" ,"밥" ,"그녀")
+			IF RESULT == 0
+				PRINTFORML 권해져 미안하지만 피곤함
+				PRINTFORML 먼저 욕실을 부탁하면 그녀는 일순간 실망 하면서도 짐을 받았다
+				PRINTFORMW 욕실로 쉬어, 식사를 한 뒤는 물론 그녀를 귀여워해 주었다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", "요정의 질", "화간")
+			ELSEIF RESULT == 1
+				PRINTFORML 권해져 미안하지만 배가 비어있다
+				PRINTFORML 먼저 밥을 부탁하면 그녀는 일순간 실망 하면서도 척척하고 요리를 늘어놓았다
+				PRINTFORMW 맛있는 식사 뒤, 욕실로 천천히 하고 나서는 물론 그녀를 귀여워해 주었다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", "요정의 질", "화간")
+			ELSE
+				PRINTFORML 이만큼 권해지면 탈 수밖에 없다
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 말없이 그녀를 껴안으면 침대에 옮겼다
+				PRINTFORML 그녀는 에이프런을 열게 하면서 이제 와서 수줍은 같은 표정으로 올려봐 온다
+				PRINTFORMW 그 표정에 색기를 느낀 %조사처리(ANAME(MASTER),"는")% 조속히 키스를 하면 그녀를 쓰러트렸다
+				PRINTFORMW 그녀는 %ANAME(MASTER)%의 공격에 마치 새댁과 같이 사랑스럽게 허덕여 즐겁게 해 주었다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", "요정의 질", "화간")
+			ENDIF
+		CASE 8
+			PRINTFORML 펫을 기르고 싶으면 졸라졌다
+			PRINTFORMW 할 수 있으면 개가 좋다고 말한다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("개를 기른다" ,"거절한다" ,"그녀를 개로 한다")
+			IF RESULT == 0
+				PRINTFORML 그것 정도라면 좋은가
+				PRINTFORML 그녀의 요망에 응해 후일 함께 개를 기르러 갔다
+				PRINTFORMW 그녀는 강아지를 안아 올리면서 기쁜듯이 인사했다
+			ELSEIF RESULT == 1
+				PRINTFORML 집에 그런 여유는 없습니다
+				PRINTFORML 거절하면 그녀는 멍하니 해 버렸다
+				PRINTFORMW 대신에 동물원으로 이끌어 주면 간신히 기분을 되돌려 주었다
+			ELSE
+				PRINTFORML 그렇게 개가 좋으면 네가 되면 된다
+				PRINTFORMW %ANAME(MASTER)%의 말을 모르고 고개를 갸우뚱하는 그녀를 창고(헛간)에게 데려 갔다
+				PRINTFORML 
+				PRINTFORML …알몸의 그녀에게 목걸이를 입어, 엎드린 자세로 시켜 심야의 공원을 산책한다
+				PRINTFORML 그녀는 얼굴을 새빨갛게 해 삐걱삐걱 떨리면서도 왕왕 아첨한 같은 소리를 높인다
+				PRINTFORMW 흥분해 버리고 있는 것 같아 비밀스런 장소로부터는 애액이 뚝뚝하고 넘쳐 나오고 있었다
+				PRINTFORMW 야무지지 못한 암캐를 조교해 주면, 기쁨의 소리를 높여 미친듯이 자지러지는 신음소리를 냈다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", "요정의 질", "화간")
+			ENDIF
+		CASE 9
+			PRINTFORML 한밤중, 그녀에게 흔들어 깨워졌다
+			PRINTFORML 무슨 일인지 있었어라고 물으면 무서운 꿈을 꾸어 버린 것이라고 말한다
+			PRINTFORMW 없는 붓게 한 눈으로 베개를 안아 함께 자게 하면 좋겠다고 부탁해 왔다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_MULTI("안아 준다" ,"곁잠 한다" ,"자기 방에 돌려보낸다")
+			IF RESULT == 2
+				PRINTFORML 나쁘지만 피곤함
+				PRINTFORMW 질질 끄는 그녀를 달래 어떻게든 자기 방에 돌아갔다
+				PRINTFORML …이튿날 아침, 어젯밤을 원한을 품어진 그녀에게 노려봐져 버렸다
+				PRINTFORMW 그 날의 아침 밥은 몇시라도와 달라 맛이 나지 않았다
+			ELSEIF RESULT == 1
+				PRINTFORML 거절할 수도 없는 곁잠 해 주기로 했다
+				PRINTFORML 이불을 넘기면 그녀는 기쁜듯이 들어 왔다
+				PRINTFORML 떨리는 그녀의 신체를 어르는 것처럼 껴안아 주면 안심한 것처럼 곧바로 잠들었다
+				PRINTFORMW 그녀의 잠자는 얼굴을 바라보면서, %ANAME(MASTER)%도 또한 다시 잠의 세계에 들어갔다
+			ELSE
+				PRINTFORML 그렇다면 잊게 해 주면 그녀를 침대안에 끌어들여 넣는다
+				PRINTFORML 그녀는 고동을 고조되게 하면서 가로놓여 되는 대로라는 자세가 된다
+				PRINTFORML 평소보다 한껏 전희를 해, 녹진녹진한 뒤로 천천히 페니스를 쑤셔 넣었다
+				PRINTFORMW 교성을 올려 전신으로 매달려 오는 그녀가 안심하는 것처럼 격렬하게 공격하고 몇 번이나 절정 시켰다
+				PRINTFORML …이튿날 아침, 그녀는 몇시라도의 건강한 모습에 돌아오고 있었다
+				PRINTFORMW 아침 밥도 어쩐지 평소보다 매우 호화로웠다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", "요정의 질", "화간")
+			ENDIF
+	ENDSELECT
+ENDIF
+RETURN 1

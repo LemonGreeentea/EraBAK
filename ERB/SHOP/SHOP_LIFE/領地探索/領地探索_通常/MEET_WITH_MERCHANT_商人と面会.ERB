@@ -1,0 +1,72 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_MEET_WITH_MERCHANT_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_MEET_WITH_MERCHANT_DECISION(대상)
+#DIM 대상
+RETURN IS_COUNTRY(CFLAG:대상:소속)
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_MEET_WITH_MERCHANT(대상)
+#DIM 대상
+PRINTFORML 있는 상인이 아가씨와 함께 인사에 왔다
+PRINTFORML 이 땅에서 장사를 하므로, 부디 편애에라는 흔히 있는 인사였다
+PRINTFORML 인상으로서는 교활할 것 같은 소심자라는 느낌이다
+PRINTFORMW 어떻게 하지?
+PRINTL
+CALL ASK_MULTI_JUDGE("보통으로 인사를 주고 받는다", 1,"은근히 뇌물을 요구한다", 1,"아가씨를 보내게 한다", HAS_PENIS(대상), "하룻밤 상대를 시킨다", IS_FEMALE(대상))
+
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 특히 문제는 없는 것 같다
+		PRINTFORMW 이번에 점에 들를 약속을 주고 받아, 상인을 돌아갔다
+	CASE 1
+		PRINTFORML 은근히 뇌물을 요구했다
+		PRINTFORML 남은 빈틈 없게 소포를 꺼내면, 별거 아닙니다만과 내몄다
+		PRINTFORML 꽤 이야기의 아는 남자다
+		PRINTFORMW 향후도 편애에 시켜 받는다고 고하면, 깊숙히 고개를 숙여 돌아갔다
+		MONEY += 5000
+		CALL ICPRINT("금<5000>을 손에 넣었다", "L", 칼라_주의)
+	CASE 2
+		PRINTFORML %조사처리(ANAME(대상),"는")% 남자에게, 아가씨를 하룻밤 보내라고 요구했다
+		PRINTFORML 남은 괴로운 표정을 띄웠지만, 이윽고 아가씨에게 같은 것을 반복했다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 조속히 아가씨의 손을 잡아, 침실로 데리고 들어갔다
+		PRINTFORML 
+		PRINTFORML 아가씨가 옷을 벗으면 연령 어울리지 않은 풍만한 육체가 공공연하게 된다
+		PRINTFORML 그녀는 수치로 뺨을 물들여, 양손으로 필사적으로 비부를 숨긴다
+		PRINTFORML 그 청순한 반응이 %조사처리(ANAME(대상),"를")% 고조되게 해 아가씨를 억지로 침대에 쓰러트렸다
+		IF HAS_PENIS(대상)
+			PRINTFORMW 아무도 접한 적이 없는 아가씨의 신체를 마음껏 만끽해, 안도 밖도 %ANAME(대상)%의 정액으로 염색해 내 주었다
+			CALL FUCK(대상, "성기술, 성교, Ｃ, 사정, Ｖ삽입" + (IS_FEMALE(대상) ? ", Ｂ, Ｖ, 레즈" # ""), "동정상실, 키스상실", 0, "상인의 아가씨의 입술", "", "상인의 아가씨의 질", "화간")
+		ELSE
+			PRINTFORMW 아무도 접한 적이 없는 아가씨의 신체를 마음껏 만끽해, 여자끼리에서의 쾌락을 한껏 철저히 가르쳐 주었다
+			CALL FUCK(대상, "성기술, 성교, Ｃ, Ｂ, Ｖ, 레즈", "키스상실", 0, "상인의 아가씨의 입술", "", "", "화간")
+		ENDIF
+		PRINTFORML 헤어질 때, 아가씨의 엉덩이를 더듬으면서, 향후도 편애에 시켜 받으려고 속삭였다
+		PRINTFORMW 그녀는 부르릇 몸부림 해 뺨을 물들이면서, 감사합니다와 작게 대답했다
+	CASE 3
+		PRINTFORML %조사처리(ANAME(대상),"는")% 남자에게, 하룻밤 상대를 하도록(듯이) 요구했다
+		PRINTFORML 그는 최초 멍청히 하고 있었지만, %조사처리(ANAME(대상),"와")% 같은 여자를 안을 수 있다고 알아 흥분한다
+		PRINTFORML 허물없게 허리에 손을 써 오는 남자를, 침실로 안내했다
+		PRINTFORML 
+		PRINTFORML %조사처리(ANAME(대상),"가")% 옷을 벗으면, %STR_BODY("가슴:애무", 대상)%나 %STR_BODY("엉덩이", 대상)%가 공공연하게 된다
+		PRINTFORML 남은 입맛을 다심을 해, %ANAME(대상)%의 %STR_BODY("신체", 대상)%에 달라붙었다
+		PRINTFORML 그의 기술은 교묘해, %조사처리(ANAME(대상),"는")% 눈 깜짝할 순간에 포로로 되어 버린다
+		PRINTFORML 그 손가락과 허리 사용의 전에 허덕여져 몇 번이나 절정 당했다……
+		CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("상인"), @"상인의 \@RAND:2 ? 페니스 # 입술\@", "상인", "", "화간")
+		PRINTFORML
+		PRINTFORML 헤어질 때, 상인은 추잡한 미소를 띄워, %ANAME(대상)%의 엉덩이를 더듬었다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 그에게로의 구체적인 원조책과 함께, 또 그를 불러내는 것을 생각하고 있었다……
+ENDSELECT
+
+RETURN 1
+

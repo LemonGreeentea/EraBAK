@@ -1,0 +1,598 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_TENGU_REPORT_RATE()
+RETURN (DVAR:텐구취재_발생플래그 > 0 ? 250 # 50)
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_TENGU_REPORT_DECISION()
+SIF !HAS_PENIS(MASTER)
+	RETURN 0
+SIF DVAR:텐구취재_발생플래그 < 0
+	RETURN 0
+SIF (ABL:MASTER:무투 + ABL:MASTER:방위 + ABL:MASTER:지략 + ABL:MASTER:정치) < 250
+	RETURN 0
+RETURN DAY >= 15
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_TENGU_REPORT_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_TENGU_REPORT()
+#DIM 대상
+
+;반복 이벤트
+IF DVAR:텐구취재_발생플래그 == 2
+	PRINTFORML 「네!   오늘도 취재하러 왔습니다!」
+	PRINTFORMW 오늘도 텐구의 소녀가 취재하러 왔다……
+	
+	PRINTFORML 
+	PRINTFORML ……
+	SELECTCASE RAND:15
+		CASE 0
+			PRINTFORML 「앗♥  앙읏♥  좀 더♥  좀 더 안쪽까지 찔러♥」
+			PRINTFORML 취재도 하는 둥 마는 둥, %조사처리(ANAME(MASTER),"와")% 소녀는 방 안에서 서로 격렬하게 요구했다
+			PRINTFORML 「응앗♥  좋으니까, 오늘 밤은 밤새, 범해 주세욧♥」
+			PRINTFORML 물론 거절하는 이유 따위 있을 리도 없고, %조사처리(ANAME(MASTER),"는")% 깊숙히 페니스를 꽂아 응했다
+			PRINTFORMW 뜨끔뜨끔 안타깝게 우는 암컷구멍에, %조사처리(ANAME(MASTER),"는")% 한껏 종을 붙였다……
+		CASE 1
+			PRINTFORML 소녀는 %ANAME(MASTER)%의 발밑에 무릎 꿇어, 입술과 혀로 열심히 페니스에 봉사하고 있다
+			PRINTFORML 「응……하아♥  변함 없이 딱딱하고 뜨겁네요……♥  기분이 좋습니까♥」
+			PRINTFORML 대답 대신에 %조사처리(ANAME(MASTER),"는")% 소녀의 머리를 움켜잡음으로 하면, 목을 오나홀 대신에 해 피스톤 했다
+			PRINTFORML 「응♥  ″♥  오″♥  오″♥  ～～～～♥♥♥」
+			PRINTFORMW 목 안에 퓻퓻 하고 뜨거운 정액을 흘려 넣어져, 소녀는 그것만으로 달하게 되었다……
+		CASE 2
+			PRINTFORML 「아읏♥  , 주인님♥  주인님♥  미안해요♥」
+			PRINTFORML 오늘은 메이드을 체험 취재할 것이었지만, 왜일까 그러한 플레이를 하는 일이 되어 버렸다
+			PRINTFORML 「네♥  내 주세욧♥  불할 수 있고음란 메이드에게 벌 해 주세욧♥
+			PRINTFORML   주인님의 특농정액으로♥  주인님 전용의 메이드 보지를 예의범절을 가르쳐 주세요♥♥♥」
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 사랑스러운 메이드 텐구안에 충분히 사정해, 그 뒤도 밤새 계속 예의범절을 가르쳤다……
+		CASE 3
+			PRINTFORML 자세력내에 있는 온천숙소에, 숙박으로 취재하러 가는 일이 되었다
+			PRINTFORML 「아이참♥  식사가 끝나자마자 섹스이라니, 조금은 경치를 즐깁시다……♥」
+			PRINTFORML 가족탕에 둘이서 잠기면서, 천천히 교접을 즐겼다
+			PRINTFORML 「그런데 이 온천은 자식의 뜨거운 물이라고 (듣)묻고 있는 것 같아요……♥
+			PRINTFORMW   아♥  조금♥  갑자기, 벗길 수 있는 쉿♥  , 진심으로 임신하게 할 생각입니까, 이제(이미/벌써/더는/정말) ♥♥♥」
+		CASE 4
+			PRINTFORML 갓파로부터 새로운 발명품의 리뷰-를 부탁받았다는 것으로, 협력하기로 했다
+			PRINTFORML 「히 있고″♥  ♥  이것♥  용서해 관♥  , 위험합니닷♥
+			PRINTFORML   ″♥  엉덩이의 구멍, 바보가 되어 버린닷♥  바보가 되어 버리는♥」
+			PRINTFORML 엎드린 자세로 된 소녀의 애널로, 갓파표의 매우 굵은 바이브가 휘익휘익 꿈틀거리고 있다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그 모습을 관찰해 리포트하면서, 구입하는 것을 검토했다……
+		CASE 5
+			PRINTFORML 「아″아″♥♥♥  아″♥  오″♥  응응″″″″♥
+			PRINTFORML   있고 꼬옥♥♥♥  ♥♥♥  있고 히♥  힛힛히 좋아아-♥♥♥」
+			PRINTFORML 영원정으로부터 새로운 미약의 리뷰-를 부탁받은 것이지만, 아무래도 효과가 너무 강한 같다
+			PRINTFORML 쓰는 말하는 %ANAME(MASTER)%도 발기가 들어가지 않고, 몇번 내도 전혀 쇠약해지는 기색을 보이지 않는다
+			PRINTFORMW 결국 효과가 끊어지는 무렵에는, 소녀의 배는 임신했는지같이 부풀어 오르고 있었다……
+		CASE 6
+			PRINTFORML 「네……네, 치즈♥」
+			PRINTFORML %ANAME(MASTER)%에 아래로부터 관철해진 자세인 채, 소녀는 셀프타이머로 자신의 모습을 촬영 당했다
+			PRINTFORML 「우웃, 일도구인데……이런 사진누구에게도 보여지지 않아요
+			PRINTFORML   네?   다음은 질내사정되어 가고 있는 곳을 찍어?   빗나가고 벌, 앗♥  아♥  아″♥」
+			PRINTFORMW 그 후, %조사처리(ANAME(MASTER),"는")% 소녀의 치태를 마음껏 촬영해 주었다……
+		CASE 7
+			PRINTFORML 「이, 이제(이미/벌써/더는/정말)!   정말로 어쩔 수 없는 사람이군요……♥」
+			PRINTFORML 오늘은 밥리포트에 나갔지만, 도중에 무심코 므흣한 %조사처리(ANAME(MASTER),"는")%, 소녀를 뒷골목에 데리고 들어가 입으로 봉사시켰다
+			PRINTFORML 「아뭇♥  츗♥  , 응붓, 쥬룻, 쥬루루읏♥
+　			PRINTFORML   야♥  등 히라고 구등있고♥  맛있는 정액, 거쳐♥♥♥」
+			PRINTFORMW 그 뒤도 몇 건인가 돌았지만, 입안의 정액의 맛이 남아 있었기 때문에, 착실한 취재가 되지 않았던 것 같다……
+		CASE 8
+			PRINTFORML 「아긋♥  아운♥  아♥  아♥  만나는♥  아앙읏♥」
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 소녀에게 덮어씌우면서, 깊은 곳까지 질육을 맛보고 있다.
+			PRINTFORML 소녀는 기쁨으로 흐느껴 울면서 삐걱삐걱 신체를 진동시켜 %ANAME(MASTER)%에 사랑 받는 행복하게 만취하고 있다
+			PRINTFORML 「좋아앗, 좋아합니닷♥  이렇게 햇, 안쪽까지♥　%ANAME(MASTER)%에, 해 받는 것♥♥♥」
+			PRINTFORMW 필사적으로 매달리면서 사랑스럽게 신음하는 소녀에게, %조사처리(ANAME(MASTER),"는")% 키스 하면서 장황히 정액을 쏟았다……
+		CASE 9
+			PRINTFORML 「앗♥  응♥  , 안쪽까지 와 있어요♥  동글동글은♥」
+			PRINTFORML 소녀는 %ANAME(MASTER)%에 걸쳐, 자신으로부터 허리를 흔들어 자궁입구를 후벼파는 기쁨에 빠지고 있다
+			PRINTFORML 완전히 %ANAME(MASTER)%에 예의범절을 가르쳐진 질육은, 다른 살아있는 생물인 듯 꾸불꾸불해, 페니스에 달라붙어 온다
+			PRINTFORML 「아핫♥  기분이 좋습니까♥  좋은, 이에요♥  함께, 좀 더, 기분 좋고♥  자주(잘) ♥」
+			PRINTFORMW 더욱 더 열렬하게 허리를 구불거리게 할 수 있는 소녀에게, %조사처리(ANAME(MASTER),"가")% 참지 못하고 사정하면, 소녀도 또 교성을 올려 절정 했다……
+		CASE 10
+			PRINTFORML 「춋♥  히, 이런 것 누군가에게 발각되면, 어떻게 합니까♥」
+			PRINTFORML 자세력내의 돌아보러 나온 %조사처리(ANAME(MASTER),"였")%지만, 무심코 도중에 므흣 와 버려, 망루 위에서 소녀에게 덤벼 들었다……
+			PRINTFORML 「히♥  , 부탁♥  아무도 눈치채지 마아♥  볼 수 있으면, 부끄러워서 죽어 버린다아♥
+			PRINTFORML   들키면 ♥  아앙읏♥  들키면, 내가 신문에 실려 버립니다아아아-……♥♥♥」
+			PRINTFORMW 이상한 상황에 흥분해 뜨끔뜨끔 단단히 조여 오는 고기구멍에, %조사처리(ANAME(MASTER),"는")% 만족 갈 때까지 정액을 쏟았다……
+		CASE 11
+			PRINTFORML 오늘은 세력내에서 열리고 있는 축제에, 소녀를 동반해 가 보았다.
+			PRINTFORML 소녀의 유카타 모습에 두근두근 하면서도 취재를 끝내 조금 쉬고 있었지만, 그 정도중의 수풀로부터 남녀의 신음소리가 들린다……
+			PRINTFORML 「아, 아니여러분번성한 일로……♥  로, 그, 그렇게, 취재의 일환으로서, 군요……, 우리들도, 합니까?」
+			PRINTFORML 슬쩍 유카타의 옷자락을 걷어 붙여 부끄러운 듯이 권하는 소녀에게, %조사처리(ANAME(MASTER),"는")% 두말 할 것 없이 덤벼 들었다
+			PRINTFORMW 그리고 기쁜 듯이 꺄―♥(와)과비명을올린다소녀를 쓰러트리고, 주위의 커플에게 지지 않을 정도(수록) 통곡하게 해 주었다……
+		CASE 12
+			PRINTFORML 취재중, 돌연의 비를 맞아 버린 %조사처리(ANAME(MASTER),"와")% 소녀는, 어쩔 수 없이 근처에 있던 야도에 뛰어들었다
+			PRINTFORML 「그렇지만, 이것은 어떻게 봐도……남녀동반 숙소군요……♥」
+			PRINTFORML 그 대로다. 그리고 모처럼 들어간 것이라면 즐겨야 한다. 그렇게 생각한 %조사처리(ANAME(MASTER),"는")% 소녀를 쓰러트렸다
+			PRINTFORML 「아-이제(이미/벌써/더는/정말) ♥  알고 있었습니다만!   라고 할까 원래 최초부터 알고 있어 데리고 들어간 것은……♥
+			PRINTFORMW   아♥  째, 말대답하지 않기 때문에♥  거기♥  안 됏♥  나, 앗♥  아♥  아″♥♥♥」
+		CASE 13
+			PRINTFORML 있는 숙소에서 뒷거래를 하고 있다는 정보를 잡은 %조사처리(ANAME(MASTER),"와")% 소녀는, 잠입 수사를 실시하는 일이 되었다
+			PRINTFORML 하지만 거기는 커플 납품업자의 비밀의 남녀동반 숙소……부득이, %ANAME(MASTER)%들은 연인끼리로서 숙소에 잠입했다
+			PRINTFORML 「그, 그렇게♥  이것은 수사를 위해서(때문에) 어쩔 수 없는 것입니다♥  연인끼리의 연기를♥  하지 않으면♥
+			PRINTFORML   아♥  아♥  좋아♥  좀 더 사랑해 주세욧♥　%ANAME(MASTER)%의 자식♥  많이 주세요♥」
+			PRINTFORMW 그 후, 연인 짓거리에 너무 빠져 무심코 거래 현장을 놓치기 시작했지만, 어떻게든 범인들을 잡을 수가 있었다……
+		CASE 14
+			PRINTFORML 불끈불끈 하고 있었던 %조사처리(ANAME(MASTER),"는")%, 오늘은 일도 취재도 내던져 소녀와 섹스 하기로 했다
+			PRINTFORML 「앗♥  , 그런 것으로 괜찮습니까♥  해, 일은, 성실하게, 하지 않으면♥  안 됩니다, 여어♥」
+			PRINTFORML 그런 일은 관계없는, 지금은 다만 너의 신체를 다 맛보고 싶으면 %조사처리(ANAME(MASTER),"는")% 고했다
+			PRINTFORML 「……읏♥♥♥  두, 간사해요♥  그런 일 말해지면 ♥  나도♥  인내♥  할 수 없게 되어 버립니닷♥
+			PRINTFORMW   응♥  응♥  가득 시라고 주세욧♥　%ANAME(MASTER)%의 자식♥  를 좋아할 뿐(만큼) 나의 안에 내 주세요……♥♥♥」
+	ENDSELECT 
+	PRINTFORMW
+	RETURN 1
+ENDIF
+
+;회수 진행 이벤트
+IF DVAR:텐구취재_발생플래그 == 0
+	PRINTFORML 어느 날, %ANAME(MASTER)%의 원을 낯선 까마귀 텐구의 소녀가 방문해 왔다
+	PRINTFORMW 어림이 남는 얼굴 생김새이지만, 활발한 인상을 주어 오는, 예쁘다라는 것보다 사랑스러운 소녀다
+	PRINTFORML 「아무래도, 처음 뵙겠습니다군요?
+	PRINTFORML   오늘은 최근명을 들고 있다고 하는 %ANAME(MASTER)%씨를, 취재시켜 받기 위해서(때문에) 왔습니다!」
+	PRINTFORML (들)물으면, %ANAME(MASTER)%에 동행해 어떤 방법으로 활약하고 있을까 보고 싶은 것이라고 한다
+	PRINTFORMW 또, 향후도 잠시동안, 계속적으로 취재시키면 좋겠다고였다
+	PRINTFORML 「실은 나, 아야씨랑 하타테씨의 후배입니다만, 최근 좋은 기사를 쓸 수 있지 않아서……
+	PRINTFORML   에서도 여기서 일발, 고명한 %ANAME(MASTER)%씨의 모습을 정리해 신문으로 하면, 반드시 나도 눈에 띌 수 있다고 생각합니다!
+	PRINTFORML   이므로 부디!   취재를 시켜 주세요!」
+	PRINTFORMW 매우 의지가 들어간 모습으로 소녀는 지껄여대 왔다
+	PRINTFORML 그 열의는 인정하지만, %ANAME(MASTER)%도 한가하다고 할 것은 아니다……
+ELSEIF DVAR:텐구취재_발생플래그 == 1
+	PRINTFORMW 또 까마귀 텐구의 소녀가 왔다
+	PRINTFORML 「안녕하세요, 또 취재시켜 받으러 왔습니다!
+	PRINTFORML   오늘은 괜찮습니까?」
+ENDIF
+PRINTFORML 어떻게 하지?
+
+CALL SINGLE_DRAWLINE
+CALL ASK_YN("받아들인다", "거절한다")
+
+IF RESULT == 1
+	IF DVAR:텐구취재_발생플래그 == 0
+		PRINTFORML 「에엣, 그런……」
+		PRINTFORML 눈에 보여 풀썩 텐구의 소녀는 어깨를 떨어뜨리지만, 하지만 곧바로 기분을 고친 것 같아,
+		PRINTFORML 「아니오, 이런 일로 체념은 하지 않습니다!   그 중 또 방문하니까요―!」
+		PRINTFORMW 그렇게 말을 남겨, 맹스피드로 날아가 버려 갔다……
+		DVAR:텐구취재_발생플래그 = -1
+	ELSEIF DVAR:텐구취재_발생플래그 == 1
+		PRINTFORML 「아라, 오늘은 상황이 나쁩니까……응, 다음은 취재시켜 주세요!」
+		PRINTFORMW 굴하지 않는 모습으로, 텐구의 소녀는 돌아갔다……
+	ENDIF
+	RETURN 1
+ENDIF
+
+DVAR:텐구취재_발생플래그 = 1
+
+PRINTFORML 「해냈다!   그러면 오늘 하루, 밀착 취재시켜 받네요!」
+PRINTFORMW 희색 만면이라는 모습으로, 소녀는 %ANAME(MASTER)%에 달려들어 왔다
+PRINTFORML 
+PRINTFORML ……
+
+SELECTCASE RAND:7
+	CASE 0
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 오늘은 전선에서 지휘를 취하는 일이 되어 있다
+		PRINTFORML 「우햐-, 격렬한 싸움이군요!   남편, 사진 사진……」
+		PRINTFORMW 과연 텐구라고 해야할 것인가, %조사처리(ANAME(MASTER),"로")% 날아 오는 시탄을 휙휙 피하면서, 사진을 마구 찍고 있었다
+	CASE 1
+		PRINTFORML %조사처리(ANAME(MASTER),"는")%, 자세력하에 있는 마을의 상태를 보러 갔다
+		PRINTFORML 「호호우, 활기가 있어 좋은 마을이군요……아, 경단가게에 들러도 좋습니까?」
+		PRINTFORMW 취재라는 것보다는 거의 먹으러 돌아다니기와 같은 느낌으로, %조사처리(ANAME(MASTER),"는")% 아가씨에게 하루종일 좌지우지되었다……
+	CASE 2
+		PRINTFORML 오늘의 %조사처리(ANAME(MASTER),"는")%, 정책을 서로 이야기하는 회의하러 나오는 일이 되어 있다
+		PRINTFORML 「회의의 모습을 취재하고 싶습니다만 나도 들어와도 괜찮습니까?   아, 역시 안 돼?   ―……」
+		PRINTFORMW 아가씨는 입을 비쭉 내며 불만을 호소하지만, 과연 안에 넣을 수는 없다……
+	CASE 3
+		PRINTFORML %조사처리(ANAME(MASTER),"는")%, 오늘은 쭉 자기 방에 틀어박혀 서류 일을 정리하기로 했다
+		PRINTFORML 「응, 이래서야 취재가 되지 않고 한가합니다만……아, 차라든지 들여놓을까요」
+		PRINTFORMW 짬을 주체 못한 소녀는, 몸소 차를 끓여 %ANAME(MASTER)%에 가져와 주었다
+	CASE 4
+		PRINTFORML 자세력의 치안 유지를 위해서(때문에), %조사처리(ANAME(MASTER),"는")% 자경단과 함께 온 마을을 순찰 했다
+		PRINTFORML 「흠, 평화로울 것 같은 마을입니다만……이런, 그 남자인 것일까 이상해요!」
+		PRINTFORMW 그녀의 협력의 덕분으로, %조사처리(ANAME(MASTER),"는")% 도둑을 잡는 것을 성공했다!
+	CASE 5
+		PRINTFORML 오늘은 휴일인 것으로, %조사처리(ANAME(MASTER),"는")% 하루종일 방에서 뒹굴뒹굴 한다고 결정하고 있었다
+		PRINTFORML 「저기 에-, 그렇게 되면 내가 한가합니다, 취재가 아니어도 괜찮으니까 상관해 주세요～」
+		PRINTFORMW 그럴 것이었던 것이지만, 깨달으면 그녀와 함께 노는 일이 되어 있었다……
+	CASE 6
+		PRINTFORML 오늘의 %조사처리(ANAME(MASTER),"는")%, 자세력내의 자연의 모습을 확인하기 위해서, 산에 오르기로 했다
+		PRINTFORML 「아니, 좋은 경치군요!   이봐요, 함께 사진 찍읍시다!」
+		PRINTFORMW 모처럼인 것으로, 산정에서 소녀와 함께 기념 사진을 찍었다
+ENDSELECT 
+
+PRINTFORML 
+PRINTFORML ……
+PRINTFORML 「오늘은 취재에 응해 받아, 감사합니다!」
+PRINTFORML 생긋 만면의 미소를 띄워, 소녀는 예의 바르게 인사를 해 왔다
+PRINTFORML 그런데……
+
+CALL SINGLE_DRAWLINE
+CALL ASK_YN("밤의 밀착 취재로 이끈다", "그대로 전송한다")
+
+IF RESULT == 1
+	IF DVAR:텐구취재_밤의취재회수 == 0
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 소녀를 위로해, 귀가를 보류했다
+		PRINTFORML 「네!   그럼 또 다음도 잘 부탁드려요!」
+		PRINTFORMW 건강 좋게 대답하면, 소녀는 기세 좋게 날아가 버려 갔다
+		DVAR:텐구취재_발생플래그 = -1
+	ELSEIF DVAR:텐구취재_밤의취재회수 <= 1
+		PRINTFORML 「이런, 이번은 밤의 밀착 취재는 하지 않아도 괜찮습니까?」
+		PRINTFORML 못된 장난 같게 웃으면서 그렇게 말했지만, 그러한 소녀의 귀도 약간주홍에 물들고 있다……
+		PRINTFORMW %ANAME(MASTER)%의 시선을 눈치챘는지, 그녀는 조금 당황하면서도, 또 옵니다라고 해 날아가 버렸다
+	ELSEIF DVAR:텐구취재_밤의취재회수 <= 3
+		PRINTFORML 「엣……앗, 네, 그러면 돌아가네요!」
+		PRINTFORML 소녀는 조금 당황스러움을 보였지만, 곧바로 손질하도록(듯이) 말했다
+		PRINTFORML 「아니오, 밤의 취재 활동을 하고 싶을 것은 아닙니다……않아요?」
+		PRINTFORMW 그리고 도망치듯이 날아가 버려 갔다……
+	ELSE
+		PRINTFORML 「에엣!   그런……」
+		PRINTFORML 가-응, 이라고 명백하게 낙담한 모습으로, 소녀는 어깨를 떨어뜨렸다
+		PRINTFORML 「……시 없습니까?」
+		PRINTFORMW 사랑스러운 눈을 치켜 뜨고 일순간%ANAME(MASTER)%의 의지는 요동하지만, 일이 있기에, 라고 말해 돌려 보냈다……
+	ENDIF
+	RETURN 1
+ENDIF
+
+DVAR:텐구취재_밤의취재회수 += 1
+
+IF DVAR:텐구취재_밤의취재회수 == 1
+	PRINTFORML 「에엣……그것은, ……」
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 말하는 곳을 헤아려, 소녀는 부끄러운 듯이 머뭇머뭇 하기 시작했다
+	PRINTFORML 힐끔힐끔%조사처리(ANAME(MASTER),"를")% 보면서, 한동안 고민하고 있던 모습이었지만,
+	PRINTFORML 「향후도 분명하게 취재를 약속해 받을 수 있다면……」
+	PRINTFORMW 라고 말해 왔다
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% 물론, 이라고 흔쾌히 승낙 했다
+	PRINTFORML 「우웃……알았습니다, 이것도 취재의 일환이라고 생각합시다!
+	PRINTFORML   어서어서, 그렇게 정해지면 좋은 일은 서두른다예요!」
+	PRINTFORMW 한 번 결정하면 쭉쭉 오는 타입인 것인가, 그녀는 얼굴을 붉히면서도 %ANAME(MASTER)%의 손을 잡았다……
+	PRINTFORML 
+	PRINTFORML ……
+	PRINTFORML %ANAME(MASTER)%의 자기 방의 침대에서, 텐구의 소녀와 함께 앉아, 서로를 천천히 서로 애무했다
+	PRINTFORML 「응……♥  앙읏♥」
+	PRINTFORML 낮의 건강한 모습은 어디 갔는지, 완전히 기특해진 소녀는,
+	PRINTFORMW %ANAME(MASTER)%의 손가락이 피부에 닿을 때에, 움찔 청순한 반응을 돌려주었다
+	PRINTFORML 그 상태를 봐, 혹시, 라고 %조사처리(ANAME(MASTER),"가")% 말하면, 소녀는 작게 수긍했다
+	PRINTFORML 「저……그, 나, 처음인 것으로……부끄러운 일입니다만……」
+	PRINTFORML 뺨을 물들이면서 소녀는 말하는……아무래도 최초 위세가 좋았던 것은 자포자기가 되고 있었기 때문에 같다
+	PRINTFORML 과연, 미경험의 아가씨에게 성행위를 강요하는 것도 주눅이 든다
+	PRINTFORML 이제 와서이지만, 역시 그만둘까……
+	PRINTFORML 「아니오, 한 번 한다고 한 이상에는 합니다!   보도 관계자로서 거짓말할 수는……!
+	PRINTFORMW   에서도, 그, 상냥하게 해 줄 수 있으면……기쁠까 하고」
+	IF TALENT:MASTER:동정 == 1
+		PRINTFORML %조사처리(ANAME(MASTER),"는")%, 실은 자신도 처음이니까 신경쓰지 않아도 괜찮은, 이라고 말했다
+		PRINTFORML 「엣……그런데도 갑자기 나를 부른 것입니까?」
+		PRINTFORML 소녀는 놀란 모습으로 눈을 크게 열었지만, 곧바로 싱글벙글했다
+		PRINTFORML 「그렇지만 그 거, 처음을 나와 시 싶다고 생각해 주었다는 것이군요?
+		PRINTFORML   그건 좀 기쁠까……♥」
+		PRINTFORML 부끄러워하도록(듯이) 말한 소녀에게 %조사처리(ANAME(MASTER),"는")% 견딜 수 없는 것을 느껴 꼬옥 하고 껴안았다
+	ELSE
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀를 껴안으면서, 절대 상냥하게 하므로 안심하면 좋은, 이라고 말했다
+		PRINTFORML 「네……잘 부탁드려요♥」
+		PRINTFORML 소녀는 부끄러워하면서, %ANAME(MASTER)%의 가슴에 얼굴을 묻었다
+	ENDIF
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 소녀에게 키스를 하면, 상냥하게 침대에 쓰러트렸다……
+	PRINTFORML 
+	PRINTFORML 「응, 츗……앗♥  나♥」
+	PRINTFORML 키스를 하면서 한동안 비밀스런 장소를 애무해 주면, 안쪽으로부터 녹진녹진 애액이 흘러넘치기 시작했다
+	PRINTFORML 기회라고 본 %조사처리(ANAME(MASTER),"는")% 소녀에게 다리를 벌리게 해 그 사이에 자신의 신체를 두었다
+	PRINTFORML 「앗……♥」
+	PRINTFORML 딱딱 발기한 페니스를 앞에, 소녀는 기대와 불안에 가득 찬 눈으로 %조사처리(ANAME(MASTER),"를")% 보았다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 수긍하면, 남자를 모르는 소녀의 균열에 페니스를 주어, 천천히 몸을 가라앉혀 갔다……
+	PRINTFORML 「앗, 읏, 응……읏!」
+	PRINTFORML 소녀가 아픔에 얼굴을 찡그려, 접합부로부터는 순결을 나타내는 파과의 피가 흐르기 시작했다……
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀가 신경쓰면서, 천천히 페니스를 근원까지 삽입해 갔다
+	PRINTFORML 「아앗♥  안쪽까지, 들어가……♥」
+	PRINTFORMW 어느 쪽으로부터랄 것도 없게 입술을 거듭하면서, %조사처리(ANAME(MASTER),"는")% 천천히 길들이도록(듯이) 허리를 전후 시켰다
+	PRINTFORML 
+	PRINTFORML 한동안 그렇게 하고 있으면, 처음은 힘든 듯이 하고 있던 소녀의 목으로부터, 뜨거운 한숨이 흘러넘치기 시작했다
+	PRINTFORML 「아앗♥  히♥  아, 아, 앗♥  는 글자, 처음, 인데♥  이런♥」
+	PRINTFORML 원래 예민한 체질인 것인가, 완전히 아픔은 없어진 모습으로, 달콤한 소리를 높여 쾌락을 받아 들이고 있다……
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 이것이라면 괜찮다고 생각해, 소녀의 허리를 다시 움켜 쥐면, 보다 깊고 빠른 움직임으로 피스톤을 개시했다
+	PRINTFORML 「아″♥  이것, 안 됏♥  는이나♥  빠른♥  히♥
+	PRINTFORML   처음인데♥  처음인데♥  섹스♥  첫 섹스인데♥」
+	PRINTFORML 어림이 남는 얼굴 생김새는 완전히 녹게 해 소녀는 이미 허리를 띄우면서 쾌락을 탐내고 있다
+	PRINTFORMW 사정이 가까운 일을 깨달은 %ANAME(MASTER)%도, 단단히소녀의 허리를 잡아 라스트 파트를 시작했다
+	PRINTFORML 「이히잇♥  더는 안 돼, 입니닷♥  ♥  갑니닷♥  이″들이마시는″우우♥♥♥」
+	PRINTFORML 움찔움찔 전신을 진동시키면서, 등을 뒤로 젖히게 해 소녀는 격렬하게 절정 했다
+	PRINTFORML 절정에 맞추어 꽈악 질내가 페니스를 단단히 조여, 인내의 한계를 맞이한 %ANAME(MASTER)%도 또한,
+	PRINTFORMW 마음껏 페니스를 돌진해 소녀의 안쪽의 안쪽에, 펄펄 끓어오른 백탁을 쳐 뿌릴 수 있었다……
+	PRINTFORML 
+	PRINTFORML ……
+	PRINTFORML 「그……수고 하셨습니다♥  ……섹스는 굉장하네요♥」
+	PRINTFORML 일을 끝마친 후, 뺨을 붉히면서 소녀는 말했다
+	PRINTFORML 「그럼, 슬슬 돌아가네요!   또 옵니다!」
+	PRINTFORML 고개를 숙였는지라고 생각하면, 갑자기 민첩한 움직임으로 %ANAME(MASTER)%의 뺨에 입맞춤을 했다
+	PRINTFORML 「또 올게요―!」
+	PRINTFORMW 그렇게 말을 남겨, 이번이야말로 소녀는 돌아갔다……
+
+ELSEIF DVAR:텐구취재_밤의취재회수 == 2
+	PRINTFORML 「이런……영웅, 색을 좋아한다는 녀석입니까」
+	PRINTFORML 히죽히죽 못된 장난 같게 웃으면서 소녀는 얼버무렸지만, 그렇지만도 않은 것 같다……
+	PRINTFORML 「에에, 상관없어요, 취재 대상과 신뢰 관계를 쌓아 올리는 것도 중요한 일이니까요!
+	PRINTFORMW   ……베개 영업등으로는 없어요?」
+	PRINTFORML 
+	PRINTFORML ……
+	PRINTFORML 「아웃♥  굉장한♥  굉장합니다아♥  아직 2회째인데, 이런♥」
+	PRINTFORML 엎드린 자세로 한 소녀를 %조사처리(ANAME(MASTER),"는")% 뒤로부터 범하고 있다
+	PRINTFORML 소녀의 질 구멍은, 벽을 요염하게 벌름거릴 수 있어 %ANAME(MASTER)%의 페니스를 뜨끔뜨끔 껴안아 왔다
+	PRINTFORML 조금 안쪽을 찔러 주면 음육은 좀 더 오쿠로 부르도록(듯이) 오므라져, %조사처리(ANAME(MASTER),"를")% 떼어 놓지 않는다……
+	PRINTFORMW 팡팡 소리를 내 허리를 부딪칠 때에, 엉덩이살이 흔들흔들 떨려, 보다 정욕을 부추겼다
+	PRINTFORML 강렬한 사정감을 기억한 %조사처리(ANAME(MASTER),"는")%, 소녀에게 덮어씌워, 안에 싼다라고 선언했다……
+	PRINTFORML 「네에♥  내, 주세욧♥  나의 안에, 안에♥」
+	PRINTFORML 훨씬 허리를 밀착시킨 채로, %조사처리(ANAME(MASTER),"는")% 한 방울도 남기지 않고 대량의 정액을 쏟았다
+	PRINTFORML 사정과 동시에 달한 암컷구멍은 쿨렁쿨렁 맥박쳐, 페니스로부터 정액을 짜내도록(듯이) 물결쳐 보였다……
+	PRINTFORML 「아……앗……마, 마시고 있닷♥  자궁이♥  자리-째응 꿀꺽꿀꺽 마시고 있다아♥」
+	PRINTFORMW 소녀는 황홀해 하면서, 자궁을 채우는 백탁의 뜨거움을 차분히 맛보았다……
+
+ELSEIF DVAR:텐구취재_밤의취재회수 == 3
+	PRINTFORML 「아읏♥  『취재로 땀 흘렸을테니까 욕실을 빌려 준다』라고 말하기 때문에 뭔가 생각하면,
+	PRINTFORML   역시 이런 생각이 아닙니까♥  히응♥」
+	PRINTFORML 목욕탕의 마루에 타올을 깔아 재운 소녀를, %조사처리(ANAME(MASTER),"는")% 범하고 있다
+	PRINTFORMW 욕실로 따뜻해진 탓인지, 소녀의 안은 평소보다 뜨겁고, 녹는 것 같은 감촉으로 페니스를 싸고 있다
+	PRINTFORML 그 뜨거움에 이끌리는 대로, %조사처리(ANAME(MASTER),"는")% 첫 번째의 정액을 풀었다
+	PRINTFORML 「아아……♥  중에 나와 있어요……♥」
+	PRINTFORML 사정을 받아 소녀는 녹은 소리를 높이지만, 아직 자신이 가지 않기 때문인가, 어딘가 불만스러운 듯이 %조사처리(ANAME(MASTER),"를")% 보았다
+	PRINTFORMW 물론, 이대로 끝날 생각도 없다……%조사처리(ANAME(MASTER),"는")% 곧바로 피스톤을 재개했다
+	PRINTFORML 「는 히?   ♥  ♥  뽑지않고에 연속은♥  안 돼이런 건♥
+	PRINTFORML   나온 정액이♥  질척질척♥라는 보지에 휘감겨, 히잇♥  히♥」
+	PRINTFORML 흰 목을 뒤로 젖히면서 소녀는 허덕여, 즉각 발끝까지 다리를 펴 쾌락에 참았다
+	PRINTFORMW %조사처리(ANAME(MASTER),"와")% 소녀는 동시에 절정에 이르러, 그녀는 행복하게 아헤얼굴을 쬐어 마구 갔다……
+
+ELSEIF DVAR:텐구취재_밤의취재회수 == 4
+	PRINTFORML 「이, 이런 건, 발견되어 버려요……♥」
+	PRINTFORML 취재의 오는 길에 인내 할 수 없게 된 %조사처리(ANAME(MASTER),"는")%, 소녀를 풀숲에 데리고 들어가 쓰러트렸다
+	PRINTFORML 여기는 텐구의 사는 요괴의산에 가깝기 때문에, 그녀 동료에게 발견되면 큰소란이 될 것이다……
+	PRINTFORMW 하지만 그것이 오히려 흥분을 부추기는지, 질육은 평소보다도 힘들게 페니스를 단단히 조여 왔다
+	PRINTFORML 갑자기 써걱써걱 하야토가 들렸기 때문에, 소녀는 당황해 양손으로 입을 막았다
+	PRINTFORML 하지만 %조사처리(ANAME(MASTER),"는")% 상관하는 일 없이 허리를 움직여, 동글동글 질 안쪽의 약점을 자극했다……
+	PRINTFORML 「……♥  ……읏♥  ″……♥  ……♥  …………♥♥♥」
+	PRINTFORMW 소녀는 필사적으로 신음소리를 억제해, 입 끝으로부터 훗훅궴 난폭하게 숨을 흘리지만, 곧 한계는 왔다
+	PRINTFORML 「～～～～～～～～～～～～♥♥♥♥♥」
+	PRINTFORML 어떻게든 소리를 억제하고 잘랐지만, 전신을 삐걱삐걱 격렬하게 경련시키고 절정 해, 그대로 실신해 버렸다
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% 근처를 둘러본……조금 전의 하야토는 단순한 유리(까마귀)였던 것 같다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 소녀의 착의를 정돈해 짊어져, 귀로에 들었다
+
+ELSEIF DVAR:텐구취재_밤의취재회수 == 5
+	PRINTFORML 오늘은 소녀의 자택에 초대 했다
+	PRINTFORML 행동해진 손수 만든 요리는 매우 맛있고, 당신은 완전히 평정해 버렸다
+	PRINTFORML 차를 마셔 잠깐 쉬면서, %조사처리(ANAME(MASTER),"는")% 방 안을 둘러보았다
+	PRINTFORML 텐구인것 같다고 말해야할 것인가, 지저분하게 어질러진 방 안에 카메라의 기재나 신문을 인쇄하는 도구가 놓여져 있다……
+	PRINTFORMW 문득, %조사처리(ANAME(MASTER),"는")% 침대의 옆에 놓여진 사진 장치를 알아차려, 일어서 그것을 손에 들어 보았다
+	PRINTFORML 「……!   아, 그것은 안 됩니다, 안 돼 안 돼앳!」
+	PRINTFORML 아와아와 소녀가 사진을 집어들려고 하지만, 조금 늦었던 것 같다
+	PRINTFORML 사진 장치에 거두어지고 있던 것은, %ANAME(MASTER)%의 옆 얼굴을 찍은 카즈하의 사진이었다……
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 새빨갛게 되어 숙이고 있는 소녀에게, %조사처리(ANAME(MASTER),"는")% 조금 심술쟁이에 무엇 때문의 것인지를 물었다
+	PRINTFORML 「저……그, 군요……%조사처리(ANAME(MASTER),"를")% 만날 수 없었던 날에, 사진을 보면서……
+	PRINTFORML   글자……자신을 위로하는데, 사용하고 있었습니다아!」
+	PRINTFORML 반자포자기 기색으로 소녀는 고백한……부끄러운 나머지 귀는 새빨갛게 물들어, 어깨로 숨을 쉬고 있다
+	PRINTFORMW 그 모습을 봐, %조사처리(ANAME(MASTER),"는")% 하반신에 단번에 피가 모이는 것을 느껴 유무를 말하게 하지 않고 소녀를 쓰러트렸다……
+	PRINTFORML 
+	PRINTFORML ……
+	PRINTFORML 「아아, 이제(이미/벌써/더는/정말), 정말로 부끄럽습니다……!」
+	PRINTFORML 한껏 섹스 한 뒤도, 소녀는 시트에 얼굴을 묻으면서 부끄러워하고 있다
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% 소녀를 달래면서, 그렇다면 부끄럽지 않게 될 정도로 좀 더 시, 라고 말했다
+	PRINTFORML 「그, 그러한 문제입니까?   아앙읏, 이제(이미/벌써/더는/정말)♥」
+	PRINTFORML 결국 밤이 끝날 때까지, %ANAME(MASTER)%들은 계속 교접했다……
+	PRINTFORMW 「아이참……♥  이렇게 된 것은, 이제(이미/벌써/더는/정말) 이 침대는 잘 수 없게 될 것 같아요……♥」
+
+ELSEIF DVAR:텐구취재_밤의취재회수 == 6
+	PRINTFORML 오늘 밤은, 그녀에게 좋을대로 시켜 보이기로 했다
+	PRINTFORML 「훗훗후……그런 일이라면, 내가 %ANAME(MASTER)%의 약점을 잡아 보입시다!   각오 해 주세요!」
+	PRINTFORMW 등과 호언 하고 있던 소녀는 %ANAME(MASTER)%에 걸쳐, 개처럼 군침을 늘어뜨리면서 허리를 흔들어 쾌락을 탐내고 있다……
+	PRINTFORML 「(이)닷♥  라도 어쩔 수 없기에붉지 않습니까♥  처음으로 섹스♥그래서, 몇 번이나 섹스♥그래서,
+	PRINTFORML   쭉 이 자지(뿐)만♥  보지에 넣어져 왔기 때문에♥
+	PRINTFORML   나의 보지♥　%ANAME(MASTER)%의 자지의 형태가 되어 버리고 있기에 아 앙읏♥」
+	PRINTFORMW 질척질척 접합부로부터 애액을 흘려 보내면서, 소녀는 질 안쪽을 후벼파는 감각에 만취하고 있다……
+	PRINTFORML 「히이읏♥  섹스 너무 좋아 있고♥  자지♥  자지 너무 좋아 있고♥  수기 좋은 있고♥」
+	PRINTFORML 소녀가 완전히 음란한 암컷이 된 것은 자신의 탓과 같다……책임을 지지 않으면 안 될 것이다
+	PRINTFORML 「세키닌♥  세키닌 취해 주세욧♥  어차피라면, 완전하게, %ANAME(MASTER)%의 것으로 해♥♥♥」
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% 소녀의 가는 허리를 잡으면, 가차 없이하로부터 마구 밀어올렸다
+	PRINTFORML 댕댕 첨단이 자궁입구를 찌를 때에 소녀는 머리카락을 흩뜨려 달콤하게 통곡해, 안타깝게 질육을 단단히 조였다
+	PRINTFORMW 페니스를 자궁입구에 먹혀들게 한 채로 정액을 내던지면, 소녀는 말을 잃어 힘껏 키를 뒤로 젖히게 해 끝났다……
+	PRINTFORMW 「아아……♥  좋아……♥  를 좋아합니다, 정말로……」
+	PRINTFORMW 절정의 여운에 잠기면서, 꿈을 꾸듯 중얼거려, 사랑스러운 듯이 소녀는 하복부를 어루만지고 있다……
+
+ELSEIF DVAR:텐구취재_밤의취재회수 == 7
+	PRINTFORML 「아, 벌써 이런 시간이군요……」
+	PRINTFORML %ANAME(MASTER)%의 자기 방에서 한 바탕 교접해 잠깐 쉬고 있으면, 시계를 봐 소녀가 말했다
+	PRINTFORML 오늘은 평소보다도 길게 하고 있던 것 같다……슬슬 일자가 바뀌려고 하고 있다
+	PRINTFORML 「서운하지만, 슬슬 돌아가지 않으면」
+	PRINTFORML 돌아오는 길 준비를 하려고 하고 있던 소녀를 만류해, %조사처리(ANAME(MASTER),"는")% 이미 늦고 묵어 가면 되는, 이라고 말했다
+	PRINTFORMW 하면 소녀는 한 박자를 둔 후, 왜일까 얼굴을 새빨갛게 해 머뭇머뭇 하기 시작해 버렸다
+	PRINTFORML 「(와)과!   묵는 것이 싫을 것이 아닙니닷!
+	PRINTFORML   단지 그……묵는다는 것은……밤새%ANAME(MASTER)%에 사랑 받아 버린다는 것이군요……♥
+	PRINTFORMW   밤새 터무니없게 되어……체력이 가지는 것일까 하고……♥」
+	PRINTFORML 화살이나 방패도 참지 못하고, %조사처리(ANAME(MASTER),"는")% 눈앞의 사랑스러운 텐구를 쓰러트렸다
+	PRINTFORMW 「꺄앗♥  , 조금 무섭지만……그렇지만, 잘 부탁드려요?」
+	PRINTFORML 
+	PRINTFORML ……
+	PRINTFORML 「앗♥  아♥  아♥  아♥  아″♥♥♥  아″″♥♥♥」
+	PRINTFORMW 「기, 깊은♥  깊습니다♥  있고 히, 그런 곳 들어가서는 안 돼♥  안 돼애♥」
+	PRINTFORML 「″♥  ″♥  ″♥  ″♥  , 조금, 쉬게 햇♥」
+	PRINTFORMW 「이, 이제 들어가지 않는다아……♥  배 팡팡 입니다, 로부터♥  이니까 이제(이미/벌써/더는/정말), 내고, 아″」
+	PRINTFORML 「히잇♥  히♥  해, 죽어 버립니닷♥  자지에 살해당해 버린다아♥」
+	PRINTFORML 「아″-……♥  바보에, 바보가 되어 버리는……♥  되어 버렸다아……♥  도, ″, ……♥」
+	PRINTFORMW 그 밤, %ANAME(MASTER)%의 방으로부터는 밤새 교성이 끊어지는 일은 없었다……
+
+ELSEIF DVAR:텐구취재_밤의취재회수 == 8
+	PRINTFORML 「앗……」
+	PRINTFORML 여느 때처럼 권하면, 소녀는 왜일까 갑자기 슬픈 것 같은 얼굴을 해 버렸다……
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 어떻게든 했는지라고 (들)물었다
+	PRINTFORML 「그……오늘로, 취재 활동은 끝내려고 생각하고 있던 것입니다
+	PRINTFORML   이제(이미/벌써/더는/정말) 충분히, 취재할 수 있었고……전부터 결정하고 있던 것이지만, 쭉 말하기 시작할 수 없어서」
+	PRINTFORML 그랬던, 이라고 %조사처리(ANAME(MASTER),"는")% 생각해 낸……소녀가 오는 것이 당연하게 되어 있어 잊고 걸치고 있었지만,
+	PRINTFORML 원래 그녀는 좋은 신문을 만들기 위해서(때문에), 자신을 취재하러 와 있던 것이다
+	PRINTFORMW 취재가 끝나면 관계가 중단되어 버리는 것은, 어느 의미 당연한 끝나는 방법이었다
+	PRINTFORML 「어쨌든, 우선 재차 답례를 말하게 해 주세요
+	PRINTFORML   지금까지, 감사합니다!   반드시 좋은 신문을 써 보입니다!
+	PRINTFORML   이니까, 그, 으음……」
+	PRINTFORML 다음의 말을 연결할 수 없이 있는 소녀에게, %조사처리(ANAME(MASTER),"는")%―-
+
+	CALL SINGLE_DRAWLINE
+	CALL ASK_MULTI("또 취재하러 오면 되는, 이라고 말한다", "사관에게 오지 않는지, 라고 권한다", "이별을 고한다")
+
+	IF RESULT == 0
+		DVAR:텐구취재_발생플래그 = 2
+		PRINTFORML %조사처리(ANAME(MASTER),"는")%, 또 언제라도 취재하러 오면 되는, 이라고 말했다
+		PRINTFORML 신문을 만들면, 또 다음의 재료를 찾으러 와도 괜찮을 것이다, 아니, 오히려 부디 왔으면 좋겠다
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")% 그렇게 신청하면, 소녀는 일순간 멍청히 한 후, 쫙 꽃 벌어지도록(듯이) 웃는 얼굴이 되었다
+		PRINTFORML 「그, 그런 일이라면 부디 부탁합니다!   또 취재시켜 주세요」
+		PRINTFORML 그리고 다음에, 와 뺨을 물들이면서,
+		PRINTFORML 「무, 물론……밤의 밀착 취재 쪽도, 군요?」
+		PRINTFORMW 그것은 물론, 이라고 %조사처리(ANAME(MASTER),"는")% 수긍했다
+	ELSEIF RESULT == 1
+		DVAR:텐구취재_발생플래그 = -1
+		PRINTFORML 신문을 만들면, 자신 전으로 사관으로서 함께 싸우지 않는가, 라고 %조사처리(ANAME(MASTER),"는")% 권했다
+		PRINTFORML 취재 활동 중(안)에서 모두 전장에 나와, 전우라고 말해도 괜찮은 관계라고 생각하고 있다
+		PRINTFORML %ANAME(MASTER)%의 권해, 소녀는 일순간 멍청히 한 후,
+		PRINTFORML 「사관으로서, 입니까……그것은 즉, %ANAME(MASTER)%의 부하로서 쭉 함께 있다는 일로?」
+		PRINTFORML 그런 일이 될 것이다, 라고 %조사처리(ANAME(MASTER),"는")% 수긍했다
+		PRINTFORMW 소녀는 한동안 음미하도록(듯이) 목을 돌려, 이윽고 생긋 웃는 얼굴이 되었다
+		PRINTFORML 「알았습니다, 그 이야기 받도록 해 받습니다!
+		PRINTFORML   그러면, 재차 잘 부탁드려요?」
+		PRINTFORMW 뺨을 약간 주홍에 물들인 소녀와 %조사처리(ANAME(MASTER),"는")% 단단히악수를 주고 받았다
+	ELSEIF RESULT == 2
+		DVAR:텐구취재_발생플래그 = -2
+		PRINTFORML 그렇다면 이것으로 작별이다, 라고 %조사처리(ANAME(MASTER),"는")% 말했다
+		PRINTFORML 「네……그렇지만, 반드시 좋은 기사를 써 보여요!」
+		PRINTFORMW 소녀는 외로운 듯이 하면서도, 재차 신문에의 열의를 끓어오르게 하고 있는 것 같다
+		PRINTFORML 「그렇지만, 이것으로 끝이라니 역시 외롭습니다!
+		PRINTFORML   이니까 신문이 나온 후, 어디선가 만나면……그 때는 감상을 들려주세요
+		PRINTFORML   차분히, 1시간이라도, 밤새라도……며칠이라도」
+		PRINTFORML 희미한 재회의 약속을 요구하는 소녀에게, %조사처리(ANAME(MASTER),"는")% 수긍해 응했다
+		PRINTFORMW 그리고 응원하고 있는, 노력해 줘, 라고 말하면, 「네!」라고 소녀는 언제나 대로 건강 좋게 대답했다
+	ENDIF
+
+	PRINTFORML 
+	PRINTFORML 「아무튼 그런 식으로, 향후의 어떻게 할지가 정해진 곳에서……
+	PRINTFORML   우선 그……이번 취재로서는 이것이 최후인 이유이고……?
+	PRINTFORML   밤의 취재도……합니까?」
+	PRINTFORMW 쑥스러워하고라는 느낌으로 작은 소리로 말하는 소녀를, %조사처리(ANAME(MASTER),"는")% 강하게 껴안았다……
+	PRINTFORML 
+	PRINTFORML ……
+	PRINTFORML 그 밤, %ANAME(MASTER)%들은 이것까지로 제일 격렬하게 서로 사랑했다……
+	PRINTFORML 「아″♥  아″♥  벗길 수 있는 쉿♥  벗길 수 있는 해 ″두♥」
+	PRINTFORML 와 페니스로 암컷구멍이 굴착되어 소녀는 거의 비명과 같이 교성을 올렸다
+	PRINTFORML 응와 고기와 고기가 서로 부딪치는 소리가 방에 울려, 접합부로부터는 애액이 흩날리고 있다
+	PRINTFORML 완전히 %ANAME(MASTER)%에 예의범절을 가르쳐진 소녀의 구멍은, 한층 안타깝게 페니스를 요구해, 안쪽에 안쪽으로 끌어 들여 왔다
+	PRINTFORMW 그 권유에 응해 페니스를 밀어넣으면, 이것까지보다 일단 깊은 곳까지 들어갔다……
+	PRINTFORML 「오호옷♥  해, 자궁♥  자궁까지, 자지 들어와 버리고 있어요……♥
+	PRINTFORML   갓난 아기의♥  갓난 아기의 방까지♥　%ANAME(MASTER)%의 것으로 되어 버렸다아……♥♥♥」
+	PRINTFORML 자궁까지 %ANAME(MASTER)%에 사랑 받는 기쁨에 소녀는 몸부림 해, 흘림같이 조수를 뿜었다
+	PRINTFORMW %ANAME(MASTER)%도 또한 가학적인 쾌락에 만취하면서, 가차 없이 자궁을 유린해 개발 했다……
+	PRINTFORML 「있고″히♥  있고″♥  , 그대로♥  다 히에♥  자리-째응이다 히라고♥
+	PRINTFORML   갓난 아기의 방, 딱 사이 없고 가득 해엣♥♥♥」
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% 자궁의 안쪽에 요도구멍을 강압한 채로, 견뎌에 견뎌 농축된 정액을, 사양말고 토해냈다
+	PRINTFORML 사정관을 자식의 덩어리가 눌러 가는 쾌감에 처음의 기세가 죽을 것 같게 되는 것을 필사적으로 참아,
+	PRINTFORMW 포동포동한 엉덩이살을 움켜잡음으로 한 채로 씨뿌리기를 감행 했다……
+	PRINTFORML 「″″♥  ♥  ♥  라고, 오고 있다아……♥  난관까지 범해진다아……♥」
+	PRINTFORML 거의 흰색 눈을 향하면서, 소녀는 완전하게 발정한 암컷의 얼굴로 정액의 탁류를 받아 들이고 있다……
+	PRINTFORMW 1분이상 계속된 사정을 끝내 페니스를 뽑아 내면, 「″응″」라고 소녀는 신음소리를 올렸다
+	PRINTFORML 
+	PRINTFORML 「응부웃!」
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% 소녀의 머리를 잡으면, 전혀 쇠약해지는 기색을 보이지 않는 페니스를 작은 입에 돌진했다
+	PRINTFORML 목 안까지를 고깃덩이에 채워져 호흡도 만족하게 할 수 없을 것이지만, 소녀는 눈에♥를 띄우고 있다……
+	PRINTFORML 츄, 츄, 라고 소녀의 목을 오나홀 대신에 사용해는 %조사처리(ANAME(MASTER),"는")% 다시 사정해,
+	PRINTFORML 한층 더 도중에 뽑아 내, 나머지의 정액을 그녀의 어린 얼굴에 뿌렸다
+	PRINTFORML 소녀는 그것을 황홀로 한 표정으로 받아 들이고 있다……
+	PRINTFORMW 그런데도 아직 더 충분하지 않고, 소녀를 엎드림에 쓰러트리고, 위로부터 덮어씌웠다
+	PRINTFORML 「아핫……♥  좋아요, 좋아하게 범해 주세요♥
+	PRINTFORML   나의 여기는, 최초부터 쭉%ANAME(MASTER)%의 것″♥  ″♥  ″♥  ″♥」
+	PRINTFORML 보고 날것으로 말하게 하지 않고 %ANAME(MASTER)%전용이 된 음란한 구멍에 페니스를 쑤셔 넣어, 가차 없이 계속 자극했다
+	PRINTFORML 자궁내 직사를 받아 더욱 더 뜨겁게 꾸불꾸불해 사랑해 오는 구멍에, 한 그릇 더를 쏟으면서,
+	PRINTFORMW 오늘 밤은 철저하게 이 소녀를 다 범해, 사라지지 않는 쾌락을 새겨 줄 것을 재차 맹세했다……
+	PRINTFORML 
+	PRINTFORML ……
+	PRINTFORML 「아″……♥  는……♥」
+	PRINTFORML 밤이 끝날 때까지, %ANAME(MASTER)%들은 마음껏 서로 사랑했다
+	PRINTFORML 소녀는 아직 절정의 물결로부터 내릴 수 없는 것인지, 전신을 백탁에 물들이고 위로 향해 구른 채로,
+	PRINTFORMW 가끔 흠칫 신체를 경련시켜서는, 질 구멍으로부터 손가락으로 잡을 수 있을 것 같을 정도 점도의 높은 백탁을 토해내고 있다……
+	PRINTFORML 그런 소녀의 모습에 만족한 %조사처리(ANAME(MASTER),"는")%, 문득 생각나, 소녀의 짐을 찾아다녔다
+	PRINTFORML 찾고 있던 것은 소녀가 언제나 사용하고 있는 카메라다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 필름이 남아 있는 것을 확인하면, 그것을 소녀에게 향하여, 웃도록(듯이) 말했다
+	PRINTFORMW 「……～～～♥♥♥」
+	PRINTFORML 찰칵한 장
+	PRINTFORML 정액 투성이가 된 얼굴을 야무지지 못하게 녹게 해 양손으로 피스를 만든 소녀는, 이 이상 없고 사랑스러웠다
+	PRINTFORMW 사진의 완성을 기다려지게 생각하면서, 모처럼인 것으로 %조사처리(ANAME(MASTER),"는")% 다시 한 번 소녀를 범하기로 했다……
+	PRINTFORMW 「예네……♥♥♥」
+
+	;최종 결과
+	IF DVAR:텐구취재_발생플래그 == 2
+		PRINTFORML 
+		PRINTFORML 그 후, %조사처리(ANAME(MASTER),"를")% 쓴 신문이 환상향안에 유통했다
+		PRINTFORMW 기사에 쓰여진 %ANAME(MASTER)%의 활약을 봐, 타세력으로부터 %조사처리(ANAME(MASTER),"가")% 소속하는 세력에의 관심이 높아진 것 같다……
+		FOR LOCAL, 1, MAX_COUNTRY
+			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, 100, -50)
+		NEXT
+		CALL COLOR_PRINT(@"자세력의 평판이 올랐다", 칼라_주의)
+	ELSEIF DVAR:텐구취재_발생플래그 == -1
+		PRINTFORML 
+		PRINTFORML 
+		PRINTFORML 그 후, %조사처리(ANAME(MASTER),"를")% 쓴 신문이 환상향안에 유통했다
+		PRINTFORMW 기사에 쓰여진 %ANAME(MASTER)%의 활약을 봐, 타세력으로부터 %조사처리(ANAME(MASTER),"가")% 소속하는 세력에의 관심이 높아진 것 같다……
+		FOR LOCAL, 1, MAX_COUNTRY
+			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, 100, -50)
+		NEXT
+		CALL COLOR_PRINT(@"자세력의 평판이 올랐다", 칼라_주의)
+		PRINTFORML 
+		CALL CREATE_RANDOM_CHARA(0,0,1)
+		대상 = RESULT
+		ABL:대상:무투 = 55 + RAND:10
+		ABL:대상:방위 = 25 + RAND:10
+		ABL:대상:지략 = 55 + RAND:10
+		ABL:대상:정치 = 15 + RAND:10
+		ABL:대상:가창 = 15 + RAND:10
+		ABL:대상:요리 = 45 + RAND:10
+		CALL TAG_INIT(대상,41)
+		CALL LEARN_SKILL_GENERAL_BY_NAME(대상, "노력가")
+		CALL LEARN_SKILL_GENERAL_BY_NAME(대상, "추적＋")
+		CALL VIRGINIZE_LOST(대상, 첫체험_처녀)
+		CALL VIRGINIZE_LOST(대상, 첫체험_키스)
+		SEXUAL_EXPERIENCE:(대상):첫체험_처녀 = %ANAME(MASTER)%
+		SEXUAL_LAST_EXPERIENCE:(대상):첫체험_처녀 = %ANAME(MASTER)%
+		SEXUAL_EXPERIENCE:(대상):첫체험_키스 = %ANAME(MASTER)%
+		SEXUAL_LAST_EXPERIENCE:(대상):첫체험_키스 = %ANAME(MASTER)%
+		TALENT:대상:반항적 = 0
+		TALENT:대상:츤데레 = 0
+		TALENT:대상:선을넘지않음 = 0
+		TALENT:대상:쾌감에솔직 = 1
+		TALENT:대상:쾌감을부정 = 0
+		TALENT:대상:합의 = 1
+		TALENT:대상:연모 = 1
+		CALL CHANGE_COUNTRY(대상, CFLAG:MASTER:소속, 1)
+		CFLAG:대상:호감도 = 1500
+		CFLAG:대상:의존도 = 1200
+		CFLAG:대상:종속도 = 1200
+		CALL COLOR_PRINTW(@"텐구의 %조사처리(ANAME(대상),"가")% 우리 군에 참가했다", 칼라_주의)
+		CALL FUCK_MAKELOVE(대상, GET_ID(MASTER), @"%ANAME(MASTER)%의 입술", @"%ANAME(MASTER)%")
+		CALL FUCK(MASTER, "Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, @"%ANAME(대상)%의 입술", "", @"%ANAME(대상)%의 질")
+		DVAR:텐구취재_캐릭터ID= GET_ID(대상)
+	ELSEIF DVAR:텐구취재_발생플래그 == -2
+		PRINTFORML 
+		PRINTFORML 그 후, %조사처리(ANAME(MASTER),"를")% 쓴 신문이 환상향안에 유통했다
+		PRINTFORML %조사처리(ANAME(MASTER),"를")% 자세하게, 그리고 정열적으로 쓴 기사는 크게 평가되었다
+		PRINTFORML 특히 쓰는 사람의 열의가 전해져 오는 것 같다면 절찬되어 소녀는 크게 이름을 올린 것 같다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 감상을 전해지는 날을 손꼽아 기다리고 있다……
+		FOR LOCAL, 1, MAX_COUNTRY
+			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, 200, -100)
+		NEXT
+		CALL COLOR_PRINT(@"자세력의 평판이 크게 올랐다", 칼라_주의)
+	ENDIF
+ENDIF
+
+PRINTFORMW
+
+RETURN 1

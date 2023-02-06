@@ -1,0 +1,295 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_ARBEIT_RATE()
+RETURN (DVAR:아르바이트_발생플래그 > 0 ? 500 # 50)
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_ARBEIT_DECISION()
+SIF !IS_FEMALE(MASTER)
+	RETURN 0
+SIF CFLAG:MASTER:포로처 != 0
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_ARBEIT_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_ARBEIT
+
+IF DVAR:아르바이트_발생플래그 == 0
+	PRINTFORML 어느 날, 모인 술집에서 아르바이트를 하지 않을까 권해졌다
+	IF CFLAG:MASTER:소속 == 0
+		PRINTFORML 지금의 %조사처리(ANAME(MASTER),"는")% 프리로 수입이 기댈 곳도 없다
+		PRINTFORMW 여비를 버는데 꼭 좋을지도 모른다
+	ELSE
+		PRINTFORML %조사처리(ANAME(MASTER),"가")% 이 나라의 장교라고 모르는 것 같다
+		PRINTFORMW 이지만 부수입으로 하고 있고일지도 모른다
+	ENDIF
+	PRINTFORML 어떻게 하지?
+	CALL ASK_YN("해 본다", "그만둔다")
+	IF RESULT == 1
+		PRINTFORMW 점의 이상한 듯한 분위기가 신경이 쓰였으므로 그만두었다
+		RETURN
+	ELSEIF RESULT == 0
+		PRINTFORML 해 보는 일로 했다
+		PRINTFORML 계약서에 싸인을 하면 가게의 안쪽에 안내되었다
+		PRINTFORML 점의 안쪽에는 지하로 계속되는 계단이 있었다
+		PRINTFORMW 의심스러워 하면서도 점장을 뒤따라 가면 다른 술집에 나왔다
+		PRINTFORML 어슴푸레한 점내에 소란스러운 음악이 울고 있다
+		PRINTFORML 마이대 위에서는 스팟 라이트를 받은 무희나 댄서들이 추잡한 의상으로 춤추고 있었다
+		PRINTFORMW 웨이트레스들은 보통 술집과는 다른 마치 창녀와 같은 의상으로 접객을 하고 있다
+		PRINTFORML 예상외의 광경에 %조사처리(ANAME(MASTER),"가")% 아연하게로 하고 있으면 가게의 뒤에 데리고 가지고 제복을 건네 받았다
+		PRINTFORML 이런 곳에서 일해진다고는 (듣)묻지 않았다고 항의하면 조금 전의 계약서를 내밀어졌다
+		PRINTFORMW 점장은 조금 전과 돌변해 낮은 소리로 계약을 찢는다면 호소하면 위협했다
+		PRINTFORML 어떻게 하지?
+		CALL ASK_YN("마지못해 갈아입는다", "도망치기 시작한다")
+		IF RESULT == 0
+			PRINTFORML 어떻게든 피하려고 했지만 할 수 없었다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 마지못해서면서 갈아입을 수밖에 없었다
+			PRINTFORMW 의상은 다른 점원에게 막상막하 추잡한 것이었다
+		ELSEIF RESULT == 1
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 순간에 도망치기 시작했다!
+			PRINTFORML 
+			IF ABL:MASTER:방위 / 10 + RAND:5 > RAND:10
+				PRINTFORMW …어떻게든 잘 도망칠 수가 있었다
+				RETURN
+			ELSE
+				PRINTFORML 하지만 도망치지 못하고 잡혀 버렸다
+				PRINTFORML 화낸 남자들에게 맞고 차져 체념해 갈아입을 수밖에 없었다
+				PRINTFORMW 의상은 다른 점원에게 막상막하 추잡한 것이었다
+			ENDIF
+		ENDIF
+		PRINTFORML 부끄러운 나머지 새빨갛게 되어 버린다
+		PRINTFORML 그는 끈적한 시선으로 바라보고 천하게 보인 미소를 띄워 왔다
+		PRINTFORMW 그리고 연수를 실시한다고 고해, %조사처리(ANAME(MASTER),"를")% 억지로 점장실에 데리고 들어갔다
+		PRINTFORML 
+		PRINTFORML 추잡한 의상을 흐트러지게한 %조사처리(ANAME(MASTER),"가")% 점장에 걸쳐 허리를 흔들고 있다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 강력한 미약을 먹게 되어 완전히 녹은 같은 표정으로 요염하게 허덕인다
+		PRINTFORML 페니스로 질육을 쓸어올릴 수 있을 때에 강렬한 쾌락으로 정수리까지 시비, 움찔움찔 경련한다
+		IF TALENT:MASTER:처녀 == 1
+			PRINTFORMW 조금 전까지 처녀였다고는 생각되지 않을 수록 쾌락에 드 빠져 있어한 %조사처리(ANAME(MASTER),"는")% 단정치 못하게 좋아한다
+		ELSE
+			PRINTFORMW 압도적인 쾌락의 물결에 %조사처리(ANAME(MASTER),"는")% 저항하는 일을 잊어, 땀투성이가 되면서 격렬하게 좋아하는 미친다
+		ENDIF
+		PRINTFORML 교묘한 허리 사용으로 약점을 후벼파지면, %조사처리(ANAME(MASTER),"는")% 참지 못하고 몸을 뒤로 젖히게 해 절정 해 버렸다
+		PRINTFORML 남은 절정 하는 %조사처리(ANAME(MASTER),"를")% 봐 「이것 정도로 가고 있으면 접객은 할 수 없어」라고 몹시 꾸짖는다
+		PRINTFORML 절정 한 채로 떨리는 소리로 사죄하는 %ANAME(MASTER)%의 표정은, 이미 이성을 잃은 암캐의 것이 되어 있었다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 밤새 점장의 교육을 받아, 신체의 안쪽 깊게까지 제대로 수컷을 확실히 익혀지는 일이 되었다
+		CALL FUCK(MASTER, "욕망, 성교, 정애, 성기술, 성기술, 봉사, Ｖ, Ｂ, Ｍ, Ｃ, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("불량배"), @"점장의 \@RAND:2 ? 페니스 # 입술\@", @"점장", "", "패배한 끝의 강간")
+		PRINTFORMW 
+		PRINTFORML 연수를 끝낸 %조사처리(ANAME(MASTER),"는")% 일단 해방되었다
+		PRINTFORML 하지만 강간 사진을 찍혀 버리고 있었다
+		PRINTFORMW 흩뿌려지고 싶지 않으면 향후도 오도록(듯이) 위협해졌다…
+		DVAR:아르바이트_발생플래그 = 1
+	ENDIF
+ELSE
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% 아르바이트에 향했다…
+	PRINTFORMW 점장은 %조사처리(ANAME(MASTER),"를")% 보면 천하게 보인 미소를 띄우면서 허리에 손을 썼다
+	IF DVAR:아르바이트_발생플래그 >= 5
+		PRINTFORML 「대단히 익숙해져 왔군, 슬슬 종업원이 되지 않는가?」라고 끈적 속삭여진다
+		PRINTFORML 그 말에 무심코 자궁이 뜨끔 쑤셔, 오슬오슬 등줄기를 진동시켜 버린다
+		PRINTFORML 하지만 %조사처리(ANAME(MASTER),"는")% 훨씬 견딘다고 소리를 진동시키면서도 거절의 말을 토했다
+		PRINTFORMW 그는 어깨를 움츠리게 하면서 %ANAME(MASTER)%에 일에 종사하도록(듯이) 명했다
+	ELSEIF DVAR:아르바이트_발생플래그 >= 3
+		PRINTFORML 「전회의 접객은 호평이었다, 좀처럼 접객용이 아닌가?」라고 끈적 속삭여진다
+		PRINTFORML 그 말에 전회을 생각해 내 버려, 참지 못하고 수치로 숙여 버린다
+		PRINTFORML 하지만 %조사처리(ANAME(MASTER),"는")% 어디까지나 사진을 위해서(때문에)라고 거부의 말을 중얼거려 고개를 저었다
+		PRINTFORMW 그는 히죽히죽 웃음인 채%ANAME(MASTER)%에 일에 종사하도록(듯이) 명했다
+	ELSE
+		PRINTFORML 「변함 없이 좋은 신체야, 손님에게 안게 하는 것은 아깝다」라고 끈적 속삭여진다
+		PRINTFORML 그 말에 %조사처리(ANAME(MASTER),"는")% 딱 되었지만 사진을 생각해 내 훨씬 참는다
+		PRINTFORML %ANAME(MASTER)%의 모습에 그는 히죽히죽 웃으면서 집요하게 몸을 더듬었다
+		PRINTFORMW 한동안 그렇게 성희롱을 받은 후, 그는 %ANAME(MASTER)%에 일에 종사하도록(듯이) 명했다
+	ENDIF
+	PRINTFORML 
+	SELECTCASE RAND:16
+		CASE 0
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 바니걸 의상으로 접객을 하게 하고 있다
+			PRINTFORML 손님은 한결같게 추잡한 눈초리로 %ANAME(MASTER)%의 가슴팍이나 엉덩이를 응시해 온다
+			PRINTFORML 그 시선과 술집의 분위기에 대어져 점차 %ANAME(MASTER)%도 몸이 달아올라 오는 것을 느꼈다
+			PRINTFORMW 열정적인 한숨을 토하면서 일을 하고 있으면, 몹시 술취한 손님이 얽힐 수 있었다
+			PRINTFORML 다른 점원에게 헬프를 요구해도 보고도 못 본 척을 되어 심하게 얽힐 수 있는 계속해 버린다
+			PRINTFORML 그는 발기한 하나의 물건을 꽉 누르면서 술 냄새나는 숨과 함께 천하게 권해 온다
+			PRINTFORMW 어떻게든 피하려고 했지만 그것도 실현되지 않고, 조금씩 화장실에 데리고 들어가져 버렸다
+			PRINTFORML 이윽고 독실로부터는 요염함%ANAME(MASTER)%의 교성이 새기 시작했다
+			PRINTFORMW 손님이 만족하는 무렵에는 %조사처리(ANAME(MASTER),"는")% 질척질척으로 되어 버리고 있었다
+		CASE 1
+			PRINTFORMW 스팟 라이트 원으로 %조사처리(ANAME(MASTER),"는")% 폴 댄스를 하고 있다
+			PRINTFORML %ANAME(MASTER)%입어 원도이 의상에 뺨을 물들이면서 어색하게 춤춘다
+			PRINTFORML 그 청순함은 반대로 손님의 흥분시켜, 욕소리와 환성이 난무한다
+			PRINTFORMW 분위기에 대어진 %조사처리(ANAME(MASTER),"는")% 무의식 중에 요염하게 허리를 흔들기 시작하고 있었다
+			PRINTFORML 손님의 요구는 자꾸자꾸과격하게 되어 가, 이윽고 탈의 콜이 발생 하기 시작했다
+			PRINTFORML 완전히 프로단서가 되어 자르고 있는 %조사처리(ANAME(MASTER),"는")% 그 콜에 웃는 얼굴로 대답한다
+			PRINTFORMW 몸을 구불거리게 되어지면서 탈의 해 나가는 %ANAME(MASTER)%의 모습에 장소는 더욱 더 분위기를 살려 간다
+			PRINTFORML %조사처리(ANAME(MASTER),"가")%전라가 되면 볼티지는 정점으로 달해, 손님이 마이대에 뛰어 올라 왔다
+			PRINTFORML 그리고 완전히 지쳐 버린 %조사처리(ANAME(MASTER),"를")% 잡으면 그대로 공개 강간 쇼로 이행했다
+			PRINTFORMW 폐점까지 끊임없이 흥분한 남자들의 상대를 하게 해 질척질척으로 되어 버렸다
+		CASE 2
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 캬바쿠라같이 손님의 상대를 하게 하고 있다
+			PRINTFORML 아슬아슬한 의상이 바디 라인을 두드러지게 한 추잡한 눈초리로 조망된다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 그 시선을 알아차리면서도 웃는 얼굴로 손님의 상대를 하지 않을 수 없다
+			PRINTFORMW 있는 살찐 중년남성이 %조사처리(ANAME(MASTER),"를")% 마음에 든 것 같고 끈질기게 관련되어 왔다
+			PRINTFORML 어떻게든 도망치려고 해도 어깨를 잡아지고 그의 술 냄새나는 숨을 퍼부을 수 있는 설득해진다
+			PRINTFORML 스킨쉽은 서서히 과격하게 되어 섬세한 장소에까지 손가락이 성장해 왔다
+			PRINTFORMW 점원에게 도움을 요구하려고 했지만 한결같게 보고도 못 본 척을 되어 버린다
+			PRINTFORML 그리고 무리하게 입술을 빼앗기면, 그대로 좌석에 밀어 쓰러트려져 버렸다
+			PRINTFORMW 어슴푸레한 가게의 구석에서 %조사처리(ANAME(MASTER),"는")% 성욕의 덩어리와 같은 그가 만족할 때까지 범해져 버렸다
+		CASE 3
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 사람이 붐비고 있는 술집에서 급사를 하고 있다
+			PRINTFORML 점은 많은 불량배로 큰소란이며 %ANAME(MASTER)%도 접객에 쫓긴다
+			PRINTFORML 한사람의 불량배의 손님에게 얽힐 수 있는 무심코 조금 강하게 저항해 버렸다
+			PRINTFORMW 반동으로 맥주가 생각해 베기 시작한 그는 %ANAME(MASTER)%에 향하여 다가서 왔다
+			PRINTFORML 어떻게든 사죄해 피하려고 하는 것도 그 동료가 모여 와 도망칠 수 없게 된다
+			PRINTFORML 그들은 각자가 %ANAME(MASTER)%에 성의를 요구해 와 %조사처리(ANAME(MASTER),"는")% 무심코 수긍해 버린다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 천하게 보인 미소를 띄우는 불량배들에게 가게의 뒤쪽으로 연행되었다
+			PRINTFORMW 밤이 끝나는 무렵 뒷골목에 능욕 다 되어 너덜너덜이 된 %조사처리(ANAME(MASTER),"가")% 구르고 있었다
+		CASE 4
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 웨이트레스를 하게 하고 있다
+			PRINTFORML 추잡한 의상에 머뭇머뭇 하면서 접객 하고 있으면 가차 없이 성희롱되어 버린다
+			PRINTFORML 어슴푸레한 점내의 도처에로 추잡한 서비스를 하고 있다
+			PRINTFORMW %ANAME(MASTER)%도 또한 한사람의 손님의 상대를 하게 하는 일이 되었다
+			PRINTFORML 심하게 취하고 있는 그는 %조사처리(ANAME(MASTER),"를")% 근처에 앉게 하면 몸의 여기저기를 끈적 손대어 왔다
+			PRINTFORML 어떻게든 피하려고 했지만 손님의 권유는 거절하지 못하고, 무리하게 먹게 되고 만취 당했다
+			PRINTFORMW 인사불성이 된 %조사처리(ANAME(MASTER),"는")% 달아올라 잘라 손님의 성희롱에도 저항하지 못하고 허덕여 버린다
+			PRINTFORML 그는 %ANAME(MASTER)%의 모습에 입맛을 다신다와 가게의 안쪽에 준비된 독실에 연행했다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 몽롱해진 의식 중(안)에서 밤새도록그에게 조교계속 되었다
+		CASE 5
+			PRINTFORMW 경쾌한 음악이 울고 있는 술집에서 %조사처리(ANAME(MASTER),"는")% 춤추고 있다
+			PRINTFORML 섹시인 무희 의상에 몸을 싸 요염하게 춤추는 모습에 손님은 못청구서가 되어 있다
+			PRINTFORML 땀으로 빛나는 포동포동한 피부와 극상의 바디 라인이 흔들릴 때에, 남자들은 목을 울린다
+			PRINTFORML %조사처리(ANAME(MASTER),"가")% 근처에 오면 손님은 보디 터치하는 김에 팁을 옷의 틈새에 끼워 온다
+			PRINTFORMW 익숙해지지 않는 행위에도 불구하고 %조사처리(ANAME(MASTER),"는")% 이상한 고양감에 휩싸일 수 있는 열심히 춤추었다
+			PRINTFORML 그 모습은 한사람의 단골손님의 눈에 띄는 일이 되어 댄스의 뒤에 이끌렸다
+			PRINTFORML 다 달아오르고 있었던 %조사처리(ANAME(MASTER),"는")% 그의 작업 대사에 가슴과 자궁을 쑤시게 한 무심코 수긍한다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그에게 연인같이 다가붙으면서ＶＩＰ룸에 향했다
+			PRINTFORMW 거기서 %조사처리(ANAME(MASTER),"는")% 밤새 그전용의 무희로서 요염하게 춤추는 일이 되었다
+		CASE 6
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 급사을 하게 하고 있다
+			PRINTFORML 오늘의 의상은 한층 과격해, 조금 움직이는 것만으로 속옷이나 그 아래가 뻔히 보임이 되어 버린다
+			PRINTFORML 추잡한 시선에 노출되면서 어떻게든 일을 하고 있었던 %조사처리(ANAME(MASTER),"는")% 한사람의 손님에게 잔이 요구되었다
+			PRINTFORMW 그 밖에 손의 비어있는 사람도 있지 않고 어쩔 수 없이 어쩔 수 없이 그의 근처에 앉아 접객 한다
+			PRINTFORML 다른 손님과 달라 성희롱도 과격한 요구도 되지 않고 %조사처리(ANAME(MASTER),"는")% 조금 그에게 기분을 허락한다
+			PRINTFORML 하지만 술에는 몰래 미약을 혼합되어지고 있고 서서히 %조사처리(ANAME(MASTER),"는")% 숨을 거칠게 하기 시작했다
+			PRINTFORMW 이유도 모르고 자궁으로부터 솟구치는 열에 %조사처리(ANAME(MASTER),"는")% 시달린 같은 표정으로 머뭇머뭇 해 버린다
+			PRINTFORML 술도 도와 이성이 정신나가 버린 %조사처리(ANAME(MASTER),"는")% 그의 포장판매 요구를 이해하지 않고 승낙해 버렸다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 호텔에 데리고 들어가져 밤새 씩씩한 하나의 물건으로 괴롭혀져 버렸다
+		CASE 7
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 폴 댄서을 맡겨지고 춤추고 있다
+			PRINTFORML 수치에 의해 다른 아이들에 비해 분명하게 움직임이 둔함%ANAME(MASTER)%에 추잡한 야지가 난다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 눈물고인 눈이 되면서도 손님에게 (듣)묻는 대로 필사적으로 폴에 신체를 문지르며 허리를 흔드는
+			PRINTFORMW 그 표정이 손님에게 받은 것 같아 한층 더 야유는 과격하게 되어행 %조사처리(ANAME(MASTER),"를")% 부추긴다
+			PRINTFORML 눈치채면 %조사처리(ANAME(MASTER),"는")% 손님에게 향하여 사타구니를 다리를 크게 벌림으로 하면서 신체를 구불거리게 되어지고 있었다
+			PRINTFORML 그 가슴팍이나 가터 벨트에는 대량의 스핀이 끼워지고 있었다
+			PRINTFORMW 요구되는 것을 %조사처리(ANAME(MASTER),"는")% 모르는 동안에 암컷으로서의 쾌감을 기억 완전히 완성되고 있었다
+			PRINTFORML 춤을 끝내도 몸의 욱신거림이 들어가지 않은 %조사처리(ANAME(MASTER),"는")% 당연 손님의 권유에도 거절할 수 없었다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 가게의 바로 뒤쪽에서 몇 사람이나 되는 남자에게 요구되고 사용되고 암컷의 기쁨으로 몇 번이나 절정 했다
+		CASE 8
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 바니걸의 모습으로 접객을 하게 하고 있다
+			PRINTFORML 급사중, 손님은 차례차례로 %ANAME(MASTER)%에 성희롱을 해 온다
+			PRINTFORML 가슴이나 엉덩이를 비비어져 허벅지를 어루만질 수 있어 일부러 맥주를 골짜기에 흘려진다
+			PRINTFORMW 성희롱은 자꾸자꾸 에스컬레이트해 가는 대로 %ANAME(MASTER)%도 숨을 거칠게 하고 뺨을 물들이기 시작한다
+			PRINTFORML 캬쿠가 흘린 술을 닦기 위해서(때문에) 책상아래에 기어들면 무려 페니스가 노출되고 있었다
+			PRINTFORML 몹시 취하고 있는 손님은 이것도 처리해 줘하고 %ANAME(MASTER)%의 눈앞에 강압해 온다
+			PRINTFORMW 반복해진 애무와 가게의 분위기 그리고 숨이 막히는 수컷의 냄새에 %조사처리(ANAME(MASTER),"는")% 거역할 수 없었다
+			PRINTFORML 깨달으면 %조사처리(ANAME(MASTER),"는")% 질퍽질퍽 추잡한 소리를 내 페니스에 달라붙고 있다
+			PRINTFORML 더욱%조사처리(ANAME(MASTER),"는")% 눈동자에♥를 띄우고 정액을 다 마시면서 스스로의 비밀스런 장소를 만지작거리고 있었다
+			PRINTFORMW 봉사에 기분을 좋게 한 손님이 부른 %조사처리(ANAME(MASTER),"는")% 욕정한 표정인 채 모두 호텔에 향했다
+		CASE 9
+			PRINTFORMW 많은 손님으로 전장과 같은 술집에서 %조사처리(ANAME(MASTER),"는")% 급사를 하게 하고 있다
+			PRINTFORML 손님의 상당수는 똘마니로 %ANAME(MASTER)%에 참견을 해 온다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 어떻게든 웃는 얼굴로 그것들에 대응하면서 필사적으로 일을 해내 간다
+			PRINTFORMW 하면 한사람의 똘마니에 얽힐 수 있어 무리하게 내기를 가져 걸려졌다
+			PRINTFORML 주위의 손님으로부터도 요구된 %조사처리(ANAME(MASTER),"는")% 빨리 끝내려고 내기에 교제했다
+			PRINTFORML 하지만 내기는 일방적으로 그 승리로 끝나 %조사처리(ANAME(MASTER),"는")% 내기의 대상을 청구 당했다
+			PRINTFORMW 그런 일은 (듣)묻지 않았다고 항의하는 사이도 없게 주위의 압력에 져 그의 요구를 삼킬 수밖에 없었다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 그에게 레로와 뺨을 빨려지면서 전리품으로서 가지고 돌아가하셨다
+			PRINTFORMW 그의 젊음에 맡긴 섹스로 밤새 안기고 완전히 암컷으로서 예의범절을 가르칠 수 있는 일이 되었다
+		CASE 10
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 바쁘고 접객 당하면서 숨을 거칠게 하고 있다
+			PRINTFORML 가터 벨트에는 몇 개의 스윗치가 끼여, 코드의 앞은 짧은 스커트안에 계속되고 있다
+			PRINTFORML %ANAME(MASTER)%의 비밀스런 장소에는 로터가 복수 담겨 있고 때때로 손님이 스윗치를 만지작거려 반응을 즐긴다
+			PRINTFORMW %조사처리(ANAME(MASTER),"가")% 야무지지 못하게 올리는 암컷의 소리에 그들은 천하게 보인 웃음을 올려 팁을
+			PRINTFORML 때때로 참지 못하고 가게의 뒤에 도망치면, 이번은 점장으로부터 성희롱을 받게 된다
+			PRINTFORMW 그는 %ANAME(MASTER)%의 근무 태도를 힐책하면서 집요하게 엉덩이나 허벅지를 돌리듯이 어루만지며 온다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 되는 대로로 손가락이 섬세한 곳을 겨 돌리는 것을 훨씬 참는다
+			PRINTFORML 그 태도를 반항적과 이체몬을 붙여진 %조사처리(ANAME(MASTER),"는")% 재교육이기 때문에와 점장실에 데리고 들어가졌다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 밤새 점장의 절륜자지에 의해 점원답게 교육되어 버렸다
+		CASE 11
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 독실에서 중년 아저씨의 상대를 하게 하고 있다
+			PRINTFORML 그는 추잡한 눈초리로 %ANAME(MASTER)%의 신체를 바라봐 돌리듯이 어루만지며 온다
+			PRINTFORML 실수가 없게 다짐해지고 있는 %조사처리(ANAME(MASTER),"는")% 얼굴을 경련이 일어나게 하면서도 웃는 얼굴로 접객 한다
+			PRINTFORMW 천하게 보인 이야기에 합퇴를 쳐, 치켜세우고 있으면 그의 텐션이 올라 가는 것을 느낀다
+			PRINTFORML 더 이상은 안 된다고 생각했을 때에는 이미 늦게 그의 손가락은 %ANAME(MASTER)%의 옷안에 기어들고 있었다
+			PRINTFORML 비명을 올리려고 하면 무리하게 입술을 빼앗기고 그대로 끈질기게 애무된다
+			PRINTFORMW 불쾌할 것인데 교묘한 손놀림으로 자극되고 %조사처리(ANAME(MASTER),"는")% 무심코 달콤한 한숨을 흘려 버린다
+			PRINTFORML 그 반응에 그는 더욱 더%조사처리(ANAME(MASTER),"를")% 마음에 든 것 같아 콧김을 거칠게 해 쓰러트렸다
+			PRINTFORMW 그의 끝없는 성욕에 의해 폐점까지 끝없이 범해지고 몇 번이나 절정에 이르러 버렸다
+		CASE 12
+			PRINTFORMW 오늘은 대란교파티가 열리고 있다
+			PRINTFORML 손님이나 점원도 모두 과격한 의상을 몸에 걸쳐, 남녀가 서로 권유하고 있다
+			PRINTFORML 그들의 단정치 못한 주고받음에 %조사처리(ANAME(MASTER),"가")%지는 언제 있고 정신을 빼앗겨 버린다
+			PRINTFORMW 그리고 드디어 난교가 시작되어 %조사처리(ANAME(MASTER),"가")% 갈팡질팡 하고 있으면 한사람의 손님이 불렀다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 거절하려고 했지만, 다수의 남자들에게 구깃구깃으로 되어 교제에 말려 들어가 버렸다
+			PRINTFORML 전신을 만지작거려지면서 술을 먹게 된 %조사처리(ANAME(MASTER),"는")% 이윽고 인사불성이 되어 자지러지는 소리를 내고 있었다
+			PRINTFORML %ANAME(MASTER)%의 극상의 여체는 대호평으로 차례차례로 남자들이 무리 무수한 자지에 계속 둘러싸였다
+			PRINTFORMW 일발 발해질 때에 허벅지에 정의 글자가 써 넣어져 가고 해방되는 무렵에는 세지 못할정도로 되어 있었다
+		CASE 13
+			PRINTFORMW 몹시 술취한 손님의 상대를 꽉 누를 수 있었다
+			PRINTFORML 그는 %조사처리(ANAME(MASTER),"를")% 껴안으면서 저질 이야기를 털어 온다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 혐오감을 느끼면서도 영업 스마일로 넌지시 대응한다
+			PRINTFORML 분위기를 살려 온 그는 연회석의 놀이를 요구했다
+			PRINTFORMW 져도 룰루랄라해 벗어 가는 그에 대해 %조사처리(ANAME(MASTER),"는")% 수치로 얼굴을 새빨갛게 해 버린다
+			PRINTFORML 하지만 팔로 신체를 숨기는 일은 용서되지 않고 그 나체를 주위에 벌거숭이에게 노출된다
+			PRINTFORML 게임은 %조사처리(ANAME(MASTER),"가")%전라가 될 때까지 강제적으로 계속되어 버렸다
+			PRINTFORML 그는 벌게임이라고 칭해 다른 손님의 앞에서 %ANAME(MASTER)%의 강간 쇼를 개시했다
+			PRINTFORML 전라에서는 도망치는 도망칠 수 있지 못하고 그의 매우 굵은 자지로 격렬하게 범해지고 몇 번이나 가게 되어 버렸다
+			PRINTFORMW 그는 매우%조사처리(ANAME(MASTER),"를")% 마음에 든 것 같아 다음번도 또 아무쪼록이라고 말해 돌아갔다
+		CASE 14
+			PRINTFORMW 업무중, 다른 점원에게 백 야드까지 불려 갔다
+			PRINTFORML 무슨 일일까하고 생각하고 있으면 그는 %ANAME(MASTER)%의 갈아입음의 사진이나 갈아 입을 것을 내몄다
+			PRINTFORML 도촬되고 있던 일에 쇼크를 받아 굳어진 %ANAME(MASTER)%에 그는 힐쭉 웃는다
+			PRINTFORMW 떨리는 소리로 무엇이 목적인지를 물으면 허리에 손을 써지고 상대를 해 주고와 속삭여졌다
+			PRINTFORML 어떻게든 이 장소를 피하자 생각하고 있는 동안에 억지로 독실로 데리고 들어가져 버렸다
+			PRINTFORML 그의 젊음 맡김의 격렬한 섹스로 몇 번이나 가게 되고 피임의 부탁도 소용없이 씨뿌리기 되어 버렸다
+			PRINTFORMW 하지만 업무중에서도 짬만 있으면 불려 가서는 가차 없이 강간을 반복해졌다
+			PRINTFORMW 폐점시 이별할 때에 연락처를 무리하게 알아내지고 또 아무쪼록과 속삭여졌다
+		CASE 15
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 손님의 요망으로 스테이지 위에서 노래하고 있다
+			PRINTFORML 살랑살랑의 의상을 입어 노래해 춤추는 %ANAME(MASTER)%의 모습은 관객을 북돋운다
+			PRINTFORML 하지만 바로 그 %조사처리(ANAME(MASTER),"는")% 관객의 소리도 귀에 들려오지 않고 뺨을 물들이고 숨을 거칠게 하고 있다
+			PRINTFORMW 스테이지의 앞에 점장으로부터 한껏 씨뿌리기 되어 있어 태내에는 그의 정액이 가득 차 있었다
+			PRINTFORML 춤출 때에 비밀스런 장소로부터 정액이 흘러넘쳐 와 버려, %조사처리(ANAME(MASTER),"는")% 필사적으로 비밀스런 장소를 긴축시킨다
+			PRINTFORML 신체는 조금 전까지의 섹스로 완전히 민감하게 되어 있어 유두는 서 자궁은 큥큥 쑤신다
+			PRINTFORMW 발정한 표정으로 가볍게 가면서 계속 노래하는 %ANAME(MASTER)%의 모습은 관객을 한층 더 북돋웠다
+			PRINTFORMW 다 노래하면 스테이지의 성공의 포상으로서 %조사처리(ANAME(MASTER),"는")% 또 점장에게 한껏 범해졌다
+	ENDSELECT
+	CALL FUCK(MASTER, "욕망, 성교, 정애, 성기술, 성기술, 봉사, Ｖ, Ｂ, Ｍ, Ｃ, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("불량배"), @"점장의 \@RAND:2 ? 페니스 # 입술\@", @"점장", "", "강간")
+	PRINTFORML 
+	LOCAL = 2000 + (ABL:MASTER:봉사 + ABL:MASTER:성기술 + ABL:MASTER:성교) * 400
+	MONEY += LOCAL
+	PRINTFORMW 보수로 해서 돈{LOCAL}를 받았다
+	DVAR:아르바이트_발생플래그 ++
+	IF DVAR:아르바이트_발생플래그 + RAND:10 > 10
+		PRINTFORML 이제(이미/벌써/더는/정말) 충분히 일해 주었다고 말해져 해방되었다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 자궁의 욱신거림을 속이는 것처럼 남자를 노려보면서 가게를 뒤로 했다
+		DVAR:아르바이트_발생플래그 = 0
+	ELSE
+		PRINTFORMW 또 오도록 들었다…
+	ENDIF
+ENDIF
+
+RETURN 1
+
+@EVENT_DAILY_ARBEIT_ALLOW_WHEN_WANDERING
+RETURN 1
+

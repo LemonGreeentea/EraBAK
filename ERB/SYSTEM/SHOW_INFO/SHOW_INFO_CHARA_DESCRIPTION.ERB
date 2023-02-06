@@ -1,0 +1,409 @@
+﻿;-------------------------------------------------
+;에로스테이타스 표시
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION(대상)
+#DIM 대상
+CALL SINGLE_DRAWLINE
+PRINTFORML 육체
+CALL COLOR_LINE
+
+CALL SHOW_INFO_ERO_DESCRIPTION_BODY(대상)
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 감각
+CALL COLOR_LINE
+
+CALL SHOW_INFO_ERO_DESCRIPTION_SENSE(대상)
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 성적 기호
+CALL COLOR_LINE
+
+CALL SHOW_INFO_ERO_DESCRIPTION_FETISH(대상)
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 함락
+CALL COLOR_LINE
+
+CALL SHOW_INFO_ERO_DESCRIPTION_FALLEN(대상)
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 특수한 함락
+CALL COLOR_LINE
+
+CALL SHOW_INFO_ERO_DESCRIPTION_SP_FALLEN(대상)
+
+CALL SINGLE_DRAWLINE
+PRINTFORML SLG 설명
+CALL COLOR_LINE
+TRYCCALLFORM SHOW_CHARA_EXPLANATION_{NO:(대상)}
+CALL SINGLE_EMPTY_LINE()
+CATCH
+	PRINTFORML SLG 설명 없음　
+	CALL SINGLE_EMPTY_LINE()
+ENDCATCH
+
+;-------------------------------------------------
+;에로스테이타스 표시  육체
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_BODY(대상)
+#DIM 대상
+IF TALENT:대상:키스미경험
+	PRINTFORML 입맞춤을 주고 받았던 적이 없다
+ELSE
+	CALL COLOR_PRINT(SEXUAL_EXPERIENCE:대상:첫체험_키스 == "불명" ? "누군가" # SEXUAL_EXPERIENCE:대상:첫체험_키스, 칼라_핑크, "에", GETDEFCOLOR())
+	SIF SEXUAL_EXPERIENCE_SITUATION:대상:첫체험_키스 != ""
+		CALL COLOR_PRINT(SEXUAL_EXPERIENCE_SITUATION:대상:첫체험_키스, 칼라_핑크, "로", GETDEFCOLOR())
+	PRINTFORML 입술의 처음을 바쳤다
+	IF SEXUAL_LAST_EXPERIENCE:대상:첫체험_키스 != ""
+		CALL COLOR_PRINT("바로 옆에서는", GETDEFCOLOR(), SEXUAL_LAST_EXPERIENCE:대상:첫체험_키스 == "불명" ? "누군가" # SEXUAL_LAST_EXPERIENCE:대상:첫체험_키스, 칼라_핑크, "에", GETDEFCOLOR())
+		SIF SEXUAL_LAST_EXPERIENCE_SITUATION:대상:첫체험_키스 != ""
+			CALL COLOR_PRINT(SEXUAL_LAST_EXPERIENCE_SITUATION:대상:첫체험_키스, 칼라_핑크, "로", GETDEFCOLOR())
+		PRINTFORML 입맞춤하고 있다
+	ENDIF
+ENDIF
+
+IF HAS_VAGINA(대상)
+	IF TALENT:대상:처녀
+		PRINTFORML 질 구멍은 순결을 유지하고 있다
+	ELSE
+		CALL COLOR_PRINT(SEXUAL_EXPERIENCE:대상:첫체험_처녀 == "불명" ? "누군가" # SEXUAL_EXPERIENCE:대상:첫체험_처녀, 칼라_핑크, "에", GETDEFCOLOR())
+		SIF SEXUAL_EXPERIENCE_SITUATION:대상:첫체험_처녀 != ""
+			CALL COLOR_PRINT(SEXUAL_EXPERIENCE_SITUATION:대상:첫체험_처녀, 칼라_핑크, "로", GETDEFCOLOR())
+		PRINTFORML 순결을 바쳤다
+		IF SEXUAL_LAST_EXPERIENCE:대상:첫체험_처녀 != ""
+			CALL COLOR_PRINT("바로 옆에서는", GETDEFCOLOR(), SEXUAL_LAST_EXPERIENCE:대상:첫체험_처녀 == "불명" ? "누군가" # SEXUAL_LAST_EXPERIENCE:대상:첫체험_처녀, 칼라_핑크, "와", GETDEFCOLOR())
+			SIF SEXUAL_LAST_EXPERIENCE_SITUATION:대상:첫체험_처녀 != ""
+				CALL COLOR_PRINT(SEXUAL_LAST_EXPERIENCE_SITUATION:대상:첫체험_처녀, 칼라_핑크, "로", GETDEFCOLOR())
+			PRINTFORML 사귀고 있다
+		ENDIF
+	ENDIF
+ENDIF
+
+IF TALENT:대상:애널처녀
+	PRINTFORML 엉덩이 구멍은 순결을 유지하고 있다
+ELSE
+	CALL COLOR_PRINT(SEXUAL_EXPERIENCE:대상:첫체험_애널처녀 == "불명" ? "누군가" # SEXUAL_EXPERIENCE:대상:첫체험_애널처녀, 칼라_핑크, "에", GETDEFCOLOR())
+	SIF SEXUAL_EXPERIENCE_SITUATION:대상:첫체험_애널처녀 != ""
+		CALL COLOR_PRINT(SEXUAL_EXPERIENCE_SITUATION:대상:첫체험_애널처녀, 칼라_핑크, "로", GETDEFCOLOR())
+	PRINTFORML 엉덩이 구멍에서의 첫체험을 바쳤다
+	IF SEXUAL_LAST_EXPERIENCE:대상:첫체험_애널처녀 != ""
+		CALL COLOR_PRINT("바로 옆에서는", GETDEFCOLOR(), SEXUAL_LAST_EXPERIENCE:대상:첫체험_애널처녀 == "불명" ? "누군가" # SEXUAL_LAST_EXPERIENCE:대상:첫체험_애널처녀, 칼라_핑크, "와", GETDEFCOLOR())
+		SIF SEXUAL_LAST_EXPERIENCE_SITUATION:대상:첫체험_애널처녀 != ""
+			CALL COLOR_PRINT(SEXUAL_LAST_EXPERIENCE_SITUATION:대상:첫체험_애널처녀, 칼라_핑크, "로", GETDEFCOLOR())
+		PRINTFORML 사귀고 있다
+	ENDIF
+ENDIF
+
+IF HAS_PENIS(대상)
+	IF TALENT:대상:동정
+		PRINTFORML 아직도 동정이다
+	ELSE
+		CALL COLOR_PRINT(SEXUAL_EXPERIENCE:대상:첫체험_동정 == "불명" ? "누군가" # SEXUAL_EXPERIENCE:대상:첫체험_동정, 칼라_핑크, "에", GETDEFCOLOR())
+		SIF SEXUAL_EXPERIENCE_SITUATION:대상:첫체험_동정 != ""
+			CALL COLOR_PRINT(SEXUAL_EXPERIENCE_SITUATION:대상:첫체험_동정, 칼라_핑크, "로", GETDEFCOLOR())
+		PRINTFORML 동정을 바쳤다
+		IF SEXUAL_LAST_EXPERIENCE:대상:첫체험_동정 != ""
+			CALL COLOR_PRINT("바로 옆에서는", GETDEFCOLOR(), SEXUAL_LAST_EXPERIENCE:대상:첫체험_동정 == "불명" ? "누군가" # SEXUAL_LAST_EXPERIENCE:대상:첫체험_동정, 칼라_핑크, "와", GETDEFCOLOR())
+			SIF SEXUAL_LAST_EXPERIENCE_SITUATION:대상:첫체험_동정 != ""
+				CALL COLOR_PRINT(SEXUAL_LAST_EXPERIENCE_SITUATION:대상:첫체험_동정, 칼라_핑크, "로", GETDEFCOLOR())
+			PRINTFORML 사귀고 있다
+		ENDIF
+	ENDIF
+ENDIF
+
+IF IS_FEMALE(대상)
+	SELECTCASE GET_BUSTSIZE(대상)
+		CASE -2
+			PRINTFORML 가슴에는 부푼 곳이 없고, 완전히 평평함
+		CASE -1
+			PRINTFORML 유방은 좀 작으면서도 갖추어진 형태를 하고 있다
+		CASE 0
+			PRINTFORML 유방은 딱 좋은 크기의 매력적인 형태를 하고 있다
+		CASE 1
+			PRINTFORML 풍부하고 부드러운 것 같은 유방이 눈을 끈다
+		CASE 2
+			PRINTFORML 터지지 않을 정도 휘어지게 여문 유방이 시선을 못을 박아 고정시킴으로 한다
+	ENDSELECT
+	SELECTCASE GET_HIPSIZE(대상)
+		CASE -2
+			PRINTFORML 엉덩이의 살집은 꽤 얇고, 완전히 평평함
+		CASE -1
+			PRINTFORML 엉덩이는 좀 작으면서도 갖추어진 형태를 하고 있다
+		CASE 0
+			PRINTFORML 엉덩이는 딱 좋은 크기의 매력적인 형태를 하고 있다
+		CASE 1
+			PRINTFORML 풍부해 탄력이 있는 엉덩이가 눈을 끈다
+		CASE 2
+			PRINTFORML 터지지 않을 정도 고기가 막힌 엉덩이가 시선을 못을 박아 고정시킴으로 한다
+	ENDSELECT
+	SIF TALENT:대상:모유체질
+		CALL COLOR_PRINTL("유방으로부터는 모유가 분비되고 있다", 칼라_핑크)
+	SIF TALENT:대상:각선미
+		PRINTFORML 날씬한 아름다운 다리가 이성을 매료한다
+	SIF TALENT:대상:예쁜엉덩이
+		PRINTFORML 엉덩이살은 아름답고, 꽉 긴장되고 있다
+ENDIF
+
+IF TALENT:대상:임신
+	CALL ICPRINT(@"<\@ GET_SPERM_NAME(CFLAG:대상:아이의부친) == "불명" ? 부친 불명 # %GET_SPERM_NAME(CFLAG:(대상):아이의부친)% \@>의 아이를 품고 있다", "L", 칼라_핑크)
+	SIF CFLAG:대상:행동불능상태 == 행동불능_임월
+		CALL COLOR_PRINTL("임월을 맞이한 배는 크게 부풀고 있다", 칼라_핑크)
+ENDIF 
+
+FOR LOCAL, 0, 2
+		CONTINUE
+	IF LOCAL == 0
+		SIF !HAS_VAGINA(대상)
+			CONTINUE
+		LOCAL:1 = TALENT:대상:Ｖ조임
+		LOCALS = 여자구멍
+	ELSE
+		LOCAL:1 = TALENT:대상:Ａ조임
+		LOCALS = 엉덩이 구멍
+	ENDIF
+
+	SELECTCASE LOCAL:1
+		CASE IS >= 조임_꽉닫힘
+			PRINTFORML %조사처리(LOCALS,"는")% 새끼 손가락조차 거절할 만큼 좁다
+		CASE IS >= 조임_꽉조임
+			PRINTFORML %조사처리(LOCALS,"는")% 새끼 손가락이라도 꽈악 단단히 조이는 좁음이다
+		CASE IS >= 조임_빡빡함
+			PRINTFORML %조사처리(LOCALS,"는")% 손가락을 큐우큐우 단단히 조여 온다
+		CASE IS >= 조임_명기
+			PRINTFORML %조사처리(LOCALS,"는")% 문 것에 쾌감을 주는 명기다
+		CASE IS >= 조임_보통
+			PRINTFORML %LOCALS%의 조임은 보통이라는 곳이다
+		CASE IS >= 조임_느슨한
+			PRINTFORML %LOCALS%의 조임은 느슨한이다
+		CASE IS >= 조임_느슨느슨
+			PRINTFORML %조사처리(LOCALS,"는")% 대단히 느슨해져 버리고 있다
+		CASE IS >= 조임_뻐끔뻐끔
+			PRINTFORML 사용된 %조사처리(LOCALS,"는")% 뻐끔 열어 닫지 않게 되어 있다
+		CASE IS >= 조임_헐렁헐렁
+			PRINTFORML 너무 사용되어, %조사처리(LOCALS,"는")% 형태가 망가져 헐렁헐렁이 되어 있다
+		CASEELSE
+			PRINTFORML 너무 사용되어, %조사처리(LOCALS,"는")% 원래의 형태를 모를 정도로 무너져 버리고 있다
+	ENDSELECT
+NEXT
+
+SELECTCASE TALENT:대상:음모현재치
+	CASE 음모_백보지
+		PRINTFORML 음모는 제모되어 치부는 반질반질 하고 있다
+	CASE 음모_깔끔
+		PRINTFORML 음모가 나지 않은 치부는 반질반질 하고 있다
+	CASE 음모_손질됨
+		PRINTFORML 음모는 제대로 손질되고 있다
+	CASE 음모_솜털
+		PRINTFORML 치부에는 희미하게, 음모가 솜털과 같이 나 있다
+	CASE 음모_살짝
+		PRINTFORML 얇은 음모가 치부로 풀숲을 형성하고 있다
+	CASE 음모_표준
+		PRINTFORML 음모는 평균적으로 나고 갖추어져 있다
+	CASE 음모_많은
+		PRINTFORML 음모는 보통 보다 약간 좀많다
+	CASE 음모_주렁주렁
+		PRINTFORML 음모는 주렁주렁무성함
+	CASE 음모_무식하게
+		PRINTFORML 꽤 진한 음모가 무식하게 무성함
+	CASE 음모_강모
+		PRINTFORML 굵은 음모가 밀림과 같이 무성해, 음부를 가리고 있다
+	CASE 음모_항문에난털
+		PRINTFORML 손질되어 있지 않은 음모는, 나고 마음껏으로 엉덩이까지 달하고 있다
+	CASE 음모_하트형
+		CALL COLOR_PRINTL("음모는 이성을 유혹하는 것 같은 하트형에 정돈되고 있다", 칼라_핑크)
+	CASEELSE
+		PRINTFORML 음모는 평균적으로 나고 갖추어져 있다
+ENDSELECT
+
+SELECTCASE TALENT:대상:겨드랑이털현재치
+	CASE 겨드랑이털_제모완료
+		PRINTFORML 겨드랑이털은 제모되어 겨드랑이는 반질반질 하고 있다
+	CASE 겨드랑이털_깔끔
+		PRINTFORML 겨드랑이털이 나지 않은 겨드랑이는 반질반질 하고 있다
+	CASE 겨드랑이털_손질됨
+		PRINTFORML 겨드랑이는 제대로 손질 되고 있다
+	CASE 겨드랑이털_솜털
+		PRINTFORML 겨드랑이에는 희미하게, 겨드랑이털이 솜털과 같이 나 있다
+	CASE 겨드랑이털_살짝
+		PRINTFORML 얇은 겨드랑이털이 겨드랑이로 풀숲을 형성하고 있다
+	CASE 겨드랑이털_보통
+		PRINTFORML 겨드랑이털은 평균적으로 나고 갖추어져 있다
+	CASE 겨드랑이털_많은
+		PRINTFORML 겨드랑이털은 보통 보다 약간 좀많다
+	CASE 겨드랑이털_주렁주렁
+		PRINTFORML 겨드랑이털은 주렁주렁무성함
+	CASE 겨드랑이털_무식하게
+		PRINTFORML 꽤 진한 겨드랑이털이 무식하게 무성함
+	CASE 겨드랑이털_강모
+		PRINTFORML 진한 겨드랑이털이 밀림과 같이 무성해, 겨드랑이를 가리고 있다
+	CASE 겨드랑이털_밀림
+		PRINTFORML 손질되어 있지 않은 겨드랑이털은, 나고 마음껏으로 겨드랑이로부터 넘쳐 나오고 있다
+	CASEELSE
+		PRINTFORML 겨드랑이털은 평균적으로 나고 갖추어져 있다
+ENDSELECT
+
+
+SIF IS_PIERCED(대상, 피어스_유두) || IS_PIERCED(대상, 피어스_클리토리스) || IS_PIERCED(대상, 피어스_페니스) || IS_PIERCED(대상, 피어스_음순)
+	CALL COLOR_PRINTL("추잡한 부위에 피어스가 되고 있다", 칼라_핑크)
+
+SIF IS_TATTOOED(대상, 문신_뺨) || IS_TATTOOED(대상, 문신_이마)
+	CALL COLOR_PRINTL("얼굴이 눈에 띄는 근처에 문신이 들어가 있다", 칼라_핑크)
+
+SIF IS_TATTOOED(대상, 문신_가슴) || IS_TATTOOED(대상, 문신_비부) || IS_TATTOOED(대상, 문신_엉덩이)
+	CALL COLOR_PRINTL("추잡한 부위에 문신이 들어가 있다", 칼라_핑크)
+
+CALL SINGLE_EMPTY_LINE()
+
+;-------------------------------------------------
+;에로스테이타스 표시  감각
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_SENSE(대상)
+#DIM 대상
+#DIM 표시항목 = GETNUM(ABL, "Ｃ감"), GETNUM(ABL, "Ｖ감"), GETNUM(ABL, "Ａ감"), GETNUM(ABL, "Ｂ감"), GETNUM(ABL, "Ｍ감")
+
+FOR LOCAL, 0, VARSIZE("표시항목")
+	TRYCALLFORM SHOW_INFO_ERO_DESCRIPTION_{표시항목:LOCAL}(대상, ABL:대상:(표시항목:LOCAL))
+NEXT
+
+CALL SINGLE_EMPTY_LINE()
+
+;-------------------------------------------------
+;에로스테이타스 표시  성벽
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_FETISH(대상)
+#DIM 대상
+{
+#DIM 표시항목 = 
+GETNUM(ABL, "욕망"), GETNUM(ABL, "성기술"), GETNUM(ABL, "성지식"), GETNUM(ABL, "봉사"), GETNUM(ABL, "성교"),
+GETNUM(ABL, "레즈"), GETNUM(ABL, "ＢＬ"), GETNUM(ABL, "노출"), GETNUM(ABL, "자위"), GETNUM(ABL, "정애"),
+GETNUM(ABL, "사정"), GETNUM(ABL, "분유"), GETNUM(ABL, "촉수"), GETNUM(ABL, "출산"), GETNUM(ABL, "마조"), GETNUM(ABL, "새드")
+}
+
+FOR LOCAL, 0, VARSIZE("표시항목")
+	TRYCALLFORM SHOW_INFO_ERO_DESCRIPTION_{표시항목:LOCAL}(대상, ABL:대상:(표시항목:LOCAL))
+NEXT
+
+TRYCALLFORM SHOW_INFO_SEXUAL_PREFERENCE_DESCRIPTION(대상)
+
+CALL SINGLE_EMPTY_LINE()
+
+;-------------------------------------------------
+;에로스테이타스 표시  함락
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_FALLEN(대상)
+#DIM 대상
+IF TALENT:대상:친애
+	PRINTFORML %조사처리(ANAME(MASTER),"를")% 언제나 생각하고 있는 것 같다
+ELSEIF TALENT:대상:연모
+	PRINTFORML %ANAME(MASTER)%에 사모하는 마음을 안고 있다
+ENDIF
+
+IF TALENT:대상:예속
+	PRINTFORML %ANAME(MASTER)%에 영혼의 바닥으로부터의 충성을 맹세코 있다
+ELSEIF TALENT:대상:복종
+	PRINTFORML %ANAME(MASTER)%에 굴해, 충성을 맹세코 있다
+ENDIF
+
+SIF TALENT:대상:낙인
+	PRINTFORML %ANAME(MASTER)%의 것이라는 낙인이 찍히고 있다
+
+IF TALENT:대상:소유자
+	PRINTFORML %조사처리(ANAME(MASTER),"를")% 마음속으로부터 굴복시켜, 소유하고 있다
+ELSEIF TALENT:대상:주인
+	PRINTFORML %조사처리(ANAME(MASTER),"를")% 굴복 시킨 주인이다
+ENDIF
+
+IF TALENT:대상:붕괴
+	CALL COLOR_PRINTL("그 마음은 파괴되어 두 번 다시 돌아오는 일은 없다", 칼라_경고)
+ELSEIF TALENT:대상:공허
+	CALL COLOR_PRINTL("도를 넘은 부담에 의해, 마음에 상처를 입고 있다", 칼라_주의)
+ENDIF
+CALL SINGLE_EMPTY_LINE()
+
+;-------------------------------------------------
+;에로스테이타스 표시  특수한 함락
+;-------------------------------------------------
+@SHOW_INFO_ERO_DESCRIPTION_SP_FALLEN(대상)
+#DIM 대상
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_음란)
+	CALL COLOR_PRINTL(@"추잡한 일을 아주 좋아한 음란함", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_음핵)
+	CALL COLOR_PRINTL(@"민감한 비핵은 항상 쾌락을 추구해, 부끄러운 듯하지도 않고 즉각 날카로워지고 있다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_음호)
+	CALL COLOR_PRINTL(@"여자구멍은 항상 쑤셔, 관철해지지 않으면 침착해 있을 수 있지 않고, 군침과 같이 꿀을 늘어뜨리고 있다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_항문광)
+	CALL COLOR_PRINTL(@"항문은 성기로서 다시 만들 수 있어 항상 성의 기쁨에 쑤셔 탐욕에 실룩거리고 있다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_음유)
+	CALL COLOR_PRINTL(@"추잡하게 개발 된 유방은, 바람이 분 것 뿐으로 느낄 만큼 민감하게 되어 있다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_키스마)
+	CALL COLOR_PRINTL(@"성감대로서 다시 태어난 입술은, 언제라도 입 맞춤이나 펠라티오의 쾌감을 추구하고 있다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_사정광)
+	CALL COLOR_PRINTL(@"몇 번이나 자식을 추방한 육봉은 항상 발기한 채로, 사정욕구로 머리를 다 메우고 있다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_새드)
+	CALL COLOR_PRINTL(@"다른 사람을 희롱하는 것을 지상의 기쁨으로 하고 있어, 폭력을 발휘하는 것으로 절정 해 버린다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_마조)
+	CALL COLOR_PRINTL(@"다른 사람에게 희롱해지는 것을 지상의 기쁨으로 하고 있어, 폭력을 휘둘러져 절정 해 버린다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_암캐)
+	CALL COLOR_PRINTL(@"짐승과의 교제에 쾌락을 찾아내고 있어 그들의 자식을 받아 들이고 싶다고 바라고 있다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_정액변소)
+	CALL COLOR_PRINTL(@"노리겟감으로 되는 것을 쾌락을 찾아내고 있어 바람직하면 누구에게라도 가랑이를 연다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_모판)
+	CALL COLOR_PRINTL(@"촉수와의 교제에 쾌락을 찾아내고 있어 그들의 모체가 되는 것을 기쁨으로 하고 있다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_약물중독)
+	CALL COLOR_PRINTL(@"약물에 의존해 버리고 있어 그것없이는 이미 살고 있을 수 없다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_창녀)
+	CALL COLOR_PRINTL(@"금을 위해서(때문에)가랑이를 여는 것을 쾌감을 찾아낸, 천한 창녀에 전락하고 있다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_노콘섹스중독)
+	CALL COLOR_PRINTL(@"생의 페니스의 쾌감에 빠져, 이미 고무 있는 섹스 따위 생각할 수 없다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_임신하고싶어함)
+	CALL COLOR_PRINTL(@"자궁으로 정액을 받아 들이는 감각에 빠져, 언제라도 아이를 임신해 낳고 싶다고 생각하고 있다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_ＡＶ여배우)
+	CALL COLOR_PRINTL(@"스스로의 치태를 매물로 하는 것을 쾌감을 찾아내, ＡＶ여배우로서 활동하고 있다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_노출광)
+	CALL COLOR_PRINTL(@"스스로의 육체를 이목에 쬐고 기뻐하는 변태다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_양질모태)
+	CALL COLOR_PRINTL(@"몇 번이나 아이를 잉태하고 낳아 온 자궁은 모태로서 최적이다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_진한정액)
+	CALL COLOR_PRINTL(@"일발 임신 틀림없음의 농후한 정액의 소유자다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_꼭두각시)
+	CALL COLOR_PRINTL(@"자아의 근저까지 최면에 의해 얽어매진 인형이다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_바람기버릇)
+	CALL COLOR_PRINTL(@"조금 상냥하게 여겨진 것 뿐으로 누구에게라도 가랑이를 여는 경솔이다", 칼라_핑크)
+
+SIF GETBIT(TALENT:대상:특수세력함락계, 특수세력_도둑)
+	CALL COLOR_PRINTL(@"도둑의 끝없는 윤간에 굴해, 성노예에게 전락했다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:특수세력함락계, 특수세력_홉고블린)
+	CALL COLOR_PRINTL(@"홉고블린의 페니스에 져, 육변기의 입장을 받아들였다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:특수세력함락계, 특수세력_외래인)
+	CALL COLOR_PRINTL(@"외래인으로부터의 연구에 의해, 실험동물에게 되어 내렸다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:특수세력함락계, 특수세력_촉수)
+	CALL COLOR_PRINTL(@"촉수에 기생되어 번식을 위해 사용되고 있다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:특수세력함락계, 특수세력_자경단)
+	CALL COLOR_PRINTL(@"자경단의 유지를 위해서라면, 이성과 자는 일도 당연이라고 생각하고 있다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:특수세력함락계, 특수세력_서큐버스)
+	CALL COLOR_PRINTL(@"사람들의 꿈에 나타나는 음마로서 다시 태어났다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:특수세력함락계, 특수세력_광신도)
+	CALL COLOR_PRINTL(@"사악한 신의 아래 성교를 교의로 하는 광신도다", 칼라_핑크)
+
+SIF GETBIT(TALENT:대상:데일리계, 소질_데일리_약팔이의성노예)
+	CALL COLOR_PRINTL(@"약팔이의 약과 조교에 떨어져 성노예에게 전락했다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:데일리계, 소질_데일리_귀족의포로)
+	CALL COLOR_PRINTL(@"귀족의 성 기교의 전에, 포로로 되어 버렸다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:데일리계, 소질_데일리_귀족의애인)
+	CALL COLOR_PRINTL(@"귀족의 애인의 한사람으로서 나날 총애를 받고 있다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:데일리계, 소질_데일리_음문)
+	CALL COLOR_PRINTL(@"아랫배에 새겨진 음문이, 머릿속을 추잡한 생각으로 다 메우고 있다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:데일리계, 소질_데일리_부호의애첩)
+	CALL COLOR_PRINTL(@"부호로부터의 능욕으로 저속해져 애첩의 입장을 받아들였다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:데일리계, 소질_데일리_원애첩)
+	CALL COLOR_PRINTL(@" 이전에는 부호의 애첩이었지만, 지금은 질려 버려졌다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:데일리계, 소질_데일리_최면중독)
+	CALL COLOR_PRINTL(@"최면술에 인격을 다시 만들 수 있어 상황이 좋은 추잡한 구멍이 되었다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:데일리계, 소질_데일리_카지노의종업원)
+	CALL COLOR_PRINTL(@"카지노의 경품으로서 인도해져 종업원으로서 일해지고 있다", 칼라_핑크)
+SIF GETBIT(TALENT:대상:데일리계, 소질_데일리_에로꼬맹이의노예)
+	CALL COLOR_PRINTL(@"에로꼬맹이의 성노예로서 귀여워해지는 나날을 보내고 있다", 칼라_핑크)
+CALL SINGLE_EMPTY_LINE()
+
+

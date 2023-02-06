@@ -1,0 +1,349 @@
+﻿;-------------------------------------------------
+;「투기장」의 본체
+;-------------------------------------------------
+@SHOP_LIFE_ARENA(대상)
+#DIM 대상
+#DIM 적전투력
+#DIM 상대남
+#DIMS CONST 상대후보남 = "늑대 같은 남자", "텐구", "오니", "들요괴", "불량배"
+#DIMS CONST 상대후보녀 = "텐구아가씨", "갓파아가씨", "여용병", "무녀", "도둑아가씨"
+#DIMS 상대이름
+#DIM 출장캐릭터
+#DIM 대전상대가캐릭터
+
+DUMPRAND
+
+출장캐릭터 = -1
+CALL SELECT_CHARA_RANDOM("ARENA")
+IF RESULT != -1
+	IF (IS_MALE(대상) && IS_FEMALE(RESULT))
+	ELSEIF (HAS_PENIS(대상) && IS_FEMALE(RESULT))
+	ELSEIF (IS_FEMALE(대상) && IS_MALE(RESULT))
+	ELSE
+		GOTO ENEMY_CANCEL
+	ENDIF
+	출장캐릭터 = RESULT
+ENDIF
+
+$ENEMY_CANCEL
+
+CALL SINGLE_DRAWLINE
+PRINTFORML %조사처리(ANAME(대상),"는")% 지하 투기장에 왔다
+PRINTFORML 많은 인간이나 요괴들로 분위기를 살리고 있다
+
+IF !RAND:5
+	SELECTCASE RAND:4
+		CASE 0
+			PRINTFORML 중앙의 링에서는 패배한 여전사가 많은 전으로 능욕 되고 있다…
+		CASE 1
+			PRINTFORML 링의 하나로 지금 확실히 여자 노예가 오니에 덮어누를 수 있는 범해질 것 같게 되어 있다…
+		CASE 2
+			PRINTFORML 내기에 너무 열중한 관객들이 링의 옆으로 장외 난투 하고 있는 모습이 눈에 비친다…
+		CASE 3
+			PRINTFORML 피투성이가 된 검투사가 %ANAME(대상)%의 옆을 들것으로 옮겨 나와 갔다…
+	ENDSELECT
+
+		PRINTFORML 「자주(잘) 왔군, 여기는 투기장이다」
+		PRINTFORML 「본 대로 여기에서는 뜨거운 투쟁을 구경거리로 하고 있다」
+		PRINTFORML 「그것도 보통 곳과 달리, 여자 투사에 의한 투쟁이다」
+		PRINTFORML 「그 의미는…알겠지?」
+		IF IS_MALE(대상)
+			PRINTFORML 그는 천하게 보인 미소를 띄웠다
+		ELSE
+			PRINTFORML 그는 %ANAME(대상)%의 신체를 빠는 것처럼 응시하면서 천하게 보인 미소를 띄웠다
+		ENDIF
+	PRINTFORML 「뭐, 이기면 돈을 받아 돌아갈 수 있을 뿐이다」
+ENDIF
+
+PRINTFORML 
+PRINTFORML 「…그런데, 어느 놈과 싸워? 강적이 벌 수 있어」
+PRINTFORML 「참가료는 금 3000이다」
+
+IF 출장캐릭터 >= 0
+	PRINTFORML 「……그러고 보면, 오늘은 뛰어 들어 참가자가 있구나」
+	PRINTFORML
+	PRINTFORML 이쪽의 실력:{ARENA_GET_POWER(대상)}
+	CALL ASK_MULTI("약한 적(기준:80)" ,"보통의 적(기준:130)" ,"강한 적(기준:180)", "타박타박(기준:250)", "돌아간다", @"%ANAME(출장캐릭터)%(기준:{ARENA_GET_POWER(출장캐릭터)})")
+ELSE
+	PRINTFORML 
+	PRINTFORML 이쪽의 실력:{ARENA_GET_POWER(대상)}
+	CALL ASK_MULTI("약한 적(기준:80)" ,"보통의 적(기준:130)" ,"강한 적(기준:180)", "타박타박(기준:250)", "돌아간다")
+ENDIF
+
+대전상대가캐릭터 = 0
+
+SELECTCASE RESULT
+	CASE 0
+		적전투력 = 60 + RAND:40
+	CASE 1
+		적전투력 = 90 + RAND:40
+	CASE 2
+		적전투력 = 160 + RAND:40
+	CASE 3
+		적전투력 = 230 + RAND:40
+	CASE 4
+		INITRAND
+		RETURN 0
+	CASE 5
+		적전투력 = ARENA_GET_POWER(출장캐릭터) * RAND(80, 120) / 100
+		대전상대가캐릭터 = 1
+ENDSELECT
+
+PRINTFORML 금 3000을 지불했다
+MONEY -= 3000
+
+IF !대전상대가캐릭터
+	IF IS_FEMALE(대상) && HAS_PENIS(대상)
+		PRINTFORML 「그것과, 당신의 경우, 상대의 성별도 선택해 받을까?」
+		PRINTFORML 「헷헤, 어느 쪽이든 재미있는 구경거리가 되겠어」
+		PRINTFORML 어느 쪽을 선택해?
+		CALL ASK_YN("남" ,"여")
+		상대남 = !RESULT
+	ELSEIF IS_MALE(대상)
+		상대남 = 0
+	ELSE
+		상대남 = 1
+	ENDIF
+
+	IF 상대남
+		상대이름 = %상대후보남:(RAND:VARSIZE("상대후보남"))%
+	ELSE
+		상대이름 = %상대후보녀:(RAND:VARSIZE("상대후보녀"))%
+	ENDIF
+ELSE
+	상대이름 = %ANAME(출장캐릭터)%
+	상대남 = IS_MALE(출장캐릭터)
+ENDIF
+
+PRINTFORML 「좋아, 그렇다면 이 녀석이 상대다」
+PRINTFORMW 상대 이름은 %상대이름%다
+PRINTFORML 「죽지 않는 정도로 완장응인, 헤헤헤」
+PRINTFORMW %조사처리(ANAME(대상),"는")% 접수를 빠져 나가, 검투장에 향했다
+
+IF !대전상대가캐릭터
+	IF 상대남
+		SELECTCASE RAND:4
+			CASE 0
+				PRINTFORML 「헤헤헤, 귀여워해 주겠어」
+				PRINTFORMW %상대이름%는 입맛을 다심을 하고 있다
+			CASE 1
+				PRINTFORML 「이 녀석은, 상등품이다, 히히」
+				PRINTFORMW %상대이름%는 추잡한 미소를 띄우고 있다
+			CASE 2
+				PRINTFORML 「이것은 즐길 수 있어 그렇네, 힛힛」
+				PRINTFORMW %상대이름%의 사타구니가 부풀어 오르고 있는 것이 보인다
+			CASE 3
+				PRINTFORML 「이, 이제(이미/벌써/더는/정말) 인내 할 수 있고! 빨리 시켜라!」
+				PRINTFORMW %상대이름%는 눈을 핏발이 서게 하고 있다
+		ENDSELECT
+	ELSE
+		SELECTCASE RAND:4
+			CASE 0
+				PRINTFORML 「당할 수는 없어요!」
+				PRINTFORMW %상대이름%는 준비했다
+			CASE 1
+				PRINTFORML 「…절대로 지지 않는다!」
+				PRINTFORMW %상대이름%는 홱 노려봐 왔다
+			CASE 2
+				PRINTFORML 「빨리 쓰러트리게 해 돌려 보내 받아요」
+				PRINTFORMW 하지만 말과 정반대로 희미하게 떨고 있었다
+			CASE 3
+				PRINTFORML 「%ANAME(대상)%정도로는 역부족이야」
+				PRINTFORMW %상대이름%는 겁없는 미소를 띄우고 있다
+		ENDSELECT
+	ENDIF
+ENDIF
+
+CALL ARENA_BATTLE(대상, 상대이름, 적전투력)
+
+IF RESULT > 0
+	CALL ARENA_WIN(대상, 상대이름, 상대남, 대전상대가캐릭터 ? 출장캐릭터 # -1)
+	CALL COLOR_PRINTW(@"상금{ARENA_CALC_MONEY(대상, 적전투력)}를 받았다", 칼라_주의)
+	MONEY += ARENA_CALC_MONEY(대상, 적전투력)
+	CALL PRINT_ADD_EXP(대상, "무투경험치", ARENA_CALC_EXP(대상, 적전투력), 1)
+	CALL PRINT_ADD_EXP(대상, "방위경험치", ARENA_CALC_EXP(대상, 적전투력), 1)
+	CALL TRAIN_AUTO_ABLUP(대상)
+ELSE
+	CALL ARENA_LOSE(대상, 상대이름, 상대남, 대전상대가캐릭터 ? 출장캐릭터 # -1)
+	CALL PRINT_ADD_EXP(대상, "무투경험치", ARENA_CALC_EXP(대상, 적전투력) / 10, 1)
+	CALL PRINT_ADD_EXP(대상, "방위경험치", ARENA_CALC_EXP(대상, 적전투력) / 10, 1)
+	CALL TRAIN_AUTO_ABLUP(대상)
+ENDIF
+
+CFLAG:대상:행동완료 = 1
+
+INITRAND
+
+RETURN 1
+
+
+;-------------------------------------------------
+;「투기장」의 대전 상대 결정
+;-------------------------------------------------
+@SELECT_CHARA_RANDOM_LOGIC_ARENA(대상)
+#DIM 대상
+SIF MASTER == 대상
+	RETURN 0
+SIF IS_SP_COUNTRY_CHARA(대상)
+	RETURN 0
+SIF IS_ANIMAL(대상)
+	RETURN 0
+SIF CFLAG:대상:포로처
+	RETURN 0
+RETURN 1
+
+
+;-------------------------------------------------
+;「투기장」전투력 산출
+;-------------------------------------------------
+@ARENA_GET_POWER(대상)
+#FUNCTION
+#DIM 대상
+RETURNF MAX(ABL:대상:무투 + ABL:대상:방위, ABL:대상:무투 + ABL:대상:지략, ABL:대상:방위 + ABL:대상:지략)
+
+;-------------------------------------------------
+;「투기장」상금 산출
+;-------------------------------------------------
+@ARENA_CALC_MONEY(대상, 적전투력)
+#FUNCTION
+#DIM 대상
+#DIM 전투력
+#DIM 적전투력
+#DIM 실력비
+#DIM 상금
+전투력 = ARENA_GET_POWER(대상)
+실력비 = 적전투력 * 100 / 전투력
+상금 = 3000 + 적전투력 * 40 * 실력비 / 100
+RETURNF 상금
+
+;-------------------------------------------------
+;「투기장」상금 산출
+;-------------------------------------------------
+@ARENA_CALC_EXP(대상, 적전투력)
+#FUNCTION
+#DIM 대상
+#DIM 전투력
+#DIM 적전투력
+#DIM 실력비
+#DIM 경험치
+전투력 = ARENA_GET_POWER(대상)
+실력비 = 적전투력 * 100 / 전투력
+경험치 = (RAND:20 + 1 + 적전투력 / 10) * 실력비 / 100
+RETURNF 경험치
+
+;-------------------------------------------------
+;「투기장」전투 파트
+;-------------------------------------------------
+@ARENA_BATTLE(대상, 상대이름, 적전투력)
+#DIM 대상
+#DIMS 상대이름
+#DIM 적전투력
+#DIM 누적결과
+#DIM 전투결과
+
+CALL SINGLE_DRAWLINE
+PRINTFORMW %조사처리(ANAME(대상),"가")% 준비하면 심판의 신호가 울었다!
+누적결과 = 0
+WHILE 1
+	전투결과 = RAND(ARENA_GET_POWER(대상) / 2, ARENA_GET_POWER(대상)) - RAND(적전투력 / 2, 적전투력)
+	IF 전투결과 > 0
+		PRINTFORML %ANAME(대상)%의 공격이 %상대이름%를 잡았다!
+		PRINTFORMW %상대이름%에 데미지를 주었다
+	ELSE
+		PRINTFORML %상대이름%의 공격을 피하지 못했다!
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 데미지를 받았다
+	ENDIF
+	IF 전투결과 > 0
+		누적결과  ++
+	ELSE
+		누적결과 --
+	ENDIF
+	SIF ABS(누적결과) >= 3
+		BREAK
+WEND
+
+CALL SINGLE_DRAWLINE
+PRINTFORM 「거기까지!」
+
+RETURN 누적결과
+
+;-------------------------------------------------
+;「투기장」승리
+;-------------------------------------------------
+@ARENA_WIN(대상, 상대이름, 상대남, 상대캐릭터)
+#DIM 대상
+#DIMS 상대이름
+#DIM 상대남
+#DIM 상대캐릭터
+
+PRINTFORMW %조사처리(ANAME(대상),"는")% 훌륭히 승리했다!
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF !상대남
+	PRINTFORML 힘이 다한 %상대이름%는 %ANAME(대상)%의 앞에서 지면에 푹 엎드리고 있다
+	PRINTFORMW 관객으로부터는 격렬한 강간 콜이 영향을 준다
+	PRINTFORML 어떻게 하지?
+	CALL ASK_YN("아무것도하지않는다" ,"범한다")
+	IF RESULT == 0
+		PRINTFORML 무리를 기쁘게 해 줄 생각은 없다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 그녀를 껴안으면 함께 투기장을 뒤로 했다
+	ELSE
+		PRINTFORML 이런 찬스를 쓸데없게 할 생각은 없다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 힐쭉 웃으면 그녀에게 다가갔다
+		CALL ARENA_RAPE_MALE(대상, 상대이름, 상대캐릭터)
+		IF 상대캐릭터 != -1
+			IF GET_COUNTRY_BOSS(CFLAG:상대캐릭터:소속) == 상대캐릭터
+				PRINTFORMW %ANAME(상대캐릭터)%가 패배해, 게다가 능욕되었다는 통지는, 곧바로 환상향안을 뛰어 돌아다녔다……
+				FOR LOCAL, 0, MAX_COUNTRY
+					SIF !IS_COUNTRY(LOCAL) || GROUPMATCH(LOCAL, CFLAG:대상:소속, CFLAG:상대캐릭터:소속)
+						CONTINUE
+					CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:상대캐릭터:소속, -300, 300)
+				NEXT
+			ENDIF
+			CFLAG:상대캐릭터:호감도 -= 500
+			CFLAG:상대캐릭터:종속도 += 500
+			CFLAG:상대캐릭터:의존도 += 500
+		ENDIF
+	ENDIF
+ELSE
+	PRINTFORML %ANAME(대상)%의 승리에 관객으로부터는 야유하는 소리가 날았다
+	PRINTFORML 그리고 푹 엎드리는 %상대이름%에 욕소리를 퍼붓기 시작했다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 말려 들어가기 전에 그 자리를 뒤로 했다
+ENDIF
+PRINTFORML 
+PRINTFORMW %조사처리(ANAME(대상),"는")% 상금을 받아, 가벼운 발걸음으로 투기장을 뒤로 했다
+
+;-------------------------------------------------
+;「투기장」패배
+;-------------------------------------------------
+@ARENA_LOSE(대상, 상대이름, 상대남, 상대캐릭터)
+#DIM 대상
+#DIMS 상대이름
+#DIM 상대남
+#DIM 상대캐릭터
+
+PRINTFORMW %조사처리(ANAME(대상),"는")% 당해버리고 말았다…
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF !상대남
+	PRINTFORML 패배한 %ANAME(대상)%에 욕소리가 퍼져 왔다
+ELSE
+	PRINTFORMW 패배한 %ANAME(대상)%에 욕소리가 퍼져 왔다
+	PRINTFORML 힘이 다하고 지면에 푹 엎드린 %ANAME(대상)%에 천천히 %조사처리(상대이름,"가")% 다가온다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 어떻게든 피하려고 했지만 그것도 소용없이 그에게 덮어씌워졌다
+	CALL ARENA_RAPE_FEMALE(대상, 상대이름, 상대캐릭터)
+	IF GET_COUNTRY_BOSS(CFLAG:대상:소속) == 대상
+		PRINTFORMW %조사처리(ANAME(대상),"가")% 패배해, 게다가 능욕되었다는 통지는, 곧바로 환상향안을 뛰어 돌아다녔다……
+		FOR LOCAL, 0, MAX_COUNTRY
+			SIF !IS_COUNTRY(LOCAL) || LOCAL == CFLAG:대상:소속
+				CONTINUE
+			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:대상:소속, -300, 300)
+		NEXT
+	ENDIF
+ENDIF
+CALL ADD_COOLTIME(대상, 2)
+PRINTFORML 
+PRINTFORMW …%조사처리(ANAME(대상),"는")% 몸을 질질 끌면서 거점에 돌아왔다
+

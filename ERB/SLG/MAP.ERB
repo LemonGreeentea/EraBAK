@@ -1,0 +1,177 @@
+﻿;맵 관계
+
+;-------------------------------------------------
+;전도시의 묘화색을 리셋트 하는 함수
+;-------------------------------------------------
+@RESET_CITY_COLOR
+VARSET CITY_COLOR, GETDEFCOLOR()
+
+;-------------------------------------------------
+;전도시의 묘화색을 세력의 색에 세트 하는 함수
+;-------------------------------------------------
+@SET_CITY_COLOR_COUNTRY
+FOR LOCAL:0, 0, MAX_CITY
+	CITY_COLOR:(LOCAL:0) = COUNTRY_COLOR:(CITY_OWNER:(LOCAL:0))
+NEXT
+
+;-------------------------------------------------
+;병의 존재하는 중계지점에 첨가하는 함수
+;-------------------------------------------------
+@SET_CITY_COLOR_UNIT
+CALL TMP_CREATE_UNIT_MAP
+FOR LOCAL:0, 0, MAX_CITY
+	IF CITY_TYPE:(LOCAL:0) == 1
+		IF IS_STAY_MYUNIT(LOCAL:0) == 1
+			CITY_COLOR:(LOCAL:0) = COUNTRY_COLOR:(CFLAG:MASTER:소속)
+		ELSEIF IS_STAY_UNIT(LOCAL:0) == 2
+			CITY_COLOR:(LOCAL:0) = COUNTRY_COLOR:(GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_도둑)))
+		ELSEIF IS_COUNTRY(TMP_UNIT_ONCITY_CNT:(LOCAL:0):0)
+			CITY_COLOR:(LOCAL:0) = COUNTRY_COLOR:(TMP_UNIT_ONCITY_CNT:(LOCAL:0):0)
+		ENDIF
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;전도시의 묘화색을 자세력:파랑, 적세력:빩강에 세트 하는 함수
+;-------------------------------------------------
+@SET_CITY_COLOR_RELATION
+FOR LOCAL:0, 0, MAX_CITY
+	IF COUNTRY_BOSS:(CITY_OWNER:(LOCAL:0)) <= 0
+		CITY_COLOR:(LOCAL:0) = GETDEFCOLOR()
+	ELSEIF CITY_OWNER:(LOCAL:0) == CFLAG:MASTER:소속
+		CITY_COLOR:(LOCAL:0) = 칼라_파랑
+	ELSEIF CITY_OWNER:(LOCAL:0) == CFLAG:MASTER:소속
+		CITY_COLOR:(LOCAL:0) = 칼라_빨강
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;도시명을 버튼으로서 묘화 하는 함수 ARG:0=도시 번호
+;-------------------------------------------------
+@DRAWCITY_BUTTON(ARG:0)
+SETCOLOR CITY_COLOR:(ARG:0)
+SIF CITY_TYPE:(ARG:0) == 0
+	FONTSTYLE IS_STAY_MYUNIT(ARG:0) * 2 + IS_STAY_ENEMY_UNIT(ARG:0) * 8
+PRINTBUTTON GET_CITYNAME_BUTTON(ARG:0), ARG:0 + 1000
+RESETCOLOR
+FONTSTYLE 0
+
+;-------------------------------------------------
+;전도시수를 돌려주는 함수
+;-------------------------------------------------
+@GET_CITY_NUM()
+#FUNCTION
+RETURNF CITY_NUM
+
+;-------------------------------------------------
+;도시명을 취득하는 함수 버튼용 ARG:0=도시 번호
+;-------------------------------------------------
+@GET_CITYNAME_BUTTON(ARG:0)
+#FUNCTIONS
+SIF ARG:0 < 0 || ARG:0 >= MAX_CITY
+	RETURNF "무명"
+RETURNF CITY_NAME_SHORT:(ARG:0)
+
+;-------------------------------------------------
+;도시명을 취득하는 함수 ARG:0=도시 번호
+;-------------------------------------------------
+@GET_CITYNAME(ARG:0)
+#FUNCTIONS
+SIF ARG:0 < 0 || ARG:0 >= MAX_CITY
+	RETURNF "무명"	
+SIF CITY_TYPE:(ARG:0) == 1
+	RETURNF "●"
+RETURNF CITY_NAME:(ARG:0)
+
+;-------------------------------------------------
+;도시명으로부터 번호를 취득하는 함수 REGISTER_ROUTE나 CITY_OWNER에서의 당의화용. ARGS:0=도시명
+;-------------------------------------------------
+@GET_CITYNUMBER(ARGS:0)
+#FUNCTION
+RETURNF FINDELEMENT(CITY_NAME, ARGS:0, 0, VARSIZE("CITY_NAME"), 1)
+
+;-------------------------------------------------
+;중계지점의 명칭을 취득하는 함수 ARG:0=도시 번호
+;-------------------------------------------------
+@GET_RELAYNAME(ARG:0)
+#FUNCTIONS
+SIF ARG:0 < 0 || ARG:0 >= MAX_CITY
+	RETURNF "무명"	
+RETURNF CITY_NAME:(ARG:0)
+
+;-------------------------------------------------
+;루트의 등록을 실시하는 함수
+;ARG:0  등록원  ARG:1~10 등록처
+;더 이미 등록되어 있으면 무시한다
+;-------------------------------------------------
+@REGISTER_ROUTE(ARG:0, ARG:1 = -99, ARG:2 = -99, ARG:3 = -99, ARG:4 = -99, ARG:5 = -99, ARG:6 = -99, ARG:7 = -99, ARG:8 = -99, ARG:9 = -99, ARG:10 = -99)
+;접속 먼저 붙어 카운트업을 실시한다
+FOR LOCAL:0, 1, 10
+	;-99였던 경우 무시
+	IF ARG:(LOCAL:0) == -99
+		BREAK
+	ENDIF
+	;접속원의 CITY_ROUTE의 0~10에 대해 카운트업을 실시한다
+	FOR LOCAL:1, 0, 10
+		;고장 안전(fail-safe). 이미 해당 지역이 등록되어 있다면 BREAK.
+		IF CITY_ROUTE:(ARG:0):(LOCAL:1) == ARG:(LOCAL:0)
+			BREAK
+		;ARG:0의 CITY_ROUTE 가운데, LOCAL:첫 번째가 비면 등록한다
+		ELSEIF CITY_ROUTE:(ARG:0):(LOCAL:1) == 0
+			CITY_ROUTE:(ARG:0):(LOCAL:1) = ARG:(LOCAL:0)
+			;접속 먼저도 접속원을 등록해 둔다
+			FOR LOCAL:3, 0, 10
+				;고장 안전(fail-safe). REGISTER_ROUTE를 통해 조작하는 한 있을 수 없다고는 생각하지만.
+				IF CITY_ROUTE:(ARG:(LOCAL:0)):(LOCAL:3) == ARG:0
+					;DEBUGPRINTFORML @REGISTER_ROUTE:{ARG:(LOCAL:0)}→{ARG:0}이 등록이 끝난 상태
+					BREAK
+				ELSEIF CITY_ROUTE:(ARG:(LOCAL:0)):(LOCAL:3) == 0
+					CITY_ROUTE:(ARG:(LOCAL:0)):(LOCAL:3) = ARG:0
+					BREAK
+				ENDIF
+			NEXT
+			BREAK
+		ENDIF
+	NEXT
+NEXT
+
+;----------------------------------------------------------------------------------------------
+;이하 나팔
+;----------------------------------------------------------------------------------------------
+
+;-------------------------------------------------
+;도시 타입의 설정
+;-------------------------------------------------
+@SET_CITY_TYPE
+	CALLFORM SET_CITY_TYPE_%MAPID%
+
+;-------------------------------------------------
+;루트의 설정
+;-------------------------------------------------
+@SET_MAP_ROUTE
+	CALLFORM SET_MAP_ROUTE_%MAPID%
+	
+;-------------------------------------------------
+;맵의 준비
+;-------------------------------------------------
+@MAPSETUP(ARG:0 = 0)
+SIF ARG:0 == 0 && MAPREADY == 1
+	RETURN
+CALL SET_CITY_TYPE
+CALLFORM SET_CITYNAME_%MAPID%
+CALLFORM SET_SHORTCITYNAME_%MAPID%
+CALLFORM SET_CITY_NUM_%MAPID%
+CALL SET_MAP_ROUTE
+MAPREADY = 1
+
+;-------------------------------------------------
+;경제나 방위 따위의 초기화
+;-------------------------------------------------
+@MAP_INIT
+CALLFORM MAP_INIT_%MAPID%
+
+;-------------------------------------------------
+;맵의 묘화 ARG:0에 1을 지정하면 군사 화면용의 버튼을 생성
+;-------------------------------------------------
+@DRAWMAP(ARG:0 = 0, ARG:1 = 0)
+CALLFORM DRAWMAP_%MAPID%, ARG:0, ARG:1

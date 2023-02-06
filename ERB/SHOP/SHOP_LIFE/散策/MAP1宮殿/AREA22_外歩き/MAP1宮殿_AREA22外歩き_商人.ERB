@@ -1,0 +1,428 @@
+﻿;============================================================================== 
+;◇수수께끼의 행상인  버튼이 길쭉한 것으로 개별적으로 변경
+;============================================================================== 
+@GAMBLE_GYOUSYOU
+#DIM FIRST_LINE
+#DIM 금액 = 0, 3000, 3000, 3000, 6000, 6000 ,9000, 9000, 9000, 9000, 9000, 9000 ,9000
+$ENTRY
+CALL TITLE_CATEGORY_GENERAL("상인을 찾는다")
+PRINTL 
+	SETCOLOR COLOR("실버")
+	PRINTL 
+	PRINTFORML    근처를 둘러보고 있으면 노출이 격렬한 의상을 감긴 수수께끼의 미녀가 말을 걸어 왔다…
+	PRINTL 
+	PRINTFORML   「네에에, 뭔가 찾고 있는 것 같네요～」
+	PRINTFORML   「만약 FP를 가지고 있다면, 이쪽에서 좋은 것과 교환을 할 수 있어요」
+	PRINTFORML   「교환할 수 있는 상품에 대한 안내 쓰기도 준비해 있기에, 사전에 미리 확인해 주세요」
+	PRINTFORML   「아, 교환 후의 반품은 받고 있지 않으므로, 조~심하세요」
+	RESETCOLOR
+CALL COLOR_LINE
+CALL ASK_MULTI ("상품을 교환한다","상품 설명을 본다","돌아온다")
+
+	;◆설명
+	IF RESULT == 1
+			PRINTFORML   ◇◇FP로 교환할 수 있는 상품에 대해◇◇
+			PRINTL
+			PRINTFORML   %조사처리(ANAME(MASTER),"가")% 스킬을 기억할 수가 있습니다
+			PRINTFORML   다만 스킬범위에 빈곳이 없는 경우, 스킬을 기억할 수 없습니다
+			PRINTFORML   또, 한 번 스킬을 잊은 후, 재차 취득하는 경우도 교환에 필요한 FP를 지불할 필요가 있습니다
+			PRINTL
+			WAIT
+			CALL COLOR_PRINTL("  【특수장비 「군령깃발」】 필요 FP,", GETDEFCOLOR(), "3000", 칼라_오렌지)
+			PRINTFORML   스킬 「전체 강화」를 습득할 수 있다
+			PRINTFORML   스킬 효과 「아군 전체의 공격력을 업」
+			PRINTFORML   발동율:15.0
+			PRINTL
+			WAIT
+			CALL COLOR_PRINTL("  【특수장비 「응원나팔」】 필요 FP,", GETDEFCOLOR(), "3000", 칼라_오렌지)
+			PRINTFORML   스킬 「기력 양도」를 습득할 수 있다
+			PRINTFORML   스킬 효과 「아군 단체의 스킬 발동률을 늘린다」
+			PRINTFORML   발동율:20.0
+			PRINTL
+			WAIT
+			CALL COLOR_PRINTL("  【특수장비 「전술기록」】 필요 FP,", GETDEFCOLOR(), "3000", 칼라_오렌지)
+			PRINTFORML   스킬 「철의 전심」을 습득할 수 있다
+			PRINTFORML   스킬 효과 「아군 단체의 방위·지략 업」
+			PRINTFORML   발동율:18.0
+			PRINTL
+			WAIT
+			CALL COLOR_PRINTL("  【특수장비 「꿈의조각」】 필요 FP,", GETDEFCOLOR(), "6000", 칼라_오렌지)
+			PRINTFORML   스킬 「환상의 장막」을 습득할 수 있다
+			PRINTFORML   스킬 효과 「자부대에 무적을 부여」
+			PRINTFORML   발동율:10.0
+			PRINTL
+			WAIT
+			CALL COLOR_PRINTL("  【특수장비 「무공훈장」】 필요 FP,", GETDEFCOLOR(), "6000", 칼라_오렌지)
+			PRINTFORML   스킬 「기사의 맹세」를 습득할 수 있다
+			PRINTFORML   스킬 효과 「아군 단체에 근성 상태를 부여」
+			PRINTFORML   발동율:50.0
+			PRINTL
+			WAIT
+			CALL COLOR_PRINTL("  【무명의 장검의 습득】 필요 FP,", GETDEFCOLOR(), "9000", 칼라_오렌지)
+			PRINTFORML   스킬 【무명의 장검】를 습득할 수 있다
+			PRINTFORML   스킬 효과 「적부대에 데미지를 줘, 자신 무투·방위를 업」
+			PRINTFORML   발동율:20.0
+			PRINTL
+			WAIT
+			CALL COLOR_PRINTL("  【무명의 마창의 습득】 필요 FP,",,"9000", GETDEFCOLOR(), "9000", 칼라_오렌지)
+			PRINTFORML   스킬 【무명의 마창】를 습득할 수 있다
+			PRINTFORML   스킬 효과 「적부대에 데미지를 줘, 자신의 방위를 업」
+			PRINTFORML   발동율:20.0
+			PRINTL
+			WAIT
+			CALL COLOR_PRINTL("  【무명의 강궁의 습득】 필요 FP,", GETDEFCOLOR(), "9000", 칼라_오렌지)
+			PRINTFORML   스킬 【무명의 강궁】를 습득할 수 있다
+			PRINTFORML   스킬 효과 「적부대에 연속 데미지」
+			PRINTFORML   발동율:20.0
+			PRINTL
+			WAIT
+			CALL COLOR_PRINTL("  【무명의 대도끼의 습득】 필요 FP,", GETDEFCOLOR(), "9000", 칼라_오렌지)
+			PRINTFORML   스킬 【무명의 대도끼】를 습득할 수 있다
+			PRINTFORML   스킬 효과 「적부대에 데미지를 줘, 자신 무투를 업」
+			PRINTFORML   발동율:20.0
+			PRINTL
+			WAIT
+			CALL COLOR_PRINTL("  【무명의 단도의 습득】 필요 FP,", GETDEFCOLOR(), "9000", 칼라_오렌지)
+			PRINTFORML   스킬 【무명의 단도】를 습득할 수 있다
+			PRINTFORML   스킬 효과 「적한사람 무투와 방위를 다운해, 저확률로 전투 불능 상태를 부여」
+			PRINTFORML   발동율:20.0
+			PRINTL
+			WAIT
+			CALL COLOR_PRINTL("  【무명의 준마의 습득】 필요 FP,", GETDEFCOLOR(), "9000", 칼라_오렌지)
+			PRINTFORML   스킬 【무명의 준마】를 습득할 수 있다
+			PRINTFORML   스킬 효과 「전투에 앞서, 자부대가 돌격을 건다」
+			PRINTFORML   발동율:20.0
+			PRINTL
+			WAIT
+			CALL COLOR_PRINTL("  【무명의 지팡이의 습득】 필요 FP,", GETDEFCOLOR(), "9000", 칼라_오렌지)
+			PRINTFORML   스킬 【무명의 지팡이】를 습득할 수 있다
+			PRINTFORML   스킬 효과 「자신의 지략·요술·스킬 발동율을 업」
+			PRINTFORML   발동율:20.0
+			PRINTL
+			WAIT
+			GOTO ENTRY
+	ELSEIF RESULT == 2
+		SETCOLOR COLOR("실버")
+		PRINTL 
+		PRINTFORML   「아라, 돌아오는 길입니까?」
+		PRINTFORML   「FP가 모이면 부디 또 이용하십시오군요」
+		RESETCOLOR
+		PRINTL 
+		PRINTFORMW  이번은 그만두기로 했다
+		RETURN
+	ENDIF
+
+	PRINTFORM   소지 FP:
+	SETCOLOR COLOR("오렌지")
+	PRINTFORM  %NO_FORMAT(GAMBLE_MONEY)%
+	RESETCOLOR
+	PRINTL
+	CALL COLOR_LINE
+
+	FIRST_LINE = LINECOUNT
+	$SHOW_LOOP
+	LOCALS:0 = 특수장비 「군령깃발」
+	IF GAMBLE_MONEY >= 금액:1 && GET_EMPTY_SKILL_SLOT(MASTER, 스킬_장르_SP) != -1 && !CHECK_SKILL_DUPLICATE(MASTER, 스킬_장르_SP, , 48)
+		PRINT   
+		PRINTFORM  [{1, 4}]%LOCALS:0, 22%
+		PRINT   
+		SETCOLOR COLOR("실버")
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:1), 6%
+		RESETCOLOR
+	ELSE
+		PRINT   
+		SETCOLOR COLOR("회색")
+		PRINTPLAINFORM  [{1, 4}]%LOCALS:0, 22%
+		PRINT   
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:1), 6%
+		RESETCOLOR
+	ENDIF
+	PRINTL 
+	LOCALS:0 = 특수장비 「응원나팔」
+	IF GAMBLE_MONEY >= 금액:2 && GET_EMPTY_SKILL_SLOT(MASTER, 스킬_장르_SP) != -1 && !CHECK_SKILL_DUPLICATE(MASTER, 스킬_장르_SP, , 49)
+		PRINT   
+		PRINTFORM  [{2, 4}]%LOCALS:0, 22%
+		PRINT   
+		SETCOLOR COLOR("실버")
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:2), 6%
+		RESETCOLOR
+	ELSE
+		PRINT   
+		SETCOLOR COLOR("회색")
+		PRINTPLAINFORM  [{2, 4}]%LOCALS:0, 22%
+		PRINT   
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:2), 6%
+		RESETCOLOR
+	ENDIF
+	PRINTL 
+	LOCALS:0 = 특수장비 「전술기록」
+	IF GAMBLE_MONEY >= 금액:3 && GET_EMPTY_SKILL_SLOT(MASTER, 스킬_장르_SP) != -1 && !CHECK_SKILL_DUPLICATE(MASTER, 스킬_장르_SP, , 51)
+		PRINT   
+		PRINTFORM  [{3, 4}]%LOCALS:0, 22%
+		PRINT   
+		SETCOLOR COLOR("실버")
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:3), 6%
+		RESETCOLOR
+	ELSE
+		PRINT   
+		SETCOLOR COLOR("회색")
+		PRINTPLAINFORM  [{3, 4}]%LOCALS:0, 22%
+		PRINT   
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:3), 6%
+		RESETCOLOR
+	ENDIF
+		PRINTL 
+	LOCALS:0 = 특수장비 「꿈의조각」
+	IF GAMBLE_MONEY >= 금액:4 && GET_EMPTY_SKILL_SLOT(MASTER, 스킬_장르_BASE) != -1 && !CHECK_SKILL_DUPLICATE(MASTER, 스킬_장르_BASE, , 34)
+		PRINT   
+		PRINTFORM  [{4, 4}]%LOCALS:0, 22%
+		PRINT   
+		SETCOLOR COLOR("실버")
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:4), 6%
+		RESETCOLOR
+	ELSE
+		PRINT   
+		SETCOLOR COLOR("회색")
+		PRINTPLAINFORM  [{4, 4}]%LOCALS:0, 22%
+		PRINT   
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:4), 6%
+		RESETCOLOR
+	ENDIF
+	PRINTL 
+	LOCALS:0 = 특수장비 「무공훈장」
+	IF GAMBLE_MONEY >= 금액:5 && GET_EMPTY_SKILL_SLOT(MASTER, 스킬_장르_SP) != -1 && !CHECK_SKILL_DUPLICATE(MASTER, 스킬_장르_SP, , 50)
+		PRINT   
+		PRINTFORM  [{5, 4}]%LOCALS:0, 22%
+		PRINT   
+		SETCOLOR COLOR("실버")
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:5), 6%
+		RESETCOLOR
+	ELSE
+		PRINT   
+		SETCOLOR COLOR("회색")
+		PRINTPLAINFORM  [{5, 4}]%LOCALS:0, 22%
+		PRINT   
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:5), 6%
+		RESETCOLOR
+	ENDIF
+	PRINTL 
+	LOCALS:0 = 무명의 장검의 습득
+	IF GAMBLE_MONEY >= 금액:6 && GET_EMPTY_SKILL_SLOT(MASTER, 스킬_장르_SP) != -1 && !CHECK_SKILL_DUPLICATE(MASTER, 스킬_장르_SP, , 41)
+		PRINT   
+		PRINTFORM  [{6, 4}]%LOCALS:0, 22%
+		PRINT   
+		SETCOLOR COLOR("실버")
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:6), 6%
+		RESETCOLOR
+	ELSE
+		PRINT   
+		SETCOLOR COLOR("회색")
+		PRINTPLAINFORM  [{6, 4}]%LOCALS:0, 22%
+		PRINT   
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:6), 6%
+		RESETCOLOR
+	ENDIF
+	PRINTL 
+	LOCALS:0 = 무명의 마창의 습득
+	IF GAMBLE_MONEY >= 금액:7 && GET_EMPTY_SKILL_SLOT(MASTER, 스킬_장르_SP) != -1 && !CHECK_SKILL_DUPLICATE(MASTER, 스킬_장르_SP, , 42)
+		PRINT   
+		PRINTFORM  [{7, 4}]%LOCALS:0, 22%
+		PRINT   
+		SETCOLOR COLOR("실버")
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:7), 6%
+		RESETCOLOR
+	ELSE
+		PRINT   
+		SETCOLOR COLOR("회색")
+		PRINTPLAINFORM  [{7, 4}]%LOCALS:0, 22%
+		PRINT   
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:7), 6%
+		RESETCOLOR
+	ENDIF
+	PRINTL 
+	LOCALS:0 = 무명의 강궁의 습득
+	IF GAMBLE_MONEY >= 금액:8 && GET_EMPTY_SKILL_SLOT(MASTER, 스킬_장르_SP) != -1 && !CHECK_SKILL_DUPLICATE(MASTER, 스킬_장르_SP, , 43)
+		PRINT   
+		PRINTFORM  [{8, 4}]%LOCALS:0, 22%
+		PRINT   
+		SETCOLOR COLOR("실버")
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:8), 6%
+		RESETCOLOR
+	ELSE
+		PRINT   
+		SETCOLOR COLOR("회색")
+		PRINTPLAINFORM  [{8, 4}]%LOCALS:0, 22%
+		PRINT   
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:8), 6%
+		RESETCOLOR
+	ENDIF
+	PRINTL 
+	LOCALS:0 = 무명의 대도끼의 습득
+	IF GAMBLE_MONEY >= 금액:9 && GET_EMPTY_SKILL_SLOT(MASTER, 스킬_장르_SP) != -1 && !CHECK_SKILL_DUPLICATE(MASTER, 스킬_장르_SP, , 44)
+		PRINT   
+		PRINTFORM  [{9, 4}]%LOCALS:0, 22%
+		PRINT   
+		SETCOLOR COLOR("실버")
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:9), 6%
+		RESETCOLOR
+	ELSE
+		PRINT   
+		SETCOLOR COLOR("회색")
+		PRINTPLAINFORM  [{9, 4}]%LOCALS:0, 22%
+		PRINT   
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:9), 6%
+		RESETCOLOR
+	ENDIF
+	PRINTL 
+	LOCALS:0 = 무명의 단도의 습득
+	IF GAMBLE_MONEY >= 금액:10 && GET_EMPTY_SKILL_SLOT(MASTER, 스킬_장르_SP) != -1 && !CHECK_SKILL_DUPLICATE(MASTER, 스킬_장르_SP, , 45)
+		PRINT   
+		PRINTFORM  [{10, 4}]%LOCALS:0, 22%
+		PRINT   
+		SETCOLOR COLOR("실버")
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:10), 6%
+		RESETCOLOR
+	ELSE
+		PRINT   
+		SETCOLOR COLOR("회색")
+		PRINTPLAINFORM  [{10, 4}]%LOCALS:0, 22%
+		PRINT   
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:10), 6%
+		RESETCOLOR
+	ENDIF
+	PRINTL 
+	LOCALS:0 = 무명의 준마의 습득
+	IF GAMBLE_MONEY >= 금액:11 && GET_EMPTY_SKILL_SLOT(MASTER, 스킬_장르_SP) != -1 && !CHECK_SKILL_DUPLICATE(MASTER, 스킬_장르_SP, , 46)
+		PRINT   
+		PRINTFORM  [{11, 4}]%LOCALS:0, 22%
+		PRINT   
+		SETCOLOR COLOR("실버")
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:11), 6%
+		RESETCOLOR
+	ELSE
+		PRINT   
+		SETCOLOR COLOR("회색")
+		PRINTPLAINFORM  [{11, 4}]%LOCALS:0, 22%
+		PRINT   
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:11), 6%
+		RESETCOLOR
+	ENDIF
+	PRINTL 
+	LOCALS:0 = 무명의 지팡이의 습득
+	IF GAMBLE_MONEY >= 금액:12 && GET_EMPTY_SKILL_SLOT(MASTER, 스킬_장르_SP) != -1 && !CHECK_SKILL_DUPLICATE(MASTER, 스킬_장르_SP, , 47)
+		PRINT   
+		PRINTFORM  [{12, 4}]%LOCALS:0, 22%
+		PRINT   
+		SETCOLOR COLOR("실버")
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:12), 6%
+		RESETCOLOR
+	ELSE
+		PRINT   
+		SETCOLOR COLOR("회색")
+		PRINTPLAINFORM  [{12, 4}]%LOCALS:0, 22%
+		PRINT   
+		PRINTPLAINFORM FP:%NO_FORMAT(금액:12), 6%
+		RESETCOLOR
+	ENDIF
+	PRINTL 
+
+	CALL COLOR_LINE
+	PRINTFORM    [   0] 돌아온다
+	PRINTL 
+
+	$INPUT_LOOP
+	INPUT 0
+
+	LOCAL:0 = RESULT
+	IF RESULT == 0
+		RETURN 0
+	ENDIF
+	SETCOLOR COLOR("실버")
+	SELECTCASE LOCAL:0
+		CASE 1
+			PRINTFORML   「특수장비의 군령깃발을 희망이군요」
+			PRINTFORML   「그러면 이쪽을 부탁합니다～」
+			PRINTL
+			CALL LEARN_SKILL_GENERAL_BY_NAME(MASTER, "전체 강화")
+			CALL COLOR_PRINTW(@"   %조사처리(ANAME(MASTER),"는")% 특수장비의 도움으로, 스킬 「전체 강화」를 습득했다!", 칼라_주의)
+		CASE 2
+			PRINTFORML   「특수장비의 응원나팔을 희망이군요」
+			PRINTFORML   「그러면 이쪽을 부탁합니다～」
+			PRINTL
+			CALL LEARN_SKILL_GENERAL_BY_NAME(MASTER, "기력 양도")
+			CALL COLOR_PRINTW(@"   %조사처리(ANAME(MASTER),"는")% 특수장비의 도움으로, 스킬 「기력 양도」를 습득했다!", 칼라_주의)
+		CASE 3
+			PRINTFORML   「특수장비의 전술기록를 희망이군요」
+			PRINTFORML   「그러면 이쪽을 부탁합니다～」
+			PRINTL
+			CALL LEARN_SKILL_GENERAL_BY_NAME(MASTER, "철의 전심")
+			CALL COLOR_PRINTW(@"   %조사처리(ANAME(MASTER),"는")% 특수장비의 도움으로, 스킬 「철의 전심」을 습득했다!", 칼라_주의)
+		CASE 4
+			PRINTFORML   「특수장비의 꿈의조각을 희망이군요」
+			PRINTFORML   「그러면 이쪽을 부탁합니다～」
+			PRINTL
+			CALL LEARN_SKILL_GENERAL_BY_NAME(MASTER, "환상의 장막")
+			CALL COLOR_PRINTW(@"   %조사처리(ANAME(MASTER),"는")% 특수장비의 도움으로, 스킬 「환상의 장막」을 습득했다!", 칼라_주의)
+		CASE 5
+			PRINTFORML   「특수장비의 무공훈장」을 희망이군요」
+			PRINTFORML   「그러면 이쪽을 부탁합니다～」
+			PRINTL
+			CALL LEARN_SKILL_GENERAL_BY_NAME(MASTER, "기사의 맹세")
+			CALL COLOR_PRINTW(@"   %조사처리(ANAME(MASTER),"는")% 특수장비의 도움으로, 스킬 「기사의 맹세」를 습득했다!", 칼라_주의)
+		CASE 6
+			PRINTFORML   「무명의 장검의 습득을 희망이군요」
+			PRINTFORML   「그러면 이쪽에 부디～」
+			PRINTL
+			CALL LEARN_SKILL_GENERAL_BY_NAME(MASTER, "무명의 장검")
+			CALL COLOR_PRINTW(@"   %조사처리(ANAME(MASTER),"는")% 스킬 「무명의 장검」을 습득했다!", 칼라_주의)
+		CASE 7
+			PRINTFORML   「무명의 마창의 습득의 습득을 희망이군요」
+			PRINTFORML   「그러면 이쪽에 부디～」
+			PRINTL
+			CALL LEARN_SKILL_GENERAL_BY_NAME(MASTER, "무명의 마창")
+			CALL COLOR_PRINTW(@"   %조사처리(ANAME(MASTER),"는")% 스킬 「무명의 마창」을 습득했다!", 칼라_주의)
+		CASE 8
+			PRINTFORML   「무명의 강궁의 습득의 습득을 희망이군요」
+			PRINTFORML   「그러면 이쪽에 부디～」
+			PRINTL
+			CALL LEARN_SKILL_GENERAL_BY_NAME(MASTER, "무명의 강궁")
+			CALL COLOR_PRINTW(@"   %조사처리(ANAME(MASTER),"는")% 스킬 「무명의 강궁」을 습득했다!", 칼라_주의)
+		CASE 9
+			PRINTFORML   「무명의 대도끼의 습득의 습득을 희망이군요」
+			PRINTFORML   「그러면 이쪽에 부디～」
+			PRINTL
+			CALL LEARN_SKILL_GENERAL_BY_NAME(MASTER, "무명의 대도끼")
+			CALL COLOR_PRINTW(@"   %조사처리(ANAME(MASTER),"는")% 스킬 「무명의 대도끼」를 습득했다!", 칼라_주의)
+		CASE 10
+			PRINTFORML   「무명의 단도의 습득의 습득을 희망이군요」
+			PRINTFORML   「그러면 이쪽에 부디～」
+			PRINTL
+			CALL LEARN_SKILL_GENERAL_BY_NAME(MASTER, "무명의 단도")
+			CALL COLOR_PRINTW(@"   %조사처리(ANAME(MASTER),"는")% 스킬 「무명의 단도」를 습득했다!", 칼라_주의)
+		CASE 11
+			PRINTFORML   「무명의 준마의 습득의 습득을 희망이군요」
+			PRINTFORML   「그러면 이쪽에 부디～」
+			PRINTL
+			CALL LEARN_SKILL_GENERAL_BY_NAME(MASTER, "무명의 준마")
+			CALL COLOR_PRINTW(@"   %조사처리(ANAME(MASTER),"는")% 스킬 「무명의 준마」를 습득했다!", 칼라_주의)
+		CASE 12
+			PRINTFORML   「무명의 지팡이의 습득을 희망이군요」
+			PRINTFORML   「그러면 이쪽에 부디～」
+			PRINTL
+			CALL LEARN_SKILL_GENERAL_BY_NAME(MASTER, "무명의 지팡이")
+			CALL COLOR_PRINTW(@"   %조사처리(ANAME(MASTER),"는")% 스킬 「무명의 지팡이」을 습득했다!", 칼라_주의)
+	ENDSELECT
+	PRINTL
+	RESETCOLOR
+	PRINTFORML    FP와 상품을 교환했다…
+	SETCOLOR COLOR("실버")
+	PRINTL 
+	PRINTFORML   「매번 있어～」
+	PRINTFORMW    「다음 내점, 대기～」
+	RESETCOLOR
+
+	GAMBLE_MONEY -= 금액:(LOCAL:0)
+
+	CLEARLINE LINECOUNT - FIRST_LINE
+
+	RETURN 2

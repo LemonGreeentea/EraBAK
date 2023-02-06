@@ -1,0 +1,1003 @@
+﻿@MILLIONAIRE_DERIVATION_CREATE_MILLIONAIRE
+#DIM 대상
+
+CALL CREATE_RANDOM_CHARA(0, -1, 0)
+FLAG:범용무장카운트 --
+대상 = RESULT
+IF LOCAL == -1
+	RETURN -1
+ENDIF
+
+NO:대상 = GET_EMPTY_NO()
+NAME:대상 = 부호
+CALLNAME:대상 = 부호
+CSTR:대상:0 =
+CSTR:대상:1 =
+TALENT:대상:성별 = 0
+MAXBASE:대상:체력 = 99999999
+MAXBASE:대상:기력 = 99999999
+MAXBASE:대상:정신력 = 1500
+BASE:대상:체력 = MAXBASE:대상:체력
+BASE:대상:기력 = MAXBASE:대상:기력
+BASE:대상:정신력 = MAXBASE:대상:정신력
+ABL:대상:성지식 = 5
+ABL:대상:Ｃ감 = 5
+ABL:대상:Ｖ감 = 3
+ABL:대상:Ａ감 = 3
+ABL:대상:Ｂ감 = 3
+ABL:대상:Ｍ감 = 5
+ABL:대상:욕망 = 15
+ABL:대상:성기술 = 20
+ABL:대상:성지식 = 5
+ABL:대상:봉사 = 1
+ABL:대상:성교 = 15
+ABL:대상:레즈 = 0
+ABL:대상:정애 = 3
+ABL:대상:노출 = 2
+ABL:대상:사정 = 15
+ABL:대상:배설 = 3
+ABL:대상:새드 = 5
+ABL:대상:주도도Ｕ = RAND(300, 600)
+ABL:대상:주도도Ｎ = RAND(300, 600)
+ABL:대상:도착도 = RAND(300, 500)
+EXP:대상:절정경험 = 500
+ABL:대상:무투 = 60
+ABL:대상:방위 = 30
+ABL:대상:지략 = 30
+ABL:대상:정치 = 30
+ABL:대상:요리 = 10
+ABL:대상:주량 = 3
+IF HAS_PENIS(대상)
+	FOR LOCAL, 30, 50
+		SIF GROUPMATCH(LOCAL, 36, 46)
+			CONTINUE
+		COM_TENDENCY:대상:LOCAL = RAND:2
+	NEXT
+ENDIF
+
+TALENT:대상:절륜 = 1
+TALENT:대상:음모현재치 = 음모_표준
+TALENT:대상:음모목표치 = 음모_표준
+TALENT:대상:Ｖ조임 = GET_DEFAULT_TIGHTNESS("보통")
+TALENT:대상:Ａ조임 = GET_DEFAULT_TIGHTNESS("보통")
+TALENT:(대상):처녀 = 0
+TALENT:(대상):키스미경험 = 0
+TALENT:(대상):동정 = 0
+TALENT:(대상):애널처녀 = 1
+SEXUAL_EXPERIENCE:(대상):첫체험_처녀 = 불명
+SEXUAL_LAST_EXPERIENCE:(대상):첫체험_처녀 = 불명
+SEXUAL_EXPERIENCE:(대상):첫체험_키스 = 불명
+SEXUAL_LAST_EXPERIENCE:(대상):첫체험_키스 = 불명
+SEXUAL_EXPERIENCE:(대상):첫체험_동정 = 불명
+SEXUAL_LAST_EXPERIENCE:(대상):첫체험_동정 = 불명
+SEXUAL_EXPERIENCE:(대상):첫체험_애널처녀 = ----
+SEXUAL_LAST_EXPERIENCE:(대상):첫체험_애널처녀 = ----
+CFLAG:대상:위안참가자 = 1
+CFLAG:대상:위안모브 = 1
+CFLAG:대상:조교참가플래그  = 1
+CFLAG:대상:강제우호화 = 1
+
+
+;---------------------
+;대응하는 데일리의 DISABLE를 돌려준다. 설정하지 않는 경우, 이벤트는 발생하지 않는다.
+;---------------------
+@EVENT_DAILY_DERIVATION_MILLIONAIRE_REVENGE_DISABLE()
+RETURN DAILY_GET_DISABLE_CONFIG("MILLIONAIRE")
+
+;---------------------
+;발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;대응하는 데일리의 DISABLE 체크를 규약으로서 필수로 한다
+;---------------------
+@EVENT_DAILY_DERIVATION_MILLIONAIRE_REVENGE_DECISION()
+#DIM 대상
+
+SIF DVAR:부호_유괴카운터 == 0
+	RETURN 0
+
+대상 = ID_TO_CHARA(DVAR:부호_유괴대상)
+SIF 대상 == -1
+	RETURN 0
+
+SIF !IS_FEMALE(대상)
+	RETURN 0
+
+SIF GET_COUNTRY_BOSS(CFLAG:대상:소속) == 대상
+	RETURN 0
+
+SIF 대상 == MASTER
+	RETURN 0
+
+SIF CFLAG:대상:특수상태 == 특수상태_사망
+	RETURN 0
+
+DVAR:부호_유괴카운터 --
+SIF DVAR:부호_유괴카운터 == 0
+	RETURN 1
+
+RETURN 0
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_DERIVATION_MILLIONAIRE_REVENGE()
+#DIM 대상
+
+대상 = ID_TO_CHARA(DVAR:부호_유괴대상)
+
+TALENT:대상:Ｃ둔감 = 0
+TALENT:대상:Ｖ둔감 = 0
+TALENT:대상:Ａ둔감 = 0
+TALENT:대상:Ｂ둔감 = 0
+TALENT:대상:Ｍ둔감 = 0
+TALENT:대상:Ｃ민감 = 1
+TALENT:대상:Ｖ민감 = 1
+TALENT:대상:Ａ민감 = 1
+TALENT:대상:Ｂ민감 = 1
+TALENT:대상:Ｍ민감 = 1
+TALENT:대상:쾌감을부정 = 0
+
+PRINTFORMW 심야……
+PRINTFORMW 거점을 둘러 보고 있었던 %조사처리(ANAME(대상),"는")%, 이상한 듯한 남자가 그늘에 숨어 있는 것을 발견했다
+PRINTFORMW 아무래도 거리의 건달과 같다. 대충, 값의 것이라도 요구해 잠입했을 것이다
+PRINTFORMW 심문하기 위해(때문에) 가까워지려고한 %조사처리(ANAME(대상),"였")%지만, 후두부를 날카로운 아픔이 덮쳤다!
+PRINTFORMW 응전하는 사이도 없고, %조사처리(ANAME(대상),"는")% 졸도 당해 버렸다……
+PRINTFORMW ·
+PRINTFORMW ·
+PRINTFORMW ·
+PRINTFORMW 차갑고 딱딱한 감촉에, %조사처리(ANAME(대상),"는")% 눈을 떴다
+PRINTFORMW 두가 몹시 아파, 신체도 삐걱거리고 있다
+PRINTFORMW 대주라도 해, 취해 무너져 버렸을 것인가. 진절머리 나면서 일어나, 눈치챈다
+PRINTFORMW 옷을 벗겨져 마루에 잠 굴려지고 있었다. 양손다리에는 형벌 도구를 끼워지고 있다
+PRINTFORMW 한층 더 여기는 자기 방은 아니다. 낯선 어슴푸레한 방, 아마 감옥이다
+PRINTFORMW 긴장감으로 의식이 단번에 각성 했다. 도대체 무엇이 있었는지, 둔한 머리를 돌려 생각해 낸다
+PRINTFORMW 그 때, 건달에게 정신을 빼앗긴 것은 잘 몰랐다
+PRINTFORMW 저것은 미끼로, 「본명」의 사람이 뒤로부터 일격을 더한다, 그러한 준비였던 것이 틀림없다
+PRINTFORMW 완전히 불찰이다. 하지만, 후회하고 있어도 어쩔 수 없다. 지금은 탈출하지 않으면 안 된다.
+PRINTFORMW 「간신히 눈을 뜸인가. 잘도 아무튼 그토록 그스카 자 있을 수 있는 것이다. 시골녀는 감각이 마비되고 있는지?」
+PRINTFORMW 끈적 한, 추잡한 소리였다. %조사처리(ANAME(대상),"는")% 그 소리에 귀동냥이 있다
+PRINTFORMW 이전%ANAME(MASTER)%의 불흥을 산 부호다……
+PRINTFORMW 「흥, 무리도, 원숭이로 해서는 도움이 된다. 금만 지불하면 무엇이라도 손을 대니까」
+PRINTFORMW 이 남자가 %조사처리(ANAME(대상),"를")% 납치한 주범일 것임에 틀림없었다. 금방 해방하도록, %조사처리(ANAME(대상),"는")% 요구한다
+PRINTFORMW 「이봐 이봐, 무엇이다 그 눈은?   암컷구멍따위가, 이 나에게 그런 눈을 향하여 좋다고라도?」
+PRINTFORMW 「원망하는 상대가 다를 것이다. 그 야만스러운 원숭이가 좀 더 착실하면, 너도 이런 일에는 안 되었던 것이다」
+PRINTFORMW 「좋은가?   이 내가 감옥에 던져 넣어지는 것의 중대함에 비하면, 너와 같은게 여기에 있으려고 별일 아니다」
+PRINTFORMW 「하지만 녀석이 가장싫어한다의 것은, 너를 데리고 가지는 것일테니까. 소망 대로로 해 준 거야」
+PRINTFORMW 「그리고 나는, 감옥에 던져 넣어진 보람이 있었다고 말할 수 있을 뿐(만큼)의 것을 얻는 것이다」
+PRINTFORMW 팔이 움직이면 때리고 있고, 다리가 움직이면 차고 있다
+PRINTFORMW 어느쪽이나 할 수 없기에, 마음껏 노려봤다
+PRINTFORMW 「하하하!   강한 일이다. 많이 상당히. 그것이 언제까지 계속될까 볼만하다」
+PRINTFORMW 「……그런데, 너는 몇회 범해져야, 누가 절대적인 지배자인가 배울까나?」
+PRINTFORMW 「자신의 존재가, 결국은성처리를 위한 『구멍』에 지나지 않아와 몇 일째로 배우겠지?」
+PRINTFORMW 말하면서, 남자는 %ANAME(대상)%에 덮어씌운다
+PRINTFORMW 비열한 손놀림으로, %ANAME(대상)%의 신체에 손을 뻗는다
+PRINTFORMW 저항하는 %조사처리(ANAME(대상),"였")%지만, 단단히 묶어지고 있어서는 어쩔 도리가 없었다……
+
+FLAG:턴엔드조교 = 3
+FLAG:위안장소 = 위안_행선지_귀족의거주지
+TRAIN_PLACE = 귀족의저택
+CVARSET CFLAG, GETNUM(CFLAG, "위안참가자") , 0
+CVARSET CFLAG, GETNUM(CFLAG, "조교참가플래그") , 0
+CFLAG:대상:조교참가플래그 = 1
+CALL MILLIONAIRE_DERIVATION_CREATE_MILLIONAIRE()
+CALL ADD_EVENTTRAIN_CALLEE("MILLIONAIRE_REVENGE")
+CALL ADD_EVENTEND_CALLEE("MILLIONAIRE_REVENGE_A")
+DAILY_CANCEL = 1
+
+@EVENTTRAIN_MILLIONAIRE_REVENGE
+TFLAG:56 = 30
+
+@EVENTEND_MILLIONAIRE_REVENGE_A
+#DIM 대상
+대상 = ID_TO_CHARA(DVAR:부호_유괴대상)
+
+PRINTFORML
+PRINTFORMW 「그런데, 슬슬 분수를 분별했지 않을까?」
+PRINTFORMW 에나 싱긋 웃으면서, 부호는 말해 온다
+PRINTFORMW 그 얼굴에 침을 내뱉어 주었다
+PRINTFORMW 「……이거 정말. ……그러면, 좀 더 배우게 해 주지 않겠는가」
+PRINTFORMW 부호는 다시, %ANAME(대상)%에 덮어씌웠다……
+PRINTFORML
+FLAG:턴엔드조교 = 3
+FLAG:위안장소 = 위안_행선지_귀족의거주지
+TRAIN_PLACE = 귀족의저택
+CVARSET CFLAG, GETNUM(CFLAG, "위안참가자") , 0
+CVARSET CFLAG, GETNUM(CFLAG, "조교참가플래그") , 0
+CFLAG:대상:조교참가플래그 = 1
+CALL MILLIONAIRE_DERIVATION_CREATE_MILLIONAIRE()
+CALL ADD_EVENTTRAIN_CALLEE("MILLIONAIRE_REVENGE")
+CALL ADD_EVENTEND_CALLEE("MILLIONAIRE_REVENGE_B")
+DAILY_CANCEL = 1
+
+@EVENTEND_MILLIONAIRE_REVENGE_B
+#DIM 대상
+대상 = ID_TO_CHARA(DVAR:부호_유괴대상)
+
+PRINTFORMW 「흥, 휴식이다」
+PRINTFORMW 절륜이라고 할 수밖에 없는 남자의 정력이어도, 과연 몇십발과 연속한 성교는 체력을 소모할 것이다
+PRINTFORMW 그는 %조사처리(ANAME(대상),"로")%부터 멀어져, 물 주전자의 물을 입에 넣었다
+PRINTFORMW 한편의 %조사처리(ANAME(대상),"는")%이라고 한다면, 살아 있을지도 확실하지 않은 상태다
+PRINTFORMW 전신땀과 백탁과 애액 투성이가 된 %PRONOUN(대상)%에는, 이미 손가락 한 개 움직이는 기력조차 남아 있지 않다
+PRINTFORMW 가슴의 상하하고 있는 것만이, 간신히 생존을 전하고 있다……
+PRINTFORMW 「어이, 무엇을 자고 있다」
+PRINTFORMW 남은 물 주전자를 손에 잡아, 그 내용을 %ANAME(대상)%에 털어 놓는다
+PRINTFORMW 잠시동안의 휴식으로부터 각성한 %조사처리(ANAME(대상),"는")%, 다시 부호를 물듯한 기세로 노려보기 시작했다
+PRINTFORMW 「아휴. 얼굴과 신체는 차치하고, 내용은 광견이다 이것은」
+PRINTFORMW 「뭐, 좋다. 며칠이라도 걸쳐 송곳니를 눌러꺾어 손톱을 잘라, 암캐로 한지 얼마 안 되는 준다」
+PRINTFORMW 「쿠쿡, 힘껏 노력하는 것이다?」
+PRINTFORMW 말할 만큼 말해, 남자는 감옥을 뒤로 했다……
+
+CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"가")% 부호에게 잡혔습니다", 칼라_경고)
+
+SETBIT TALENT:대상:데일리계, 소질_데일리_부호의포로
+CALL CHANGE_COUNTRY(대상, 0)
+CFLAG:대상:특수상태 = 0
+
+RETURN 1
+
+;---------------------
+;대응하는 데일리의 DISABLE를 돌려준다. 설정하지 않는 경우, 이벤트는 발생하지 않는다.
+;---------------------
+@EVENT_DAILY_DERIVATION_MILLIONAIRE_TRAIN_DISABLE()
+RETURN DAILY_GET_DISABLE_CONFIG("MILLIONAIRE")
+
+;---------------------
+;발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;대응하는 데일리의 DISABLE 체크를 규약으로서 필수로 한다
+;---------------------
+@EVENT_DAILY_DERIVATION_MILLIONAIRE_TRAIN_DECISION()
+#DIM 대상
+
+RETURN 1
+
+;---------------------
+;발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;대응하는 데일리의 DISABLE 체크를 규약으로서 필수로 한다
+;---------------------
+@EVENT_DAILY_DERIVATION_MILLIONAIRE_TRAIN_SETTARGET()
+#DIM 대상
+
+FOR LOCAL, 0, CHARANUM
+	IF GETBIT(TALENT:LOCAL:데일리계, 소질_데일리_부호의포로)
+		DAILY_TARGET:DAILY_TARGET_NUM = LOCAL
+		DAILY_TARGET_NUM ++
+	ENDIF
+NEXT
+
+RETURN DAILY_TARGET_NUM > 0
+
+;---------------------
+;이벤트 본체
+;---------------------
+@EVENT_DAILY_DERIVATION_MILLIONAIRE_TRAIN()
+#DIM 대상
+
+대상 = DAILY_TARGET:0
+
+CALL EVENT_DAILY_DARIVATION_MILLIONAIRE_RESCUE(대상)
+SIF RESULT == 1
+	RETURN 0
+
+PRINTFORMW 부호에게 잡히고 있는 %조사처리(ANAME(대상),"가")%, 조교를 받고 있다……
+
+FOR LOCAL, 0, 10
+	SELECTCASE DVAR:부호_조교카운터
+		CASE 0
+			PRINTDATAW
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 마구 아우성치지만, 남자는 일절 사양하지 않고, %ANAME(대상)%의 구멍을 사용해 간다
+					DATAFORM 일발 찌르기 될 때에 흘러넘칠 것 같게 되는 교성을, %PRONOUN(대상)%는 필사적으로 억제하고 있다……
+				ENDLIST
+				DATALIST
+					DATAFORM 남은 천하게 보인 웃음을 띄우면서, %조사처리(ANAME(대상),"를")% 범하고 있다
+					DATAFORM 소리를 지르지 않으려고, %PRONOUN(대상)%는 필사적으로 참고 있다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 암컷구멍을 손가락끝으로 파헤쳐지고 있다
+					DATAFORM 약한 곳을 오로지 꾸짖을 수 있는 면서도, %PRONOUN(대상)%는 어떻게든 참고 있다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 엉덩이 구멍을 뚫어지고 있다
+					DATAFORM 배설구를 만지작거려지고 있다는데, 남자의 교묘한 성기술에 %조사처리(ANAME(대상),"는")% 성감을 기억해 버린다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 남자의 것에 입으로 봉사 당하고 있다
+					DATAFORM 속상해졌는지, 남자는 %PRONOUN(대상)%의 안면에 허리를 내던져, 목으로 페니스를 훑어 간다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 채찍이나 바늘로 몰아세워지고 있다
+					DATAFORM 어금니를 악물고 아픔을 견디는 모양을, 남자는 비웃음은 있다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 여러가지 고문도구를 장착되어 범해지고 있다
+					DATAFORM 가차 없이 내던질 수 있는 쾌감을, %조사처리(ANAME(대상),"는")% 필사적으로 참고 있다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 남자에게 복종하는 것 같은 말을 말하게 해지고 있다
+					DATAFORM 한마디 한마디 토해낼 때에, 원한만으로 죽일 수 있을 것 같은 시선을 남자에게 향하여 있다……
+				ENDLIST
+			ENDDATA
+			{
+			CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 욕망, 성기술, 성교, 봉사, 정애, 긴박, 고통쾌락, 마조, 키스, 펠라티오, 자위, 노출, Ｖ성교, Ａ성교", "질내사정, 장내사정, 구강사정, 처녀상실, Ａ처녀상실, 키스상실, CFLAG 감소",
+					GET_SPERM_ID("부호"), "부호의 페니스", "부호", "", "강간")
+			}
+		CASE 1
+			PRINTDATAW
+				DATALIST
+					DATAFORM 흐느껴 우는 것 같은 스트로크를 받을 때, %조사처리(ANAME(대상),"는")% 절정 해 버린다
+					DATAFORM 결정타라고 할듯한 강력한 사정을 질내에 받아, %PRONOUN(대상)%는 등을 뒤로 젖혀 번민 미친다……
+				ENDLIST
+				DATALIST
+					DATAFORM 뒤로부터의 격렬한 피스톤에, %조사처리(ANAME(대상),"는")% 의지와 관련되지 못하고 절정 해 버린다
+					DATAFORM 이지만, 남자는 그런 일 따위 관계없이, 더욱 더 격렬하게 삽입질을 반복한다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 엉덩이구멍을 뚫어져 상스럽지도 절정 하고 있다
+					DATAFORM 남에는 용서가 없고, %PRONOUN(대상)%의 절정 따위 관계없다고 말할듯이 격렬하게 허리를 내던져 간다……
+				ENDLIST
+				DATALIST
+					DATAFORM 양구멍에 지독한 사이즈의 완구를 쑤셔 넣어져 %조사처리(ANAME(대상),"는")% 참지 않고 절정 해 버린다
+					DATAFORM 물론 남자가 그래서 허락할 리도 없고, %조사처리(ANAME(대상),"는")% 한층 더 몇 번이나 몇 번이나 격렬하게 두 구멍을 후벼파져 간다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 남자의 것을 목 안에까지 돌진해지고 있다
+					DATAFORM 점막을 후벼파지는 고통을 느끼는 한편으로, 비부의 안쪽의 안쪽은 열을 띠고 있다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 예의 범절이라고 칭해 엉덩이를 얻어맞고 있다
+					DATAFORM , 와 파열음이 울릴 때, %조사처리(ANAME(대상),"는")% 아픔에 신음하지만, 한편으로 그 비부는 습기를 띠고 있다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 남자에게 복종하는 것 같은 말을 말하게 해지고 있다
+					DATAFORM 한마디 한마디 발표할 때 마다 저항은 느끼고 있는 것 같지만, 당초 있던 살의는 조금 꺾여 버리고 있다……
+				ENDLIST
+			ENDDATA
+			{
+			CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 욕망, 성기술, 성교, 봉사, 정애, 긴박, 고통쾌락, 마조, 키스, 펠라티오, 자위, 노출, Ｖ성교, Ａ성교", "질내사정, 장내사정, 구강사정, 처녀상실, Ａ처녀상실, 키스상실, CFLAG 감소",
+					GET_SPERM_ID("부호"), "부호의 페니스", "부호", "", "강간")
+			}
+		CASE 2
+			PRINTDATAW
+				DATALIST
+					DATAFORM 자궁입구를 페니스로 찔러져 %조사처리(ANAME(대상),"는")% 교성을 주고 좋아하고 있다
+					DATAFORM 그 허리는, 정액을 갖고 싶어하는것같이 구불거리기 시작하고 있다……
+				ENDLIST
+				DATALIST
+					DATAFORM 남의 끈적한 허리사용에, %조사처리(ANAME(대상),"는")% 관능의 극한에 달하고 있다
+					DATAFORM 오르는 것은, 달콤하게 녹은 여자의 소리다……
+				ENDLIST
+				DATALIST
+					DATAFORM 직장을 페니스로 유린되어 %조사처리(ANAME(대상),"는")% 단정치 못하게 교성을 주고 있다
+					DATAFORM 국좌는 정액을 조임 취하도록(듯이) 수축해, 배설구로부터 제 2의 성기로 다시 태어나려고 하고 있다……
+				ENDLIST
+				DATALIST
+					DATAFORM %ANAME(대상)%의 양구멍은 회하승개가 없는 사이즈의 완구를 물어, 아이같이 군침을 늘어뜨리고 있다
+					DATAFORM 격렬하게 절정 하는 %조사처리(ANAME(대상),"이지만")%, 그런데도 부족하다고 말할듯이, 그 고기히다는 수축하고 있다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 남자의 것에 입으로 봉사하고 있다
+					DATAFORM 「시켜지고 있다」의 것인지 「하고 있다」의 것인지, 그 경계는 자꾸자꾸애매하게 되어 가고 있다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 예의 범절이라고 칭해, 채찍 하자 켤레로 꾸짖어지고 있다
+					DATAFORM 아픔에 의해 오르는 것은, 비명은 아니고 요염한 소리가 되어 있다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 남자에게 복종하는 것 같은 말을 말하게 해지고 있다
+					DATAFORM 저항도 없고, 사실을 말할 것 같은 어조로, %PRONOUN(대상)%는 비굴한 말을 늘어놓는다……
+				ENDLIST
+			ENDDATA
+			{
+			CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 욕망, 성기술, 성교, 봉사, 정애, 긴박, 고통쾌락, 마조, 키스, 펠라티오, Ｖ성교, Ａ성교", "질내사정, 장내사정, 구강사정, 처녀상실, Ａ처녀상실, 키스상실, CFLAG 감소",
+					GET_SPERM_ID("부호"), "부호의 페니스", "부호", "", "강간")
+			}
+		CASE 3
+			PRINTDATAW
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 분명하게 적극적으로 남자와 교제허리를 구불거리게 할 수 있다
+					DATAFORM 페니스가 가져오는 쾌락으로부터, 피할 수 없게 되고 있다……
+				ENDLIST
+				DATALIST
+					DATAFORM 녹진녹진 녹은 애널을 찔릴 때, %조사처리(ANAME(대상),"는")% 교성을 지르고 있다
+					DATAFORM 찔릴 때 분출하는 백탁은, %PRONOUN(대상)%가 이제 몇 번이나 거기서 정액을 받아 들였다는 움직이지 않는 증거다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 남자에게 엉덩이살을 얻어맞으면서, 격렬하게 범해지고 있다
+					DATAFORM 기분 좋은 파열음이 울릴 때, %PRONOUN(대상)%는 비명과 같은 강제를 주어 허리를 흔드는……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 남자에게 기승위가 요구되고 있다
+					DATAFORM 속박되면서도 %PRONOUN(대상)%는 필사적으로 허리를 흔들어, 성교의 쾌락을 얻으려고 하고 있다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 남자의 것에 입으로 봉사하고 있다
+					DATAFORM 「시켜지고 있다」것은 아니고, %PRONOUN(대상)%가 스스로 「하고 있다」의다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 포상이라고 칭해, 채찍 하자 켤레로 꾸짖어지고 있다
+					DATAFORM 요염한 소리를 질러 아픔에 의해 %PRONOUN(대상)%는 절정 한다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 남자에게 복종하는 것 같은 말을 말하게 해지고 있다
+					DATAFORM 한마디 한마디 늘어놓을 때, 감미로운 기쁨이 %ANAME(대상)%의 뇌 골수를 저리게 한다……
+				ENDLIST
+			ENDDATA
+			{
+			CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 욕망, 성기술, 성교, 봉사, 정애, 긴박, 고통쾌락, 마조, 키스, 펠라티오, Ｖ성교, Ａ성교", "질내사정, 장내사정, 구강사정, 처녀상실, Ａ처녀상실, 키스상실, CFLAG 감소",
+					GET_SPERM_ID("부호"), "부호의 페니스", "부호", "", "강간")
+			}
+		CASE 4
+			PRINTDATAW
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 남자에게 걸쳐 스스로 허리를 흔들어, 귀중한 정액을 받아 들이려고 하고 있다
+					DATAFORM 그가 바래 대로에 사정하면, %조사처리(ANAME(대상),"는")% 견딜 수 없다고 말할듯이 등을 뒤로 젖혀 절정을 맞이했다……
+				ENDLIST
+				DATALIST
+					DATAFORM 남에 의해 제 2의 성기로서 다시 태어난 애널을 뚫어져 %ANAME(대상)%피부인것 같은 있고 교성을 마구 뿌리고 있다
+					DATAFORM 뒤로부터 엉덩이살을 얻어맞아 손바닥의 자국을 남겨지면서, %조사처리(ANAME(대상),"는")% 필사적으로 허리를 흔들어 남자를 기쁘게 하려고 하고 있다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 남자에게 명해져 즉석의 자위 쇼를 피로 하고 있다
+					DATAFORM 안짱다리를 넓히고 등줄기를 뒤로 젖혀지면서 필사적으로 암컷구멍을 후비는 야비한 모양을, 남자는 비웃음은 있다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 스스로 남자의 것에 달라붙어서 놓지 않아, 뺨을 움츠려 봉사하고 있다
+					DATAFORM 입안에 털어 놓여진 정액을 천천히 맛보면서, 남기는 일 없이 다 마셔 간다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 바닥에 납죽 엎드려, 남자에게 도게자해, 그에게 복종을 맹세코 있다
+					DATAFORM 구상이 마음에 들지 않았던 것일까, 남자는 %PRONOUN(대상)%의 머리를 짓밟아, 동글동글 마루에 강압한다
+					DATAFORM %PRONOUN(대상)%는 거기에조차 기쁨을 느껴, 고개를 숙인 채로 스스로의 음부를 반죽해 돌리고 있다……
+				ENDLIST
+				DATALIST
+					DATAFORM %조사처리(ANAME(대상),"는")% 남자에게 관철해져 암컷구멍을 성처리에 사용되고 있다
+					DATAFORM 약점을 후벼파지는 기쁨에, %PRONOUN(대상)%의 암컷구멍은 조수를 마구 분출하고 있다……
+				ENDLIST
+			ENDDATA
+			{
+			CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 욕망, 성기술, 성교, 봉사, 정애, 긴박, 고통쾌락, 마조, 키스, 펠라티오, Ｖ성교, Ａ성교", "질내사정, 장내사정, 구강사정, 처녀상실, Ａ처녀상실, 키스상실, CFLAG 감소",
+					GET_SPERM_ID("부호"), "부호의 페니스", "부호", "", "강간")
+			}
+	ENDSELECT
+	PRINTFORML 능욕은 더욱 계속된다……
+	CALL SINGLE_DRAWLINE
+NEXT
+
+DVAR:부호_조교카운터 ++
+FLAG:턴엔드조교 = 3
+FLAG:위안장소 = 위안_행선지_귀족의거주지
+TRAIN_PLACE = 귀족의저택
+CVARSET CFLAG, GETNUM(CFLAG, "위안참가자") , 0
+CVARSET CFLAG, GETNUM(CFLAG, "조교참가플래그") , 0
+CFLAG:대상:조교참가플래그 = 1
+CALL MILLIONAIRE_DERIVATION_CREATE_MILLIONAIRE()
+CALL ADD_EVENTTRAIN_CALLEE("MILLIONAIRE_TRAIN")
+CALL ADD_EVENTEND_CALLEE("MILLIONAIRE_TRAIN")
+DAILY_CANCEL = 1
+
+
+@EVENTTRAIN_MILLIONAIRE_TRAIN
+TFLAG:56 = 30
+
+@EVENTEND_MILLIONAIRE_TRAIN
+#DIM 대상
+SIF DVAR:부호_조교카운터 != 5
+	RETURN 1
+
+FOR LOCAL, 0, CHARANUM
+	IF GETBIT(TALENT:LOCAL:데일리계, 소질_데일리_부호의포로)
+		대상 = LOCAL
+		CONTINUE
+	ENDIF
+NEXT
+
+
+PRINTFORMW ……조교가 끝난 뒤도, %조사처리(ANAME(대상),"는")% 부호에게 봉사를 계속하고 있었다
+PRINTFORMW 자신의 양구멍을 심하게 뚫어 「주셨다」물건을, 질퍽질퍽 소리를 내 계속 빤다
+PRINTFORMW %STR_BODY("질:욕정")%나 %STR_BODY("애널:감도")%로부터는, 한껏 쏟아진 백탁이 소리를 내 넘쳐 나오고 있다
+PRINTFORMW 「너도 대단히, 솔직해졌지 않을까?」
+PRINTFORMW 그에게 지적되어 %조사처리(ANAME(대상),"는")% 부끄러움을 기억한다
+PRINTFORMW 당신은 성처리를 위한 무가치인 구멍에 지나지 않고, 어디까지나 그의 온정에 의해 사용해 받고 있는 것에 지나지 않는다
+PRINTFORMW 그런 일도 모르고 있었다 어리석은 옛 자신은, 잊어 받고 싶었다
+PRINTFORMW %PRONOUN(대상)%가 당초 안고 있던 반항심은 벌써 눌러꺾어지고 있어 지금은 그에게 아첨하는 암컷에 전락하고 있다
+PRINTFORMW 「그렇다, 오늘은 너에 맞추고 싶은 녀석이 있다」
+PRINTFORMW 「너를 여기에 데려 오기에 즈음해 사용한 무리가 있어서 말이야. 뭐, 뇌수 대신에 솜털이 머리에 막혀 있는 것 같은 무리다」
+PRINTFORMW 「너같이 동일하게 무가치이지만, 고용해 일을 시킨 이상에는 보수를 주지 않으면 안 된다」
+PRINTFORMW 「돈은 벌써 건네주어 있다. 하지만, 그 나름대로 도움이 된 이상, 『보너스』를 주지 않으면 안 되기 때문에?」
+PRINTFORMW 그가 말하고 있는 것의 의미를, %조사처리(ANAME(대상),"는")% 이해한다
+PRINTFORMW 즉 그는, %ANAME(대상)%에, 자기 자신을 가로챈 건달들에게 봉사하라고 명령하고 있다
+PRINTFORMW 그에 대해, 시비를 주창할 권리도 생각도, %ANAME(대상)%에는 없다. 이 몸은 모든 페니스를 시중들기 위해서(때문에) 있지만
+PRINTFORMW ……물론, 그가 최우선인 것은 대전제이지만
+PRINTFORMW 「자, 행차다」
+PRINTFORMW 감옥의 차갑고 무거운 문이, 무거운 소리를 내 열린다
+PRINTFORMW 줄줄(질질)하고 비집고 들어가 온 것은, %조사처리(ANAME(대상),"가")% 순회중에 찾아낸 그 이상한 듯한 남자를 포함한 건달들
+PRINTFORMW 그리고, 순회에 동반하고 있었음이 분명한, %ANAME(대상)%의 부하였다
+PRINTFORMW 「군에 군사를 맞이한다면, 그 태생은 확인해 두지 않으면?」
+PRINTFORMW 「누군가의 어릴때부터 기르는 것을 섞여 와질지도 모르기 때문에……뭐, 너희들원숭이에, 그런 일을 생각하는 머리는 없었던 것 같지만」
+PRINTFORMW 「그런데. 너희들, 그것은 죽이지 않으면 마음대로 해도 좋아. 질리면 그 근처에 버려 두어라. 적당한 사람에게 회수시킨다」
+PRINTFORMW 말해, 남자는 방을 뒤로 한다. 남겨진 것은 건달들과 음란한 모습을 보이는 %ANAME(대상)%뿐이다
+PRINTFORMW %조사처리(ANAME(대상),"는")% 아첨하도록(듯이) 그들의 바탕으로 무릎 꿇는다. 남자들이 스스로의 발기한 하나의 물건을 과시하면, 눈동자를 녹일 수 있었다
+PRINTFORMW 빠르게 그것을 돌진했으면 좋겠다고 말할듯이 눈썹 꼬리를 늘어지고 내려, 혀를 내민다
+PRINTFORMW 그 남자에게 자신의 이 무슨인지를 두드려 붐비어지고 싶은 의 %PRONOUN(대상)%에 있어, 페니스를 가지는 것은 누구든 봉사의 대상이다
+PRINTFORMW 그것이 자신을 배반해, 함정에 걸친 전 부하이든지
+PRINTFORMW 어쨌든, 스스로 가랑이를 열어, 삽입을 조르기 시작한 %ANAME(대상)%에, 이것 다행이라고 남자들은 모여 간다
+PRINTFORMW 삽입되어 사정되어 절정 당해 %PRONOUN(대상)%의 의식은 눈 깜짝할 순간에 희게 녹아 갔다……
+PRINTFORML
+FLAG:턴엔드조교 = 3
+FLAG:위안장소 = 위안_행선지_귀족의거주지
+CVARSET CFLAG, GETNUM(CFLAG, "위안참가자") , 0
+CVARSET CFLAG, GETNUM(CFLAG, "조교참가플래그") , 0
+CFLAG:대상:조교참가플래그 = 1
+FOR LOCAL, 0, 5
+	CALL CREATE_IAN_MOB(위안_행선지_slum, LOCAL + 1)
+NEXT
+CALL ADD_EVENTTRAIN_CALLEE("MILLIONAIRE_TRAIN")
+CALL ADD_EVENTEND_CALLEE("MILLIONAIRE_TRAIN_B")
+DAILY_CANCEL = 1
+
+
+@EVENTEND_MILLIONAIRE_TRAIN_B
+#DIM 대상
+
+FOR LOCAL, 0, CHARANUM
+	IF GETBIT(TALENT:LOCAL:데일리계, 소질_데일리_부호의포로)
+		대상 = LOCAL
+		CONTINUE
+	ENDIF
+NEXT
+
+PRINTFORML
+PRINTFORMW 이것도 저것도가 끝나, 건달들이 나간 후, %조사처리(ANAME(대상),"는")% 운반이다 되었다
+PRINTFORMW 부호의 손의 사람에 의해 그 신체는 맑게 할 수 있어 케어 되어 간다
+PRINTFORMW ……그리고, 그의 첩에 어울린 모습에, 「만들어 바꿀 수 있어」말했다……
+
+IF GET_INMOU_LEVEL(대상) > 음모_백보지
+	CALL SET_INMOU_DEFAULT(대상, 음모_하트형)
+	TALENT:대상:음모현재치 = 음모_하트형
+ENDIF
+
+FOR LOCAL, 0, 3
+	CALL SET_PIERCE_RANKED(대상, 1, 피어스_음순, 피어스_페니스, 피어스_클리토리스, 피어스_유두, 피어스_배꼽, 피어스_귀, 피어스_혀, 피어스_코)
+	CALL SET_TATTOO_RANDOM(대상, STR_FOR_TATTOO(-1))
+NEXT
+
+PRINTFORMW 깨달으면, %조사처리(ANAME(대상),"는")% 호사스러운 침대에 옆으로 놓여지고 있었다
+PRINTFORMW 의복도, 지금까지 한 번도 몸에 익힌 적이 없는 것 같은, 훌륭한 맞춤의 것이다
+PRINTFORMW 자신이 그를 위한 여자가 된 것을 이해 당한다
+PRINTFORMW %조사처리(ANAME(대상),"라")%고 해도, 행동의 자유가 주어진 곳에서, 도망칠 생각은 없었다
+PRINTFORMW 주어진 자유를, 부호를 위해서(때문에) 사용하는 일만 생각하고 있었다
+PRINTFORMW 또 그처럼 격렬하게 범해지는 것을 상상해, %조사처리(ANAME(대상),"는")% 신체를 뜨겁게 했다……
+
+CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"가")% 부호의 애첩이 되었습니다", 칼라_경고)
+
+SETBIT TALENT:대상:데일리계, 소질_데일리_부호의애첩
+CLEARBIT TALENT:대상:데일리계, 소질_데일리_부호의포로
+SETBIT TALENT:대상:음란계, 소질_음란_음란
+CALL CHANGE_COUNTRY(대상, 0)
+CALL LOSE_RELATION_TALENT(대상)
+CFLAG:대상:특수상태 = 0
+
+RETURN 1
+
+;---------------------
+;대응하는 데일리의 DISABLE를 돌려준다. 설정하지 않는 경우, 이벤트는 발생하지 않는다.
+;---------------------
+@EVENT_DAILY_DERIVATION_MILLIONAIRE_SLAVE_DISABLE()
+RETURN DAILY_GET_DISABLE_CONFIG("MILLIONAIRE")
+
+;---------------------
+;발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;대응하는 데일리의 DISABLE 체크를 규약으로서 필수로 한다
+;---------------------
+@EVENT_DAILY_DERIVATION_MILLIONAIRE_SLAVE_DECISION()
+RETURN 1
+
+
+;---------------------
+;특정의 조건을 채우는 캐릭터를 랜덤에 선택하는 경우에 이용
+;다른 함수는 필수이지만, 이것만은 없어도 좋다  라고 할까 퍼포먼스에 영향을 주므로 불필요하면 만들어서는 안 된다
+;대상이 존재하지 않고 데일리를 개시 할 수 없는 경우는 0을 돌려주는 것으로 데일리의 발생을 캔슬한다
+;---------------------
+@EVENT_DAILY_DERIVATION_MILLIONAIRE_SLAVE_SETTARGET()
+FOR LOCAL, 0, CHARANUM
+	IF GETBIT(TALENT:LOCAL:데일리계, 소질_데일리_부호의애첩)
+		DAILY_TARGET:DAILY_TARGET_NUM = LOCAL
+		DAILY_TARGET_NUM ++
+	ENDIF
+NEXT
+
+SIF DAILY_TARGET_NUM < 1
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_DERIVATION_MILLIONAIRE_SLAVE()
+#DIM 대상
+
+대상 = DAILY_TARGET:(RAND:DAILY_TARGET_NUM)
+
+CALL EVENT_DAILY_DARIVATION_MILLIONAIRE_RESCUE(대상)
+SIF RESULT == 1
+	RETURN 0
+
+PRINTFORMW %조사처리(ANAME(대상),"가")% 부호의 남자에게 안기고 있다……
+
+SELECTCASE RAND:10
+	CASE 0
+		PRINTFORML 남은 %ANAME(대상)%에 허리를 강압해, 가장 깊은 곳에서정액을 푼다
+		PRINTFORML 자궁을 다 메우는 강렬한 쾌락에, %조사처리(ANAME(대상),"는")% 몸부림 하면서 절정 한다
+		PRINTFORML 남이 페니스를 뽑아 내면, %PRONOUN(대상)%는 아무것도 말해지지 않더라도 입으로 그것을 빨아, 열심히 맑은 시작했다……
+	CASE 1
+		PRINTFORML 남은 %조사처리(ANAME(대상),"를")% 뒤로부터 관철해, 격렬하게 범하고 있다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 남자에게 요구되는 대로 허리를 곤두세워, 그를 기쁘게 하고 있다
+		PRINTFORML 포상으로서 남자가 엉덩이살을 두드리면, %조사처리(ANAME(대상),"는")% 견딜 수 없다는 교성을 질러 질을 조른다
+		PRINTFORML 그 뒤도, %조사처리(ANAME(대상),"는")% 몇 번이나 남자에게 정액을 따라졌다……
+	CASE 2
+		PRINTFORML 남은 %ANAME(대상)%의 엉덩이 구멍을 범하고 있다
+		PRINTFORML 그에 의해 조교되고 성기화한 애널은, 격렬한 삽입질에 기쁨 큐우큐우 육봉을 조른다
+		PRINTFORML 그리고 그 번, %PRONOUN(대상)%는 천한 소리를 흩뿌리면서 법열에 미쳐 보였다
+		PRINTFORML 남이 직장에 백탁을 따르면, %조사처리(ANAME(대상),"는")% 등을 뒤로 젖혀 절정 해 보였다……
+	CASE 3
+		PRINTFORML 남은 %조사처리(ANAME(대상),"를")% 범하고 있다
+		PRINTFORML 오늘에만 셀 수 없을 만큼의 사정을 받은 %조사처리(ANAME(대상),"는")% 피폐 해 무반응이지만, 남자는 상관 없음이다
+		PRINTFORML 이윽고 남자가 사정해, 페니스를 뽑아 내면, 다 들어가지 않는 백탁이 질구로부터 걸죽 흘러 떨어진다
+		PRINTFORML 남은 반쯤 열려 있는 상태가 된 %ANAME(대상)%의 입에 물건을 쑤셔 넣어, 무리하게에 맑은 시켰다……
+	CASE 4
+		PRINTFORML 다른 애첩들과 함께, %조사처리(ANAME(대상),"는")% 남자에게 봉사하고 있다
+		PRINTFORML 남이 변덕스럽게 %PRONOUN(대상)%의 유방에 닿아, 비부를 희롱하면, %PRONOUN(대상)%는 그것만으로 견딜 수 없다고 하도록(듯이) 좋아한다
+		PRINTFORML 그 후 여자들은 늘어놓을 수 있어 한사람 한사람 차례로 관철해져 갔다………
+	CASE 5
+		PRINTFORML %조사처리(ANAME(대상),"는")% 남자의 것에 입으로 봉사하고 있다
+		PRINTFORML 그에게 봉사할 수 있는 기쁨에 쳐 떨리는 %조사처리(ANAME(대상),"는")%, 스스로의 가랑이를 손가락끝으로 만지작거리고 있다
+		PRINTFORML 이윽고 남자가 사정하면, 입안에 흘러든 백탁의 뜨거움에 %조사처리(ANAME(대상),"는")% 절정 했다
+		PRINTFORML 그 후, %조사처리(ANAME(대상),"는")% 온순한 봉사의 포상으로서 한껏 종을 붙여졌다……
+	CASE 6
+		PRINTFORML %조사처리(ANAME(대상),"는")% 남자에 이끌려 노예의 품평회에 참가했다
+		PRINTFORML 호사가모두가 스스로의 노예를 서로 교환해, 그 성과를 겨루고 있다
+		PRINTFORML %ANAME(대상)%도, 부호를 위해서(때문에) 많은 낯선 남자에게 가랑이를 열어, 그 정액을 짜냈다
+		PRINTFORML 돌아온 뒤는, 『좋은 아이』로 하고 있던 포상으로서 부호에게 한껏 종을 붙여진 것 같다……
+	CASE 7
+		PRINTFORML %조사처리(ANAME(대상),"는")% 단단히 묶어져 범해지고 있다
+		PRINTFORML 피부에 먹혀드는 밧줄의 감미로운 감각에 도취를 기억하면서, 육봉의 쾌감에 빠지고 있다
+		PRINTFORML 경고되어지면서 해 야비하게 좋아하는 %조사처리(ANAME(대상),"를")% 비웃음 있으면서, 남자는 허리를 내던진다
+		PRINTFORML 해방되는 무렵에는, 그 피부에는 붉은 밧줄의 뒤가 남아 있었다……
+	CASE 8
+		PRINTFORML 남은 장난에, %ANAME(대상)%의 전신에 완구를 설치해, 단단히 묶어 방치했다
+		PRINTFORML %조사처리(ANAME(대상),"가")% 절정 해도, 기계는 가차 없이 %PRONOUN(대상)%에 쾌락을 주어 간다
+		PRINTFORML 고문은 %조사처리(ANAME(대상),"가")% 정신을 잃을려고도 계속되었다……
+		PRINTFORML 간신히 해방되는 무렵, %PRONOUN(대상)%가 있던 근처에는 애액이 웅덩이같이 되어 있었다……
+	CASE 9
+		PRINTFORML %조사처리(ANAME(대상),"는")% 남자 위에 걸쳐, 고기구멍으로 봉사하고 있다
+		PRINTFORML 남이 좀 더 허리를 흔드는요구하면, %조사처리(ANAME(대상),"는")% 말해졌던 대로 음란하게 엉덩이를 흔든다
+		PRINTFORML 그의 것의 씩씩함에 절정 해 버릴 때, %PRONOUN(대상)%는 스스로의 야비함에 임해서 사죄해 보인다
+		PRINTFORML 남이 사정하면, %조사처리(ANAME(대상),"는")% 그 열을 자궁으로 느끼면서 등을 뒤로 젖혀 절정을 맞이했다……
+ENDSELECT
+
+CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 욕망, 성기술, 성교, 봉사, 정애, 긴박, 고통쾌락, 마조, 키스, 펠라티오, Ｖ성교, Ａ성교", "질내사정, 장내사정, 구강사정, 처녀상실, Ａ처녀상실, 키스상실, CFLAG 감소",　GET_SPERM_ID("부호"), "부호의 페니스", "부호", "", "조교")
+PRINTFORMW
+IF RAND:100 < 15
+	CALL COLOR_PRINTW(@"남은 %ANAME(대상)%에 질린 것 같다……", 칼라_경고)
+	CALL COLOR_PRINTW(@"남은 %조사처리(ANAME(대상),"를")% 그의 관으로부터 내쫓았다……", 칼라_경고)
+	CLEARBIT TALENT:대상:데일리계, 소질_데일리_부호의애첩
+	SETBIT   TALENT:대상:데일리계, 소질_데일리_원애첩
+ENDIF
+
+RETURN 1
+
+
+;---------------------
+;대응하는 데일리의 DISABLE를 돌려준다. 설정하지 않는 경우, 이벤트는 발생하지 않는다.
+;---------------------
+@EVENT_DAILY_DERIVATION_MILLIONAIRE_AFTER_DISABLE()
+RETURN DAILY_GET_DISABLE_CONFIG("MILLIONAIRE")
+
+;---------------------
+;발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;대응하는 데일리의 DISABLE 체크를 규약으로서 필수로 한다
+;---------------------
+@EVENT_DAILY_DERIVATION_MILLIONAIRE_AFTER_DECISION()
+FOR LOCAL, 0, CHARANUM
+	SIF GETBIT(TALENT:LOCAL:데일리계, 소질_데일리_원애첩)
+		RETURN 1
+NEXT
+
+RETURN 0
+
+
+;---------------------
+;특정의 조건을 채우는 캐릭터를 랜덤에 선택하는 경우에 이용
+;다른 함수는 필수이지만, 이것만은 없어도 좋다  라고 할까 퍼포먼스에 영향을 주므로 불필요하면 만들어서는 안 된다
+;대상이 존재하지 않고 데일리를 개시 할 수 없는 경우는 0을 돌려주는 것으로 데일리의 발생을 캔슬한다
+;---------------------
+@EVENT_DAILY_DERIVATION_MILLIONAIRE_AFTER_SETTARGET()
+FOR LOCAL, 0, CHARANUM
+	IF GETBIT(TALENT:LOCAL:데일리계, 소질_데일리_원애첩)
+		DAILY_TARGET:DAILY_TARGET_NUM = LOCAL
+		DAILY_TARGET_NUM ++
+	ENDIF
+NEXT
+
+SIF DAILY_TARGET_NUM < 1
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_DERIVATION_MILLIONAIRE_AFTER()
+#DIM 대상
+
+대상 = DAILY_TARGET:(RAND:DAILY_TARGET_NUM)
+
+CALL EVENT_DAILY_DARIVATION_MILLIONAIRE_RESCUE(대상)
+SIF RESULT == 1
+	RETURN 0
+
+PRINTFORMW 부호에게 버려진 %조사처리(ANAME(대상),"가")% 길거리에 헤매고 있다……
+
+SELECTCASE RAND:10
+	CASE 0
+		PRINTFORML %조사처리(ANAME(대상),"는")% 건달들에게 윤간되고 있다
+		PRINTFORML 남자들은 %ANAME(대상)%의 모든 구멍에 계속해서 페니스를 찔러 넣어, 종을 토해내 간다
+		PRINTFORML 일찍이 부호에 의해 예의범절을 가르쳐진 %조사처리(ANAME(대상),"는")%, 곧바로 쾌락에 빠져, 추잡하게 성교를 조르게 되었다
+		PRINTFORML 해방되는 무렵, 그 신체에 백탁에 더럽혀지지 않은 곳은 없어져 있었다……
+		CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 욕망, 성기술, 성교, 봉사, 정애, 긴박, 고통쾌락, 마조, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교", "질내사정, 장내사정, 구강사정, 처녀상실, Ａ처녀상실, 키스상실, CFLAG 감소",　GET_SPERM_ID("건달"), "건달의 페니스", "건달", "", "윤간")
+	CASE 1
+		PRINTFORML 가는 마치 없는 %조사처리(ANAME(대상),"는")%, slum에 겨우 도착했다
+		PRINTFORML ……가, %조사처리(ANAME(대상),"와")% 같은 「상등품」을, 그들이 다만 맞아들일 리도 없다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 곧바로 부랑자에게 둘러싸져 옷을 벗겨내지고 그리고 윤간되었다　
+		PRINTFORML 범해지고 있다는데, 일찍이 부호에게 개발 된 육체는 기쁨, %조사처리(ANAME(대상),"는")% 눈 깜짝할 순간에 그들의 성노예와 전락했다……
+		CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 욕망, 성기술, 성교, 봉사, 정애, 긴박, 고통쾌락, 마조, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교", "질내사정, 장내사정, 구강사정, 처녀상실, Ａ처녀상실, 키스상실, CFLAG 감소",　GET_SPERM_ID("부랑자"), "부랑자의 페니스", "부랑자", "", "윤간")
+	CASE 2
+		PRINTFORML %조사처리(ANAME(대상),"는")% 이상한 듯한 가게에서 일하고 있다
+		PRINTFORML 먹어 가기 위해는, 이미 창녀라도 되는 것 외에 없었던 것이다
+		PRINTFORML 태생도 모르는 남자가 %조사처리(ANAME(대상),"를")% 방문해서는, 가끔 상냥하게, 가끔 폭력적으로 안아 간다
+		PRINTFORML 하룻밤의 사이에, %ANAME(대상)%경험 인원수는 상당히 증가해 버렸다……
+		CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 욕망, 성기술, 성교, 봉사, 정애, 긴박, 고통쾌락, 마조, 키스, 펠라티오, 매춘, Ｖ성교, Ａ성교", "질내사정, 장내사정, 구강사정, 처녀상실, Ａ처녀상실, 키스상실, CFLAG 감소",　GET_SPERM_ID("창관의 손님"), @"손님의 페니스", @"손님", "", "매춘")
+	CASE 3
+		PRINTFORML %조사처리(ANAME(대상),"는")% 이상한 듯한 가게에서 일하고 있다
+		PRINTFORML 스테이지 위에서, 개와의 교미를 피로 하고 있었다
+		PRINTFORML 암컷을 임신하게 할 수밖에 생각하지 않은 야성적인 피스톤에, %조사처리(ANAME(대상),"는")% 단정치 못한 소리를 지른다
+		PRINTFORML 관객의 야유를 받으면서, %조사처리(ANAME(대상),"는")% 많은 전으로 짐승에게 종을 심어졌다……
+		CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 욕망, 성기술, 성교, 봉사, 정애, 긴박, 고통쾌락, 마조, 키스, 펠라티오, 수간, Ｖ성교, Ａ성교", "질내사정, 장내사정, 구강사정, 처녀상실, Ａ처녀상실, 키스상실, CFLAG 감소",　GET_SPERM_ID("개"), @"개의 페니스", @"개", "", "매춘")
+
+	CASE 4
+		PRINTFORML %조사처리(ANAME(대상),"는")% 건달에게 윤간되고 있다
+		PRINTFORML 이상한 듯한 약을 맞은 %조사처리(ANAME(대상),"는")%, 당초의 저항 따위 없었는지같이 적극적으로 허리를 흔들어, 페니스를 빨아 세운다
+		PRINTFORML 추잡한 모양을 보이는 %ANAME(대상)%에, 남자들은 포상으로서 추가의 약을 투여해 나간다
+		PRINTFORML 수시간 후, 간신히 해방된 %조사처리(ANAME(대상),"는")%, 공허한 미소를 띄우면서 스스로의 음부를 계속 반죽해 돌리고 있었다……
+		CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 욕망, 성기술, 성교, 봉사, 정애, 긴박, 고통쾌락, 마조, 키스, 펠라티오, 윤간, 약물의존, Ｖ성교, Ａ성교", "질내사정, 장내사정, 구강사정, 처녀상실, Ａ처녀상실, 키스상실, CFLAG 감소",　GET_SPERM_ID("건달"), "건달의 페니스", "건달", "", "윤간")
+
+	CASE 5
+		PRINTFORML %조사처리(ANAME(대상),"는")% 「립」를 해 벌려고 한 것 같다
+		PRINTFORML 이지만, 그것이 본고장의 건달들의 불흥을 사, %PRONOUN(대상)%는 잡혀 버렸다
+		PRINTFORML 그들의 대기실에서, %조사처리(ANAME(대상),"는")% 벌이라고 칭해 격렬한 폭력과 윤간에 노출되었다
+		PRINTFORML ……하지만 그런데도, 일찍이 부호에게 철저하게 예의범절을 가르쳐진 육체는, 야비하게도 쾌락에 빠져 버리고 있었다……
+		CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 욕망, 성기술, 성교, 봉사, 정애, 긴박, 고통쾌락, 마조, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교", "질내사정, 장내사정, 구강사정, 처녀상실, Ａ처녀상실, 키스상실, CFLAG 감소",　GET_SPERM_ID("건달"), "건달의 페니스", "건달", "", "윤간")
+	CASE 6
+		PRINTFORML 성교를 요구하는 신체의 욱신거림에 참고일까, %조사처리(ANAME(대상),"는")% 벽고가 된 것 같다
+		PRINTFORML 태생도 모르는 남자들이 차례차례로 방문해서는, %ANAME(대상)%의 암컷구멍을, 엉덩이 구멍을, 칠레지 감각으로 일회용이라고 간다
+		PRINTFORML 인으로서조차 보여지지 않는다고 말하는데, %조사처리(ANAME(대상),"는")% 쾌락에 몸부림쳐, 오로지 절정 하고 있었다
+		PRINTFORML 일이 끝나는 무렵에는, %ANAME(대상)%의 하반신은 보는 것도 끔찍할 정도에 질척질척이 되어 있었다……
+		CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 욕망, 성기술, 성교, 봉사, 정애, 긴박, 고통쾌락, 마조, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교", "질내사정, 장내사정, 구강사정, 처녀상실, Ａ처녀상실, 키스상실, CFLAG 감소",　GET_SPERM_ID("건달"), "건달의 페니스", "건달", "", "매춘")
+	CASE 7
+		PRINTFORML %조사처리(ANAME(대상),"는")% slum에서 매춘을 하고 있는 것 같다
+		PRINTFORML 보통이라면 눈썹을 찡그리고 코를 안주 멀어지는 것 같은 사람이 상대여도, 살아가기 (위해)때문에 봉사해, 가랑이를 연다
+		PRINTFORML 혹은, 자신을 범해 주는 상대이면, 이미 누구라도 좋았던 것일지도 모른다
+		PRINTFORML 여하튼, %조사처리(ANAME(대상),"는")% 새발의 피정도의 돈을 위해서(때문에), 스스로의 봄을 팔아 치워 건넜다……
+		CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 욕망, 성기술, 성교, 봉사, 정애, 긴박, 고통쾌락, 마조, 키스, 펠라티오, 매춘, Ｖ성교, Ａ성교", "질내사정, 장내사정, 구강사정, 처녀상실, Ａ처녀상실, 키스상실, CFLAG 감소",　GET_SPERM_ID("부랑자"), "부랑자의 페니스", "부랑자", "", "매춘")
+	CASE 8
+		PRINTFORML %조사처리(ANAME(대상),"는")% slum에서 살고 있다
+		PRINTFORML ……다만, 부랑자들의 육변기로서
+		PRINTFORML 때나 오물 투성이가 된 페니스를 돌입, 등 되어 그런데도 %조사처리(ANAME(대상),"는")% 좋아해, 절정 해 나간다
+		PRINTFORML 일찍이 부호에게 마음을 눌러꺾어진 %PRONOUN(대상)%에 있어, 지금 있는 지옥은 가혹함이기 때문에 오히려 행복을 가져와 주고 있었다……
+		CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 욕망, 성기술, 성교, 봉사, 정애, 긴박, 고통쾌락, 마조, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교", "질내사정, 장내사정, 구강사정, 처녀상실, Ａ처녀상실, 키스상실, CFLAG 감소",　GET_SPERM_ID("부랑자"), "부랑자의 페니스", "부랑자", "", "윤간")
+	CASE 9
+		PRINTFORML %조사처리(ANAME(대상),"는")% 변두리의 스트립 댄서로서 일하고 있다
+		PRINTFORML 천하게 보인 시선, 천한 야유를 받으면서, 당신의 나신을 매물로서 계속 춤춘다
+		PRINTFORML 그런데도, 일찍이 부호에게 조교된 육체도 마음도 흥분을 느껴, %PRONOUN(대상)%의 가랑이는 모르는 동안에 흠뻑 젖고 있었다
+		PRINTFORML 그 후%조사처리(ANAME(대상),"는")%, 극장의 단골 상대에게 가랑이를 열어, 봄과 교환에 살기 위한 돈을 벌었다……
+		CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 욕망, 성기술, 성교, 봉사, 정애, 긴박, 고통쾌락, 마조, 키스, 펠라티오, 매춘, Ｖ성교, Ａ성교", "질내사정, 장내사정, 구강사정, 처녀상실, Ａ처녀상실, 키스상실, CFLAG 감소",　GET_SPERM_ID("창관의 손님"), @"손님의 페니스", @"손님", "", "매춘")
+ENDSELECT
+PRINTFORMW
+IF RAND:100 < 15
+	CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"는")% 이것도 저것도를 단념한 것 같다……", 칼라_경고)
+	CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"는")% 환상향의 역사로부터 자취을 감추었다……", 칼라_경고)
+	CLEARBIT TALENT:대상:데일리계, 소질_데일리_원애첩
+ENDIF
+
+RETURN 1
+
+;---------------------
+;구출 이벤트
+;---------------------
+@EVENT_DAILY_DARIVATION_MILLIONAIRE_RESCUE(대상)
+#DIM 대상
+#DIM 담당자
+#DIM 능력합계
+
+SIF DVAR:부호_탐색단념플래그
+	RETURN 0
+
+CALL SINGLE_DRAWLINE
+PRINTFORMW 행방불명이 된 %조사처리(ANAME(대상),"를")% 수색하러 갈까……?
+PRINTL
+CALL ASK_MULTI_JUDGE("수색한다(금 10000 필요)", MONEY >= 10000, "수색한다(군사 5000 소비)", COUNTRY_SOLDIER:(CFLAG:MASTER:소속) >= 5000, "관망 한다", 1, "수색을 자른다", 1)
+
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML %조사처리(ANAME(대상),"를")% 방치할 수는 없다
+		PRINTFORML 금을 거출해, 수색하기로 했다
+		MONEY -= 10000
+	CASE 1
+		PRINTFORML %조사처리(ANAME(대상),"를")% 방치할 수는 없다
+		PRINTFORML 병을 거출해, 수색하기로 했다
+		COUNTRY_SOLDIER:(CFLAG:MASTER:소속) -= 5000
+	CASE 2
+		PRINTFORML 유감스럽지만 여유가 없다
+		PRINTFORML 지금은 상태를 보기로 했다
+		PRINTFORMW 
+		CALL SINGLE_DRAWLINE
+		RETURN 0
+	CASE 3
+		PRINTFORML 더 이상의 수색은 무의미하다고 판단했다
+		PRINTFORML 유감이지만, %ANAME(대상)%의 수색을 자르기로 했다
+		PRINTFORMW 
+		CALL SINGLE_DRAWLINE
+		DVAR:부호_탐색단념플래그 = 1
+		RETURN 0
+ENDSELECT
+
+PRINTFORML 누구에게 담당시키자……?
+PRINTFORML 험한 동작과 권모술수에 뛰어난 사람이 좋을 것 같다……
+CALL SINGLE_DRAWLINE
+CALL SELECT_CHARA_LIST_ONLY_LOGIC_SLG("DEFAULT", "DEFAULT")
+
+IF RESULT == -1
+	PRINTFORML 역시 이번은 전송하기로 했다
+	RETURN 0
+ELSE
+	담당자 = RESULT
+	PRINTFORML %조사처리(ANAME(담당자),"가")% 담당하기로 했다
+	능력합계 = ABL:담당자:무투 + ABL:담당자:지략
+ENDIF
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+IF 능력합계 < RAND:120 + 80
+	PRINTFORML ……유감스럽지만, %조사처리(ANAME(대상),"를")% 찾아낼 수 없었다……
+	PRINTFORMW 
+	RETURN 0
+ENDIF
+
+PRINTFORML %조사처리(ANAME(대상),"가")% 발견되었다!
+
+IF GETBIT(TALENT:대상:데일리계, 소질_데일리_원애첩)
+	PRINTFORML 슬럼가에서 부랑자들에게 「길러져」있던 곳을 발견된 것 같다……
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% 당황해 달려 들면, 확실히 전신 더럽혀져야만 있었지만 %ANAME(대상)%에 틀림없었다
+	PRINTFORMW ……%조사처리(ANAME(대상),"는")% 이쪽을 보자마자 다가서, 안아 주도록(듯이) 추잡한 말을 늘어놓아 조른다
+	PRINTFORMW 오랜 세월에 걸치는 심한 생활은, %PRONOUN(대상)%의 마음을 완전하게 부수어, 비틀어 구부려 버린 것 같다
+	PRINTFORMW 지금은 %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%의 일도 기억하지 않은, 단순한 육변기에 전락하고 있었다……
+	TALENT:대상:공허 = 1
+	CFLAG:대상:붕괴 = 3000
+	CALL SET_PIERCE_RANDOM(대상, 0)
+	CALL SET_PIERCE_RANDOM(대상, 0)
+	CALL SET_PIERCE_RANDOM(대상, 0)
+	CALL SET_TATTOO_RANDOM(대상, STR_FOR_TATTOO(-1), 0)
+	CALL SET_TATTOO_RANDOM(대상, STR_FOR_TATTOO(-1), 0)
+	CALL SET_TATTOO_RANDOM(대상, STR_FOR_TATTOO(-1), 0)
+	SETBIT TALENT:대상:음란계, 소질_음란_음란
+	SETBIT TALENT:대상:음란계, 소질_음란_정액변소
+	SETBIT TALENT:대상:음란계, 소질_음란_ＡＶ여배우
+	SETBIT TALENT:대상:음란계, 소질_음란_암캐
+	SETBIT TALENT:대상:음란계, 소질_음란_약물중독
+	SETBIT TALENT:대상:음란계, 소질_음란_창녀
+	CFLAG:대상:호감도 = MIN(CFLAG:대상:호감도 , 0) 
+	CFLAG:대상:의존도 = MIN(CFLAG:대상:의존도 , 0) 
+	CFLAG:대상:종속도 = MIN(CFLAG:대상:종속도 , 0) 
+	CFLAG:대상:지배도 = MIN(CFLAG:대상:지배도 , 0) 
+
+	CALL CHANGE_COUNTRY(대상, CFLAG:MASTER:소속)
+	CLEARBIT TALENT:대상:데일리계, 소질_데일리_원애첩
+	RETURN 1
+ELSEIF GETBIT(TALENT:대상:데일리계, 소질_데일리_부호의애첩)
+	PRINTFORMW 예의 부호가 「기르는 개」로서 뒤의 사교계에서 과시하고 있었다는 목격 정보가 들어갔다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 부호를 비밀리에 처리해, %조사처리(ANAME(대상),"를")% 구출시켰다
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% 당황해 달려 들면, 확실히 %조사처리(ANAME(대상),"였")%다
+	PRINTFORMW 휘황찬란하고 추잡한 의상을 몸에 지닌 %PRONOUN(대상)%의 모습은, 원래의 %조사처리(ANAME(대상),"라")%고는 도저히 생각되지 않는다
+	PRINTFORMW 주인님은 어디, 라고 끊임없이 물어 쑤신 신체를 위로하려고 하고 있다
+	PRINTFORMW 또%ANAME(MASTER)%에 대해, 아첨한 소리로 쾌락을 조르기 시작했다
+	PRINTFORMW 말을 주고 받아 보았지만, %조사처리(ANAME(대상),"는")% %조사처리(ANAME(MASTER),"가")% 누군지 모르게 되고 있는 것 같았다
+	PRINTFORMW 오랜 세월에 걸쳐 애노로서 길러지고 있던 것으로, %ANAME(대상)%의 마음은 꺾어져 버린 것이다……
+	CALL COLOR_PRINTW("암살한 부호의 자산으로부터 금 100000을 빼앗았다", 칼라_주의)
+	MONEY += 100000
+	TALENT:대상:공허 = 1
+	CFLAG:대상:붕괴 = 3000
+	CALL SET_PIERCE_RANDOM(대상, 0)
+	CALL SET_TATTOO_RANDOM(대상, STR_FOR_TATTOO(-1), 0)
+	SETBIT TALENT:대상:음란계, 소질_음란_음란
+	CFLAG:대상:호감도 = MIN(CFLAG:대상:호감도 , 0) 
+	CFLAG:대상:의존도 = MIN(CFLAG:대상:의존도 , 0) 
+	CFLAG:대상:종속도 = MIN(CFLAG:대상:종속도 , 0) 
+	CFLAG:대상:지배도 = MIN(CFLAG:대상:지배도 , 0) 
+	CALL CHANGE_COUNTRY(대상, CFLAG:MASTER:소속)
+	CLEARBIT TALENT:대상:데일리계, 소질_데일리_부호의애첩
+	RETURN 1
+ELSEIF DVAR:부호_조교카운터 >= 2
+	PRINTFORML 예의 부호가 자신의 저택에서 조교하고 있었던 것이 발각된 것이다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 부호를 비밀리에 처리해, %조사처리(ANAME(대상),"를")% 구출시켰다
+	PRINTFORMW ……구조되고야말로 했지만, %조사처리(ANAME(대상),"는")% 불안한 듯한 표정을 띄우고 있었다
+	PRINTFORMW 주인님의 아래를 멋대로 멀어져 괜찮을 것일까, 봉사하지 않으면……이라고 토로하고 있다
+	PRINTFORMW 오랜 세월에 걸치는 조교가, 그녀의 마음을 비틀어 구부리고 있던 것 같다
+	PRINTFORMW 차분히 시간을 들여 되찾아 갈 수밖에 없을 것이다……
+	CALL COLOR_PRINTW("암살한 부호의 자산으로부터 금 100000을 빼앗았다", 칼라_주의)
+	MONEY += 100000
+	CFLAG:대상:호감도 = MAX(CFLAG:대상:호감도 / 3 , 0) 
+	CFLAG:대상:의존도 = MAX(CFLAG:대상:의존도 / 3 , 0) 
+	CFLAG:대상:종속도 = MAX(CFLAG:대상:종속도 / 3 , 0) 
+	CFLAG:대상:지배도 = MAX(CFLAG:대상:지배도 / 3 , 0) 
+	SETBIT TALENT:대상:음란계, 소질_음란_음란
+	CALL CHANGE_COUNTRY(대상, CFLAG:MASTER:소속)
+	CLEARBIT TALENT:대상:데일리계, 소질_데일리_부호의포로
+	DVAR:부호_조교카운터 = 0
+	RETURN 1
+ELSEIF DVAR:부호_조교카운터 < 2
+	PRINTFORML 예의 부호가 자신의 저택에서 조교하고 있었던 것이 발각된 것이다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 부호를 비밀리에 처리해, %조사처리(ANAME(대상),"를")% 구출시켰다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% %조사처리(ANAME(MASTER),"를")% 봐, 마음 속 안심한 표정을 보였다
+	PRINTFORMW 신체야말로 그 비열하게 요것으로 되었지만, 마음까지는 부수어지지 않았던 것 같다
+	PRINTFORMW 이것이라면 곧 복귀할 수 있을 것이다……
+	CALL COLOR_PRINTW("암살한 부호의 자산으로부터 금 100000을 빼앗았다", 칼라_주의)
+	MONEY += 100000
+	CALL CHANGE_COUNTRY(대상, CFLAG:MASTER:소속)
+	CLEARBIT TALENT:대상:데일리계, 소질_데일리_부호의포로
+	DVAR:부호_조교카운터 = 0
+	RETURN 1
+ENDIF
+RETURN 0
+
+;---------------------
+;대응하는 데일리의 DISABLE를 돌려준다. 설정하지 않는 경우, 이벤트는 발생하지 않는다.
+;---------------------
+@EVENT_DAILY_DERIVATION_MILLIONAIRE_REVENGE_MINIGAME
+#DIM 회피
+#DIM 정답
+#DIMS 대답문자열 = "왼쪽", "오른쪽", "상", "하"
+#DIM 대답
+
+;5회, 올바른 선택지를 선택한다
+FOR LOCAL, 0, 5
+
+	;대답을 내 둔다
+	대답 = RAND:4
+	회피 = RAND:3
+
+	IF 회피
+		CALL COLOR_PRINTL(@"%대답문자열:대답%에 피해라!", 칼라_경고)
+	ELSE
+		CALL COLOR_PRINTL(@"%조사처리(대답문자열:대답,"를")% 피해라!", 칼라_경고)
+	ENDIF
+
+	FOR LOCAL:1, 0, VARSIZE("대답문자열")
+		PRINTFORML [{LOCAL:1}] %대답문자열:(LOCAL:1)%
+	NEXT
+
+	TINPUT 1500, -1, 1
+
+	;실패하면 강제 종료
+	SIF (회피 && RESULT != 대답) || (!회피 && RESULT == 대답)
+		BREAK
+	SIF LOCAL != 4
+		PRINTFORML 도적은 아직 덤벼 들어 온다……!
+NEXT
+
+RETURN LOCAL == 5

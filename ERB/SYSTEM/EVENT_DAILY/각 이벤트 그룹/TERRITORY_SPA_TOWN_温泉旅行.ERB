@@ -1,0 +1,197 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_TERRITORY_SPA_TOWN_RATE()
+RETURN 50
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_TERRITORY_SPA_TOWN_DECISION()
+#DIM 온천가
+온천가 = GET_CITYNUMBER("옛 도시 온천가")
+
+SIF 온천가 == -1
+	RETURN 0
+SIF CITY_OWNER:온천가 != CFLAG:MASTER:소속
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_TERRITORY_SPA_TOWN_GENRE()
+RETURN 데일리_장르_에로
+
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_TERRITORY_SPA_TOWN
+#DIM 대상
+
+대상 = 0
+
+PRINTFORML 온천 할인권을 손에 넣었다
+PRINTFORML 최근 전쟁이나 정치로 바빠서 피로가 쌓여 있다
+PRINTFORMW 가끔씩은 날개를 펴도 벌은 맞지 않을 것이다
+PRINTFORML 어떻게 하지?
+CALL ASK_MULTI("혼자서 간다" ,"누군가를 부른다" ,"역시 그만둔다")
+IF RESULT == 2
+	PRINTFORML 아니, 역시 지금은 바쁘다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 할인권을 데스크의 안쪽에 끝냈다
+	RETURN
+ELSEIF RESULT == 0
+	PRINTFORML 혼자서 한가롭게 즐기기로 하자
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 울렁울렁 기분으로 온천가에 향했다
+ELSEIF RESULT == 1
+	PRINTFORML 모처럼인 것으로 누군가를 부르는 일로 했다
+	PRINTFORMW 누구를 유혹할까?
+	CALL SELECT_CHARA_LIST_ONLY_LOGIC_SEX("DAILY_TERRITORY_SPA_TOWN", "DAILY_TERRITORY_SPA_TOWN")
+	IF RESULT == -1
+		PRINTFORMW 역시 혼자서 향하는 일로 했다
+	ELSE
+		대상 = RESULT
+		PRINTFORML %조사처리(ANAME(대상),"를")% 권하는 일로 했다
+		PRINTFORM %ANAME(MASTER)%의 권유에
+		IF IS_FEMALE(대상)
+			PRINTFORMW 그녀는 기꺼이 교제해 주었다
+		ELSE
+			PRINTFORMW 그는 기꺼이 교제해 주었다
+		ENDIF
+	ENDIF
+ENDIF
+IF 대상 != 0
+	PRINTFORMW 둘이서 즐거운 여행을 보낼 수가 있었다
+	IF (HAS_PENIS(MASTER) && IS_FEMALE(대상)) || (IS_FEMALE(MASTER) && IS_MALE(대상))
+		IF HAS_PENIS(MASTER) && (IS_SLAVE(대상) || IS_LOVER(대상) || IS_SLAVED_BY(대상))
+			PRINTFORML 단 둘이서 노천탕을 즐기고 있으면 좋은 분위기가 되었다
+			PRINTFORML 그녀를 응시하면 뺨을 물들이면서 기대하는 것 같은 시선을 향할 수 있었다
+			PRINTFORMW 어느 쪽으로부터랄 것도 없게 상대에게 의지하면, 신체를 겹쳤다
+			PRINTFORML 
+			SELECTCASE RAND:5
+				CASE 0
+					PRINTFORML %조사처리(ANAME(MASTER),"는")% 목욕통에 잠기면서 그녀와 격렬하게 교접하고 있다
+					PRINTFORML 그녀는 %ANAME(MASTER)%에 걸치면서 언제나 이상으로 단정치 못하게 허덕여 허리를 구불거리게 할 수 있다
+					PRINTFORML 가슴이나 피부를 애무하면서 밀어올려 주면 기쁨의 소리를 높여 질을 단단히 조여 왔다
+					PRINTFORMW 신체의 밖과 안으로부터 전해져 오는 열에 열중한 %ANAME(MASTER)%들은 한껏 즐겼다
+				CASE 1
+					PRINTFORML 탕이 흩날리는 소리와 그녀의 신음소리가 리드미컬하게 영향을 주고 있다
+					PRINTFORML 그녀의 신체는 완전히 녹고 잘라 페니스를 평소보다 안쪽 깊게까지 받아들인다
+					PRINTFORML 가볍게 찌르는 것만으로 격렬하게 전신을 진동시키고 질육이 슥슥 수축해 자극했다
+					PRINTFORMW 그녀의 녹진녹진이 된 달콤한 신체를 전신 구석구석까지 맛봐 몇 번이나 정액을 토해냈다
+				CASE 2
+					PRINTFORML %ANAME(MASTER)%들은 깊게 연결된 채로 서로 껴안아 키스를 주고 받고 있다
+					PRINTFORML 완만하게 허리를 흔들면 질육의 감촉이 민감하게 연결 그녀는 희미하게 신음소리를 흘린다
+					PRINTFORML 밀착한 채로 혀를 얽히게 되어지고 있으면 온천의 열도 합쳐져 머리가 멍-하니 해 온다
+					PRINTFORMW 낙낙한 농후한 섹스로 %ANAME(MASTER)%들은 올리는 만큼 서로를 계속 요구했다
+				CASE 3
+					PRINTFORML 목욕통으로 한껏 즐긴 %ANAME(MASTER)%들은 샤워를 하고 있다
+					PRINTFORML 샤워를 해 한숨을 흘리는 그녀의 행동에 %조사처리(ANAME(MASTER),"는")% 다시 므흣 왔다
+					PRINTFORML %조사처리(ANAME(MASTER),"가")% 허리를 안으면 그녀는 곤란한 것처럼 부끄러워하면서도 그렇지만도 않은 것 같았다
+					PRINTFORMW 둘이서 서로의 신체를 요구해 얽히게 할 수 있는 만나면서 그대로 2회전에 돌입했다
+				CASE 4
+					PRINTFORML 그녀에게 욕조의 인연에 손을 찌르게 한 배후로부터 격렬하게 암 찔러 해 준다
+					PRINTFORML 목욕통의 열자포자기하고 자르고 있던 그녀는 일발 찌르기마다 민감하게 경련해 교성을 올렸다
+					PRINTFORML 그녀는 격렬한 공격에 야무지지 못한 표정으로 좀더 좀더와 졸라대는 것처럼 허리를 흔드는
+					PRINTFORMW %ANAME(MASTER)%도 또한열에 대어지고 완전히 지쳐 버릴 때까지 마음껏 그녀와 사귀었다
+			ENDSELECT
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, @"%ANAME(대상)%의 입술", "", @"%ANAME(대상)%의 질", "화간")
+			CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_ID(MASTER), @"%ANAME(MASTER)%의 입술", @"%ANAME(MASTER)%", "", "화간")
+		ELSE
+			PRINTFORMW 조금 부끄러웠지만 둘이서 한가로이 노천탕도 즐겼다
+		ENDIF
+	ELSE
+		PRINTFORMW 온천에 잠기면서 평소의 푸념이나 취미의 이야기에 분위기를 살렸다
+	ENDIF
+	CFLAG:대상:호감도 += 100 + RAND:200
+ELSEIF IS_MALE(MASTER) || (HAS_PENIS(MASTER) && RAND:2) || (HAS_PENIS(MASTER) && TALENT:MASTER:남성혐오)
+	PRINTFORML 혼자서 온천을 즐기고 있으면 있는 여성이라고 알게 되었다
+	PRINTFORML 남편과의 사이가 차가워지고 있고 혼자서 여행하는 일이 된 것이라면 외로운 듯이 고한다
+	PRINTFORMW 그녀의 이야기를 듣고 있는 동안에 %조사처리(ANAME(MASTER),"는")% 완전히 묶이고 그 손을 잡고 있었다
+	PRINTFORML 
+	SELECTCASE RAND:5
+		CASE 0
+			PRINTFORML %ANAME(MASTER)%들은 함께 온천에 들어가 그대로 사귀고 있다
+			PRINTFORML 그녀의 유부녀 특유의 익은 육체는 더욱 열로 다랑어잘라, 끈적 휘감겨 온다
+			PRINTFORML 오랜만의 섹스에 그녀는 단정치 못하게 미친듯이 자지러지는 신음소리를 내며 격렬하게 몸을 구불거리게 해 %조사처리(ANAME(MASTER),"를")% 요구해 왔다
+			PRINTFORMW 그 음란함에 %ANAME(MASTER)%도 열중해 허리를 흔들어, 목욕통 중(안)에서 몇 번이나 그녀의 안에 정액을 발했다
+		CASE 1
+			PRINTFORML %ANAME(MASTER)%들은 숙소를 같이 해 그대로 온천에서 격렬하게 교접했다
+			PRINTFORML 옷아래의 조금 야무지지 못한 육체가 오히려 참지 못하고 %조사처리(ANAME(MASTER),"는")% 열중해 그녀에게 문다
+			PRINTFORML 상당히 보류였던 것 같아 그녀는 미친 것처럼 자지러지며 주어지는 쾌락대로 몇 번이나 조수를 뿜었다
+			PRINTFORMW %ANAME(MASTER)%도 그녀의 익은 육체에 달라붙도록(듯이)해 한껏 맛보게 해 받았다
+		CASE 2
+			PRINTFORML 함께 온천을 돌아 다니는 동안에 의기 투합한 %ANAME(MASTER)%들은 밤을 같이 했다
+			PRINTFORML 그녀와 %ANAME(MASTER)%의 궁합은 발군에 자주(잘), 잠깐 시간을 잊어 탐내는 것처럼 서로를 계속 요구했다
+			PRINTFORML %ANAME(MASTER)%에 걸쳐 유카타를 풀어헤치게 해 머리카락을 흩뜨려 흐트러지는 그녀의 음미로움에 열중해 허리를 쳐박는다
+			PRINTFORMW 땀투성이가 된 %ANAME(MASTER)%들은 함께 샤워를 하고 나서 농후한 키스를 주고 받아 헤어졌다
+		CASE 3
+			PRINTFORML 함께 온천 순회를 즐긴 후%조사처리(ANAME(MASTER),"는")% 그녀를 숙소로 이끌었다
+			PRINTFORML 초그녀는 배덕감에 주저 하고 있었지만 재차 권하면 최종적으로 생긋 미소지었다
+			PRINTFORML 방에 들어가면 어느 쪽으로부터랄 것도 없게 입술을 거듭해 서로의 신체를 얽히게 되어지면서 이불 위에 쓰러졌다
+			PRINTFORMW %ANAME(MASTER)%들은 하룻밤 걸쳐 한껏 서로 사랑한 후, 연락처를 교환하고 나서 이별을 고했다
+		CASE 4
+			PRINTFORML 흐름대로 숙소를 같이한 %ANAME(MASTER)%들은 함께 눕고 있다
+			PRINTFORML 오랜만의 교접이었던 그녀는 매우 흐트러지고 그 익은 육체로 마음껏 즐겁게 해 주었다
+			PRINTFORML 이불 중(안)에서 그녀의 뜨거운 시선을 느껴 가볍게 키스를 해 주면 다리를 얽히게 되어지면서 다음을 요구해 왔다
+			PRINTFORMW %ANAME(MASTER)%들은 다른 일은 모두 잊어, 밤새다만 오로지 달굴 수 있는 것 같은 쾌락에 몸을 바쳤다
+	ENDSELECT
+	CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "유부녀의 입술", "", "유부녀의 질", "화간")
+ELSE
+	PRINTFORML 혼자서 온천을 즐기고 있으면 있는 남성이라고 알게 되었다
+	PRINTFORML 아내와의 사이가 차가워지고 있고 혼자서 여행하는 일이 된 것이라면 외로운 듯이 고한다
+	PRINTFORML 그의 이야기를 듣고 있는 동안에 %조사처리(ANAME(MASTER),"는")% 완전히 묶이고 그 손을 잡고 있었다
+	PRINTFORML 
+	SELECTCASE RAND:5
+		CASE 0
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 숙소에 데리고 들어가지자마자 밀어 쓰러트려져 범해지면서 단정치 못하게 허덕이고 있다
+			PRINTFORML 대담한 페니스로 동글동글 자궁입구가 자극되면 시야가 새하얗게 되어 전신에 시비레가 달린다
+			PRINTFORML 그는 그 반응을 즐기는 것처럼 끈적 공격을 반복해, %ANAME(MASTER)%의 신체는 암컷으로서 예의범절을 가르쳐져 버렸다
+			PRINTFORMW 하룻밤 걸쳐 그에게 헤롱헤롱으로 된 %조사처리(ANAME(MASTER),"는")% 이별할 때 연락처를 (듣)묻고 기뻐해 교환했다
+		CASE 1
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 그가 부르고 온천에 잠기면서 격렬하게 안겨 기쁨의 소리를 미치게 하고 있다
+			PRINTFORML 열이 가득찬 신체는 몇시라도보다 민감해, 깊숙히 꽂힌 페니스의 감촉을 직접적으로 느껴 버린다
+			PRINTFORML 질퍽질퍽 육봉이 출입할 때에 고기를 후벼파지는 감각에 %조사처리(ANAME(MASTER),"는")% 보기 흉하게 아헤얼굴을 쬐어 미친듯이 자지러지는 신음소리를 냈다
+			PRINTFORMW 올릴 때까지 범해진 후 그의 방에 데리고 들어가져 거기서 지금까지도 충분히와 귀여워해졌다
+		CASE 2
+			PRINTFORML 그가 불러 숙소를 같이한 %조사처리(ANAME(MASTER),"는")% 함께 온천에 잠기면서 러브러브 하고 있다
+			PRINTFORML 키스를 주고 받으면서 전신을 끈적 애무되어 온천의 열도 함께 머리가 멍-하니 해 온다
+			PRINTFORML 그에게 명령받은 %조사처리(ANAME(MASTER),"는")% 숨을 거칠게 해 기대에 가슴을 높아지게 하면서 욕조의 인연에 손을 붙어 엉덩이를 내밀었다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그의 씩씩한 페니스로 심하게 마구 가게 되어, 몸도 마음도 그의 애인으로서 기뻐했다
+		CASE 3
+			PRINTFORML 둘이서 온천 순회를 즐긴 후, %조사처리(ANAME(MASTER),"는")% 그의 방에 이끌리고 그대로 격렬하게 사귀고 있었다
+			PRINTFORML 불륜 섹스를 하고 있는 배덕감에 관능이 쑤셔, %ANAME(MASTER)%들은 땀투성이가 되어 격렬하게 교접한다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 격렬하게 밀어올려지면서 유카타를 풀어헤치게 해, 가고 있는 채인 채 사랑의 말을 늘어놓았다
+			PRINTFORMW 밤이 끝날 때까지 사귄 후, 한 번 더 온천에서 땀을 흘리고 나서 재회를 약속해 헤어졌다
+		CASE 4
+			PRINTFORML 어느 쪽으로부터랄 것도 없고 %ANAME(MASTER)%들은 함께 온천을 돌아 다니기로 해, 그대로 그의 숙소에 들어갔다
+			PRINTFORML 그의 숙련의 테크닉과 씩씩한 남근은 곧바로 %조사처리(ANAME(MASTER),"를")% 매료해 몇 번이나 암컷의 기쁨에 달한다
+			PRINTFORML 무소식이었던 그는 원숭이같이 격렬하게 허리를 계속 흔들어, 또%ANAME(MASTER)%도 요구되는 것을 기뻐해 미친듯이 자지러지는 신음소리를 냈다
+			PRINTFORMW 자궁으로부터 흘러넘치는만큼 씨뿌리기 된 %조사처리(ANAME(MASTER),"는")% 그의 아이를 임신하면 어떻게 하려고 뺨을 물들였다
+	ENDSELECT
+	CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, Ｖ성교, 펠라티오", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("지나가는 남자"), @"지나가는 남자의 \@RAND:2 ? 페니스 # 입술\@", "지나가는 남자", "", "화간")
+ENDIF
+PRINTFORML 
+PRINTFORML 즐거운 여행으로 완전히 피로도 잡혔다
+PRINTFORMW 또 오기로 하자
+SIF COOLTIME:MASTER:0 > 0
+	COOLTIME:MASTER:0 = 0
+
+RETURN 1
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_DAILY_TERRITORY_SPA_TOWN(대상)
+#DIM 대상
+RETURN 대상 != MASTER && CFLAG:대상:소속 == CFLAG:MASTER:소속 && CFLAG:대상:행동불능상태 != 4 && !IS_ANIMAL(대상)
+
+@SELECT_CHARA_LIST_SELECT_LOGIC_DAILY_TERRITORY_SPA_TOWN(대상)
+#DIM 대상
+RETURN CFLAG:대상:포로처 == 0

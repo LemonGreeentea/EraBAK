@@ -1,0 +1,125 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_TRAINING_TOGETHER_RATE()
+RETURN 30
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_TRAINING_TOGETHER_DECISION()
+SIF DAY < 5
+	RETURN 0
+;MASTER가 페니스를 가지고 있다
+SIF !(HAS_PENIS(MASTER))
+	RETURN 0
+
+RETURN 1
+
+
+;---------------------
+;특정의 조건을 채우는 캐릭터를 랜덤에 선택하는 경우에 이용
+;다른 함수는 필수이지만, 이것만은 없어도 좋다  라고 할까 퍼포먼스에 영향을 주므로 불필요하면 만들어서는 안 된다
+;대상이 존재하지 않고 데일리를 개시 할 수 없는 경우는 0을 돌려주는 것으로 데일리의 발생을 캔슬한다
+;---------------------
+@EVENT_DAILY_TRAINING_TOGETHER_SETTARGET()
+
+FOR LOCAL, 0, CHARANUM
+	SIF !IS_FEMALE(LOCAL)
+		CONTINUE
+	SIF LOCAL == MASTER
+		CONTINUE
+	;자국 소속 또한 포로가 아니다
+	IF CFLAG:LOCAL:소속 == CFLAG:MASTER:소속 && !CFLAG:LOCAL:포로처 && CFLAG:LOCAL:안면
+		DAILY_TARGET:DAILY_TARGET_NUM = LOCAL
+		DAILY_TARGET_NUM ++
+	ENDIF
+NEXT
+
+SIF DAILY_TARGET_NUM < 1
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_TRAINING_TOGETHER_GENRE()
+RETURN 데일리_장르_트래이너
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_TRAINING_TOGETHER
+#DIM 대상
+
+대상 = DAILY_TARGET:(RAND:DAILY_TARGET_NUM)
+
+IF RAND:2 == 0
+	PRINTFORMW 훈련하고 있는 %조사처리(ANAME(대상),"가")% 보였다
+	PRINTFORML 어떻게 하지?
+	CALL ASK_YN("함께 훈련한다", "떠난다")
+	IF RESULT == 1
+		PRINTFORMW 방해 해선 안 되는, %조사처리(ANAME(MASTER),"는")% 떠났다
+	ELSE
+		PRINTFORMW 함께 훈련을 신청하면 그녀는 기꺼이 받아들였다
+		PRINTFORML ·
+		PRINTFORML ·
+		PRINTFORMW ·
+		LOCAL = (ABL:MASTER:무투 + ABL:MASTER:방위) * (RAND:5 + 1) - (ABL:대상:무투 + ABL:대상:방위) * (RAND:4 + 1)
+		IF LOCAL >= 100
+			PRINTFORMW 훈련은 매우 진전되었다
+			PRINTFORML 답례에 식사 제의를 해지고 기뻐해 동반했다
+			PRINTFORMW 식사는 맛있게 회화도 활기를 띠어 분위기를 살려, 오후도 둘이서 즐겁게 보냈다
+			CALL PRINT_ADD_EXP(대상, "무투경험치", RAND:10 + 6, 1)
+			CALL PRINT_ADD_EXP(대상, "방위경험치", RAND:10 + 6, 1)
+			CFLAG:대상:호감도 += RAND:300 + 500
+		ELSEIF LOCAL >= 0
+			PRINTFORMW 충실한 훈련이 되었다
+			PRINTFORMW 좋은 땀을 흘릴 수 있었다고 타올로 닦으면서 예의를 표한다 그녀의 웃는 얼굴이 눈부셨다
+			CALL PRINT_ADD_EXP(대상, "무투경험치", RAND:5 + 3, 1)
+			CALL PRINT_ADD_EXP(대상, "방위경험치", RAND:5 + 3, 1)
+			CFLAG:대상:호감도 += RAND:100 + 300
+		ELSE
+			PRINTFORMW 훈련은 특히 순조롭게 끝났다
+			PRINTFORMW 예를 고하는 그녀와 헤어졌다
+			CALL PRINT_ADD_EXP(대상, "무투경험치", RAND:3 + 1, 1)
+			CALL PRINT_ADD_EXP(대상, "방위경험치", RAND:3 + 1, 1)
+			CFLAG:대상:호감도 += 100
+		ENDIF
+	ENDIF
+ELSE
+	PRINTFORMW 공부하고 있는 %조사처리(ANAME(대상),"가")% 보였다
+	PRINTFORML 어떻게 하지?
+	CALL ASK_YN("함께 공부한다", "떠난다")
+	IF RESULT == 1
+		PRINTFORMW 방해 해선 안 되는, %조사처리(ANAME(MASTER),"는")% 떠났다
+	ELSE
+		PRINTFORMW 함께 공부를 신청하면 그녀는 기꺼이 받아들였다
+		PRINTFORML ·
+		PRINTFORML ·
+		PRINTFORMW ·
+		LOCAL = (ABL:MASTER:지략 + ABL:MASTER:정치) * (RAND:5 + 1) - (ABL:대상:지략 + ABL:대상:정치) * (RAND:4 + 1)
+		IF LOCAL >= 100
+			PRINTFORMW 공부는 매우 진전되었다
+			PRINTFORML 답례에 식사 제의를 해지고 기뻐해 동반했다
+			PRINTFORMW 식사는 맛있게 회화도 활기를 띠어 분위기를 살려, 오후도 둘이서 즐겁게 보냈다
+			CALL PRINT_ADD_EXP(대상, "지략경험치", RAND:10 + 6, 1)
+			CALL PRINT_ADD_EXP(대상, "정치경험치", RAND:10 + 6, 1)
+			CFLAG:대상:호감도 += RAND:300 + 500
+		ELSEIF LOCAL >= 0
+			PRINTFORMW 충실한 스터디 그룹이 되었다
+			PRINTFORMW 함께 공부 되어있고 즐거웠다고 예의를 표한다 그녀의 웃는 얼굴이 눈부셨다
+			CALL PRINT_ADD_EXP(대상, "지략경험치", RAND:5 + 3, 1)
+			CALL PRINT_ADD_EXP(대상, "정치경험치", RAND:5 + 3, 1)
+			CFLAG:대상:호감도 += RAND:100 + 300
+		ELSE
+			PRINTFORMW 스터디 그룹은 특히 순조롭게 끝났다
+			PRINTFORMW 예를 고하는 그녀와 헤어졌다
+			CALL PRINT_ADD_EXP(대상, "지략경험치", RAND:3 + 1, 1)
+			CALL PRINT_ADD_EXP(대상, "정치경험치", RAND:3 + 1, 1)
+			CFLAG:대상:호감도 += 100
+		ENDIF
+	ENDIF
+ENDIF
+
+RETURN 1

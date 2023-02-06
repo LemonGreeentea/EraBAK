@@ -1,0 +1,221 @@
+﻿;-------------------------------------------------
+;# COM_AUTOSELECT_2_카테고리의 우선도 설정
+;-------------------------------------------------
+@COM_AUTOSELECT_SET_CATEGORY_PRIORITY(MAIN_PLAYER, MAIN_TARGET)
+#DIM MAIN_PLAYER
+#DIM MAIN_TARGET
+#DIM L_COUNTER
+
+;-------------------------------------------------
+; 리셋트
+;-------------------------------------------------
+VARSET COM_AUTO_CATEGORY_PRIORITY, 0
+
+;-------------------------------------------------
+; 각 카테고리의 우선도 리스트 read
+;-------------------------------------------------
+FOR L_COUNTER, 1, COM_AUTO_CATEGORY_NUM_MAX + 1
+	CALLFORM COM_AUTOSELECT_SET_CATEGORY_PRIORITY_{L_COUNTER}(MAIN_PLAYER, MAIN_TARGET)
+NEXT
+
+;-------------------------------------------------
+; 디버그 등록 누락 확인
+;-------------------------------------------------
+[IF_DEBUG]
+	DEBUGPRINTFORML 
+	DEBUGPRINTFORML   DEBUG 카테고리 우선도 등록 누락 확인
+	FOR L_COUNTER, 1, COM_AUTO_CATEGORY_NUM_MAX + 1
+		SIF COM_AUTO_CATEGORY_PRIORITY:L_COUNTER != 0
+			CONTINUE
+		DEBUGPRINTFORML {L_COUNTER, 4}. %COM_AUTO_N_COM_CATEGORY_NAME(L_COUNTER), 26, LEFT% 카테고리 없음
+	NEXT
+[ENDIF]
+
+;-------------------------------------------------
+; 디버그 카테고리 우선도 기본 설정 후
+;-------------------------------------------------
+[IF_DEBUG]
+	DEBUGPRINTFORML 
+	DEBUGPRINTFORML   DEBUG 카테고리 우선도 기본 설정 후
+	FOR L_COUNTER, 1, COM_AUTO_CATEGORY_NUM_MAX + 1
+		IF COM_AUTO_CATEGORY_PRIORITY:L_COUNTER > 0
+			DEBUGPRINTFORML {L_COUNTER, 4}. %COM_AUTO_COM_CATEGORY_NAME(L_COUNTER), 26, LEFT% %NUM_FORMAT(COM_AUTO_CATEGORY_PRIORITY:L_COUNTER), 10, RIGHT%
+		ENDIF
+	NEXT
+[ENDIF]
+
+;-------------------------------------------------
+; 보정  위안서비스측
+;	위안때 서비스측은 상대에게 서비스를 명령하기 어렵다
+;	성교시키자 피학 하고는 아무쪼록 희롱해 주세요 목표 표현으로서 있는 곳?
+;-------------------------------------------------
+IF FLAG:조교모드 == 조교_위안 && !TALENT:MAIN_PLAYER:위안모브 && !CFLAG:MAIN_PLAYER:위안참가자
+	SIF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무시킨다 > 0
+		COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_애무시킨다 /= 3
+	SIF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 > 0
+		COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 /= 3
+	SIF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임시킨다 > 0
+		COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임시킨다 /= 3
+	SIF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 > 0
+		COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 /= 3
+	SIF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 > 0
+		COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 /= 3
+	SIF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 > 0
+		COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 /= 3
+	SIF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 > 0
+		COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 /= 3
+	SIF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설시킨다 > 0
+		COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설시킨다 /= 3
+	SIF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설시킨다 > 0
+		COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설시킨다 /= 3
+	SIF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하게가학한다 > 0
+		COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하게가학한다 /= 3
+	SIF COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 > 0
+		COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 /= 3
+ENDIF
+
+;-------------------------------------------------
+; 제외 특수 세력·위안모브 남성
+;	상의 지정에서는 CHECK_SP_SADIST_CHARA（위안모브는 동물 이외, 특수 세력은 자경단·서큐버스 이외）
+;	로 공격역을 판단해, Ｓ행동의 제한을 없애고 있다
+;	가, Ｍ행동은 특히 제한하고 있지 않다. 이유는Ｍ인 음란 치녀 캐릭터를 제한하지 않도록 하기 위해(때문)
+;	남성만 자주적인Ｍ행동을 제한해 간역인것 같게 하는, 배설은 판단이 서지 않기 때문에 스르
+;-------------------------------------------------
+IF IS_MALE(MAIN_PLAYER) && (TALENT:MAIN_PLAYER:특수세력소질 || TALENT:MAIN_PLAYER:위안모브)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임시킨다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하고피학한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 = -1
+ENDIF
+
+;남 위안모브측이 실행이라면. 대상의 경우는 이 한계는 아니다
+IF TALENT:MAIN_PLAYER:위안모브 && IS_MALE(MAIN_PLAYER)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 = -1
+	;오나홀대딸 지시를 할 수 있도록(듯이)하려면
+	;커맨드의 우선도 설정측에서 분기 시켜 도구 사용하게 하는 것을 살릴 필요 있어
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하고피학한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 = -1
+ENDIF
+
+;-------------------------------------------------
+; 제외 동물 모브
+;	대상이라면, 캐릭터측으로부터 피임시키거나 도구를 사용할 수 있다
+;-------------------------------------------------
+IF GROUPMATCH(TALENT:MAIN_PLAYER:위안모브, 위안_캐릭터_개, 위안_캐릭터_돼지, 위안_캐릭터_말, 위안_캐릭터_원숭이)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하게가학한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하고피학한다 = -1
+ENDIF
+IF GROUPMATCH(TALENT:MAIN_TARGET:위안모브, 위안_캐릭터_개, 위안_캐릭터_돼지, 위안_캐릭터_말, 위안_캐릭터_원숭이)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_도구사용하게한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하게가학한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하고피학한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_노출시킨다 = -1
+	;캐릭터로부터 동물에 배설을 요구하면 산책이나 주선과 같이 될 것 같은 것으로 제한
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설시킨다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설시킨다 = -1
+ENDIF
+
+;-------------------------------------------------
+; 제외맡김 설정
+;-------------------------------------------------
+;-------------------------------------------------
+; # 남성의Ａ목적을 금지 설정
+;-------------------------------------------------
+IF !GETBIT(CONFIG:11, COM_AUTO_FILTER_남성의Ａ를노리는행위를허가)
+	IF TOSTR_SEX(TALENT:MAIN_PLAYER:성별) == "남성"
+		COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임시킨다 = -1
+		COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가시킨다 = -1
+		COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교시킨다 = -1
+	ENDIF
+	IF TOSTR_SEX(TALENT:MAIN_TARGET:성별) == "남성"
+		COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피임한다 = -1
+		COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_윤활추가한다 = -1
+		COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_성교한다 = -1
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+; # 과격한 폭력을 금지
+;-------------------------------------------------
+IF GETBIT(CONFIG:11, COM_AUTO_FILTER_과격한폭력을금지)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하게가학한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_심하고피학한다 = -1
+ENDIF
+
+;-------------------------------------------------
+; # ＳＭ를 금지
+;-------------------------------------------------
+IF GETBIT(CONFIG:11, COM_AUTO_FILTER_ＳＭ를금지)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_가학한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_피학한다 = -1
+ENDIF
+
+;-------------------------------------------------
+; # 대스캇을 금지
+;-------------------------------------------------
+IF GETBIT(CONFIG:11, COM_AUTO_FILTER_대스캇을금지)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_대배설시킨다 = -1
+ENDIF
+
+;-------------------------------------------------
+; # 소스캇을 금지
+;-------------------------------------------------
+IF GETBIT(CONFIG:11, COM_AUTO_FILTER_소스캇을금지)
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설한다 = -1
+	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_소배설시킨다 = -1
+ENDIF
+
+;-------------------------------------------------
+; 최저 우선도
+;-------------------------------------------------
+FOR L_COUNTER, 1, COM_AUTO_CATEGORY_NUM_MAX + 1
+	IF L_COUNTER == 1
+		COM_AUTO_CATEGORY_PRIORITY:L_COUNTER = MAX(COM_AUTO_CATEGORY_PRIORITY:L_COUNTER, 2)
+	ELSE
+		COM_AUTO_CATEGORY_PRIORITY:L_COUNTER = MAX(COM_AUTO_CATEGORY_PRIORITY:L_COUNTER, 0)
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+; 카테고리의 예약 보정
+;	허가되고 있으면, 그 카테고리의 선택율을 큰폭으로 상승
+;	윤활 허가하면 로션 칠로부터의 예약 행동으로 성교가 나올 가능성 있어
+;	제삼자로 고무나 로션으로부터의 예약 발동이 일어나는 일이 있으므로
+;	카테고리가 0이라면 예약 발동하지 않도록 했다
+;-------------------------------------------------
+IF TFLAG:30 >= 1 && COM_AUTO_CATEGORY_PRIORITY:(TFLAG:30) > 0
+	COM_AUTO_CATEGORY_PRIORITY:(TFLAG:30) += 10000
+ENDIF
+
+;-------------------------------------------------
+; 디버그 카테고리 우선도 보정 설정 후
+;-------------------------------------------------
+[IF_DEBUG]
+	DEBUGPRINTFORML 
+	DEBUGPRINTFORML   DEBUG 카테고리 우선도 보정 설정 후
+	FOR L_COUNTER, 1, COM_AUTO_CATEGORY_NUM_MAX + 1
+		IF COM_AUTO_CATEGORY_PRIORITY:L_COUNTER > 0
+			DEBUGPRINTFORML {L_COUNTER, 4}. %COM_AUTO_COM_CATEGORY_NAME(L_COUNTER), 26, LEFT% %NUM_FORMAT(COM_AUTO_CATEGORY_PRIORITY:L_COUNTER), 10, RIGHT%
+		ENDIF
+	NEXT
+[ENDIF]
+
+RETURN 0
+

@@ -1,0 +1,83 @@
+﻿;-------------------------------------------------
+;번호 ARG:0의 캐릭터에 대해, 소질을 바탕으로 어느 범용 구상을 사용할까를 결정한다
+;-------------------------------------------------
+@SET_KOJO_PATTERN(ARG:0)
+;아이인 경우
+IF IS_CHILD(ARG:0)
+	;남성·남성(후타)
+	IF GROUPMATCH(TALENT:(ARG:0):성별, 0, 3)
+		CFLAG:(ARG:0):범용구상패턴 = 1300
+	;여성·여성(후타)·오토코노코
+	ELSE
+		;만능
+		IF TALENT:(ARG:0):성장형 == 0
+			CFLAG:(ARG:0):범용구상패턴 = 1400
+		;지장
+		ELSEIF TALENT:(ARG:0):성장형 == 1
+			CFLAG:(ARG:0):범용구상패턴 = 1400
+		;학사
+		ELSEIF TALENT:(ARG:0):성장형 == 2
+			CFLAG:(ARG:0):범용구상패턴 = 1410
+		;양도
+		ELSEIF TALENT:(ARG:0):성장형 == 3
+			CFLAG:(ARG:0):범용구상패턴 = 1400
+		;무관
+		ELSEIF TALENT:(ARG:0):성장형 == 4
+			CFLAG:(ARG:0):범용구상패턴 = 1400
+		;군사
+		ELSEIF TALENT:(ARG:0):성장형 == 5
+			CFLAG:(ARG:0):범용구상패턴 = 1410
+		;문관
+		ELSEIF TALENT:(ARG:0):성장형 == 6
+			CFLAG:(ARG:0):범용구상패턴 = 1410
+		;예능
+		ELSEIF TALENT:(ARG:0):성장형 == 7
+			CFLAG:(ARG:0):범용구상패턴 = 1410
+		;요리
+		ELSEIF TALENT:(ARG:0):성장형 == 8
+			CFLAG:(ARG:0):범용구상패턴 = 1400
+		;천재
+		ELSEIF TALENT:(ARG:0):성장형 == 9
+			CFLAG:(ARG:0):범용구상패턴 = 1400
+		ENDIF
+	ENDIF
+
+;통상의 범용 캐릭터의 경우(아이 이외)
+ELSE
+	;남성·남성(후타)
+	IF GROUPMATCH(TALENT:(ARG:0):성별, 0, 3)
+		CFLAG:(ARG:0):범용구상패턴 = 1100
+
+	;여성·여성(후타)·오토코노코
+	;만능
+	ELSEIF TALENT:(ARG:0):성장형 == 0
+		CFLAG:(ARG:0):범용구상패턴 = 1200
+	;지장
+	ELSEIF TALENT:(ARG:0):성장형 == 1
+		CFLAG:(ARG:0):범용구상패턴 = 1201
+	;학사
+	ELSEIF TALENT:(ARG:0):성장형 == 2
+		CFLAG:(ARG:0):범용구상패턴 = 1202
+	;양도
+	ELSEIF TALENT:(ARG:0):성장형 == 3
+		CFLAG:(ARG:0):범용구상패턴 = 1203
+	;무관
+	ELSEIF TALENT:(ARG:0):성장형 == 4
+		CFLAG:(ARG:0):범용구상패턴 = 1204
+	;군사
+	ELSEIF TALENT:(ARG:0):성장형 == 5
+		CFLAG:(ARG:0):범용구상패턴 = 1205
+	;문관
+	ELSEIF TALENT:(ARG:0):성장형 == 6
+		CFLAG:(ARG:0):범용구상패턴 = 1206
+	;예능
+	ELSEIF TALENT:(ARG:0):성장형 == 7
+		CFLAG:(ARG:0):범용구상패턴 = 1207
+	;요리
+	ELSEIF TALENT:(ARG:0):성장형 == 8
+		CFLAG:(ARG:0):범용구상패턴 = 1200
+	;천재
+	ELSEIF TALENT:(ARG:0):성장형 == 9
+		CFLAG:(ARG:0):범용구상패턴 = 1200
+	ENDIF
+ENDIF

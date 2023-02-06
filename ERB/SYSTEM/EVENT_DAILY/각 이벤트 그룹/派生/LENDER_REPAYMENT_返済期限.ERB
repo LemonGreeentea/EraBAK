@@ -1,0 +1,304 @@
+﻿;---------------------
+;대응하는 데일리의 DISABLE를 돌려준다. 설정하지 않는 경우, 이벤트는 발생하지 않는다.
+;---------------------
+@EVENT_DAILY_DERIVATION_LENDER_REPAYMENT_DISABLE()
+RETURN DAILY_GET_DISABLE_CONFIG("LENDER")
+
+;---------------------
+;발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;대응하는 데일리의 DISABLE 체크를 규약으로서 필수로 한다
+;---------------------
+@EVENT_DAILY_DERIVATION_LENDER_REPAYMENT_DECISION()
+;반제기간이 있으면 감소
+IF DVAR:대금업자_반제기간 > 0
+	DVAR:대금업자_반제기간 --
+	;기한이 0이 되면 발동
+	SIF DVAR:대금업자_반제기간 == 0
+		RETURN 1
+ENDIF
+
+RETURN 0
+
+;---------------------
+;특정의 조건을 채우는 캐릭터를 랜덤에 선택하는 경우에 이용
+;다른 함수는 필수이지만, 이것만은 없어도 좋다  라고 할까 퍼포먼스에 영향을 주므로 불필요하면 만들어서는 안 된다
+;대상이 존재하지 않고 데일리를 개시 할 수 없는 경우는 0을 돌려주는 것으로 데일리의 발생을 캔슬한다
+;---------------------
+@EVENT_DAILY_DERIVATION_LENDER_REPAYMENT_SETTARGET()
+FOR LOCAL, 0, CHARANUM
+	SIF LOCAL == MASTER
+		CONTINUE
+	SIF CFLAG:LOCAL:소속 != CFLAG:MASTER:소속
+		CONTINUE
+	SIF CFLAG:LOCAL:포로처
+		CONTINUE
+	SIF !IS_FEMALE(LOCAL)
+		CONTINUE
+	DAILY_TARGET:DAILY_TARGET_NUM = LOCAL
+	DAILY_TARGET_NUM ++
+NEXT
+
+
+RETURN 1
+
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_DERIVATION_LENDER_REPAYMENT()
+#DIM LCOUNT, 3
+#DIM 반제액
+#DIM 반제기간
+#DIM 담보
+VARSET 반제액
+VARSET 반제기간
+
+IF DAILY_TARGET_NUM > 0
+	담보 = DAILY_TARGET:(RAND:DAILY_TARGET_NUM)
+ELSE
+	담보 = -1
+ENDIF
+
+PRINTFORMW 오늘은 빌리고 있던 돈의 반제일이다
+PRINTFORMW 예정의 시각 딱에, 남자는 나타났다……
+PRINTFORMW 「그런데%ANAME(MASTER)%님. 오늘은 반제일입니다만, 돈의 준비는 좋습니까?」
+PRINTFORMW 자, 그럼, 어떻게 하지……
+CALL SINGLE_DRAWLINE
+PRINTFORML 현재의 돈:{MONEY}
+
+CALL ASK_MULTI_JUDGE(@"금{DVAR:대금업자_융자총액}를 반제한다", MONEY >= DVAR:대금업자_융자총액, "지불할 수 없다고 전한다", 1, "당신에 어울린 방법을 준비해 있다", (DVAR:대금업자_발생플래그 == 1 && MONEY >= DVAR:대금업자_융자총액 * 3 / 2))
+
+IF RESULT == 0 && MONEY >= DVAR:대금업자_융자총액
+	IF MONEY >= DVAR:대금업자_융자총액 * 2
+		PRINTFORMW 「이런, 미안하다. 반제액에 착오가 있었습니다」
+		PRINTFORM 「진정한 반제액은 돈
+		CALL COLOR_PRINT(@"{DVAR:대금업자_융자총액 * 2}", 칼라_주의)
+		PRINTFORMW 입니다. 뭐 가지고 계신 같기 때문에 문제 없습니다?」
+		PRINTFORM 불합리하지 않을것인가 라는 짬조차 주지 않고, 남자는 정말로 돈
+		CALL COLOR_PRINT(@"{DVAR:대금업자_융자총액 * 2}", 칼라_주의)
+		PRINTFORMW 를 갖고 있고는 끝냈다……
+		MONEY -= DVAR:대금업자_융자총액 * 2
+	ELSE
+		PRINTFORMW 「흠. 그럼 확실히
+		PRINTFORM 남에 돈
+		CALL COLOR_PRINT(@"{DVAR:대금업자_융자총액}", 칼라_주의)
+		PRINTFORMW 를 반제했다……
+	ENDIF
+	PRINTFORMW 「그럼 나는 이것으로. 앞으로도 편애에」
+	PRINTFORMW 남은 싱글싱글 한 얼굴로 돌아갔다……
+	DVAR:대금업자_나머지융자액 = 0
+	DVAR:대금업자_융자총액 = 0
+ELSEIF RESULT == 1
+	PRINTFORMW 실은 반제할 수 있을 것 같지 않다. 미안하다. 돈은 가능한 한 빨리, 반드시 돌려준다. %조사처리(ANAME(MASTER),"는")% 정직하게 전했다
+	PRINTFORMW 「……흠……. 뭐, 어쩔 수 없습니다. 돌려줄 수 없는 것은 어쩔 수 없기에」
+	PRINTFORMW 이쪽의 성의가 전해진 것 같다. %조사처리(ANAME(MASTER),"는")% 가슴을 쓸어내렸다
+
+	;담보가 있는 경우
+	IF 담보 >= 0
+		PRINTFORMW 「그럼, 대신의 반제 방법입니다만……실은 나, 여인숙도 영위하고 있어서?」
+		PRINTFORMW 「%ANAME(MASTER)%님의 곳의 %ANAME(담보)%를 그 쪽으로 한동안 맡겨 받을 수 있으면, 그 급료를 반제액으로서 충당합시다」
+		PRINTFORMW 「부끄럽지만 일손부족으로 하고. 그 쪽에 있어서도, 나쁜 이야기는 아니라고 생각합니다만……」
+		IF IS_FEMALE(MASTER)
+			PRINTFORMW 「그것인가, %ANAME(MASTER)%님 자신에게 일해 받아도 괜찮습니다만,」
+		ENDIF
+		PRINTFORMW 과연, 그것은 확실히, 쌍방에 있어 나쁘지 않은 이야기가 될 것 같다……
+		PRINTFORMW 어느 쪽이든, 선택의 여지도 없는 것이고……
+		IF IS_FEMALE(MASTER)
+			PRINTFORMW 어떻게 하지?
+			CALL ASK_YN(@"%ANAME(담보)%를 배웅한다", "자신이 대신에 일한다")
+		ELSE
+			RESULT = 0
+		ENDIF
+		IF RESULT == 0
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")%, %ANAME(담보)%를 배웅하기로 했다
+			PRINTFORMW 「그럼, %ANAME(담보)%를 빌리겠습니다」
+			IF GETBIT(TALENT:담보:음란계, 소질_음란_정액변소)
+				PRINTFORMW 「쿠크, 어차피 자지라고 보면 뭐든지 좋은 것 같은 여자다, 다소 난폭하게 사용해도 문제 없을 것이다……」
+				PRINTFORMW 「읏?   아니오, 뭐든지 없어요. 혼잣말입니다」
+			ENDIF
+			PRINTFORMW 「빈틈없이 일해 받으면 돌려 드리기 때문에, 염려말고……」
+		ELSE
+			담보 = MASTER
+			PRINTFORMW %ANAME(담보)%자신이 일하기로 했다
+			PRINTFORMW 「그렇습니까, 그럼 제대로 일해 받습니다」
+			PRINTFORMW 「뭐, 반제액분 일해 받으면 해방하기 때문에, 염려말고……」
+		ENDIF
+		PRINTFORMW 남은 %ANAME(담보)%를 따라, 떠나 갔다……
+		DVAR:대금업자_반제기간 = -1
+		DVAR:대금업자_어깨ID = GET_ID(담보)
+		IF 담보 != MASTER
+			CALL CHANGE_COUNTRY(담보, 0)
+			CFLAG:담보:특수상태 = 0
+		ENDIF
+	ELSE
+		PRINTFORMW 「그래서, 나머지의 돈입니다만……흠, 뭐, 방법이 없군요」
+		PRINTFORMW 「하지만, 향후는 이러한 일이 없게 부탁해요」
+		PRINTFORMW 남은 떠나 갔다……
+		DVAR:대금업자_반제기간 = 0
+		DVAR:대금업자_나머지융자액 = 0
+		DVAR:대금업자_융자총액 = 0
+		DVAR:대금업자_어깨ID = 0
+	ENDIF
+ELSEIF RESULT == 2
+	PRINTFORMW 분명하게 전액 지불하자, 그 말을 (들)물어 뺨을 느슨해지게 한 순간
+	PRINTFORML 찰칵
+	PRINTFORML 희미한 소리와 함께 대금업자의 발밑의 마루가 열린다
+	PRINTFORMW 「개…이런 곳에 떨어뜨린다는 것은, 위자료를 포함해 적어도 1000000은 지불해 받지 않습니다와」
+	PRINTFORML 난폭한 행동을 해 미안함
+	PRINTFORMW 몇분 저대로 지불하기에는 너무 넓기 때문에 특별히 지불해 장소를 만들도록 해 받았다
+	PRINTFORML 위자료도 준비해 있으므로 바랄 만큼 받아 주자
+	PRINTFORML 「그, 그런 일이라면 있었다다…아니요 우선은 여기에서 내
+	PRINTFORML 불쌍한 수전노의 말이 끝나는 것보다도 빨리, 준비해 있던 봉투의 내용을 모두가 기세 좋게 흘려 넣어 간다
+	PRINTFORMW 순식간에 남자의 다리가, 허리가 파묻혀 간다…
+	PRINTFORMW 「아, 갓…도, 도움……」
+	PRINTFORML 소리는 이윽고 작아져, 마루에까지 화폐-그것도 가장 가치의 낮은 잔돈이다-가 닿는 무렵에는 다만 전끼리가 부딪치는 소리가 나게만 되었다
+	PRINTFORMW 생을 완수하는 마지막 순간까지 집착 계속 한 돈에 둘러싸여 있던 것이다, 편하게 갈 수 있었을 것이다
+	PRINTFORML 잔돈 가득한 통은 그 후, 직할의 용광로로 쓰레기 금속으로서 융 쉬었다고 하지만,
+	PRINTFORMW 융 쉰 금속의 행방을 아는 것은 없다
+	PRINTFORMW ……
+	PRINTFORMW …
+	PRINTFORMW 
+	PRINTFORMW 후일, 방의 개장비와 잔돈의 청구가 왔다
+	PRINT 대금은 합계
+		CALL COLOR_PRINT(@"{DVAR:대금업자_융자총액 * 3 / 2}", 칼라_주의)
+	PRINTW 였다……
+	MONEY -= DVAR:대금업자_융자총액 * 3 / 2
+	DVAR:대금업자_발생플래그 = -1
+ENDIF
+
+RETURN 1
+
+;---------------------
+;대응하는 데일리의 DISABLE를 돌려준다. 설정하지 않는 경우, 이벤트는 발생하지 않는다.
+;---------------------
+@EVENT_DAILY_DERIVATION_LENDER_REPAYMENT_DONE_DISABLE()
+RETURN DAILY_GET_DISABLE_CONFIG("LENDER")
+
+
+;---------------------
+;발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;대응하는 데일리의 DISABLE 체크를 규약으로서 필수로 한다
+;---------------------
+@EVENT_DAILY_DERIVATION_LENDER_REPAYMENT_DONE_DECISION()
+SIF DVAR:대금업자_반제기간 == -1 && DVAR:대금업자_나머지융자액 <= 0
+	RETURN 1
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_DERIVATION_LENDER_REPAYMENT_DONE()
+#DIM 반제액
+
+LOCAL = ID_TO_CHARA(DVAR:대금업자_어깨ID)
+IF LOCAL != MASTER
+	PRINTFORMW 「(이)나나 %ANAME(MASTER)%님. 실은 %ANAME(LOCAL)%의 건인 것입니다만」
+	PRINTFORMW 대금업자가 물어 왔다. 아무래도 빚의 담보에 맡긴 %ANAME(LOCAL)%의 일로 이야기가 있는 것 같다……
+	IF ((IS_LOVER(LOCAL) || IS_SLAVE(LOCAL) || IS_SLAVED_BY(LOCAL)) && RAND:3) || RAND:5
+		PRINTFORMW 「실은 경사스럽고 반제액 분의 급료가 모여서. 그러니까, 데려 온 나름이라서」
+		PRINTFORMW 남이 손뼉을 치면, 방의 밖으로부터 %조사처리(ANAME(LOCAL),"가")% 들어 왔다
+		PRINTFORMW 이지만 그 모습에, %조사처리(ANAME(MASTER),"는")% 눈을 의심했다
+		SELECTCASE RAND:5
+			CASE 0
+				PRINTFORMW %조사처리(ANAME(LOCAL),"는")%, 알몸보다 추잡한 얇은 의상에 몸을 감싸며 있었다
+				PRINTFORMW 직전까지 충분히 「일해」있었는지, 양구멍으로부터는 애액과 정액이 질척질척흘러넘치고 있다
+				PRINTFORMW 그런데도 더 육욕이 쑤시고 있는지, %조사처리(ANAME(LOCAL),"는")% 당신의 음부를 손가락으로 휘젓고 있다
+				PRINTFORMW 흘러넘치는 달콤한 한숨은 점차 명확한 교성이 되어, 손가락의 움직임도 격렬해진다
+				PRINTFORMW 그리고 %조사처리(ANAME(LOCAL),"는")%, 등을 뒤로 젖혀, %조사처리(ANAME(MASTER),"가")% 보고 있는 앞에서 격렬하게 절정 했다
+			CASE 1
+				PRINTFORMW %조사처리(ANAME(LOCAL),"는")%, 대금업자의 측근의 남자와 함께 나타났다
+				PRINTFORMW ……그 남자에게 거느려져 그의 육봉을 비밀의 틈에 물면서
+				PRINTFORMW 남이 허리를 밀어올리면, %조사처리(ANAME(LOCAL),"는")% 머리카락을 흩뜨려 좋아한다
+				PRINTFORMW 삽입질은 점차 격렬해져, 남자는 드디어 %ANAME(LOCAL)% 안에 사정했다
+				PRINTFORMW %조사처리(ANAME(LOCAL),"는")% 요염한 소리를 높여, 암컷국물을 분출하면서 절정 했다
+			CASE 2
+				PRINTFORMW 「그녀는 상당히 열심이었어요. 보십니까?」
+				PRINTFORMW 대금업자는 그러한대로, %ANAME(LOCAL)%에 눈짓 했다
+				PRINTFORMW 하면 %조사처리(ANAME(LOCAL),"는")%, %조사처리(ANAME(MASTER),"가")% 보고 있기 전이라고 말하는데, 그의 것에 입으로 봉사를 시작했다
+				PRINTFORMW 와 소리를 내고 페니스를 훌쩍거리는 모양은, 몹시 열이 들어간, 열심인 것이었다
+				PRINTFORMW 이윽고 남자가 정액을 토해내면, %조사처리(ANAME(LOCAL),"는")% 그것을 흘리지 않고 모두 받아 들여, 감사합니다라고 중얼거렸다
+			CASE 3
+				PRINTFORMW 「이런이런, 일 너무 열심이어, 작업복인 채로 와 버렸습니까」
+				PRINTFORMW 대금업자가 작업복이라고 부른 그것은, 도저히 작업복이라고는 부를 수 없는 것이나 마찬가지였다
+				PRINTFORMW 급사의 옷인 것 같은 것이긴 하지만, 유방은 노출로, 스커트 길이도 짧고, 비밀의 틈을 거의 숨길 수 있지 않았다
+				PRINTFORMW 「뭐 좋을 것입니다, 그렇다면, 일상태를 %ANAME(MASTER)%님이 봐 주면 좋다」
+				PRINTFORMW 말하면서, 남은 %ANAME(MASTER)%의 눈앞에서 %조사처리(ANAME(LOCAL),"를")% 쓰러트리고, 범하기 시작했다
+				PRINTFORMW 남이 신음소리를 질러 종을 질내에 발하면, 그녀는 한층 더 높은 소리를 질러 몸부림쳐 보였다
+			CASE 4
+				PRINTFORMW 「그녀는 실로 충실한 종업원으로 하고. 보십니까」
+				PRINTFORMW 남이 의미 있는듯이 눈짓 하면, %조사처리(ANAME(LOCAL),"는")% 깊숙히 도게자했다
+				PRINTFORMW 「쿠쿡, 그대로 가만히 하고 있어라」
+				PRINTFORMW 그리고 남자는, 당치 않게 그녀를, 그대로의 자세로 범하기 시작했다
+				PRINTFORMW 격렬한 피스톤의 뒤, 남자는 신음해, 그 질내에 종을 발한다
+				PRINTFORMW %조사처리(ANAME(LOCAL),"는")% 감사합니다와 공손하게 예의 말까지 말해 보였다
+		ENDSELECT
+		PRINTFORMW 제 정신이 된 %조사처리(ANAME(MASTER),"가")%, 이것은 어떻게 말하는 것이라고 캐물으려고 하는 무렵에는, 남자는 도망쳐 버리고 있었다……
+		CALL COLOR_PRINTW(@"%조사처리(ANAME(LOCAL),"가")% 복귀했습니다", 칼라_주의)
+		SETCOLOR 칼라_경고
+		IF !GETBIT(TALENT:LOCAL:음란계, 소질_음란_음란)
+			PRINTFORML %조사처리(ANAME(LOCAL),"는")%＜음란＞을 얻었다
+		ENDIF
+		CALL TALENT_LOSE_PRIDE(LOCAL, 1)
+		CALL TALENT_LOSE_TEISOU(LOCAL, 1)
+		RESETCOLOR
+		CFLAG:(LOCAL):종속도 = MAX(CFLAG:(LOCAL):종속도, 500)
+		CFLAG:(LOCAL):의존도 = MAX(CFLAG:(LOCAL):의존도, 50)
+		SETBIT TALENT:LOCAL:음란계, 소질_음란_음란
+
+		DVAR:대금업자_반제기간 = 0
+		DVAR:대금업자_나머지융자액 = 0
+		DVAR:대금업자_융자총액 = 0
+		DVAR:대금업자_어깨ID = 0
+		CALL CHANGE_COUNTRY(LOCAL, CFLAG:MASTER:소속)
+		CFLAG:LOCAL:특수상태 = 0
+	ELSE
+		반제액 = RAND(100000, MAX(100001, MIN(200000, DVAR:대금업자_융자총액)))
+		PRINTFORMW 「실은 %ANAME(LOCAL)%의 일입니다만, 심한 바보짓을 해 버려서」
+		PRINTFORM 「새롭게 빚이 돈
+		CALL COLOR_PRINT(@"{반제액}", 칼라_주의)
+		PRINTFORMW (정도)만큼 생겼으므로, 좀 더 빌리는 취지를 탈 수 있는 것에 (가)왔습니다」
+		PRINTFORMW 뭐라는 것이다, 빚을 갚은 생각이, 반대로 증가해 버린다고는
+		PRINTFORMW 라고는 해도, 어쩔 수 없는 것이다. %조사처리(ANAME(MASTER),"는")% 동의 할 수밖에 없었다……
+
+		DVAR:대금업자_나머지융자액 = 반제액
+		DVAR:대금업자_융자총액 = 반제액
+	ENDIF
+ELSE
+	IF RAND:5
+		PRINTFORMW 「%ANAME(MASTER)%전. 실은 당신의 급료가, 정확히 빚과 같다가 되어서」
+		PRINTFORMW 「이것에서 집에서은 끝입니다, 좋았던 것입니다」
+		PRINTFORMW 어느 날 대금업자에게 불려 간 %조사처리(ANAME(MASTER),"는")%, 그용으로이야기를 잘라졌다
+		PRINTFORMW 대금업자는 눈앞에서 차용서를 찢어 버렸다. 아무래도, 이것으로 정말로 빚생활은 끝과 같다
+		PRINTFORMW 「이것에 질리면, 돈을 척척 빌리거나 하지 않는 것입니다, 학」
+		PRINTFORMW 「뭐, 범해지는 것이 기호라고 한다면, 멈춤은 하지 않습니다만」
+		PRINTFORMW 대금업자의 비웃음을 등에 받으면서, %조사처리(ANAME(MASTER),"는")% 그의 아래로부터 떠났다……
+		PRINTFORMW 신체가 능욕의 쾌락을 추구해, 쑤셔 버리고 있다……
+		SETCOLOR 칼라_경고
+		IF !GETBIT(TALENT:LOCAL:음란계, 소질_음란_음란)
+			PRINTFORML %조사처리(ANAME(LOCAL),"는")%＜음란＞을 얻었다
+		ENDIF
+		CALL TALENT_LOSE_PRIDE(LOCAL, 1)
+		CALL TALENT_LOSE_TEISOU(LOCAL, 1)
+		RESETCOLOR
+		CFLAG:(LOCAL):종속도 = MAX(CFLAG:(LOCAL):종속도, 500)
+		CFLAG:(LOCAL):의존도 = MAX(CFLAG:(LOCAL):의존도, 50)
+		SETBIT TALENT:LOCAL:음란계, 소질_음란_음란
+		DVAR:대금업자_반제기간 = 0
+		DVAR:대금업자_나머지융자액 = 0
+		DVAR:대금업자_융자총액 = 0
+		DVAR:대금업자_어깨ID = 0
+	ELSE
+		반제액 = RAND(100000, MAX(100001, MIN(200000, DVAR:대금업자_융자총액)))
+		PRINTFORMW 「해 버렸습니다, %ANAME(MASTER)%전」
+		PRINTFORMW 일로 큰 바보짓을 해 버린 %조사처리(ANAME(MASTER),"는")%, 대금업자에게 불려 갔다
+		PRINTFORMW 「뭐, 헤마에 대해서는 비벼 지웠습니다만. 소방에 흩뿌린 돈은, 지불해 받습니까?
+		PRINTFORM %ANAME(MASTER)%에, 새롭게 빚으로 해서 돈
+		CALL COLOR_PRINT(@"{반제액}", 칼라_주의)
+		PRINTFORMW 가 부과되었다……
+		DVAR:대금업자_나머지융자액 = 반제액
+		DVAR:대금업자_융자총액 = 반제액
+	ENDIF
+ENDIF
+
+RETURN 1

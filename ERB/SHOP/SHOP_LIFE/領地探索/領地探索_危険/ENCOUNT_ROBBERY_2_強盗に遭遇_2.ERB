@@ -1,0 +1,95 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_ENCOUNT_ROBBERY_2_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_ENCOUNT_ROBBERY_2_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_ENCOUNT_ROBBERY_2(대상)
+#DIM 대상
+
+PRINTFORML 뒷골목을 지름길로 가고 있으면, 등으로부터 칼날을 들이댈 수 있었다
+PRINTFORML 값의 것을 내, 라고 위협했지만……
+PRINTL
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "무투"))
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "지략"))
+
+CALL ASK_MULTI_JUDGE("금을 지불한다", 1, "저항한다", 1, "설득한다", 1, "신체를 내민다", IS_FEMALE(대상), "도망친다", 1)
+
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 생명에는 대신할 수 없다
+		PRINTFORML 솔직하게 지불하기로 했다
+		LOCAL = MIN(MONEY, 5000)
+		CALL ICPRINT(@"금<{LOCAL}>를 잃었다", "L", 칼라_주의)
+		MONEY -= LOCAL
+	CASE 1
+		PRINTFORML %조사처리(ANAME(대상),"는")% 저항했다!
+		IF LIMIT(ABL:대상:무투, 30, 100) >= RAND:100
+			PRINTFORML 맛이 없다고 판단했는지, 강도는 도망치기 시작해 갔다……
+			CALL PRINT_ADD_EXP(대상, "무투경험치", RAND:10 + 5)
+		ELSE
+			PRINTFORML ……가, 강도에 역관광으로 되어 버렸다!
+			IF IS_FEMALE(대상)
+				PRINTFORML 화낸 강도는, %조사처리(ANAME(대상),"를")% 기절시켜, 은둔지에 데리고 들어갔다……
+				CALL TERRITORY_EVENT_ENCOUNT_ROBBERY_2_FUCK(대상)
+			ENDIF
+			PRINTFORML 강도에 털어진 폭력으로, %조사처리(ANAME(대상),"는")% 다쳐 버렸다
+			CALL ADD_COOLTIME(대상, 3)
+		ENDIF
+	CASE 2
+		PRINTFORML %조사처리(ANAME(대상),"는")% 설득을 시도했다!
+		IF LIMIT(ABL:대상:지략, 30, 100) >= RAND:100
+			PRINTFORML %ANAME(대상)%의 설득을 받아들여, 강도는 떠났다……
+			CALL PRINT_ADD_EXP(대상, "지략경험치", RAND:10 + 5)
+		ELSE
+			PRINTFORML ……가, 역효과였어!
+			IF IS_FEMALE(대상)
+				PRINTFORML 화낸 강도는, %조사처리(ANAME(대상),"를")% 기절시켜, 은둔지에 데리고 들어갔다……
+				CALL TERRITORY_EVENT_ENCOUNT_ROBBERY_2_FUCK(대상)
+			ENDIF
+			PRINTFORML 강도에 털어진 폭력으로, %조사처리(ANAME(대상),"는")% 다쳐 버렸다
+			CALL ADD_COOLTIME(대상, 3)
+		ENDIF        
+	CASE 3
+		PRINTFORML 신체를 내밀기 때문에 놓치면 좋겠다
+		PRINTFORML 그렇게 부탁하면, 강도는 품평 하는 눈으로 %조사처리(ANAME(대상),"를")% 응시한다
+		PRINTFORML 안경에 필적했는지, 그는 %조사처리(ANAME(대상),"를")% 은둔지에 데리고 들어갔다……
+		CALL TERRITORY_EVENT_ENCOUNT_ROBBERY_2_FUCK(대상)
+	CASE 4
+		PRINTFORML %조사처리(ANAME(대상),"는")% 도망치기 시작했다!
+		IF IS_FEMALE(대상)
+			PRINTFORML ……가, 잡혀 버렸다!
+			PRINTFORML 화낸 강도는, %조사처리(ANAME(대상),"를")% 기절시켜, 은둔지에 데리고 들어갔다……
+			CALL TERRITORY_EVENT_ENCOUNT_ROBBERY_2_FUCK(대상)
+			PRINTFORML 강도에 털어진 폭력으로, %조사처리(ANAME(대상),"는")% 다쳐 버렸다
+			CALL ADD_COOLTIME(대상, 3)
+		ENDIF
+ENDSELECT
+
+RETURN 1
+
+@TERRITORY_EVENT_ENCOUNT_ROBBERY_2_FUCK(대상)
+#DIM 대상
+PRINTFORML 
+PRINTFORMW 강도의 은둔지에서, %조사처리(ANAME(대상),"는")% 그에게 조교되고 있다
+PRINTFORML %조사처리(STR_BODY("가슴:감촉", 대상),"를")% 주물러져 %조사처리(STR_BODY("엉덩이", 대상),"를")% 얻어맞는다
+PRINTFORML %STR_BODY("음순:처녀 확인:시간 경과", 대상)%는, 몇 번이나 관철해져 닫지 않게 되어 있다
+PRINTFORML 주어진 폭력과 쾌감에 굴한 %조사처리(ANAME(대상),"는")%, 스스로 허리를 구불거리게 할 수 있어 남자를 요구하고 있었다
+PRINTFORML 조르기의 포상에, 남자는 %ANAME(대상)%의 질내에 몇 번이나 정액을 발했다……
+PRINTFORML 
+CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, Ｖ성교, Ａ성교, 펠라티오", "처녀상실, Ａ처녀상실, 키스상실, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("강도"), @"강도의 \@RAND:2 ? 페니스 # 입술\@", "강도", "","보금자리에서의 조교")
+PRINTFORML 
+PRINTFORML 어떻게든 도망치기 시작할 수 있었지만, 그 신체는 완전히 쾌락을 확실히 익혀지고 있었다
+

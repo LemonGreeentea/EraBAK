@@ -1,0 +1,52 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_SWIMMING_DANGER_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_SWIMMING_DANGER_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_SWIMMING_DANGER(대상)
+#DIM 대상
+PRINTFORML 탐색중, 숲속에서 수영에 꼭 좋은 물 마시는 장소를 찾아냈다
+PRINTFORMW 어떻게 하지?
+PRINTL
+CALL ASK_MULTI("수영을 한다", "물을 마신다")
+
+IF RESULT == 1
+	PRINTFORML 수는 매우 차갑고, 마시면 힘이 솟아 올라 왔다
+	PRINTFORMW 목을 적신 %조사처리(ANAME(대상),"는")% 충족 해 거점에 돌아왔다
+	RETURN 1
+ENDIF
+PRINTFORML 모처럼이니까 수영을 해 나가기로 했다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+IF IS_MALE(대상)
+	PRINTFORML 기분이 좋았다
+	PRINTFORMW 산뜻해진 %조사처리(ANAME(대상),"는")% 거점으로 돌아갔다
+	CALL PRINT_ADD_EXP(대상, "무투경험치", 1)
+ELSE
+	PRINTFORML ……가까이의 수풀로부터 치한이 튀어 나와, 덤벼 들어 왔다!
+	PRINTFORMW 저항하는 %조사처리(ANAME(대상),"이지만")%, 알몸 상태에서는 아무것도 할 수 없다
+	PRINTFORMW 무리하게 수풀 속에 데리고 들어가져 버렸다
+	PRINTFORML 
+	PRINTFORML %조사처리(ANAME(대상),"는")% 흥분한 치한에 의해 엎드린 자세로 밀어 쓰러트려졌다
+	PRINTFORML 저항도 소용없이 그가 우뚝 솟는 육봉으로 관철해져 버려, 흠칫 신체를 뛰게 한다
+	PRINTFORML 흥분해 버린 치한은 처음부터 맹렬하게 허리를 흔들기 시작해, %조사처리(ANAME(대상),"는")% 무심코 신음소리를 내 버린다
+	PRINTFORMW 이윽고 그가 낮게 신음소리를 내면서 뜨거운 탁류를 발하면, %조사처리(ANAME(대상),"는")% 뜻에 반해 절정 당해 버렸다
+	CALL FUCK(대상, "욕망, 성교, 성기술, Ｖ, Ｖ성교", "질내사정, 처녀상실", GET_SPERM_ID("치한"), @"치한의 \@RAND:2 ? 페니스 # 입술\@", "치한", "", "패배한 끝의 강간")
+	PRINTFORML 
+	PRINTFORMW 비밀스런 장소로부터 백탁액을 늘어뜨리면서 가로놓여 있는 %조사처리(ANAME(대상),"를")% 방치해 치한은 떠나 갔다
+ENDIF

@@ -1,0 +1,152 @@
+﻿@EVENT_DAILY()
+#DIM EVENT_NUM
+#DIMS NAME_ENG
+#DIMS NAME_JAP
+#DIM EVENT_COUNT
+#DIM EVENT_ARRAY, VARSIZE("SHAFFLE_ARRAY")
+
+DAILY_CANCEL = 0
+EVENT_COUNT = DAILY_EVENT_COUNT
+
+SIF !IS_DAILY_EVENT_HAPPEN(MASTER)
+	RETURN 0
+
+CALL DAILY_DERIVATION()
+
+SIF DAILY_CANCEL
+	RETURN 0
+
+EVENT_NUM = DAILY_EVENT_NUM
+
+CALL FISHER_YATES_SHAFFLE(EVENT_NUM)
+
+ARRAYCOPY "SHAFFLE_ARRAY", "EVENT_ARRAY"
+
+FOR LOCAL, 0, EVENT_NUM
+	SIF EVENT_COUNT == 0
+		BREAK
+	NAME_ENG = %DAILY_EVENT_NAME_ENG:데일리_통상:(EVENT_ARRAY:LOCAL)%
+	NAME_JAP = %DAILY_EVENT_NAME:데일리_통상:(EVENT_ARRAY:LOCAL)%
+
+	SIF DAILY_GET_DISABLE_CONFIG(NAME_ENG)
+		CONTINUE
+
+	TRYCCALLFORM EVENT_DAILY_%NAME_ENG%_RATE()
+
+		SIF RESULT * DAILY_EVENT_ODDS <= RAND:1000
+			CONTINUE
+
+		;방랑중의 거점 페이즈데이리는 특수한 함수가 필요
+		IF !CFLAG:MASTER:소속
+			RESULT = 0
+			TRYCALLFORM EVENT_DAILY_%NAME_ENG%_ALLOW_WHEN_WANDERING()
+			SIF RESULT == 0
+				CONTINUE
+		ENDIF
+
+		RESULT = 1
+		TRYCALLFORM EVENT_DAILY_%NAME_ENG%_DECISION()
+		SIF RESULT == 0
+			CONTINUE
+
+		VARSET DAILY_TARGET, -1
+		VARSET DAILY_TARGET_NUM
+		RESULT = 1
+		TRYCALLFORM EVENT_DAILY_%NAME_ENG%_SETTARGET()
+		SIF RESULT == 0
+			CONTINUE
+
+		RESULTS = 
+		TRYCALLFORM EVENT_DAILY_%NAME_ENG%_NAME()
+		IF RESULTS == ""
+			CALL DAILY_START(NAME_JAP)
+		ELSE
+			CALL DAILY_START(RESULTS)
+		ENDIF
+		CALLFORM EVENT_DAILY_%NAME_ENG%()
+
+		IF RESULT == 1
+			EVENT_COUNT --
+		ENDIF
+		SIF DAILY_CANCEL
+			RETURN
+	CATCH
+		DEBUGPRINTFORML EVENT_DAILY_%NAME_ENG%_RATE 발견되지 않고
+	ENDCATCH
+NEXT
+
+;-------------------------------------------------------------------------------
+;지정 캐릭터에 대해, 「방랑하거나 죽거나 하고 있지 않다」 「포로가 아니다」 「어딘가의 세력에 소속해 있다」를 채우고 있다면 진
+;-------------------------------------------------------------------------------
+@IS_DAILY_EVENT_HAPPEN(ARG:0)
+#FUNCTION
+IF CFLAG:(ARG:0):특수상태 == 0 && CFLAG:(ARG:0):포로처 == 0
+	RETURNF 1
+ENDIF
+RETURNF 0
+
+
+;-------------------------------------------------------------------------------
+;데일리 이벤트에 대해, 랜덤에 대상 캐릭터를 선출한다
+;포로가 아니고, 죽거나 하고 있지 않는 것은 전제
+;ARG:00자세력 캐릭터  1전세력으로부터 선택
+;RESULT 선출된 대상 캐릭터
+;-------------------------------------------------------------------------------
+@DAILY_EVENT_RAND_CHARASELECT(ARG:0 = 0)
+#DIM 대상, 3000
+#DIM 카운터, 1
+VARSET 대상
+VARSET 카운터
+;셔플용의 배열을 작성한다
+FOR LOCAL, 0, CHARANUM
+	IF (ARG:0 || (!ARG:0 && CFLAG:(LOCAL:0):1 == CFLAG:MASTER:1)) && !CFLAG:(LOCAL:0):포로처 && !CFLAG:(LOCAL:0):특수상태
+		대상:카운터 = LOCAL
+		카운터 ++
+	ENDIF
+NEXT
+
+RETURN 카운터 ? 대상:(RAND:카운터) # -1
+
+;-------------------------------------------------------------------------------
+;데일리 이벤트에 대해, 랜덤에 대상 도시를 선출한다
+;ARG:00자세력 도시  1전세력으로부터 선택
+;RESULT 선출된 대상 도시
+;-------------------------------------------------------------------------------
+@DAILY_EVENT_RAND_CITYSELECT(ARG:0 = 0)
+#DIM 대상, MAX_CITY
+#DIM 카운터, 1
+VARSET 대상
+VARSET 카운터
+
+;셔플용의 배열을 작성한다
+FOR LOCAL, 1, MAX_CITY
+	IF CITY_TYPE:LOCAL == 1
+		BREAK
+	ENDIF
+	IF ARG:0 || (!ARG:0 && CITY_OWNER:LOCAL == CFLAG:MASTER:1)
+		대상:카운터 = LOCAL
+		카운터 ++
+	ENDIF
+NEXT
+
+RETURN 카운터 ? 대상:(RAND:카운터) # -1
+
+;-------------------------------------------------------------------------------
+;데일리 이벤트에 대해, 랜덤에 대상국가를 선출한다
+;RESULT 선출된 대상국가
+;-------------------------------------------------------------------------------
+@DAILY_EVENT_RAND_COUNTRYSELECT
+#DIM 대상, MAX_COUNTRY
+#DIM 카운터
+VARSET 대상
+VARSET 카운터
+
+;셔플용의 배열을 작성한다
+FOR LOCAL, 0, MAX_COUNTRY
+	IF IS_COUNTRY(LOCAL)
+		대상:카운터 = LOCAL
+		카운터 ++
+	ENDIF
+NEXT
+
+RETURN 카운터 ? 대상:(RAND:카운터) # -1

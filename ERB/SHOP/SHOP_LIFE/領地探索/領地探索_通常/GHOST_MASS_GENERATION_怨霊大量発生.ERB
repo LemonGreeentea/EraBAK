@@ -1,0 +1,34 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_GHOST_MASS_GENERATION_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_GHOST_MASS_GENERATION_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_GHOST_MASS_GENERATION(대상)
+#DIM 대상
+#DIM 대상도시
+
+CALL DAILY_EVENT_RAND_CITYSELECT(!IS_COUNTRY(CFLAG:대상:소속))
+대상도시 = RESULT
+PRINTFORML %CITY_NAME:대상도시%로 원령이 대량 발생했다
+PRINTFORML 해는 없는 것 같지만 주민들이 불안해 해, 일부가 폭도화한 것 같다
+PRINTFORMW 곧바로 진압할 수 있었지만, 혼란으로 거리에 피해가 나왔다
+LOCAL = MIN(CITY_GUARD:대상도시, 10)
+CITY_GUARD:대상도시 -= LOCAL
+CALL ICPRINT(@"%CITY_NAME:대상도시%의 방위율이<{LOCAL}>감소해,<{CITY_GUARD:대상도시}>가 되었다", "W", 칼라_주의)
+RETURN 1
+
+
+RETURN 1

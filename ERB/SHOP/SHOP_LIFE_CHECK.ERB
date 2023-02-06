@@ -1,0 +1,124 @@
+﻿;공유되고 있는 선택 가부 판정과 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+;메뉴의 선택 가부와 메뉴의 선택 가능 캐릭터 존재 판정을
+;SHOP_AVAIL에 보존한다
+;-------------------------------------------------
+@CHECK_CHECKCHARA_SAVE
+#DIM CHECK_SAVE_COUNTER
+#DIM CHECKCHARA_SAVE_COUNTER
+
+VARSET SHOP_AVAIL, 0
+
+FOR CHECK_SAVE_COUNTER, 0, 99
+	IF CHECK_SAVE_COUNTER <= 10 || CHECK_SAVE_COUNTER >= 90
+		SHOP_AVAIL:(CHECK_SAVE_COUNTER) = 1
+	ELSE
+		RESULTS:0 '= ""
+		TRYCALLFORM SHOP_LIFE_NAME{CHECK_SAVE_COUNTER}
+		;메뉴 명칭이 존재한다면
+		IF RESULTS:0 != ""
+			;선택 가능 캐릭터 존재 판정
+			FOR CHECKCHARA_SAVE_COUNTER, 0, CHARANUM
+				RESULT = 0
+				TRYCCALLFORM SHOP_LIFE_CHECKCHARA{CHECK_SAVE_COUNTER}(CHECKCHARA_SAVE_COUNTER)
+					;이 캐릭터는 0:선택 불가로 비표시 1:선택가능 2:선택 불가색으로 표시의 어떤 것인가가 돌아온다
+					SHOP_AVAIL:(CHECK_SAVE_COUNTER) = RESULT
+				CATCH
+					SHOP_AVAIL:(CHECK_SAVE_COUNTER) = 1
+				ENDCATCH
+				;존재 판정이 없었다, 또는, 1 선택가능의 캐릭터가 있으면 루프를 빠진다
+				IF SHOP_AVAIL:(CHECK_SAVE_COUNTER) == 1
+					BREAK
+				ENDIF
+			NEXT
+			;메뉴의 선택 가부 판정
+			RESULT = 0
+			TRYCCALLFORM SHOP_LIFE_CHECK{CHECK_SAVE_COUNTER}
+				;선택 가부 판정이 존재해, 불가의 경우만 덧쓰기한다
+				IF RESULT == 0
+					SHOP_AVAIL:(CHECK_SAVE_COUNTER) = 0
+				ENDIF
+				;선택 가부 판정이 존재해, 가능이지만 선택 가능 캐릭터 판정은 불가였던 때 최종 체크
+				;요바이나 안내같이 특수한 판정으로 사용
+				IF RESULT == 1 && SHOP_AVAIL:(CHECK_SAVE_COUNTER) == 0
+					TRYCCALLFORM SHOP_LIFE_CHECK_ADDITIONAL_CHECK{CHECK_SAVE_COUNTER}()
+						SIF RESULT == 1
+							SHOP_AVAIL:(CHECK_SAVE_COUNTER) = 1
+					CATCH
+					ENDCATCH
+				ENDIF
+			CATCH
+			ENDCATCH
+		ENDIF
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;행동이 끝난 체크
+;ARG:0  대상 캐릭터
+;ARG:1  ARG:2가 진이었던 때에 돌려주는 값
+;ARG:2  행동 끝나 이외의 조건식
+;-------------------------------------------------
+@CHECK91(ARG:0, ARG:1, ARG:2)
+#FUNCTION
+SIF ARG:2 <= 0
+	RETURNF ARG:2
+IF !CFLAG:(ARG:0):행동완료
+	RETURNF ARG:2
+ELSE
+	IF CONFIG:13 == 1
+		RETURNF 0
+	ELSEIF ARG:2 == 1
+		RETURNF ARG:1
+	ELSE
+		RETURNF ARG:2
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;「침실호출」의 선택 가능 캐릭터 존재 판정 리스트 1
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA_NEYA(ARG:0)
+LOCAL:0 = TMP_COUNTRY_RELATION:(CFLAG:MASTER:소속):(CFLAG:(ARG:0):소속)
+;포로로서 잡히고 있는 경우
+IF CFLAG:(ARG:0):포로처
+	;비주인공, 통상 상태 또는 육아중, 합의, 주인공 세력의 포로 또한 연금중
+	RETURN CHECK91(ARG:0, 2, ARG:0 != MASTER && GROUPMATCH(CFLAG:(ARG:0):행동불능상태, 0, 2) && (TALENT:(ARG:0):합의 || TALENT:(ARG:0):친구) && CFLAG:(ARG:0):포로처 == CFLAG:MASTER:소속 && CFLAG:(ARG:0):연금중 == 1)
+ELSE
+	;포로가 아닌, 비주인공, 통상 상태 또는 육아중, 합의나 친구내지 소속이 특수 세력이라면 대응하는 특수 세력 함락소질 가져, 동일 세력 or공투 세력 or방랑 리스트에 있다
+	RETURN CHECK91(ARG:0, 2, ARG:0 != MASTER && GROUPMATCH(CFLAG:(ARG:0):행동불능상태, 0, 2) && (TALENT:(ARG:0):합의 || TALENT:(ARG:0):친구 || (IS_SP_COUNTRY(CFLAG:(ARG:0):소속) && GETBIT(TALENT:(ARG:0):특수세력함락계, SP_COUNTRY_TO_CONST(CFLAG:(ARG:0):소속)))) && (LOCAL:0 >= 2 || FINDELEMENT(MEET_CANDIDATES, GET_ID(ARG:0)) != -1))
+ENDIF
+
+;-------------------------------------------------
+;「능력표시」의 선택 가능 캐릭터 존재 판정 리스트 1
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA_NOURYOKU(ARG:0)
+;동일 세력 or공투 세력 or자국의 포로
+;마지막에&& CFLAG:(ARG:0):포로처로 하고 있는 것은, 마스터가 미소속 포로로 능력표시를 열었을 경우, 「어디의 세력의 포로로도 되지 않았다」캐릭터가 걸리기 때문에
+SIF ARG:0 == MASTER
+	RETURN 1
+SELECTCASE FLAG:능력표시필터
+	;종래
+	CASE 0
+		RETURN TMP_COUNTRY_RELATION:(CFLAG:MASTER:소속):(CFLAG:(ARG:0):소속) >= 2 || (CFLAG:(ARG:0):포로처 == CFLAG:MASTER:소속 && CFLAG:(ARG:0):포로처)
+	;자국만
+	CASE 1
+		RETURN CFLAG:MASTER:소속 && CFLAG:MASTER:소속 == CFLAG:(ARG:0):소속
+	;포로도
+	CASE 2
+		RETURN CFLAG:MASTER:소속 && (CFLAG:MASTER:소속 == CFLAG:(ARG:0):소속 || CFLAG:MASTER:소속 == CFLAG:(ARG:0):포로처)
+	;전부
+	CASE 3
+		RETURN 1
+ENDSELECT
+RETURN 1
+
+;-------------------------------------------------
+;「안내시킨다」선택 가능 캐릭터 존재 판정 리스트 2
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA_SUB_NAITSUU(ARG:0)
+;포로가 아닌, 비주인공, 통상 상태 또는 육아중, 낙인, 별세력
+SIF TMP_COUNTRY_IS_NEIBORING:(CFLAG:MASTER:소속):(CFLAG:(ARG:0):소속)
+	RETURN CHECK91(ARG:0, 2, ARG:0 != MASTER && !CFLAG:(ARG:0):포로처 && GROUPMATCH(CFLAG:(ARG:0):행동불능상태, 0, 2) && TALENT:(ARG:0):낙인 && CFLAG:MASTER:소속 != CFLAG:(ARG:0):소속  && CFLAG:(ARG:0):행동불능상태 != 행동불능_아이)
+RETURN 0
+

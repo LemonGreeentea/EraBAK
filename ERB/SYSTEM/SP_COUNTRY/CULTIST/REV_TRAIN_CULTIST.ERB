@@ -1,0 +1,75 @@
+﻿;-------------------------------------------------
+;정기 이벤트
+;-------------------------------------------------
+@CULTIST_REV_TRAIN_REGULAR_EVENT(세력)
+#DIM 세력
+
+SIF FLAG:역조교회수 == 0 || FLAG:역조교회수 % 4 != 0
+	RETURN 0
+
+PRINTFORML 조교의 시간이 가까워지면, %조사처리(ANAME(MASTER),"는")% 여느 때처럼 「의식의 사이」에 구속되어
+PRINTFORMW 후는 광신도에게 자기 마음대로되는 것을 기다릴 뿐되었다
+PRINTFORMW 그런데, 온 광신도들은, 뜻밖의 것을 말하기 시작한다
+PRINTFORMW 군은 이단자면서 가르침을 잘 이해하고 있는, 정직 놀라울 정도다
+PRINTFORMW 만약 우리에 참가한다는 것이라면, 신자로서 인정하자, 라고……
+PRINTFORML 이대로 거부해 계속해도, 이 녀석들은 자신을 계속 더럽힐 것이다
+PRINTFORML 목을 세로에 흔들면, 얼마 정도는 편해질 수 있을지도 모른다
+PRINTFORMW 어떻게 해야 할 것일까……
+CALL ASK_YN("단념해 받아들인다", "이런 녀석들 동료는 미안이다")
+IF RESULT == 0
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 수긍하면, 그들은 만족기분에 웃었다
+	IF RAND:3
+		CALL SET_PIERCE_RANKED(MASTER, 0, 피어스_음순, 피어스_페니스, 피어스_클리토리스, 피어스_유두, 피어스_배꼽, 피어스_귀, 피어스_혀, 피어스_코)
+		SIF RESULT != -1
+			CALL COLOR_PRINTW(@"%ANAME(MASTER)%의 %GET_PIERCE_NAME(RESULT)%에, 신자인 것을 나타내는 피어스가 장착되었다……", 칼라_핑크)
+	ELSE
+		CALL SET_TATTOO_RANKED(MASTER, "신의 제물", 0, 문신_비부, 문신_엉덩이, 문신_뺨, 문신_이마, 문신_어깨, 문신_가슴, 문신_등, 문신_배, 문신_넙적다리, 문신_발목)
+		SIF RESULT != -1
+			CALL COLOR_PRINTW(@"%ANAME(MASTER)%의 %GET_TATTOO_NAME(RESULT)%에, 신자인 것을 나타내는 문신이 새겨졌다……", 칼라_핑크)
+	ENDIF
+	PRINTFORMW 그들은 %ANAME(MASTER)%에, 법의와 속세의 더러워진 공기를 들이마시지 않기 위한 복면을 주었다
+	SETCOLOR 칼라_주의
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 광신도의 일원이 되었습니다
+	RESETCOLOR
+	SETBIT TALENT:MASTER:특수세력함락계, 특수세력_광신도
+	CALL CHANGE_COUNTRY(MASTER, 세력, 1)
+	CALL PLAYER_FALLEN_TO_SP_COUNTRY(세력)
+	RETURN 1
+ELSE
+	PRINTFORML 그런 것으로, %ANAME(MASTER)%의 거부를 특별히 신경쓴 바람도 아니고 광신도들은 받아들인다
+	PRINTFORML 우리의 가르침이 부족한 것 같다면, %ANAME(MASTER)%에 모여 간다……
+ENDIF
+
+;-------------------------------------------------
+;아는 사람이 왔을 때의 이벤트
+;-------------------------------------------------
+@CULTIST_REV_TRAIN_MSG(세력, 아는사람참가자, 아는사람참가수)
+#DIM 세력
+#DIM REF 아는사람참가자
+#DIM 아는사람참가수
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 조교의 시간이 가까워지면, %조사처리(ANAME(MASTER),"는")% 여느 때처럼 「의식의 사이」에 구속되어
+PRINTFORMW 후는 남자들에게 더럽혀지는 것을 기다릴 뿐되었다
+PRINTFORMW 온 광신도는, %조사처리(ANAME(MASTER),"가")% 자주(잘) 면식이 있던 상대를 데리고 와서 있었다
+PRINTFORMW 법의를 몸에 걸쳐, 복면을 쓰고는 있지만, 몸집으로부터 안다
+PRINTFORMW %ANAME(아는사람참가자:0, 아는사람참가수)%…
+PRINTFORMW 한 때의 모습은 없고, 마음속으로부터 그들의 사상에 물들고 있는 것 같다
+PRINTFORMW 성교를 제일로 하는 그들의 가르침을, 누구하나 의문에도 생각하지 않는 것 같았다
+IF IS_FEMALE(아는사람참가자:0)
+	PRINTFORMW 이윽고 그녀들은 당신의 옷을 벗어 던진다
+	PRINTFORMW 사전에 한껏 범해져 왔을 것이다, 양쪽 모두의 구멍은 이미 애액과 정액으로 질척질척 젖고 있다
+	IF HAS_PENIS(MASTER)
+		PRINTFORMW 성욕으로 가득 찬 시선은, %조사처리(ANAME(MASTER),"는")% 아니고, %ANAME(MASTER)%의 격분한 남근에 따라지고 있었다…
+	ELSE
+		PRINTFORMW 성욕으로 가득 찬 시선은, %조사처리(ANAME(MASTER),"는")% 아니고, %ANAME(MASTER)%의 몸에게 따라지고 있었다…
+	ENDIF
+ELSE
+	PRINTFORMW 이윽고 그들은 당신의 옷을 벗어 던진다
+	PRINTFORMW 사전에 한껏 범해져 왔을 것이다, 전신은 백탁 투성이가 되어 있다
+	IF HAS_PENIS(MASTER)
+		PRINTFORMW 성욕으로 가득 찬 시선은, %조사처리(ANAME(MASTER),"는")% 아니고, %ANAME(MASTER)%의 격분한 남근에 따라지고 있었다…
+	ELSE
+		PRINTFORMW 성욕으로 가득 찬 시선은, %조사처리(ANAME(MASTER),"는")% 아니고, %ANAME(MASTER)%의 몸에게 따라지고 있었다…
+	ENDIF
+ENDIF

@@ -1,0 +1,109 @@
+﻿;----------------------------
+;구분의 아르바이트
+;슬롯과 빙고와 비교해 실력으로 어떻게든 되는 녀석
+;----------------------------
+@GAMBLING_SORT()
+#DIMS CONST 모양 = "◆", "✕", "△", "★", "●", "■", "범"
+#DIMS 필드, 7
+#DIM START_LINE
+#DIM PLAY_AREA_LINE
+#DIMS 이번모양
+#DIM 남은시간
+#DIM 전회시간
+#DIM 스코아
+#DIM 게임중
+#DIM 선택회수
+VARSET 이번모양
+VARSET 스코아
+VARSET 게임중
+VARSET 선택회수
+
+CALL FISHER_YATES_SHAFFLE(VARSIZE("모양"))
+
+FOR LOCAL, 0, VARSIZE("모양")
+	필드:LOCAL = %모양:(SHAFFLE_ARRAY:LOCAL)%
+NEXT
+
+START_LINE = LINECOUNT
+
+$MAIN
+
+CALL PRINT_CASINO_SORTING_README
+CALL PRINTBUTTON_EXL("[플레이 개시]", 999, !게임중)
+CALL SINGLE_DRAWLINE
+PRINTL
+
+PLAY_AREA_LINE = LINECOUNT
+
+$SHOW_PLAY_AREA
+
+PRINTFORM 스코아:{스코아}
+SIF 게임중
+	PRINTFORM     NOW:%이번모양%를 선택해라!
+PRINTL
+
+FOR LOCAL, 0, VARSIZE("필드")
+	PRINTBUTTON @"[%필드:LOCAL%]", LOCAL
+	PRINT    
+NEXT
+
+IF !게임중
+	INPUT
+ELSE
+	TINPUT 남은시간, -1
+	IF RESULT == -1
+		CALL COLOR_PRINTW("!!!!!TIME UP!!!!!", 칼라_주의)
+		PRINTFORMW 「스코아는……{스코아}입니까」
+		RETURN 스코아 >= 30
+	ENDIF
+ENDIF
+
+IF RESULT == 999 && !게임중
+	PRINTFORMW 「그럼, 게임을 개시합니다……」
+	PRINTFORMW 「3」
+	PRINTFORMW 「2」
+	PRINTFORMW 「1」
+	게임중 = 1
+	이번모양 = %모양:(RAND:(VARSIZE("모양")))%
+	전회시간 = GETMILLISECOND()
+	남은시간 = 30000
+	CLEARLINE LINECOUNT - PLAY_AREA_LINE
+	GOTO SHOW_PLAY_AREA
+ENDIF
+
+IF INRANGE(RESULT, 0, VARSIZE("필드"))
+	남은시간 = 남은시간 - (GETMILLISECOND() - 전회시간)
+	전회시간 = GETMILLISECOND()
+	IF 필드:RESULT == 이번모양
+		스코아 ++
+	ELSE
+		IF 이번모양 == "범"
+			PRINTFORMW 범의 글자를 잘못해 버렸다!
+			RETURN 2
+		ELSE
+			스코아 --
+		ENDIF
+	ENDIF
+	선택회수 ++
+	IF 선택회수 % 10 == 0
+		CALL FISHER_YATES_SHAFFLE(VARSIZE("모양"))
+
+		FOR LOCAL, 0, VARSIZE("모양")
+			필드:LOCAL = %모양:(SHAFFLE_ARRAY:LOCAL)%
+		NEXT
+	ENDIF
+	이번모양 = %모양:(RAND:(VARSIZE("모양")))%
+	CLEARLINE LINECOUNT - PLAY_AREA_LINE
+	GOTO SHOW_PLAY_AREA
+ENDIF
+
+
+@PRINT_CASINO_SORTING_README()
+CALL SINGLE_DRAWLINE
+PRINTFORML 「표시된 모양을 재빠르게 선택해 주세요」
+PRINTFORML 「올바른 모양을 선택하면+1점, 잘못하면-1점입니다」
+PRINTFORML 「제한 시간은 30초. 끝난 시점에서 스코아가 30있으면 %ANAME(MASTER)%님 승리입니다」
+PRINTFORML 「다만, 『범』의 모양이 표시되었을 때에 잘못하면,
+PRINTFORML 그 시점에서 게임 종료, 패널티 돌출하고 우리 승리가 되기 때문에 주의를」
+CALL SINGLE_DRAWLINE
+

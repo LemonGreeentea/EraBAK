@@ -1,0 +1,809 @@
+﻿;포로의취급 관계
+
+;-------------------------------------------------
+;포로의취급을 설정한다
+;-------------------------------------------------
+@SETSTATE_PRISONER
+#DIM FIRST_LINE
+;1페이지 22명까지의 커맨드가 표시된다
+;LOCAL	
+	;0:루프용
+	;5:포로의 인원수/선택한 버튼의 대상 캐릭터
+	;6:선택한 버튼의 포로의취급
+	;7:표시한 행수를 카운트 한다
+	;8:루프내에서 포로의 인원수를 카운트 하기 위해서 있다
+	;10:최대 페이지
+	;11:현재의 페이지
+	;15:표시 위치 조정용
+	;20:촉수조교 가능
+
+;●포로의 인원수를 카운트
+LOCAL:5 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF LOCAL:0 != MASTER && CFLAG:(LOCAL:0):포로처 != 0 && CFLAG:(LOCAL:0):포로처 == CFLAG:MASTER:소속 && CFLAG:(LOCAL:0):연금중 == 0
+		LOCAL:5 ++
+	ENDIF
+NEXT
+
+;포로가 한사람도 없으면 돌아온다
+IF LOCAL:5 == 0
+	RETURN
+ENDIF
+
+;●표시부분
+LOCAL:10 = (LOCAL:5 - 1) / 22 + 1
+LOCAL:11 = 1
+
+;촉수조교가 가능한가 어떤가를 판정
+LOCAL:20 = ITEM:촉수의방 && ID_TO_CHARA(FLAG:촉수의방관리자) >= 0 && IS_SYOKUSYU_MANAGE(ID_TO_CHARA(FLAG:촉수의방관리자))
+FIRST_LINE = LINECOUNT
+$SHOW_LOOP
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 각 포로의취급을 설정해 주세요
+CALL SINGLE_DRAWLINE
+
+PRINTFORM %TOSTR_SPACE(47)%
+PRINTFORM <일괄> 
+PRINTBUTTON "{구류}",10
+PRINTBUTTON "{고문}",12
+PRINTBUTTON "{신체개발}",13
+PRINTBUTTON "{설득}",14
+PRINTBUTTON "{성처리}",15
+IF LOCAL:20
+	PRINTBUTTON "{촉수조교}",16
+ENDIF
+PRINTBUTTON "{창관}",17
+PRINTBUTTON "{착유}",18
+PRINTL
+
+LOCAL:7 = 0
+LOCAL:8 = 0
+LOCAL:12 = (LOCAL:11 - 1) * 22
+LOCAL:13 = LOCAL:11 * 22
+FOR LOCAL:0, 0, CHARANUM
+	IF LOCAL:0 != MASTER && CFLAG:(LOCAL:0):포로처 == CFLAG:MASTER:소속 && CFLAG:(LOCAL:0):연금중 == 0
+		IF LOCAL:8 >= LOCAL:12 && LOCAL:8 < LOCAL:13
+			PRINTBUTTON @"{NO:(LOCAL:0)+100, 4}[%SNAME(LOCAL:0), MAX_CHARANAME_LENGTH / 2, LEFT%]", NO:(LOCAL:0)+100
+			PRINT  
+			CALL PRINT_SEX(LOCAL:0, 1)
+			IF TALENT:(LOCAL:0):붕괴
+				CALL COLOR_PRINT("붕", 0xFF0000)
+			ELSEIF TALENT:(LOCAL:0):공허
+				CALL COLOR_PRINT("허", 0xEE7800)
+			ELSE
+				PRINT   
+			ENDIF
+			IF CFLAG:(LOCAL:0):소속
+				PRINTFORM 소속:%SNAME(GET_COUNTRY_BOSS(CFLAG:LOCAL:소속)), MAX_CHARANAME_LENGTH / 2, LEFT%
+			ELSE
+				PRINTFORM 소속:%@"----", MAX_CHARANAME_LENGTH / 2, LEFT%
+			ENDIF
+			SETCOLOR 칼라_주석
+			PRINTFORM  정신:
+			RESETCOLOR
+			CALL PRINT_GRADATIONBAR(BASE:(LOCAL):정신력, MAXBASE:(LOCAL):정신력, 10, 0x5E9AFF)
+			CALL SETSTATE_PRISONER_BUTTON(LOCAL:0, 0, "구류")
+			CALL SETSTATE_PRISONER_BUTTON(LOCAL:0, 2, "고문")
+			CALL SETSTATE_PRISONER_BUTTON(LOCAL:0, 3, "신체개발")
+			CALL SETSTATE_PRISONER_BUTTON(LOCAL:0, 4, "설득")
+			CALL SETSTATE_PRISONER_BUTTON(LOCAL:0, 5, "성처리")
+			IF LOCAL:20
+				CALL SETSTATE_PRISONER_BUTTON(LOCAL:0, 6, "촉수조교")
+			ENDIF
+			CALL SETSTATE_PRISONER_BUTTON(LOCAL:0, 7, "창관")
+			CALL SETSTATE_PRISONER_BUTTON(LOCAL:0, 8, "착유")
+			PRINTL
+			LOCAL:7 ++
+		ENDIF
+		LOCAL:8 ++
+	ENDIF
+NEXT
+CALL SINGLE_DRAWLINE
+
+IF LOCAL:10 >= 2
+	LOCAL:7 += 2
+
+	LOCAL:15 = 25
+	IF LOCAL:11 >= 2
+		PRINTBUTTON "[8] 이전페이지", 8
+		LOCAL:15 -= 12
+	ENDIF
+	PRINTFORM %TOSTR_SPACE(LOCAL:15)%
+
+	LOCALS:0 = page{LOCAL:11}/{LOCAL:10}
+	PRINTPLAINFORM %LOCALS:0, 25, LEFT%
+
+	IF LOCAL:11 < LOCAL:10
+		PRINTBUTTON "[9] 다음페이지", 9
+	ENDIF
+	PRINTL 
+	CALL SINGLE_DRAWLINE
+ENDIF
+PRINTBUTTON "[0] 결정", 0
+
+REDRAW 0
+
+$INPUT_LOOP
+INPUT
+
+IF RESULT == 0
+	REDRAW 1
+	RETURN
+ELSEIF RESULT == 8 && LOCAL:11 >= 2
+	LOCAL:11 --
+ELSEIF RESULT == 9 && LOCAL:11 < LOCAL:10
+	LOCAL:11 ++
+ELSEIF RESULT == 10 || (RESULT >= 12 && RESULT <= 15) || (RESULT == 16 && LOCAL:20) || RESULT == 17 || RESULT == 18
+	CALL SETSTATE_PRISONER_SETALL(RESULT - 10)
+ELSEIF RESULT >= 100 && RESULT <= 999
+	CALL USERSHOP_LIFE_CHARA1(NO_TO_CHARA(RESULT - 100))
+ELSEIF RESULT >= 1000
+	LOCAL:5 = RESULT / 1000 - 1
+	LOCAL:6 = RESULT % 1000
+	IF LOCAL:5 < CHARANUM && LOCAL:5 != MASTER && CFLAG:(LOCAL:5):포로처 == CFLAG:MASTER:소속 && CFLAG:(LOCAL:5):연금중 == 0
+		IF CFLAG:(LOCAL:5):포로의취급 != LOCAL:6 && (LOCAL:6 == 0 || (LOCAL:6 >= 2 && LOCAL:6 <= 5) || (LOCAL:6 == 6 && LOCAL:20)) || LOCAL:6 == 7 || LOCAL:6 == 8
+			CFLAG:(LOCAL:5):포로의취급 = LOCAL:6
+		ENDIF
+	ENDIF
+ELSE
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+CLEARLINE LINECOUNT - FIRST_LINE
+GOTO SHOW_LOOP
+
+;-------------------------------------------------
+;SETSTATE_PRISONER로 사용하는 버튼 표시 함수
+;인수  0:포로의 캐릭터 번호 1:취급의 종별 번호 2:버튼에 표시되는 문자열
+;-------------------------------------------------
+@SETSTATE_PRISONER_BUTTON(ARG:0, ARG:1, ARGS:2)
+IF CFLAG:(ARG:0):포로의취급 == ARG:1
+	SETCOLOR 칼라_선택중
+	PRINTPLAINFORM \{%ARGS:2%\}
+	RESETCOLOR
+ELSE
+	PRINTBUTTON @"\{%ARGS:2%\}", ARG:0 * 1000 + ARG:1 + 1000
+ENDIF
+
+;-------------------------------------------------
+;포로의취급을 일괄로(ARG:0)로 한다
+;-------------------------------------------------
+@SETSTATE_PRISONER_SETALL(ARG:0)
+FOR LOCAL:0, 0, CHARANUM
+	IF LOCAL:0 != MASTER && CFLAG:(LOCAL:0):포로처 != 0 && CFLAG:(LOCAL:0):포로처 == CFLAG:MASTER:소속 && CFLAG:(LOCAL:0):연금중 == 0
+		CFLAG:(LOCAL:0):포로의취급 = ARG:0
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;포로의취급에 대응한 이벤트
+;-------------------------------------------------
+@EVENT_PRISONER
+;LOCAL
+	;2:하나앞에 출력되었던 것이 구류 상황 묘사이다
+	;20:촉수의방 사용 가능
+	;21:촉수조교의 예정이었던 노예가 있었는지
+;촉수의방이 사용 가능한가 어떤가를 판정
+LOCAL:20 = 0
+IF ITEM:촉수의방 && ID_TO_CHARA(FLAG:촉수의방관리자) >= 0 && IS_SYOKUSYU_MANAGE(ID_TO_CHARA(FLAG:촉수의방관리자))
+	LOCAL:20 = 1
+ENDIF
+
+IF !LOCAL:20
+	LOCAL:21 = 0
+	FOR LOCAL:0, 0, CHARANUM
+		IF CFLAG:(LOCAL:0):포로의취급 == 6
+			CFLAG:(LOCAL:0):포로의취급 = 0
+			LOCAL:21 = 1
+		ENDIF
+	NEXT
+	IF LOCAL:21
+		SETCOLOR 칼라_주의
+		PRINTFORMW ※촉수의방을 사용 할 수 없기에, 일부의 포로의취급을 「촉수조교」로부터 「구류」로 변경했습니다
+		RESETCOLOR
+	ENDIF
+ENDIF
+
+LOCAL:2 = 0
+FOR LOCAL:0, 0, CHARANUM
+	;LOCAL:0이 포로인 것을 의미하는 결정 표현
+	IF LOCAL:0 != MASTER && CFLAG:(LOCAL:0):포로처 != 0 && CFLAG:(LOCAL:0):포로처 == CFLAG:MASTER:소속 && CFLAG:(LOCAL:0):연금중 == 0
+		;포로의취급이 구류의 경우는 취급의 묘사가 일행으로 끝나므로 전후에 특별 개행을 넣지 않고 연속으로 결과를 낸다
+		;포로의취급이 그 이외의 경우는 취급의 묘사가 복수행에 걸치므로 알기 쉽게 전후에 개행이 일행씩 들어가도록(듯이) 조정한다
+		;이미지
+			;캐릭터 1 구류 텍스트
+			;캐릭터 2 구류 텍스트
+			;캐릭터 3 구류 텍스트
+			;
+			;캐릭터 4 구류 이외 텍스트
+			;캐릭터 4 구류 이외 텍스트 계속
+			;
+			;캐릭터 5 구류 이외 텍스트
+			;캐릭터 5 구류 이외 텍스트 계속
+			;
+			;캐릭터 6 구류 텍스트
+			;캐릭터 7 구류 텍스트
+		IF CFLAG:(LOCAL:0):포로의취급 != 0 && LOCAL:2
+			PRINTL 
+		ENDIF
+		CALLFORM EVENT_PRISONER{CFLAG:(LOCAL:0):포로의취급}(LOCAL:0)
+		IF CFLAG:(LOCAL:0):포로의취급 != 0
+			WAIT
+			CALL TALENT_CHECK(LOCAL:0)
+			PRINTL 
+			LOCAL:2 = 0
+		ELSE
+			LOCAL:2 = 1
+		ENDIF
+	ENDIF
+NEXT
+
+;■구류
+@EVENT_PRISONER0(ARG:0)
+CALL EVENT_PRISONER_TEXT0(ARG:0)
+
+;■고문
+@EVENT_PRISONER2(ARG:0)
+CALL EVENT_PRISONER_TEXT2(ARG:0)
+IF TALENT:(ARG:0):붕괴 || TALENT:(ARG:0):공허
+
+ELSE
+	IF ABL:(ARG:0):무투 >= 70 || TALENT:(ARG:0):아픔에강함
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 이를 악물어 필사적으로 아픔과 굴욕에 참고 있다…
+		IF TALENT:(ARG:0):아픔에강함
+			CFLAG:(ARG:0):포로포 = 2500
+		ELSE
+			CFLAG:(ARG:0):포로포 = 3300
+		ENDIF
+	ELSEIF TALENT:(ARG:0):아픔에약함 || TALENT:(ARG:0):유치
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 아픔의 너무 울부짖으면서 용서를 빌고 있다…
+		CFLAG:(ARG:0):포로포 = 4100
+	ELSE
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 채찍으로 맞을 때마다 비명을 올리고 있다…
+		CFLAG:(ARG:0):포로포 = 3500
+	ENDIF
+	CFLAG:(ARG:0):포로포 = CFLAG:(ARG:0):포로포 * (200 - ABL:(ARG:0):무투 / 2) / 200
+	CFLAG:(ARG:0):포로로 = 2000
+	CFLAG:(ARG:0):포로액 = 2000
+ENDIF
+
+;■신체개발
+@EVENT_PRISONER3(ARG:0)
+CALL EVENT_PRISONER_TEXT3(ARG:0)
+SELECTCASE RAND:4
+	CASE 0
+		CALL FUCK(ARG:0, "욕망, Ｃ")
+	CASE 1
+		CALL FUCK(ARG:0, "욕망, Ｂ")
+	CASE 2
+		CALL FUCK(ARG:0, "욕망, Ｖ")
+	CASE 3
+		CALL FUCK(ARG:0, "욕망, Ａ")
+ENDSELECT
+
+CALL TRAIN_AUTO_ABLUP(ARG:0)
+CFLAG:(ARG:0):포로로 = 800
+CFLAG:(ARG:0):포로액 = 800
+CFLAG:(ARG:0):포로포 = 250
+
+;■설득
+@EVENT_PRISONER4(ARG:0)
+CALL EVENT_PRISONER_TEXT4(ARG:0)
+CALL TRAIN_AUTO_ABLUP(ARG:0)
+CFLAG:(ARG:0):포로로 = 0
+CFLAG:(ARG:0):포로액 = 0
+CFLAG:(ARG:0):포로포 = 100
+
+
+;■성처리
+@EVENT_PRISONER5(ARG:0)
+CALL EVENT_PRISONER_TEXT5(ARG:0)
+
+LOCAL:0 = 2000
+
+IF TALENT:(ARG:0):처녀 && HAS_VAGINA(ARG:0)
+	IF TALENT:(ARG:0):처녀 == 1
+		LOCAL:0 += 3000
+	ELSE
+		LOCAL:0 += 1500
+	ENDIF
+ENDIF
+
+IF TALENT:(ARG:0):키스미경험
+	LOCAL:0 += 1000
+ENDIF
+
+SELECTCASE ABL:(ARG:0):욕망
+	CASE 0
+		TIMES LOCAL:0, 1.00
+	CASE 1
+		TIMES LOCAL:0, 0.70
+	CASE 2
+		TIMES LOCAL:0, 0.50
+	CASE 3
+		TIMES LOCAL:0, 0.35
+	CASE 4
+		TIMES LOCAL:0, 0.20
+	CASEELSE
+		LOCAL:0 = LOCAL:0 / (ABL:(ARG:0):욕망 + 1)
+ENDSELECT
+
+;절정경험에 의한 보정
+LOCAL:0 = CALC_LOSEBASE_EXP_CORRECTION(ARG:0, LOCAL:0)
+
+CFLAG:(ARG:0):포로로 = LOCAL:0
+CFLAG:(ARG:0):포로액 = LOCAL:0
+CFLAG:(ARG:0):포로포 = LOCAL:0
+
+CALL FUCK(ARG:0, "욕망, 성기술, 정애, 성교, 사정, Ｃ, Ｖ, Ｂ, Ｍ, Ａ, 고통쾌락, 긴박, 마조, ＢＬ, 윤간, 펠라티오, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 질내사정, 키스상실, 장내사정, 구강사정", GET_SPERM_ID("병사"), "병사의 페니스", "병사", "", "윤간")
+
+;징병효율의 증가
+LOCAL:1 = 0
+LOCAL:1 += MAX(ABL:(ARG:0):Ｃ감 - 1, 0)
+LOCAL:1 += MAX(ABL:(ARG:0):Ｖ감 - 1, 0) * 3
+LOCAL:1 += MAX(ABL:(ARG:0):Ａ감 - 1, 0) * 3
+LOCAL:1 += MAX(ABL:(ARG:0):Ｂ감 - 1, 0)
+LOCAL:1 += MAX(ABL:(ARG:0):Ｍ감 - 1, 0) / 2
+LOCAL:1 = LOCAL:1 * (ABL:(ARG:0):욕망 + 2) / 2
+LOCAL:2 = MIN(LOCAL:1 * 10 + 100, 800)
+
+IF TALENT:(ARG:0):붕괴
+	TIMES LOCAL:2, 0.40
+ELSEIF TALENT:(ARG:0):공허
+	TIMES LOCAL:2, 0.80
+ENDIF
+
+SELECTCASE FLAG:병수증가추가치
+	CASE IS > 3000
+		TIMES LOCAL:1, 0.10
+	CASE IS > 2000
+		TIMES LOCAL:1, 0.25
+	CASE IS > 1000
+		TIMES LOCAL:1, 0.5
+ENDSELECT
+
+FLAG:병수증가추가치 += LOCAL:2
+
+;■촉수조교
+@EVENT_PRISONER6(ARG:0)
+CALL EVENT_PRISONER_TEXT6(ARG:0)
+
+LOCAL:0 = 3000
+
+IF TALENT:(ARG:0):처녀 && HAS_VAGINA(ARG:0)
+	IF TALENT:(ARG:0):처녀 == 1
+		LOCAL:0 += 4000
+	ELSE
+		LOCAL:0 += 2000
+	ENDIF
+ENDIF
+
+SELECTCASE ABL:(ARG:0):욕망
+	CASE 0
+		TIMES LOCAL:0, 1.00
+	CASE 1
+		TIMES LOCAL:0, 0.95
+	CASE 2
+		TIMES LOCAL:0, 0.90
+	CASE 3
+		TIMES LOCAL:0, 0.85
+	CASE 4
+		TIMES LOCAL:0, 0.80
+	CASEELSE
+		LOCAL:0 = LOCAL:0 * 7 / (ABL:(ARG:0):욕망 + 5)
+ENDSELECT
+
+SELECTCASE ABL:(ARG:0):촉수
+	CASE 0
+		TIMES LOCAL:0, 1.00
+	CASE 1
+		TIMES LOCAL:0, 0.70
+	CASE 2
+		TIMES LOCAL:0, 0.40
+	CASE 3
+		TIMES LOCAL:0, 0.25
+	CASE 4
+		TIMES LOCAL:0, 0.12
+	CASEELSE
+		LOCAL:0 = LOCAL:0 / (ABL:(ARG:0):촉수 * 3)
+ENDSELECT
+
+;절정경험에 의한 보정
+LOCAL:0 = CALC_LOSEBASE_EXP_CORRECTION(ARG:0, LOCAL:0)
+
+CFLAG:(ARG:0):포로로 = LOCAL:0
+CFLAG:(ARG:0):포로액 = LOCAL:0
+CFLAG:(ARG:0):포로포 = LOCAL:0
+
+CALL FUCK(ARG:0, "욕망, 성기술, 정애, 성교, 사정, Ｃ, Ｖ, Ｂ, Ｍ, Ａ, 고통쾌락, 긴박, 마조, 윤간, 펠라티오, 촉수, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 질내사정, 키스상실, 장내사정, 구강사정", GET_SPERM_ID("촉수"), "촉수", "촉수", "", "윤간")
+
+;절정 회수의 계산
+LOCAL:1 = 0
+LOCAL:1 += MAX(ABL:(ARG:0):Ｃ감 - 1, 0) * 2
+LOCAL:1 += MAX(ABL:(ARG:0):Ｖ감 - 1, 0) * 3
+LOCAL:1 += MAX(ABL:(ARG:0):Ａ감 - 1, 0) * 3
+LOCAL:1 += MAX(ABL:(ARG:0):Ｂ감 - 1, 0) * 2
+LOCAL:1 += MAX(ABL:(ARG:0):Ｍ감 - 1, 0)
+LOCAL:1 = LOCAL:1 * (ABL:(ARG:0):욕망 + 2) / 2
+
+;촉수의방의 관리자에게 요술경험치와 촉수경험치를 준다
+LOCAL:2 = SQRT(LOCAL:1 * 100) / 4 + 5
+LOCAL:2 = LOCAL:2 * MAX(100 - ABL:(ID_TO_CHARA(FLAG:촉수의방관리자)):요술, 20) / 100
+IF TALENT:(ARG:0):공허
+	TIMES LOCAL:2, 0.50
+ELSEIF TALENT:(ARG:0):붕괴
+	TIMES LOCAL:2, 0.20
+ENDIF
+
+PRINTFORML <%ANAME(ID_TO_CHARA(FLAG:촉수의방관리자))%>
+CALL PRINT_ADD_EXP(ID_TO_CHARA(FLAG:촉수의방관리자), "촉수경험치", 10)
+CALL PRINT_ADD_EXP(ID_TO_CHARA(FLAG:촉수의방관리자), "요술경험치", LOCAL:2)
+CALL TRAIN_AUTO_ABLUP(ID_TO_CHARA(FLAG:촉수의방관리자))
+PRINTL
+
+;■창관
+@EVENT_PRISONER7(ARG:0)
+CALL EVENT_PRISONER_TEXT7(ARG:0)
+LOCAL:0 = 2000
+
+IF TALENT:(ARG:0):처녀 && HAS_VAGINA(ARG:0)
+	IF TALENT:(ARG:0):처녀 == 1
+		LOCAL:0 += 3000
+	ELSE
+		LOCAL:0 += 1500
+	ENDIF
+ENDIF
+
+IF TALENT:(ARG:0):키스미경험
+	LOCAL:0 += 1000
+ENDIF
+
+SELECTCASE ABL:(ARG:0):욕망
+	CASE 0
+		TIMES LOCAL:0, 1.00
+	CASE 1
+		TIMES LOCAL:0, 0.70
+	CASE 2
+		TIMES LOCAL:0, 0.50
+	CASE 3
+		TIMES LOCAL:0, 0.35
+	CASE 4
+		TIMES LOCAL:0, 0.20
+	CASEELSE
+		LOCAL:0 = LOCAL:0 / (ABL:(ARG:0):욕망 + 1)
+ENDSELECT
+
+;절정경험에 의한 보정(20으로 1/2, 100으로 1/10, 2000으로 1/20, 50000으로 1/60)
+LOCAL:0 = CALC_LOSEBASE_EXP_CORRECTION(ARG:0, LOCAL:0)
+
+CFLAG:(ARG:0):포로로 = LOCAL:0
+CFLAG:(ARG:0):포로액 = LOCAL:0
+CFLAG:(ARG:0):포로포 = LOCAL:0
+
+CALL FUCK(ARG:0, "욕망, 성기술, 정애, 성교, 사정, Ｃ, Ｖ, Ｂ, Ｍ, Ａ, 펠라티오, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 질내사정, 키스상실, 장내사정, 구강사정", GET_SPERM_ID("창관의 손님"), "창관의 손님", "창관의 손님", "", "매춘")
+
+;받을 수 있는 액의 계산
+LOCAL:1 = ABL:(ARG:0):욕망 + ABL:(ARG:0):봉사 + ABL:(ARG:0):성기술 + ABL:(ARG:0):성교 + ABL:(ARG:0):Ｃ감 + ABL:(ARG:0):Ｖ감 + ABL:(ARG:0):Ａ감 + ABL:(ARG:0):Ｂ감
+LOCAL:1 = LIMIT(RAND(LOCAL:1 / 10, LOCAL:1 / 10 + 10) * 100, 100, 3000)
+
+PRINTFORML %조사처리(ANAME(ARG:0),"는")% 돈{LOCAL:1}를 번 것 같다
+MONEY += LOCAL:1
+
+;■착유
+@EVENT_PRISONER8(ARG:0)
+#DIM MILK_AMOUNT
+#DIM VALUE
+#DIM SPOUT_MILK
+CALL EVENT_PRISONER_TEXT8(ARG:0)
+;모유가 나오지 않는 캐릭터는 착유되면 모유가 나오는 체질이 되어 가는 먼저 처리
+IF !TALENT:(ARG:0):모유체질 && (!IS_MALE(ARG:0) || (IS_MALE(ARG:0) && TALENT:(ARG:0):잉태가능))
+	EXP:(ARG:0):착유경험치 += (1 + RAND:3)
+	SIF TALENT:(ARG:0):Ｂ민감
+		EXP:(ARG:0):착유경험치 += 1
+	SIF TALENT:(ARG:0):Ｂ둔감
+		EXP:(ARG:0):착유경험치 += -1
+	SIF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음유)
+		EXP:(ARG:0):착유경험치 += 2
+	SIF ABL:(ARG:0):Ｂ감 >= 3
+		EXP:(ARG:0):착유경험치 += 2
+	IF EXP:(ARG:0):착유경험치 >= 50
+		IF TALENT:(ARG:0):모유체질
+			PRINTFORML 거듭되는 강행인 착유에 %조사처리(ANAME(ARG:0),"는")% 유선이 망가져 버린 것을 느꼈다
+		ELSE
+			PRINTFORML 거듭되는 강행인 착유에 마침내 %ANAME(ARG:0)%의 가슴으로부터 모유가 새기 시작했다
+		ENDIF
+		TALENT:(ARG:0):모유체질 = 1
+		CFLAG:(ARG:0):일시적모유체질 = 0
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% 몸을 바뀌어져 버린 일에 충격을 받고 복잡한 감정을 강하게 느끼고 있다
+		CFLAG:(ARG:0):포로로 += 2000
+		CFLAG:(ARG:0):포로액 += 2000
+		CFLAG:(ARG:0):포로포 += 2000
+	ENDIF
+ENDIF
+IF TALENT:(ARG:0):모유체질
+	SPOUT_MILK = ABL:(ARG:0):분유 * 2 + ABL:(ARG:0):Ｂ감 * 2 + 3
+	SIF TALENT:(ARG:0):Ｂ민감
+		SPOUT_MILK *= 3 / 2
+	SIF TALENT:(ARG:0):Ｂ둔감
+		SPOUT_MILK *= 3 / 4
+	SIF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음유)
+		SPOUT_MILK *= 3 / 2
+	SPOUT_MILK = MAX(SPOUT_MILK, 1)
+	;조교시보다 시간이 길기 때문에 1회 100 cc와 적당하게 추측한다
+	MILK_AMOUNT = SPOUT_MILK * 100
+	VALUE = SQRT(MILK_AMOUNT) * (19 + TALENT:(ARG:0):인기 * 10 + VIRGIN(ARG:0) * 20)
+	MONEY += VALUE
+	CALL FUCK(ARG:0, "Ｂ감, 분유, 고통쾌락, 마조")
+	PRINTFORML %조사처리(ANAME(ARG:0),"로")%부터{MILK_AMOUNT}cc의 모유를 짜내, {VALUE}의 매입가가 붙었다
+ELSEIF IS_MALE(ARG:0) && !TALENT:(ARG:0):모유체질
+	SPOUT_MILK = 0
+	CALL FUCK(ARG:0, "Ｂ감")
+	PRINTFORML 남인 %조사처리(ANAME(ARG:0),"로")%부터는 모유를 짤 길도 없었다…
+ELSE
+	SPOUT_MILK = 0
+	CALL FUCK(ARG:0, "Ｂ감, 고통쾌락, 마조")
+	SELECTCASE RAND:2
+		CASE 0
+			PRINTFORML 이지만, %조사처리(ANAME(ARG:0),"로")%부터 모유를 짤 수 없었다
+		CASE 1
+			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 근지러움에 얼굴을 비뚤어지게 했지만 결국 모유는 나오지 않았다
+	ENDSELECT
+ENDIF
+;처리 내용을 기본으로 능력이 오르는지 체크하는 경험이 들어가지 않는 것이 분명한 경우 필요없다
+CALL TRAIN_AUTO_ABLUP(ARG:0)
+
+CFLAG:(ARG:0):포로로 += 1000
+CFLAG:(ARG:0):포로액 += 1500
+CFLAG:(ARG:0):포로포 += 1500
+
+
+;-------------------------------------------------
+;포로의취급에 응한 턴 종료시의 기분·공감치·평가치 변화
+;-------------------------------------------------
+@PRISONER_CHANGE_EMOTION(ARG:0)
+;감금중
+IF CFLAG:(ARG:0):연금중 == 0
+	SELECTCASE CFLAG:(ARG:0):포로의취급
+		;구류
+		CASE 0
+			TIMES PALAM:(ARG:0):로외, 0.70
+			TIMES PALAM:(ARG:0):액외, 0.70
+			TIMES PALAM:(ARG:0):포외, 0.70
+			TIMES PALAM:(ARG:0):로주, 0.60
+			TIMES PALAM:(ARG:0):액주, 0.60
+			TIMES PALAM:(ARG:0):포주, 0.30
+			BASE:(ARG:0):정신력 = MIN(BASE:(ARG:0):정신력 + MAX(MAXBASE:(ARG:0):정신력 / 10, 300), MAXBASE:(ARG:0):정신력)
+		;고문
+		CASE 2
+			CUP:(ARG:0):로주 = CFLAG:(ARG:0):포로로
+			CUP:(ARG:0):액주 = CFLAG:(ARG:0):포로액
+			CUP:(ARG:0):포주 = CFLAG:(ARG:0):포로포
+			;소스 처리의 함수를 유용
+			CALL UP_TALENT_CHECK3(ARG:0)
+
+			PALAM:(ARG:0):로외 += CUP:(ARG:0):로주
+			PALAM:(ARG:0):액외 += CUP:(ARG:0):액주
+			PALAM:(ARG:0):포외 += CUP:(ARG:0):포주
+			TIMES PALAM:(ARG:0):로주, 0.25
+			TIMES PALAM:(ARG:0):액주, 0.25
+			TIMES PALAM:(ARG:0):포주, 0.70
+
+			BASE:(ARG:0):정신력 = MAX(BASE:(ARG:0):정신력 - CUP:(ARG:0):포주 / 2, -500)
+			IF BASE:(ARG:0):정신력 < 0
+				CFLAG:(ARG:0):붕괴 += 800 - BASE:(ARG:0):정신력 * 2
+			ENDIF
+
+		;신체개발
+		CASE 3
+			CUP:(ARG:0):로주 = CFLAG:(ARG:0):포로로
+			CUP:(ARG:0):액주 = CFLAG:(ARG:0):포로액
+			CUP:(ARG:0):포주 = CFLAG:(ARG:0):포로포
+			;소스 처리의 함수를 유용
+			CALL UP_TALENT_CHECK3(ARG:0)
+
+			PALAM:(ARG:0):로외 += CUP:(ARG:0):로주
+			PALAM:(ARG:0):액외 += CUP:(ARG:0):액주
+			PALAM:(ARG:0):포외 += CUP:(ARG:0):포주
+			TIMES PALAM:(ARG:0):로주, 0.30
+			TIMES PALAM:(ARG:0):액주, 0.30
+			TIMES PALAM:(ARG:0):포주, 0.40
+
+			BASE:(ARG:0):정신력 = MAX(BASE:(ARG:0):정신력 - CUP:(ARG:0):포주 / 2, -500)
+			IF BASE:(ARG:0):정신력 < 0
+				CFLAG:(ARG:0):붕괴 += 400 - BASE:(ARG:0):정신력
+			ENDIF
+		;설득
+		CASE 4
+			TIMES PALAM:(ARG:0):로주, 0.30
+			TIMES PALAM:(ARG:0):액주, 0.30
+			TIMES PALAM:(ARG:0):포주, 0.40
+			BASE:(ARG:0):정신력 = MIN(BASE:(ARG:0):정신력 + MAX(MAXBASE:(ARG:0):정신력 / 15, 300), MAXBASE:(ARG:0):정신력)
+		;성처리
+		CASE 5
+			CUP:(ARG:0):로주 = CFLAG:(ARG:0):포로로
+			CUP:(ARG:0):액주 = CFLAG:(ARG:0):포로액
+			CUP:(ARG:0):포주 = CFLAG:(ARG:0):포로포
+			;소스 처리의 함수를 유용
+			CALL UP_TALENT_CHECK3(ARG:0)
+
+			PALAM:(ARG:0):로외 += CUP:(ARG:0):로주
+			PALAM:(ARG:0):액외 += CUP:(ARG:0):액주
+			PALAM:(ARG:0):포외 += CUP:(ARG:0):포주
+			TIMES PALAM:(ARG:0):로주, 0.30
+			TIMES PALAM:(ARG:0):액주, 0.30
+			TIMES PALAM:(ARG:0):포주, 0.50
+
+			BASE:(ARG:0):정신력 = MAX(BASE:(ARG:0):정신력 - CUP:(ARG:0):포주, -500)
+			IF BASE:(ARG:0):정신력 < 0
+				CFLAG:(ARG:0):붕괴 += 800 - BASE:(ARG:0):정신력 * 2
+			ENDIF
+
+		;촉수조교
+		CASE 6
+			CUP:(ARG:0):로주 = CFLAG:(ARG:0):포로로
+			CUP:(ARG:0):액주 = CFLAG:(ARG:0):포로액
+			CUP:(ARG:0):포주 = CFLAG:(ARG:0):포로포
+			;소스 처리의 함수를 유용
+			CALL UP_TALENT_CHECK3(ARG:0)
+
+			PALAM:(ARG:0):로외 += CUP:(ARG:0):로주
+			PALAM:(ARG:0):액외 += CUP:(ARG:0):액주
+			PALAM:(ARG:0):포외 += CUP:(ARG:0):포주
+			TIMES PALAM:(ARG:0):로주, 0.30
+			TIMES PALAM:(ARG:0):액주, 0.30
+			TIMES PALAM:(ARG:0):포주, 0.50
+
+			BASE:(ARG:0):정신력 = MAX(BASE:(ARG:0):정신력 - CUP:(ARG:0):포주, -500)
+			IF BASE:(ARG:0):정신력 < 0
+				CFLAG:(ARG:0):붕괴 += 800 - BASE:(ARG:0):정신력 * 2
+			ENDIF
+
+		;창관
+		CASE 7
+			CUP:(ARG:0):로주 = CFLAG:(ARG:0):포로로
+			CUP:(ARG:0):액주 = CFLAG:(ARG:0):포로액
+			CUP:(ARG:0):포주 = CFLAG:(ARG:0):포로포
+			;소스 처리의 함수를 유용
+			CALL UP_TALENT_CHECK3(ARG:0)
+
+			PALAM:(ARG:0):로외 += CUP:(ARG:0):로주
+			PALAM:(ARG:0):액외 += CUP:(ARG:0):액주
+			PALAM:(ARG:0):포외 += CUP:(ARG:0):포주
+			TIMES PALAM:(ARG:0):로주, 0.30
+			TIMES PALAM:(ARG:0):액주, 0.30
+			TIMES PALAM:(ARG:0):포주, 0.40
+
+			BASE:(ARG:0):정신력 = MAX(BASE:(ARG:0):정신력 - CUP:(ARG:0):포주, -500)
+			IF BASE:(ARG:0):정신력 < 0
+				CFLAG:(ARG:0):붕괴 += 300 - BASE:(ARG:0):정신력 * 2
+			ENDIF
+
+		;착유
+		CASE 8
+			;포로의취급에 관련되는 기분의 변동 처리
+			;포로의취급에 의해 태어난 감정을 일단 CUP에 거두어 SOURCE 처리와 같은 함수를 통해 소질에 응한 배율을 걸친다
+			CUP:(ARG:0):로주 = CFLAG:(ARG:0):포로로
+			CUP:(ARG:0):액주 = CFLAG:(ARG:0):포로액
+			CUP:(ARG:0):포주 = CFLAG:(ARG:0):포로포
+			;소스 처리의 함수를 유용
+			CALL UP_TALENT_CHECK3(ARG:0)
+			
+			;포로의취급에 의해 태어난 감정은 주위에의 반감, 혹은 스트레스로서 처리된다
+			PALAM:(ARG:0):로외 += CUP:(ARG:0):로주
+			PALAM:(ARG:0):액외 += CUP:(ARG:0):액주
+			PALAM:(ARG:0):포외 += CUP:(ARG:0):포주
+			
+			;주인공에게로의 반감이 희미해진다  숫자가 큰 만큼 희미해지기 어렵다
+			;반발이 강한 커맨드이니까 젖이 나오게 되면 줄어들기 어려워진다
+			IF TALENT:(ARG:0):모유체질
+				TIMES PALAM:(ARG:0):로주, 0.30
+				TIMES PALAM:(ARG:0):액주, 0.20
+				TIMES PALAM:(ARG:0):포주, 0.40
+			ELSE
+				TIMES PALAM:(ARG:0):로주, 0.20
+				TIMES PALAM:(ARG:0):액주, 0.20
+				TIMES PALAM:(ARG:0):포주, 0.30
+			ENDIF
+
+			;정신력을 계산해 그것이 적었으면 붕괴한다
+			;고문과 동일한 정도로 정신 쇼크가 크다  신체 개조되는 것이니까
+			BASE:(ARG:0):정신력 = MAX(BASE:(ARG:0):정신력 - CUP:(ARG:0):포주 / 2, -500)
+			IF BASE:(ARG:0):정신력 < 0
+				CFLAG:(ARG:0):붕괴 += 800 - BASE:(ARG:0):정신력
+			ENDIF
+
+	ENDSELECT
+
+;연금중
+ELSE
+	TIMES PALAM:(ARG:0):로외, 0.30
+	TIMES PALAM:(ARG:0):액외, 0.30
+	TIMES PALAM:(ARG:0):포외, 0.30
+	TIMES PALAM:(ARG:0):로주, 0.05
+	TIMES PALAM:(ARG:0):액주, 0.05
+	TIMES PALAM:(ARG:0):포주, 0.05
+ENDIF
+
+;-------------------------------------------------
+;포로의 수감에 의한 국가 감정의 변동（포로 일인당／턴)
+;;;;;ARG:0 포로가 되고 있는 개인
+;-------------------------------------------------
+@PRISONER_CHANGE_RELATION(ARG:0)
+#DIM LIKE
+#DIM HATE
+
+LIKE = 0
+HATE = 0
+
+SIF CFLAG:(ARG:0):포로처 == 0
+	RETURN
+SIF CFLAG:(ARG:0):해방카운터 == 0
+	RETURN
+
+;MASTER 소속국이 아닌 세력에 포로로 되고 있다
+SIF CFLAG:(ARG:0):포로처 != CFLAG:(MASTER):소속
+	RETURN
+
+;MASTER가 대우 결정하는＆투옥
+IF CFLAG:(ARG:0):연금중 == 0
+	SELECTCASE CFLAG:(ARG:0):포로의취급
+		;구류
+		CASE 0
+			LIKE = 0
+			HATE = 1
+		;고문
+		CASE 2
+			LIKE = -4
+			HATE = 4
+		;신체개발
+		CASE 3
+			LIKE = -3
+			HATE = 4
+		;설득
+		CASE 4
+			LIKE = 0
+			HATE = 0
+			CALL CHANGE_RELATION_O_TO_C(ARG:0, CFLAG:MASTER:소속, 30, -10)
+			SIF CFLAG:(ARG:0):소속
+				CALL CHANGE_RELATION_O_TO_C(ARG:0, CFLAG:(ARG:0):소속, -10, 15)
+		;성처리
+		CASE 5
+			LIKE = -5
+			HATE = 10
+		;촉수조교
+		CASE 6
+			LIKE = -10
+			HATE = 15
+		;창관
+		CASE 7
+			LIKE = -10
+			HATE = 15
+		;찢는 젖
+		CASE 8
+			LIKE = -5
+			HATE = 10
+	ENDSELECT
+;MASTER가 대우 결정하는＆연금
+ELSE
+	LIKE = 5
+	HATE = -5
+ENDIF
+
+
+IF CFLAG:(ARG:0):소속 != 0
+	LOCAL:0 = GET_COUNTRY_BOSS(CFLAG:(ARG:0):포로처)
+	LOCAL:1 = GET_COUNTRY_BOSS(CFLAG:(ARG:0):소속)
+
+	SIF REL_LIKE:(LOCAL:1):(LOCAL:0) > 300 && LIKE > 0
+		LIKE = 0
+	SIF REL_HATE:(LOCAL:1):(LOCAL:0) < 300 && HATE < 0
+		HATE = 0
+
+	CALL CHANGE_RELATION_C_TO_C(CFLAG:(ARG:0):소속, CFLAG:(ARG:0):포로처, LIKE, HATE)
+ELSE
+	CALL CHANGE_RELATION_O_TO_C(ARG:0, CFLAG:(ARG:0):포로처, LIKE, HATE)
+ENDIF
+
+
+;PRINTFORML 후  %ANAME(ARG:0)% → %ANAME(MASTER)% L{REL_LIKE:(ARG:0):(MASTER)}  H{REL_HATE:(ARG:0):(MASTER)}

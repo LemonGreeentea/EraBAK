@@ -1,0 +1,248 @@
+﻿;경험치에만 밤능력 상승(SLG 능력)
+
+;-------------------------------------------------
+;무투
+;-------------------------------------------------
+@ABLUP_EXPNAME50
+RESULTS = 무투경험치
+
+@CALC_ABLUP_EXP50(ARG:0)
+;최대치는 300
+IF ABL:(ARG:0):무투 >= 300
+	RETURN -1
+ENDIF
+
+LOCAL:0 = ABLUP_NEED_EXP_SLG(ABL:(ARG:0):무투) / GROWTYPE_RATE(ARG:0, "무투")
+
+SIF FIND_PASSIVE_SKILL(ARG:0, "초성장력")
+	TIMES LOCAL:0, 0.80
+
+SIF ID_TO_CHARA(FLAG:마음에든다지정캐릭터) == ARG:0
+	TIMES LOCAL:0, 0.80
+
+IF TALENT:(ARG:0):농땡이마왕
+	SELECTCASE ABL:(ARG:0):무투
+		CASE IS >= 90
+			TIMES LOCAL:0, 1.50
+		CASE IS >= 80
+			TIMES LOCAL:0, 1.25
+		CASEELSE
+			TIMES LOCAL:0, 1.1
+	ENDSELECT
+ENDIF
+RETURN MAX(LOCAL:0, 1)
+
+;-------------------------------------------------
+;방위
+;-------------------------------------------------
+@ABLUP_EXPNAME51
+RESULTS = 방위경험치
+
+@CALC_ABLUP_EXP51(ARG:0)
+;최대치는 300
+IF ABL:(ARG:0):방위 >= 300
+	RETURN -1
+ENDIF
+
+LOCAL:0 = ABLUP_NEED_EXP_SLG(ABL:(ARG:0):방위) / GROWTYPE_RATE(ARG:0, "방위")
+
+SIF FIND_PASSIVE_SKILL(ARG:0, "초성장력")
+	TIMES LOCAL:0, 0.80
+
+SIF ID_TO_CHARA(FLAG:마음에든다지정캐릭터) == ARG:0
+	TIMES LOCAL:0, 0.80
+
+IF TALENT:(ARG:0):농땡이마왕
+	SELECTCASE ABL:(ARG:0):방위
+		CASE IS >= 90
+			TIMES LOCAL:0, 1.50
+		CASE IS >= 80
+			TIMES LOCAL:0, 1.25
+		CASEELSE
+			TIMES LOCAL:0, 1.1
+	ENDSELECT
+ENDIF
+RETURN MAX(LOCAL:0, 1)
+
+
+;-------------------------------------------------
+;지략
+;-------------------------------------------------
+@ABLUP_EXPNAME52
+RESULTS = 지략경험치
+
+@CALC_ABLUP_EXP52(ARG:0)
+;최대치는 300
+IF ABL:(ARG:0):지략 >= 300
+	RETURN -1
+ENDIF
+
+LOCAL:0 = ABLUP_NEED_EXP_SLG(ABL:(ARG:0):지략) / GROWTYPE_RATE(ARG:0, "지략")
+
+SIF FIND_PASSIVE_SKILL(ARG:0, "초성장력")
+	TIMES LOCAL:0, 0.80
+
+SIF ID_TO_CHARA(FLAG:마음에든다지정캐릭터) == ARG:0
+	TIMES LOCAL:0, 0.80
+
+IF TALENT:(ARG:0):농땡이마왕
+	SELECTCASE ABL:(ARG:0):지략
+		CASE IS >= 90
+			TIMES LOCAL:0, 1.50
+		CASE IS >= 80
+			TIMES LOCAL:0, 1.25
+		CASEELSE
+			TIMES LOCAL:0, 1.1
+	ENDSELECT
+ENDIF
+RETURN MAX(LOCAL:0, 1)
+
+;-------------------------------------------------
+;정치
+;-------------------------------------------------
+@ABLUP_EXPNAME53
+RESULTS = 정치경험치
+
+@CALC_ABLUP_EXP53(ARG:0)
+;최대치는 300
+IF ABL:(ARG:0):정치 >= 300
+	RETURN -1
+ENDIF
+
+LOCAL:0 = ABLUP_NEED_EXP_SLG(ABL:(ARG:0):정치) / GROWTYPE_RATE(ARG:0, "정치")
+
+SIF FIND_PASSIVE_SKILL(ARG:0, "초성장력")
+	TIMES LOCAL:0, 0.80
+
+SIF ID_TO_CHARA(FLAG:마음에든다지정캐릭터) == ARG:0
+	TIMES LOCAL:0, 0.80
+
+IF TALENT:(ARG:0):농땡이마왕
+	SELECTCASE ABL:(ARG:0):정치
+		CASE IS >= 90
+			TIMES LOCAL:0, 1.50
+		CASE IS >= 80
+			TIMES LOCAL:0, 1.25
+		CASEELSE
+			TIMES LOCAL:0, 1.1
+	ENDSELECT
+ENDIF
+RETURN MAX(LOCAL:0, 1)
+
+;-------------------------------------------------
+;요술
+;-------------------------------------------------
+@ABLUP_EXPNAME54
+RESULTS = 요술경험치
+
+@CALC_ABLUP_EXP54(ARG:0)
+;최대치는 300
+IF ABL:(ARG:0):요술 >= 300
+	RETURN -1
+ENDIF
+
+LOCAL:0 = ABLUP_NEED_EXP_SLG(ABL:(ARG:0):요술) * 5 / GROWTYPE_RATE(ARG:0, "요술")
+
+SIF FIND_PASSIVE_SKILL(ARG:0, "초성장력")
+	TIMES LOCAL:0, 0.80
+
+SIF ID_TO_CHARA(FLAG:마음에든다지정캐릭터) == ARG:0
+	TIMES LOCAL:0, 0.80
+
+IF TALENT:(ARG:0):농땡이마왕
+	SELECTCASE ABL:(ARG:0):요술
+		CASE IS >= 50
+			TIMES LOCAL:0, 1.50
+		CASE IS >= 30
+			TIMES LOCAL:0, 1.25
+		CASEELSE
+			TIMES LOCAL:0, 1.1
+	ENDSELECT
+ENDIF
+RETURN MAX(LOCAL:0, 1)
+
+;-------------------------------------------------
+;가창
+;-------------------------------------------------
+@ABLUP_EXPNAME60
+RESULTS = 가창경험치
+
+@CALC_ABLUP_EXP60(ARG:0)
+;최대치는 300
+IF ABL:(ARG:0):가창 >= 300
+	RETURN -1
+ENDIF
+
+LOCAL:0 = ABLUP_NEED_EXP_SLG(ABL:(ARG:0):가창) / GROWTYPE_RATE(ARG:0, "가창")
+
+SIF FIND_PASSIVE_SKILL(ARG:0, "초성장력")
+	TIMES LOCAL:0, 0.80
+
+SIF ID_TO_CHARA(FLAG:마음에든다지정캐릭터) == ARG:0
+	TIMES LOCAL:0, 0.80
+
+IF TALENT:(ARG:0):농땡이마왕
+	SELECTCASE ABL:(ARG:0):가창
+		CASE IS >= 50
+			TIMES LOCAL:0, 1.50
+		CASE IS >= 30
+			TIMES LOCAL:0, 1.25
+		CASEELSE
+			TIMES LOCAL:0, 1.1
+	ENDSELECT
+ENDIF
+
+RETURN MAX(LOCAL:0, 1)
+
+;-------------------------------------------------
+;요리
+;-------------------------------------------------
+@ABLUP_EXPNAME61
+RESULTS = 요리경험치
+
+@CALC_ABLUP_EXP61(ARG:0)
+;최대치는 300
+IF ABL:(ARG:0):요리 >= 300
+	RETURN -1
+ENDIF
+
+LOCAL:0 = ABLUP_NEED_EXP_SLG(ABL:(ARG:0):요리) / GROWTYPE_RATE(ARG:0, "요리")
+
+SIF FIND_PASSIVE_SKILL(ARG:0, "초성장력")
+	TIMES LOCAL:0, 0.80
+
+SIF ID_TO_CHARA(FLAG:마음에든다지정캐릭터) == ARG:0
+	TIMES LOCAL:0, 0.80
+
+IF TALENT:(ARG:0):농땡이마왕
+	SELECTCASE ABL:(ARG:0):요리
+		CASE IS >= 50
+			TIMES LOCAL:0, 1.50
+		CASE IS >= 30
+			TIMES LOCAL:0, 1.25
+		CASEELSE
+			TIMES LOCAL:0, 1.1
+	ENDSELECT
+ENDIF
+
+RETURN MAX(LOCAL:0, 1)
+
+;-------------------------------------------------
+;능력 레벨 ARG:0에 대한 필요경험치(×100)를 돌려주는 함수(SLG계)
+;-------------------------------------------------
+@ABLUP_NEED_EXP_SLG(ARG:0)
+#FUNCTION
+SELECTCASE ARG:0
+	CASE IS >= 120
+		RETURNF 7000 + (ARG:0 - 120) * 600
+	CASE IS >= 랭크역치:랭크_ＳＬＧ:랭크_S
+		RETURNF 4000 + (ARG:0 - 100) * 150
+	CASE IS >= 랭크역치:랭크_ＳＬＧ:랭크_A
+		RETURNF 2000 + (ARG:0 - 80) * 100
+	CASE IS >= 랭크역치:랭크_ＳＬＧ:랭크_C
+		RETURNF 600 + (ARG:0 - 60) * 70 
+	CASE IS >= 랭크역치:랭크_ＳＬＧ:랭크_F
+		RETURNF 300 + (ARG:0 - 30) * 10
+	CASEELSE
+		RETURNF 300
+ENDSELECT

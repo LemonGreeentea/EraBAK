@@ -1,0 +1,366 @@
+﻿;-------------------------------------------------
+; 「거실로 편히 쉰다」의 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA8_COM1_EXIST
+RETURN 1
+
+;-------------------------------------------------
+; 「거실로 편히 쉰다」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA8_COM1_NAME
+IF GET_COUNTRY_BOSS(CFLAG:MASTER:소속) == MASTER
+	RESULTS:0 '= "사관의 모습"
+ELSE
+	RESULTS:0 '= "거실로 편히 쉰다"
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+; 「거실로 편히 쉰다」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA8_COM1_CHECK
+RETURN 1
+
+;-------------------------------------------------
+; 「거실로 편히 쉰다」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA8_COM1_CHECKCHARA(ARG:0)
+
+SIF MASTER == ARG:0
+	RETURN 0
+SIF CFLAG:(ARG:0):행동완료
+	RETURN 0
+SIF CFLAG:(ARG:0):포로처
+	RETURN 0
+SIF CFLAG:MASTER:소속 != CFLAG:(ARG:0):소속
+	RETURN 0
+SIF CFLAG:(ARG:0):행동불능상태 == 행동불능_임월
+	RETURN 0
+SIF COOLTIME:(ARG:0):0
+	RETURN 0
+SIF IS_ANIMAL(ARG:0)
+	RETURN 0
+
+RETURN 1
+
+;-------------------------------------------------
+; 「거실로 편히 쉰다」의 메인 처리
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA8_COM1_MAIN
+#DIM L_COUNTER
+#DIM 대상
+
+;리셋트
+CALL COM_AUTO_RANDOMIZED_WEIGHTED_START
+
+;후보 추가
+FOR L_COUNTER, 0, CHARANUM
+	CALL SHOP_LIFE67_MAP1_AREA8_COM1_CHECKCHARA(L_COUNTER)
+	SIF !RESULT
+		CONTINUE
+	CALL COM_AUTO_RANDOMIZED_WEIGHTED_VALUE(L_COUNTER, 10)
+NEXT
+
+;결과 취득
+대상 = COM_AUTO_RANDOMIZED_WEIGHTED_RESULT()
+
+;조교 초기설정
+CALL TRAIN_TARGET_SETTING(대상)
+
+FLAG:우후후플래그 = 0
+
+;상대가 아이라면 육아 모드
+IF CFLAG:대상:행동불능상태 == 행동불능_아이
+	FLAG:조교모드 = 조교_육아
+;그 이외는 통상의 만나러간다 모드
+ELSE
+	FLAG:조교모드 = 조교_만난다
+ENDIF
+
+;행동 개시시의 공통 처리
+CALL START_TRAIN_COMMON
+
+CALL SHOP_LIFE67_MAP1_AREA8_COM1_TEXT_1(대상)
+WAIT
+;CALL LOVE_AT_FIRST_SIGHT(대상)
+;PRINTL 
+CALL SHOP_LIFE67_MAP1_AREA8_COM1_TEXT_2(대상)
+WAIT
+
+CFLAG:대상:안면 = 1
+
+;묘사를 클리어 하지 않는다
+LINES_SHOP = LINECOUNT
+
+RETURN 1
+
+;-------------------------------------------------
+; 묘사 1
+;	구상주를 자유롭게 바꿀 수 있도록(듯이)
+;	@KOJO_EVENT_DEFAULT(ARG)로 옮기는 것이 좋을지도
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA8_COM1_TEXT_1(대상)
+#DIM 대상
+
+IF GET_COUNTRY_BOSS(CFLAG:MASTER:소속) == MASTER
+	PRINTFORML  %조사처리(ANAME(MASTER),"가")% 병사를 들여다 보러 가면, 사관의 %조사처리(ANAME(대상),"가")% 얼굴을 내밀었다
+	PRINTFORML  %조사처리(ANAME(대상),"는")% 자세력의 군주인 %조사처리(ANAME(MASTER),"를")% 만나 당황했는지, 거실에 권해 왔다
+ELSE
+	PRINTFORML  %조사처리(ANAME(MASTER),"가")% 거실로 편히 쉬고 있으면, 문을 두드리는 소리가 들렸다
+	PRINTFORML  손님은 %조사처리(ANAME(대상),"였")%다
+	IF HAS_SAME_FATHER(MASTER, 대상) || HAS_SAME_MOTHER(MASTER, 대상)
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 형제 자매인 %ANAME(MASTER)%의 상태를 보러 온 것 같다
+	ELSEIF CFLAG:MASTER:부친 == GET_ID(대상)
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 부친으로서 우리 아이인 %ANAME(MASTER)%의 상태를 보러 온 것 같다
+	ELSEIF CFLAG:MASTER:모친 == GET_ID(대상)
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 모친으로서 %ANAME(MASTER)%의 상태를 보러 온 것 같다
+	ELSEIF CFLAG:대상:부친 == GET_ID(MASTER)
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 부친인 %조사처리(ANAME(MASTER),"를")% 만나고 싶어져 방문한 것 같다
+	ELSEIF CFLAG:대상:모친 == GET_ID(MASTER)
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 모친인 %조사처리(ANAME(MASTER),"를")% 만나고 싶어져 방문한 것 같다
+;	ELSEIF TALENT:대상:의형제
+;		PRINTFORML  %조사처리(ANAME(대상),"는")% 의형제인 %ANAME(MASTER)%의 상태를 보러 온 것 같다
+	ELSEIF TALENT:대상:연인
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 연인인 %ANAME(MASTER)%에 아무래도 만나고 싶었던 것 같다
+	ELSEIF TALENT:대상:낙인
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 낙인의 주인인 %ANAME(MASTER)%의 얼굴을 볼 수 없으면 침착하지 않았던 것 같다
+	ELSEIF GET_COUNTRY_FROM_BOSS_NAME(NAME:대상) == CFLAG:MASTER:소속
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 자세력의 사관인 %ANAME(MASTER)%의 상태를 보러 온 것 같다
+	ELSEIF TALENT:대상:연모
+		PRINTFORML  %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%의 얼굴을 보고 싶어진 것 같다
+	ELSEIF TALENT:대상:복종
+		PRINTFORML  %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%에 상관하기를 원해서 방문한 것 같다
+	ELSEIF TALENT:대상:주인 ;|| TALENT:대상:각인
+		PRINTFORML  %조사처리(ANAME(대상),"는")% %조사처리(ANAME(MASTER),"가")% 나날을 어떻게 보내고 있는지 확인하러 온 것 같다
+	ELSEIF TALENT:대상:친구
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 짬을 주체 못해 친구의 %ANAME(MASTER)%의 원래로 놀러 온 것 같다
+	ELSEIF CFLAG:대상:안면 == 0
+		PRINTFORML  동일 세력인 %ANAME(MASTER)%에 인사를 하려고 방문한 것 같다
+	ELSE
+		PRINTFORML  %조사처리(ANAME(대상),"는")% %조사처리(ANAME(MASTER),"와")% 교류가 깊어지고 싶다고 생각하고 있는 것 같다
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+; 묘사 2
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA8_COM1_TEXT_2(대상)
+#DIM 대상
+
+IF GET_COUNTRY_BOSS(CFLAG:MASTER:소속) == MASTER
+	PRINTFORM %조사처리(ANAME(대상),"는")%
+	IF TALENT:대상:솔직함 || TALENT:대상:낙관적 || TALENT:대상:프라이드높음
+		PRINTFORM 살짝 붉어진 웃는 얼굴로 차를 끓여, 
+	ELSEIF TALENT:대상:무관심 || TALENT:대상:감정결핍
+		PRINTFORM 담담하게 차를 끓여, 
+	ELSEIF TALENT:대상:겁쟁이 || TALENT:대상:비관적 || TALENT:대상:프라이드낮음
+		PRINTFORM 차를 끓여, 조심스럽게 
+	ELSEIF TALENT:대상:반항적 || TALENT:대상:츤데레 ;|| TALENT:대상:인간혐오
+		PRINTFORM 차를 끓여, 퉁명스럽게 
+	ELSEIF TALENT:대상:헌신적
+		PRINTFORM 공손한 행동으로 차를 끓여, 입맛에 맞으면 하고 
+	ENDIF
+ELSE
+	IF DISPLAY_SEASON() == "봄"
+		IF WEATHERNUM == 기후_구름
+			PRINTFORML  바깥은 화담으로 졸려지는 기후인것 같다
+		ELSEIF WEATHERNUM == 기후_강우
+			PRINTFORML  봄비에 촉촉하고 적셔진 것 같다
+		ELSE
+			PRINTFORML  화창한 맑은 하늘에서 산책하기 좋은 날씨인것 같다
+		ENDIF
+	ELSEIF DISPLAY_SEASON() == "여름"
+		IF WEATHERNUM == 기후_구름
+			PRINTFORML  바깥은 흐려도 여름인것 같고 더웠던 것 같다
+		ELSEIF WEATHERNUM == 기후_강우
+			PRINTFORML  여름의 비로 찌고 있는 것 같다
+		ELSE
+			PRINTFORML  바깥은 구름 하나 없는 염천인것 같다
+		ENDIF
+	ELSEIF DISPLAY_SEASON() == "가을"
+		IF WEATHERNUM == 기후_구름
+			PRINTFORML  하늘에 약운이 퍼지고 있던 것 같다
+		ELSEIF WEATHERNUM == 기후_강우
+			PRINTFORML  바깥은 소나기로 추웠던 것 같다
+		ELSE
+			PRINTFORML  바깥은 맑게 개이는 가을의 맑은 날씨인것 같다
+		ENDIF
+	ELSE
+		IF WEATHERNUM == 기후_구름
+			PRINTFORML  바깥은 동담으로 손가락끝까지 차가워진 것 같다
+		ELSEIF WEATHERNUM == 기후_강설
+			PRINTFORML  바깥은 함박눈이 내려 쌓이고 있는 것 같다
+		ELSE
+			PRINTFORML  맑은 하늘에 눈보라가 춤추고 있어 옷이 젖은 것 같다
+		ENDIF
+	ENDIF
+	PRINTFORM  %조사처리(ANAME(대상),"는")%
+	IF TALENT:대상:솔직함 || TALENT:대상:낙관적 || TALENT:대상:프라이드높음
+		PRINTFORM 살짝 붉어진 웃는 얼굴로 간단한 선물의 
+	ELSEIF TALENT:대상:무관심 || TALENT:대상:감정결핍
+		PRINTFORM 담담하게 
+	ELSEIF TALENT:대상:겁쟁이 || TALENT:대상:비관적 || TALENT:대상:프라이드낮음
+		PRINTFORM 간단한 선물로서 조심스럽게 
+	ELSEIF TALENT:대상:반항적 || TALENT:대상:츤데레 ;|| TALENT:대상:인간혐오
+		PRINTFORM 퉁명스럽게 
+	ELSEIF TALENT:대상:헌신적
+		PRINTFORM 공손한 행동으로, 입맛에 맞으면 하고 
+	ENDIF
+ENDIF
+PRINTDATA
+	DATAFORM 인절미를
+	DATAFORM 카시와모찌를
+	DATAFORM 스아마를
+	DATAFORM 만두를
+	DATAFORM 카루칸을
+	DATAFORM 쿠즈모찌를
+	DATAFORM 우이로를
+	DATAFORM 도라야끼를
+	DATAFORM 사쿠라모찌를
+	DATAFORM 킨츠바를
+	DATAFORM 다이후쿠를
+	DATAFORM 모모야마를
+	DATAFORM 양갱을
+	DATAFORM 수양갱을
+	DATAFORM 사슴전병을
+	DATAFORM 고카보를
+	DATAFORM 아마낫토를
+	DATAFORM 전병을
+	DATAFORM 카스테라를
+	DATAFORM 닭꼬치를
+	DATAFORM 애플파이를
+	DATAFORM 에클레어를
+	DATAFORM 푸딩을
+	DATAFORM 가토쇼콜라를
+	DATAFORM 사브레디아만을
+	DATAFORM 스테인드글라스 쿠키를
+	DATAFORM 스노우볼을
+	DATAFORM 아마렛티를
+	DATAFORM 크롯칸을
+	DATAFORM 아이스박스 쿠키를
+	DATAFORM 쇼트브레드를
+	DATAFORM 후로랑탕을
+	DATAFORM 갈레트를
+	DATAFORM 랑그드샤를
+	DATAFORM 비스킷을
+	DATAFORM 크레페를
+	DATAFORM 사바랭을
+	DATAFORM 아이스크림을
+	DATAFORM 샤벳을
+	DATAFORM 수플레를
+	DATAFORM 슈크림을
+	DATAFORM 쇼트 케이크를
+	DATAFORM 프루츠 젤리를
+	DATAFORM 트뤼프 초콜릿을
+	DATAFORM 타르트를
+	DATAFORM 태피를
+	DATAFORM 도너츠를
+	DATAFORM 바움쿠헨
+	DATAFORM 파운드 케이크를
+	DATAFORM 버터 케이크를
+	DATAFORM 바바루아를
+	DATAFORM 프루츠 케이크를
+	DATAFORM 핫 케익을
+	DATAFORM 마카롱을
+	DATAFORM 마를렌
+	DATAFORM 머시멜로우를
+	DATAFORM 마롱 글라세를
+	DATAFORM 미트파이를
+	DATAFORM 밀피유를
+	DATAFORM 무스 케이크를
+	DATAFORM 리프파이를
+	DATAFORM 치즈 케이크를
+	DATAFORM 레어 치즈 케이크를
+	DATAFORM 롤 케이크를
+	DATAFORM 와플을
+	DATAFORM 빵을
+	DATAFORM 피자를
+	DATAFORM 츠키모찌를
+	DATAFORM 참깨 경단을
+	DATAFORM 찐빵을
+	DATAFORM 고기만두를
+	DATAFORM 복숭아만두를
+	DATAFORM 행인두부를
+	DATAFORM 에그타르트를
+	DATAFORM 망고푸딩을
+	DATAFORM 치마키를
+	DATAFORM 교자를
+	DATAFORM 슈마이를
+	DATAFORM 춘권을
+	DATAFORM 샤오롱바오를
+	DATAFORM 춘빙을
+	DATAFORM 총요우빙을
+	DATAFORM 사타안다기를
+	DATAFORM 까눌레를
+	DATAFORM 스콘을
+	DATAFORM 판나 코타를
+	DATAFORM 츄러스를
+	DATAFORM 쿠구로후를
+	DATAFORM 브라우니를
+	DATAFORM 클라푸티를
+	DATAFORM 까놀로라는 통 모양의 이탈리아 과자를
+	DATAFORM 슈톨렌이라는 독일의 크림 빵을
+	DATAFORM 파나토네라는 이탈리아의 크림 빵을
+	DATAFORM 민스파이라는 영국의 과자를
+	DATAFORM 블랑망제라는 프랑스의 빙과를
+	DATAFORM 바스부사라는 터키의 케이크를
+	DATAFORM 카브리슈카라는 러시아의 쿠키를
+	DATAFORM 슈트르델이라는 독일의 전통적인 과자를
+	DATAFORM 쿠나파라는 이집트의 과자를
+	DATAFORM 블린츠라는 러시아의 크레페를
+	DATAFORM 루쿠마데스라는 그리스풍 도너츠를
+	DATAFORM 라스말라이라는 인도의 크림 과자를
+	DATAFORM 우피파이라는 미국의 구운 과자를
+	DATAFORM 파베·드·제네바라는 생 초콜릿을
+	DATAFORM 무할레비라는 터키의 푸딩를
+	DATAFORM 레체·플랑이라는 필리핀의 푸딩를
+ENDDATA
+
+IF GET_COUNTRY_BOSS(CFLAG:MASTER:소속) == MASTER
+	PRINTFORML  내몄다
+	PRINTFORML  %조사처리(ANAME(MASTER),"는")% %ANAME(대상)%의 대접을 받기로 했다
+	IF TALENT:대상:연인
+		PRINTFORML  차의 준비를 끝내면, %조사처리(ANAME(대상),"가")% 조속히 밀착했다
+	ELSEIF TALENT:대상:낙인
+		PRINTFORML  차의 준비를 끝내면, %조사처리(ANAME(대상),"는")% 뭔가 명령이 있는 것은 아닌지라고 물어 왔다
+	ELSEIF TALENT:대상:연모
+		PRINTFORML  차의 준비를 끝내면, %조사처리(ANAME(대상),"는")% 미소지어, %ANAME(MASTER)%에 다가붙어 왔다
+	ELSEIF TALENT:대상:복종
+		PRINTFORML  차의 준비를 끝내면, %조사처리(ANAME(대상),"는")% 말석에 앉아 긴장하고 있는 것 같다
+	ELSEIF TALENT:대상:주인 ;|| TALENT:대상:각인
+		PRINTFORML  차의 준비를 끝내면, %조사처리(ANAME(대상),"는")% 군주를 앞으로 하고 있다고는 생각되지 않는 편히 쉼을 보이고 있다
+	ELSEIF TALENT:대상:친구
+		PRINTFORML  차의 준비를 끝내면, %조사처리(ANAME(대상),"는")% 부모 해 기분에 잡담하기 시작했다
+	ENDIF
+ELSE
+	IF TALENT:대상:솔직함 || TALENT:대상:낙관적 || TALENT:대상:프라이드높음
+		PRINTFORML  건네주었다
+	ELSEIF TALENT:대상:무관심 || TALENT:대상:감정결핍
+		PRINTFORML  포장해 건네주며 간단한 선물이라고 덧붙였다
+	ELSEIF TALENT:대상:겁쟁이 || TALENT:대상:비관적 || TALENT:대상:프라이드낮음
+		PRINTFORML  내몄다
+	ELSEIF TALENT:대상:반항적 || TALENT:대상:츤데레 ;|| TALENT:대상:인간혐오
+		PRINTFORML  강압해 왔다
+	ELSEIF TALENT:대상:헌신적
+		PRINTFORML  내몄다
+	ELSE
+		PRINTFORML  가져온 것 같다
+	ENDIF
+	PRINTFORML  %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"를")% 거실에 불러들여, 차를 끓여 대접하기로 했다
+	IF TALENT:대상:연인
+		PRINTFORML  %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%에 다가붙어 방에 들어가, 밀착했다
+	ELSEIF TALENT:대상:낙인
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 조속히, 뭔가 돕는 일은 없을까%ANAME(MASTER)%에게 물어 왔다
+	ELSEIF TALENT:대상:연모
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 미소지어, %ANAME(MASTER)%에 다가붙어 들어 왔다
+	ELSEIF TALENT:대상:복종
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 미안한 것같이 들어 와 말석에 앉아, 긴장하고 있다
+	ELSEIF TALENT:대상:주인 ;|| TALENT:대상:각인
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 당당히 들어 와, 우리 집과 같이 편히 쉬기 시작했다
+	ELSEIF TALENT:대상:친구
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 시선을 둘러싸게 해, 재미있는 것은 없을까 찾고 있다
+	ENDIF
+ENDIF
+
+RETURN 0
+

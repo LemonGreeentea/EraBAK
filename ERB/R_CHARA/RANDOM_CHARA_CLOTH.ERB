@@ -1,0 +1,331 @@
+﻿;-------------------------
+;범용 무장에 의상을 설정한다
+;랜덤 의상 강화·수정 패치 덧붙여 씀
+;SET_CLOTH_BY_NAME를 다용했으므로 무거워졌는지도 모릅니다
+;SET_CLOTH로 해야할 것인가? 하지만 시인성이 나빠지는·결정 치는 것은 좋지 않다
+;-------------------------
+@RANDOM_CHARA_CLOTH_SETTING()
+;0-15 남녀 겸용+TARGET가 남자라면 16-19남 전용 or녀라면 20-30 여전용
+SELECTCASE IFRAND("0TO15", 1, "16TO19", IS_MALE(TARGET), "20TO30", IS_FEMALE(TARGET))
+	;0-15 남녀 겸용
+	;범용
+	CASE 0
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "모자")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상의, "옷")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "양말")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "구두")
+		IF IS_MALE(TARGET)
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_하의, "바지")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "트렁크스")
+		ELSE
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_하의, "스커트")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷상, "브라")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "팬티")
+		ENDIF
+	;전사
+	CASE 1
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "투구")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_팔, "건틀렛")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "그리브")
+		IF IS_MALE(TARGET)
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상하의, "갑옷")
+		ELSE
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상하의, "비키니 아머")
+		ENDIF
+	;슈트
+	CASE 2
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상의, "와이셔츠")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_윗도리, "슈트")
+		IF IS_MALE(TARGET)
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_목, "넥타이")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_하의, "슬랙스")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "트렁크스")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "양말")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "구두")
+		ELSE
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_하의, "타이트 스커트")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷상, "브라")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "팬티")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "스타킹")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "하이힐")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_악세사리, "안경")
+		ENDIF
+	;빈수가
+	CASE 3
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "머리수건")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상하의, "도복")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "훈도시")
+		SIF IS_FEMALE(TARGET)
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷상, "가슴붕대")
+	;인
+	CASE 4
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상하의, "닌자옷")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "훈도시")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_팔, "토시")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "지카타비")
+		IF IS_MALE(TARGET)
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "두건")
+		ELSE
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "머리수건")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷상, "가슴붕대")
+		ENDIF
+	;기모노
+	CASE 5
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상하의, "기모노")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "버선")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "나막신")
+	;요리사
+	CASE 6
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "요리사모자")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_목, "스카프")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상의, "옷")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_윗도리, "에이프런")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "양말")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "구두")
+		IF IS_MALE(TARGET)
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_하의, "바지")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "트렁크스")
+		ELSE
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_하의, "스커트")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷상, "브라")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "팬티")
+		ENDIF
+	;라이더
+	CASE 7
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "헬멧")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상하의, "라이더 슈트")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_팔, "레더 글로브")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "부츠삭스")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "레더 부츠")
+		IF IS_MALE(TARGET)
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "보이레그")
+		ELSE
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷상, "브라")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "팬티")
+		ENDIF
+	;저지
+	CASE 8
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상하의, "저지")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "샌들")
+		IF IS_MALE(TARGET)
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "트렁크스")
+		ELSE
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "팬티")
+		ENDIF
+	;skater
+	CASE 9
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "헬멧")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상의, "탱크탑")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_팔, "글로브")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "양말")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "롤러 스케이트")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_악세사리, "고글")
+		IF IS_MALE(TARGET)
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_하의, "숏팬츠")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "보이레그")
+		ELSE
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_하의, "미니스커트")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷상, "스포츠 브라")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "스패츠")
+		ENDIF
+	;군복
+	CASE 10
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "모자")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_목, "넥타이")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상의, "군복")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_팔, "장갑")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "양말")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "부츠")
+		IF IS_MALE(TARGET)
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_하의, "바지")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "트렁크스")
+		ELSE
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_하의, "스커트")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷상, "브라")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "팬티")
+		ENDIF
+	;죄수
+	CASE 11
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_목, "관리태그")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상하의, "죄수옷")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_팔, "수갑")
+	;연구자
+	CASE 12
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상의, "와이셔츠")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_윗도리, "백의")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "양말")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "구두")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_악세사리, "안경")
+		IF IS_MALE(TARGET)
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_하의, "바지")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "브리프")
+		ELSE
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_하의, "스커트")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "팬티")
+		ENDIF
+	;한랭지
+	CASE 13
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "모자")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_목, "머플러")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상의, "스웨터")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_윗도리, "다운재킷")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_팔, "장갑")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "부츠")
+		IF IS_MALE(TARGET)
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_하의, "바지")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "트렁크스")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "양말")
+		ELSE
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_하의, "스커트")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷상, "브라")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "팬티")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "타이츠")
+		ENDIF
+	;원아
+	CASE 14
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "모자")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상의, "스모크 블라우스")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "양말")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "구두")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_악세사리, "명찰")
+		IF IS_MALE(TARGET)
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_하의, "숏팬츠")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "브리프")
+		ELSE
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_하의, "서스펜터 스커트")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "드로워즈")
+		ENDIF
+	;마도사
+	CASE 15
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "모자")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상하의, "로브")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "구두")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_악세사리, "마도서")
+		IF IS_MALE(TARGET)
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "트렁크스")
+		ELSE
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷상, "브라")
+			CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "팬티")
+		ENDIF
+	;16-19남 전용
+	;스님
+	CASE 16
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "삿갓")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_목, "염주")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상하의, "법의")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_윗도리, "가사")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "버선")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "짚신")
+	;남 예복
+	CASE 17
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "실크햇")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상하의, "연미복")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "로우라이즈")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_팔, "장갑")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "양말")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "구두")
+	;가쿠란
+	CASE 18
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "모자")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상의, "Ｔ셔츠")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_하의, "바지")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_윗도리, "가쿠란")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "트렁크스")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "나막신")
+	;왕
+	CASE 19
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "왕관")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상하의, "법의")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_윗도리, "망토")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "트렁크스")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "양말")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "구두")
+	;20-30 여전용
+	;바니
+	CASE 20
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "부 귀")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상하의, "바니슈트")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_팔, "커프스")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "망사 타이즈")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "하이힐")
+	;차이나
+	CASE 21
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "시뇽")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상하의, "차이나 드레스")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷상, "브라")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "팬티")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "펌프스")
+	;메이드
+	CASE 22
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "화이트블림")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상하의, "메이드복")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷상, "브라")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "팬티")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "니삭스")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "펌프스")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_악세사리, "가터")
+	;세일러
+	CASE 23
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상의, "세일러복")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_하의, "세일러 스커트")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷상, "브라")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "팬티")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "크루삭스")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "로퍼")
+	;잠옷
+	CASE 24
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "나이트캡")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_윗도리, "가디건")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷세트, "네글리제")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "슬리퍼")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_악세사리, "베개")
+	;발레
+	CASE 25
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상하의, "발레복")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷상, "레오타드")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "Ｔ백")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "타이츠")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "발레 슈즈")
+	;여왕
+	CASE 26
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "티아라")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상하의, "드레스")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_윗도리, "모피코트")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷세트, "레오타드")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_팔, "장갑")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "타이츠")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "하이힐")
+	;수도자
+	CASE 27
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "두건")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상하의, "수도옷")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷상, "시스루 브라")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "시스루 팬티")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "양말")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "구두")
+	;녀 예복
+	CASE 28
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "머리장식")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상하의, "나이트 드레스")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷상, "코르셋")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "팬티")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "하이힐")
+	;고스로리
+	CASE 29
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "헤드드레스")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_상하의, "고딕드레스")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷상, "뷔스티에")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "팬티")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_양말, "타이츠")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "펌프스")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_악세사리, "우산")
+	;훌라 댄서
+	CASE 30
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_머리, "화관")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_하의, "파레오")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷상, "홀더넥 브라")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_속옷하, "팬티")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_팔, "브레이슬릿")
+		CALL SET_CLOTH_BY_NAME(TARGET, 의상부위_구두, "비치 샌들")
+ENDSELECT
+

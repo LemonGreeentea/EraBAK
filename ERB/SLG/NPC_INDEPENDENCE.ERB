@@ -1,0 +1,422 @@
+﻿;-------------------------------------------------
+;desc  :NPC의 독립의 처리
+;param :배반자:배반 하는 캐릭터의 번호
+;param :탈취 도시수:빼앗는 도시의 수（보정이 들어갈 가능성이 있다）
+;param :탈취 도시수고정:상기 보정을 자르는 플래그  온으로 하는 경우 호출측에서 체크하는 것
+;param :이벤트 발생 금지:설득 이벤트의 발생을 금지하는 플래그
+;return:반환값:반환값 설명
+;-------------------------------------------------
+@NPC_INDEPENDENCE(배반자, 탈취도시수 = 0, 탈취도시수고정 = 0, 이벤트발생금지 = 0)
+#DIM 배반자
+#DIM 탈취도시수
+#DIM 탈취도시수고정
+#DIM 배반전군주
+#DIM 배반원세력
+#DIM 신세력
+#DIM 신세력칼라
+#DIM 플레이어대응
+#DIM 이벤트발생금지
+#DIM CONST 대응_분노 = 3
+#DIM CONST 대응_거부 = 2
+#DIM CONST 대응_수락 = 1
+#DIM CONST 대응_무관계 = 0
+
+#DIM 무장수
+#DIM 탈취무장수
+#DIM 탈취무장
+
+;배반 전 군주의 캐릭터 번호
+배반전군주 = GET_COUNTRY_BOSS(CFLAG:(배반자):소속)
+;배반 모토쿠니가의 번호
+배반원세력 = CFLAG:(배반자):소속
+;새로운 세력을 취득
+신세력 = GET_NEW_COUNTRY()
+
+SIF !CAN_INDEPENDENCE(배반자, 배반원세력)
+	RETURN -1
+
+;탈취 도시수를 보정한다
+탈취도시수 = INDEPENDENCE_STEAL_CITY_NUM(배반원세력, 탈취도시수, 탈취도시수고정)
+
+SIF 탈취도시수 <= 0
+	RETURN -1
+
+;국가색은 함수에서 자동 결정
+
+;플레이어의 태도를 플레이어 대응에 격납
+플레이어대응 = 대응_무관계
+
+;플레이어가 배반자의 소속국가의 군주가 아니고, 한편 배반자의 동료이다
+IF 배반전군주 != MASTER && CFLAG:MASTER:소속 == CFLAG:(배반자):소속 && !이벤트발생금지
+	CALL NPC_INDEPENDENCE_EVENT(배반자, 배반전군주, 신세력)
+	SIF RESULT == -1
+		RETURN
+	플레이어대응 = RESULT
+ENDIF
+
+
+CALL SINGLE_DRAWLINE
+CALL COLOR_PRINTW(@"%NAME_FORMAL(배반자)%가 군사를 일으킴 해, %NAME_FORMAL(배반전군주)%의 세력으로부터 독립했습니다!", 칼라_경고)
+
+신세력칼라 = CHARA_COUNTRY_COLOR(배반자)
+
+COUNTRY_COLOR:신세력 = 신세력칼라
+COUNTRY_BOSS:신세력  = GET_ID(배반자)
+CALL CHANGE_COUNTRY(배반자, 신세력, 1)
+
+INDEPENDENCE_COUNTER:신세력 = 10
+DIPLOMACY_HATE:신세력 += 10
+
+;배반원세력의 도시의 수장을 해제
+FOR LOCAL:0, 0, MAX_CITY
+	IF CITY_OWNER:(LOCAL:0) == 배반원세력
+		CITY_COMMANDER:(LOCAL:0) = 0
+	ENDIF
+NEXT
+
+;도시를 슬쩍한다
+CALL STEAL_CITIES(배반원세력, 신세력, 탈취도시수)
+
+;병력을 슬쩍한다
+CALL STEAL_SOLDIER(배반원세력, 신세력)
+
+;전혀 취할 수 없었을 때를 고려해 최저한의 용돈
+COUNTRY_SOLDIER:신세력 += MIN(DAY * 200, 5000)
+
+;무장수를 카운트 한다
+무장수 = 0
+FOR LOCAL:0, 0, CHARANUM
+	;배반원소속이 아니면 안 돼
+	SIF CFLAG:(LOCAL:0):소속 != 배반원세력
+		CONTINUE
+	;포로라면 안 돼
+	SIF CFLAG:(LOCAL:0):포로처
+		CONTINUE
+	;주인공, 배반자, 군주는 안 돼
+	SIF GROUPMATCH(LOCAL:0, MASTER, 배반자, 배반전군주)
+		CONTINUE
+	;특수 캐릭터도 안 돼
+	SIF IS_SP_CHARA(LOCAL:0)
+		CONTINUE
+	무장수 ++
+NEXT
+
+SIF 무장수 <= 0
+	GOTO STEAL_COMMANDER_END
+
+;25～50%의 무장을 빼앗는다. 최대 10
+탈취무장수 = MIN(무장수 * RAND(25, 50) / 100, 10)
+CALL FISHER_YATES_SHAFFLE(CHARANUM)
+FOR LOCAL, 0, CHARANUM
+	SIF 탈취무장수 == 0
+		BREAK
+	탈취무장 = SHAFFLE_ARRAY:LOCAL
+	;배반원소속이 아니면 안 돼
+	SIF CFLAG:(탈취무장):소속 != 배반원세력
+		CONTINUE
+	;포로라면 안 돼
+	SIF CFLAG:(탈취무장):포로처
+		CONTINUE
+	;주인공, 배반자, 군주는 안 돼
+	SIF GROUPMATCH(탈취무장, MASTER, 배반자, 배반전군주)
+		CONTINUE
+	;특수 캐릭터도 안 돼
+	SIF IS_SP_CHARA(탈취무장)
+		CONTINUE
+	;플레이어가 관계되는 경우의 함락이 끝난 캐릭터의 취급
+	IF (IS_LOVER(탈취무장) || IS_SLAVE(탈취무장) || IS_SLAVED_BY(탈취무장)) && 플레이어대응 != 대응_무관계
+		;배반하는 경우, 함락이 끝난 캐릭터는 따라 온다
+		IF 플레이어대응 == 대응_수락
+			CALL CHANGE_COUNTRY(탈취무장, 신세력, 1)
+			탈취무장수 --
+		;화나게 했을 경우는 납치해 온다
+		ELSEIF 플레이어대응 == 대응_분노
+			CALL CAPTURE(탈취무장, 신세력)
+			탈취무장수 --
+		ENDIF
+		;거부했을 경우는 아무것도 해 오지 않는다
+	;1/2의 확률로 동조 OR납치
+	ELSEIF RAND:2
+		IF REL_LIKE:탈취무장:배반전군주 - REL_HATE:탈취무장:배반전군주 > 0
+			CALL CAPTURE(탈취무장, 신세력)
+		ELSE
+			CALL CHANGE_COUNTRY(탈취무장, 신세력, 1)
+		ENDIF
+		탈취무장수 --
+	ENDIF
+NEXT
+
+$STEAL_COMMANDER_END
+
+;배반원세력의 부대를 해산
+CALL CLEAR_ALL_UNIT(배반원세력, 1)
+;사이는 아무튼, 나쁘게도 되어요
+CALL CHANGE_RELATION_C_TO_C(배반원세력, 신세력, -200, 600)
+CALL CHANGE_RELATION_C_TO_C(신세력, 배반원세력, -200, 600)
+
+
+
+;반란 세력의 도시를 표시
+FOR LOCAL:0, 0, MAX_CITY
+	IF CITY_OWNER:(LOCAL:0) == 신세력
+		PRINTFORML %GET_CITYNAME(LOCAL:0)%가 %ANAME(배반자)%의 지배하에 있었습니다
+	ENDIF
+NEXT
+;반란 세력에 흐른 인재
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):소속 == 신세력 && LOCAL:0 != 배반자
+		PRINTFORML %조사처리(ANAME(LOCAL:0),"가")% %ANAME(배반자)% 아래에 도착했습니다
+	ELSEIF CFLAG:(LOCAL:0):9 == 신세력
+		SETCOLOR 칼라_경고
+		PRINTFORML %조사처리(ANAME(LOCAL:0),"가")% %ANAME(배반자)%에 납치되었습니다
+		RESETCOLOR
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;desc  :어느 배반자가 배반 할 수 있을까의 판정
+;param :배반자
+;param :탈취 도시수:빼앗는 도시의 수(보정이 들어갈 가능성 있어)
+;param :탈취 도시수고정:빼앗는 도시의 수를 고정할까의 플래그
+;return:배반이 가능하면 1
+;-------------------------------------------------
+@CAN_INDEPENDENCE(배반자, 탈취도시수, 탈취도시수고정)
+#FUNCTION
+#DIM 배반자
+#DIM 탈취도시수
+#DIM 탈취도시수고정
+#DIM 배반전군주
+#DIM 배반원세력
+#DIM 신세력
+
+;배반 전 군주의 캐릭터 번호
+배반전군주 = GET_COUNTRY_BOSS(CFLAG:(배반자):소속)
+;배반 모토쿠니가의 번호
+배반원세력 = CFLAG:(배반자):소속
+;새로운 세력을 취득
+신세력 = GET_NEW_COUNTRY()
+
+
+;포로, 무소속이라면 안 돼
+SIF CFLAG:(배반자):포로처 || !IS_COUNTRY(CFLAG:(배반자):소속)
+	RETURNF 0
+
+;신세력을 만들 수 없다（벌써 가득）라면 안 돼
+SIF 신세력 == -1
+	RETURNF 0
+
+;배반원이 도시수 2이상인 것
+SIF GET_OWN_CITY(배반원세력) < 2
+	RETURNF 0
+
+SIF GET_OWN_CITY(배반원세력) < INDEPENDENCE_STEAL_CITY_NUM(배반원세력, 탈취도시수, 탈취도시수고정)
+	RETURNF 0
+
+RETURNF 1
+
+;-------------------------------------------------
+;desc  :독립시에 빼앗는 도시수를 결정한다
+;param :배반원세력:배반원의 세력 번호
+;param :탈취 도시수:빼앗는 도시수（보정이 들어갈 가능성이 있다）
+;param :탈취 도시수고정:빼앗는 도시수를 고정하는 플래그  세우는 경우는 호출해 옆에서 배반원의 도시수를 체크하는 것
+;return:빼앗는 도시수
+;-------------------------------------------------
+@INDEPENDENCE_STEAL_CITY_NUM(배반원세력, 탈취도시수, 탈취도시수고정)
+#FUNCTION
+#DIM 배반원세력
+#DIM 배반원세력도시수
+#DIM 탈취도시수
+#DIM 탈취도시수고정
+
+배반원세력도시수 = GET_OWN_CITY(배반원세력)
+
+;탈취 도시수고정이 서 있지 않아서, 탈취 도시수가 배반 모토쿠니가의 소유 도시수의 반이상이라면, 반에 조정한다
+SIF 배반원세력도시수 / 2 <= 탈취도시수 && !탈취도시수고정
+	탈취도시수 = 배반원세력도시수 / 2
+
+;탈취 도시수가 없는 경우, 소속 세력의 것 1/3을 가져 간다（최저 1)
+SIF 탈취도시수 == 0
+	탈취도시수 = MAX(배반원세력도시수 / 3, 1)
+
+;탈취 도시수가 배반 모토쿠니가의 소유 도시수이상이라면 그만둔다
+SIF 배반원세력도시수 <= 탈취도시수
+	RETURNf 0
+
+RETURNF 탈취도시수
+
+;-------------------------------------------------
+;desc  :배반 이벤트
+;-------------------------------------------------
+@NPC_INDEPENDENCE_EVENT(배반자, 배반전군주, 신세력)
+#DIM 배반자
+#DIM 배반전군주
+#DIM 신세력
+#DIM CONST 대응_분노 = 3
+#DIM CONST 대응_거부 = 2
+#DIM CONST 대응_수락 = 1
+#DIM CONST 대응_무관계 = 0
+
+SIF CFLAG:배반자:호감도 <= 300
+	RETURN 0
+
+;그 나름대로 사이가 좋으면 함께 오지 않을까 묻는다
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 어느 날, %ANAME(배반자)%에 갑자기 불려 갔다
+PRINTFORMW 주위 사람을 없게 함을 한 %PRONOUN(배반자)%의 방에서, %ANAME(배반자)%에 전해듣는다
+PRINTFORML
+PRINTFORML 자신은 %ANAME(배반전군주)%로부터 배반 하려고 생각하고 있다. %조사처리(ANAME(MASTER),"는")% 사용할 수 있을 것 같고, 부디 데리고 가고 싶다
+PRINTFORML 갑작스러운 이야기이고, 주군을 배반하는 것이니까 헤매겠지만, 곧 대답을 갖고 싶다
+PRINTFORMW 대답할 때까지 돌려보낼 수는 없다. %조사처리(ANAME(MASTER),"가")% %ANAME(배반전군주)%에 밀고하지 않다고도 할 수 없기 때문이다……
+PRINTFORML
+PRINTFORML 대단한 것을 (들)물어 버렸다. 이것은, 대답을 할 때까지 돌아갈 수 없을 것이다
+PRINTFORMW 향후의 어떻게 할지에게 관련되어 오는 것이다, 신중하게 선택하지 않으면……
+CALL ASK_MULTI(@"%ANAME(배반자)%에 붙는다", @"%ANAME(배반전군주)%측에 남는다", "바보 같은 (일)것은 그만두라고 설득한다")
+IF RESULT == 0
+	CALL CHANGE_COUNTRY(MASTER, 신세력, 1)
+	PRINTFORML 너라면 그렇게 말해 준다고 생각하고 있었다……%조사처리(ANAME(배반자),"는")% 흉악한 미소를 생긋 띄워 보였다
+	PRINTFORML 하고 주자, %조사처리(ANAME(배반자),"는")% %조사처리(ANAME(MASTER),"와")% 단단한 악수를 주고 받았다……
+	PRINTFORMW 어쩐지 대단한 것에 머리를 들이밀어 버린 것 같다. 괜찮을 것일까……
+	RETURN 대응_수락
+ELSEIF RESULT == 1
+	PRINTFORMW %ANAME(배반전군주)%를 배반할 수는 없는……그렇게 고하면, %조사처리(ANAME(배반자),"는")% 노골적으로 실망한 표정을 띄웠다
+	PRINTFORML 그렇다면 냉큼 나가라, 후회하지 마, 지금부터 만드는 나라는, 너의 나라 따위 눈 깜짝할 순간에 다 먹는, 그처럼 전해들었다
+	PRINTFORML 그것 뿐%조사처리(ANAME(배반자),"는")% 이쪽에 흥미를 잃었는지, 외면해 버렸다
+	PRINTFORMW 여기서 %ANAME(MASTER)%에 위해를 줄 생각은 없는 것 같지만, 다음을 만날 때는 적끼리가 될 것이다……
+	PRINTL
+	RETURN 대응_거부
+ELSEIF RESULT == 2
+	PRINTFORM 바보 같은 (일)것은 그만두어라……
+	;어떠한 당신에 대한 함락소질이 있으면 단념한다
+	IF (IS_LOVER(배반자) || IS_SLAVE(배반자) || IS_SLAVED_BY(배반자))
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")% 필사적으로 설득하면, %조사처리(ANAME(배반자),"는")% 한숨을 쉬었다
+		PRINTFORML %ANAME(MASTER)%에 그런 일을 얘기한다고는 생각하지 않았었다
+		PRINTFORML 하지만, %조사처리(ANAME(MASTER),"가")% 말하는 것을 거절하고 싶지는 않다. 어쩔 수 없기에 이번은 참는다
+		PRINTFORMW 그 대신에, 자신을 다양하게 만족시켜 주면 기쁘다……
+		PRINTFORMW 아무래도 %조사처리(ANAME(배반자),"는")% 배반을 포기해 준 것 같다……
+		RETURN -1
+	;없으면 d100가 현재의 호감도의 것 1/10보다 크면 이성을 잃는다
+	ELSEIF RAND:100 > CFLAG:(배반자):호감도 / 10
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")% 필사적으로 설득하면, %조사처리(ANAME(배반자),"는")% 이성을 잃었다
+		PRINTFORML 이니까 너에게 그런 말을 듣지 않으면 안 되는 것인지
+		PRINTFORML 그런 일이라면 %조사처리(ANAME(MASTER),"는")% 필요없다. 자신이 야기하는 선풍에 말려 들어가 사라져 버리면 된다
+		PRINTFORMW 나가라, 자신의 전부터 사라져라……
+		PRINTFORML 그렇게 말해 분노를 거두는 일 없이 %조사처리(ANAME(배반자),"는")% 당신을 방으로부터 내쫓았다
+		PRINTFORMW 다음에 %조사처리(ANAME(배반자),"와")% 만나는 것은 전장인가, 그렇지 않으면……
+		PRINTL
+		RETURN 대응_분노
+	;그렇지 않으면 보통으로 헤어진다, 더 대사는 코피페인 채로 끝내고 싶지 않았기 때문에 촐랑촐랑 바꾸어 보았다
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")% 필사적으로 설득하면, %조사처리(ANAME(배반자),"는")% 혐오의 표정을 띄웠다
+		PRINTFORML 여기에 붙을 생각이 없으면, 나가 줘
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")% %ANAME(배반전군주)%에 집착인 것은 알았다. 지금 서로 겨우 밀통하고 있는 편이 좋다……
+		PRINTFORMW 다르다, 그렇게 반론하려고 하는 것보다도 빨리%조사처리(ANAME(배반자),"는")% 말을 계속했다
+		PRINTFORMW 곧바로 자신의 나라가, 색노망 하고 있는 %ANAME(배반전군주)%와도 너희를 멸할 것이다……
+		PRINTFORML 분노의 표정을 숨기지 않는 %ANAME(배반자)%의 모습을 등에, %조사처리(ANAME(MASTER),"는")% 방에서 나갔다
+		PRINTFORMW %조사처리(ANAME(MASTER),"와")% 칼날을 섞을 때, 서로 어떠한 얼굴을 하고 있을까……
+		PRINTL
+		RETURN 대응_거부
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;범용형 랜덤 거리 강탈 후보 선택 함수
+;ARG:0 세력으로부터 독립한 ARG:1 세력이 ARG:2 도시 날치기하는 함수입니다.
+;ARG:0이 있는 1 도시를 빼앗아, 계속되어 그 도시에 연속하고 있는 ARG:0의 도시만을 빼앗습니다.
+;LOCAL 0:나머지 강탈 예정 도시수, 1:기특한 카운터군, 2:판정하는 도시 번호
+;RETURN 0:강탈할 수 있었습니다♪, 1:혹시:전부 빼앗아도 부족한가 0을 지정, 2:좀 더 이상한 뭔가가 일어났습니다
+;------------------------------------------------- 
+@STEAL_CITIES(독립원, 독립처, 탈취수)
+#DIM 독립원
+#DIM 독립처
+#DIM 탈취수
+#DIM 탈취잔수
+#DIM 도시
+#DIM 루프, 2
+#DIM 루트
+#DIM 중계점접속처
+#DIM 탈취후보
+;도시수의 체크
+SIF MATCH(CITY_OWNER, 독립원) <= 1 || 탈취수 <= 0
+	RETURN 1
+탈취잔수 = 탈취수
+;도시의 셔플
+CALL FISHER_YATES_SHAFFLE(GET_CITY_NUM())
+FOR 루프, 0, GET_CITY_NUM()
+	도시 = SHAFFLE_ARRAY:루프
+	SIF CITY_OWNER:도시 != 독립원
+		CONTINUE
+	CALL TAKEOVER_CITY_FROM_NO(독립처, 도시)
+	PRINTFORML %GET_CITYNAME(도시)%를 빼앗았습니다
+	탈취잔수 --
+	SIF 탈취잔수 == 0
+		RETURN 0
+	FOR 루트, 0, VARSIZE("CITY_ROUTE", 1)
+		SIF CITY_ROUTE:도시:루트 < 1
+			BREAK
+		;중계점
+		IF CITY_TYPE:(CITY_ROUTE:도시:루트) == 1
+			FOR 루프:1, 0, VARSIZE("CITY_ROUTE", 1)
+				중계점접속처 = CITY_ROUTE:(CITY_ROUTE:도시:루트):(루프:1)
+				SIF 중계점접속처 == CITY_ROUTE:도시:루트
+					CONTINUE
+				SIF 중계점접속처 < 1
+					BREAK
+				SIF CITY_OWNER:중계점접속처 != 독립원
+					CONTINUE
+				CALL TAKEOVER_CITY_FROM_NO(독립처, 중계점접속처)
+				PRINTFORML %GET_CITYNAME(중계점접속처)%를 빼앗았습니다
+				탈취잔수 --
+				SIF 탈취잔수 == 0
+					RETURN 0
+			NEXT
+		ELSE
+			탈취후보 = CITY_ROUTE:도시:루트
+			SIF IS_COUNTRY(CITY_OWNER:탈취후보) && GET_OWN_CITY(CITY_OWNER:탈취후보) > 1
+				CONTINUE
+			CALL TAKEOVER_CITY_FROM_NO(독립처, 탈취후보)
+			탈취잔수 --
+			SIF 탈취잔수 == 0
+				RETURN 0
+		ENDIF
+	NEXT
+	RETURN 1
+NEXT
+;보통 여기까지 오지 않습니다만 만약을 위해
+RETURN 2
+
+
+;-------------------------------------------------
+;병력 탈취 함수
+;호출한 시점에서 독립원과 독립처는 군주, 도시가 정해져 있을 필요가 있다
+;------------------------------------------------- 
+@STEAL_SOLDIER(독립원, 독립처)
+#DIM 독립원
+#DIM 독립처
+#DIM 독립원병수
+#DIM 독립전군주
+#DIM 독립선군주
+#DIM 독립원도시수
+#DIM 독립처도시수
+#DIM 도시수비
+#DIM 능력비
+#DIM 병수비
+#DIM 독립처획득병수
+독립전군주 = GET_COUNTRY_BOSS(독립원)
+독립선군주 = GET_COUNTRY_BOSS(독립처)
+
+독립원도시수 = GET_OWN_CITY(독립원)
+독립처도시수 = GET_OWN_CITY(독립처)
+
+독립원병수 = GET_SUM_SOLDIER(독립원)
+
+도시수비 = LIMIT(독립처도시수 * 100 / 독립원도시수, 50, 150)
+능력비 = LIMIT((ABL:독립선군주:지략 + ABL:독립선군주:정치) * 100 / (ABL:독립전군주:지략 + ABL:독립전군주:정치), 50, 150)
+
+병수비 = (도시수비 + 능력비) / 2
+
+독립처획득병수 = MIN(독립원병수, 독립원병수 * 병수비 / (병수비 + 100))
+
+CALL SHIFT_SOLDIER(독립원, 독립처, 독립처획득병수)
+
+RETURN 1

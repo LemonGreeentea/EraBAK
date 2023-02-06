@@ -1,0 +1,777 @@
+﻿;전반적으로 사용하는 변수를 정의(SLG 부분만으로 사용하는 변수는 SLG\SLG_VARIABLE.ERH 에)
+
+;-------------------------------------------------
+;■시스템에 관한 변수
+;-------------------------------------------------
+;거점 화면의 TIME 최대치(가변에는 하고 낮추고)
+;#DIM PHASE_BASE = 2
+
+;조교의 행해지고 있는 장소
+#DIMS TRAIN_PLACE
+
+;멀티 타겟, 타겟을 복수 취하기 위해서(때문에) 도입하는 변수
+;※타겟을 추가·삭제할 때는 반드시 ADD_MTAR, DEL_MTAR 함수를 사용하는 것
+#DIM MTAR, 100
+
+;현재의 타겟수
+#DIM MTAR_NUM
+
+;멀티 플레이어, 플레이어를 복수 취하기 위해서(때문에) 도입하는 변수
+;※플레이어를 추가·삭제할 때는 반드시 ADD_MPLY, DEL_MPLY 함수를 사용하는 것
+#DIM MPLY, 100
+
+;현재의 플레이어수
+#DIM MPLY_NUM
+
+;포로 조교의 타겟
+#DIM SAVEDATA PRISONER_TARGET, 3
+
+;선택한 등록 캐릭터 ID
+#DIM MASTER_ID
+
+;USERCOM로 사용하는 커맨드 리스트
+#DIM COM_LIST, 1000
+
+;이것이 0이라면 모든 커맨드가 무효가 된다(USERCOM에 있어서의 커맨드의 자동 표시·실행을 방지)
+#DIM COM_ENABLE
+
+;절정/사정 삽화 지정
+#DIM SEX_STATE
+
+;삽입중 애니메이션 지속 여부 체크
+#DIM CONST 아니메필터_삽입 = 1p0
+
+;이번 선택한 커맨드의 명칭
+#DIMS SELECTCOM_NAME
+
+;전회 선택한 커맨드의 명칭
+#DIMS PREVCOM_NAME
+
+;COS의 값을 보존하는 함수(처리의 고속화를 위해 사전에 계산)
+#DIM COS_LIST, 360
+
+;SHOP 화면에 있어서의 캐릭터의 표시순서
+#DIM SHOP_CHARA_LIST, 3000
+
+;각각 이번·전회의 커맨드의 실행 상태(0=주인공이 플레이어, 1=주인공이 타겟, 2=어느 쪽도 아니다)
+#DIM SELECTCOM_TYPE
+#DIM PREVCOM_TYPE
+
+;각각 능력치의 최소와 최대를 정의하는 변수
+#DIM ABL_MIN, 100
+#DIM ABL_MAX, 100
+
+;각 커맨드를 실행한 회수
+;0～999=플레이어 1000～1999=타겟 2000-2999=제삼자
+#DIM SAVEDATA CHARADATA COM_EXP, 3000
+
+;각 커맨드의 지식
+#DIM SAVEDATA CHARADATA COM_KNOWLEDGE, 1000
+
+;각 커맨드의 기호도(0～3, 높을 정도 중독충족＋＆맡김 실행율 업)
+;0～999=플레이어 1000～1999=타겟 2000-2999=제삼자
+#DIM SAVEDATA CHARADATA COM_TENDENCY, 3000
+
+;기후 보존
+#DIM SAVEDATA WEATHERNUM
+;기후 보존(캐릭터 라인) WEATHER는 장래적으로 삭제 예정 DISPLAY_WEATHER 사용 추천
+#DIMS SAVEDATA WEATHER
+
+;커맨드가 어느 타이밍에 사용할 수 있는지를 나타내는 정수
+#DIM 커맨드_우후후 = 0
+#DIM 커맨드_일상   = 1
+#DIM 커맨드_육아   = 2
+#DIM 커맨드_공통   = 3
+
+;성적 기호의 값이 어떤 기호를 나타내는지를 대응 짓는 정수
+
+#DIM SAVEDATA CHARADATA SEXUAL_PREFERENCE
+;유무를 비트 연산으로 처리하므로 64 만큼 확보
+#DIM SAVEDATA CHARADATA SEXUAL_PREFERENCE_EXP, 64
+
+#DIM CONST 성적기호_애무하고싶다 = 0
+#DIM CONST 성적기호_봉사하고싶다 = 1
+#DIM CONST 성적기호_성교하고싶다 = 2
+#DIM CONST 성적기호_도구를사용하고싶다 = 3
+#DIM CONST 성적기호_학대하고싶다 = 4
+#DIM CONST 성적기호_욕보이고싶다 = 5
+#DIM CONST 성적기호_촉수로범하고싶다 = 6
+#DIM CONST 성적기호_애무되고싶다 = 7
+#DIM CONST 성적기호_봉사되고싶다 = 8
+#DIM CONST 성적기호_성교되고싶다 = 9
+#DIM CONST 성적기호_도구를사용되고싶다 = 10
+#DIM CONST 성적기호_시달리고싶다 = 11
+#DIM CONST 성적기호_욕보여지고싶다 = 12
+#DIM CONST 성적기호_촉수로범해지고싶다 = 13
+#DIM CONST 성적기호_속박되고싶다 = 14
+#DIM CONST 성적기호_짐승과사귀고싶다 = 15
+#DIM CONST 성적기호_노출하고싶다 = 16
+#DIM CONST 성적기호_최면을걸쳐지고싶다 = 17
+#DIM CONST 성적기호_매춘하고싶다 = 18
+#DIM CONST 성적기호_촬영되고싶다 = 19
+#DIM CONST 성적기호_더럽혀지고싶다 = 20
+#DIM CONST 성적기호_조교되고싶다 = 21
+#DIM CONST 성적기호_윤간되고싶다 = 22
+#DIM CONST 성적기호_임신하고싶다 = 23
+#DIM CONST 성적기호_근친상간하고싶다 = 24
+#DIM CONST 성적기호_동성과사귀고싶다 = 25
+{
+	#DIMS CONST SEXUAL_PREFERENCE_STR = 
+		"애무하고싶다", "봉사하고싶다", "성교하고싶다", "도구를사용하고싶다", "학대하고싶다", 
+		"욕보이고싶다", "촉수로범하고싶다", "애무되고싶다", "봉사되고싶다", "성교되고싶다", 
+		"도구를사용되고싶다", "시달리고싶다", "욕보여지고싶다", "촉수로범해지고싶다", "속박되고싶다", 
+		"짐승과사귀고싶다", "노출하고싶다", "최면을걸쳐지고싶다", "매춘하고싶다", "촬영되고싶다", "더럽혀지고싶다", 
+		"조교되고싶다", "윤간되고싶다", "임신하고싶다", "근친상간하고싶다", "동성과사귀고싶다"
+		
+}
+
+
+;일상 국면의 커맨드 실행 회수
+#DIM SAVEDATA SHOP_TIME, 1
+
+;일상 국면의 노동 실행 회수
+#DIM SAVEDATA SHOP_WORK_COUNT, 1
+
+;배열의 read순서를 랜덤으로 하기 위한 배열. FISHER_YATES_SHAFFLE에서 셔플 합니다
+#DIM SHAFFLE_ARRAY, 5000
+
+;SELECT_CHARA_LIST_MULTI로 이용한다
+#DIM SELECTED_CHARA, 3000
+#DIM SELECTED_CHARA_NUM
+
+;제일 긴 이름의 길이를 의미하는 정수  우선 이름의 길이로 표시가 무너지고 있는 것을 찾아내면 이것에 옮겨놓아 보자
+#DIM CONST MAX_CHARANAME_LENGTH = STRLENS("스타사파이어")
+
+;「위안할당」시, 호감도든지 종속도든지를 대피 하게 하는 영역.
+#DIM TMP_MASTER
+#DIM TMP_참가자, 10
+#DIM TMP_호감도, 10
+#DIM TMP_종속도, 10
+#DIM TMP_의존도, 10
+
+#DIM 랭크역치, 4, 9
+#DIM CONST 랭크_무 = 8
+#DIM CONST 랭크_G = 7
+#DIM CONST 랭크_F = 6
+#DIM CONST 랭크_E = 5
+#DIM CONST 랭크_D = 4
+#DIM CONST 랭크_C = 3
+#DIM CONST 랭크_B = 2
+#DIM CONST 랭크_A = 1
+#DIM CONST 랭크_S = 0
+#DIM CONST 랭크_ＳＬＧ = 0
+#DIM CONST 랭크_그외 = 1
+#DIM CONST 랭크_부대 = 2
+#DIM CONST 랭크_성지식 = 3
+#DIMS CONST 랭크문자열 = "S", "A", "B", "C", "D", "E", "F", "G", "-"
+
+;퍼스트 키스, 처녀, 동정을 빼앗은 상대를 기록
+#DIMS SAVEDATA CHARADATA SEXUAL_EXPERIENCE, 4
+#DIMS SAVEDATA CHARADATA SEXUAL_LAST_EXPERIENCE, 4
+#DIM CONST 첫체험_키스 = 0
+#DIM CONST 첫체험_동정 = 1
+#DIM CONST 첫체험_처녀 = 2
+#DIM CONST 첫체험_애널처녀 = 3
+
+#DIMS SAVEDATA CHARADATA SEXUAL_EXPERIENCE_SITUATION, 4
+#DIMS SAVEDATA CHARADATA SEXUAL_LAST_EXPERIENCE_SITUATION, 4
+
+;도박장의 자금
+#DIM SAVEDATA GAMBLE_MONEY
+
+#DIM CONST CUM_SLOT_NUM = 15
+;사정 부위
+#DIM CONST 사정부위_낭비 = 0
+#DIM CONST 사정부위_질내 = 1
+#DIM CONST 사정부위_애널 = 2
+#DIM CONST 사정부위_손 = 3
+#DIM CONST 사정부위_입 = 4
+#DIM CONST 사정부위_가슴 = 5
+#DIM CONST 사정부위_다리 = 6
+#DIM CONST 사정부위_꼬리 = 7
+#DIM CONST 사정부위_얼굴 = 8
+#DIM CONST 사정부위_머리카락 = 9
+#DIM CONST 사정부위_겨드랑이 = 10
+#DIM CONST 사정부위_엉덩이 = 11
+#DIM CONST 사정부위_오나홀 = 12
+#DIM CONST 사정부위_촉수 = 13
+#DIM CONST 사정부위_고무 = 14
+
+;그 조교로 사정된 회수
+#DIM CHARADATA CUM_GET_COUNT, CUM_SLOT_NUM
+
+;그 조교로 사정한 회수
+#DIM CHARADATA CUM_TO_COUNT, CUM_SLOT_NUM
+
+{
+	#DIMS CONST CUM_SLOT_NAME = 
+	"허공", "질내", "애널", "손", "입", "가슴", "발", "꼬리", "얼굴", "머리카락", "겨드랑이", "엉덩이", "오나홀", "촉수", "고무"
+}
+
+;0=몸(지정 없음) 1=질내 2=애널 3=손 4=입 5=가슴 6=발 7=꼬리 8=얼굴 9=머리카락 10=겨드랑이 11=엉덩이 12=오나홀 13=촉수 14 =고무
+
+;오토 세이브 영역
+#DIM CONST AUTOSAVE_DOMAIN_NUM = 5
+#DIM GLOBAL SAVEDATA AUTOSAVE_DOMAIN
+
+;마지막에 사용한 세이브 데이터의 페이지
+#DIM GLOBAL SAVEDATA SAVELOAD_LASTPAGE
+
+;EVENTTRAINC로 부르는 함수를 지정한다
+#DIMS EVENTTRAIN_CALLEE, 10
+#DIM EVENTTRAIN_CALLEE_NUM
+
+;EVENTEND로 부르는 함수를 지정한다
+#DIMS EVENTEND_CALLEE, 10
+#DIM EVENTEND_CALLEE_NUM
+
+;SHOW_INFO의 접이를 지정
+#DIM SHOW_INFO_FOLD
+
+#DIM CONST MEET_MAX_CANDIDATES = 5
+#DIM SAVEDATA MEET_CANDIDATES, MEET_MAX_CANDIDATES
+#DIM SAVEDATA MEET_CANDIDATES_REST_TURN
+;-------------------------------------------------
+;■계속 상태에 관한 변수
+;-------------------------------------------------
+;계속 상태에 관한 최대수
+#DIM CONST MAX_MEQUIP = 50
+#DIM CONST MAX_MEQUIP_PLAYER = 10
+#DIM CONST MAX_MEQUIP_TARGET = 10
+
+;계속 상태의 종류
+#DIM MEQUIP, MAX_MEQUIP
+
+;계속 상태의 수
+#DIM MEQUIP_NUM
+
+;계속 상태의 플레이어와 그 수
+#DIM MEQUIP_PLAYER, MAX_MEQUIP, MAX_MEQUIP_PLAYER
+#DIM MEQUIP_PLAYER_NUM, MAX_MEQUIP
+
+;계속 상태의 타겟과 그 수
+#DIM MEQUIP_TARGET, MAX_MEQUIP, MAX_MEQUIP_TARGET
+#DIM MEQUIP_TARGET_NUM, MAX_MEQUIP
+
+;계속 상태의 커맨드로 주도권을 잡고 있던 녀석
+#DIM MEQUIP_INITIATIVE, MAX_MEQUIP
+
+;계속 상태의 지문 컷 플래그
+#DIM MEQUIP_CUT, MAX_MEQUIP
+
+;계속 상태가 세트 되고 나서의 턴수
+#DIM MEQUIP_TURN, MAX_MEQUIP
+
+;소스를 일시적으로 보존하는 변수
+#DIM CHARADATA MEMORY_SOURCE, 100
+
+;-------------------------------------------------
+;■설정에 관한 변수
+;-------------------------------------------------
+;콘피그 설정
+;0～299:일반  300～499:SLG 관계  500～:예비
+#DIM SAVEDATA CONFIG, 1000
+
+;커맨드 필터
+#DIM SAVEDATA COM_FILTER, 1000
+
+;콘피그 설정의 보존용 변수
+#DIM GLOBAL SAVEDATA G_CONFIG, 5, 1000
+
+;커맨드 필터·계속 필터의 보존용 변수
+#DIM GLOBAL SAVEDATA G_FILTER, 5, 1000
+
+;콘피그 설정 세이브 데이터의 명칭 설정
+#DIMS GLOBAL SAVEDATA G_CONFIG_NAME, 5
+
+;-------------------------------------------------
+;■ 아이템에 관한 변수
+;-------------------------------------------------
+; 아이템 개발에 필요한 기간
+#DIM ITEMTERM, 1000
+
+;현재의 아이템 개발 기간
+#DIM SAVEDATA ITEMTIME, 1000
+
+;-------------------------------------------------
+;■캐릭터 사이의 관계를 나타내는 변수
+;-------------------------------------------------
+;캐릭터 사이의 호감도
+#DIM CHARADATA SAVEDATA REL_LIKE, 3000
+
+;캐릭터 사이의 적대도
+#DIM CHARADATA SAVEDATA REL_HATE, 3000
+
+;※REL_LIKE, REL_HATE는 캐릭터 번호로 관리하기 위해(때문에), 캐릭터의 소트나 삭제에 동기 해 변경할 필요 있어
+
+;자진의 포로가 아닌 특수 상태가 아닌 호감도·의존도·종속도의 합계치가 높게 맹세가 있는 멤버를 늘어놓는 배열
+;0 = 줄 순서 1 = 캐릭터 등록 번호 2 = 호감도+의존도+종속도
+#DIM BESTMENBER, 3, 10
+;-------------------------------------------------
+;■등록 캐릭터에 관한 변수
+;-------------------------------------------------
+#DIM CONST MAX_MASTER = 30
+#DIM GLOBAL SAVEDATA MASTER_MAXBASE, MAX_MASTER, 100
+#DIM GLOBAL SAVEDATA MASTER_ABL, MAX_MASTER, 100
+#DIM GLOBAL SAVEDATA MASTER_EXP, MAX_MASTER, 100
+#DIM GLOBAL SAVEDATA MASTER_TALENT, MAX_MASTER, 1000
+#DIMS GLOBAL SAVEDATA MASTER_NAME, MAX_MASTER, 15
+#DIM GLOBAL SAVEDATA MASTER_NAMETYPE, MAX_MASTER
+;임신한 아이의 부친의 이름의 기록에 사용하는 변수
+
+;-------------------------------------------------
+;■색에 관한 정수
+;-------------------------------------------------
+;폐지되었습니다. _FUNCTION.ERB내@COLOR로 이동하고 있습니다.
+
+;-------------------------------------------------
+;■매크로
+;-------------------------------------------------
+
+;============================================================================== 
+;◆표시 정형용
+;============================================================================== 
+;실행 판정식을 보존한다
+#DIMS EXECUTION
+
+;이름 표시제플래그
+#DIM DISPLAYNAME
+
+;단락선·개행 표시제플래그
+#DIM DISPLAYLINE
+
+;클릭 표시제플래그
+#DIM DISPLAYWAIT
+
+
+;-------------------------------------------------
+;■숍에 관한 정수
+;-------------------------------------------------
+;전략 화면의 맵 부분의 높음
+#DIM CONST MENU_HEIGHT = 27
+;숍에서 묘화 하는 행수
+#DIM CONST LINES_SHOP_DRAW = MENU_HEIGHT + 11
+;숍에서 소거하는 행수
+#DIM LINES_SHOP
+
+;전략 화면에서 이용하는 행수
+#DIM MAP_LINES
+;숍에서 이용할 수 있는 항목
+#DIM SHOP_AVAIL, 100
+
+;조교시에 삭제하는 행수
+#DIM LINES_TRAIN
+;-------------------------------------------------
+;■소질에 관한 변수와 정수
+;-------------------------------------------------
+;소질 피어스와 피어스구멍의, 장착 개소에 대한 대응 비트를 나타내는 정수
+#DIM CONST 피어스_코 = 0
+#DIM CONST 피어스_귀 = 1
+#DIM CONST 피어스_혀 = 2
+#DIM CONST 피어스_유두 = 3
+#DIM CONST 피어스_배꼽 = 4
+#DIM CONST 피어스_클리토리스 = 5
+#DIM CONST 피어스_음순 = 6
+#DIM CONST 피어스_페니스 = 7
+
+#DIM CONST 피어스_최대비트 = 7
+
+;소질 음모의, 값에 대한 상황의 대응을 나타내는 정수
+#DIM CONST 음모_백보지 = -1
+#DIM CONST 음모_깔끔 = 0
+#DIM CONST 음모_손질됨 = 1
+#DIM CONST 음모_솜털 = 2
+#DIM CONST 음모_살짝 = 3
+#DIM CONST 음모_표준 = 4
+#DIM CONST 음모_많은 = 5
+#DIM CONST 음모_주렁주렁 = 6
+#DIM CONST 음모_무식하게 = 7
+#DIM CONST 음모_강모 = 8
+#DIM CONST 음모_항문에난털 = 9
+#DIM CONST 음모_하트형 = 10
+
+;소질 겨드랑이털의, 값에 대한 상황의 대응을 나타내는 정수
+#DIM CONST 겨드랑이털_제모완료 = -1
+#DIM CONST 겨드랑이털_깔끔 = 0
+#DIM CONST 겨드랑이털_손질됨 = 1
+#DIM CONST 겨드랑이털_솜털 = 2
+#DIM CONST 겨드랑이털_살짝 = 3
+#DIM CONST 겨드랑이털_보통 = 4
+#DIM CONST 겨드랑이털_많은 = 5
+#DIM CONST 겨드랑이털_주렁주렁 = 6
+#DIM CONST 겨드랑이털_무식하게 = 7
+#DIM CONST 겨드랑이털_강모 = 8
+#DIM CONST 겨드랑이털_밀림 = 9
+
+#DIMS CHARADATA SAVEDATA  TATTOO, 10
+#DIM CONST 문신_이마 = 0
+#DIM CONST 문신_뺨 = 1
+#DIM CONST 문신_어깨 = 2
+#DIM CONST 문신_가슴 = 3
+#DIM CONST 문신_등 = 4
+#DIM CONST 문신_배 = 5
+#DIM CONST 문신_비부 = 6
+#DIM CONST 문신_엉덩이 = 7
+#DIM CONST 문신_넙적다리 = 8
+#DIM CONST 문신_발목 = 9
+
+#DIMS TATTOO_SAMPLE_LIST_COMMON, 200
+#DIMS TATTOO_SAMPLE_LIST, 10, 200
+#DIM TATTOO_SAMPLE_ADDRESS, 10
+#DIM TATTOO_SAMPLE_COMMON_ADDRESS
+
+
+;조임계
+#DIM CONST 조임_최고치 = 1000
+#DIM CONST 조임_꽉닫힘 = 900
+#DIM CONST 조임_꽉조임  = 800
+#DIM CONST 조임_빡빡함 = 700
+#DIM CONST 조임_명기 = 600
+#DIM CONST 조임_보통 = 500
+#DIM CONST 조임_느슨한 = 400
+#DIM CONST 조임_느슨느슨 = 300
+#DIM CONST 조임_뻐끔뻐끔 = 200
+#DIM CONST 조임_헐렁헐렁 = 100
+#DIM CONST 조임_최저치 = 0
+
+#DIM CONST 동물_개 = 1
+#DIM CONST 동물_돼지 = 2
+#DIM CONST 동물_말 = 3
+#DIM CONST 동물_원숭이 = 4
+
+;============================================================================== 
+;◆함락 조건에 관한 변수(Kh)
+;============================================================================== 
+;삼종의 스테이터스#M를 MAX로 판정하고 있을 때는 루트 A를 기준으로 하고 있으므로
+;메인 스테이터스#M(연모라면 호감도·복종이라면 종속도)는 같은 값으로 할 필요 있어
+
+;함락 루트 A(연모계) 천함락
+;연모 획득 조건……호감도
+#DIM KANNRAKU_LV1_A2 = 2000
+;연모 획득 조건……의존도
+#DIM KANNRAKU_LV1_A3 = 300
+;연모 획득 조건……종속도
+#DIM KANNRAKU_LV1_A4 = 0
+;연모 획득 조건……지배도
+#DIM KANNRAKU_LV1_A5 = 0
+
+;함락 루트 A(연모계) 심함락(천함락의 10배)
+;친애 획득 조건……호감도
+#DIM KANNRAKU_LV2_A2 = 20000
+;친애 획득 조건……의존도
+#DIM KANNRAKU_LV2_A3 = 5000
+;친애 획득 조건……종속도
+#DIM KANNRAKU_LV2_A4 = 0
+;친애 획득 조건……지배도
+#DIM KANNRAKU_LV2_A5 = 0
+
+;함락 루트 B(주인계) 천함락
+;주인 획득 조건……호감도
+#DIM KANNRAKU_LV1_B2 = 0
+;주인 획득 조건……의존도
+#DIM KANNRAKU_LV1_B3 = 300
+;주인 획득 조건……종속도
+#DIM KANNRAKU_LV1_B4 = 0
+;주인 획득 조건……지배도
+#DIM KANNRAKU_LV1_B5 = 1500
+
+;함락 루트 B(주인계) 심함락(천함락의 6.6배)
+;소유자 획득 조건……호감도
+#DIM KANNRAKU_LV2_B2 = 0
+;소유자 획득 조건……의존도
+#DIM KANNRAKU_LV2_B3 = 3000
+;소유자 획득 조건……종속도
+#DIM KANNRAKU_LV2_B4 = 0
+;소유자 획득 조건……지배도
+#DIM KANNRAKU_LV2_B5 = 10000
+
+;함락 루트 C(복종계) 천함락
+;복종 획득 조건……호감도
+#DIM KANNRAKU_LV1_C2 = 0
+;복종 획득 조건……의존도
+#DIM KANNRAKU_LV1_C3 = 300
+;복종 획득 조건……종속도
+#DIM KANNRAKU_LV1_C4 = 1500
+;복종 획득 조건……지배도
+#DIM KANNRAKU_LV1_C5 = 0
+
+;함락 루트 C(복종계) 심함락(천함락의 6.6배)
+;예속 획득 조건……호감도
+#DIM KANNRAKU_LV2_C2 = 0
+;예속 획득 조건……의존도
+#DIM KANNRAKU_LV2_C3 = 3000
+;예속 획득 조건……종속도
+#DIM KANNRAKU_LV2_C4 = 10000
+;예속 획득 조건……지배도
+#DIM KANNRAKU_LV2_C5 = 0
+
+;-------------------------------------------------
+;■특수 세력에 관한 변수
+;-------------------------------------------------
+;#DIM CONST 특수 세력_도둑 = 0
+;#DIM CONST 특수 세력_외래인 = 1
+;#DIM CONST 특수 세력_홉고블린 = 2
+;#DIM CONST 특수 세력_촉수 = 3
+
+;#DIM CONST 특수 세력_도둑 = 1
+;#DIM CONST 특수 세력_외래인 = 2
+;#DIM CONST 특수 세력_홉고블린 = 3
+;#DIM CONST 특수 세력_촉수 = 4
+
+
+#DIM CONST 소질_음란_음란 = 0
+#DIM CONST 소질_음란_음핵 = 1
+#DIM CONST 소질_음란_음호 = 2
+#DIM CONST 소질_음란_항문광 = 3
+#DIM CONST 소질_음란_음유 = 4
+#DIM CONST 소질_음란_키스마 = 5
+#DIM CONST 소질_음란_사정광 = 6
+#DIM CONST 소질_음란_새드 = 7
+#DIM CONST 소질_음란_마조 = 8
+#DIM CONST 소질_음란_암캐 = 9
+#DIM CONST 소질_음란_정액변소 = 10
+#DIM CONST 소질_음란_모판 = 11
+#DIM CONST 소질_음란_약물중독 = 12
+#DIM CONST 소질_음란_창녀 = 13
+#DIM CONST 소질_음란_노콘섹스중독 = 14
+#DIM CONST 소질_음란_임신하고싶어함 = 15
+#DIM CONST 소질_음란_ＡＶ여배우 = 16
+#DIM CONST 소질_음란_노출광 = 17
+#DIM CONST 소질_음란_양질모태 = 18
+#DIM CONST 소질_음란_진한정액 = 19
+#DIM CONST 소질_음란_꼭두각시 = 20
+#DIM CONST 소질_음란_바람기버릇 = 21
+{
+#DIMS CONST SEX_TALENT_NAME = 
+"음란",	"음핵",	"음호",	"항문광", "음유",
+"키스마", "사정광", "새드", "마조", "암캐",
+"정액변소", "모판", "약물 중독", "창녀", "노콘섹스중독",
+"임신하고싶어함", "ＡＶ여배우", "노출광", "양질모태", "진한정액",
+"꼭두각시", "바람기버릇"
+}
+
+
+
+;-------------------------------------------------
+;■처녀라든지의 상실에 관한 정수
+;-------------------------------------------------
+{
+#DIMS CONST LOST_SITUATION = 
+"",		"화간",	"조교",	"강간",	"윤간",
+"매춘",	"난교",	"최면",	"세뇌",	"도구",
+"외교"
+}
+
+#DIM CONST 상실_화간 = 1
+#DIM CONST 상실_조교 = 2
+#DIM CONST 상실_강간 = 3
+#DIM CONST 상실_윤간 = 4
+#DIM CONST 상실_매춘 = 5
+#DIM CONST 상실_난교 = 6
+#DIM CONST 상실_최면 = 7
+#DIM CONST 상실_세뇌 = 8
+#DIM CONST 상실_도구 = 9
+#DIM CONST 상실_외교 = 10
+
+#DIM CONST 조교_만난다 = 0
+#DIM CONST 조교_침실 = 1
+#DIM CONST 조교_포로조교 = 2
+#DIM CONST 조교_육아 = 3
+#DIM CONST 조교_역조교특수 = 4
+#DIM CONST 조교_역조교통상 = 5
+#DIM CONST 조교_포로회화 = 6
+#DIM CONST 조교_위안 = 7
+
+{
+#DIMS CONST IAN_PLACE = 
+"slum" , "거리의 광장", "상급 거주구"       , "요괴의산" , "구지옥" , "대나무숲" ,
+"도둑의 아지트"       , "아이들의 비밀기지" , "병사"    , "개 축사" ,"축사"     ,
+"마계" , "요정의숲"   , "피안"  , "홍마관"  , "달궁전"   , "천계"   , "호수"    , "숲"
+}
+#DIM CONST 위안_행선지_slum             = 0
+#DIM CONST 위안_행선지_일반주택가         = 1
+#DIM CONST 위안_행선지_귀족의거주지       = 2
+#DIM CONST 위안_행선지_요괴의산           = 3
+#DIM CONST 위안_행선지_구지옥             = 4
+#DIM CONST 위안_행선지_대나무숲               = 5
+#DIM CONST 위안_행선지_도둑의아지트       = 6
+#DIM CONST 위안_행선지_아이들의비밀기지 = 7
+#DIM CONST 위안_행선지_병사               = 8
+#DIM CONST 위안_행선지_개축사               = 9
+#DIM CONST 위안_행선지_축사               = 10
+#DIM CONST 위안_행선지_마계               = 11
+#DIM CONST 위안_행선지_마법의숲           = 12
+#DIM CONST 위안_행선지_피안               = 13
+#DIM CONST 위안_행선지_홍마관             = 14
+#DIM CONST 위안_행선지_달궁전             = 15
+#DIM CONST 위안_행선지_천계               = 16
+#DIM CONST 위안_행선지_호수                 = 17
+#DIM CONST 위안_행선지_숲                 = 18
+
+#DIM CONST 위안_캐릭터_민           = 1
+#DIM CONST 위안_캐릭터_빈민         = 2
+#DIM CONST 위안_캐릭터_부랑자       = 3
+#DIM CONST 위안_캐릭터_건달     = 4
+#DIM CONST 위안_캐릭터_부호         = 5
+#DIM CONST 위안_캐릭터_귀족         = 6
+#DIM CONST 위안_캐릭터_자산가       = 7
+#DIM CONST 위안_캐릭터_텐구         = 8
+#DIM CONST 위안_캐릭터_갓파         = 9
+#DIM CONST 위안_캐릭터_오니           = 10
+#DIM CONST 위안_캐릭터_요괴         = 11
+#DIM CONST 위안_캐릭터_노출광       = 12
+#DIM CONST 위안_캐릭터_토끼           = 13
+#DIM CONST 위안_캐릭터_도둑         = 14
+#DIM CONST 위안_캐릭터_아이         = 15
+#DIM CONST 위안_캐릭터_병사         = 16
+#DIM CONST 위안_캐릭터_개           = 17
+#DIM CONST 위안_캐릭터_돼지           = 18
+#DIM CONST 위안_캐릭터_악마         = 19
+#DIM CONST 위안_캐릭터_요정         = 20
+#DIM CONST 위안_캐릭터_사신         = 21
+#DIM CONST 위안_캐릭터_유령         = 22
+#DIM CONST 위안_캐릭터_홉고블린 = 23
+#DIM CONST 위안_캐릭터_월인         = 24
+#DIM CONST 위안_캐릭터_달토끼         = 25
+#DIM CONST 위안_캐릭터_천인         = 26
+#DIM CONST 위안_캐릭터_바람둥이     = 27
+#DIM CONST 위안_캐릭터_말           = 28
+#DIM CONST 위안_캐릭터_원숭이           = 29
+{
+#DIMS CONST IAN_SPERM_ARRAY = 
+"더미", "민"   , "빈민"   , "부랑자"   , "건달" , "부호" , "귀족" , "자산가"   , "텐구" , "갓파" ,
+"오니", "요괴" , "노출광" , "토끼"     , "도둑" , "아이" , "병사" , "개"       , "돼지" , "악마" ,
+"요정", "사신" , "유령"   , "홉고블린" , "월인" , "달토끼", "천인" , "바람둥이" , "말"   , "원숭이"
+}
+
+;-------------------------------------------------
+;랜덤 캐릭터·아이에게 관한 정수
+;-------------------------------------------------
+#DIM CONST MAX_FIXED_CHARA = 500
+#DIM CONST MIN_NO_RANDOM_CHARA = 500
+#DIM CONST MAX_RANDOM_CHARA = 750
+#DIM CONST MIN_NO_CHILD = 1250
+#DIM CONST MAX_CHILD = 750
+#DIM CONST MIN_NO_SP_CHARA = 2000
+
+
+;-------------------------------------------------
+;태그에 관한 변수·정수
+;-------------------------------------------------
+#DIM CONST MAX_TAG = 10
+#DIM SAVEDATA CHARADATA TAG, MAX_TAG
+#DIM CONST 태그_인간 = 0
+#DIM CONST 태그_인외 = 1
+#DIM CONST 태그_요괴 = 2
+#DIM CONST 태그_요정 = 3
+#DIM CONST 태그_마법사 = 4
+#DIM CONST 태그_흡혈귀 = 5
+#DIM CONST 태그_요수 = 6
+#DIM CONST 태그_소령 = 7
+#DIM CONST 태그_유령 = 8
+#DIM CONST 태그_망령 = 9
+#DIM CONST 태그_오니 = 10
+#DIM CONST 태그_봉래인 = 11
+#DIM CONST 태그_텐구 = 12
+#DIM CONST 태그_인형 = 13
+#DIM CONST 태그_사신 = 14
+#DIM CONST 태그_염라 = 15
+#DIM CONST 태그_신 = 16
+#DIM CONST 태그_갓파 = 17
+#DIM CONST 태그_천인 = 18
+#DIM CONST 태그_츠쿠모가미 = 19
+#DIM CONST 태그_신선 = 20
+#DIM CONST 태그_아마노자쿠 = 21
+#DIM CONST 태그_소인 = 22
+#DIM CONST 태그_달토끼 = 23
+#DIM CONST 태그_월인 = 24
+#DIM CONST 태그_원령 = 25
+#DIM CONST 태그_로보트 = 26
+#DIM CONST 태그_악마 = 27
+#DIM CONST 태그_마계인 = 28
+#DIM CONST 태그_천사 = 29
+#DIM CONST 태그_선령 = 30
+
+{
+#DIMS CONST TAG_NAME =
+"인간", "인외", "요괴","요정","마법사","흡혈귀","요수","소령","유령","망령","오니",
+"봉래인","텐구","인형","사신","염라","신","갓파","천인","츠쿠모가미","신선",
+"아마노자쿠","소인","달토끼","월인","원령","로보트","악마","마계인","천사","선령"
+}
+
+;-------------------------------------------------
+;상태에 관한 변수·정수
+;-------------------------------------------------
+#DIM CONST 특수상태_방랑 = 1
+#DIM CONST 특수상태_사망 = 2
+
+#DIM CONST 행동불능_임월 = 1
+#DIM CONST 행동불능_육아 = 2
+#DIM CONST 행동불능_상처 = 3
+#DIM CONST 행동불능_아이 = 4
+
+
+;mod variables
+#DIM SAVEDATA 소트키 = 0
+#DIM SAVEDATA 내림차순소트 = 0
+#DIM 소트키보존 = 0
+#DIM 소트순서보존 = 0
+
+#DIM CONST NUM_SORTKEY = 18
+#DIM CONST 소트_NO = 0
+#DIM CONST 소트_소속 = 1
+#DIM CONST 소트_쇼우 = 2
+#DIM CONST 소트_이름 = 3
+#DIM CONST 소트_호감도 = 4
+#DIM CONST 소트_종속도 = 5
+#DIM CONST 소트_지배도 = 6
+#DIM CONST 소트_임신 = 7
+#DIM CONST 소트_성별 = 8
+#DIM CONST 소트_안면 = 9
+
+#DIM CONST 소트_무투 = 10
+#DIM CONST 소트_방위 = 11
+#DIM CONST 소트_지략 = 12
+#DIM CONST 소트_정치 = 13
+#DIM CONST 소트_가창 = 14
+#DIM CONST 소트_요리 = 15
+#DIM CONST 소트_요술 = 16
+#DIM CONST 소트_능력4종 = 17
+#DIM CONST 소트_능력7종 = 18
+;이것들은 최후미, 통상 만질 수 없다
+#DIM CONST 소트_요바이조수 = 19
+#DIM CONST 소트_안내조수 = 20
+#DIM CONST 소트_오락담당 = 21
+{
+#DIMS CONST STR_NOW_SORTKEY =
+"NO", "소속", "★", "이름", "호감", "종속", "지배", "임신", "성별", "안면",
+"무투", "방위", "지략", "정치", "가창", "요리", "요술", "4능력", "7능력"
+}
+
+#DIM SAVEDATA ARENA_DONE
+#DIM SAVEDATA APPOINT_DONE
+
+;============================================================================== 
+;■산책 관계
+;============================================================================== 
+
+;만든 요리명
+#DIMS FOODNAME
+#DIMS 요리명
+#DIMS 접두사
+#DIM 미약플래그
+
+;============================================================================== 
+;■토벌지
+;============================================================================== 
+;토벌지의 통화(FP)
+#DIM 적NO, 21
+#DIM 토벌참가자, 5
+#DIMS 전투상태
+#DIM GAMBLE_POOL
+
+;============================================================================== 
+;■맵 폰트
+;============================================================================== 
+;맵 폰트 설정
+#DIMS 맵_폰트 = "굴림체"

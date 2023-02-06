@@ -1,0 +1,550 @@
+﻿;---------------------------------
+;지정한 이름의 패시브 스킬을 찾는다
+;---------------------------------
+@PASSIVE_SKILL_NAME_TO_ID(스킬명)
+#FUNCTION
+#DIM 발동자
+#DIMS 스킬명
+SELECTCASE 스킬명
+	CASE "초성장력"
+		RETURNF 0
+	CASE "노력가"
+		RETURNF 1
+	CASE "치료"
+		RETURNF 2
+	CASE "통찰"
+		RETURNF 3
+ENDSELECT
+
+RETURNF -1
+
+;---------------------------------
+;지정한 이름의 패시브 스킬이 있을까를 찾는다
+;---------------------------------
+@FIND_PASSIVE_SKILL(발동자, 스킬명)
+#FUNCTION
+#DIM 발동자
+#DIMS 스킬명
+#DIM 스킬ID
+#DIM 패시브
+
+스킬ID = PASSIVE_SKILL_NAME_TO_ID(스킬명)
+
+SIF 스킬ID == -1
+	THROW 해당하는 이름의 스킬 없음
+
+패시브 = FINDELEMENT(SKILL_GENRE_ENG, "PASSIVE")
+
+FOR LOCAL, 0, MAX_SKILL_SLOT
+	SIF SKILL_NO_SLOT:발동자:패시브:LOCAL == 0 && SKILL_ID_SLOT:발동자:패시브:LOCAL == 스킬ID
+		RETURNF 1
+NEXT
+RETURNF 0
+
+@FIND_GENERAL_SKILL(발동자, 스킬명)
+#DIM 발동자
+#DIMS 스킬명
+#DIM 장르
+#DIM 스킬ID
+FOR LOCAL, 0, VARSIZE("SKILL_GENRE")
+	FOR LOCAL:1, 0, MAX_SKILLS
+		TRYCCALLFORM SKILL_0_%SKILL_GENRE_ENG:LOCAL%_{LOCAL:1}_NAME
+			IF RESULTS == 스킬명
+				장르 = LOCAL
+				스킬ID = LOCAL:1
+				GOTO FOUND
+			ENDIF
+		CATCH
+			CONTINUE
+		ENDCATCH
+	NEXT
+NEXT
+
+RETURN 0
+
+$FOUND
+
+FOR LOCAL, 0, MAX_SKILL_SLOT
+	IF SKILL_NO_SLOT:발동자:장르:LOCAL == 0 && SKILL_ID_SLOT:발동자:장르:LOCAL == 스킬ID
+		RETURN 1
+	ENDIF
+NEXT
+
+RETURN 0
+
+;---------------------------------
+;SP, BASE, CAPTURE, ESCAPE 스킬 발동용
+;---------------------------------
+@SKILL_COMBAT_INVOKE(발동자, 발동번호, 장르, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상세력
+#DIM 대상부대
+
+SIF BATTLE_SKILL_SEALED:발동측:발동번호 || BATTLE_SUMMONED_CHARA:발동측:발동번호
+	RETURN 0
+
+FOR LOCAL, 0, MAX_SKILL_SLOT
+	SIF SKILL_NO_SLOT:발동자:장르:LOCAL < 0
+		CONTINUE
+	SIF SKILL_ID_SLOT:발동자:장르:LOCAL < 0
+		CONTINUE
+	CALL SKILL_COMBAT_TRY_INVOKE(발동자, 발동번호, 장르, SKILL_NO_SLOT:발동자:장르:LOCAL, SKILL_ID_SLOT:발동자:장르:LOCAL, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+NEXT
+
+;---------------------------------
+;SP, BASE, CAPTURE, ESCAPE 스킬 발동용 CAPTURE에서는 발동측이 포박측, ESCAPE에서는 발동측이 도주측
+;---------------------------------
+@SKILL_COMBAT_TRY_INVOKE(발동자, 발동번호, 장르, 스킬NO, 스킬ID, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 장르
+#DIM 스킬NO
+#DIM 스킬ID
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상세력
+#DIM 대상부대
+
+SIF BATTLE_SKILL_SEALED:발동측:발동번호
+	RETURN -1
+
+;존재 판정
+TRYCCALLFORM SKILL_{스킬NO}_%SKILL_GENRE_ENG:장르%_{스킬ID}_EXIST
+	CATCH
+		RETURN -1
+ENDCATCH
+;대상 선택
+TRYCCALLFORM SKILL_{스킬NO}_%SKILL_GENRE_ENG:장르%_{스킬ID}_SETTARGET(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+	IF !RESULT
+		RESETCOLOR
+		RETURN 0
+	ENDIF
+CATCH
+ENDCATCH
+;발동율 판정
+CALLFORM SKILL_{스킬NO}_%SKILL_GENRE_ENG:장르%_{스킬ID}_RATE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+IF RAND:1000 >= RESULT * BATTLE_SKILL_RATE:발동측:발동번호 / 100
+	RESETCOLOR
+	RETURN 0
+ENDIF
+;발동 판정
+CALLFORM SKILL_{스킬NO}_%SKILL_GENRE_ENG:장르%_{스킬ID}_CAN_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+IF !RESULT
+	RESETCOLOR
+	RETURN 0
+ENDIF
+;TRYCCALLFORM SKILL_{발동자}_%장르%_{스킬}_INVOKE_TEXT(발동자)
+;	CATCH
+CALLFORM SKILL_PRINT_INVOKE(발동자, 장르, 스킬NO, 스킬ID)
+;ENDCATCH
+CALLFORM SKILL_{스킬NO}_%SKILL_GENRE_ENG:장르%_{스킬ID}_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+RETURN RESULT
+
+
+
+
+;---------------------------------
+;스킬 발동시의 Default 지문
+;---------------------------------
+@SKILL_PRINT_INVOKE(발동자, 장르, 스킬NO, 스킬ID)
+#DIM 발동자
+#DIM 스킬NO
+#DIM 스킬ID
+#DIM 장르
+CALLFORM SKILL_{스킬NO}_%SKILL_GENRE_ENG:장르%_{스킬ID}_NAME
+PRINTFORML %ANAME(발동자)%의 스킬 「%RESULTS%」발동!
+
+;---------------------------------
+;암살의 효과용
+;---------------------------------
+@COMBAT_ASSASINATE(대상측, 대상번호)
+#DIM 대상측
+#DIM 대상번호
+BATTLE_무투:대상측:대상번호 = 0
+BATTLE_방위:대상측:대상번호 = 0
+BATTLE_지략:대상측:대상번호 = 0
+BATTLE_정치:대상측:대상번호 = 0
+BATTLE_요술:대상측:대상번호 = 0
+BATTLE_요리:대상측:대상번호 = 0
+BATTLE_가창:대상측:대상번호 = 0
+BATTLE_무투파워:대상측:대상번호 = 0
+BATTLE_방위파워:대상측:대상번호 = 0
+BATTLE_지략파워:대상측:대상번호 = 0
+BATTLE_요술파워:대상측:대상번호 = 0
+BATTLE_가창파워:대상측:대상번호 = 0
+BATTLE_요리파워:대상측:대상번호 = 0
+BATTLE_SKILL_RATE:대상측:대상번호 = 0
+BATTLE_SKILL_SEALED:대상측:대상번호 = 1
+
+;---------------------------------
+;기습의 효과용
+;---------------------------------
+@SKILL_SNEAK_ATTACK(대상측, 대상번호)
+#DIM 대상측
+#DIM 대상번호
+TIMES BATTLE_무투:대상측:대상번호, 0.875
+TIMES BATTLE_방위:대상측:대상번호, 0.875
+
+;---------------------------------
+;소환계 스킬
+;---------------------------------
+@BATTLE_SUMMON(발동측, 대상, 부대플래그)
+#DIM 발동측
+#DIM 대상
+#DIM 부대플래그
+
+FOR LOCAL:0, 0, VARSIZE("BATTLE_COMMANDER", 1)
+	SIF BATTLE_COMMANDER:발동측:LOCAL >= 0
+		CONTINUE
+	SIF 부대플래그 == 0 && BATTLE_COMMANDER_NUM:발동측 >= MAX_CITY_COMMANDER
+		BREAK
+	BATTLE_COMMANDER:발동측:LOCAL = 대상
+	BATTLE_무투:발동측:LOCAL = ABL:대상:무투
+	BATTLE_방위:발동측:LOCAL = ABL:대상:방위
+	BATTLE_지략:발동측:LOCAL = ABL:대상:지략
+	BATTLE_정치:발동측:LOCAL = ABL:대상:정치
+	BATTLE_가창:발동측:LOCAL = ABL:대상:가창
+	BATTLE_요리:발동측:LOCAL = ABL:대상:요리
+	BATTLE_요술:발동측:LOCAL = ABL:대상:요술
+	BATTLE_무투파워:발동측:LOCAL = ABL_POWER(BATTLE_무투:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
+	BATTLE_방위파워:발동측:LOCAL = ABL_POWER(BATTLE_방위:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
+	BATTLE_지략파워:발동측:LOCAL = ABL_POWER(BATTLE_지략:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
+	BATTLE_요술파워:발동측:LOCAL = ABL_POWER(BATTLE_요술:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
+	BATTLE_가창파워:발동측:LOCAL = ABL_POWER(BATTLE_가창:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
+	BATTLE_요리파워:발동측:LOCAL = ABL_POWER(BATTLE_요리:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
+	BATTLE_요술파워:발동측:LOCAL = ABL_POWER(BATTLE_요술:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
+	BATTLE_SKILL_RATE:발동측:LOCAL = 0
+	BATTLE_SUMMONED_CHARA:발동측:LOCAL = 1
+	BATTLE_COMMANDER_NUM:발동측 ++
+	RETURN 1
+NEXT
+RETURN 0
+
+;---------------------------------
+;모브 소환계 스킬
+;---------------------------------
+@BATTLE_ADD_MOB(발동측, 부대플래그, 이름, 무투치, 방위치, 지략치,  정치치, 요술치, 요리치, 가창치)
+#DIM 발동측
+#DIM 부대플래그
+#DIM 대상
+#DIMS 이름
+#DIM 무투치
+#DIM 방위치
+#DIM 지략치
+#DIM 정치치
+#DIM 요술치
+#DIM 요리치
+#DIM 가창치
+
+CALL ADD_VOID_CHARA()
+대상 = RESULT
+NAME:대상 = %이름%
+CALLNAME:대상 = %이름%
+TALENT:대상:전투모브 = 1
+ABL:대상:무투 = 무투치
+ABL:대상:방위 = 방위치
+ABL:대상:지략 = 지략치
+ABL:대상:정치 = 정치치
+ABL:대상:요술 = 요술치
+ABL:대상:요리 = 요리치
+ABL:대상:가창 = 가창치
+FOR LOCAL, 0, VARSIZE("BATTLE_COMMANDER", 1)
+	SIF BATTLE_COMMANDER:발동측:LOCAL >= 0
+		CONTINUE
+	SIF 부대플래그 == 0 && BATTLE_COMMANDER_NUM:발동측 >= MAX_CITY_COMMANDER
+		BREAK
+	BATTLE_COMMANDER:발동측:LOCAL = 대상
+	BATTLE_무투:발동측:LOCAL = ABL:대상:무투
+	BATTLE_방위:발동측:LOCAL = ABL:대상:방위
+	BATTLE_지략:발동측:LOCAL = ABL:대상:지략
+	BATTLE_정치:발동측:LOCAL = ABL:대상:정치
+	BATTLE_가창:발동측:LOCAL = ABL:대상:가창
+	BATTLE_요리:발동측:LOCAL = ABL:대상:요리
+	BATTLE_요술:발동측:LOCAL = ABL:대상:요술
+	BATTLE_무투파워:발동측:LOCAL = ABL_POWER(BATTLE_무투:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
+	BATTLE_방위파워:발동측:LOCAL = ABL_POWER(BATTLE_방위:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
+	BATTLE_지략파워:발동측:LOCAL = ABL_POWER(BATTLE_지략:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
+	BATTLE_요술파워:발동측:LOCAL = ABL_POWER(BATTLE_요술:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
+	BATTLE_가창파워:발동측:LOCAL = ABL_POWER(BATTLE_가창:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
+	BATTLE_요리파워:발동측:LOCAL = ABL_POWER(BATTLE_요리:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
+	BATTLE_요술파워:발동측:LOCAL = ABL_POWER(BATTLE_요술:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
+	BATTLE_SKILL_RATE:발동측:LOCAL = 0
+	BATTLE_SUMMONED_CHARA:발동측:LOCAL = 1
+	BATTLE_COMMANDER_NUM:발동측 ++
+	RETURN 대상
+NEXT
+RETURN -1
+
+
+;---------------------------------
+;스킬 발동시의 Default 지문
+;---------------------------------
+@SKILL_INIT(대상)
+#DIM 대상
+#DIM 장르
+#DIM 대상NO
+#DIM 스킬ID
+
+
+FOR 장르, 0, SKILL_GENRE_NUM
+	FOR 스킬ID, 0, MAX_SKILL_SLOT
+		SKILL_NO_SLOT:대상:장르:스킬ID = -1
+		SKILL_ID_SLOT:대상:장르:스킬ID = -1
+	NEXT
+NEXT
+
+대상NO = NO:대상
+TRYCALLFORM SKILL_INIT_{대상NO}_GENERAL(대상)
+
+;장르마다로 습득시켜 간다
+FOR 장르, 0, SKILL_GENRE_NUM
+	FOR 스킬ID, 0, MAX_SKILL_SLOT
+		;0차례는 범용으로 하므로, 「당신」에는 아무것도 배우게 하지 않는다
+		SIF 대상NO == 0
+			GOTO CANCEL
+		TRYCCALLFORM SKILL_{대상NO}_%SKILL_GENRE_ENG:장르%_{스킬ID}_EXIST
+			;초기 상태로 습득 불가의 스킬은 연주한다
+			TRYCCALLFORM SKILL_{대상NO}_%SKILL_GENRE_ENG:장르%_{스킬ID}_NO_LEARN_INIT
+				GOTO CANCEL
+			CATCH
+			CALL SKILL_LEARN(대상, 장르, 대상NO, 스킬ID)
+			ENDCATCH
+		CATCH
+			$CANCEL
+		ENDCATCH
+	NEXT
+NEXT
+
+;---------------------------------
+;스킬의 설명
+;---------------------------------
+@SKILL_EXPLANATION(장르, 스킬NO, 스킬ID, 스페이스)
+#DIM 장르
+#DIM 스킬NO
+#DIM 스킬ID
+#DIMS 악세사
+#DIMS 캐릭터명
+#DIMS 스킬명
+#DIMS 레벨
+#DIMS 설명
+#DIMS 전달불가
+#DIMS 발동율
+#DIM 스페이스
+;묘화 내용을 준비
+악세사 = SKILL_{스킬NO}_%SKILL_GENRE_ENG:장르%_{스킬ID}_
+CALLFORM %악세사%NAME
+스킬명 = %(STRLENS(RESULTS:0) > 20 ? TOHALF(RESULTS:0) # RESULTS:0)%
+IF 스킬NO == 0
+	캐릭터명 = 범용
+ELSEIF 스킬NO > 10000
+	캐릭터명 = 특수
+ELSE
+	캐릭터명 = %SNAME(NO_TO_CHARA(스킬NO))%
+ENDIF
+CALLFORM %악세사%LEVEL
+레벨 '= TOSTR(RESULT)
+
+CALLFORM %악세사%EXPLANATION
+설명 = %RESULTS%
+
+IF 장르 == 스킬_장르_PASSIVE
+	발동율 '= "  --"
+ELSE
+	TRYCCALLFORM %악세사%RATE_VARABLE
+		발동율 '= "가변"
+	CATCH
+		CALLFORM %악세사%RATE
+		발동율 = %DECIMAL_STRING(RESULT, 1)%
+	ENDCATCH
+ENDIF
+
+TRYCCALLFORM %악세사%CANT_TELL
+	전달불가 '= "전달 불가"
+CATCH
+	전달불가 '= ""
+ENDCATCH
+
+PRINTFORML %스킬명, 35, LEFT%LV%레벨, 3, LEFT% 발동율%발동율, 6, LEFT%%SKILL_GENRE:장르, 6, LEFT%%전달불가, 10, LEFT%%캐릭터명, MAX_CHARANAME_LENGTH/2, LEFT%
+PRINTFORML %TOSTR_SPACE(스페이스)%%설명%
+
+
+;---------------------------------
+;빈자리 슬롯에 스킬세트
+;습득할 수 있으면 1이 돌아온다  빈자리가 없으면 0
+;---------------------------------
+@SKILL_LEARN_BY_NAME(대상, 장르, 스킬NO, 스킬명)
+#DIM 대상
+#DIM 장르
+#DIM 스킬NO
+#DIMS 스킬명
+#DIM 스킬ID
+#DIM 빈슬롯
+
+;가득하면 안 돼
+빈슬롯 = GET_EMPTY_SKILL_SLOT(대상, 장르)
+SIF 빈슬롯 == -1
+	RETURN 0
+
+FOR 스킬ID, 0, MAX_SKILLS
+	TRYCCALLFORM SKILL_{스킬NO}_%SKILL_GENRE_ENG:장르%_{스킬ID}_NAME
+		IF RESULTS == 스킬명
+			CALL SKILL_LEARN(대상, 장르, 스킬NO, 스킬ID)
+			RETURN RESULT
+		ENDIF
+	CATCH
+	ENDCATCH
+NEXT
+
+RETURN 0
+
+
+;---------------------------------
+;빈자리 슬롯에 스킬세트
+;습득할 수 있으면 1이 돌아온다  빈자리가 없으면 0
+;---------------------------------
+@SKILL_LEARN(대상, 장르, 스킬NO, 스킬ID)
+#DIM 대상
+#DIM 장르
+#DIM 스킬NO
+#DIM 스킬ID
+#DIM 빈슬롯
+
+;가득하면 안 돼
+빈슬롯 = GET_EMPTY_SKILL_SLOT(대상, 장르)
+SIF 빈슬롯 == -1
+	RETURN 0
+
+;중복 하고 있으면 안 되겠지
+SIF CHECK_SKILL_DUPLICATE(대상, 장르, 스킬NO, 스킬ID)
+	RETURN 0
+
+SKILL_NO_SLOT:대상:장르:빈슬롯 = 스킬NO
+SKILL_ID_SLOT:대상:장르:빈슬롯 = 스킬ID
+
+RETURN 1
+
+;---------------------------------
+;지정 스킬을 잊는다
+;잊으면 1이 돌아온다  원래 비었다면 0
+;---------------------------------
+@SKILL_FORGET(대상, 장르, 슬롯)
+#DIM 대상
+#DIM 장르
+#DIM 슬롯
+
+SIF GROUPMATCH(-1, SKILL_NO_SLOT:대상:장르:슬롯, SKILL_ID_SLOT:대상:장르:슬롯)
+	RETURN 0
+
+SKILL_NO_SLOT:대상:장르:슬롯 = -1
+SKILL_ID_SLOT:대상:장르:슬롯 = -1
+
+RETURN 1
+
+;---------------------------------
+;지정한 이름의 스킬을 잊는다
+;잊으면 1이 돌아온다
+;---------------------------------
+@SKILL_FORGET_BY_NAME(대상, 장르, 스킬명)
+#DIM 대상
+#DIM 장르
+#DIMS 스킬명
+#DIM 슬롯
+
+FOR 슬롯, 0, MAX_SKILL_SLOT
+	SIF GROUPMATCH(-1, SKILL_NO_SLOT:대상:장르:슬롯, SKILL_ID_SLOT:대상:장르:슬롯)
+		CONTINUE
+	TRYCCALLFORM SKILL_{SKILL_NO_SLOT:대상:장르:슬롯}_%SKILL_GENRE_ENG:장르%_{SKILL_ID_SLOT:대상:장르:슬롯}_NAME
+		IF RESULTS == 스킬명
+			CALL SKILL_FORGET(대상, 장르, 슬롯)
+			RETURN RESULT
+		ENDIF
+	CATCH
+	ENDCATCH
+NEXT
+
+RETURN 0
+
+
+;---------------------------------
+;빈자리 슬롯의 취득  빈자리가 없으면 -1
+;---------------------------------
+@GET_EMPTY_SKILL_SLOT(대상, 장르)
+#FUNCTION
+#DIM 대상
+#DIM 장르
+#DIM 빈슬롯
+;빈자리 슬롯을 찾는다
+FOR 빈슬롯, 0, MAX_SKILL_SLOT
+	IF SKILL_NO_SLOT:대상:장르:빈슬롯 < 0 && SKILL_ID_SLOT:대상:장르:빈슬롯 < 0
+		빈슬롯 --
+		BREAK
+	ENDIF
+NEXT
+
+;가득하면 안 돼
+SIF 빈슬롯 == MAX_SKILL_SLOT
+	RETURNF -1
+
+RETURNF 빈슬롯
+
+;---------------------------------------
+;범용 스킬 초기화 처리용, 이름으로부터 스킬 주워 와 기억하게 하는 녀석
+;보통으로 하는 만큼에는 SKILL_LEARN_BY_NAME 시중들고
+;---------------------------------------
+@LEARN_SKILL_GENERAL_BY_NAME(대상, 범용스킬명)
+#DIM 대상
+#DIMS 범용스킬명
+#DIM 장르
+#DIM 스킬ID
+#DIM 빈슬롯
+FOR 장르, 0, SKILL_GENRE_NUM
+	FOR 스킬ID, 0, MAX_SKILLS
+		TRYCCALLFORM SKILL_0_%SKILL_GENRE_ENG:장르%_{스킬ID}_NAME
+			SIF RESULTS == 범용스킬명
+				GOTO FOUND
+		CATCH
+		ENDCATCH
+	NEXT
+NEXT
+
+SIF 장르 == SKILL_GENRE_NUM
+	THROW %조사처리(ANAME(대상),"로")% 지정된 %조사처리(범용스킬명,"는")% 존재하지 않는다
+
+$FOUND
+
+SIF CHECK_SKILL_DUPLICATE(대상, 장르, 0, 스킬ID)
+	RETURN 0
+
+빈슬롯 = GET_EMPTY_SKILL_SLOT(대상, 장르)
+
+SIF 빈슬롯 == -1
+	RETURN 0
+
+CALL SKILL_LEARN(대상, 장르, 0, 스킬ID)
+
+RETURN 1
+
+
+;---------------------------------------
+;지정한 스킬을 이미 기억하고 있을까를 조사한다
+;---------------------------------------
+@CHECK_SKILL_DUPLICATE(대상, 장르, 스킬NO, 스킬ID)
+#FUNCTION
+#DIM 대상
+#DIM 장르
+#DIM 스킬ID
+#DIM 스킬NO
+#DIM 스킬
+
+FOR 스킬, 0, MAX_SKILL_SLOT
+	SIF SKILL_NO_SLOT:대상:장르:스킬 == 스킬NO && SKILL_ID_SLOT:대상:장르:스킬 == 스킬ID
+		RETURNF 1
+NEXT
+
+RETURNF 0

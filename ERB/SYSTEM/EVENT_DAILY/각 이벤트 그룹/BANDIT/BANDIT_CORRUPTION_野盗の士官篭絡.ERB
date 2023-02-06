@@ -1,0 +1,331 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_BANDIT_CORRUPTION_RATE()
+RETURN (DVAR:마약절임_타겟 > 0 ? 250 # 30)
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_BANDIT_CORRUPTION_DECISION()
+#DIM 도둑
+도둑 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_도둑))
+
+SIF CFLAG:MASTER:소속 != 도둑
+	RETURN 0
+
+SIF ITEM:마약 <= 0
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_BANDIT_CORRUPTION_GENRE()
+RETURN 데일리_장르_특수세력
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_BANDIT_CORRUPTION()
+#DIM 대상
+#DIM 실행자
+#DIM 도둑
+도둑 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_도둑))
+
+대상 = ID_TO_CHARA(DVAR:마약절임_타겟)
+실행자 = ID_TO_CHARA(DVAR:마약절임_공작원ID)
+
+IF DVAR:마약절임_농락단계 > 0
+	;공작원이 사망, 포로, 다른 세력으로 옮기고 있는 경우는 최초부터가 된다
+	IF 실행자 < 0 || CFLAG:실행자:소속 != CFLAG:MASTER:소속 || CFLAG:실행자:포로처 != 0
+		PRINTFORML 예의 사관 농락 계획은 담당의 공작원이 없어져 버린 때문 좌절해 버렸다
+		PRINTFORMW 작전을 최초부터 다시 할 필요가 있을 것이다
+		DVAR:마약절임_타겟 = 0
+		DVAR:마약절임_공작원ID = 0
+		DVAR:마약절임_농락단계 = 0
+	ENDIF
+
+	;타겟이 사망, 포로가 되어 있는 경우는 최초부터가 된다
+	IF 대상 < 0 || CFLAG:대상:포로처 != 0 || CFLAG:대상:특수상태 == 특수상태_사망
+		PRINTFORML 예의 사관 농락 계획은 타겟이 손이 낼 수 없는 상황이 되어 버려 중단 하지 않을 수 없게 되었다
+		PRINTFORMW 단념해 새로운 타겟을 찾는 일로 하자
+		DVAR:마약절임_타겟 = 0
+		DVAR:마약절임_공작원ID = 0
+		DVAR:마약절임_농락단계 = 0
+	ENDIF
+ENDIF
+;첫회, 타겟과 공작원 결정
+IF DVAR:마약절임_농락단계 == 0
+	PRINTFORML 적국의 여사관을 농락할 계획을 세웠다
+	PRINTFORML 성공하면 큰 전력에, 무엇보다도 좋은 성노예가 될 것이다
+	PRINTFORMW 누구를 타겟으로 할까?
+	CALL SELECT_CHARA_LIST_ONLY_LOGIC_SLG("BANDIT_CORRUPTION_TARGET", "BANDIT_CORRUPTION_TARGET")
+	IF RESULT < 0
+		PRINTFORMW 역시 그만두기로 했다
+		RETURN 1
+	ENDIF
+	대상 = RESULT
+	PRINTFORML %조사처리(ANAME(대상),"를")% 타겟으로 하는 일로 했다
+	PRINTFORMW 누구에게 맡길까?
+	CALL SELECT_CHARA_LIST_ONLY_LOGIC_SLG("BANDIT_CORRUPTION_SPY", "BANDIT_CORRUPTION_SPY")
+	IF RESULT < 0
+		PRINTFORMW 역시 그만두기로 했다
+		RETURN 1
+	ENDIF
+	실행자 = RESULT
+	IF 실행자 == MASTER
+		PRINTFORML %ANAME(실행자)%스스로 계획을 실행하는 일로 했다
+		PRINTFORMW %ANAME(실행자)%는 힐쭉 웃으면서 계획을 실행할 준비를 시작했다
+	ELSE
+		PRINTFORML %ANAME(실행자)%에 맡기는 일로 했다
+		PRINTFORMW 그는 히죽히죽 웃으면서 계획을 실행할 준비를 시작했다
+	ENDIF
+	DVAR:마약절임_타겟 = GET_ID(대상)
+	DVAR:마약절임_공작원ID = GET_ID(실행자)
+;공작원과 타겟이 건재의 경우, 농락 작전은 속행된다
+ELSE
+	대상 = ID_TO_CHARA(DVAR:마약절임_타겟)
+	실행자 = ID_TO_CHARA(DVAR:마약절임_공작원ID)
+	PRINTFORML 전회에 계속해 %조사처리(ANAME(대상),"를")% 농락하는 작전을 실행하는 일로 했다
+	PRINTFORMW %ANAME(실행자)%는 특제의 약을 손에 그녀의 곁으로 향했다
+ENDIF
+
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF DVAR:마약절임_농락단계 == 0
+	PRINTFORML %ANAME(실행자)%는 상인으로 변해 %ANAME(대상)%에 알현한다일에 성공했다
+	PRINTFORML 의심받지 않게 예의 바르게 행동해, %조사처리(ANAME(대상),"와")% 인사를 주고 받는다
+	PRINTFORML 겸손하게 한 태도의 %ANAME(실행자)%에 대해, 조금 잘난듯 한 태도를 취하는 %ANAME(대상)%에
+	PRINTFORMW %ANAME(실행자)%는 내심 안절부절 하면서도, 지금부터 어떻게 조교해 줄까하고 생각한다
+	PRINTFORML 잠깐 시시한 회화를 주고 받은 후, %ANAME(실행자)%는 외래산의 고급 과자를 헌상 했다
+	PRINTFORML …물론 단순한 과자는 아니고, 안에는 특제의 미약과 마약이 한껏 포함되어 있다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 의심하는 일도 없게 기꺼이 받으면, 하나 집어 맛있을 것 같게 입에 넣었다
+	PRINTFORMW 그것을 본 %ANAME(실행자)%는 마음 속에서 빙긋 웃으면서 방을 뒤로 했다
+	PRINTFORML 
+	PRINTFORML 심야, %조사처리(ANAME(대상),"는")% 침대 중(안)에서 신음하고 있었다
+	PRINTFORML 그 얼굴은 붉게 물들고 있어 숨을 거칠게 하면서 머뭇머뭇 허벅다리를 맞대고 비비고 있다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 오늘 하루종일, 신체가 달아올라 어쩔 수 없었다
+	PRINTFORML 자면 어떻게든 될 것이라고 생각하고 있었지만, 밤이 되어 더욱 더 신체의 욱신거림은 강해질 뿐이었다
+	PRINTFORMW 하지만 %ANAME(대상)%에는 그 원인은 모른채, 침대 중(안)에서 오로지 번민스럽게 하고 있다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 결국 인내 할 수 없게 되어, 천천히 흠뻑 젖는 비밀스런 장소로 손가락을 폈다
+	PRINTFORML 가볍게 훑는 것만으로 저리는 것 같은 쾌락이 달려, 그녀는 신체를 흠칫 뛰게 한 달콤한 한숨을 흘렸다
+	PRINTFORML 조용한 침실에 울린 그 소리에, %조사처리(ANAME(대상),"는")% 누군가에게 (들)물은 것은 아닐까 흠칫 떨린다
+	PRINTFORML 하지만 그럴 리도 없고, 주위는 고요히 쥐죽은 듯이 조용해 안심 안도한 그녀는 다시 당신을 위로하기 시작했다
+	PRINTFORMW 숨을 죽이면서도 점차 손가락의 움직임은 격렬하게 되어 가, 이윽고 그녀의 신음소리가 방 안에 울리기 시작했다
+	LOCAL:0 = RAND:3 + 3
+	SETCOLOR 칼라_오렌지
+	CALL FUCK(대상, "Ｃ, Ｂ, 자위, 욕망")
+	RESETCOLOR
+	PRINTFORML 
+	PRINTFORML 결국%조사처리(ANAME(대상),"는")% 밤이 희어질 때까지 자위를 계속해 버렸다
+	PRINTFORMW 하지만 몇 번이나 달한 것의 그녀는 어딘가 가득 차고 부족한 표정을 보이고 있었다
+	CFLAG:대상:약물의존 += RAND(20, 50)
+	ITEM:마약 -= 1
+	DVAR:마약절임_농락단계 ++
+ELSEIF DVAR:마약절임_농락단계 == 1
+	PRINTFORML %ANAME(실행자)%는 다시 %ANAME(대상)%에 알현 하고 있다
+	PRINTFORML 인사를 하면서 그녀의 얼굴을 힐끗 바라보면, 희미하게 뺨을 물들이고 있는 모습을 물을 수 있었다
+	PRINTFORMW 전회 건네주었다“과자”의 효과가 나타나고 있는 것 같다, %ANAME(실행자)%는 그녀에게 보여지지 않게 힐쭉 웃는다
+	PRINTFORML %ANAME(실행자)%는 이번도 헌상품으로서 전회의 과자와 함께 향기를 건네준…릴렉스할 수 있는 효과가 있으면 시치미떼어
+	PRINTFORML 그의 기대를 알아차리지 않는 %조사처리(ANAME(대상),"는")% 그것을 기꺼이 받았다
+	PRINTFORMW %ANAME(실행자)%는 내심 빙긋 웃으면 조속히 방을 뒤로 했다
+	PRINTFORML 
+	PRINTFORML 심야, 향기의 피워진 깜깜한 방 안에서 그림자가 꿈틀거려, 신음소리가 영향을 주고 있었다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 잠옷 모습으로 책상의 모퉁이에 사타구니를 칠하면서 여차저차허리를 흔들고 있다
+	PRINTFORML 특제의 향기에 의해 고조되어진 그 표정은 야무지지 못하고, 마치 발정난 암캐의 같았다
+	PRINTFORMW 최근의 그녀는 손가락만으로는 어딘지 부족하게 되어 버려, 이같이 당신을 위로하는 것이 일과가 되어 있었다
+	PRINTFORML 이전과는 달라, 이미 목소리를 낮추는 일도 없게 단정치 못하게 미친듯이 자지러지는 신음소리를 내며, 자위에 몰두하고 있다
+	PRINTFORML 그 중 다리를 삐걱삐걱 진동시키면서, %조사처리(ANAME(대상),"는")% 교성과 함께 크게 등을 뒤로 젖혀 절정에 이르렀다
+	PRINTFORML 그 얼굴은 황홀로 하고 있어, 한 때의 수줍음은 벌써 쾌락에 의해 밀려나고 있었다
+	PRINTFORMW 잠깐책상에 의지해 절정의 여운에 잠긴 후, %조사처리(ANAME(대상),"는")% 다시 허리를 흔들기 시작했다
+	LOCAL:0 = RAND:3 + 3
+	SETCOLOR 칼라_오렌지
+	CALL FUCK(대상, "Ｃ, Ｂ, 자위, 욕망")
+	RESETCOLOR
+	PRINTFORML 
+	PRINTFORML 결국, %ANAME(대상)%의 추잡한 행위는, 새벽녘 근처까지 계속되었다
+	PRINTFORMW 기진맥진이 되어 침대에 쓰러진 그녀는, 정신나간 것 같은 표정으로 신체를 진동시키고 있었다
+	CFLAG:대상:약물의존 += RAND(20, 50)
+	ITEM:마약 -= 1
+	DVAR:마약절임_농락단계 ++
+ELSEIF DVAR:마약절임_농락단계 == 2
+	PRINTFORML %ANAME(실행자)%는 다시 %ANAME(대상)%에 알현 하고 있다
+	PRINTFORML 하지만 그녀는 %ANAME(실행자)%의 인사에도 건성의 모습으로, 신체를 머뭇거리며 있다
+	PRINTFORML 컨디션이 시원치 않은 것 같네요, 라고 %ANAME(실행자)%는 일부러 그녀를 신경쓰면 차를 내몄다
+	PRINTFORML 이것을 마시면 반드시 침착해요, 그렇게 고하는 그의 말에 %조사처리(ANAME(대상),"는")% 의심하는 일도 없게 그것을 말했다
+	PRINTFORMW 그것을 확인한 %ANAME(실행자)%는 잠깐 그녀와 시시한 회화를 해, 기다렸다
+	PRINTFORML 그다지 사이를 두는 일도 없게 그 때는 온, %ANAME(대상)%의 눈이 몽롱 해 혀가 제대로 돌지 않고든지 낸다
+	PRINTFORML 이윽고 몸에 힘이 들어가지 않게 된 것처럼 소파에 의지해, 괴로운 듯이 숨을 거칠게 하기 시작했다
+	PRINTFORML %ANAME(실행자)%는 기회라고 판단하면, 그녀를 간호하는 모습을 해 가까워 짐 신체를 지지한다
+	PRINTFORML 그리고 자연스럽게 가슴을 비비면, %조사처리(ANAME(대상),"는")% 달콤한 한숨을 흘려 몸을 진동시켰다
+	PRINTFORMW %ANAME(실행자)%는 여섯에 저항도할 수 없는 그녀를 껴안도록(듯이)해 침실로 데리고 들어갔다
+	PRINTFORML 
+	PRINTFORML %ANAME(실행자)%는 %조사처리(ANAME(대상),"를")% 침대에 걸터앉게 하면, 차의 나머지를 먹인다
+	PRINTFORML 하면 더욱 더 그녀의 숨은 거칠게 하고, 밀어닥치는 쾌락으로 움찔움찔 신체를 진동시키고 냈다
+	PRINTFORML 그런데도 희미하게 남는 이성으로 저항하는 그녀를 무시해, %ANAME(실행자)%는 그녀를 침대에 쓰러트리고 난폭하게 옷을 벗게 한다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 어떻게든 피하려고 했지만, 성감대를 가볍게 만지작거려지는 것만으로 저리는 것 같은 쾌락이 달려 신체가 경련해 버린다
+	PRINTFORMW 그가 계속해 녹진녹진이 된 균열을 훑는 것처럼 손가락을 기게 하면, 그녀는 움찔움찔 경련하면서 교성을 올렸다
+	PRINTFORML %ANAME(실행자)%는 정신나간 표정으로 힘 없게 늘어진 %ANAME(대상)%의 양 다리를 벌리면, 페니스를 꺼낸다
+	PRINTFORML 그녀는 작고비명을올린다도, 그 씩씩한 육봉에 무심코 못박음이 되어, 꿀꺽 군침을 삼켰다
+	PRINTFORML %ANAME(실행자)%는 그녀에게 과시하는 것처럼, 애액의 흘러넘치는 꿀단지에, 천천히 페니스를 쑤셔 넣었다
+	PRINTFORML 하복부에 기어들어 오는 작열의 감각에, %조사처리(ANAME(대상),"는")% 전신을 뒤로 젖히게 하면서 소리가 되지 않는 소리를 높여 떨렸다
+	IF TALENT:대상:처녀 == 1
+		PRINTFORMW 그 질육은 처녀의 그것이라고는 생각되지 않을만큼 꿈틀거려, 페니스에 휘감겨 왔다
+	ELSE
+		PRINTFORMW 완전히 완성되고 있던 질육은 페니스에 휘감기는 것처럼 꿈틀거려 왔다
+	ENDIF
+	PRINTFORML %ANAME(실행자)%는 무심코 사정할 것 같게 되는 것을 참아 질의 안쪽 깊게까지 깊숙히 페니스를 가라앉혀 간다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 전신을 경련시키고 눈물을 흘리면서, 망가진 인형과 같이 반복해 핑크색의 신음소리를 올리고 있다
+	PRINTFORML %ANAME(실행자)%는 경련해 맥박치는 것처럼 휘감겨 오는 극상의 질육을 즐기는 것처럼 페니스를 출납한다
+	PRINTFORML 약의 효과로 완전히 민감하게 되어 있는 질육을 페니스로 후벼파질 때에, %조사처리(ANAME(대상),"는")% 머리가 새하얗게 되어 좋아해 미친다
+	PRINTFORMW 잠깐의 사이, 방 안에 %ANAME(대상)%의 교성과 추잡한 미츠네가 울려 퍼졌다
+	PRINTFORML 그리고 %ANAME(대상)%의 머리가 완전히 쾌락으로 다 녹았을 무렵, 갑자기 그녀의 질 안쪽으로 한층 더 강렬한 열을 털어 놓여졌다
+	PRINTFORML 갑자기 하복부에게 주어진 충격에, 그녀는 일순간 정신을 잃을 정도의 절정에 이르러, 크게 키를 뒤로 젖히게 해 교성을 올렸다
+	PRINTFORML %ANAME(대상)%의 질육은 힘들게 페니스를 졸라, 자궁에 정액을 토해내질 때에 그녀는 연속으로 절정에 이르렀다
+	PRINTFORMW 그 뒤도 %ANAME(실행자)%에 범해지고 계속해, %조사처리(ANAME(대상),"가")% 스스로 허리를 흔들기 시작하는데 시간은 걸리지 않았다
+	CALL FUCK_RAPE(대상, GET_ID(실행자), @"%ANAME(실행자)%의 \@RAND:2 ? 페니스 # 입술\@", @"%ANAME(실행자)%")
+	CALL FUCK_RAPE(대상, GET_ID(실행자), @"%ANAME(실행자)%의 \@RAND:2 ? 페니스 # 입술\@", @"%ANAME(실행자)%")
+	PRINTFORML 
+	PRINTFORML 한껏 귀여워해진 %조사처리(ANAME(대상),"는")% 꿈꾸는 듯한 기분인 채 침대 위에서 가로놓여 있다
+	PRINTFORMW %ANAME(실행자)%가 그녀의 귓전으로 또 온다고 고하면, %조사처리(ANAME(대상),"는")% 부르릇 몸부림쳤다
+	CFLAG:대상:약물의존 += RAND(20, 50)
+	ITEM:마약 -= 1
+	DVAR:마약절임_농락단계 ++
+ELSEIF DVAR:마약절임_농락단계 == 3
+	PRINTFORML %ANAME(실행자)%가 방문하면 %조사처리(ANAME(대상),"는")% 흠칫 신체를 진동시켰다
+	PRINTFORML %ANAME(실행자)%는 그 반응을 봐 힐쭉 이미 숨기지 않고 웃는다
+	PRINTFORML 전회을 생각해 낸 %조사처리(ANAME(대상),"는")% %ANAME(실행자)%에 나가도록(듯이) 고한다
+	PRINTFORMW 하지만 그 소리에 희미하게 흔들림이 섞이고 있는 것을 간파한 %ANAME(실행자)%는 개의치 않고 그녀에게 다가간다
+	PRINTFORML %ANAME(실행자)%가 천천히 근 붙는 것에 따라, %조사처리(ANAME(대상),"는")% 점차 숨을 거칠게 하고, 마침내 숙여 버렸다
+	PRINTFORML %ANAME(실행자)%가 %ANAME(대상)%의 허리에 손을 쓸 정도로 가까워져도, 그녀는 신체를 진동시킬 뿐으로 저항하지 않는다
+	PRINTFORML 그리고 %ANAME(실행자)%는 그녀의 귓전으로 상냥하게 「약을 갖고 싶을 것이다?」라고 속삭였다
+	PRINTFORML 그 말로 부르릇 몸부림 해 %ANAME(실행자)%를 올려본 그녀의 얼굴은, 이미 완전히 붉게 물들고 있었다
+	PRINTFORMW %ANAME(실행자)%는 그녀를 응시하면서, 품으로부터 약을 꺼낸다
+	PRINTFORML 그것을 보는 것만으로 %조사처리(ANAME(대상),"는")% 이전의 행위를 생각해 내, 신체를 진동시키고 꿀꺽 군침을 마셨다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 그런데도 작게 거절의 말을 토하려고 했지만, 갑자기 그에게 엉덩이를 어루만져지는 한심한 소리를 높인다
+	PRINTFORML 완전히 민감하게 되어 쾌락의 포로가 되어 있었던 %ANAME(대상)%의 신체는 그것만으로 욱신거림이고, 그녀는 달콤한 한숨을 흘렸다
+	PRINTFORMW %ANAME(실행자)%는 저항이 약해진 %ANAME(대상)%의 허리를 안으면서 침실로 향했다
+	PRINTFORML 
+	PRINTFORML %조사처리(ANAME(대상),"를")% 침대에 가로놓이게 해 전신을 끈적 애무한다
+	PRINTFORML 그녀는 눈을♥로 하면서 %ANAME(실행자)%로 되는 대로 다만 허덕이고 있다
+	PRINTFORML 곧바로 몸도 마음도 녹진녹진으로 된 %ANAME(대상)%에는, 방금전까지 희미하게 남아 있던 저항심도 벌써 사라지고 있었다
+	PRINTFORMW %ANAME(실행자)%가 그녀의 돌기를 가볍게 연주하면, 그녀는 신체를 뛰게 해 간단하게 절정에 이른다
+	PRINTFORML 하지만 약물 섹스에 빠져 버리고 있는 지금의 %ANAME(대상)%에는 그러면 어딘지 부족했다
+	PRINTFORML 그런 그녀의 마음중을 간파했는지같이 %ANAME(실행자)%가 약을 내민다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 번창한 암캐같이 야무지지 못하게 혀를 늘어뜨리면서, 애태우는 것처럼 그것을 응시한다
+	PRINTFORMW %ANAME(실행자)%는 그녀에게, 약을 갖고 싶으면 스스로 가랑이를 열어 조르기를 하라고 요구한다
+	PRINTFORML 그 명령에 %조사처리(ANAME(대상),"는")% 과연 일순간 주저했지만, 신체의 달아오름에는 저항할 수 없었다
+	PRINTFORML 그녀는 복종의 포즈로 %ANAME(실행자)%에 가랑이를 열어, 흠칫흠칫 생각나는 한 조르기의 말을 토한다
+	PRINTFORMW %ANAME(실행자)%는 거기에 만족하면, %ANAME(대상)%에 약을 준다
+	PRINTFORML 하자 곧바로 %ANAME(대상)%의 머리는 쾌락으로 녹고이고, 황홀한 표정을 보여 신체를 진동시키기 시작했다
+	PRINTFORML 애액이 넘쳐 나오고 해 갖고 싶어하는 듯이 빠끔빠끔 하는 암컷구멍에, 페니스를 쑤셔 넣어 주면, 그녀는 기쁨의 소리를 지른다
+	PRINTFORMW %ANAME(실행자)%의 일발 찌르기마다, %조사처리(ANAME(대상),"는")% 단정치 못한 소리를 높여 녹는 것 같은 육욕에 빠져 갔다
+	CALL FUCK_RAPE(대상, GET_ID(실행자), @"%ANAME(실행자)%의 \@RAND:2 ? 페니스 # 입술\@", @"%ANAME(실행자)%")
+	CALL FUCK_RAPE(대상, GET_ID(실행자), @"%ANAME(실행자)%의 \@RAND:2 ? 페니스 # 입술\@", @"%ANAME(실행자)%")
+	PRINTFORML 
+	PRINTFORMW 해가 지는 무렵에는, %ANAME(실행자)%의 팔 중(안)에서 응석부리는 것처럼 안기고 있는 %ANAME(대상)%의 모습이 있었다
+	CFLAG:대상:약물의존 += RAND(20, 50)
+	ITEM:마약 -= 1
+	DVAR:마약절임_농락단계 ++
+;이 단계는 무엇 패턴이나 랜덤에 내, 약물 중독에 걸리면 다음에 진행되는 것처럼 해도 될지도?
+ELSEIF DVAR:마약절임_농락단계 == 4
+	PRINTFORML 심야의 궁전안을, %조사처리(ANAME(대상),"는")% %ANAME(실행자)%와 함께 심야의 궁전안을 배회하고 있다
+	PRINTFORML 하지만 %ANAME(실행자)%의 명령으로 속옷조차 몸에 대지 않고, 한가닥의 실 휘감지 않은 나체를 쬐고 있었다
+	PRINTFORML 그녀는 수치로 얼굴을 새빨갛게 하면서도, 약을 먹이로 되고 %ANAME(실행자)%의 명령에 온순하게 따라서 있다
+	PRINTFORML 심야라고 해도 언제 누구에게 조우할지도 모르는 긴장감과 배덕감으로, %조사처리(ANAME(대상),"는")% 숨을 거칠게 하고 진동시킨다
+	PRINTFORMW 본인도 눈치채지 않는 동안에 그 비밀스런 장소는 젖고 중얼, 뚝뚝하고 복도에 애액을 늘어뜨리고 있었다
+	PRINTFORML 그녀의 수치 하는 모습을 잠시 만끽한 후, %ANAME(실행자)%는 %ANAME(대상)%에 엉덩이를 내미는 것처럼 명령한다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 설마 여기서얼굴을 경련이 일어나게 하는 것도, 꿀꺽 목을 울리고 나서 흠칫흠칫 벽에 손을 대고 엉덩이를 내밀었다
+	PRINTFORML 기대로 젖고 자르고 있는 암컷구멍에, %ANAME(실행자)%가 갑자기 안쪽 깊게까지 찌르면, 그녀는 흠칫 뛰어 교성을 올렸다
+	PRINTFORMW 고요하게 영향을 주는 스스로의 소리에 %조사처리(ANAME(대상),"는")% 누군가에게 (들)물었는지도 모르면 우려해, 서둘러 손으로 입을 막는다
+	PRINTFORML 하지만 %ANAME(실행자)%는 그런 일도 상관없이 허리를 쳐박아, 그녀의 녹진녹진의 질육을 빠득빠득 도려낸다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 몸을 진동시키고 어떻게든 이빨을 먹어 묶어 참으려고 하지만, 이빨의 틈새로부터는 히익히익 거리며 신음소리가 새고 있었다
+	PRINTFORML %ANAME(실행자)%는 그런 그녀의 반응을 즐겨, 얼굴을 끌어 들이면, 입으로 대망의 약을 먹여 준다
+	PRINTFORMW 하자마자%조사처리(ANAME(대상),"는")% 몽롱하게 한 표정이 되어, 질이 꽈악 페니스를 단단히 조여 왔다
+	PRINTFORML %ANAME(실행자)%가 딱 가볍게 자궁입구를 찌르면, 그녀는 크게 등을 뒤로 젖히게 해 달콤한 기쁨의 소리를 높인다
+	PRINTFORML 꿈틀거리는 질육을 맛보도록(듯이)%ANAME(실행자)%가 격렬하게 허리를 흔들어, , 와 고기가 서로 치는 소리가 울린다
+	PRINTFORML 전신이 다랑어노도와 같은 쾌락의 물결에 노출되면서, %조사처리(ANAME(대상),"는")% 이미 소리를 억제하는 일도 잊고 좋아해 미친다
+	PRINTFORML 그리고 그녀의 머리가 녹을 것 같게 되는 기회를 가늠했는지같이, 힘차게 %ANAME(실행자)%의 정액이 발해지면
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 크게 뒤로 젖혀 기다려 바라고 있던 절정에 이르면서, 한층 더 큰 교성을 발했다
+	PRINTFORML 다행스럽게 지나친 쾌락에 그 교 목소리는 쉬어, 소리가 되지 않는 소리가 되고 있어 궁전안에 울리지 않고 끝났다
+	PRINTFORML 하지만 %ANAME(대상)%에는 이미 그런 일을 걱정하는 머리도 남지 않고, 완전히 정신나가고 자른 표정으로 그 자리에 붕괴된다
+	PRINTFORMW %ANAME(실행자)%는 그녀를 거느려 침실에 데리고 돌아가면, 더욱 약을 먹여 밤새 한껏 범해 주었다
+	CALL FUCK_RAPE(대상, GET_ID(실행자), @"%ANAME(실행자)%의 \@RAND:2 ? 페니스 # 입술\@", @"%ANAME(실행자)%")
+	CALL FUCK_RAPE(대상, GET_ID(실행자), @"%ANAME(실행자)%의 \@RAND:2 ? 페니스 # 입술\@", @"%ANAME(실행자)%")
+	CFLAG:대상:약물의존 += RAND(20, 50)
+	ITEM:마약 -= 1
+	DVAR:마약절임_농락단계 ++
+ELSEIF DVAR:마약절임_농락단계 == 5
+	PRINTFORML %ANAME(대상)%의 자기 방에 남녀의 사귀는 소리가 울려 퍼지고 있다
+	PRINTFORML %ANAME(실행자)% 위에서 야무지지 못하게 군침을 늘어뜨리면서 허리를 흔드는그녀에게, 한 때의 모습은 벌써 없고
+	PRINTFORMW 완전히 마약과 섹스에 의해 초래되는 쾌락의 포로가 되어 있었다
+	PRINTFORML %ANAME(실행자)%가 허리를 잡아 밀어올리면, %조사처리(ANAME(대상),"는")% 기쁨의 소리를 높여 전신을 진동시킨다
+	PRINTFORMW 질육의 억압에 %ANAME(실행자)%가 참지 못하고 질내사정 하면, 그녀도 크게 등을 뒤로 젖히면서 절정 했다
+	PRINTFORML 하복부에 퍼지는 열에 그녀는 움찔움찔 뒤로 젖히면서 좋아해 미쳐, 연속 절정을 맛본다
+	PRINTFORML 이윽고 %ANAME(실행자)%에 한껏 질 내 된 %조사처리(ANAME(대상),"와")% 힘 없게 쓰러졌다
+	PRINTFORML 그 상태에서도 욱신거림이 들어가지 않는 그녀는, %ANAME(실행자)%의 목에 손을 써 허리를 구불거리게 할 수 있는 다음을 졸라대기 시작한다
+	PRINTFORMW 하지만 %ANAME(실행자)%는 %ANAME(대상)%에 응하지 않고, 페니스를 뽑아 내 무정하게 그녀를 마루에 내던졌다
+	PRINTFORML 마루에 넘어진 %조사처리(ANAME(대상),"는")% 떨리는 팔로 몸을 지지하면서, 무엇을 일어났는지 모르고 %ANAME(실행자)%를 본다
+	PRINTFORML 언제나라면 여기로부터 한층 더 몇 번이나 정신을 잃는 만큼 범해지는데, 라고 무의식 중에 갖고 싶어하는 것 같은 표정을 보인다
+	PRINTFORML %ANAME(실행자)%는 그런 그녀의 반응에 내심 빙긋 웃으면 일부러 한숨을 쉬어
+	PRINTFORMW 더 이상 너에게 교제할 수 없는, 마약도 섹스도 보류다  라고 선고한다
+	PRINTFORML 그 말에 %조사처리(ANAME(대상),"는")% 이 세상의 끝의 같은 표정을 보이고 「어째서, 왜, 범해, 여기까지 와」라고 그에게 달라붙는다
+	PRINTFORML %ANAME(실행자)%는 천천히 몸을 굽히고 %ANAME(대상)%에 시선을 맞추면, 조용하게 귓전으로 속삭였다
+	PRINTFORMW 아무래도라고 한다면, 우리에게 와라, 그러면 자기 마음대로 귀여워해 주는…과
+	PRINTFORML %조사처리(ANAME(대상),"는")% 그 말을 (들)물어 오싹 등을 진동시킨다
+	PRINTFORML 지금이 정신나간 %ANAME(대상)%에도 그것이 어떻게 말하는 것인 것인가는 안다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 미아의 아이같이 곤란한 표정으로, %ANAME(실행자)%와 허공을 교대로 응시하면서 작게 떨고 있었다
+	PRINTFORML 
+	PRINTFORML 하지만 이윽고, 그녀는 힘 없게 수긍했다
+	PRINTFORMW 
+	PRINTFORML 그 순간, %ANAME(실행자)%는 난폭하게 그녀를 쓰러트렸다
+	PRINTFORML 그리고 %조사처리(ANAME(대상),"가")%비명을올린다 머지않아, 페니스를 그녀의 꿀단지의 최안쪽까지 깊숙히 찔렀다
+	PRINTFORMW 갑작스러운 삽입으로 그녀는 정수리에 관통할 정도의 강렬한 충격을 받아, 절정에 이르러 크게 교성을 미치게 한다
+	PRINTFORML %ANAME(실행자)%는 그녀를 칭찬하면서 포상의 마킹을 선고하면, 자궁까지 유린하도록(듯이) 몹시 거칠게 허리를 흔드는
+	PRINTFORML %조사처리(ANAME(대상),"는")% 난폭하게 범해지면서도 대망의 쾌락에에로 정신나간 표정을 보이고 좋아해 미친다
+	PRINTFORMW 그리고 %ANAME(실행자)%의 말에 기쁨을 느끼면서, 조금 전까지의 불안도 바람에 날아갈 정도의 압도적인 쾌락에 몸을 바쳤다
+	CALL FUCK_RAPE(대상, GET_ID(실행자), @"%ANAME(실행자)%의 \@RAND:2 ? 페니스 # 입술\@", @"%ANAME(실행자)%")
+	CALL FUCK_RAPE(대상, GET_ID(실행자), @"%ANAME(실행자)%의 \@RAND:2 ? 페니스 # 입술\@", @"%ANAME(실행자)%")
+	PRINTFORML
+	PRINTFORML %조사처리(ANAME(대상),"를")% 농락하는 것을 성공했습니다
+	CALL COLOR_PRINT(@"%조사처리(ANAME(대상),"는")% 도둑의 육변기가 되었습니다", 칼라_경고)
+	PRINTFORMW 
+	CALL CHANGE_COUNTRY(대상, 도둑, 1)
+	SETBIT TALENT:대상:특수세력함락계, 특수세력_도둑
+	CALL TALENT_LOSE_PRIDE(대상)
+	CFLAG:대상:약물의존 += RAND(30, 60)
+	ITEM:마약 -= 1
+	DVAR:마약절임_타겟 = 0
+	DVAR:마약절임_공작원ID = 0
+	DVAR:마약절임_농락단계 = 0
+ENDIF
+
+RETURN 1
+
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_BANDIT_CORRUPTION_TARGET(대상)
+#DIM 대상
+RETURN CFLAG:대상:행동불능상태 != 행동불능_아이 && !IS_ANIMAL(대상) && CFLAG:대상:소속 != CFLAG:MASTER:소속 && GET_COUNTRY_BOSS(CFLAG:대상:소속) != 대상 && IS_COUNTRY(CFLAG:대상:소속) && !IS_SP_CHARA(대상) && !IS_MALE(대상)
+
+@SELECT_CHARA_LIST_SELECT_LOGIC_BANDIT_CORRUPTION_TARGET(대상)
+#DIM 대상
+RETURN CFLAG:대상:포로처 == 0
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_BANDIT_CORRUPTION_SPY(대상)
+#DIM 대상
+RETURN CFLAG:대상:행동불능상태 != 행동불능_아이 && !IS_ANIMAL(대상) && CFLAG:대상:소속 == CFLAG:MASTER:소속 && HAS_PENIS(대상)
+
+@SELECT_CHARA_LIST_SELECT_LOGIC_BANDIT_CORRUPTION_SPY(대상)
+#DIM 대상
+RETURN CFLAG:대상:포로처 == 0
+

@@ -1,0 +1,416 @@
+﻿;-------------------------------------------------
+;# 맵 read
+;	ARG:0	행 번호를 두고 있지만 사용하지는 않았다. 보기 쉽고하기 위한 숫자
+;	ARGS:0	맵 캐릭터 라인을 일행씩 건네준다
+;-------------------------------------------------
+@SHOP_LIFE_MAP(ARG:0, ARGS:0)
+#DIM SPLIT_COUNTER									;FOR문의 카운터. TEXT_SPLIT를 순서에 봐 갈 때 사용한다
+#DIM MENUVARS_COUNTER								;FOR문의 카운터. 등록되어 있는 에리어명을 차례로 봐 갈 때 사용한다
+#DIM MENUVARS_COUNTER_MAX							;현재의 맵의 에리어수최대치를 취득
+#DIM CHARA_COUNTER									;FOR문의 카운터. AREAEVENT의 가능 캐릭터 존재 판정할 때 사용한다
+#DIMS TEMP_SPLIT, 2									;SPLIT로 분해할 때 일시적으로 사용한다. 0에 버튼의 좌측, 1에 버튼의 우측을 들어갈 수 있다
+#DIMS TEXT_SPLIT, SHOP_LIFE_MAP_AREA_MAX			;여기에게 건네진 캐릭터 라인을 단순한 캐릭터 라인과 버튼 캐릭터 라인 으로 분해해 보존해 나간다
+#DIM TEXT_SPLIT_BUTTON_NUM, SHOP_LIFE_MAP_AREA_MAX	;TEXT_SPLIT와 연동. 버튼이라면 버튼 번호를 넣어 둔다
+#DIM PRINTBUTTON_FLAG								;AREAEVENT를 판정해, 표시 가능하면 1으로 한다
+
+VARSET TEMP_SPLIT, ""
+VARSET TEXT_SPLIT, ""
+VARSET TEXT_SPLIT_BUTTON_NUM
+
+;-------------------------------------------------
+; 분해
+;-------------------------------------------------
+TEXT_SPLIT:0 '= ARGS:0
+
+RESULT = 0
+CALLFORM SHOP_LIFE67_MAP{SHOP_LIFE_MAP_NUM}_AREAMAX
+MENUVARS_COUNTER_MAX = RESULT
+;DEBUGPRINTFORML MAP1의 AREAMAX는{MENUVARS_COUNTER_MAX}
+
+FOR SPLIT_COUNTER, 0, SHOP_LIFE_MAP_AREA_MAX
+	SIF TEXT_SPLIT:SPLIT_COUNTER != ""
+		CONTINUE
+	FOR MENUVARS_COUNTER, 1, MENUVARS_COUNTER_MAX + 1
+		SIF MENUVARS:MENUVARS_COUNTER == ""
+			CONTINUE
+		IF STRFIND(TEXT_SPLIT:(SPLIT_COUNTER - 1), MENUVARS:MENUVARS_COUNTER) != -1
+			VARSET TEMP_SPLIT, ""
+			SPLIT TEXT_SPLIT:(SPLIT_COUNTER - 1), MENUVARS:MENUVARS_COUNTER, TEMP_SPLIT
+			TEXT_SPLIT:(SPLIT_COUNTER - 1) '= TEMP_SPLIT:0
+			TEXT_SPLIT_BUTTON_NUM:(SPLIT_COUNTER - 1) = 0
+			TEXT_SPLIT:SPLIT_COUNTER '= MENUVARS:MENUVARS_COUNTER
+			TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER = MENUVARS_COUNTER + SHOP_LIFE_LIST1_ADD_INPUT
+			TEXT_SPLIT:(SPLIT_COUNTER + 1) '= TEMP_SPLIT:1
+			TEXT_SPLIT_BUTTON_NUM:(SPLIT_COUNTER + 1) = 0
+			[IF_DEBUG]
+				DEBUGPRINTFORML 
+				DEBUGPRINTFORML TEXT_SPLIT:{SPLIT_COUNTER - 1}를 검색해
+				DEBUGPRINTFORML MENUVARS_COUNTER {MENUVARS_COUNTER} %MENUVARS:MENUVARS_COUNTER%를 검출했다
+				DEBUGPRINTFORML 입력치는 TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER {TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER}
+			[ENDIF]
+		ENDIF
+	NEXT
+NEXT
+
+VARSET SPLIT_COUNTER
+
+;-------------------------------------------------
+; 표시
+;-------------------------------------------------
+FOR SPLIT_COUNTER, 0, SHOP_LIFE_MAP_AREA_MAX
+	SIF TEXT_SPLIT:SPLIT_COUNTER == ""
+		CONTINUE
+	;----------------------------------------------
+	; # 클릭 가부 판정
+	;----------------------------------------------
+	IF TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER > 0
+		[IF_DEBUG]
+			DEBUGPRINTFORM BUTTON 판정 이번 체크하는 것은 AREA.{TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER - SHOP_LIFE_LIST1_ADD_INPUT}
+			DEBUGPRINTFORML   %MENUVARS:(TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER - SHOP_LIFE_LIST1_ADD_INPUT)%
+		[ENDIF]
+		VARSET PRINTBUTTON_FLAG
+		;-----------------------------------------
+		;존재 판정
+		;-----------------------------------------
+		RESULT = 0
+		TRYCALLFORM SHOP_LIFE67_MAP{SHOP_LIFE_MAP_NUM}_AREA{TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER - SHOP_LIFE_LIST1_ADD_INPUT}_EXIST
+		IF RESULT
+			PRINTBUTTON_FLAG = 1
+			[IF_DEBUG]
+				DEBUGPRINTFORM BUTTON 판정 AREA.{TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER - SHOP_LIFE_LIST1_ADD_INPUT}
+				DEBUGPRINTFORML   %MENUVARS:(TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER - SHOP_LIFE_LIST1_ADD_INPUT)%  존재 있어
+			[ENDIF]
+		ENDIF
+		;-----------------------------------------
+		;명칭 판정
+		;-----------------------------------------
+		IF PRINTBUTTON_FLAG
+			PRINTBUTTON_FLAG = 0
+			RESULTS:0 '= ""
+			TRYCALLFORM SHOP_LIFE67_MAP{SHOP_LIFE_MAP_NUM}_AREA{TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER - SHOP_LIFE_LIST1_ADD_INPUT}_NAME
+			IF RESULTS:0 != ""
+				PRINTBUTTON_FLAG = 1
+				[IF_DEBUG]
+					DEBUGPRINTFORM BUTTON 판정 AREA.{TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER - SHOP_LIFE_LIST1_ADD_INPUT}
+					DEBUGPRINTFORML   %MENUVARS:(TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER - SHOP_LIFE_LIST1_ADD_INPUT)%  명칭 있어
+				[ENDIF]
+			ENDIF
+		ENDIF
+		;-----------------------------------------
+		;선택 가부 판정
+		;-----------------------------------------
+		IF PRINTBUTTON_FLAG
+			PRINTBUTTON_FLAG = 0
+			RESULT = 0
+			TRYCALLFORM SHOP_LIFE67_MAP{SHOP_LIFE_MAP_NUM}_AREA{TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER - SHOP_LIFE_LIST1_ADD_INPUT}_CHECK
+			IF RESULT
+				PRINTBUTTON_FLAG = 1
+				[IF_DEBUG]
+					DEBUGPRINTFORM BUTTON 판정 AREA.{TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER - SHOP_LIFE_LIST1_ADD_INPUT}
+					DEBUGPRINTFORML   %MENUVARS:(TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER - SHOP_LIFE_LIST1_ADD_INPUT)%  선택 가능
+				[ENDIF]
+			ENDIF
+		ENDIF
+	ENDIF
+	;-----------------------------------------
+	; # 표시
+	;-----------------------------------------
+	;버튼이 존재해 현재지 또한 컨텐츠 표시 허가 상태
+	IF PRINTBUTTON_FLAG && TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER > 0 && SHOP_LIFE_MAP_AREA_NUM == TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER - SHOP_LIFE_LIST1_ADD_INPUT
+		SETCOLOR 칼라_선택중
+		PRINTBUTTON @"%TEXT_SPLIT:SPLIT_COUNTER%", TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER
+	;버튼이 존재해 현재지 또한 컨텐츠 표시 금지 상태
+	ELSEIF TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER > 0 && SHOP_LIFE_MAP_AREA_NUM == TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER - SHOP_LIFE_LIST1_ADD_INPUT
+		SETCOLOR 칼라_선택중
+		PRINTFORM %TEXT_SPLIT:SPLIT_COUNTER%
+	;버튼이 존재해 컨텐츠 표시 허가 상태
+	ELSEIF PRINTBUTTON_FLAG && TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER > 0
+		SETCOLOR 칼라_시안
+		PRINTBUTTON @"%TEXT_SPLIT:SPLIT_COUNTER%", TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER
+	;버튼이 존재하지만 컨텐츠 표시 금지 상태
+	ELSEIF TEXT_SPLIT_BUTTON_NUM:SPLIT_COUNTER > 0
+		SETCOLOR 칼라_주석
+		PRINTFORM %TEXT_SPLIT:SPLIT_COUNTER%
+	;버튼이 존재하지 않고 선택 불가능
+	ELSE
+		RESETCOLOR
+		;색조 변경
+		CALL MAPIMAGING(TEXT_SPLIT:SPLIT_COUNTER)
+	ENDIF
+NEXT
+
+RESETCOLOR
+;오른쪽 컬럼용의 개행（왼쪽 컬럼의 버튼이 자동 표시된다）
+CALL COLUMN_RIGHT_PRINTL
+
+RETURN 0
+
+;-------------------------------------------------
+;# 맵 색조 변경
+;	화상화하는 경우는 색지정은 아니고 화상 지정에
+;-------------------------------------------------
+@MAPIMAGING(MAPIMAGING_TEXT)
+#DIMS MAPIMAGING_TEXT
+#DIMS TEXT_ONE
+#DIM TEXT_COUNTER
+#DIM TEXT_MAX
+#DIM TEXT_MIN
+
+;텍스트를 1문자씩 분해해 색 바꾸고 표시
+;루프의 최대치（전각 문자수×2）
+TEXT_MAX = 50 * 2
+;루프의 최소치（전각 문자수×2）
+TEXT_MIN = 0
+
+FOR TEXT_COUNTER, TEXT_MIN, TEXT_MAX, 2
+	RESULTS:0 '= ""
+	SUBSTRING MAPIMAGING_TEXT, TEXT_COUNTER, 2
+	TEXT_ONE '= RESULTS:0
+
+		IF TEXT_ONE == "┏"
+			PRINT_IMG "chip_kabe_ishi01"
+		ELSEIF TEXT_ONE == "┗"
+			PRINT_IMG "chip_kabe_ishi02"
+		ELSEIF TEXT_ONE == "┓"
+			PRINT_IMG "chip_kabe_ishi03"
+		ELSEIF TEXT_ONE == "┛"
+			PRINT_IMG "chip_kabe_ishi04"
+		ELSEIF TEXT_ONE == "━"
+			PRINT_IMG "chip_kabe_ishi05"
+		ELSEIF TEXT_ONE == "┃"
+			PRINT_IMG "chip_kabe_ishi06"
+		ELSEIF TEXT_ONE == "╋"
+			PRINT_IMG "chip_kabe_ishi07"
+		ELSEIF TEXT_ONE == "┣"
+			PRINT_IMG "chip_kabe_ishi08"
+		ELSEIF TEXT_ONE == "┳"
+			PRINT_IMG "chip_kabe_ishi09"
+		ELSEIF TEXT_ONE == "┫"
+			PRINT_IMG "chip_kabe_ishi10"
+		ELSEIF TEXT_ONE == "┻"
+			PRINT_IMG "chip_kabe_ishi11"
+		ELSEIF TEXT_ONE == "τ"
+			PRINT_IMG "chip_kabe_ishi12"
+		ELSEIF TEXT_ONE == "λ"
+			PRINT_IMG "chip_kabe_ishi13"
+		ELSEIF TEXT_ONE == "┌"
+			PRINT_IMG "chip_kabe_ita01"
+		ELSEIF TEXT_ONE == "└"
+			PRINT_IMG "chip_kabe_ita02"
+		ELSEIF TEXT_ONE == "┐"
+			PRINT_IMG "chip_kabe_ita03"
+		ELSEIF TEXT_ONE == "┘"
+			PRINT_IMG "chip_kabe_ita04"
+		ELSEIF TEXT_ONE == "─"
+			PRINT_IMG "chip_kabe_ita05"
+		ELSEIF TEXT_ONE == "│"
+			PRINT_IMG "chip_kabe_ita06"
+		ELSEIF TEXT_ONE == "┼"
+			PRINT_IMG "chip_kabe_ita07"
+		ELSEIF TEXT_ONE == "├"
+			PRINT_IMG "chip_kabe_ita08"
+		ELSEIF TEXT_ONE == "┬"
+			PRINT_IMG "chip_kabe_ita09"
+		ELSEIF TEXT_ONE == "┤"
+			PRINT_IMG "chip_kabe_ita10"
+		ELSEIF TEXT_ONE == "┴"
+			PRINT_IMG "chip_kabe_ita11"
+		ELSEIF TEXT_ONE == "κ"
+			PRINT_IMG "chip_kabe_ita12"
+		ELSEIF TEXT_ONE == "ε"
+			PRINT_IMG "chip_kabe_ita13"
+		ELSEIF TEXT_ONE == "◆"
+			IF DISPLAY_SEASON() == "봄"
+				PRINT_IMG "chip_yuka01_haru"
+			ELSEIF DISPLAY_SEASON() == "여름"
+				PRINT_IMG "chip_yuka01_natu"
+			ELSEIF DISPLAY_SEASON() == "가을"
+				PRINT_IMG "chip_yuka01_aki"
+			ELSE
+				PRINT_IMG "chip_yuka01_huyu"
+			ENDIF
+		ELSEIF TEXT_ONE == "□"
+			IF DISPLAY_SEASON() == "봄"
+				PRINT_IMG "chip_yuka02_haru"
+			ELSEIF DISPLAY_SEASON() == "여름"
+				PRINT_IMG "chip_yuka02_natu"
+			ELSEIF DISPLAY_SEASON() == "가을"
+				PRINT_IMG "chip_yuka02_aki"
+			ELSE
+				PRINT_IMG "chip_yuka02_huyu"
+			ENDIF
+		ELSEIF TEXT_ONE == "■"
+			IF DISPLAY_SEASON() == "봄"
+				PRINT_IMG "chip_yuka03_haru"
+			ELSEIF DISPLAY_SEASON() == "여름"
+				PRINT_IMG "chip_yuka03_natu"
+			ELSEIF DISPLAY_SEASON() == "가을"
+				PRINT_IMG "chip_yuka03_aki"
+			ELSE
+				PRINT_IMG "chip_yuka03_huyu"
+			ENDIF
+		ELSEIF TEXT_ONE == "△"
+			IF DISPLAY_SEASON() == "봄"
+				PRINT_IMG "chip_yuka04_haru"
+			ELSEIF DISPLAY_SEASON() == "여름"
+				PRINT_IMG "chip_yuka04_natu"
+			ELSEIF DISPLAY_SEASON() == "가을"
+				PRINT_IMG "chip_yuka04_aki"
+			ELSE
+				PRINT_IMG "chip_yuka04_huyu"
+			ENDIF
+		ELSEIF TEXT_ONE == "▲"
+			IF DISPLAY_SEASON() == "봄"
+				PRINT_IMG "chip_yuka05_haru"
+			ELSEIF DISPLAY_SEASON() == "여름"
+				PRINT_IMG "chip_yuka05_natu"
+			ELSEIF DISPLAY_SEASON() == "가을"
+				PRINT_IMG "chip_yuka05_aki"
+			ELSE
+				PRINT_IMG "chip_yuka05_huyu"
+			ENDIF
+		ELSEIF TEXT_ONE == "▽"
+			IF DISPLAY_SEASON() == "봄"
+				PRINT_IMG "chip_yuka06_haru"
+			ELSEIF DISPLAY_SEASON() == "여름"
+				PRINT_IMG "chip_yuka06_natu"
+			ELSEIF DISPLAY_SEASON() == "가을"
+				PRINT_IMG "chip_yuka06_aki"
+			ELSE
+				PRINT_IMG "chip_yuka06_huyu"
+			ENDIF
+		ELSEIF TEXT_ONE == "▼"
+			IF DISPLAY_SEASON() == "봄"
+				PRINT_IMG "chip_yuka07_haru"
+			ELSEIF DISPLAY_SEASON() == "여름"
+				PRINT_IMG "chip_yuka07_natu"
+			ELSEIF DISPLAY_SEASON() == "가을"
+				PRINT_IMG "chip_yuka07_aki"
+			ELSE
+				PRINT_IMG "chip_yuka07_huyu"
+			ENDIF
+		ELSEIF TEXT_ONE == "☆"
+			IF DISPLAY_SEASON() == "봄"
+				PRINT_IMG "chip_yuka08_haru"
+			ELSEIF DISPLAY_SEASON() == "여름"
+				PRINT_IMG "chip_yuka08_natu"
+			ELSEIF DISPLAY_SEASON() == "가을"
+				PRINT_IMG "chip_yuka08_aki"
+			ELSE
+				PRINT_IMG "chip_yuka08_huyu"
+			ENDIF
+		ELSEIF TEXT_ONE == "★"
+			IF DISPLAY_SEASON() == "봄"
+				PRINT_IMG "chip_yuka09_haru"
+			ELSEIF DISPLAY_SEASON() == "여름"
+				PRINT_IMG "chip_yuka09_natu"
+			ELSEIF DISPLAY_SEASON() == "가을"
+				PRINT_IMG "chip_yuka09_aki"
+			ELSE
+				PRINT_IMG "chip_yuka09_huyu"
+			ENDIF
+		ELSEIF TEXT_ONE == "HH"
+			PRINT_IMG "chip_yuka03"
+		ELSEIF TEXT_ONE == "∞"
+			PRINT_IMG "chip_mizu03"
+		ELSEIF TEXT_ONE == "∽"
+			PRINT_IMG "chip_mizu04"
+		ELSEIF TEXT_ONE == "(("
+			PRINT_IMG "chip_mizu01"
+		ELSEIF TEXT_ONE == "))"
+			PRINT_IMG "chip_mizu02"
+		ELSEIF TEXT_ONE == "◇"
+			PRINT_IMG "chip_hon"
+		ELSEIF TEXT_ONE == "▓▓"
+			PRINT_IMG "chip_yuka04"
+		ELSEIF TEXT_ONE == "||"
+			PRINT_IMG "chip_yuka01"
+		ELSEIF TEXT_ONE == "**"
+			PRINT_IMG "chip_yuka02"
+		ELSEIF TEXT_ONE == "⊃"
+			PRINT_IMG "chip_yuka01_ao"
+		ELSEIF TEXT_ONE == "⊂"
+			PRINT_IMG "chip_yuka02_ao"
+		ELSEIF TEXT_ONE == "⊇"
+			PRINT_IMG "chip_yuka03_ao"
+		ELSEIF TEXT_ONE == "⊆"
+			PRINT_IMG "chip_yuka04_ao"
+		ELSEIF TEXT_ONE == "∋"
+			PRINT_IMG "chip_yuka05_ao"
+		ELSEIF TEXT_ONE == "∈"
+			PRINT_IMG "chip_yuka06_ao"
+		ELSEIF TEXT_ONE == "∃"
+			PRINT_IMG "chip_yuka07_ao"
+		ELSEIF TEXT_ONE == "⇒"
+			PRINT_IMG "chip_yuka08_ao"
+		ELSEIF TEXT_ONE == "⇔"
+			PRINT_IMG "chip_yuka09_ao"
+		ELSEIF TEXT_ONE == "Ж"
+			PRINT_IMG "chip_yuka01_aka"
+		ELSEIF TEXT_ONE == "Ф"
+			PRINT_IMG "chip_yuka02_aka"
+		ELSEIF TEXT_ONE == "Ц"
+			PRINT_IMG "chip_yuka03_aka"
+		ELSEIF TEXT_ONE == "Ч"
+			PRINT_IMG "chip_yuka04_aka"
+		ELSEIF TEXT_ONE == "б"
+			PRINT_IMG "chip_yuka05_aka"
+		ELSEIF TEXT_ONE == "Ъ"
+			PRINT_IMG "chip_yuka06_aka"
+		ELSEIF TEXT_ONE == "Ы"
+			PRINT_IMG "chip_yuka07_aka"
+		ELSEIF TEXT_ONE == "Э"
+			PRINT_IMG "chip_yuka08_aka"
+		ELSEIF TEXT_ONE == "Ю"
+			PRINT_IMG "chip_yuka09_aka"
+		ELSEIF TEXT_ONE == "░░"
+			IF DISPLAY_SEASON() == "봄"
+				PRINT_IMG "chip_shiba01"
+			ELSEIF DISPLAY_SEASON() == "여름"
+				PRINT_IMG "chip_shiba02"
+			ELSEIF DISPLAY_SEASON() == "가을"
+				PRINT_IMG "chip_shiba03"
+			ELSE
+				PRINT_IMG "chip_shiba04"
+			ENDIF
+		ELSEIF TEXT_ONE == "※"
+			IF DISPLAY_SEASON() == "봄"
+				PRINT_IMG "chip_kusa01"
+			ELSEIF DISPLAY_SEASON() == "여름"
+				PRINT_IMG "chip_kusa02"
+			ELSEIF DISPLAY_SEASON() == "가을"
+				PRINT_IMG "chip_kusa03"
+			ELSE
+				PRINT_IMG "chip_kusa04"
+			ENDIF
+		ELSEIF TEXT_ONE == "Ψ"
+			IF DISPLAY_SEASON() == "봄"
+				PRINT_IMG "chip_ki01"
+			ELSEIF DISPLAY_SEASON() == "여름"
+				PRINT_IMG "chip_ki02"
+			ELSEIF DISPLAY_SEASON() == "가을"
+				PRINT_IMG "chip_ki03"
+			ELSE
+				PRINT_IMG "chip_ki04"
+			ENDIF
+		ELSEIF TEXT_ONE == "++"
+			IF DISPLAY_SEASON() == "봄"
+				PRINT_IMG "chip_ki05"
+			ELSEIF DISPLAY_SEASON() == "여름"
+				PRINT_IMG "chip_ki06"
+			ELSEIF DISPLAY_SEASON() == "가을"
+				PRINT_IMG "chip_ki07"
+			ELSE
+				PRINT_IMG "chip_ki08"
+			ENDIF
+			SETCOLOR GETDEFCOLOR()
+		;●외
+		ELSE
+			;화상의 할당이 없는 기호는 그대로 표시
+			;화상은 할당하지 않지만 기호에 착색은 하고 싶은 경우도
+			;분기를 늘려 이 지정에 SETCOLOR를 더하는 등으로 가능한 것으로 생각한다
+			PRINTFORM %TEXT_ONE%
+		ENDIF
+NEXT
+
+RETURN 0

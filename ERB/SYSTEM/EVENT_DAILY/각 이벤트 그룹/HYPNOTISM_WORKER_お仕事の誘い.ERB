@@ -1,0 +1,240 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_HYPNOTISM_WORKER_RATE()
+RETURN 35
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_HYPNOTISM_WORKER_DECISION()
+SIF CFLAG:MASTER:포로처 != 0
+	RETURN 0
+SIF DVAR:최면일_상태관리플래그 != 0
+	RETURN 0
+SIF GETBIT(TALENT:MASTER:데일리계, 소질_데일리_최면노예) && CFLAG:MASTER:소속 == 0
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_HYPNOTISM_WORKER_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_HYPNOTISM_WORKER
+#DIM 대상
+
+IF GETBIT(TALENT:MASTER:데일리계, 소질_데일리_최면노예) && CFLAG:MASTER:소속 != 0 && IS_FEMALE(MASTER)
+	PRINTFORML 일을 하고 있으면 %ANAME(MASTER)%에 주인님이 왔다
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% 그의 얼굴을 본 순간에 암컷의 얼굴이 되어, 개처럼 달려들면 발밑에 무릎 꿇었다
+	PRINTFORML 그는 니 질투나면서 %ANAME(MASTER)%의 머리를 어루만져, 새로운 노예를 갖고 싶어졌다고 고했다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그러면 하고 새로운 동료를 소개하는 일로 했다
+	$SLAVE_SELECT
+	PRINTFORML 누구를 내밀겠어인가?
+	CALL SINGLE_DRAWLINE
+	CALL SELECT_CHARA_LIST_ONLY_LOGIC_SEX("HYPNOTISM_WORKER", "HYPNOTISM_WORKER")
+	대상 = RESULT
+	IF RESULT < 0
+		PRINTFORMW 하지만 동료의 상황이 붙지 않았다……
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 사과로서 스스로의 신체를 내며, 한껏 벌 되었다
+		CALL FUCK(MASTER, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, Ａ, 키스, 펠라티오, Ｖ성교, Ａ성교", "처녀상실, 질내사정, 구강사정, Ａ처녀상실, 장내사정, 키스상실", GET_SPERM_ID("최면술사"), @"최면술사의 \@RAND:2 ? 페니스 # 입술\@", @"", "최면술사", "최면중의 조교")
+		RETURN
+	ELSEIF GETBIT(TALENT:대상:데일리계, 소질_데일리_최면노예)
+		PRINTFORML 그녀는 이미 %ANAME(MASTER)%같이 주인님의 최면 노예였다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 엉덩이를 비비어지면서 다른 여자를 소개하도록(듯이) 명령받았다
+		GOTO SLAVE_SELECT
+	ELSE
+		PRINTFORMW %조사처리(ANAME(대상),"를")% 소개했다
+	ENDIF
+ELSEIF CFLAG:MASTER:소속 == 0
+	PRINTFORML 방랑중, 어느 남자를 만났다
+	PRINTFORML 그는 %조사처리(ANAME(MASTER),"와")% 같은 낭인에게 일을 알선하고 있는 것 같다
+	PRINTFORMW 자세하게 이야기를 들어 보았지만, 꽤 좋은 것 같은 조건이었다
+	PRINTFORML 어떻게 하지?
+	CALL ASK_YN("맡는다" ,"거절한다")
+	IF RESULT == 1
+		PRINTFORML 이지만 지금은 품에도 여유가 있다
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")% 거절하면 남자는 유감스러운 듯이 떠나 갔다
+		RETURN
+	ELSE
+		PRINTFORML 무슨 일도 경험이다
+		PRINTFORMW 일을 맡는 일로 했다
+		대상 = MASTER
+	ENDIF
+ELSE
+	PRINTFORML 업무중, 어느 남자를 부하에 소개되었다
+	PRINTFORML 그는 여러가지 자선 활동을 실시하고 있는 자선가인것 같다
+	PRINTFORMW 그을 도우면 영지민에게로의 어필이 될지도 모른다
+	PRINTFORML 어떻게 하지?
+	CALL ASK_YN("맡는다" ,"거절한다")
+	IF RESULT == 1
+		PRINTFORML 하지만 지금은 전쟁으로 바쁘다
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")% 거절하면 남자는 유감스러운 듯이 떠나 갔다
+		RETURN
+	ELSE
+		PRINTFORML 부하에게 물었지만 꽤 신용이 있는 남자의 같다
+		PRINTFORMW 기분 좋게 맡는 일로 했다
+		PRINTFORML 남에 일에 종사하는 인간을 선택해 주라고 말해졌다
+		$WORKER_SELECT
+		PRINTFORML 누구를 소개할까?
+		CALL SELECT_CHARA_LIST_SLG()
+		대상 = RESULT
+		IF RESULT < 0
+			PRINTFORML 하지만 동료의 상황이 붙지 않았다……
+			PRINTFORMW 미안하지만 거절하면 그는 어깨를 움츠려 떠나 갔다
+			RETURN
+		ELSEIF RESULT == MASTER
+			PRINTFORMW %ANAME(대상)%자신이 돕는 일로 했다
+		ELSE
+			PRINTFORMW %조사처리(ANAME(대상),"를")% 소개했다
+			IF GETBIT(TALENT:대상:데일리계, 소질_데일리_최면노예)
+				IF IS_FEMALE(대상)
+					PRINTFORML 하지만 왜일까 그녀는 거절당했다
+				ELSE
+					PRINTFORML 하지만 왜일까 그는 거절당했다
+				ENDIF
+				PRINTFORMW 별의 동료를 소개하는 일로 하자
+				GOTO WORKER_SELECT
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+PRINTFORML 그는 %조사처리(ANAME(대상),"를")% 보면 만족할 것 같은 미소를 띄웠다
+PRINTFORMW %조사처리(ANAME(대상),"는")% 조속히 남자에 이끌려 직장에 향했다……
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF (RAND:4 != 0 && !GETBIT(TALENT:MASTER:데일리계, 소질_데일리_최면노예)) || IS_MALE(대상)
+	IF CFLAG:대상:소속 != 0
+		PRINTFORML 소개된 일은 영지민에게로의 봉사 활동이었다
+		PRINTFORMW 평상시와는 다른 일에서 라고 개 마이가 되면서도 충실한 날이 되었다
+		CALL COLOR_PRINTW(@"자선 활동에 의해 타국의 평가가 조금 올라, 지원병도 증가했다", 칼라_주의)
+		COUNTRY_SOLDIER:(CFLAG:대상:소속) += 300 + (50 * (RAND:20 + 1))
+		FOR LOCAL, 1, MAX_COUNTRY
+			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, 15, -15)
+		NEXT
+	ELSE
+		PRINTFORML 소개된 일은 난민에게로의 자원봉사 활동이었다
+		PRINTFORMW 익숙해지지 않는 것을서 라고 개 마이 있으가 되면서도 충실한 날이 되었다
+		CALL COLOR_PRINTW(@"보수로 하고 있고 창고인가의 돈을 받았다", 칼라_주의)
+		MONEY += 500 + (50 * (RAND:30 + 1))
+	ENDIF
+ELSE
+	PRINTFORML %조사처리(ANAME(대상),"는")% 남자의 저택에 안내되면 갑자기 벗도록 들었다
+	PRINTFORML 돌연의 요구에 당연 %조사처리(ANAME(대상),"는")% 곤혹해거부한다
+	PRINTFORMW 남은 간들거리면서 재차 명령했기 때문에 %조사처리(ANAME(대상),"는")% 돌아가려고 했다
+	PRINTFORML …하지만 왜일까 몸이 움직이지 않는다!
+	PRINTFORMW 당황하는 %조사처리(ANAME(대상),"를")% 봐 남자는 히죽히죽 웃는다
+	PRINTFORML 뭔가의 방법을 걸쳐졌다고 초조해 하는 %조사처리(ANAME(대상),"이지만")% 이미 늦었다
+	PRINTFORML 「이제 당신은 나의 명령에 거역할 수 없는, 도망치는 일도할 수 없다…」
+	PRINTFORMW 남이 천천히 가까워져 오면서 기색이 나쁜 소리로 중얼거린다
+	IF GETBIT(TALENT:MASTER:데일리계, 소질_데일리_최면노예)
+		PRINTFORML 「쿳쿳쿠, 가족의 도움이 있으면 편하고 좋다」
+		PRINTFORMW 남이 기분 나쁘게 그렇게 중얼거렸다
+		PRINTFORML 혼란한 %ANAME(대상)%에는 그 의미가 몰랐다
+		PRINTFORMW 「응? 아직 모르는 것인지? 너를 여기에 넘긴 저 녀석은, 이미 나의 노예인 것이야」
+		PRINTFORML 남의 말에 %ANAME(대상)%의 뇌리에 %ANAME(MASTER)%의 얼굴이 떠올랐다
+		PRINTFORML 「덕분에 간단하게 끼울 수가 있었다…쿠쿠쿠, 믿을 수 없는가? 그렇다면 그걸로 좋다」
+		PRINTFORML 「어차피 곧바로 아무것도 모르게 되니까」
+		PRINTFORMW 남은 니타와 입을 비뚤어지게 하면 재차 이쪽에 다시 향했다
+	ENDIF
+	PRINTFORML 「신체는 이미 나의 물건…다음은 그 정신과 감각을…예의범절을 가르치게 해 받읍시다」
+	PRINTFORML 기분 나쁜 모습에 %조사처리(ANAME(대상),"는")% 식은 땀을 흘리면서 어떻게든 도망치려고 한다
+	PRINTFORMW 하지만 역시 몸은 손가락 한 개 자유롭게 움직이지 않고, 눈앞의 남자를 뿌리치는 일도할 수 없다
+	PRINTFORML 「내가 이 손가락을 울리면, 당신은 깊은 꿈 속에 떨어지는…좋습니까?」
+	PRINTFORML 남의 조용한 소리가 머릿속에 울려 퍼져 스며들어 온다
+	PRINTFORMW 「그러면…」
+	PRINTFORML 
+	PRINTFORML 
+	CALL COLOR_PRINTW(@"　　　　　　　　　　짜악", 칼라_핑크)
+	PRINTFORML 
+	PRINTFORMW 
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 침실에서 최면술사에 범해지고 있다
+	PRINTFORML 밀어 쓰러트려져 격렬한 씨뿌리기 프레스를 먹으면서 움찔움찔 신체를 진동시킨다
+	PRINTFORML 하지만 조금 전과 달라 %조사처리(ANAME(대상),"는")% 저항도 하지 않고 전혀 아무 일도 없는 것처럼 무표정하다
+	PRINTFORMW 남의 최면을 받은 %조사처리(ANAME(대상),"는")% 지금 일어나고 있는 일을 올바르게 인식 되어 있지 않게 되어 있었다
+	PRINTFORML 「쿳! 꽤 좋은 형편이 아닌가! 어때! 범해지고 있는 기분은!」
+	PRINTFORML 격렬하게 허리를 쳐박아 오는 남자에게 그렇게 거론되어도 %조사처리(ANAME(대상),"는")% 멍청히 해 고개를 갸웃한다
+	PRINTFORML 그는 무슨 말을 하고 있는 것일까? 확실히 강간되고 있지만 보통 일이 아닐까
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 움찔움찔 몸을 진동시키면서 스스로를 관철하는 남자의 페니스의 움직임을 다만 바라본다
+	PRINTFORML 「옷! 옷! 건방지게도 단단히 조여 오고 자빠져도! 오라! 이 암퇘지가!」
+	PRINTFORML %조사처리(ANAME(대상),"는")% 자신의 안에 격렬하게 출입하는 씩씩한 자지를 약간 발정한 눈으로 바라보고 있다
+	PRINTFORML 빵! 빵! 빵! (와)과 격렬하게 페니스를 쳐박아질 때에 보지가 격렬하게 실룩거린다
+	PRINTFORMW 사고와 달라 신체는 솔직하게 반응해, 무자각의 쾌락에 %조사처리(ANAME(대상),"는")% 숨을 거칠게 하고 있었다
+	PRINTFORML 「오오! 좋은 억압이다! 워, 원래 여기의 소질이 있지 않았을까? 오라!」
+	PRINTFORML 자지가 빼고 꽂기 될 때에않고 않고 와 추잡한 소리와 %ANAME(대상)%의 신음소리가 영향을 준다
+	PRINTFORML 다소의 고통과 저리는 것 같은 감각을 기억하면서도 그것이 무엇인 것인가, %ANAME(대상)%에는 모른다
+	PRINTFORMW 남이 허리의 움직임을 가속시키면, %ANAME(대상)%도 또한 움찔움찔 전신을 진동시키기 시작했다
+	PRINTFORML 「오라! 오라! 너도 느껴라! 빗치같이 미친듯이 앙앙거리면서 가버려라!」
+	PRINTFORMW 남이 뭔가를 아우성친다…
+	PRINTFORML 하면 다음의 순간 강렬한 쾌감이 전신에 달려, %조사처리(ANAME(대상),"는")% 크게 신체를 뒤로 젖히게 했다
+	PRINTFORML 갑자기 덤벼 들어 온 폭력적인 충격에 %조사처리(ANAME(대상),"는")% 혼란하면서 몹시 놀라 조수를 분다
+	PRINTFORMW 육체 감각을 민감하게 된 %조사처리(ANAME(대상),"는")% 사고를 튀게 하면서 명령받은 대로 미친듯이 자지러지는 신음소리를 낸다
+	PRINTFORML 「쿠우! 좋아! 한층 더 단단히 조여 오고 자빠져! 싼다! 오라! 가라! 오라! 오라!」
+	PRINTFORMW 사정 선언에 %조사처리(ANAME(대상),"는")% 무의식 중에 그에게 매달려, 자궁입구구두나 키라고 대망때를 맞이했다
+	PRINTFORML 
+	CALL COLOR_PRINTL(@"뷰르르룰!", 칼라_핑크)
+	PRINTFORML 
+	CALL COLOR_PRINTL(@"♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥", 칼라_핑크)
+	PRINTFORMW 
+	PRINTFORML 작열의 정액이 발해지면 %조사처리(ANAME(대상),"는")% 시야를 새하얗게 하면서 절정에 이르렀다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 힘차게 쏟아지는 정액을 태로 느끼면서 단정치 못한 교성을 미치게 했다
+	PRINTFORML …남자는 %ANAME(대상)%의 최면 강도를 올릴 수 있도록 그 뒤도 끝없이 조교를 계속 반복했다
+	PRINTFORMW 절정의 여운이 남은 %조사처리(ANAME(대상),"는")% 이미 쾌락의 물결에 저항하지 못하고, 명령되는 대로 몇 번이나 절정 했다
+	CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, Ａ, 키스, 펠라티오, Ｖ성교, Ａ성교", "처녀상실, 질내사정, 구강사정, Ａ처녀상실, 장내사정, 키스상실", GET_SPERM_ID("최면술사"), @"최면술사의 \@RAND:2 ? 페니스 # 입술\@", @"", "최면술사", "최면중의 조교")
+	CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, Ａ, 키스, 펠라티오, Ｖ성교, Ａ성교", "처녀상실, 질내사정, 구강사정, Ａ처녀상실, 장내사정, 키스상실", GET_SPERM_ID("최면술사"), @"최면술사의 \@RAND:2 ? 페니스 # 입술\@", @"", "최면술사", "최면중의 조교")
+	PRINTFORML 
+	IF 대상 == MASTER 
+		IF CFLAG:MASTER:소속 == 0
+			PRINTFORMW 깨달으면 %조사처리(ANAME(대상),"는")% 숙박하고 있는 숙소의 전에 있었다
+			PRINTFORML 는이라고, 어느새? 확실히 오늘은 일을 소개되고 있었을 것
+			PRINTFORML 어떤 일을 한 것이던가?
+			PRINTFORMW 그렇게 생각하면 찌잉하고 하복부가 아팠다
+			PRINTFORML 하지만 %조사처리(ANAME(대상),"가")% 그것에 대해 깊게 생각하는 일은 없었다
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 아마 첫일로 지쳤을 것이라고 자신에게 타일러 숙소에 들어갔다
+			PRINTFORMW …몸에 새겨진 능욕의 자국에 일절 깨닫지 않는 채
+		ELSE
+			PRINTFORMW 깨달으면 %조사처리(ANAME(대상),"는")% 자택의 앞에 있었다
+			PRINTFORML 는이라고, 어느새? 확실히 오늘은 일을 소개되고 있었을 것
+			PRINTFORML 어떤 일을 한 것이던가?
+			PRINTFORMW 그렇게 생각하면 찌잉하고 하복부가 아팠다
+			PRINTFORML 하지만 %조사처리(ANAME(대상),"가")% 그것에 대해 깊게 생각하는 일은 없었다
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 아마 첫일로 지쳤을 것이라고 자신에게 타일러 집에 들어갔다
+			PRINTFORMW …몸에 새겨진 능욕의 자국에 일절 깨닫지 않는 채
+		ENDIF
+	ELSE
+		PRINTFORML 저녁, 그녀가 궁전에 돌아온 것이 보인 %조사처리(ANAME(MASTER),"는")% 말을 걸었다
+		PRINTFORMW 어떤 일이었는지라고 물으면 그녀는 이상한 것 같게 고개를 갸웃했다
+		PRINTFORML 그리고 다음의 순간, 싱긋 웃는 얼굴이 되면
+		PRINTFORMW 매우 도움이 되는 일이었던 것으로 한동안 다녀 보려고 생각한다, 라고 고했다
+		IF GETBIT(TALENT:MASTER:데일리계, 소질_데일리_최면노예)
+			PRINTFORMW 그녀의 그 모습에, 당신힐쭉 웃었다
+		ELSE
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀의 그 모습에 일순간 위화감을 기억했지만 기분탓일거라고 신경쓰지 않았다
+			PRINTFORMW 자기 방에 돌아가는 그녀와 이별을 고해 일하러 돌아왔다
+			PRINTFORMW …그녀의 옷아래의 능욕의 자국에는 일절 깨달을 수 없었다
+		ENDIF
+	ENDIF
+	DVAR:최면일_조교대상ID = GET_ID(대상)
+	DVAR:최면일_상태관리플래그 = 1
+ENDIF
+
+RETURN 1
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_HYPNOTISM_WORKER(대상)
+#DIM 대상
+RETURN CFLAG:대상:행동불능상태 != 행동불능_아이 && CFLAG:대상:소속 == CFLAG:MASTER:소속 && !IS_ANIMAL(대상) && !IS_MALE(대상) && GET_ID(대상) != GET_ID(MASTER)
+
+@SELECT_CHARA_LIST_SELECT_LOGIC_HYPNOTISM_WORKER(대상)
+#DIM 대상
+RETURN CFLAG:대상:포로처 == 0
+
+@EVENT_DAILY_HYPNOTISM_WORKER_ALLOW_WHEN_WANDERING
+RETURN 1
+

@@ -1,0 +1,27 @@
+﻿@CHARACTER_EDIT_UI_BASE(대상)
+#DIM 대상
+PRINTBUTTON "[  체력]", 0
+PRINTFORML  현재:{MAXBASE:대상:체력}
+PRINTBUTTON "[  기력]", 1
+PRINTFORML  현재:{MAXBASE:대상:기력}
+PRINTBUTTON "[정신력]", 2
+PRINTFORML  현재:{MAXBASE:대상:정신력}
+
+
+@CHARACTER_EDIT_INPUT_BASE(대상, 입력치)
+#DIM 대상
+#DIM 입력치
+
+SIF !INRANGE(입력치, 0, 2)
+	RETURN 0
+
+PRINTFORML 치를 입력 현재가 {MAXBASE:대상:입력치} 
+PRINTFORML %BASENAME:입력치%를 편집중 0～5000)
+
+INPUT
+
+RESULT = LIMIT(RESULT, 0, 5000)
+
+MAXBASE:대상:입력치 = RESULT
+BASE:대상:입력치 = MAXBASE:대상:입력치
+

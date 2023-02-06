@@ -1,0 +1,60 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_CHALLENGE_DANMAKU_DANGER_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_CHALLENGE_DANMAKU_DANGER_DECISION(대상)
+#DIM 대상
+RETURN IS_FEMALE(대상)
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_CHALLENGE_DANMAKU_DANGER(대상)
+#DIM 대상
+PRINTFORML 도를 걷고 있으면, 들요괴에 탄막놀이를 도전해졌다
+PRINTFORML 이기면 돈을 준다고 한다
+PRINTFORML 이지만, 지면 몸을 좋아하게 시켜라라고 말해 왔다
+
+PRINTL
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "무투"))
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "지략"))
+CALL ASK_YN("받아 선다", "거절한다")
+IF RESULT == 1
+	PRINTFORML 어떻게 생각해도 어울리지 않는다
+	PRINTFORML 거절했다
+	RETURN 1
+ENDIF
+
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF LIMIT(ABL:대상:무투 + ABL:대상:지략, 75, 150) > RAND:150
+	PRINTFORML 훌륭히 승리했다!
+	PRINTFORML 좋은 승부로 자신이 붙었다
+	CALL ICPRINT("상금으로 해서 금<10000>을 손에 넣었다", "L", 칼라_주의)
+	CALL PRINT_ADD_EXP(대상, "무투경험치", RAND:8 + 6, 1)
+	CALL PRINT_ADD_EXP(대상, "지략경험치", RAND:8 + 6, 1)
+	MONEY += 10000
+	RETURN 1
+ENDIF
+
+PRINTFORML 져 버렸다
+PRINTFORMW 승부에 진 %조사처리(ANAME(대상),"는")%, 약속대로 요괴의 보금자리에 데리고 들어가졌다……
+PRINTFORML 
+PRINTFORML %조사처리(ANAME(대상),"는")% 사타구니로부터 대량의 백탁액을 흘려 보내면서, 숨도 끊어질듯 끊어질듯이 되어 있다
+PRINTFORML 패배의 대상으로 해서 요괴에 심하게 범해지고 다하여져 %조사처리(ANAME(대상),"는")% 황홀한 표정을 띄워 가로놓여 있다
+PRINTFORML 요괴의 몹시 거친 섹스에, 몸도 마음도 완전히 헤롱헤롱으로 되어 버리고 있다
+PRINTFORML 휴식을 끝낸 그가 그 %STR_BODY("신체", 대상)%를 껴안으면, %조사처리(ANAME(대상),"는")% 열정적인 시선을 보내 다음을 졸라댄다
+PRINTFORMW 요괴도 거기에 응해 조속히 페니스를 %ANAME(대상)%에 삽입해, 격렬하게 허리를 흔들기 시작했다
+CALL FUCK(대상, "욕망, 성교, 봉사, 성기술, Ｖ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("들요괴"), @"들요괴의 \@RAND:2 ? 페니스 # 입술\@", "들요괴", "", "패배한 끝의 강간")
+PRINTFORML 
+PRINTFORMW 밤새 범해지고 계속한 후 해방된 %조사처리(ANAME(대상),"는")%, 떨리는 신체를 질질 끌어 거점에 돌아왔다
+
+RETURN 1

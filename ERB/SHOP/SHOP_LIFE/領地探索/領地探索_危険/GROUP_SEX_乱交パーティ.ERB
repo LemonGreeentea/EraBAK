@@ -1,0 +1,71 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_GROUP_SEX_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_GROUP_SEX_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_GROUP_SEX(대상)
+#DIM 대상
+
+PRINTFORML 어떤 환락가를 산책중, 그야말로 이상한 낯선 남자가 다가왔다
+PRINTFORML 좋은 일을 하고 있지만 함께 어때, 라고다
+PRINTFORML 신경이 쓰인 %조사처리(ANAME(대상),"는")% 상세를 (들)물어 보았다
+PRINTFORML 이 앞의 가게의 지하에서 남녀가 모여, 마다없는 일을 하고 있는 것이라고 한다
+PRINTFORML ……즉, 난교 파티의 참가자를 모으고 있는 것 같다
+PRINTFORML 환락가라고는 해도 대낮 당당 그런 권유를 받는다고는 생각하지 않았지만……
+
+PRINTL
+CALL ASK_MULTI("참가해 본다", "남을 잡는다", "그만둔다")
+
+SELECTCASE RESULT
+	CASE 2
+		PRINTFORML 흥미는 없다
+		PRINTFORML 남을 다루어 떠났다
+	CASE 1
+		PRINTFORML 그런 발칙한 일을 하고 있는 것은 허락할 수 없다!
+		PRINTFORML 남을 잡아, 병사에 내밀었다
+		CALL ICPRINT("강기 숙정의 예로서 금<3000>을 받았다", "L", 칼라_주의)
+	CASE 0
+		PRINTFORML 흥미가 있다
+		PRINTFORMW 남의 유혹에 넘어가 보기로 했다
+		IF IS_FEMALE(대상)
+			PRINTFORML 승낙하면, 남자는 천하게 보인 미소를 띄워%ANAME(대상)%의 %STR_BODY("허리", 대상)%에 손을 썼다
+			PRINTFORMW %ANAME(대상)%도 특히 저항하지 않고, 남자에 이끌리는 대로 어떤점의 지하로 내려 갔다
+			PRINTFORML 
+			PRINTFORML 그곳에서는 무수한 알몸의 남녀가 흐트러지고 있었다
+			PRINTFORML 대음량으로 흐르는 음악과 함께, 방안에 추잡한 미츠네와 신음소리가 영향을 주고 있다
+			PRINTFORMW 숨이 막히는 것 같은 수컷과 암컷의 냄새가 충만하고 있어, %ANAME(대상)%도 신체가 달아올라 버리는 것을 느꼈다
+			PRINTFORML %조사처리(ANAME(대상),"를")% 데리고 들어간 남자는, 조속히 그 %STR_BODY("신체", 대상)%를 껴안아, 애무와 함께 옷을 벗겨 온다
+			PRINTFORML 완전히 고조된 %ANAME(대상)%도, 되는 대로 몸을 구불거리게 되어지면서 알몸이 되었다
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 밤새 그들과 함께 육욕의 연회에 빠져 무수한 페니스에 봉사해 몇 번이나 질 내 되었다
+			CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 질내사정, 키스상실, 장내사정, 구강사정", GET_SPERM_ID("지나가는 남자"), @"지나가는 남자의 \@RAND:2 ? 페니스 # 입술\@", "지나가는 남자", "",  "난교")
+			PRINTFORML 
+			PRINTFORMW 완전히 빠져 버린 %조사처리(ANAME(대상),"는")%, 다음의 파티에도 권하면 좋겠다고 고해 헤어졌다
+		ELSE
+			PRINTFORMW 승낙하면, 남자는 천하게 보인 미소를 띄워%조사처리(ANAME(대상),"를")% 어떤점의 지하에 안내했다
+			PRINTFORML 
+			PRINTFORML 그곳에서는 무수한 알몸의 남녀가 흐트러지고 있었다
+			PRINTFORML 대음량으로 흐르는 음악과 함께, 방안에 추잡한 미츠네와 신음소리가 영향을 주고 있다
+			PRINTFORMW 숨이 막히는 것 같은 수컷과 암컷의 냄새가 충만하고 있어, %ANAME(대상)%도 신체가 달아올라 버리는 것을 느꼈다
+			PRINTFORML 한사람의 알몸의 소녀가 %ANAME(대상)%에 껴안아, 애무와 함께 옷을 벗겨 온다
+			PRINTFORML 완전히 고조된 %ANAME(대상)%도 그녀의 입술을 난폭하게 막아, 혀를 얽히게 되어지면서 알몸이 되었다
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 밤새 그녀들과 함께 육욕의 연회에 빠져 졸라대지는 대로 몇 번이나 섹스를 반복했다
+			CALL FUCK(대상, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실, Ｖ삽입", 0, "스침의 소녀의 입술", "", "스침의 소녀의 질", "난교")
+			PRINTFORML 
+			PRINTFORMW 완전히 만족한 %조사처리(ANAME(대상),"는")%, 다음의 파티에도 권하면 좋겠다고 고해 헤어졌다
+		ENDIF
+ENDSELECT
+RETURN 1
+

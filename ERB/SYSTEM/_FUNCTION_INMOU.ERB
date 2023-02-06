@@ -1,0 +1,144 @@
+﻿;---------------------------
+;ARG:0의 음모 목표치를 ARG:1으로 설정하는 함수
+;---------------------------
+@SET_INMOU_DEFAULT(ARG:0, ARG:1)
+SIF !INRANGE_INMOU(ARG:1)
+	RETURN 0
+TALENT:(ARG:0):음모목표치 = ARG:1
+RETURN 1
+
+;---------------------------
+;ARG:0의 음모현재치를 취득한다
+;하트형은 표준에 읽어 바꿀 수 있다
+;---------------------------
+@GET_INMOU(ARG:0)
+#FUNCTION
+SIF TALENT:(ARG:0):음모현재치 == 음모_하트형
+	RETURNF 음모_표준
+RETURNF TALENT:(ARG:0):음모현재치
+
+;---------------------------
+;ARG:0의 음모현재치가 목표치에 향하여 변화하는 함수
+;---------------------------
+@INMOU_GROW(ARG:0)
+#DIM 현재
+#DIM 목표
+
+;백보지라면 자라지 않는다
+SIF !IS_GROW_INMOU(ARG:0)
+	RETURN 0
+
+현재 = TALENT:(ARG:0):음모현재치
+목표 = TALENT:(ARG:0):음모목표치
+
+LOCAL:1 = 0
+
+;하트형은 표준 상당
+IF 현재 == 음모_하트형
+	현재 = 음모_표준
+ENDIF
+IF 목표 == 음모_하트형
+	목표 = 음모_표준
+	LOCAL:1 = 1
+ENDIF
+
+;목표보다 적은 경우는 1자란다
+IF 목표 - 현재 > 0 
+	현재 ++
+;목표보다 자라고 있는 경우는 벤다
+ELSEIF 목표 - 현재 < 0
+	현재 = 목표
+ENDIF
+
+;하트형의 경우, 표준 상당히 되어 있으면 베어 가지런히 한다
+IF 목표 == 현재 && LOCAL:1 == 1
+	현재 = 음모_하트형
+ENDIF
+
+TALENT:(ARG:0):음모현재치 = 현재
+RETURN 1
+
+;---------------------------
+;ARG:0의 음모가 성장할까
+;---------------------------
+@IS_GROW_INMOU(ARG:0)
+#FUNCTION
+RETURNF TALENT:(ARG:0):음모현재치 != -1
+
+
+;---------------------------
+;ARG:0에 대응하는 음모의 성장 정도를 돌려준다
+;---------------------------
+@GET_INMOU_NAME(ARG:0)
+#FUNCTIONS
+SELECTCASE ARG:0
+	CASE 음모_백보지
+		RETURNF "백보지"
+	CASE 음모_깔끔
+		RETURNF "깔끔"
+	CASE 음모_손질됨
+		RETURNF "손질됨"
+	CASE 음모_솜털
+		RETURNF "솜털"
+	CASE 음모_살짝
+		RETURNF "살짝"
+	CASE 음모_표준
+		RETURNF "표준"
+	CASE 음모_많은
+		RETURNF "많은"
+	CASE 음모_주렁주렁
+		RETURNF "주렁주렁"
+	CASE 음모_무식하게
+		RETURNF "무식하게"
+	CASE 음모_강모
+		RETURNF "강모"
+	CASE 음모_항문에난털
+		RETURNF "엉덩이까지 털투성이"
+	CASE 음모_하트형
+		RETURNF "하트형"
+	CASEELSE
+		RETURNF "불명"
+ENDSELECT
+
+;---------------------------
+;주어진 인수의 성장 정도가 존재할까
+;---------------------------
+@INRANGE_INMOU(ARG:0)
+#FUNCTION
+RETURNF GET_INMOU_NAME(ARG:0) != "불명"
+
+
+;---------------------------
+;주어진 캐릭터의 음모 상태가 어떤 것인가 돌려준다
+;-2 무모 -1얇은 0 표준 1많은 2 강모 3 하트
+;---------------------------
+@GET_INMOU_LEVEL(ARG:0)
+#FUNCTION
+SELECTCASE TALENT:(ARG:0):음모현재치
+	CASE 음모_백보지, 음모_깔끔
+		RETURNF -2
+	CASE 음모_손질됨, 음모_솜털, 음모_살짝
+		RETURNF -1
+	CASE 음모_표준
+		RETURNF 0
+	CASE 음모_많은, 음모_주렁주렁, 음모_무식하게
+		RETURNF 1
+	CASE 음모_강모, 음모_항문에난털
+		RETURNF 2
+	CASE 음모_하트형
+		RETURNF 3
+ENDSELECT
+
+;---------------------------
+;음모가 하트형인지를 단순하게 돌려준다
+;---------------------------
+@IS_INMOU_HEART(ARG:0)
+#FUNCTION
+RETURNF TALENT:(ARG:0):음모현재치 == 음모_하트형
+
+;---------------------------
+;음모 상태를 화면에 출력한다
+;---------------------------
+@PRINT_INMOU(ARG:0)
+LOCALS:0 = %GET_INMOU_NAME(TALENT:(ARG:0):음모현재치)%
+CALL COLOR_PRINT(@"%LOCALS:0%", LOCALS:0 == "하트형" ? 칼라_핑크 # GETDEFCOLOR())

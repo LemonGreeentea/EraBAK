@@ -1,0 +1,579 @@
+﻿;-------------------------------------------------
+; 「가챠를 돌린다」의 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA14_COM2_EXIST
+RETURN 1
+
+;-------------------------------------------------
+; 「가챠를 돌린다」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA14_COM2_NAME
+RESULTS:0 '= "가챠를 돌린다"
+RETURN 1
+
+;-------------------------------------------------
+; 「가챠를 돌린다」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA14_COM2_CHECK(ARG:0)
+SIF GAMBLE_MONEY < 100
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+; 「가챠를 돌린다」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA14_COM2_CHECKCHARA(ARG:0)
+
+RETURN 1
+
+;-------------------------------------------------
+; 「가챠를 돌린다」의 메인 처리
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA14_COM2_MAIN
+
+PRINTFORML  FP:100으로 가챠를 1회 돌릴 수 있을 것 같다
+PRINTFORML  어떻게 하지
+$INPUT_LOOP
+
+RESETCOLOR
+CALL COLOR_LINE
+PRINTFORM   소지 FP:
+SETCOLOR COLOR("오렌지")
+PRINTFORM  %NO_FORMAT(GAMBLE_MONEY)%
+RESETCOLOR
+PRINTL 
+CALL COLOR_LINE
+PRINTFORM   [ 100]FP교환
+PRINT 　　
+PRINTFORM  [ 101]가챠를 돌린다
+PRINT 　　
+PRINTFORM  [ 102]경품을 본다
+PRINTL 
+CALL COLOR_LINE
+PRINT   [   0]돌아온다
+
+INPUT 0
+
+IF RESULT == 0
+CALL COLOR_LINE
+
+PRINTFORMW  눈 깜짝할 사이에 시간이 지나 버렸다
+
+SHOP_TIME ++
+BEGIN TURNEND
+RETURN
+
+ELSEIF RESULT == 100
+	CALL GAMBLE_EXCHANGE
+
+ELSEIF RESULT == 101
+	CALL Gacha
+
+ELSEIF RESULT == 102
+	CALL KEIHIN
+ENDIF
+
+GOTO INPUT_LOOP
+
+;묘사를 클리어 하지 않는다
+LINES_SHOP = LINECOUNT
+
+RETURN 1
+
+;============================================================================== 
+;◇FP의 교환（레이아웃을 메인 페이지에 통일·타이틀·텍스트·정보·버튼의 순서에）
+;============================================================================== 
+@GAMBLE_EXCHANGE
+	#DIM RATE = 1000
+	#DIM MAXBALL = 0
+	MAXBALL = MONEY / RATE
+	IF GAMBLE_MONEY > 999999999999
+		MAXBALL = MAXBALL - ( MAXBALL + GAMBLE_MONEY - 9999999999999 )
+	ENDIF
+	CALL TITLE_CATEGORY_GENERAL("FP의 교환")
+	PRINTL 
+	SETCOLOR COLOR("실버")
+	PRINTFORML   금을 가챠로 사용할 수 있는 「FP」로 교환할 수가 있는 것 같다
+	PRINTFORML   몇 포인트 교환할까? （입력 또는 선택）
+	RESETCOLOR
+	CALL COLOR_LINE
+
+	CALL COLOR_PRINTL("  소지금:", GETDEFCOLOR(), @"%NO_FORMAT(MONEY)%", 칼라_오렌지, "  소지 FP:", GETDEFCOLOR(), @"%NO_FORMAT(GAMBLE_MONEY)%", 칼라_오렌지, "  FP단가:", GETDEFCOLOR(), "1,000", 칼라_오렌지, "/FP")
+	CALL COLOR_LINE
+
+	IF MAXBALL >= 10
+		PRINT   
+		PRINTFORM  [{10 ,4}]%NO_FORMAT(10), 6%포인트 교환
+		PRINT   
+		SETCOLOR COLOR("실버")
+		PRINTPLAINFORM FP:%NO_FORMAT(10), 6%  금:%NO_FORMAT(MONEY), 10% - %NO_FORMAT(10*RATE), 10% = %NO_FORMAT(MONEY-(10*RATE)), 10%
+		RESETCOLOR
+	ELSE
+		PRINT   
+		SETCOLOR COLOR("회색")
+		PRINTPLAINFORM  [{10 ,4}]%NO_FORMAT(10), 6%포인트 교환
+		PRINT   
+		PRINTPLAINFORM FP:%NO_FORMAT(10), 6%  금:%NO_FORMAT(MONEY), 10% - %NO_FORMAT(10*RATE), 10% = %NO_FORMAT(MONEY-(10*RATE)), 10%
+		RESETCOLOR
+	ENDIF
+	PRINTL 
+	IF MAXBALL >= 100
+		PRINT   
+		PRINTFORM  [{100 ,4}]%NO_FORMAT(100), 6%포인트 교환
+		PRINT   
+		SETCOLOR COLOR("실버")
+		PRINTPLAINFORM FP:%NO_FORMAT(100), 6%  금:%NO_FORMAT(MONEY), 10% - %NO_FORMAT(100*RATE), 10% = %NO_FORMAT(MONEY-(100*RATE)), 10%
+		RESETCOLOR
+	ELSE
+		PRINT   
+		SETCOLOR COLOR("회색")
+		PRINTPLAINFORM  [{100 ,4}]%NO_FORMAT(100), 6%포인트 교환
+		PRINT   
+		PRINTPLAINFORM FP:%NO_FORMAT(100), 6%  금:%NO_FORMAT(MONEY), 10% - %NO_FORMAT(100*RATE), 10% = %NO_FORMAT(MONEY-(100*RATE)), 10%
+		RESETCOLOR
+	ENDIF
+	PRINTL 
+	LOCALS:0 = 한계까지
+	IF MAXBALL >= 1
+		PRINT   
+		PRINTFORM  [{MAXBALL, 4}]%LOCALS:0, 13%교환
+		PRINT   
+		SETCOLOR COLOR("실버")
+		PRINTPLAINFORM FP:%NO_FORMAT(MAXBALL), 6%  금:%NO_FORMAT(MONEY), 10% - %NO_FORMAT(MAXBALL*RATE), 10% = %NO_FORMAT(MONEY-(MAXBALL*RATE)), 10%
+		RESETCOLOR
+	ELSE
+		PRINT   
+		SETCOLOR COLOR("회색")
+		PRINTPLAINFORM  [{MAXBALL, 4}]%LOCALS:0, 13%교환
+		PRINT   
+		PRINTPLAINFORM FP:%NO_FORMAT(MAXBALL), 6%  금:%NO_FORMAT(MONEY), 10% - %NO_FORMAT(MAXBALL*RATE), 10% = %NO_FORMAT(MONEY-(MAXBALL*RATE)), 10%
+		RESETCOLOR
+	ENDIF
+	PRINTL 
+
+	CALL COLOR_LINE
+	PRINTFORM   [   0]돌아온다
+	PRINTL 
+
+	$INPUT_LOOP
+	INPUT 0
+
+	IF RESULT <= 0 || RESULT > MAXBALL
+		RETURN
+	ENDIF
+
+	CLEARLINE 1
+	PRINTL 
+	LOCAL = ABS(RESULT)
+	LOCAL:1 = ABS(RESULT) * 1000
+	IF RESULT > 0
+		IF LOCAL:1 > MONEY
+			PRINTFORML  금이 부족함
+			RETURN
+
+		ELSE
+			PRINTFORML  금 %NO_FORMAT(LOCAL:1)%를 소비해, FP {LOCAL}를 구입했다
+			MONEY -= LOCAL:1
+			GAMBLE_MONEY += LOCAL
+			GAMBLE_MONEY = LIMIT(GAMBLE_MONEY, 0, 9999999999999)
+		ENDIF
+	ENDIF
+	WAIT
+
+	RETURN 0
+
+;============================================================================== 
+;■경품 일람
+;============================================================================== 
+@KEIHIN
+
+PRINTFORML            ◇◇경품 일람◇◇
+PRINTL
+[SKIPSTART]
+PRINTFORML     【특상】 이상한회중시계
+PRINTFORML     【1등】 증류주
+PRINTFORML     【2등】 도원향 or 일본술
+PRINTFORML     【3등】 절륜환 or 배란유발제
+PRINTFORML     【4등】 과실주 or 양조술 or 대역인형 or 벌꿀수 or 미약
+PRINTFORML     【5등】 맥주 or 포도주 or 청주 각 5개
+PRINTFORML     【6등】 콘돔 5개
+PRINTFORML     【7등】 탁주 5개
+PRINTFORML     【SSS급】 스텟재분배티켓 or전능력UP++
+PRINTFORML     【 SS급】 태평요술서 or 최면술 or 음기술대전 or전능력UP+
+PRINTFORML     【  S급】 [ 전투계능력 ] UP++ or전능력UP
+PRINTFORML     【  A급】 [ 전투계능력 ] UP+  or [비전투계능력] UP++
+PRINTFORML     【  B급】 [ 전투계능력 ] UP   or [비전투계능력] UP+
+PRINTFORML     【  C급】 [비전투계능력] UP   or [ 기타아이템 ] 각 5개
+PRINTFORML     【  D급】 [ 기타아이템 ] 각 3개
+PRINTFORML
+PRINTFORML     [ 전투계능력 ] :【무투】【방위】【지략】【정치】【요술】
+PRINTFORML     [비전투계능력] :【가창】【요리】
+PRINTFORML     [ 기타아이템 ] : 이상한회중시계, 대역인형, 벌꿀수,
+PRINTFORML                     배란유발제, 미약, 도원향, 증류주
+[SKIPEND]
+CALL COLOR_PRINTL("     【",,"SSS",칼라_크림,"급】 스텟재분배티켓       or 전능력UP++",)
+CALL COLOR_PRINTL("     【",," SS",칼라_골드,"급】 태평요술서 or 최면술 or 음기술대전 or 전능력UP+",)
+CALL COLOR_PRINTL("     【",,"  S",칼라_연분홍,"급】 [ 전투계능력 ] UP++  or 전능력UP",)
+CALL COLOR_PRINTL("     【",,"  A",칼라_흰색,"급】 [ 전투계능력 ] UP+   or [비전투계능력] UP++",)
+CALL COLOR_PRINTL("     【",,"  B",칼라_연보라,"급】 [ 전투계능력 ] UP    or [비전투계능력] UP+",)
+CALL COLOR_PRINTL("     【",,"  C",칼라_연초록,"급】 [비전투계능력] UP    or [ 기타아이템 ] 각 5개",)
+CALL COLOR_PRINTL("     【",,"  D",칼라_명회색,"급】 [ 기타아이템 ] 각 3개",)
+PRINTFORML
+PRINTFORML     [ 전투계능력 ] : [무투] [방위] [지략] [정치] [요술]
+PRINTFORML     [비전투계능력] : [가창] [요리]
+PRINTFORML     [ 기타아이템 ] : 이상한회중시계, 대역인형, 벌꿀수,
+PRINTFORML                     배란유발제, 미약, 도원향, 증류주
+PRINTL 
+CALL COLOR_LINE
+PRINTFORM   [   0]돌아온다
+PRINTL 
+$INPUT_LOOP
+INPUT 0
+
+;============================================================================== 
+;■가챠
+;============================================================================== 
+@Gacha
+
+	IF GAMBLE_MONEY > 200
+		PRINTFORML  가챠를 당기는 회수를 입력해 주세요. (MAX {MIN(99,GAMBLE_MONEY / 100)})
+		INPUT
+		SIF RESULT > 99
+			RESULT = 99
+		IF RESULT < 1
+			GOTO INPUT_LOOP
+		ELSEIF RESULT * 100 > GAMBLE_MONEY
+			LOCAL = GAMBLE_MONEY / 100
+			GAMBLE_MONEY -= LOCAL * 100
+			CALL KUZI, LOCAL
+		ELSE
+			GAMBLE_MONEY -= RESULT * 100
+			CALL KUZI, RESULT
+		ENDIF
+	ELSEIF GAMBLE_MONEY > 100
+		CALL KUZI,1
+		GAMBLE_MONEY -= 100
+	ELSE
+		PRINTW FP가 충분하지 않습니다
+	ENDIF
+	$INPUT_LOOP
+
+@KUZI, ARG
+[SKIPSTART]
+#DIM ITEMID = 154, 170, 250, 251, 260, 151, 152, 153, 162, 262, 261, 265, 252, 253, 267, 150
+#DIM ITEMNUM,16 
+
+VARSET ITEMNUM,0
+LOCAL = 0
+FOR COUNT,0, ARG
+	LOCAL = RAND:95
+	SELECTCASE LOCAL
+		CASE IS < 10
+			;10/95콘돔
+			ITEMNUM:8 += 5
+		CASE IS < 60
+			;50/95로 뭔가 아이템
+			LOCAL = RAND:8
+			SELECTCASE LOCAL
+				CASE 7
+					;맥주
+					ITEMNUM:LOCAL += 5
+				CASE 6
+					;포도주
+					ITEMNUM:LOCAL += 5
+				CASE 5
+					;청주
+					ITEMNUM:LOCAL += 5
+				CASEELSE
+					;그 외  x1
+					ITEMNUM:LOCAL += 1
+			ENDSELECT
+		CASE IS < 65
+			;5/95로 레어
+			LOCAL = RAND:2
+			SELECTCASE LOCAL
+				CASE 0
+					;절륜환
+					ITEMNUM:9 += 1
+				CASEELSE
+					;배란유발제
+					ITEMNUM:10 += 1
+			ENDSELECT
+		CASE IS < 68
+			;5/95로 레어
+			LOCAL = RAND:5
+			SELECTCASE LOCAL
+				CASE 0
+					;일본술
+					ITEMNUM:11 += 1
+				CASEELSE
+					;도원향
+					ITEMNUM:12 += 1
+			ENDSELECT
+		CASE IS < 70
+			;2/95로 증류주
+			ITEMNUM:13 += 1
+		CASE IS < 71
+			;1/95로 이상한회중시계
+			ITEMNUM:14 += 1
+		;5/95로 1 MORE!
+		CASE IS < 76
+			PRINTW 1 MORE!
+			COUNT -= 2
+		CASEELSE
+			;19/95로 탁주
+			ITEMNUM:15 += 5
+	ENDSELECT
+NEXT
+
+FOR COUNT,0, 16
+	IF ITEMNUM:COUNT > 0
+		PRINTFORML  %ITEMNAME:(ITEMID:COUNT)%x{ITEMNUM:COUNT} 획득!
+		CALL CHECK_ITEMMAX, ITEMID:COUNT
+		SIF RESULT == 0
+			CALL GET_ITEM, ITEMID:COUNT, ITEMNUM:COUNT
+	ELSE
+		CONTINUE
+	ENDIF
+NEXT
+PRINTW
+
+RETURN 0
+[SKIPEND]
+;0스텟재분배티켓,1무투UP,2방위UP,3지략UP,4정치UP,5요술UP,6가창UP,7요리UP,8전능력UP,
+;9무투UP+,10방위UP+,11지략UP+,12정치UP+,13요술UP+,14가창UP+,15요리UP+,16전능력UP+,
+;17무투UP++,18방위UP++,19지략UP++,20정치UP++,21요술UP++,22가창UP++,23요리UP++,24전능력UP++,
+;25태평요술서,26최면술,27음기술대전,28이상한회중시계,29대역인형,30벌꿀수,31절륜환,32배란유발제,33미약,34도원향,35증류주
+{
+#DIM ITEMID = 
+	171, 172, 175, 178, 181, 184, 187, 190, 193, 
+	173, 176, 179, 182, 185, 188, 191, 194, 
+	174, 177, 180, 183, 186, 189, 192, 195, 
+	141, 217, 142, 267, 170, 154, 262, 261, 260, 265, 253
+}
+#DIM ITEMNUM,36 
+#DIM 남은수량
+#DIM 경품수량,7
+#DIM FIRST_LINE
+
+VARSET ITEMNUM,0
+VARSET 경품수량,0
+LOCAL = 0
+FOR COUNT,0, ARG
+	LOCAL = RAND:100
+	SELECTCASE LOCAL
+		CASE 0 TO 39
+			;40/100으로 D급 아이템 뭐가 나올지 기대되지도 않고, 대량으로 쌓이는 아이템이 금방 꼴보기 싫어질듯
+			경품수량:6++
+			;기타아이템
+			LOCAL:0 = RAND(28,36)
+			ITEMNUM:(LOCAL:0) += 3
+		CASE 40 TO 64
+			;25/100으로 C급 아이템 아직은 잡템 수준.
+			경품수량:5++
+			SELECTCASE RAND:3
+				CASE 0
+					;가창UP
+					ITEMNUM:6 += 1
+				CASE 1
+					;요리UP
+					ITEMNUM:7 += 1
+				CASE 2
+					;기타아이템
+					LOCAL:0 = RAND(28,36)
+					ITEMNUM:(LOCAL:0) += 5
+			ENDSELECT
+		CASE 65 TO 79
+			;15/100으로 B급 아이템 능력치UP 아이템들이 나와도 별로 도움이 안될 것 같아 보인다...?
+			경품수량:4 ++
+			IF RAND:2
+				;전투계능력UP
+				LOCAL:0 = RAND(1,6)
+				ITEMNUM:(LOCAL:0) += 1
+			ELSE
+				IF RAND:2
+					;가창UP+
+					ITEMNUM:14 += 1
+				ELSE
+					;요리UP+
+					ITEMNUM:15 += 1
+				ENDIF
+			ENDIF
+		CASE 80 TO 89
+			;10/100으로 A급 아이템 이정도 아이템이면 좀 도움이 될려나....
+			경품수량:3 ++
+			IF RAND:2
+				;전투계능력UP+
+				LOCAL:0 = RAND(9,14)
+				ITEMNUM:(LOCAL:0) += 1
+			ELSE
+				IF RAND:2
+					;가창UP++
+					ITEMNUM:22 += 1
+				ELSE
+					;요리UP++
+					ITEMNUM:23 += 1
+				ENDIF
+			ENDIF
+		CASE 90 TO 95
+			;6/100으로 S급 아이템 너무 높아져서 잘 오르지 않는 능력치에다 사용하면 좋을듯
+			경품수량:2 ++
+			IF RAND:2
+				;전투계능력UP++
+				LOCAL:0 = RAND(17,22)
+				ITEMNUM:(LOCAL:0) += 1
+			ELSE
+				;전능력UP
+				ITEMNUM:8 += 1
+			ENDIF
+		CASE 96 TO 98
+			;3/100으로 SS급 아이템 그래도 여기까지는 꽤 잘나오는편이지.
+			경품수량:1 ++
+			SELECTCASE RAND:10
+				CASE 0 TO 3
+					;전능력UP+
+					ITEMNUM:16 += 1
+				CASE 4 TO 6
+					;음기술대전
+					ITEMNUM:27 += 1
+				CASE 7 TO 8
+					;최면술
+					ITEMNUM:26 += 1
+				CASEELSE
+					;태평요술서
+					ITEMNUM:25 += 1
+			ENDSELECT
+		CASEELSE
+			;1/100으로 SSS급 아이템
+			;PRINTW 축하드립니다! SSS급 아이템을 획득하였습니다!!!! 하지만 과연 정말로 바라던 아이템이 나온 걸까...?
+			경품수량:0 ++
+			SELECTCASE RAND:10
+				;인데 여기서 또 1/10 확률을 뚫어야 한다
+				CASE 0 TO 8
+					;전능력UP++ 하지만 현실은 비정하다
+					ITEMNUM:24 += 1
+				CASEELSE
+					;스텟재분배티켓 데이터변조를 하지 않고 이 확률을 뚫었다면 경의를 표한다.
+					ITEMNUM:0 += 1
+			ENDSELECT
+	ENDSELECT
+NEXT
+
+PRINTL
+IF 경품수량:0
+	;여기만 축하메세지를 추가하자 싸구려틱하지만 어쩔 수 없다
+	PRINTFORML 빰빠밤 ─ ♪♬ 축하합니다! 
+	CALL COLOR_PRINTL("【",,"SSS",칼라_크림,@"급 아이템을 {경품수량:0, 2}개 획득하였습니다!!!!",)
+ENDIF
+IF 경품수량:1
+	CALL COLOR_PRINTL("【",," SS",칼라_골드,@"급 아이템을 {경품수량:1, 2}개 획득하였습니다♬",)
+ENDIF
+IF 경품수량:2
+	CALL COLOR_PRINTL("【",,"  S",칼라_연분홍,@"급 아이템을 {경품수량:2, 2}개 획득하였습니다♪",)
+ENDIF
+IF 경품수량:3
+	CALL COLOR_PRINTL("【",,"  A",칼라_흰색,@"급 아이템을 {경품수량:3, 2}개 획득하였습니다",)
+ENDIF
+IF 경품수량:4
+	CALL COLOR_PRINTL("【",,"  B",칼라_연보라,@"급 아이템을 {경품수량:4, 2}개 획득하였습니다",)
+ENDIF
+IF 경품수량:5
+	CALL COLOR_PRINTL("【",,"  C",칼라_연초록,@"급 아이템을 {경품수량:5, 2}개 획득하였습니다",)
+ENDIF
+IF 경품수량:6
+	CALL COLOR_PRINTW("【",,"  D",칼라_명회색,@"급 아이템을 {경품수량:6, 2}개 획득하였습니다",)
+ENDIF
+PRINTL 
+PRINTL
+;두근두근 아이템 개봉시간. 물론 이미 뭐가 나올진 정해졌지만
+FOR COUNT:2, 0, 20
+	CLEARLINE 1
+	SELECTCASE (COUNT:2)%5
+		CASE 0
+			PRINTFORML     ★결과 확인중★
+			TWAIT 150, 0
+		CASE 1
+			PRINTFORML    .★결과 확인중★.
+			TWAIT 150, 0
+		CASE 2
+			PRINTFORML   ..★결과 확인중★..
+			TWAIT 150, 0
+		CASE 3
+			PRINTFORML  ...★결과 확인중★...
+			TWAIT 150, 0
+		CASE 4
+			PRINTFORML ....★결과 확인중★....
+			TWAIT 150, 0
+	ENDSELECT
+NEXT
+PRINTL
+
+FOR COUNT:0, 0, 36
+	IF ITEMNUM:(COUNT:0) > 0
+		IF COUNT:0 == 0
+			IF ITEMNUM:0 > 1
+				CALL COLOR_PRINTL("엄청난 행운! SSS급 아이템 상자에서 ",,"스텟재분배티켓",칼라_크림,@"을 {ITEMNUM:0}개 획득했습니다!",)
+			ELSE
+				CALL COLOR_PRINTL("극악의 확률을 뚫고 SSS급 아이템 상자에서 ",,"스텟재분배티켓",칼라_크림,"을 획득했습니다!",)
+			ENDIF
+			PRINTFORMW 획득한 스텟재분배티켓은 [능력상승]메뉴에서 사용할 수 있습니다.
+		ELSE
+			PRINTFORML  %@"%ITEMNAME:(ITEMID:(COUNT:0))%", 15, LEFT%x{ITEMNUM:(COUNT:0), 2, LEFT}개를 획득했다!
+		ENDIF
+		IF COUNT:0 == 25 || COUNT:0 == 27
+			남은수량 = ITEMNUM:(COUNT:0)
+			FIRST_LINE = LINECOUNT
+			$ITEM_LOOP
+			PRINTL
+			PRINTFORML %조사처리(ITEMNAME:(ITEMID:(COUNT:0)),"는")% 바로 사용해야 합니다(남은 수량 : {남은수량}개)
+			PRINTFORML [돌아온다]를 선택하면 자동으로 판매처리됩니다.
+			SETCOLOR 칼라_회색
+			CALL SINGLE_DRAWLINE
+			RESETCOLOR
+			PRINTFORML  ★ %ITEMNAME:(ITEMID:(COUNT:0))%
+			SETCOLOR 칼라_회색
+			CALL SINGLE_DRAWLINE
+			RESETCOLOR
+			SETCOLOR 칼라_주석
+			TRYCALLFORM ITEM_EXPLANATION{ITEMID:(COUNT:0)}
+			RESETCOLOR
+			PRINTL
+			PRINTL
+			PRINTL
+			CALL SELECT_ITEM_USER(ITEMID:(COUNT:0))
+			PRINTL
+			IF !RESULT
+				PRINTFORML %조사처리(ITEMNAME:(ITEMID:(COUNT:0)),"를")% 판매해 금 {ITEMPRICE:(ITEMID:(COUNT:0))}을 획득했습니다
+				MONEY += ITEMPRICE:(ITEMID:(COUNT:0))
+			ENDIF
+			PRINTL
+			남은수량 --
+			IF 남은수량
+				CLEARLINE LINECOUNT - FIRST_LINE
+				GOTO ITEM_LOOP
+			ENDIF
+		ELSEIF COUNT:0 == 26
+			IF ITEM:(ITEMID:(COUNT:0))
+				PRINTFORML 불필요한 최면술 아이템이 최면 레벨로 변환됩니다.
+				CALL COLOR_PRINTL(@"%ANAME(MASTER)%의 최면이 {ITEMNUM:(COUNT:0)} 상승했다", 칼라_주의)
+				ABL:MASTER:최면 += ITEMNUM:(COUNT:0)
+			ELSEIF ITEMNUM:(COUNT:0) > 1
+				PRINTFORML 불필요한 최면술 아이템이 최면 레벨로 변환됩니다.
+				CALL COLOR_PRINTL(@"%ANAME(MASTER)%의 최면이 {ITEMNUM:(COUNT:0) - 1} 상승했다", 칼라_주의)
+				ABL:MASTER:최면 += ITEMNUM:(COUNT:0) - 1
+				ITEM:(ITEMID:(COUNT:0)) = 1
+			ELSE
+				ITEM:(ITEMID:(COUNT:0)) = 1
+			ENDIF
+		ELSE
+			CALL CHECK_ITEMMAX, ITEMID:(COUNT:0)
+			SIF RESULT == 0
+				CALL GET_ITEM, ITEMID:(COUNT:0), ITEMNUM:(COUNT:0)
+		ENDIF
+	ELSE
+		CONTINUE
+	ENDIF
+NEXT
+PRINTW
+
+RETURN 0

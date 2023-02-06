@@ -1,0 +1,75 @@
+﻿;-------------------------------------------------
+;준 버젼 문자열에 대응하는 버젼 수치의 취득
+;-------------------------------------------------
+@GET_VERSION_VALUE(버젼문자열)
+#FUNCTION
+#DIMS 버젼문자열
+;RESULT 퇴피
+LOCAL = RESULT
+SPLIT 버젼문자열, ".", LOCALS
+RESULT = LOCAL
+
+RETURNF TOINT(LOCALS:0) * 10000 + TOINT(LOCALS:1) * 100 + TOINT(LOCALS:2)
+;-------------------------------------------------
+;준 버젼 수치에 대응하는 버젼 문자열의 취득
+;-------------------------------------------------
+@GET_VERSION_STRING(버젼수치)
+#FUNCTIONS
+#DIM 버젼수치
+
+RETURNF TOSTR(버젼수치 / 10000) + "." + TOSTR(버젼수치 % 10000 / 100) + "." + TOSTR(버젼수치 % 10000 % 100)
+;-------------------------------------------------
+;준 버젼 문자열과 지금의 버젼을 비교해, 아프데가 필요한가 조사한다
+;-------------------------------------------------
+@CHECK_UPDATE(버젼문자열)
+#FUNCTION
+#DIMS 버젼문자열
+
+RETURNF LASTLOAD_VERSION < GET_VERSION_VALUE(버젼문자열)
+
+;-------------------------------------------------
+;세이브 데이터의 업데이트 처리
+;-------------------------------------------------
+@UPDATE
+#DIM 강제인계플래그
+
+강제인계플래그 = 0
+
+IF LASTLOAD_VERSION != GAMEBASE_VERSION
+	PRINTFORML 업데이트 처리를 실시합니다
+	PRINTFORML 「엔들레스 루프의 혐의가 운운」이라고 나올 가능성이 있습니다만, 문제는 없기에 속행해 주세요
+	PRINTFORMW
+	CALL CLEAN_SPERM_MAP()
+	; 이전 버전 세이브 CSTR 업데이트용
+	; CSV 숫자만큼 루프 반복
+	FOR COUNT:0, 1, 151
+		FOR COUNT:1, 0, 100
+			IF CSTR:(COUNT:0):(COUNT:1) != ""
+;				PRINTFORML {COUNT:0}{COUNT:1} %CSTR:(COUNT:0):(COUNT:1)%
+;				PRINTFORML {COUNT:0}{COUNT:1} %CSVCSTR(COUNT:0, COUNT:1)%
+				CSTR:(COUNT:0):(COUNT:1) = %CSVCSTR(COUNT:0, COUNT:1)%
+;				PRINTFORML {COUNT:0} %CSTR:(COUNT:0):(COUNT:1)%
+			ENDIF
+		NEXT
+;		PRINTFORML %NAME:(COUNT:0)%
+;		PRINTFORML %CALLNAME:(COUNT:0)%
+		NAME:(COUNT:0) = %CSVNAME(COUNT:0)%
+		CALLNAME:(COUNT:0) = %CSVCALLNAME(COUNT:0)%
+;		PRINTFORML {COUNT:0} %NAME:(COUNT:0)%
+;		PRINTFORML {COUNT:0} %CALLNAME:(COUNT:0)%
+	NEXT
+	PRINTFORMW 변경된 캐릭터네임을 업데이트했습니다
+ENDIF
+
+IF CHECK_UPDATE("0.1.2")
+	CALL COLOR_PRINTW("Ver0.1.2", 칼라_주의)
+	PRINTFORML + 의복 변경에 따른 화상 변경(치나츠, 히나)
+	PRINTFORML + 의복(한벌옷) 종류 및 이름 변경
+ENDIF
+
+IF 강제인계플래그
+	FLAG:클리어직후플래그 = 1
+	CALL SAVE_GAME
+	FLAG:클리어직후플래그 = 0
+	BEGIN TITLE
+ENDIF

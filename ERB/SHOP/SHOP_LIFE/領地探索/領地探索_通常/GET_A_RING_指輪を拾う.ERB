@@ -1,0 +1,57 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_GET_A_RING_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_GET_A_RING_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_GET_A_RING(대상)
+#DIM 대상
+#DIM 동료
+PRINTFORML 탐색중, 지면에 빛나는 것을 찾아냈다
+PRINTFORML 흙에 파묻힌 그것을 주워 인상때와 빛나는 반지였다
+PRINTFORML 누군가가 떨어뜨렸을 것이다
+PRINTL
+CALL ASK_MULTI_JUDGE("소유자를 찾아 보낸다", 1,"동료에게 선물 한다", 대상 == MASTER, "도둑질 한다", 1, "버려 둔다", 1)
+SELECTCASE RESULT 
+	CASE 0
+		PRINTFORML 반지의 소유자는 떨어뜨려 곤란하고 있을 것이다
+		PRINTFORML 소유자를 찾기로 했다
+		PRINTFORML ……무사하게 반지의 소유자에게 보낼 수가 있었다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 좋은 기분으로 거점에 돌아왔다
+	CASE 1
+		PRINTFORMW 누구에게 선물 할까나?
+		CALL SELECT_CHARA_LIST_SLG()
+		동료 = RESULT
+		IF 동료 == -1 || 동료 == 대상
+			PRINTFORMW 아니, 역시 파는 일로 하자
+			CALL ICPRINT("반지는 금<2000>으로 팔렸다", "L", 칼라_주의)
+			MONEY += 2000
+		ELSE
+			CFLAG:동료:호감도 += 150
+			PRINTFORMW %ANAME(동료)%에 반지를 선물 한다고 기뻐해 주어졌다
+			CALL ICPRINT("호감도가<150>올랐다", "L", 칼라_주의)
+		ENDIF
+	CASE 2
+		PRINTFORML 좋은 것을 주웠다
+		PRINTFORMW 점에 팔면 용돈이 될지도 모른다
+		CALL ICPRINT("반지는 금<2000>으로 팔렸다", "L", 칼라_주의)
+		MONEY += 2000
+	CASE 3
+		PRINTFORML 자주(잘) 보면 유리구슬의 싸구려다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 반지를 내던지면 궁전에 돌아왔다
+ENDSELECT
+
+RETURN 1
+

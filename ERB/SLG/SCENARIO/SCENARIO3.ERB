@@ -1,0 +1,393 @@
+﻿;-------------------------------------------------
+;시나리오 3
+;요정대전쟁（가짜）
+;ver0. 127
+;손을 넣어 주셔서 감사합니다＆갱신 게으름 피워 미안함
+;맵 확대에 대응해 초기 영지를 5개씩으로 변경
+;랜덤에서 게스트 캐릭터가 조금의 사이만 참전하는 이벤트를 추가
+;ver0. 120
+;등장 캐릭터를 전원으로부터 시나리오의 분위기에 맞은 것인 만큼 변경
+;상기 변경에 의한 등장 캐릭터수 대폭 감소에 수반해, 랜덤 캐릭터의 등장을 선택식에
+;초반의 전개를 재촉하기 위해서(때문에) 초기 영지를 2개로 변경
+;-------------------------------------------------
+@SCENARIO_NAME_3
+RESULTS = 요정대전쟁
+RETURN
+
+@SCENARIO_MAPSELECT_3
+PRINTFORML
+PRINTFORML 이 시나리오에서는 규모의 작은 맵을 이용할 수 있습니다.
+PRINTFORML 작은 맵을 이용했을 경우에는, 통상 맵보다 고속의 전개가 전망됩니다.
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "[1] 작은 맵으로 플레이 한다",1
+PRINT      
+PRINTBUTTON "[0] 보통 맵으로 플레이 한다",0
+PRINTFORML
+$INPUT_LOOP
+INPUT
+IF RESULT > 1 || RESULT < 0
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+
+IF RESULT
+	SCVAR:10 = 1
+	MAPID '= "FAIRY"
+ELSE
+	SCVAR:10 = 0
+ENDIF
+
+
+@SCENARIO_INTRO_3
+
+
+PRINTFORML
+PRINTFORMW
+PRINTFORMW 「제일 강한 요정은 치르노답지만
+PRINTFORMW   제일 영리한 요정은 누구인 것일까?」
+PRINTFORMW 누군가가 말한 이 의문이, 환상향을 말려들게 하는 중대사변의 개막이 되었다
+PRINTFORMW 하쿠레이 신사의 뜰에서, 홍마관의 복도에서, 마을의 뒤골목에서, 요괴의산의 한 귀퉁이에서
+PRINTFORMW 지금, 요정들의 지략의 한계를 다한 전쟁（짓거리）가 막을 연다
+PRINTFORML 
+
+PRINTFORML *주의
+PRINTFORML 이 시나리오에서는 큰폭으로 등장 캐릭터가 삭감되고 있습니다
+PRINTFORML 관직에 오름이 부족한 세력이 빈출 하기 위해(때문), 랜덤 캐릭터의 사용을 추천 합니다
+PRINTFORMW
+
+
+
+;랜덤 캐릭터는 선택에 맡긴다
+FLAG:OP랜덤캐릭터사용 = 0
+
+@SCENARIO_PLACEMENT_3
+
+;세력 설정
+COUNTRY_BOSS:0 = 0
+COUNTRY_COLOR:0 = GETDEFCOLOR()
+
+IF SCVAR:10
+	;;--------서니밀크;--------
+	COUNTRY_BOSS:1 = GET_ID(NAME_TO_CHARA("서니밀크"))
+	COUNTRY_COLOR:1 = 0xFA5882
+	CITY_OWNER:GET_CITYNUMBER("못된장난해보람이있는길") = 1
+	CITY_OWNER:GET_CITYNUMBER("미즈나라의 나무") = 1
+	;
+	CFLAG:(NAME_TO_CHARA("서니밀크")):1 = 1
+
+	;;--------루나차일드;--------
+	COUNTRY_BOSS:2 = GET_ID(NAME_TO_CHARA("루나차일드"))
+	COUNTRY_COLOR:2 = 0xFFF999
+	CITY_OWNER:GET_CITYNUMBER("홍마관의문전") = 2
+	CITY_OWNER:GET_CITYNUMBER("안개의 호수인북측") = 2
+	;
+	CFLAG:(NAME_TO_CHARA("루나차일드")):1 = 2
+
+	;;--------스타사파이어;--------
+	COUNTRY_BOSS:3 = GET_ID(NAME_TO_CHARA("스타사파이어"))
+	COUNTRY_COLOR:3 = 0x778CFF
+	CITY_OWNER:GET_CITYNUMBER("요정의놀이터") = 3
+	CITY_OWNER:GET_CITYNUMBER("버섯이많이나는숲") = 3
+	;
+	CFLAG:(NAME_TO_CHARA("스타사파이어")):1 = 3
+
+	;;--------릴리화이트;--------
+	COUNTRY_BOSS:4 = GET_ID(NAME_TO_CHARA("릴리화이트"))
+	COUNTRY_COLOR:4 = 0xF5A9F2
+	CITY_OWNER:GET_CITYNUMBER("신사뒤의벚꽃이깨끗한장소") = 4
+	CITY_OWNER:GET_CITYNUMBER("봄의소불경") = 4
+	;
+	CFLAG:(NAME_TO_CHARA("릴리화이트")):1 = 4
+
+	;;--------릴리블랙;--------
+	COUNTRY_BOSS:5 = GET_ID(NAME_TO_CHARA("릴리블랙"))
+	COUNTRY_COLOR:5 = 0x757575
+	CITY_OWNER:GET_CITYNUMBER("수도") = 5
+	CITY_OWNER:GET_CITYNUMBER("칠성장어구이 포장마차") = 5
+	;
+	CFLAG:(NAME_TO_CHARA("릴리블랙")):1 = 5
+
+	;;--------치르노;--------
+	COUNTRY_BOSS:6 = GET_ID(NAME_TO_CHARA("치르노"))
+	COUNTRY_COLOR:6 = 0x00FFF7
+	CITY_OWNER:GET_CITYNUMBER("치르노의카마쿠라") = 6
+	CITY_OWNER:GET_CITYNUMBER("안개의 호수의남쪽") = 6
+	;
+	CFLAG:(NAME_TO_CHARA("치르노")):1 = 6
+
+	;;--------대요정;--------
+	COUNTRY_BOSS:7 = GET_ID(NAME_TO_CHARA("대요정"))
+	COUNTRY_COLOR:7 = 0x79FF4B
+	CITY_OWNER:GET_CITYNUMBER("운송영감이자주낚시하러오는곶") = 7
+	CITY_OWNER:GET_CITYNUMBER("향림당") = 7
+	;
+	CFLAG:(NAME_TO_CHARA("대요정")):1 = 7
+ELSE
+	;;--------서니밀크;--------
+	;하쿠레이 신사 스타트  붉고 주인공 같으니까
+	COUNTRY_BOSS:1 = GET_ID(NAME_TO_CHARA("서니밀크"))
+	COUNTRY_COLOR:1 = 0xFA5882
+	CITY_OWNER:GET_CITYNUMBER("하쿠레이 신사") = 1
+	CITY_OWNER:GET_CITYNUMBER("미즈나라의 나무") = 1
+	CITY_OWNER:GET_CITYNUMBER("신사 뒤쪽의 연못") = 1
+	CITY_OWNER:GET_CITYNUMBER("뒷산의 길") = 1
+	CITY_OWNER:GET_CITYNUMBER("뒷산의 호수") = 1
+	;
+	CFLAG:(NAME_TO_CHARA("서니밀크")):1 = 1
+
+	;;--------루나차일드;--------
+	;신문을 읽거나 하므로 도서관이 있는 홍마관스타트
+	COUNTRY_BOSS:2 = GET_ID(NAME_TO_CHARA("루나차일드"))
+	COUNTRY_COLOR:2 = 0xFFF999
+	CITY_OWNER:GET_CITYNUMBER("홍마관") = 2
+	CITY_OWNER:GET_CITYNUMBER("안개의 호수") = 2
+	CITY_OWNER:GET_CITYNUMBER("지하도서관") = 2
+	CITY_OWNER:GET_CITYNUMBER("요정의 숲") = 2
+	CITY_OWNER:GET_CITYNUMBER("안개의 호수 근처") = 2
+
+	;
+	CFLAG:(NAME_TO_CHARA("루나차일드")):1 = 2
+
+	;;--------스타사파이어;--------
+	;영원정스타트  아마 모브 요정과 공주님 짓거리 하고 있다
+	COUNTRY_BOSS:3 = GET_ID(NAME_TO_CHARA("스타사파이어"))
+	COUNTRY_COLOR:3 = 0x778CFF
+	CITY_OWNER:GET_CITYNUMBER("영원정") = 3
+	CITY_OWNER:GET_CITYNUMBER("미혹의 죽림 서부") = 3
+	CITY_OWNER:GET_CITYNUMBER("미혹의 죽림 동부") = 3
+	CITY_OWNER:GET_CITYNUMBER("흰 토끼의 취락") = 3
+	CITY_OWNER:GET_CITYNUMBER("미혹의 죽림") = 3
+	;
+	CFLAG:(NAME_TO_CHARA("스타사파이어")):1 = 3
+
+	;;--------릴리화이트;--------
+	;봄 같게 벚꽃이 있는 곳
+	COUNTRY_BOSS:4 = GET_ID(NAME_TO_CHARA("릴리화이트"))
+	COUNTRY_COLOR:4 = 0xF5A9F2
+	CITY_OWNER:GET_CITYNUMBER("백옥루") = 4
+	CITY_OWNER:GET_CITYNUMBER("칠천계단") = 4
+	CITY_OWNER:GET_CITYNUMBER("사이쿄우 아야카시") = 4
+	CITY_OWNER:GET_CITYNUMBER("야쿠모 저택") = 4
+	CITY_OWNER:GET_CITYNUMBER("마요이가") = 4
+	;
+	CFLAG:(NAME_TO_CHARA("릴리화이트")):1 = 4
+
+	;;--------릴리블랙;--------
+	;화이트를 그대로 둘 수 없기에 곁에 있다
+	COUNTRY_BOSS:5 = GET_ID(NAME_TO_CHARA("릴리블랙"))
+	COUNTRY_COLOR:5 = 0x757575
+	CITY_OWNER:GET_CITYNUMBER("시비곡직청") = 5
+	CITY_OWNER:GET_CITYNUMBER("피안") = 5
+	CITY_OWNER:GET_CITYNUMBER("유령 대기장소") = 5
+	CITY_OWNER:GET_CITYNUMBER("나룻배 타는곳") = 5
+	CITY_OWNER:GET_CITYNUMBER("삼도천") = 5
+	;
+	CFLAG:(NAME_TO_CHARA("릴리블랙")):1 = 5
+
+	;;--------치르노;--------
+	;높은 곳이 좋아
+	COUNTRY_BOSS:6 = GET_ID(NAME_TO_CHARA("치르노"))
+	COUNTRY_COLOR:6 = 0x00FFF7
+	CITY_OWNER:GET_CITYNUMBER("도원") = 6
+	CITY_OWNER:GET_CITYNUMBER("천인의 수도") = 6
+	CITY_OWNER:GET_CITYNUMBER("히나나이 저택") = 6
+	CITY_OWNER:GET_CITYNUMBER("용궁의 사용인 전용 숙소") = 6
+	CITY_OWNER:GET_CITYNUMBER("유정천") = 6
+	;
+	CFLAG:(NAME_TO_CHARA("치르노")):1 = 6
+
+	;;--------대요정;--------
+	;치르노를 그대로 둘 수 없기에 곁에 있다
+	COUNTRY_BOSS:7 = GET_ID(NAME_TO_CHARA("대요정"))
+	COUNTRY_COLOR:7 = 0x79FF4B
+	CITY_OWNER:GET_CITYNUMBER("모리야 신사") = 7
+	CITY_OWNER:GET_CITYNUMBER("풍신의 호수") = 7
+	CITY_OWNER:GET_CITYNUMBER("요괴의 산 정상") = 7
+	CITY_OWNER:GET_CITYNUMBER("간헐천 지하센터") = 7
+	CITY_OWNER:GET_CITYNUMBER("큰 두꺼비 연못") = 7
+	;
+	CFLAG:(NAME_TO_CHARA("대요정")):1 = 7
+ENDIF
+
+
+;지정되지 않았던 캐릭터는 방랑 「당신」는 제외（MASTER 바꿔 넣었을 때에 방랑하는 것을 막는다）.
+FOR LOCAL:0, 1, CHARANUM
+	SIF CFLAG:(LOCAL:0):1 == 0  && CSTR:(LOCAL:0):99 != "당신"
+		CFLAG:(LOCAL:0):특수상태 = 0
+NEXT
+
+;요정의 전쟁 레벨에 어울릴 것 같은 고정 캐릭터를 방랑 상태에. 요정의 흉내놀이에 교제해 받는 이미지
+;아키 자매는 스테이터스는 차치하고, 이미지적으로 신님이 참가해도 좋은 것인가……
+;맵 넓어진 것으로 추가했습니다...
+CFLAG:(NAME_TO_CHARA("루미아")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("리글")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("미스티아")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("소악마")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("레티")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("첸")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("메디슨")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("리리카")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("메를랑")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("루나사")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("시즈하")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("미노리코")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("히나")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("아큐")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("코스즈")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("키스메")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("야마메")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("토키코")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("코가사")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("쿄코")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("요시카")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("와카사기히메")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("세키반키")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("카게로")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("벤벤")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("야츠하시")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("스미레코")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("린노스케")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("이터니티라바")):특수상태 = 특수상태_방랑
+
+;국화등 추가분
+CFLAG:(NAME_TO_CHARA("루이즈")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("사라")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("유키")):특수상태 = 특수상태_방랑
+CFLAG:(NAME_TO_CHARA("마-이")):특수상태 = 특수상태_방랑
+
+;이번 여포?
+CFLAG:(NAME_TO_CHARA("신묘마루")):특수상태 = 특수상태_방랑
+
+
+;병력의 초기 배치
+CALL INIT_ARMY
+
+;무소속 도시의 병수는 경제의 7.5%설정이었던 것을 3%에.
+;여기는 코멘트 아웃 하지 않아 좋아. 요정 능력 낮고
+FOR LOCAL:0, 0, MAX_CITY
+	SIF CITY_OWNER:(LOCAL:0) == 0
+		CITY_SOLDIER:(LOCAL:0) = CITY_ECONOMY:(LOCAL:0) * 30 / 1000
+NEXT
+
+;■관계 설정
+CALL SHARED_SETTING_RELATION
+;3월정액, 대틸, 릴리 2명은 각각 의좋은 사이
+CALL INIT_RELATION("서니밀크", "루나차일드", 500, 0)
+CALL INIT_RELATION("서니밀크", "스타사파이어", 500, 0)
+CALL INIT_RELATION("루나차일드", "서니밀크", 500, 0)
+CALL INIT_RELATION("루나차일드", "스타사파이어", 500, 0)
+CALL INIT_RELATION("스타사파이어", "서니밀크", 500, 0)
+CALL INIT_RELATION("스타사파이어", "루나차일드", 500, 0)
+CALL INIT_RELATION("릴리블랙", "릴리화이트", 1000, 0)
+CALL INIT_RELATION("릴리화이트", "릴리블랙", 1000, 0)
+CALL INIT_RELATION("치르노", "대요정", 500, 0)
+CALL INIT_RELATION("대요정", "치르노", 1000, 0)
+
+;랜덤 봉기를 오프
+CALL DAILY_SET_DISABLE("RANDOM_RISE", 1)
+
+
+;-------------------------------------------------
+;정례 이벤트
+;턴 엔드시에 불려 간다
+;일정기간만 제외하고 있었던 강캐릭터가 참전하는 이벤트를 만들어 본다
+;SCVAR:0  게스트 캐릭터 참전 플래그
+;SCVAR:1  게스트 캐릭터 이탈 턴
+;-------------------------------------------------
+@SCENARIO_EVENT_3
+
+
+
+
+;게스트 캐릭터가 참전하고 있지 않아서, 5턴째보다 후,800/턴수％의 확률로 게스트 캐릭터 참전 이벤트 발생
+IF SCVAR:0 == 0 && DAY > 5 && RAND:100 < 800 / (DAY + 1)
+	SETCOLOR 칼라_주의
+	SELECTCASE RAND:5
+		CASE 0
+			PRINTFORML *게스트 캐릭터 참전*
+			PRINTFORML 레이무가 변덕스럽게 상태를 보러 왔습니다
+			PRINTFORML 수턴만 전쟁놀이에 참가하는 것 같습니다
+			PRINTFORMW 
+			CFLAG:(NAME_TO_CHARA("레이무")):특수상태 = 특수상태_방랑
+			SCVAR:0 = 1
+			SCVAR:1 = RAND:9 + 10 + DAY
+		CASE 1
+			PRINTFORML *게스트 캐릭터 참전*
+			PRINTFORML 플랑도르가 주목되어져 버렸습니다
+			PRINTFORML 수턴의 사이, 유무를 말하게 하지 않고 전쟁놀이에 참가됩니다
+			PRINTFORMW 
+			CFLAG:(NAME_TO_CHARA("플랑도르")):특수상태 = 특수상태_방랑
+			SCVAR:0 = 1
+			SCVAR:1 = RAND:17 + 6 + DAY
+		CASE 2
+			;첸이 사망 상태가 아닐 때, 첸의 소속국에 란을 배치한다
+			IF CFLAG:(NAME_TO_CHARA("첸")):특수상태 != 특수상태_사망	
+				PRINTFORML *게스트 캐릭터 참전*
+				PRINTFORML 란이 첸의 상태를 보러 온 것 같습니다
+				PRINTFORML 잠시동안, 첸과 함께 놀아 주는 것 같습니다
+				PRINTFORMW 
+				CFLAG:(NAME_TO_CHARA("란")):특수상태 = CFLAG:(NAME_TO_CHARA("첸")):특수상태
+				CFLAG:(NAME_TO_CHARA("란")):1 = CFLAG:(NAME_TO_CHARA("첸")):1
+				SCVAR:0 = 1
+				SCVAR:1 = RAND:7 + 12 + DAY
+			ENDIF
+		CASE 3
+			PRINTFORML *게스트 캐릭터 참전*
+			PRINTFORML 텐시가 하늘로부터 떨어져 내렸습니다
+			PRINTFORML 사정을 설명하면, 질릴 때까지는 함께 놀아 주는 것 같습니다
+			PRINTFORMW 
+			CFLAG:(NAME_TO_CHARA("텐시")):특수상태 = 특수상태_방랑
+			SCVAR:0 = 1
+			SCVAR:1 = RAND:5 + 14 + DAY
+		CASE 4
+			IF IS_COUNTRY(CITY_OWNER:(SCVAR:10 ? GET_CITYNUMBER("못된장난해보람이있는길") # GET_CITYNUMBER("하쿠레이 신사")))
+				;하쿠레이 신사를 소유하고 있는 세력에 게스트 가입. 스타트시 경제력 최하위인 서니에게로의 특별조처
+				PRINTFORML *게스트 캐릭터 참전*
+				PRINTFORML 하쿠레이 신사에 마리사와 앨리스가 놀러 왔습니다
+				PRINTFORML 조금의 사이만, 시간 때우기로 교제해 주는 것 같습니다
+				PRINTFORMW 
+				CFLAG:(NAME_TO_CHARA("마리사")):특수상태 = 0
+				CFLAG:(NAME_TO_CHARA("마리사")):1 = CITY_OWNER:(SCVAR:10 ? GET_CITYNUMBER("못된장난해보람이있는길") # GET_CITYNUMBER("하쿠레이 신사"))
+				CFLAG:(NAME_TO_CHARA("앨리스")):특수상태 = 0
+				CFLAG:(NAME_TO_CHARA("앨리스")):1 = CITY_OWNER:(SCVAR:10 ? GET_CITYNUMBER("못된장난해보람이있는길") # GET_CITYNUMBER("하쿠레이 신사"))
+				SCVAR:0 = 1
+				SCVAR:1 = RAND:7 + 12 + DAY
+			ENDIF
+	ENDSELECT
+	
+	RESETCOLOR
+ENDIF
+
+;이탈 턴이 되면 게스트 캐릭터를 다시 제외해, 참전 플래그를 0에 되돌린다
+IF DAY >= SCVAR:1 && SCVAR:1 != 0
+	CFLAG:(NAME_TO_CHARA("레이무")):특수상태 = 0
+	CFLAG:(NAME_TO_CHARA("레이무")):1 = 0
+	CFLAG:(NAME_TO_CHARA("레이무")):9 = 0
+	CALL FORCE_FREE(NAME_TO_CHARA("레이무"))
+	CFLAG:(NAME_TO_CHARA("플랑도르")):특수상태 = 0
+	CFLAG:(NAME_TO_CHARA("플랑도르")):1 = 0
+	CFLAG:(NAME_TO_CHARA("플랑도르")):9 = 0
+	CALL FORCE_FREE(NAME_TO_CHARA("플랑도르"))
+	CFLAG:(NAME_TO_CHARA("란")):특수상태 = 0
+	CFLAG:(NAME_TO_CHARA("란")):1 = 0
+	CFLAG:(NAME_TO_CHARA("란")):9 = 0
+	CALL FORCE_FREE(NAME_TO_CHARA("란"))
+	CFLAG:(NAME_TO_CHARA("텐시")):특수상태 = 0
+	CFLAG:(NAME_TO_CHARA("텐시")):1 = 0
+	CFLAG:(NAME_TO_CHARA("텐시")):9 = 0
+	CALL FORCE_FREE(NAME_TO_CHARA("텐시"))
+	CFLAG:(NAME_TO_CHARA("마리사")):특수상태 = 0
+	CFLAG:(NAME_TO_CHARA("마리사")):1 = 0
+	CFLAG:(NAME_TO_CHARA("마리사")):9 = 0
+	CALL FORCE_FREE(NAME_TO_CHARA("마리사"))
+	CFLAG:(NAME_TO_CHARA("앨리스")):특수상태 = 0
+	CFLAG:(NAME_TO_CHARA("앨리스")):1 = 0
+	CFLAG:(NAME_TO_CHARA("앨리스")):9 = 0
+	CALL FORCE_FREE(NAME_TO_CHARA("앨리스"))
+	SCVAR:0 = 0
+	SCVAR:1 = 0
+	SETCOLOR 칼라_주의
+	PRINTFORMW 게스트 캐릭터는 전쟁놀이에 질려 돌아갔습니다
+	RESETCOLOR
+ENDIF
+

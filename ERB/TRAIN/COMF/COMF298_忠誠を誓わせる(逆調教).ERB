@@ -1,0 +1,87 @@
+﻿;충충성을맹세하게한다역조교)
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME298
+RESULTS:0 = 충성을맹세하게한다
+
+;-------------------------------------------------
+;이 커맨드는 필터 불가
+;-------------------------------------------------
+@COM_FILTER_FORCE_OFF298
+RETURN 1
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE298
+;공통 부분
+CALL COM_ABLE_COMMON(298)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 1명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 1
+	RETURN 0
+;타겟은 최대로 1명까지
+SIF MTAR_NUM <= 0 || MTAR_NUM > 1
+	RETURN 0
+;플레이어와 타겟의 쳐 어느쪽이든가 행동불능라면 불가
+SIF !IS_PLAYABLE(MPLY:0) || !IS_PLAYABLE(MTAR:0)
+	RETURN 0
+;포로 역조교 때 한정
+SIF FLAG:조교모드 != 5 || !CFLAG:MASTER:포로처
+	RETURN 0
+;주인공이 타겟 때 한정
+SIF MTAR:0 != MASTER
+	RETURN 0
+;플레이어의 입이 막히고 있다면 불가
+SIF IS_M_HOLD(MPLY:0)
+	RETURN 0
+;타겟의 입이 막히고 있다면 불가
+SIF IS_M_HOLD(MTAR:0)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM298
+;설득하고 나서의 기간을 0으로 한다
+FLAG:권유경과기간 = 0
+
+LOCAL:5 = GET_COUNTRY_BOSS(CFLAG:(MPLY:0):소속)
+
+;구상 표시
+CALL KOJO_EVENT(MPLY:0, 450)
+
+CALL ASK_YN("임관한다", "거절한다")
+
+;임관한다
+IF RESULT == 0
+	;구상 표시
+	CALL KOJO_EVENT(MPLY:0, 451)
+
+	;주인공의 밧줄을 푼다
+	CALL RELEASE_EQUIP_EX(85, -1, MASTER)
+
+	PRINTL 
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:5)%의 사관이 되었습니다
+	;소속국가의 변경
+	CALL CHANGE_COUNTRY(MASTER, CFLAG:(MPLY:0):소속, 1)
+	PLAYER_HIRED_COUNTER = 10
+;거절한다
+ELSE
+	;구상 표시
+	CALL KOJO_EVENT(MPLY:0, 452)
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN298
+RETURN 커맨드_우후후

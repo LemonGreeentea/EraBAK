@@ -1,0 +1,185 @@
+﻿;-------------------------------------------------
+;도둑의 처리
+;-------------------------------------------------
+@BANDIT_AI(세력)
+#DIM 세력
+#DIM 병수
+#DIM 증가량
+#DIM 부대번호
+#DIM 출병처
+#DIM 중계점의수
+#DIM 접속도시소유자,2
+#DIM 해산플래그
+#DIM 도시수, MAX_COUNTRY
+
+;쿨 타임 감소 처리와 이 턴에 할당한 플래그 삭제 처리
+FOR LOCAL, 0, CHARANUM
+	IF CFLAG:LOCAL:소속 == 세력
+		COOLTIME:LOCAL:0 = MAX(COOLTIME:LOCAL:0 - 1 , 0)
+		ASSIGNED_THIS_TURN:LOCAL:0 = 0
+	ENDIF
+NEXT
+
+;도둑 솟아 오르지 않는 기간중이라고 아무것도 하지 않고 끝난다
+SIF BANDIT_POP_SUSPENDED > 0
+	RETURN 0
+
+CALL BANDIT_ADD_SOLDIER(세력)
+
+CALL BANDIT_CLEAR_UNIT(세력)
+
+CALL BANDIT_CREATE_UNIT(세력)
+
+
+;-------------------------------------------------
+;도둑의 징병 처리
+;-------------------------------------------------
+@BANDIT_ADD_SOLDIER(세력)
+#DIM 세력
+#DIM 이용경제
+#DIM 병수
+#DIM 경제합계, MAX_COUNTRY
+VARSET 경제합계, __INT_MIN__
+
+
+FOR LOCAL, 0, MAX_COUNTRY
+	SIF IS_COUNTRY(LOCAL) && LOCAL != 세력
+		경제합계:LOCAL = TMP_SUM_ECONOMY:LOCAL
+NEXT
+
+ARRAYSORT 경제합계, BACK
+
+이용경제 = MAX(경제합계:0, 0)
+
+IF 경제합계:1 != __INT_MIN__
+	이용경제 += 경제합계:1
+	이용경제 /= 2
+ENDIF
+
+DEBUGPRINTFORML 이용 경제{이용경제}
+병수 = MAX(이용경제 / 100, 0)
+
+COUNTRY_SOLDIER:세력 = MIN(COUNTRY_SOLDIER:세력 + 병수, 이용경제 / 10)
+
+DEBUGPRINTFORML 도둑 징병 병수 + {병수} COUNTRY_SOLDIER:{COUNTRY_SOLDIER:세력}
+
+;-------------------------------------------------
+;부대의 해체 처리
+;-------------------------------------------------
+@BANDIT_CLEAR_UNIT(세력)
+#DIM 세력
+#DIM 부대
+#DIM 부대현재지
+#DIM 도시소유자,2
+#DIM 확정병수
+FOR 부대, 0, MAX_UNIT
+	부대현재지 = UNIT_POSITION:세력:부대
+	FOR LOCAL, 0, VARSIZE("CITY_ROUTE", 1)
+		도시소유자:0 = CITY_OWNER:(CITY_ROUTE:부대현재지:LOCAL)
+		FOR LOCAL:1, LOCAL + 1, VARSIZE("CITY_ROUTE", 1)
+			도시소유자:1 = CITY_OWNER:(CITY_ROUTE:부대현재지:(LOCAL:1))
+			IF TMP_COUNTRY_RELATION:(도시소유자:0):(도시소유자:1) != 0
+				CALL CLEAR_UNIT(세력, 부대)
+				GOTO CLEARED
+			ENDIF
+		NEXT
+	NEXT
+	;그렇지 않으면,
+	TIMES UNIT_SOLDIER:세력:부대, 1.05
+	UNIT_SOLDIER:세력:부대 = MIN(UNIT_SOLDIER:세력:부대, 30000)
+	$CLEARED
+NEXT
+
+
+;-------------------------------------------------
+;부대의 생성처리
+;-------------------------------------------------
+@BANDIT_CREATE_UNIT(세력)
+#DIM 세력
+#DIM 부대
+#DIM 중계지점
+#DIM 위치
+#DIM 도시소유자,2
+#DIM 후보, MAX_CITY
+#DIM 후보수
+#DIM 병수
+
+SIF DAY % 3 != 0
+	RETURN
+
+VARSET 후보
+VARSET 후보수
+
+;GET_CITY_NUM의 반환값 이후가 중계지점인 전제
+FOR 중계지점, GET_CITY_NUM(), MAX_CITY
+	$SKIPPED
+	;중계지점이 아닌, 또는 CITY_ROUTE가 일절 등록되지 않은 경우는 날린다
+	SIF CITY_TYPE:중계지점 != 1 || CITY_ROUTE:중계지점:0 == 0
+		CONTINUE
+	;전략
+	;양쪽 모두의 도시 소유자를 비교한다
+	;양쪽 모두 무소속, 또는 소속이 있어도 적끼리가 아닌 경우는 출현 위치로서 포함하지 않는다
+	FOR LOCAL, 0, VARSIZE("CITY_ROUTE", 1)
+		;등록되지 않으면 날린다
+		SIF CITY_ROUTE:중계지점:LOCAL == 0
+			CONTINUE
+		도시소유자:0 = CITY_OWNER:(CITY_ROUTE:중계지점:LOCAL)
+		FOR LOCAL:1, LOCAL, VARSIZE("CITY_ROUTE", 1)
+			;등록되지 않으면 날린다
+			SIF CITY_ROUTE:중계지점:(LOCAL:1) == 0
+				CONTINUE
+			도시소유자:1 = CITY_OWNER:(CITY_ROUTE:중계지점:(LOCAL:1))
+			SIF (!IS_COUNTRY(도시소유자:0) && !IS_COUNTRY(도시소유자:1)) || TMP_COUNTRY_RELATION:(도시소유자:0):(도시소유자:1) != 0
+				CONTINUE
+			;벌써 자신과 이 부대가 있으면 안 돼
+			;GOTO 사용하지 않으면 안 되는 것은 해고이지만, 여기서 하지 않으면 중계지점*MAX_UNIT의 루프가 반드시 발생하는 것을든지 나른함
+			FOR 부대, 0, MAX_UNIT
+				IF UNIT_POSITION:세력:부대 == 중계지점
+					중계지점 ++
+					GOTO SKIPPED
+				ENDIF
+			NEXT
+			;조건을 채우는 경우는 후보에 넣는다
+			;다음의 중계지점을 본다
+			후보:후보수 = 중계지점
+			후보수 ++
+			중계지점 ++
+			GOTO SKIPPED
+		NEXT
+	NEXT
+NEXT
+
+SIF 후보수 == 0
+	RETURN
+
+CALL FISHER_YATES_SHAFFLE(후보수)
+
+FOR 부대, 0, MAX_UNIT
+
+	SIF UNIT_SOLDIER:세력:부대 != 0
+		CONTINUE
+
+	병수 = MIN(COUNTRY_SOLDIER:세력 / 2, 30000)
+
+	SIF 병수 < 5000
+		BREAK
+
+	UNIT_SOLDIER:세력:부대 = 병수
+	COUNTRY_SOLDIER:세력 -= 병수
+
+	CALL CHECK_UNIT_COMMANDER_BEST(세력)
+
+	FOR 위치, 0, MAX_UNIT_COMMANDER
+		SIF UNIT_COMMANDER_BEST:위치 == -1
+			BREAK
+		CALL SET_UNIT_COMMANDER(세력, 부대, 위치, UNIT_COMMANDER_BEST:위치)
+		TMP_IS_FREE:(UNIT_COMMANDER_BEST:위치):0 = 1
+	NEXT
+
+	UNIT_POSITION:세력:부대 = 후보:(SHAFFLE_ARRAY:0)
+	후보수 --
+	ARRAYSHIFT SHAFFLE_ARRAY:0, -1, 0
+	SIF 후보수 == 0
+		BREAK
+	DEBUGPRINTFORML 도둑 출병:%GET_CITYNAME(UNIT_POSITION:세력:부대)% 병 수{UNIT_SOLDIER:세력:부대}
+NEXT

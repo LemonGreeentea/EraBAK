@@ -1,0 +1,70 @@
+﻿;-------------------------------------------------
+;특수 세력에 의한 조교
+;-------------------------------------------------
+@SP_TRAIN(세력)
+#DIM 세력
+#DIM 대상
+#DIM 표시플래그
+#DIM 세력정수
+#DIMS 세력명
+
+세력정수 = SP_COUNTRY_TO_CONST(세력)
+
+SIF !세력정수
+	RETURN 0
+
+세력명 = %SP_COUNTRY_NAME_ENG:세력정수%
+
+SIF 세력명 == ""
+	RETURN 0
+
+SIF CONFIG:200
+	RETURN -1
+
+표시플래그 = 0
+
+TRYCCALLFORM %세력명%_DOES_TRAIN
+CATCH
+	RETURN
+ENDCATCH
+
+FOR 대상, 0, CHARANUM
+	SIF !IS_TRAIN_BY_SP_COUNTRY(대상, 세력)
+		CONTINUE
+	IF !표시플래그
+		CALL SINGLE_DRAWLINE("-", 칼라_선택불가)
+		RESETCOLOR
+		PRINTFORMW %SP_COUNTRY_NAME:세력정수%에 붙잡힌 각국의 관직에 오름이 조교되고 있는 것 같습니다……
+		PRINTFORML
+		표시플래그 = 1
+	ENDIF
+	TRYCALLFORM %세력명%_TRAIN_MSG(대상, GETBIT(TALENT:대상:특수세력함락계, 세력정수) || SP_TRAIN_COUNT:대상:세력정수 >= TRAIN_FALLEN_TERM:2)
+	SP_TRAIN_COUNT:대상:세력정수 ++
+	
+	IF IS_BETRAY_TO_SP_COUNTRY(대상, 세력)
+		PRINTFORML
+		SETCOLOR 칼라_경고
+		TRYCALLFORM %세력명%_FALLEN_MSG(대상)
+		RESETCOLOR
+		SIF CFLAG:대상:소속 != 세력
+			CALL CHANGE_COUNTRY(대상, 세력, 1)
+		SETBIT TALENT:대상:특수세력함락계, 세력정수
+		SIF SP_TRAIN_IS_DECREASE_CFLAG(대상, 세력)
+			CALL LOSE_RELATION_TALENT(대상)
+		TRYCALLFORM %세력명%_FALLEN_LEAVE_MARK(대상)
+		SIF 대상 == MASTER
+			CALL PLAYER_FALLEN_TO_SP_COUNTRY(세력)
+		CALL CLOTH_RESET(대상)
+		CALL SET_CLOTH_BY_NAME(대상, 의상부위_목, "노예목걸이")
+
+		IF 대상 != MASTER && CFLAG:대상:소속 == CFLAG:MASTER:소속
+			CFLAG:대상:호감도 = MAX(CFLAG:대상:호감도, 500)
+			CFLAG:대상:종속도 = MAX(CFLAG:대상:종속도, 1000)
+			CFLAG:대상:의존도 = MAX(CFLAG:대상:의존도, 500)
+			CFLAG:대상:지배도 = MAX(CFLAG:대상:지배도, 0)
+			TALENT:대상:합의 = 1
+		ENDIF
+	ENDIF
+	PRINTL
+	WAIT
+NEXT

@@ -1,0 +1,202 @@
+﻿@CHARACTER_EDIT_UI_MARK(대상)
+#DIM 대상
+
+PRINTBUTTON "[호감도] ", 500
+PRINTFORML 현재:{CFLAG:대상:호감도}
+PRINTBUTTON "[종속도] ", 501
+PRINTFORML 현재:{CFLAG:대상:종속도}
+PRINTBUTTON "[지배도] ", 503
+PRINTFORML 현재:{CFLAG:대상:지배도}
+PRINTBUTTON "[의존도] ", 502
+PRINTFORML 현재:{CFLAG:대상:의존도}
+CALL COLOR_LINE
+CALL PRINT_TOGGLE_BUTTON("[친구] ", 0, TALENT:대상:친구)
+PRINTL
+CALL PRINT_TOGGLE_BUTTON("[연모] ", 10, TALENT:대상:연모)
+CALL PRINT_TOGGLE_BUTTON("[친애] ", 11, TALENT:대상:친애)
+PRINTL
+CALL PRINT_TOGGLE_BUTTON("[복종] ", 20, TALENT:대상:복종)
+CALL PRINT_TOGGLE_BUTTON("[예속] ", 21, TALENT:대상:예속)
+PRINTL
+CALL PRINT_TOGGLE_BUTTON("[주인] ", 22, TALENT:대상:주인)
+CALL PRINT_TOGGLE_BUTTON("[소유자] ", 23, TALENT:대상:소유자)
+PRINTL
+CALL PRINT_TOGGLE_BUTTON("[합의] ", 30, TALENT:대상:합의)
+CALL PRINT_TOGGLE_BUTTON("[낙인] ", 31, TALENT:대상:낙인)
+PRINTL
+CALL PRINT_TOGGLE_BUTTON("[공허] ", 40, TALENT:대상:공허)
+CALL PRINT_TOGGLE_BUTTON("[붕괴] ", 41, TALENT:대상:붕괴)
+PRINTL
+CALL PRINT_TOGGLE_BUTTON("[안면]", 50, CFLAG:대상:안면)
+PRINTL
+CALL COLOR_LINE
+FOR LOCAL, 0, VARSIZE("SEX_TALENT_NAME")
+	CALL PRINT_TOGGLE_BUTTON(@"[%SEX_TALENT_NAME:LOCAL%] ", 100 + LOCAL, GETBIT(TALENT:대상:음란계, LOCAL))
+NEXT
+PRINTL
+CALL COLOR_LINE
+FOR LOCAL, 1, VARSIZE("SP_FALLEN_TALENT_NAME")
+	CALL PRINT_TOGGLE_BUTTON(@"[%SP_FALLEN_TALENT_NAME:LOCAL%] ", 200 + LOCAL, GETBIT(TALENT:대상:특수세력함락계, LOCAL))
+NEXT
+PRINTL
+CALL COLOR_LINE
+FOR LOCAL, 0, VARSIZE("DAILY_TALENT_NAME")
+	CALL PRINT_TOGGLE_BUTTON(@"[%DAILY_TALENT_NAME:LOCAL%] ", 300 + LOCAL, GETBIT(TALENT:대상:데일리계, LOCAL))
+NEXT
+PRINTL
+
+@CHARACTER_EDIT_INPUT_MARK(대상, 입력치)
+#DIM 대상
+#DIM 입력치
+
+IF 입력치 == 500
+	PRINTFORM 호감도를 입력(하한 -1000)
+	INPUT
+	CFLAG:대상:호감도 = MAX(RESULT, -1000)
+ELSEIF 입력치 == 501
+	PRINTFORM 종속도를 입력(하한 -1000)
+	INPUT
+	CFLAG:대상:종속도 = MAX(RESULT, -1000)
+ELSEIF 입력치 == 502
+	PRINTFORM 의존도를 입력(하한 -1000)
+	INPUT
+	CFLAG:대상:의존도 = MAX(RESULT, -1000)
+ELSEIF 입력치 == 503
+	PRINTFORM 지배도를 입력(하한 -1000)
+	INPUT
+	CFLAG:대상:지배도 = MAX(RESULT, -1000)
+ELSEIF INRANGE(입력치, 100, 100 + VARSIZE("SEX_TALENT_NAME"))
+	INVERTBIT TALENT:대상:음란계, 입력치 - 100
+ELSEIF INRANGE(입력치, 201, 200 + VARSIZE("SP_FALLEN_TALENT_NAME"))
+	INVERTBIT TALENT:대상:특수세력함락계, 입력치 - 200
+ELSEIF INRANGE(입력치, 300, 300 + VARSIZE("DAILY_TALENT_NAME"))
+	INVERTBIT TALENT:대상:데일리계, 입력치 - 300
+ENDIF
+
+SELECTCASE 입력치
+	CASE 0
+		TALENT:대상:친구 = !TALENT:대상:친구
+		IF TALENT:대상:친구
+			TALENT:대상:연모 = 0
+			TALENT:대상:친애 = 0
+			TALENT:대상:복종 = 0
+			TALENT:대상:예속 = 0
+			TALENT:대상:주인 = 0
+			TALENT:대상:소유자 = 0
+			CFLAG:대상:호감도 = 1500
+		ENDIF
+	CASE 10
+		TALENT:대상:연모 = !TALENT:대상:연모
+		IF TALENT:대상:연모
+			TALENT:대상:친구 = 0
+			TALENT:대상:복종 = 0
+			TALENT:대상:예속 = 0
+			TALENT:대상:낙인 = 0
+			TALENT:대상:주인 = 0
+			TALENT:대상:소유자 = 0
+			CFLAG:대상:호감도 = 1500
+			CFLAG:대상:의존도 = 300
+		ENDIF
+		TALENT:대상:친애 = 0
+	CASE 11
+		TALENT:대상:친애 = !TALENT:대상:친애
+		IF TALENT:대상:친애
+			TALENT:대상:연모 = 1
+			TALENT:대상:친구 = 0
+			TALENT:대상:복종 = 0
+			TALENT:대상:예속 = 0
+			TALENT:대상:낙인 = 0
+			TALENT:대상:주인 = 0
+			TALENT:대상:소유자 = 0
+			CFLAG:대상:호감도 = 10000
+			CFLAG:대상:의존도 = 3000
+		ENDIF
+	CASE 20
+		TALENT:대상:복종 = !TALENT:대상:복종
+		IF TALENT:대상:복종
+			TALENT:대상:친구 = 0
+			TALENT:대상:연모 = 0
+			TALENT:대상:친애 = 0
+			TALENT:대상:연인 = 0
+			TALENT:대상:주인 = 0
+			TALENT:대상:소유자 = 0
+			CFLAG:대상:종속도 = 1500
+			CFLAG:대상:의존도 = 300
+		ENDIF
+		TALENT:대상:예속 = 0
+	CASE 21
+		TALENT:대상:예속 = !TALENT:대상:예속
+		IF TALENT:대상:예속
+			TALENT:대상:복종 = 1
+			TALENT:대상:친구 = 0
+			TALENT:대상:연모 = 0
+			TALENT:대상:친애 = 0
+			TALENT:대상:연인 = 0
+			TALENT:대상:주인 = 0
+			TALENT:대상:소유자 = 0
+			CFLAG:대상:종속도 = 10000
+			CFLAG:대상:의존도 = 3000
+		ENDIF
+	CASE 22
+		TALENT:대상:주인 = !TALENT:대상:주인
+		IF TALENT:대상:주인
+			TALENT:대상:친구 = 0
+			TALENT:대상:연모 = 0
+			TALENT:대상:친애 = 0
+			TALENT:대상:복종 = 0
+			TALENT:대상:예속 = 0
+			TALENT:대상:연인 = 0
+			CFLAG:대상:지배도 = 1500
+			CFLAG:대상:의존도 = 300
+		ENDIF
+		TALENT:대상:소유자 = 0
+	CASE 23
+		TALENT:대상:소유자 = !TALENT:대상:소유자
+		IF TALENT:대상:소유자
+			TALENT:대상:주인 = 1
+			TALENT:대상:친구 = 0
+			TALENT:대상:연모 = 0
+			TALENT:대상:복종 = 0
+			TALENT:대상:예속 = 0
+			TALENT:대상:친애 = 0
+			TALENT:대상:연인 = 0
+			CFLAG:대상:지배도 = 10000
+			CFLAG:대상:의존도 = 3000
+		ENDIF
+	CASE 30
+		TALENT:대상:합의 = !TALENT:대상:합의
+	CASE 31
+		TALENT:대상:낙인 = !TALENT:대상:합의
+		IF TALENT:대상:낙인
+			TALENT:대상:연인 = 0
+			TALENT:대상:연모 = 0
+			TALENT:대상:친애 = 0
+		ENDIF
+	CASE 32
+		TALENT:대상:연인 = !TALENT:대상:연인
+		IF TALENT:대상:연인
+			TALENT:대상:낙인 = 0
+			TALENT:대상:복종 = 0
+			TALENT:대상:예속 = 0
+			TALENT:대상:주인 = 0
+			TALENT:대상:소유자 = 0
+		ENDIF
+	CASE 40
+		TALENT:대상:공허 = !TALENT:대상:공허
+		CFLAG:대상:붕괴 = 0
+		IF TALENT:대상:공허
+			CFLAG:대상:붕괴 = 1500
+		ENDIF
+	CASE 41
+		TALENT:대상:붕괴 = !TALENT:대상:붕괴
+		CFLAG:대상:붕괴 = 0
+		IF TALENT:대상:붕괴
+			TALENT:대상:공허 = 1
+			CFLAG:대상:붕괴 = 3500
+		ENDIF
+	CASE 50
+		CFLAG:대상:안면 = !CFLAG:대상:안면
+ENDSELECT
+
+SIF !GETBIT(TALENT:대상:음란계, 소질_음란_약물중독)
+	CFLAG:대상:약물의존 = 0

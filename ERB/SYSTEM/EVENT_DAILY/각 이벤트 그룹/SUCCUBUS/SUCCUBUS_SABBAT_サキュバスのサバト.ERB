@@ -1,0 +1,128 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_SUCCUBUS_SABBAT_RATE()
+RETURN 35
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_SUCCUBUS_SABBAT_DECISION()
+#DIM 서큐버스
+서큐버스 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_서큐버스))
+SIF 서큐버스 == -1
+	RETURN 0
+SIF CFLAG:MASTER:소속 != 서큐버스
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_SUCCUBUS_SABBAT_GENRE()
+RETURN 데일리_장르_특수세력
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_SUCCUBUS_SABBAT
+#DIM 서큐버스
+
+서큐버스 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_서큐버스)
+
+PRINTFORML 오늘은 달에 한 번의 안식일이 열리는 날이다
+PRINTFORMW 전쟁 무시로, 영지민 모두가 참가해 오로지 사귀는 축제다
+PRINTFORMW %ANAME(MASTER)%도 물론 참가하는 일로 했다
+PRINTFORML 
+IF IS_MALE(MASTER) || (HAS_PENIS(MASTER) && RAND:2) || (HAS_PENIS(MASTER) && TALENT:MASTER:남성혐오)
+	SELECTCASE RAND:4
+		CASE 0
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 무수한 서큐버스에게 둘러싸여 있다
+			PRINTFORML 그녀들은 설탕에 모이는 개미같이 %ANAME(MASTER)%에 껴안아 키스가 세례를 퍼부을 수 있는 다가서 온다
+			PRINTFORML 한사람을 안아 사정해서는 또 다음의 여자에게 재촉 되는 일을 반복해, 페니스는 마를 여유도 없다
+			PRINTFORML 그녀들의 음기분탓인가, 아무리 사정해도 발기는 들어가기는 커녕 성욕은 더욱 더 늘어나 간다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 밤이 끝날 때까지 육욕인 채 오로지 그녀들과 계속 사귀었다…
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "서큐버스의 입술", "", "서큐버스의 질", "난교")
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "서큐버스의 입술", "", "서큐버스의 질", "난교")
+		CASE 1
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 무수한 마을 아가씨 일행과 사귀고 있다
+			PRINTFORML 그녀들은 한결같게 발정한 개처럼 야무지지 못한 표정으로 %ANAME(MASTER)%에 무리 섹스를 요구해 온다
+			PRINTFORML 아양을 떠는 것처럼 엉덩이를 향하는 아가씨들의 암컷구멍은 야무지지 못하게 실룩거려, 애액을 흘러넘치게 하고 있었다
+			PRINTFORML 그 단정치 못한 모습과 숨이 막히는 것 같은 암컷의 냄새에 %조사처리(ANAME(MASTER),"는")% 짐승과 같이 그녀들에게 덤벼 들었다
+			PRINTFORMW 몇 사람 안았는지 몇회 사정했는지도 다 셀 수 있지 않게 될 때까지 섹스에 몰두했다…
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "마을 아가씨의 입술", "", "마을 아가씨의 질", "난교")
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "마을 아가씨의 입술", "", "마을 아가씨의 질", "난교")
+		CASE 2
+			PRINTFORMW 궁전으로부터 단정치 못한 교성이 영향을 주고 있다
+			PRINTFORML 젊은도 늙음도 인간이나 서큐버스도 관계없이 무수한 알몸의 남녀가 여기저기에서 서로 요구해 교접한다
+			PRINTFORML 확실히 몽마의 연회라고 부르기에 어울린 배덕적인 광경이, 아침부터 끝없이 반복해지고 있다
+			PRINTFORML 그 중에는 %ANAME(MASTER)%의 모습도 있어, 지금도 한사람의 서큐버스와 격렬한 섹스에 몰두하고 있었다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 완전히 지쳐 버리고 잠에 떨어질 때까지, 쉬는 일도 없고 많은 여자와 교접했다…
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "서큐버스의 입술", "", "서큐버스의 질", "난교")
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "서큐버스의 입술", "", "서큐버스의 질", "난교")
+		CASE 3
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 아침부터 번갈아 여자의 상대를 하고 있다
+			PRINTFORML 인간이나 서큐버스도 적극적으로 %조사처리(ANAME(MASTER),"를")% 권해, 전신을 사용한 정성인 봉사로 만족시켜 준다
+			PRINTFORML 답례라는 듯이 질 내 하면, 그녀들은 환희의 소리를 높여 사랑스러운 암컷의 얼굴을 보였다
+			PRINTFORML 뇌까지 흔들어지는 것 같은 달콤한 암컷의 냄새에 자극 받으며, 하나의 물건은 몇번 사정해도 들어가지 않는다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그 뒤도 계속 사귀어, 새벽무렵에 그녀들과 얼싸안으면서 잠에 떨어졌다…
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "마을 아가씨의 입술", "", "마을 아가씨의 질", "난교")
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "마을 아가씨의 입술", "", "마을 아가씨의 질", "난교")
+	ENDSELECT
+ELSE
+	SELECTCASE RAND:5
+		CASE 0
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 무수한 서큐버스에게 둘러싸여 있다
+			PRINTFORML 그녀들의 사타구니에는 훌륭한 남근이 나 있어 수컷의 냄새를 감돌게 해 빠직빠직 발기하고 있다
+			PRINTFORML 지금부터 이 무수한 페니스에 범해지고 다하는 일을 생각하는 것만으로 자궁이 욱신거림%조사처리(ANAME(MASTER),"는")% 눈동자에♥를 띄웠다
+			PRINTFORML 조속히 1인째의 서큐버스가 쓰러트려 오면, %조사처리(ANAME(MASTER),"는")% 기쁨의 소리를 높여 스스로 가랑이를 열었다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 새벽까지 끝없이 무수한 페니스에 범해지고 더럽혀지고 자궁이 부풀 때까지 씨뿌리기 되었다…
+			CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, Ａ, Ｖ성교, Ａ성교, 키스, 펠라티오", "키스상실, 처녀상실, 질내사정, 구강사정, Ａ처녀상실, 장내사정", GET_SPERM_ID("서큐버스"), @"서큐버스의 \@RAND:2 ? 페니스 # 입술\@", @"서큐버스", "", "난교")
+			CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, Ａ, Ｖ성교, Ａ성교, 키스, 펠라티오", "키스상실, 처녀상실, 질내사정, 구강사정, Ａ처녀상실, 장내사정", GET_SPERM_ID("서큐버스"), @"서큐버스의 \@RAND:2 ? 페니스 # 입술\@", @"서큐버스", "", "난교")
+		CASE 1
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 다수의 남자들에게 난폭하게 범해지고 있다
+			PRINTFORML 음기에 대어진 남자들은 번창한 원숭이같이 %ANAME(MASTER)%에 모여 격분한 하나의 물건을 쑤셔 넣어 왔다
+			PRINTFORML 그들은 %조사처리(ANAME(MASTER),"를")% 단순한 고기구멍으로서 취급해, 난폭하게 허리를 쳐박고 전신을 유린해서는 사정을 반복한다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(MASTER),"로")% 남자들에게 다만 암컷으로서 요구되는 것을 이 이상 없는 기쁨을 느껴 미친듯이 자지러지는 신음소리를 냈다
+			PRINTFORMW 모두가 제정신에게 돌아와 해방되었을 무렵에는 %조사처리(ANAME(MASTER),"는")% 전신이 질척질척으로 되어 버리고 있었다…
+			CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, Ａ, Ｖ성교, Ａ성교, 키스, 펠라티오", "키스상실, 처녀상실, 질내사정, 구강사정, Ａ처녀상실, 장내사정", GET_SPERM_ID("지나가는 남자"), @"영지민의 \@RAND:2 ? 페니스 # 입술\@", @"영지민", "", "난교")
+			CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, Ａ, Ｖ성교, Ａ성교, 키스, 펠라티오", "키스상실, 처녀상실, 질내사정, 구강사정, Ａ처녀상실, 장내사정", GET_SPERM_ID("지나가는 남자"), @"영지민의 \@RAND:2 ? 페니스 # 입술\@", @"영지민", "", "난교")
+		CASE 2
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 서큐버스의 데려 온 거대한 오니에 범해지고 있다
+			PRINTFORML 흉악한 페니스는 음기에 의해 더욱 팽창해, 단순한 일발 찌르기로 %ANAME(MASTER)%의 이성을 파괴했다
+			PRINTFORML 그는 미친 것처럼 허리를 흔들어, 거기에 맞추어 %조사처리(ANAME(MASTER),"는")% 하복부를 보고와 부풀려 경련한다
+			PRINTFORML 하지만 %조사처리(ANAME(MASTER),"는")% 고통을 느끼기는 커녕 미칠 정도의 쾌감을 느껴 단정치 못하게 미친듯이 자지러지는 신음소리를 낸다
+			PRINTFORMW 서큐버스님으로부터 주어진 최고의 섹스에 %조사처리(ANAME(MASTER),"는")% 정신을 잃을 때까지 즐겼다…
+			CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, Ｖ성교, Ｖ확장, 키스, 펠라티오", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("오니"), @"오니의 \@RAND:2 ? 페니스 # 입술\@", "오니", "", "난교")
+			CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, Ｖ성교, Ｖ확장, 키스, 펠라티오", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("오니"), @"오니의 \@RAND:2 ? 페니스 # 입술\@", "오니", "", "난교")
+		CASE 3
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 공공 육변기로서 설치되어 있다
+			PRINTFORML 서큐버스의 음기에 의해 %조사처리(ANAME(MASTER),"는")% 미칠 정도의 쾌감에 습격당하고 마구 야무지지 못하게 가고 있다
+			PRINTFORML 얼굴도 모르는 남자에게 무책임하게 범해지고 있는 사실에 %조사처리(ANAME(MASTER),"는")% 흥분해 등줄기를 진동시킨다
+			PRINTFORML 저지라고 또! (와)과 힘차게 사정되면서, %조사처리(ANAME(MASTER),"는")% 크게 뒤로 젖혀 절정 했다
+			PRINTFORMW 해방되었을 때의 %조사처리(ANAME(MASTER),"는")% 확실히 몸도 마음도 훌륭한 육변기로서 아헤얼굴을 쬐고 있었다…
+			CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, Ｖ성교, 키스, 펠라티오", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("지나가는 남자"), @"영지민의 \@RAND:2 ? 페니스 # 입술\@", "영지민", "", "난교")
+			CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, Ｖ성교, 키스, 펠라티오", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("지나가는 남자"), @"영지민의 \@RAND:2 ? 페니스 # 입술\@", "영지민", "", "난교")
+		CASE 4
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 말과 교미하면서 짐승과 같은 외침을 올리고 있다
+			PRINTFORML 말도 또 음기를 받아 흥분해 버리고 있어 미친 것처럼 울면서 %ANAME(MASTER)%에 허리를 쳐박는다
+			PRINTFORML 장대한 페니스로 자궁이 찢어질 정도의 피스톤을 받아, %조사처리(ANAME(MASTER),"는")% 격렬하게 조수를 뿜면서 경련한다
+			PRINTFORML 짐승에 범해진다는 배덕감은 %조사처리(ANAME(MASTER),"를")% 흥분시키고 눈을 뒤집으면서 몇 번이나 절정을 반복했다
+			PRINTFORMW "그"에 마음에 들었던 %조사처리(ANAME(MASTER),"는")% 특농의 스펌을 한계까지 따라졌다…
+			CALL FUCK(MASTER, "욕망, 성기술, 성교, 정애, Ｖ, Ｖ, Ｖ성교, 수간", "처녀상실, 질내사정", GET_SPERM_ID("말"), @"말의 \@RAND:2 ? 페니스 # 입술\@", "말", "", "화간")
+			CALL FUCK(MASTER, "욕망, 성기술, 성교, 정애, Ｖ, Ｖ, Ｖ성교, 수간", "처녀상실, 질내사정", GET_SPERM_ID("말"), @"말의 \@RAND:2 ? 페니스 # 입술\@", "말", "", "화간")
+	ENDSELECT
+ENDIF
+PRINTFORML 
+FOR LOCAL, 0, CHARANUM
+	IF LOCAL != MASTER && CFLAG:(LOCAL):소속 == CFLAG:MASTER:소속 && !CFLAG:(LOCAL):포로처 && !IS_ANIMAL(LOCAL)
+		ABL:LOCAL:무투 += RAND:2
+		ABL:LOCAL:방위 += RAND:2
+		ABL:LOCAL:지략 += RAND:2
+		ABL:LOCAL:정치 += RAND:2
+	ENDIF
+NEXT
+CALL COLOR_PRINTW(@"안식일로 모은 정기는 서큐버스들을 강화했다", 칼라_주의)
+
+RETURN 1

@@ -1,0 +1,197 @@
+﻿;----------------------------------------------
+;봉기를 일으키는 NPC의 후보를 선택해, 확률 롤
+;----------------------------------------------
+@SLG_RANDOM_RISE
+#DIM LCOUNT
+#DIM 인원수
+#DIM 후보, 3000
+#DIM 후보치, 3000
+#DIM 결과
+#DIM 판정치
+#DIM 세력번호
+VARSET 인원수
+VARSET 후보
+VARSET 후보치, __INT_MIN__
+
+;10기 이후
+SIF DAY < SLG_PP:1
+	RETURN 0
+
+세력번호 = GET_NEW_COUNTRY()
+
+;새롭고 세력 만들 수 없으면 되돌린다
+SIF 세력번호 <= 0
+	RETURN 0
+
+;---이번 봉기 후보를 취득---
+FOR LCOUNT, 0, CHARANUM
+	SIF LCOUNT == MASTER
+		CONTINUE
+	;방랑하고 있지 않으면 안 돼
+	SIF CFLAG:LCOUNT:특수상태 != 특수상태_방랑
+		CONTINUE
+	;특수 캐릭터는 안 돼（특수 캐릭터는 방랑하고 있지 않는 것 같은 생각도 드는데）
+	SIF IS_SP_CHARA(LCOUNT)
+		CONTINUE
+	;야심이 전무인 녀석도 안 돼
+	SIF ABL:LCOUNT:야심 <= 0
+		CONTINUE
+	후보:인원수 = LCOUNT
+	;선출 후보치는 야심을 그대로 이용
+	후보치:인원수 = RAND(0, MAX(1, ABL:LCOUNT:야심))
+	인원수 ++
+NEXT
+
+;후보가 없으면 RETURN
+SIF 인원수 < 1
+	RETURN 0
+
+결과 = 후보:FINDELEMENT(후보치, MAXARRAY(후보치, 0, 인원수))
+;---후보 취득 여기까지---
+
+판정치 = CALC_RISE_RATE(결과)
+;확률 롤에 실패하면 돌아온다
+SIF 판정치 <= RAND:3000
+	RETURN 0
+
+;----확률 롤 성공. 세력을 작성----
+
+SELECTCASE RAND:7
+	CASE 0, 1
+		COUNTRY_AI_TYPE:세력번호 = AI_통상
+	CASE 2
+		COUNTRY_AI_TYPE:세력번호 = AI_외교
+	CASE 3
+		COUNTRY_AI_TYPE:세력번호 = AI_호전
+	CASE 4
+		COUNTRY_AI_TYPE:세력번호 = AI_방위
+	CASE 5
+		COUNTRY_AI_TYPE:세력번호 = AI_내정
+	CASE 6
+		COUNTRY_AI_TYPE:세력번호 = AI_만행
+ENDSELECT
+
+COUNTRY_COLOR:세력번호 = CHARA_COUNTRY_COLOR(결과)
+
+LOCAL:1 = 0
+FOR LOCAL, 0, MAX_COUNTRY
+	SIF !IS_COUNTRY(LOCAL)
+		CONTINUE
+	LOCAL:1 += GET_SUM_SOLDIER(LOCAL)
+NEXT
+LOCAL:1 /= GET_COUNTRY_NUM()
+
+COUNTRY_SOLDIER:세력번호 = MIN(LOCAL:1, 5000)
+COUNTRY_BOSS:세력번호 = GET_ID(결과)
+INDEPENDENCE_COUNTER:세력번호 = 10
+DIPLOMACY_HATE:세력번호 += 10
+
+CALL CHANGE_COUNTRY(결과, 세력번호, 1)
+CFLAG:결과:특수상태 = 0
+
+CALL SP_COUNTRY_RISE(세력번호)
+
+VARSET 후보
+VARSET 인원수
+;찬동자를 모은다
+FOR LOCAL, 1, CHARANUM
+	SIF LOCAL == 결과
+		CONTINUE
+	;주인공은 안 돼
+	SIF LOCAL == MASTER
+		CONTINUE
+	;주인공 소속으로 함락계 소질 있어라면 찬동 하지 않는다
+	SIF CFLAG:LOCAL:소속 && CFLAG:MASTER:소속 == CFLAG:LOCAL:소속 && (IS_LOVER(LOCAL) || IS_SLAVE(LOCAL)  || IS_SLAVED_BY(LOCAL)|| TALENT:LOCAL:친구)
+		CONTINUE
+	;군주는 안 돼
+	SIF GET_COUNTRY_BOSS(CFLAG:LOCAL:소속) == LOCAL
+		CONTINUE
+	;죽고 있으면 안 돼
+	SIF CFLAG:LOCAL:특수상태 == 특수상태_사망
+		CONTINUE
+	;포로라면 안 됩니다―
+	SIF CFLAG:LOCAL:포로처
+		CONTINUE
+	;미등장에서도 안 돼
+	SIF !IS_APPEAR(LOCAL)
+		CONTINUE
+	;특수 캐릭터는 안 돼（특수 캐릭터는 방랑하고 있지 않는 것 같은 생각도 드는데）
+	SIF IS_SP_CHARA(LOCAL)
+		CONTINUE
+	후보:인원수 = LOCAL
+	인원수 ++
+NEXT
+CALL FISHER_YATES_SHAFFLE(인원수)
+LOCAL:1 = 1
+FOR LOCAL, 0, 인원수
+	LOCAL:2 = 후보:(SHAFFLE_ARRAY:(LOCAL))
+	LOCAL:3 = REL_LIKE:(LOCAL:2):결과
+	IF CFLAG:(LOCAL:2):소속
+		LOCAL:3 += REL_HATE:(LOCAL:2):(GET_COUNTRY_BOSS(CFLAG:(LOCAL:2):소속))
+	ELSE
+		LOCAL:3 += 500
+	ENDIF
+	IF LOCAL:3 > LOCAL:1 * 300
+		PRINTFORMW %조사처리(ANAME(LOCAL:2),"가")% 찬동 해, %ANAME(결과)%에 다했습니다
+		CALL CHANGE_COUNTRY(LOCAL:2, 세력번호, 1)
+		LOCAL:1 ++
+	ENDIF
+NEXT
+
+
+;----------------------------------------------
+;봉기를 일으키는 확률을 산출
+;----------------------------------------------
+@CALC_RISE_RATE(대상)
+#FUNCTION
+#DIM 대상
+#DIM 판정치
+;야심과 DAY로부터 판정치를 산출
+판정치 = ABL:대상:야심 * 2
+SELECTCASE ABL:대상:야심
+	CASE IS >= 랭크역치:랭크_ＳＬＧ:랭크_A
+		TIMES 판정치, 1.5
+	CASE IS  >= 랭크역치:랭크_ＳＬＧ:랭크_B
+		TIMES 판정치, 1.25
+	CASE IS >= 랭크역치:랭크_ＳＬＧ:랭크_C
+		TIMES 판정치, 1.1
+ENDSELECT
+
+;세력수가 적을 정도 봉기 하기 쉽다
+판정치 += (MAX_COUNTRY - GET_COUNTRY_NUM()) * 2
+;종반은 봉기 하기 어렵게 한다（그렇지 않아도 끝나지 않는 관전 모드가 한층 더 끝나지 않게 되므로）
+판정치 -= LIMIT(DAY / 2 - 50, 0, 200)
+SIF TALENT:대상:겁쟁이
+	판정치 -= 5
+SIF TALENT:대상:반항적
+	판정치 += 15
+SIF TALENT:대상:솔직함
+	판정치 -= 8
+SIF TALENT:대상:얌전함
+	판정치 -= 5
+SIF TALENT:대상:프라이드높음
+	판정치 += 20
+SIF TALENT:대상:거만함
+	판정치 += 10
+SIF TALENT:대상:프라이드낮음
+	판정치 -= 15
+SIF TALENT:대상:자제심
+	판정치 -= 5
+SIF TALENT:대상:보수적
+	판정치 -= 5
+SIF TALENT:대상:호기심
+	판정치 += 5
+SIF TALENT:대상:선을넘지않음
+	판정치 -= 15
+SIF TALENT:대상:억압
+	판정치 -= 5
+SIF TALENT:대상:해방
+	판정치 += 15
+SIF TALENT:대상:고고함
+	판정치 += 20
+
+;능력4종이 250넘고 있으면 플러스 보정
+SIF ABL:대상:무투 + ABL:대상:방위 + ABL:대상:지략 + ABL:대상:정치 > 250
+	판정치 += MAX(ABL:대상:무투 + ABL:대상:방위 + ABL:대상:지략 + ABL:대상:정치 - 200, 50)
+
+RETURNF 판정치

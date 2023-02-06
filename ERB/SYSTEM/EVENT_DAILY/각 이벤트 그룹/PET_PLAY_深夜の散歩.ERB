@@ -1,0 +1,139 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_PET_PLAY_RATE()
+RETURN 40
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_PET_PLAY_DECISION()
+SIF !ITEM:목걸이
+	RETURN 0
+SIF !HAS_PENIS(MASTER)
+	RETURN 0
+RETURN DAY >= 5
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_PET_PLAY_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_PET_PLAY()
+#DIM 대상
+
+PRINTFORML 심야, 한가하게 된 %조사처리(ANAME(MASTER),"가")% 방 안을 둘러보고 있으면, 벽에 걸려 있는 목걸이가 눈에 멈추었다
+PRINTFORML %조사처리(ANAME(MASTER),"는")% 문득 밤의 산책하러 나가려고 생각나, 목걸이와 리드를 손에 들어 방을 나왔다
+PRINTFORMW 그런데, 누구를 유혹할까?
+CALL SELECT_CHARA_LIST_ONLY_LOGIC_SEX("PET_PLAY", "NONE", "PET_PLAY")
+IF RESULT == -1
+	PRINTFORMW 역시 그만두자
+	RETURN 1
+ENDIF
+대상 = RESULT
+PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(대상)%의 방을 방문했다
+PRINTFORMW 이런 한밤중에 무슨 용무일까하고 고개를 갸웃하는 그녀에게 목걸이를 과시해, 밤의 산책으로 이끌었다
+PRINTFORML 돌연의 권유에 그녀는 멍하고 있었지만
+IF GETBIT(TALENT:대상:음란계, 소질_음란_음란) || (IS_SLAVE(대상) && ABL:대상:노출 >= 1) || (ABL:대상:노출 >= 4 && CFLAG:대상:호감도 > 0)
+	PRINTFORML 다음의 순간, 뺨을 물들이면서 끄덕끄덕 수긍했다
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 힐쭉 웃음“준비”를 하도록(듯이) 고하면
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 주저 없게 옷을 벗기 시작해, 전라가 되면 눈을♥로 해 %ANAME(MASTER)%에 무릎 꿇어 왔다
+ELSEIF (IS_LOVER(대상) && TALENT:대상:합의) || IS_SLAVE(대상)
+	PRINTFORML 다음의 순간, 얼굴을 새빨갛게 해 횡설수설하게 되기 시작했다
+	PRINTFORML 그 반응에 반응있음으로 확신한 %조사처리(ANAME(MASTER),"는")% 한층 더 그녀에게 강요했다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 잠깐 우물우물 하고 있었지만, 이윽고 숙이면서 작게 수긍했다
+ELSE
+	PRINTFORML 다음의 순간, 경멸하는 것 같은 시선을 %ANAME(MASTER)%향하면, 덜컹! (와)과 문을 닫았다
+	PRINTFORMW …아무래도 미움받아 버린 것 같다
+	CFLAG:대상:호감도 -= 300
+	RETURN
+ENDIF
+PRINTFORMW %조사처리(ANAME(MASTER),"는")% 조속히 그녀에게 목걸이를 입으면, 산책하러 나갔다
+PRINTFORML 
+SELECTCASE RAND:12
+	CASE 0
+		PRINTFORML %조사처리(ANAME(대상),"를")% 거느려 밤의 거리를 걸었다
+		PRINTFORML 심야라고는 해도 누군가에게 보여질지도 모르는 수치심과 배덕감으로, 그녀는 얼굴을 새빨갛게 해 숨을 거칠게 하고 있다
+		PRINTFORML 눈치채면 그 비밀스런 장소로부터는 애액이 넘치고 있어 그 치태를 귓전으로 속삭이면 %조사처리(ANAME(대상),"는")% 오슬오슬 등줄기를 진동시켰다
+		PRINTFORMW 인내 할 수 없게 된 애완동물에게 졸라대진 %조사처리(ANAME(MASTER),"는")%, 그녀를 뒷골목에 데리고 들어가면 한껏 귀여워해 주었다
+	CASE 1
+		PRINTFORML %조사처리(ANAME(대상),"를")% 따라 밤의 공원에 향했다
+		PRINTFORML 그녀는 %ANAME(MASTER)%에 명령된 대로 야무지지 못하게 혀를 늘어뜨리면서 네발로 엎드림의 모습으로 따라 온다
+		PRINTFORML 그 모습은 확실히 암캐에게 어울리고, 흥분해 버렸다 %ANAME(대상)%의 비밀스런 장소로부터는 애액이 방울져 떨어져 떨어져 암컷의 냄새를 감돌게 한다
+		PRINTFORMW 그녀의 치태에 만족한 %조사처리(ANAME(MASTER),"는")% 온순한 애완동물을 수풀에 데리고 들어가면, 포상이라고 칭해 몇 번이나 씨뿌리기 교미를 반복했다
+	CASE 2
+		PRINTFORML %조사처리(ANAME(대상),"를")% 따라 밤의 공원에 향했다
+		PRINTFORML 개처럼 네발로 엎드림의 그녀를 경련이 일어나고 있으면, 교미를 하고 있는 다른“펫”와 사육주를 만났다
+		PRINTFORML 사육주와 회화를 하고 있는 %ANAME(MASTER)%의 발밑에서, %조사처리(ANAME(대상),"는")% 범해지고 있는 애완동물에게 못을 박아 고정시킴이 되어 자위를하기 시작했다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 이 상스러운 애완동물을 예의범절을 가르치기 위해서(때문에), 그들과 서로 과시하도록(듯이)“벌”를 개시했다
+	CASE 3
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 깜깜한 안뜰에서 %조사처리(ANAME(대상),"를")% 범하고 있다
+		PRINTFORML 산책으로 완전히 달아올라 자른 그녀의 질내는 녹진녹진이 되어 있어, 허리를 쳐박을 때마다 신음소리를 올려 몸을 구불거리게 할 수 있다
+		PRINTFORML 때때로 병사의 발소리가 들려 오면, %조사처리(ANAME(대상),"는")% 소리를 견디려고 몸을 굳어지게 해, 꽈악 페니스를 단단히 조여 온다
+		PRINTFORMW 배덕감과 수치심으로 고조된 %조사처리(ANAME(MASTER),"와")% 그녀는 밤이 희어질 때까지 짐승과 같은 교미를 즐겼다
+	CASE 4
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"를")% 슬럼가에 데려 갔다
+		PRINTFORML 아니나 다를까 곧바로 부랑자나 건달이 모여 와, 그녀의 나체를 사방으로부터 시간 하기 시작했다
+		PRINTFORML 체를 숨기려고 하는 %조사처리(ANAME(대상),"를")% 비난해 나체를 드러내게 하면, 그녀는 얼굴을 새빨갛게 해 다리를 삐걱삐걱 털게 했다
+		PRINTFORMW 그들에게 과시하는 것처럼%조사처리(ANAME(대상),"를")% 범하면, 그녀는 평소보다 요염한 소리를 내 민감하게 몸을 뛰게 했다
+	CASE 5
+		PRINTFORML %조사처리(ANAME(대상),"를")% 안뜰로 데리고 나갔다
+		PRINTFORML 한동안 산책을 하고 있으면 그녀는 발정한 같은 표정을 보이고이고, %ANAME(MASTER)%에 달라붙도록(듯이)해 조르기를 시작했다
+		PRINTFORML %조사처리(ANAME(MASTER),"가")% 페니스를 꺼내면, 그녀는 주저 하는 일 없이 무릎 꿇어 목 안까지 물어 추잡한 소리를 내 봉사를 시작했다
+		PRINTFORMW %ANAME(대상)%의 열심인 봉사로 곧바로 %ANAME(MASTER)%의 페니스는 발기해, 포상으로서 한껏 범해 주었다
+	CASE 6
+		PRINTFORML 가라앉은 궁전의 일각부터 흐려진 목소리가 들려 온다
+		PRINTFORML %조사처리(ANAME(대상),"가")% 벽에 의지하면서 %ANAME(MASTER)%의 페니스를 깊숙히 물어 움찔움찔 몸을 진동시킨다
+		PRINTFORML 산책으로 완전히 고조되고 있던 그녀는 일발 찌르기마다 가볍게 달하면서도, 어떻게든 소리를 흘리지 않게 이를 악물고 있다
+		PRINTFORMW 가볍게 약점을 후벼파 주면 %조사처리(ANAME(대상),"는")% 크게 몸을 뒤로 젖히게 하면서, 소리가 되지 않는 소리를 높여 절정 했다
+	CASE 7
+		PRINTFORML 알몸에 코트의 모습의 %조사처리(ANAME(대상),"를")% 따라 밤의 주택가를 산책하러 나갔다
+		PRINTFORML 인과 엇갈릴 때마다 그녀에게 명해 코트를 열게 하면, 그들은 대체로 경악 해 그녀의 몸에 못을 박아 고정시킴이 되었다
+		PRINTFORML 그런 일을 반복하고 있으면 이윽고 그녀의 보지는 애액을 방울져 떨어지게 한 내, 발정한 것 같은 시선을 %ANAME(MASTER)%에 던져 왔다
+		PRINTFORMW %조사처리(ANAME(대상),"를")% 뒷골목에 데리고 들어가면, 고조되는 대로 교접을 반복해, 몇 번이나 정액을 쏟았다
+	CASE 8
+		PRINTFORML %조사처리(ANAME(대상),"를")% 따라 궁전안의 산책을 하기로 했다
+		PRINTFORML 목걸이를 입은 그녀는 네발로 엎드림의 모습으로 야무지지 못하게 혀를 늘어뜨리면서 %ANAME(MASTER)%에 따라 와 있다
+		PRINTFORML 때때로, 이야기 소리나 발소리가 들려 올 때에 그녀는 몸을 움추려%ANAME(MASTER)%의 그늘에 숨어, 얼굴을 새빨갛게 해 떨렸다
+		PRINTFORMW 시간을 들여 천천히 산책을 끝내면 %조사처리(ANAME(대상),"는")% 완전히 다 달아올라, 침대에서 밤새도록 귀여워해 주었다
+	CASE 9
+		PRINTFORML %ANAME(대상)%의 교성이 심야의 길거리로부터 영향을 주어 온다
+		PRINTFORML 견딜 수 없게 배덕적인 플레이에 그녀는 수치와 흥분으로 얼굴을 새빨갛게 해, %ANAME(MASTER)%의 피스톤에 맞추어 격렬하게 좋아한다
+		PRINTFORML 한동안 해 골목의 틈새로부터 아이가 들여다 보고 있는 것을 발견한 %조사처리(ANAME(MASTER),"는")%, 그에게 과시하는 것처럼 그녀의 몸을 열었다
+		PRINTFORMW 소년의 시선을 눈치챈 %조사처리(ANAME(대상),"는")%, 방금전보다 한층 더 힘들게 페니스를 단단히 조이면서 몇 번이나 절정에 이르렀다
+	CASE 10
+		PRINTFORML %조사처리(ANAME(대상),"를")% 따라 심야의 다리아래에 왔다
+		PRINTFORML 거기에는 몇사람의 술주정꾼이 있어 %조사처리(ANAME(MASTER),"는")% 그들의 앞에 그녀를 끌어 가면 눈앞에서 과시하는 것처럼 범하기 시작했다
+		PRINTFORML 그들은 돌연의 일에 놀라면서도 못박음이 되어, 이윽고 하나의 물건을 꺼내면 그녀의 치태를 반찬에 열중해 잡아당기기 시작했다
+		PRINTFORMW 시간 되고 있는 것을 흥분했는지, %조사처리(ANAME(대상),"는")% 평소보다도 추잡하게 흐트러져 %조사처리(ANAME(MASTER),"를")% 즐겁게 했다
+	CASE 11
+		PRINTFORML %조사처리(ANAME(대상),"와")% 함께 심야의 거리걷고 있다
+		PRINTFORML 그녀는 얼굴을 새빨갛게 해 갓 태어난 작은사슴과 같이 떨려, 때때로 %ANAME(MASTER)%의 안색을 엿보면서 천천히 걷고 있다
+		PRINTFORML 있어에 그녀의 노출의 엉덩이나 가슴을 비비어 주면, 흠칫 크게 몸을 뛰게 한 온 마을에 울릴 것 같은 교성을 올렸다
+		PRINTFORMW 당장 울 듯한 표정에 흥분한 %조사처리(ANAME(MASTER),"는")%, 그녀를 뒷골목에 끌어들여 넣으면 고조됨대로 난폭하게 범했다
+ENDSELECT
+CALL FUCK(대상, "Ｃ, Ｂ, Ｖ, Ｍ, 욕망, 성교, 봉사, 정애, 펠라티오, 키스, Ｖ성교", "처녀상실, 키스상실, 질내사정", GET_ID(MASTER), @"%ANAME(MASTER)%의 \@RAND:2 ? 페니스 # 입술\@", ANAME(MASTER), "", "조교")
+CALL FUCK(MASTER, "Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", @"%ANAME(대상)%의 질", "조교")
+PRINTFORMW 
+RETURN 1
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_PET_PLAY(대상)
+#DIM 대상
+RETURN CFLAG:대상:행동불능상태 != 행동불능_아이 && CFLAG:대상:소속 == CFLAG:MASTER:소속 && !IS_ANIMAL(대상) && CFLAG:대상:포로처 == 0 && !IS_MALE(대상) && 대상 != MASTER
+
+@SELECT_CHARA_LIST_COLOR_LOGIC_PET_PLAY(대상)
+#DIM 대상
+SIF GETBIT(TALENT:대상:음란계, 소질_음란_음란) || (IS_SLAVE(대상) && ABL:대상:노출 >= 1) || (ABL:대상:노출 >= 4 && CFLAG:대상:호감도 > 0) ||(IS_LOVER(대상) && TALENT:대상:합의) || IS_SLAVE(대상)
+	RETURN 칼라_핑크
+RETURN GETDEFCOLOR()
+

@@ -1,0 +1,104 @@
+﻿;-------------------------------------------------
+;「상태를 본다」의 명칭
+;-------------------------------------------------
+;@SHOP_LIFE_NAME68
+;RESULTS:0 '= "상태를 본다"
+
+;-------------------------------------------------
+;「상태를 본다」의 선택 가부
+;-------------------------------------------------
+;@SHOP_LIFE_CHECK68
+;주인공이 포로는 아니면 돌아온다
+;SIF ! CFLAG:(MASTER):포로처
+;	RETURN 0
+;RETURN 1
+
+;-------------------------------------------------
+;「상태를 본다」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+;@SHOP_LIFE_CHECKCHARA68(ARG:0)
+
+;-------------------------------------------------
+;「상태를 보는 것 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+;@SHOP_LIFE_EVENTBUY68
+;CALL SHOP_WATCH_OTHERS
+;	FLAG:거점 페이즈페이지 = 1
+;	RETURN 0
+;RETURN 1
+
+;-------------------------------------------------
+;「상태를 본다」의 오른쪽 컬럼 표시 처리
+;-------------------------------------------------
+;@SHOP_LIFE_EVENTBUY_SHOW68
+;CALL COLUMN_RIGHT_TITLE("대상자 선택, "", "", "", "", "")
+;CALL COLUMN_RIGHT_PRINTL
+;CALL COLUMN_RIGHT_LINE
+;CALL COLUMN_RIGHT_PRINTL
+;CALL COLUMN_RIGHT_CHARALIST
+;RETURN
+
+;-------------------------------------------------
+;상태를 보는 ARG:0=대상의 캐릭터 번호
+;-------------------------------------------------
+;@SHOP_WATCH_OTHERS(ARG:0)
+;SHOW_INFO의 초기 화면을 기본 정보로 한다
+;FLAG:능력표시 모드 = 0
+;
+;$SHOW_LOOP_INFO_A
+;
+;대상 캐릭터의 정보를 표시
+;CALL SINGLE_DRAWLINE
+;CALL SHOW_INFO(ARG:0)
+;CALL SINGLE_DRAWLINE
+;
+;PRINTFORML %ANAME(ARG:0)%의 상태를 봅니까?
+;CALL ASK_YN
+;IF RESULT == 0
+;	CALL GAIRAI_TRAIN_MSG(ARG:0)
+;	WAIT
+	;IF CFLAG:(ARG:0):포로처 == 0
+	;	SELECTCASE RAND:2
+	;		CASE 0
+	;			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 외래 사람들에게 앞과 뒤의 구멍을 잇달아 범해져
+	;			PRINTFORMW 대량의 자식을 쏟아지고 있다…
+	;			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 녹은 표정으로 쾌감에 몸을 바치면서,
+	;			PRINTFORMW 기다리고 있는 외래인의 페니스를 스스로 손으로 훑어 봉사하고 있다…
+	;	ENDSELECT
+	;ELSEIF CFLAG:(ARG:0):3 <= -200
+	;	SELECTCASE RAND:2
+	;		CASE 0
+	;			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 외래 사람들에게 앞과 뒤의 구멍을 잇달아 범해져
+	;			PRINTFORMW 가차 없이 자식을 쏟아지고 있다…
+	;			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 필사적으로 능욕을 참고 있지만,
+	;			PRINTFORMW 그 소리에는 쾌감의 색이 섞이고 있다…
+	;	ENDSELECT
+	;ELSEIF CFLAG:(ARG:0):3 < 1500 || TALENT:(ARG:0):2 < 1500
+	;	SELECTCASE RAND:2
+	;		CASE 0
+	;			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 외래 사람들에게 앞과 뒤의 구멍을 잇달아 범해져
+	;			PRINTFORMW 가차 없이 자식을 쏟아지고 있다…
+	;			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 오로지 굴욕에 참으면서
+	;			PRINTFORMW 끝없이 능욕을 계속 받고 있다…
+	;	ENDSELECT
+	;ELSE
+	;	SELECTCASE RAND:2
+	;		CASE 0
+	;			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 외래 사람들에게 앞과 뒤의 구멍을 잇달아 범해져
+	;			PRINTFORMW 가차 없이 자식을 쏟아지고 있다…
+	;			PRINTFORML %조사처리(ANAME(ARG:0),"는")% %ANAME(MASTER)%의 이름을 부르면서,
+	;			PRINTFORMW 끝없이 계속되는 능욕에 참고 있다…
+	;		CASE 1
+	;			PRINTFORML %조사처리(ANAME(ARG:0),"는")% 외래 사람들에게 앞과 뒤의 구멍을 잇달아 범해져
+	;			PRINTFORMW 가차 없이 자식을 쏟아지고 있다…
+	;			PRINTFORML %조사처리(ANAME(ARG:0),"는")% %ANAME(MASTER)%의 이름을 부르면서,
+	;			PRINTFORMW 끝없이 계속되는 능욕에 참고 있다…
+	;	ENDSELECT
+	;ENDIF
+;
+;	;역조교의 개시
+;	CALL TRAIN_IN_PRISON
+;ENDIF
+;
+;RETURN 1
+

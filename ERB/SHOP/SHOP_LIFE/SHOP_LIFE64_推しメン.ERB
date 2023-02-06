@@ -1,0 +1,228 @@
+﻿;-------------------------------------------------
+;「마음에든다」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE_NAME64
+RESULTS:0 '= "마음에든다"
+
+;-------------------------------------------------
+;「마음에든다」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE_CHECK64
+SIF CFLAG:MASTER:포로처
+	RETURN 0
+SIF FLAG:마음에든다지정캐릭터
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「마음에든다」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA64(ARG:0)
+;비주인공, 포로가 아니다
+RETURN ARG:0 != MASTER && CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속 && CFLAG:(ARG:0):포로처 == 0 && !IS_ANIMAL(ARG:0)
+
+;-------------------------------------------------
+;「마음에 드는 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY64
+FLAG:거점페이즈페이지 = 1
+FLAG:요바이 = 0
+RETURN 0
+
+;-------------------------------------------------
+;「마음에든다」의 오른쪽 컬럼 표시 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SHOW64
+CALL COLUMN_RIGHT_TITLE("대상자 선택", "0", "1", "0", "0")
+;주석을 오렌지로 해 눈에 띄게 하고 싶기 때문에 나눈다
+CALL COLOR_PRINT("  1회 한정", 칼라_선택중)
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+CALL COLOR_PRINT(" 능력치를 재설정 할 수 있습니다 ", 칼라_주석)
+CALL COLOR_PRINT("1회 한정", 칼라_선택중)
+CALL COLOR_PRINT("으로 ", 칼라_주석)
+CALL COLOR_PRINT("한사람", 칼라_선택중)
+CALL COLOR_PRINT("밖에 선택할 수 없기에 주의해 주세요", 칼라_주석)
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+;표준적인 캐릭터 리스트와 페이지 이동
+CALL COLUMN_RIGHT_CHARALIST
+RETURN 0
+
+;-------------------------------------------------
+;「마음에든다」의 리스트 1 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP64(대상)
+#DIM FIRST_LINE
+#DIM 대상
+#DIM 원의능력, 7
+#DIM 선택항목,1
+#DIM 선택상세,1
+#DIM 변화량,1
+#DIM 포인트, 1
+#DIM 배분후, 7
+#DIM LOOPCOUNT, 1
+#DIM LOOPMAX, 1
+VARSET 포인트
+VARSET 배분후
+원의능력:0 = ABL:대상:무투
+원의능력:1 = ABL:대상:방위
+원의능력:2 = ABL:대상:지략
+원의능력:3 = ABL:대상:정치
+원의능력:4 = ABL:대상:요술
+원의능력:5 = ABL:대상:가창
+원의능력:6 = ABL:대상:요리
+포인트 = SUMARRAY(원의능력)
+
+FLAG:능력표시모드 = 0
+
+FIRST_LINE = LINECOUNT
+REDRAW 0
+$SHOW_LOOP
+CALL SINGLE_DRAWLINE
+PRINTFORML %조사처리(ANAME(대상),"를")% 마음에든다로 해, 원래의 능력치의 범위내에서, 능력값을 다시 날릴 수가 있습니다
+PRINTFORML 마음에든다에게는 그 밖에도 여러가지 보정이 걸리거나 합니다
+PRINTFORML 다만, 마음에든다는 한 번 밖에 설정할 수 없습니다. 자주(잘) 생각합시다
+PRINTFORML 나머지 포인트:{포인트}
+CALL SINGLE_DRAWLINE
+CALL ICPRINT(@"<%ANAME(대상)%>%조사만처리(ANAME(대상),"를")% 설정중", "L", 칼라_주의)
+CALL SINGLE_DRAWLINE
+PRINTFORM 무투:{배분후:0, 3} 원:{원의능력:0, 3} -- 
+CALL PRINTBUTTON_FAVORITE("[ +1]", 200, 배분후:0, 포인트,   1)
+CALL PRINTBUTTON_FAVORITE("[ -1]", 201, 배분후:0, 포인트,  -1)
+CALL PRINTBUTTON_FAVORITE("[+10]", 202, 배분후:0, 포인트,  10)
+CALL PRINTBUTTON_FAVORITE("[-10]", 203, 배분후:0, 포인트, -10)
+PRINTL
+PRINTFORM 방위:{배분후:1, 3} 원:{원의능력:1, 3} -- 
+CALL PRINTBUTTON_FAVORITE("[ +1]", 210, 배분후:1, 포인트,   1)
+CALL PRINTBUTTON_FAVORITE("[ -1]", 211, 배분후:1, 포인트,  -1)
+CALL PRINTBUTTON_FAVORITE("[+10]", 212, 배분후:1, 포인트,  10)
+CALL PRINTBUTTON_FAVORITE("[-10]", 213, 배분후:1, 포인트, -10)
+PRINTL
+PRINTFORM 지략:{배분후:2, 3} 원:{원의능력:2, 3} -- 
+CALL PRINTBUTTON_FAVORITE("[ +1]", 220, 배분후:2, 포인트,   1)
+CALL PRINTBUTTON_FAVORITE("[ -1]", 221, 배분후:2, 포인트,  -1)
+CALL PRINTBUTTON_FAVORITE("[+10]", 222, 배분후:2, 포인트,  10)
+CALL PRINTBUTTON_FAVORITE("[-10]", 223, 배분후:2, 포인트, -10)
+PRINTL
+PRINTFORM 정치:{배분후:3, 3} 원:{원의능력:3, 3} -- 
+CALL PRINTBUTTON_FAVORITE("[ +1]", 230, 배분후:3, 포인트,   1)
+CALL PRINTBUTTON_FAVORITE("[ -1]", 231, 배분후:3, 포인트,  -1)
+CALL PRINTBUTTON_FAVORITE("[+10]", 232, 배분후:3, 포인트,  10)
+CALL PRINTBUTTON_FAVORITE("[-10]", 233, 배분후:3, 포인트, -10)
+PRINTL
+IF TALENT:대상:요술지식
+	PRINTFORM 요술:{배분후:4, 3} 원:{원의능력:4, 3} -- 
+	CALL PRINTBUTTON_FAVORITE("[ +1]", 240, 배분후:4, 포인트,   1)
+	CALL PRINTBUTTON_FAVORITE("[ -1]", 241, 배분후:4, 포인트,  -1)
+	CALL PRINTBUTTON_FAVORITE("[+10]", 242, 배분후:4, 포인트,  10)
+	CALL PRINTBUTTON_FAVORITE("[-10]", 243, 배분후:4, 포인트, -10)
+	PRINTL
+ENDIF
+PRINTFORM 가창:{배분후:5, 3} 원:{원의능력:5, 3} -- 
+CALL PRINTBUTTON_FAVORITE("[ +1]", 250, 배분후:5, 포인트,   1)
+CALL PRINTBUTTON_FAVORITE("[ -1]", 251, 배분후:5, 포인트,  -1)
+CALL PRINTBUTTON_FAVORITE("[+10]", 252, 배분후:5, 포인트,  10)
+CALL PRINTBUTTON_FAVORITE("[-10]", 253, 배분후:5, 포인트, -10)
+PRINTL
+PRINTFORM 요리:{배분후:6, 3} 원:{원의능력:6, 3} -- 
+CALL PRINTBUTTON_FAVORITE("[ +1]", 260, 배분후:6, 포인트,   1)
+CALL PRINTBUTTON_FAVORITE("[ -1]", 261, 배분후:6, 포인트,  -1)
+CALL PRINTBUTTON_FAVORITE("[+10]", 262, 배분후:6, 포인트,  10)
+CALL PRINTBUTTON_FAVORITE("[-10]", 263, 배분후:6, 포인트, -10)
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTFORML [0] 결정
+PRINTFORML [999] 돌아온다
+$INPUT_LOOP_1
+INPUT 999
+IF RESULT == 999
+	REDRAW 1
+	RETURN 0
+ELSEIF RESULT == 0
+	REDRAW 1
+	PRINTFORML 이상으로 마음에든다 설정을 끝냅니까?
+	SIF 포인트 > 0
+		CALL COLOR_PRINTL("포인트가 남아 있어요?   남겨도 진짜로 아무것도 좋은 일 없어요?", 칼라_주의)
+	CALL ASK_YN("끝낸다", "좀 더 만진다")
+	IF RESULT == 0
+		ABL:대상:무투 = 배분후:0
+		ABL:대상:방위 = 배분후:1
+		ABL:대상:지략 = 배분후:2
+		ABL:대상:정치 = 배분후:3
+		ABL:대상:요술 = 배분후:4
+		ABL:대상:가창 = 배분후:5
+		ABL:대상:요리 = 배분후:6
+		PRINTFORMW %조사처리(ANAME(대상),"를")% 마음에든다로 했습니다!
+		FLAG:거점페이즈선택커맨드 = DEFAULT_MENU_NUM
+		FLAG:마음에든다지정캐릭터 = GET_ID(대상)
+		RETURN 1
+	ELSEIF RESULT == 1
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+	ENDIF
+ELSE
+	선택항목 = (RESULT - 200) / 10
+	선택상세 = (RESULT - 200) % 10
+	SELECTCASE 선택상세
+		CASE 0
+			선택상세 = 1
+		CASE 1
+			선택상세 = -1
+		CASE 2
+			선택상세 = 10
+		CASE 3
+			선택상세 = -10
+		CASEELSE
+			CLEARLINE LINECOUNT - FIRST_LINE
+			GOTO SHOW_LOOP
+	ENDSELECT
+	IF !INRANGE(선택항목, 0, 6) || 선택항목 == 4 && !TALENT:대상:요술지식 || !FAVORITE_CAN_CHOOSE(배분후:선택항목, 포인트, 선택상세)
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+	ENDIF
+	배분후:선택항목 += 선택상세
+	포인트 -= 선택상세
+ENDIF
+
+CLEARLINE LINECOUNT - FIRST_LINE
+GOTO SHOW_LOOP
+
+;-------------------------------------------------
+;「마음에든다」의 처리용 버튼
+;-------------------------------------------------
+@PRINTBUTTON_FAVORITE(문자열, 번호, 현재가, 포인트, 변화량)
+#DIMS 문자열
+#DIM 번호
+#DIM 현재가
+#DIM 포인트
+#DIM 변화량
+IF FAVORITE_CAN_CHOOSE(현재가, 포인트, 변화량)
+	PRINTBUTTON 문자열, 번호
+ELSE
+	SETCOLOR 칼라_선택불가
+	PRINTPLAINFORM %문자열%
+	RESETCOLOR
+ENDIF
+
+;-------------------------------------------------
+;「마음에든다」의 처리의 선택 가부
+;-------------------------------------------------
+@FAVORITE_CAN_CHOOSE(현재가, 포인트, 변화량)
+#FUNCTION
+#DIM 현재가
+#DIM 포인트
+#DIM 변화량
+SIF 변화량 > 포인트
+	RETURNF 0
+SIF 변화량 + 현재가 > 300
+	RETURNF 0
+SIF 변화량 + 현재가 < 0
+	RETURNF 0
+
+RETURNF 1
+

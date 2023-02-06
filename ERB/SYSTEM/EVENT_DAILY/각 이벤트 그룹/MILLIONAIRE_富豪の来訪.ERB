@@ -1,0 +1,725 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_MILLIONAIRE_RATE()
+RETURN (DVAR:부호_마음에든다ID > 0 ? 250 # 30)
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_MILLIONAIRE_DECISION()
+SIF DVAR:부호_발생플래그 == -1
+	RETURN 0
+
+;SIF DAY < 10
+;	RETURN 0
+
+RETURN 1
+
+
+;---------------------
+;특정의 조건을 채우는 캐릭터를 랜덤에 선택하는 경우에 이용
+;다른 함수는 필수이지만, 이것만은 없어도 좋다  라고 할까 퍼포먼스에 영향을 주므로 불필요하면 만들어서는 안 된다
+;대상이 존재하지 않고 데일리를 개시 할 수 없는 경우는 0을 돌려주는 것으로 데일리의 발생을 캔슬한다
+;---------------------
+@EVENT_DAILY_MILLIONAIRE_SETTARGET()
+#DIM 대상
+#DIM 후보, 3000
+#DIM 후보난수, 3000
+#DIM 후보수
+VARSET 후보, -1
+VARSET 후보난수, __INT_MIN__
+VARSET 후보수
+대상 = ID_TO_CHARA(DVAR:부호_마음에든다ID)
+;벌써 마음에든다가 되어 있는 아가씨가 있어, 그 녀석이 기본적인 조건을 채우고 있는 채로, 한편 80%라면, 계속해 지명한다
+IF 대상 != -1 && IS_FEMALE(대상) && CFLAG:대상:소속 == CFLAG:MASTER:소속 && !CFLAG:대상:포로처 && RAND:5 
+ELSE
+	;호감도에 근거해 후보 배열을 준비
+	FOR LOCAL, 0, CHARANUM
+		;녀로, 소속이 MASTER와 동일해, 포로가 아니고, 군주가 아니다
+		IF lOCAL != MASTER && IS_FEMALE(LOCAL) && CFLAG:LOCAL:소속 == CFLAG:MASTER:소속 && !CFLAG:LOCAL:포로처 && GET_COUNTRY_BOSS(CFLAG:LOCAL:1) != LOCAL && CFLAG:LOCAL:행동불능상태 != 행동불능_아이
+			후보:후보수 = LOCAL
+			후보난수:후보수 = RAND:(MAX(CFLAG:LOCAL:호감도, 100))
+			;연모계라면 난수에 보정이 걸린다（걸려 버려? ）
+			SIF IS_LOVER(LOCAL)
+				후보난수:후보수 += 1000
+			후보수 ++
+		ENDIF
+	NEXT
+	;후보가 없으면 되돌린다
+	SIF 후보수 < 1
+		RETURN 0
+	;호감도에 근거해 낸 후보 난수 가운데, 제일 비싼 값을 낸 캐릭터를 대상으로 한다.
+	대상 = 후보:(FINDELEMENT(후보난수, MAXARRAY(후보난수, 0, 후보수), 0, 후보수))
+ENDIF
+
+SIF 대상 < 0
+	RETURN 0
+
+DAILY_TARGET:0 = 대상
+DAILY_TARGET_NUM = 1
+
+RETURN 1
+
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_MILLIONAIRE_GENRE()
+RETURN 데일리_장르_에로
+
+@EVENT_DAILY_MILLIONAIRE()
+#DIM 대상
+#DIM 만족도
+#DIM 보수
+#DIM 당신에게로의생각해;추가분
+
+대상 = DAILY_TARGET:0
+;추가분
+당신에게로의생각해 = (CFLAG:대상:호감도 + CFLAG:대상:의존도 + CFLAG:대상:종속도)
+
+IF DVAR:부호_발생플래그 == 0
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 정무를 해내고 있으면, 부하가 손님을 고했다
+	PRINTFORMW 환상향안에 이름을 이라고 진흙 빌려주는 부호가 방문해 온 것이라고 한다
+	PRINTFORML 오만하고 유명하고, 만나고 싶지 않은 상대이지만, 그가 한 번의 유흥으로 사용하는 돈은 자그만 세력의 예산(정도)만큼도 있다
+	PRINTFORMW 로 할 수는 없는 손님이라고 판단한 %조사처리(ANAME(MASTER),"는")%, 즉시 만나기로 했다……
+	PRINTFORML 
+	PRINTFORML 
+	PRINTFORML 
+	PRINTFORML 「야아. 너가 %ANAME(MASTER)%공?   소문과 달리 실물은 초라한데」
+	PRINTFORML 「뭐 좋다. 여기에 온 것은 시간 때우기를 위해서(때문에)다. 그렇지 않으면 누가 이런 드 시골에 와?」
+	PRINTFORMW 「그런데……, 시골의 사루야마의 대장전이, 어떻게 나를 즐겁게 해 주는지, 볼만하지만」
+	PRINTFORML 방에 있던 것은, 보기에도 벼락 부자 취미의, "매우 풍채가 좋다"남자였다
+	PRINTFORMW 목은 군살에 파묻혀 전혀 안보인다. 시가를 들이마시는 손가락의 모두에, 큰 보석포함의 반지가 빠지고 있었다
+	PRINTFORML 「어이쿠. 시간 때우기라고는 말했지만, 어떻게 즐겁게 할까 생각할 필요는 없어」
+	PRINTFORML 「실제, 너와 같은 빈민이 없는 뇌수를 필사적으로 짜고 생각나는 것 따위, 나에게는 아무것도 안 된다」
+	PRINTFORML 「무엇을 생각해 냈는지, 들려주어 봐 줄래?   쓰레기 바지락조개인가, 그렇지 않으면 시시한 우물가의 쑥덕공론인가?」
+	PRINTFORMW 「여자다. 이런 드 시골에서도, 있을 것이다, 한사람 정도는, 나의 안경에 필적하는 아가씨가」
+	PRINTFORMW 여자. 그렇다면 특출의 창녀에서도 불러 올까하고 생각한 %조사처리(ANAME(MASTER),"이지만")%, 남자는 파묻힌 목을 옆에 흔든다
+	PRINTFORML
+	CALL ICPRINT(@"「<%ANAME(대상)%>라든가 하는, 상당한 상등품이 있는 것 같지 않은가?  그것을 빌려 주게」", "W", 칼라_주의)
+	PRINTFORMW 「그 녀석의 "기능"에 응해, 돈을 지불해 주지 않겠는가」
+	PRINTFORML 「별로 상관없을 것이다?   너희들도 돈은 필요할 것이고」
+	PRINTFORMW 「소속하는 조직에 봉사할 일이 생기니까, %ANAME(대상)%도 만족할 것이다」
+	SIF IS_LOVER(대상)
+		PRINTFORMW 「……그렇게 생각하면, 좋아하는 사람이 한사람이나 두 명 있던 곳에서, 어떻다고 할 일도 없을 것이다?」
+	PRINTFORMW 「물론 피임은 하자. 그 근처는 걱정하지 마」
+	PRINTFORML 무려 장난친 발언일 것이다. %조사처리(ANAME(MASTER),"는")% 입술을 악문다
+	PRINTFORML ……이지만, 이 남자의 위세의 좋은 점은 사람의 입에 오를 정도다. 내밀면, 상당한 지불은 기대할 수 있을 것이다……
+ELSEIF 대상 == ID_TO_CHARA(DVAR:부호_마음에든다ID)
+	PRINTFORMW 예의 부호의 남자가 방문해 왔다
+	PRINTFORML 「야아, 또 와 주었어」
+	CALL ICPRINT(@"「용건은 하나. 그<%ANAME(대상)%>라든가 하는 것을 또 빌려 주게」", "W", 칼라_주의)
+	IF DVAR:부호_마음에든다조교횟수 >= 3
+		PRINTFORMW 「피임?   아, 해 주고 (어) 준다. 알았다 알았다」
+	ELSE
+		PRINTFORMW 「물론 피임은 하자. 그 근처는 걱정하지 마」
+	ENDIF
+	PRINTFORMW 「기능에 응해, 많이 보수를 준다」
+	PRINTFORML 자, 그럼, 어떻게 하지……
+ELSE
+	PRINTFORMW 예의 부호의 남자가 방문해 왔다
+	PRINTFORML 「야아, 또 와 주었어」
+	CALL ICPRINT(@"「그렇네, 이번은<%ANAME(대상)%>라든가 하는 것을 빌려 주게」", "W", 칼라_주의)
+	PRINTFORMW 「물론 피임은 하자. 그 근처는 걱정하지 마」
+	PRINTFORMW 「기능에 응해, 많이 보수를 준다」
+	PRINTFORML 자, 그럼, 어떻게 하지……
+ENDIF
+CALL SINGLE_DRAWLINE
+CALL ASK_MULTI("대출한다", "그런 일은 할 수 없다", "포박 해, 몸값을 요구", "벤다")
+IF RESULT == 1
+	PRINTFORMW 「……흠?   그런가」
+	PRINTFORMW 「바보 같은 녀석, 모처럼 큰돈을 손에 넣을 기회가 눈앞에 있었다는데」
+	PRINTFORMW 「뭐, 좋다. 그렇다면 그걸로, 이런 짜증이 난 곳에 용무는 없다. 그러면」
+	PRINTFORMW 남은 조속히 떠나 갔다……
+	DVAR:부호_마음에든다ID = 0
+	DVAR:부호_마음에든다조교횟수 = 0
+	DVAR:부호_발생플래그 = 1
+	RETURN 1
+ELSEIF RESULT == 2
+	PRINTFORMW 「너, 너……!」
+	PRINTFORMW 병사에 명해 그를 잡았다
+	PRINTFORMW 그 후, 국원에 몸값을 요구했다
+	PRINTFORMW 남은 격노하고 있었지만, 최종적으로는 받아들이는 것 외에 없었다……
+	DVAR:부호_발생플래그 = -1
+	DVAR:부호_유괴카운터 = 5
+	DVAR:부호_유괴대상 = GET_ID(대상)
+	CALL ICPRINT("금<100000>을 손에 넣었다", "W", 칼라_주의)
+	MONEY += 100000
+	CALL COLOR_PRINTW("……부호의 미움을 샀다", 칼라_경고)
+	RETURN 1
+ELSEIF RESULT == 3
+	PRINTFORML 무려 뭐 무례한 녀석이다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 남자를 베어 버렸다……
+	DVAR:부호_발생플래그 = -1
+	RETURN 1
+ENDIF
+
+;마음에든다와 다른 캐릭터를 지명이라면 여기서 회수 리셋트
+SIF 대상 != ID_TO_CHARA(DVAR:부호_마음에든다ID)
+	DVAR:부호_마음에든다조교횟수 = 0
+	
+PRINTFORML 「그렇겠지?   너희들 빈민은, 돈의 일이 되면 눈빛을 바꾸는 것」
+PRINTFORML 「안심하게, 차용물을 부수는 것 같은 취미는 나에게는 없다. 정중하게 희롱해 주지 않겠는가」
+PRINTFORML
+SELECTCASE DVAR:부호_마음에든다조교횟수
+	CASE 0
+		PRINTFORMW 「……가장, 나의 기술의 전에 떨어지는 것은, 있을지도 모르지만?」
+		PRINTFORML 남은 추잡한 시선을, %ANAME(대상)%의 신체에 기게 하고 있다
+		PRINTFORMW %ANAME(대상)%의 딱딱한 표정은, 혐오 하면서도 그것을 겉(표)에 낼 수 없는 그녀의 입장을 여실에 나타내고 있다……
+	CASE 1
+		PRINTFORMW 「쿠쿡, 전회 나의 것을 받아들여, 그 고기구멍이 느슨해져 버렸는지도 모르지만」
+		PRINTFORML 남은 끈적한 시선을, %ANAME(대상)%의 신체에 기게 하고 있다
+		PRINTFORMW 이전 된 것을 생각해 냈는지, %조사처리(ANAME(대상),"는")% 눈을 떼었다……
+	CASE 2
+		;추가분
+		IF 당신에게로의생각해 > 10000 && DVAR:부호_네토라레플래그 == 0
+			PRINTFORML 「정중하게 가르쳐진 "장난감"(와)과 같기 때문에……부수는 것은 아깝다」
+			PRINTFORMW 「완전히, 좋은 것을 빌려 주고 있어, 너는. 하하학」
+			PRINTFORML 남은 자기 것인양, %ANAME(대상)%의 엉덩이를 의복 위로부터 돌리듯이 어루만지며 있다
+			PRINTFORMW %조사처리(ANAME(대상),"는")%\@ IS_LOVER(대상) ? 생각해 그리워하고 있다# \@%ANAME(MASTER)%의 눈앞에서 되는 대로, 입가를 꼭 끼게 닫아 참고 있다……
+		ELSE
+			PRINTFORML 「정중하게 가르쳐진 "장난감"(와)과 같기 때문에……부수는 것은 아깝다」
+			PRINTFORMW 「완전히, 좋은 것을 빌려 주고 있어, 너는. 학」
+			PRINTFORML 남은 자기 것인양, %ANAME(대상)%의 엉덩이를 의복 위로부터 돌리듯이 어루만지며 있다
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 뺨을 상기시켜,\@ IS_LOVER(대상) ? 생각해 그리워하고 있어야 할# \@%ANAME(MASTER)%의 눈앞에서, 되는 대로 되고 있다……
+		ENDIF
+	CASE 3
+		;추가분
+		IF 당신에게로의생각해 > 10000 && DVAR:부호_네토라레플래그 == 0
+			PRINTFORMW 「나에게로의 봉사의 방법도, 많이 기억해 왔지 않은가……어이」
+			PRINTFORML 남이 눈짓 하면, %조사처리(ANAME(대상),"는")% 혐오의 표정을 띄우면서도 그의 곁으로 무릎 꿇는다
+			PRINTFORMW 그 하나의 물건을 노출시키면,\@ IS_LOVER(대상) ? 생각해 그리워하고 있다# \@%ANAME(MASTER)%의 눈앞에서, 어쩔 수 없이 그의 육봉을 빨기 시작했다……
+			PRINTFORML 「응응～, 이 달라붙음이라고 하면, 호사가의 그것이 아닌가?  금 (위해)때문에가랑이를 열고 있을 뿐(만큼)의 매춘부에게는 흉내내고 할 수 없어」
+			PRINTFORMW 「너에게는 감사하고 있어?   이런 좋은 것을 빌려 주어, 하하하학」
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 굴욕과 수치에 얼굴을 붉히면서도, %조사처리(ANAME(MASTER),"를")% 위해서(때문에), 남자의 육봉을 계속 열심히 빨았다……
+		ELSE
+			PRINTFORMW 「나에게로의 봉사의 방법도, 상당히 기억해 와……어이」
+			PRINTFORML 남이 눈짓 하면, %조사처리(ANAME(대상),"는")% 그의 곁으로 무릎 꿇는다
+			PRINTFORMW 그 하나의 물건을 노출시키면,\@ IS_LOVER(대상) ? 생각해 그리워하고 있어야 할# \@%ANAME(MASTER)%의 눈앞에서, 그의 육봉을 빨기 시작했다……
+			PRINTFORML 「오오, 이 달라붙음이라고 하면, 진정한 호사가의 그것이다. 돈 (위해)때문에 가랑이를 열고 있을 뿐(만큼)의 매춘부에게는 흉내낼 수 없다」
+			PRINTFORMW 「너에게는 감사하고 있어?   이런 좋은 것을 가르쳐 준 것이니까, 나를 위해서(때문에)」
+			PRINTFORMW 남이 멈출 때까지, %조사처리(ANAME(대상),"는")% 소리를 내, 그의 육봉을 계속 열심히 빨고 있었다……
+		ENDIF
+	CASE 4
+		;추가분
+		IF 당신에게로의생각해 > 10000 && DVAR:부호_네토라레플래그 == 0
+			PRINTFORMW 「요즘은 나에게 손대어지는 것이 버릇이 되기 시작한 것 같아, 곤란한 것이야」
+			PRINTFORML %조사처리(ANAME(대상),"는")%, 무엇을 제멋대로인 일을…, 라는 표정으로 부호를 노려보는 것도
+			PRINTFORMW 남은 그 시선을 개의치 않고, 멋대로 %ANAME(대상)%의 의복가운데 손을 넣어, 유방이나 비부를 만지작거리고 있다
+			PRINTFORML 혐오 하는 남자에게 희롱해지면서도, 그 교묘한 테크닉이 주는 쾌감에 %ANAME(대상)%의 신체는 민감하게 반응한다
+			PRINTFORMW 유두는 옷의 위로부터도 아는 만큼 발기해, 질척질척 추잡한 물소리를 사타구니로부터 흘리고 있다
+			PRINTFORML 그런 전신을 덮치는 쾌감의 물결에 움찔움찔 신체를 진동시키면서도, %조사처리(ANAME(대상),"는")% 이를 악물어 필사적으로 참고 있다
+			PRINTFORMW 「흥, 무엇이다 그 움직임은?   권하고 있는지?   -, 그러면 이 장소에서 가볍게 끼워 주자」
+			PRINTFORML 남은 중얼거리면, 재빠르게 당신의 것을 노출시켜, %ANAME(대상)%의 속옷을 내리면, 흠뻑 젖는 암컷구멍에 페니스를 쑤셔 넣었다
+			PRINTFORMW 이미 고무를 사용할 생각조차 없는 것 같다……
+			PRINTFORMW 「아～이것이다, 이 달라붙음이라고 하면 완전히!   굉장한 암컷이다 이 녀석은, 에엣?」
+			PRINTFORMW 부호의 육봉에 빠득빠득 느끼는 부분을 꾸짖을 수 있어 %ANAME(대상)%의 신체로부터 저항의 의사가 약해진다
+			PRINTFORML 당신이 치태를\@ IS_LOVER(대상) ? 생각해 그리워하고 있던 # \@%조사처리(ANAME(MASTER),"로")% 보여지면서, %ANAME(대상)%의 입으로부터 의사에 반해 달콤한 소리가 샌다
+			PRINTFORMW 남이 질내에 생의종을 발하면, %조사처리(ANAME(대상),"는")% 한층 더 큰 교성과 함께 키를 활처럼 뒤로 젖혀, 절정 했다……
+			PRINTFORML （신체는 떨어지고 있는…이제(이미/벌써/더는/정말) 한 번 밀기일 것이다. 크크크…）
+			PRINTFORMW 남은 입술을 핥으면서 빠는 것 같은 시선으로, %ANAME(대상)%의 개발 상태를 관찰하고 있다
+		ELSE
+			PRINTFORMW 「요즘은 나부터 떨어지려고 하지 않게 되어 와서 말이야, 곤란한 것이야」
+			PRINTFORML 남은 마치 자신의 것인것같이 %ANAME(대상)%의 의복가운데 손을 넣어, 유방이나 비부를 만지작거리고 있다
+			PRINTFORMW %ANAME(대상)%도 %조사처리(ANAME(대상),"로")%, 견딜 수 없다는 것 같은 안타까운 소리를 높이고 있다……
+			PRINTFORMW 「흠, 참을 수 없구나, 이 장소에서 가볍게 끼워 줄까」
+			PRINTFORML 남은 중얼거리면, 재빠르게 당신의 것을 노출시켜, %ANAME(대상)%의 속옷을 내리면, 흠뻑 젖는 암컷구멍에 페니스를 쑤셔 넣었다
+			PRINTFORMW 이미 고무를 사용할 생각조차 없는 것 같다……
+			PRINTFORMW 「아～이것이다, 이 구멍이야 완전히, 굉장한 암컷이다 이 녀석은」
+			PRINTFORML \@ IS_LOVER(대상) ? 생각해 그리워하고 있어야 할# \@%ANAME(MASTER)%의 눈앞이라고 말하는데, %조사처리(ANAME(대상),"는")% 추잡한 소리를 질러라 꾸중, 스스로 허리를 흔드는
+			PRINTFORMW 남이 질내에 생의종을 발하면, %조사처리(ANAME(대상),"는")% 최고라고 할듯한 교성과 함께 키를 활처럼 뒤로 젖혀, 절정 했다……
+		ENDIF
+ENDSELECT
+PRINTFORMW 「그런데, 즐겨 온다고 할까. 방에는 아무도 넣어 주지 마」
+PRINTFORML 남은 %ANAME(대상)%의 허리를 안으면서, 특별히 준비된 방에 같이 가 들어갔다……
+;추가분
+IF DVAR:부호_마음에든다조교횟수 >= 2 && IS_LOVER(대상)
+	IF 당신에게로의생각해 > 10000 && DVAR:부호_마음에든다조교횟수 >= 3
+		PRINTFORML 「……아아, 그렇다, 너는 또 방의 앞에 서 있게」
+		PRINTFORMW 갑자기, 남자가 되돌아 봐, 말한다
+		PRINTFORMW 「역시 %ANAME(대상)%에 있어 너는 "특별한 존재"답다」
+		PRINTFORMW 「것의 한중간에 너의 일에 언급하면, 상당히 조임이 좋아지는거야」
+		PRINTFORMW 「문하나 멀리해, 너에게 자신의 소리가 들리고 있다고 되면……상당히 즐거울 것이다」
+		PRINTFORMW 남은 히죽 불쾌하게 웃는다
+		PRINTFORMW 「뭐, 그 사이 싫증 전용에 나의 여자를 빌려 주자. 좋아하게 사용해 주어도 상관없어」
+		SELECTCASE RAND:4
+			CASE 0
+				PRINTFORML 그 말과 함께, 남자의 뒤에 앞두고 있던 소녀가 한사람, %ANAME(MASTER)%의 앞에 나온다
+				PRINTFORMW 실로 옷감 면적이 작은 선정적인 의상을 몸에 댄, 작은 소녀였다
+				PRINTFORML 10대 중반이라고 한 어림이 남는 얼굴 생김새이지만, 그 표정은 일류의 창녀같이 요염해
+				PRINTFORMW 아첨하는 것 같은 미소를 띄워%ANAME(MASTER)%의 옆에 서, 신체를 강압하도록(듯이)해 시중든다…
+			CASE 1
+				PRINTFORML 그 말과 함께, 남자의 뒤로 기다리고 있던 한사람의 소녀가 %ANAME(MASTER)%의 앞에 나온다
+				PRINTFORMW 매우 짧은 스커트에 가슴팍을 크게 연 블라우스와 신선한 피부를 이래 도냐와 과시해 온다
+				PRINTFORML 10대 후반의, 이른바 걸이라는 얼굴 생김새이지만, 그 행동은 일류의 창녀같이 요염해
+				PRINTFORMW 요염한 허리자세로 %ANAME(MASTER)%의 앞에 서, 사타구니에 부드러운 엉덩이를 꽉 눌러 온다…
+			CASE 2
+				PRINTFORML 그 말과 함께, 남자의 뒤에 앞두고 있던 여성이 한사람, %ANAME(MASTER)%의 앞에 나온다
+				PRINTFORMW 이른바 메이드복 모습이지만, 그 스커트는 극단적으로 짧고, 눈부신 허벅지를 드러내고 있다
+				PRINTFORML 20대전반이라는 얼굴 생김새이지만, 그 행동은, 일류의 창녀같이 요염해
+				PRINTFORMW 남 좋아하는 하는 표정으로 %ANAME(MASTER)%에 껴안아, 자랑의 각선미를 관련되어 온다…
+			CASE 3
+				PRINTFORML 그 말과 함께, 남자의 나중에 한사람의 여성이 나타났다
+				PRINTFORMW 침착한 분위기가 있는 묘령의 미녀로, 피부의 노출이 적은 세련된 치장이다
+				PRINTFORMW 하지만 그것이 오히려 그녀의 풍만한 몸의 라인을 떠오르게 해보다 매력적으로 보인다
+				PRINTFORML 그 요염한 행동은, 그것들의 창녀란 비교도 되지 않을 정도(수록) 추잡한 것이었다
+				PRINTFORMW 요염한 미소로 %ANAME(MASTER)%에 다가붙어, %조사처리(ANAME(MASTER),"를")% 요구하는 것 같은 시선을 보낸다…
+		ENDSELECT
+		PRINTFORMW 「개인적인 용무에 예의범절을 가르쳐 있기에, 너에게는 좀 느슨할지도 모르지만…하하하학」
+		PRINTFORMW 말할 만큼 말해, 남자는 문을 닫았다……
+	ELSE
+		PRINTFORML 「……아아, 그렇다, 너는 방의 앞에 서 있게」
+		PRINTFORMW 갑자기, 남자가 되돌아 봐, 말한다
+		PRINTFORMW 「아무래도 %ANAME(대상)%에 있어 너는 "특별한 존재"다운데?   다른 거야?」
+		PRINTFORMW 「것의 한중간에 너의 일에 언급하면, 상당히 조임이 좋아지는거야. 쿠쿡」
+		PRINTFORMW 「문하나 멀리해, 너가 자신의 소리를 듣고 있다고 되면……상당히 즐거울 것이다」
+		PRINTFORMW 「그러한 (뜻)이유이니까, 하나 부탁한다. 그럼」
+		PRINTFORMW 말할 만큼 말해, 남자는 문을 닫았다……
+	ENDIF
+ENDIF
+
+PRINTFORML
+PRINTFORML
+PRINTFORMW 두 명이 들어온 방 안으로부터, 남녀의 격렬하게 사귀는 목소리가 들려 온다……
+PRINTFORML
+IF DVAR:부호_마음에든다조교횟수 >= 3 && IS_LOVER(대상) && 당신에게로의생각해 > 10000
+	PRINTFORML 그런 가운데, 「우리도 즐깁시다」라고 부호의 여자에게 재촉당한다
+	PRINTFORML %조사처리(ANAME(MASTER),"는")%……
+	PRINTFORMW 
+	CALL ASK_YN("자중 한다", "자신도 즐긴다")
+	IF RESULT == 1
+		IF DVAR:부호_네토라레플래그 >= 2
+			PRINTFORMW 이대로 문의 앞에서 기다리고 있어도 지루할 뿐이다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 이번도, 그녀와의 섹스를 즐기기로 했다
+			PRINTFORML 변함 없이 꼭 죄여야말로 느슨하기는 했지만, 자주(잘) 느끼는 신체로 큰 교성을 올려 좋아한다
+			PRINTFORMW 그 쾌감에 빠지는 소리에, %조사처리(ANAME(MASTER),"는")% 기분을 좋게 해 더욱 그녀의 신체를 즐겼다
+			SETCOLOR 칼라_경고
+			PRINTFORMW 그런 두 명의 교성도, %ANAME(대상)%에 있어서는 이제(이미/벌써/더는/정말) 어떻든지 좋았다
+			PRINTFORMW 문의 밖의 잡음 따위 귀에 들려오지 않는 모습으로, %조사처리(ANAME(대상),"는")% 야무지지 못하게 녹은 표정으로 부호에게 안기고 있다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 자신을 생각해 주지 않았다고…하면 자신도 쾌락에 흐르게 되어 무엇이 나쁜 것인지
+			PRINTFORMW %ANAME(대상)%의 마음은 안개는 %조사처리(ANAME(MASTER),"로")%부터 멀어져, 부호에게 줄 수 있는 암컷으로서의 기쁨을 받아들였다
+			RESETCOLOR
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "부호의 여자의 입술", "", "부호의 여자의 질", "화간")
+			DVAR:부호_네토라레플래그 ++
+		ELSE
+			PRINTFORMW …이대로 문의 앞에서, 두 명의 교성을 듣고 있어도 맥이 풀릴 뿐이다
+			PRINTFORMW %ANAME(MASTER)%도 흐르게 되는 대로, 그녀와의 섹스를 즐기기로 했다
+			PRINTFORML 그녀들은 조임이야말로 느슨하기는 했지만, 부호에게 잘 예의범절을 가르쳐지고 있는 만큼
+			PRINTFORMW 자주(잘) 느끼는 신체와 정중한 봉사상으로 %조사처리(ANAME(MASTER),"를")% 많이 즐겁게 했다
+			SETCOLOR 칼라_주의
+			PRINTFORMW 하지만, 방의 저 편, 문의 앞에서 즐기기 시작한 두 명의 교성은,
+			PRINTFORML %조사처리(ANAME(MASTER),"를")% 생각해, 정수리까지 저리게 하는 쾌감의 소용돌이를 필사적으로 참고 있었던 %ANAME(대상)%의 마음에
+			PRINTFORML 금을 넣는데 충분한 것이었다. 그리고 그 금으로부터는,
+			PRINTFORMW 암컷의 본능을 받아들여, 쾌락에 빠지는 것을 기뻐하는 %ANAME(대상)%의 교성이 솟아 올라 나와 있었다……
+			RESETCOLOR
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "부호의 여자의 입술", "", "부호의 여자의 질", "화간")
+			DVAR:부호_네토라레플래그 = 2
+		ENDIF
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 유혹을 타지 않고, %조사처리(ANAME(대상),"를")% 생각해 기다리기로 했다
+		PRINTFORML 그녀는 힘껏, %ANAME(MASTER)%에 안기려고 그 손 이 손으로 강요해 왔지만
+		PRINTFORMW %조사처리(ANAME(대상),"를")% 생각해 계속 고집했다
+		PRINTFORMW 그녀는 그 단단한 의지에 접혀, %조사처리(ANAME(MASTER),"와")% 함께 주인을 기다릴 수밖에 없었다…
+		DVAR:부호_후원자플래그 ++
+	ENDIF
+ENDIF
+PRINTFORML
+PRINTFORMW 
+;추가분
+IF DVAR:부호_마음에든다조교횟수 >= 3 && IS_LOVER(대상)
+	IF 당신에게로의생각해 > 10000 && DVAR:부호_네토라레플래그 == 0
+		CALL COLOR_PRINTL(@"때때로, %ANAME(대상)%의, %조사처리(ANAME(MASTER),"를")% 부르는 목소리가 들린다……", 칼라_경고)
+		CFLAG:대상:호감도 -= 1500
+		CFLAG:대상:종속도 -= 1500
+		CFLAG:대상:의존도 -= 1500
+		CFLAG:대상:지배도 /= 3
+		CALL FUCK_RAPE(대상, GET_SPERM_ID("부호"), @"부호의 \@ RAND:2 ? 페니스 # 입술\@", "부호")
+	ELSE
+		CALL COLOR_PRINTL(@"때때로, 너무 좋아, 사랑하고 있다 따위라는, %조사처리(ANAME(대상),"가")% 녹은 소리가 섞이고 있다……", 칼라_경고)
+		CFLAG:대상:호감도 /= 3
+		CFLAG:대상:종속도 /= 3
+		CFLAG:대상:의존도 /= 3
+		CFLAG:대상:지배도 /= 3
+		CALL FUCK_RAPE(대상, GET_SPERM_ID("부호"), @"부호의 \@ RAND:2 ? 페니스 # 입술\@", "부호")
+	ENDIF
+ENDIF
+CALL FUCK_RAPE_HININ(대상, @"부호의 \@ RAND:2 ? 페니스 # 입술\@", "부호")
+CALL FUCK_RAPE_HININ(대상, @"부호의 \@ RAND:2 ? 페니스 # 입술\@", "부호")
+
+만족도 = ABL:대상:Ｃ감 + ABL:대상:Ｖ감 + ABL:대상:Ｂ감 + ABL:대상:Ａ감 + ABL:대상:Ｍ감
+만족도 += ABL:대상:욕망 + ABL:대상:정애 + ABL:대상:봉사 + ABL:대상:성기술 + ABL:대상:성교
+보수 = MIN(RAND(만족도 * 1000, 만족도 * 1000 + 10000), 50000)
+IF 만족도 >= 40 && DVAR:부호_마음에든다조교횟수 == 0
+	CALL COLOR_PRINTW(@"%ANAME(대상)%의 신체는, 부호를 많이 만족시킨 것 같다……", 칼라_주의)
+	DVAR:부호_마음에든다ID = GET_ID(대상)
+ENDIF
+
+PRINTFORML
+PRINTFORML 충분히 6시간 정도도 끊고 나서, 부호의 남자는 방으로부터 혼자서 나왔다
+IF DVAR:부호_마음에든다조교횟수
+	SELECTCASE DVAR:부호_마음에든다조교횟수
+		CASE 1
+			PRINTFORMW 「거참 변함 없이, 좋은 구멍이다」
+			PRINTFORMW 「너무 무심코 내 버렸어……크크크」
+		CASE  2
+			;추가분
+			IF 당신에게로의생각해 > 10000 && DVAR:부호_네토라레플래그 == 0
+				PRINTFORML 「거참 변함 없이, 좋은 구멍이다 그녀는」
+				PRINTFORMW 「나와의 행위의 한중간에, 너의 이름을 부르는 것은 받을 수 없지만」
+				PRINTFORMW 「…뭐, 그러한 여자를 떨어뜨려 가는 것이 즐겁지만…」
+				PRINTFORMW 부호의 마지막 군소리는, %ANAME(MASTER)%의 귀에 닿는 일은 없었다
+			ELSE
+				PRINTFORMW 「거참 변함 없이, 좋은 구멍이다」
+				PRINTFORMW 「너무 무심코 내 버렸어……크크크」
+			ENDIF
+		CASE 3
+			;추가분
+			IF 당신에게로의생각해 > 10000 && IS_LOVER(대상) && DVAR:부호_네토라레플래그 == 0
+				PRINTFORML 「……수고. 변함없는 좋은 구멍이었다」
+				PRINTFORMW 부호는 뭔가 기분이 안좋은 모습이다
+				PRINTFORMW （……내가 여기까지 하고 있다는데 아직 떨어지지 않아와는……）
+				PRINTFORMW 「…흥!   재미있다. 다음이야말로 절대로 나의 것으로 해 준닷」
+			ELSE
+				PRINTFORMW 「거참 변함 없이, 좋은 구멍이다」
+				PRINTFORMW 「최근은 완전히 나의 봉의 형태로 바뀌어 와, 훌륭한 일이다, 쿠크……」
+				IF IS_LOVER(대상)
+					PRINTFORMW 「……쿠쿡, 자신의 여자를 저 좋은 대로 되는 기분이라는 것은 어떤 것이구나?」
+				ENDIF
+			ENDIF
+		CASE 4
+			;추가분
+			IF 당신에게로의생각해 > 10000 && IS_LOVER(대상) && DVAR:부호_네토라레플래그 == 0
+				PRINTFORMW 「～～～～, 거참, 실로 좋은 구멍이었다」
+				PRINTFORMW 「나의 자식을 받을 때, 기쁜 듯한 소리를 내는 것이지만들, 무심코 허리가 멈추지 않아서 말야」
+				PRINTFORMW 「매우 기뻐하고 있던 것 같고, 이제(이미/벌써/더는/정말) 나의 마라가 아니면 만족해 금화도, 하하학」
+				PRINTFORML 「뭐, 너에게는 이제(이미/벌써/더는/정말) 관계없게 되는 것일지도 모르지만…쿠크……」
+				PRINTFORMW 부호의 마지막 군소리는, %ANAME(MASTER)%의 귀에 닿는 일은 없었다
+			ELSE
+				PRINTFORMW 「～～～～, 거참, 좋은 구멍이다」
+				PRINTFORMW 「……설마 자식 가지고 싶음에 일생을 바친다고는 말야, 학!   궁핍한 배는 어디까지 말해도 바보야」
+				PRINTFORMW 「응?   아니아니, 아무것도 아닌 거야, 너는 신경쓰지 않아도 괜찮다」
+				IF IS_LOVER(대상)
+					PRINTFORMW 「……쿠쿡, 너도 얼간이인 일이구나?   금을 위해서라면 한 번이나 두 번, 여자를 빌려 주어도 좋다고 생각하고 있던 것일 것이다?」
+					PRINTFORMW 「뭐, 내가 무슨 말을 하고 있을까는, 그 중 알아줄 것이다」
+				ENDIF
+			ENDIF
+	ENDSELECT
+ELSE
+	SELECTCASE 만족도
+		CASE IS > 60
+			PRINTFORML 「……완전히 훌륭한 구멍, 아니, 여자였다…」
+			PRINTFORMW 「다음도 꼭, 부탁한다…」
+			PRINTFORMW 부호는 뭔가 만족한 모습
+		CASE IS > 40
+			PRINTFORML 「거참 완전히, 훌륭한 구멍이다」
+			PRINTFORMW 「향후도 사용하게 해 받는다」
+		CASE IS > 30
+			PRINTFORML 「후우. 상당히 좋지 않은가, 너무 무심코 내 버렸어」
+			PRINTFORMW 「기대 이상의 구멍이었다」
+		CASE IS > 20
+			PRINTFORML 「흥, 뭐, 이런 곳일 것이다」
+			PRINTFORMW 「뭐 그렇다고 한 곳이다」
+		CASE IS > 10
+			PRINTFORML 「아휴……뭐라고도 사용해 참고가 없는 구멍이었다」
+			PRINTFORMW 「기대에 못미칠다. 뭐, 기대하고 있던 내 쪽이 얼간이였다고 말하는 이야기인가」
+		CASEELSE
+			PRINTFORML 「무엇이다 그 참치는. 변두리의 창녀보다 너무해」
+			PRINTFORMW 「완전히, 불쾌한 일 한이 없어」
+	ENDSELECT
+ENDIF
+PRINTFORMW 「자, 보수다, 받게」
+PRINTFORM 금
+CALL COLOR_PRINT(@"{보수}", 칼라_주의)
+PRINTFORML 를 받았다……
+MONEY += 보수
+IF IS_LOVER(대상) && DVAR:부호_마음에든다조교횟수 > 2
+	IF 당신에게로의생각해 > 10000 && DVAR:부호_마음에든다조교횟수 >= 4 
+		PRINTFORMW 「……이만큼 예의범절을 가르쳐 주면, 과연 벌써 떨어진 것일 것이다. 크크크……」
+		PRINTFORMW 「응?   아니아니, 아무것도 아닌 거야, 너는 신경쓰지 않아도 괜찮은 일이야」
+		PRINTFORML 「……그녀가 나를 선택한 후, 싫어도 아는 것일테니까」
+		PRINTFORMW 부호는 의미심장한 것을 중얼거렸다
+	ELSEIF 당신에게로의생각해 > 10000 && DVAR:부호_마음에든다조교횟수 >= 3 && DVAR:부호_네토라레플래그 == 0
+		PRINTFORMW 「거참……이런은 한 돈을 위해서(때문에), 좋아하는 사람을 몇 번이나 내밀고 있다는데」
+		PRINTFORML 「그런 남자에게 의리 세우고 한다 따위……그 여자가 생각하는 것은 구제하기 어려워, 완전히」
+		PRINTFORMW 부호는 뭔가 초조하고 있는 모습이다…
+	ELSE
+		PRINTFORMW 「거참……이런은 한 돈을 위해서(때문에), 좋아하는 사람을 몇 번이나 내며서 말이야」
+		PRINTFORMW 「이런 것을 위해서(때문에), 자신의 여자가 씨뿌리기 되는 일도 받아들일까. 빈민이 생각하는 것은 구제하기 어려워, 완전히」
+	ENDIF
+ENDIF
+PRINTFORMW 「그럼. 용무가 끝났는데, 이런 짜증이 난 곳에는 아프지 않기 때문에」
+PRINTFORMW 「"뒷정리"는 맡겼어, 대단히 더럽혀 버렸으므로, 하하하」
+PRINTFORML 착의를 정돈하면, 남자는 조속히 떠나 갔다……
+PRINTFORML 그 후, 방에 들어가면, 거기에는 땀과 애액과 백탁 투성이가 되어 심하게 된 %조사처리(ANAME(대상),"가")% 침대에 쓰러져 엎어지고 있었다……
+IF DVAR:부호_마음에든다조교횟수 >= 3
+	PRINTFORMW 피임한다고 했을 텐데, 그 약속을 남자는 지키지 않았던 것 같다
+	PRINTFORMW %ANAME(대상)%의 양구멍으로부터는,\@ IS_LOVER(대상) ? %ANAME(MASTER)% 이외의 # \@자식이 걸죽 흘러 떨어지고 있었다……
+	;추가분
+	IF 당신에게로의생각해 > 10000 && IS_LOVER(대상) && DVAR:부호_네토라레플래그 == 0
+		CALL ASK_YN("그녀를 신경쓴다", "타인에게 처리를 맡겨 떠난다")
+		IF RESULT == 1
+			PRINTFORMW …그 남자의 정자 투성이가 된 %ANAME(대상)%의 모습이 보는 것에 참지 않고, %조사처리(ANAME(MASTER),"는")% 뒤처리를 적당한 사람에게 맡겨 떠나 갔다
+			PRINTFORMW 그 차가운 모양은, 필사적으로 부호의 능욕을 참아 온 %ANAME(대상)%의 마음을 꺾기에는 충분한 것이었다……
+			DVAR:부호_네토라레플래그 = 1
+		ELSE
+			IF DVAR:부호_후원자플래그 == 1
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 약속을 달리한 그 남자에게 강한 분노를 느꼈다
+				PRINTFORMW 금방 뒤쫓아 찔러 죽일까하고 생각한 정면, %조사처리(ANAME(대상),"가")% 충고하도록(듯이) 손을 더한다
+				PRINTFORMW 자신 한사람이 참으면 되는 일이다. 그래서 조금이라도 %조사처리(ANAME(MASTER),"가")% 도움이 된다면 상관없다, 라고…
+				PRINTFORML 그녀의 헌신에 보답하기 위해서(때문에), %조사처리(ANAME(MASTER),"는")% 분노를 삼키는 일로 했다
+				PRINTFORML 더러워지고 있는 %ANAME(대상)%의 신체를 목욕탕에서 맑게 하고 있으면, 갑자기 그녀는 %ANAME(MASTER)%에 껴안음
+				PRINTFORMW 그 남자를 잊게 하면 좋다, 라고 눈물을 머금으면서 간원 했다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")%, 떨리는 그녀의 신체를 살그머니 껴안아, 그 생각에 응하기로 했다
+				PRINTFORMW 장시간의 성교에 의해 소모하고 있는 그녀를 비추어 봐, 상냥하게, 천천히 신체를 겹친다
+				PRINTFORML 하지만, 부호의 손에 의해 완전히 민감하게 되어 버린 %ANAME(대상)%의 신체는
+				PRINTFORMW 그런 슬로우 섹스에서도 많이 느끼고 필요해, 질육을 완전히 녹게 했다
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀의 균열에 페니스를 깊게 찔러 넣어, 질내에 남은 부호의 정액을 긁어내 가면
+				PRINTFORMW 부호의 왕자지에 후벼파진 형태를 되돌리도록(듯이), 질육이 %ANAME(MASTER)%의 페니스에 찰싹 달라붙어 온다
+				PRINTFORMW 그 기특한님에게, 잠깐 열중해 허리를 쳐박아, 목욕탕에 두 명의 교성만이 계속 영향을 준다
+				PRINTFORMW 이윽고 한계를 맞이한 %조사처리(ANAME(MASTER),"는")%, 한층 더 깊게 허리를 쳐박아, 그녀의 자궁입구에 귀두를 밀착시키면서 마음껏 사정했다
+				PRINTFORML %조사처리(ANAME(대상),"는")% 크게 등을 뒤로 젖히게 하면서 목욕탕의 밖까지 영향을 주는 것 같은 큰 교성을 올려 삐걱삐걱 몸을 진동시킨다
+				PRINTFORMW 크게 절정 했던 것도 잠시동안, 그녀는 더욱%조사처리(ANAME(MASTER),"를")% 요구해 허리를 구불거리게 할 수 있다
+				PRINTFORMW 그 추억을, %ANAME(MASTER)%의 신체로 덧쓰기 해 주었으면 한다
+				PRINTFORMW 그런 식으로 (듣)묻고 있는 것 같은 생각이 들어, %조사처리(ANAME(MASTER),"는")% 한층 더 격렬하게%조사처리(ANAME(대상),"와")% 신체를 겹쳤다……
+			ELSEIF DVAR:부호_후원자플래그 >= 2 
+				PRINTFORML %조사처리(ANAME(MASTER),"는")%, 다시 약속을 달리한 그 남자에게 분노를 느끼는 것도,
+				PRINTFORMW %ANAME(대상)%의 헌신을 쓸데없게 할 수는 없는, 분노를 살그머니 삼킨다
+				PRINTFORMW 그녀는, 그 대신에 또, %ANAME(MASTER)%에 신체를 맑게 했으면 좋다, 라고 간원 했다
+				PRINTFORMW 그 소원 대로, 전회같이 목욕탕에서 『맑게 하는 행위』를 둘이서 실시한다…
+				PRINTFORMW 부호에게 안긴 감촉을 덧쓰기하도록(듯이), %조사처리(ANAME(대상),"와")% %조사처리(ANAME(MASTER),"는")% 격렬하게 사귄다
+				PRINTFORML 페니스의 칼리목이 부호의 정액을 긁어내, 질육을 어루만질 때 그녀의 신체가 쾌감으로 뛴다
+				PRINTFORMW 이윽고 한계를 맞이한 %조사처리(ANAME(MASTER),"는")%, 한층 더 깊게 허리를 쳐박아, 그녀의 자궁입구에 귀두를 밀착시키면서 마음껏 사정했다
+				PRINTFORML %조사처리(ANAME(대상),"는")% 크게 등을 뒤로 젖히게 하면서 목욕탕의 밖까지 영향을 주는 것 같은 큰 교성을 올려 삐걱삐걱 몸을 진동시킨다
+				PRINTFORMW 크게 절정 했던 것도 잠시동안, 그녀는 더욱%조사처리(ANAME(MASTER),"를")% 요구해 허리를 구불거리게 할 수 있다
+				PRINTFORMW 나의 안을, %ANAME(MASTER)%의 것으로 채우면 좋겠다
+				PRINTFORMW 그런 식으로 (듣)묻고 있는 것 같은 생각이 들어, %조사처리(ANAME(MASTER),"는")% 한층 더 격렬하게%조사처리(ANAME(대상),"와")% 신체를 겹쳤다……
+			ENDIF
+			PRINTFORML 
+			DVAR:부호_후원자플래그 ++
+			CALL FUCK_MAKELOVE(대상, GET_ID(MASTER), @"%ANAME(MASTER)%의 입술", ANAME(MASTER))
+			CALL FUCK(MASTER, "Ｃ, 사정, Ｖ삽입", "동정상실", 0, "", "", @"%ANAME(대상)%의 질")
+			CFLAG:대상:호감도 += 1000
+			CFLAG:대상:종속도 += 1000
+			CFLAG:대상:의존도 += 1000
+		ENDIF
+	ENDIF
+ELSE
+	PRINTFORMW 피임한다고 할 약속을, 남자는 제대로 지킨 것 같다
+	PRINTFORMW 그녀의 주위에는, 사용이 끝난 고무가 대량으로 산란하고 있었다……
+	;추가분
+	IF 당신에게로의생각해 > 10000 && DVAR:부호_네토라레플래그 == 0
+		CALL ASK_YN("그녀를 신경쓴다", "뒤처리 하지 않고 떠난다")
+		IF RESULT == 1
+			PRINTFORMW …그 남자에게 안겨 절정에 달하고 있는 모습이 보는 것에 참지 않고, %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"를")% 슬쩍 봐 떠나 갔다
+			PRINTFORMW 그 차가운 모습은, 필사적으로 능욕의 시간을 참았던 %ANAME(대상)%의 마음을 손상시키기에는 충분한 것이었다……
+			DVAR:부호_네토라레플래그 = 1
+		ELSE
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")%, 부호에게 격렬하게 범해져 숨도 끊어질듯 끊어질듯의 %조사처리(ANAME(대상),"를")% 신경썼다
+			PRINTFORML 따뜻한 타올로 신체를 닦을 때, 남자의 손에 의해 민감하게 된 %ANAME(대상)%의 신체가 반응하지만,
+			PRINTFORMW 그녀는 %ANAME(MASTER)%에 의해 주어지는 따뜻한 쾌감을, 온화한 얼굴로 받아들이고 있었다
+			CFLAG:대상:호감도 += 500
+		ENDIF
+	DVAR:부호_발생플래그 = 1
+	ENDIF
+ENDIF
+
+
+IF GET_ID(대상) == DVAR:부호_마음에든다ID
+	DVAR:부호_마음에든다조교횟수 ++
+ELSE
+	DVAR:부호_마음에든다ID = 0
+	DVAR:부호_마음에든다조교횟수 = 0
+	DVAR:부호_네토라레플래그 = 0
+	DVAR:부호_후원자플래그 = 0
+ENDIF
+;추가분
+IF DVAR:부호_마음에든다조교횟수 == 5 
+	;지금까지 불의리를 일하지 않았다
+	IF 당신에게로의생각해 >= 10000 && IS_LOVER(대상) && DVAR:부호_네토라레플래그 == 0
+		CALL SINGLE_DRAWLINE
+		PRINTFORML 
+		PRINTFORML 
+		PRINTFORML 
+		PRINTFORMW 후일, 부호가 다시 방문했다
+		PRINTFORMW 그리고, 하필이면 %ANAME(MASTER)%의 앞에서, %조사처리(ANAME(대상),"를")% 첩에 맞아들이려고 선언했다
+		PRINTFORMW 여기서의 생활보다 상당히 호화로워, 여자로서 최고의 행복을 %ANAME(대상)%에게 주자, 라고 말한다……
+		PRINTFORMW 그 말과 함께, 지금까지 그에게 안겨 새겨져 온 쾌감의 소용돌이가 %ANAME(대상)%의 육체를 쑤시게 해 무심코 군침을 먹인다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 그런 %조사처리(ANAME(대상),"를")%, 다만 지켜본다
+		PRINTFORMW 여기서 %조사처리(ANAME(대상),"가")% 어느 쪽을 선택하려고, 그것은 그녀 자신이 결정한 것이다, 로 각오를 결정한다
+		PRINTFORML 그리고……약간의 망설임의 뒤……
+		PRINTFORML
+		PRINTFORMW
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 부호는 아니고, %조사처리(ANAME(MASTER),"와")% 걸어 가는 것을 선택했다
+		PRINTFORMW 「낫!? ……왜닷!?   왜 나의 것이 되지 않는닷!!」
+		PRINTFORML 남은 낭패 한다. 설마 자신이 소매로 된다고는 이슬(정도)만큼도 생각하지 않았을 것이다
+		PRINTFORMW 「지금까지 나의 테크닉으로 떨어지지 않았던 여자는 없닷!   너의 신체도 기뻐하고 있었다!   그것이 왜닷!?」
+		PRINTFORML 오늘에 이를 때까지, 눈에 띈 여자는 모두 육봉과 테크닉으로 자신의 물건으로 한 부호에게 있어
+		PRINTFORMW 그토록 범해, 육봉의 형태까지 철저히 가르쳐 준 여자가 자신을 선택하지 않는, 이라는 것은 처음이었다
+		PRINTFORMW 「왜다!?   그 남자의 무엇이 나보다 우수하다는 것이다!」
+		PRINTFORMW 「사이즈도 테크닉도, 나보다 뛰어난 남자 따위 없었다!   왜 그런 남자를 선택한닷!?」
+		PRINTFORMW %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%에 다가붙으면서, 조용하게 고한다. 그것은 『사랑』이 있었기 때문이다, 라고……
+		PRINTFORMW 「아, 사랑이, 라면!?   그런 것은 점막이 낳는 환상이닷!」
+		PRINTFORMW 「지, 지금까지의 여자도, 누구하나 없었다!   모두, 사랑보다 나의 신체를 선택했다!   라고 한다…!」
+		PRINTFORMW ……생각하면 이 남자도, 견해에 따라서는 불쌍할지도 모른다
+		PRINTFORML 세의 대부분의 여자는, 그의 탁월한 성기술에 의해 주어지는 쾌락에 굴복 해 버릴 것이다
+		PRINTFORMW 이 정도의 성기술을 가진 까닭에, 일부러 상대와 마음을 다니게 할 수 있는 교제 따위 할 필요가 없었을 것이다
+		PRINTFORML 여하튼, 어떤 여자도 마라 하나로 따르게 되어진 것이니까…
+		PRINTFORMW 그러한 삶의 방법 이유, 그는 『마음을 다니게 할 수 있어 사람을 사랑한다』라는 관념을 기를 수가 없었던 것이다
+		PRINTFORML 하지만, 얼마나 부정하든지, %조사처리(ANAME(대상),"가")% 부호는 아니고 %조사처리(ANAME(MASTER),"를")% 선택했다는 사실은 변함없다
+		PRINTFORMW 「…사랑…그런 것이…정말로 존재하는지…그런, 고귀한 것이……」
+		PRINTFORML 「…………」
+		PRINTFORMW 「……졌어…나의 패배다. …사랑, 등이라고 말하는 것, 믿지는 않았지만…」
+		PRINTFORMW 인정할 수밖에 없었다. 당신의 인생에 필요없었다, 존재하지 않았던 것에 진 것이라는 일을……
+		PRINTFORMW 「너희들의 사이에는, 그것이 있다, 라고 한다…. 나에게는 손에 들어 오지 않았던 것이……」
+		PRINTFORML 그가 지금까지 믿어 온 절대의 신조는, 두 명 사랑에 의해 쳐부수어졌다
+		PRINTFORMW 절대의 자신을 가지고 있던 당신의 남근조차, 몹시 허무한 것과 같이 느껴졌다…
+		PRINTFORML 이미 그의 안에, 믿을 수 있는 것 등 남아 있지 않았다
+		PRINTFORMW 부호는 의기 소침한 모습으로 의자에 허리를 건다
+		PRINTFORML 그 모습으로부터는, 조금 전까지같이 오만하고 뻔뻔스러운 분위기는 사라지고 있었다
+		PRINTFORMW 마치 버려진 아이와 같은, 몹시 허약한 것이었다…
+		PRINTFORMW 그것을 본 %조사처리(ANAME(대상),"는")%, %ANAME(MASTER)%에 시선을 보내, %ANAME(MASTER)%도 응하도록(듯이) 수긍하는,
+		PRINTFORMW 부호에게 접근한 %조사처리(ANAME(대상),"는")%, 눈앞의 고개 숙이는 남자를 상냥하게 껴안았다
+		PRINTFORMW 마치 어머니가 아이를 안는것같이……
+		PRINTFORML 「낫?   무엇을……」
+		PRINTFORMW %ANAME(MASTER)%도 또한, 남자의 등에 손을 둬, 둘이서 사랑하도록(듯이) 얼싸안는다
+		PRINTFORMW 다만 불쌍했다. 사랑도 알지 못하고, 존재도 하지 않는다고 단언하는 만큼 타인을 믿을 수 없었다 이 남자가, 슬퍼 어쩔 수 없었다
+		PRINTFORMW 지금까지의 행동에 의해 끓어오르고 있었음이 분명한 부호에게로의 분노도, 그 슬픈 모습을 보면 자연히(과) 식어 갔다…
+		PRINTFORML 「…하하…왜 일까…. 안고 있었을 때보다, 훨씬 따뜻하게 느낀다……」
+		PRINTFORMW 그 눈초리에는, 눈물과 같은 물건이 보였다
+		PRINTFORML
+		PRINTFORML
+		PRINTFORMW
+		PRINTFORMW 한동안 해, 부호는 침착한 모습으로 두 명과 마주보았다. 그 표정은 이상하게 밝게 보였다
+		PRINTFORMW 「그러면 이것으로…. 지금까지 끝나지 않았다. 이제(이미/벌써/더는/정말) 너희들의 앞에는…」
+		PRINTFORMW 부호가 단언하기 전에, %조사처리(ANAME(MASTER),"가")% 그에게 말을 건다
+		PRINTFORML 또, 오면 좋다
+		PRINTFORMW 「……뭐라고?」
+		PRINTFORMW 또 언제라도 오면 좋다. 지금까지 사랑도 친구도 몰랐다고 한다면, 지금부터 알아 가면 된다. 자신들이 보여 준다
+		PRINTFORMW 이니까 외로워지면, 언제라도 와도 상관없다. 이것은 두 명의 총의다, 라고 %조사처리(ANAME(MASTER),"는")% 그에게 전했다
+		PRINTFORML 「…하하, 핫핫핫!   아무래도 사람으로서의 그릇은, 너 쪽이 아득하게 컸던 것 같구나」
+		PRINTFORMW 부호는 쾌활하게 웃었다. 그 웃는 얼굴은 이것까지같이 음습한 것은 아닌, 밝은 애교가 있었다
+		PRINTFORMW 「그러면 앞으로도, 친밀에 시켜 받는다. ……고마워요, 처음의 친구야」
+		PRINTFORMW 그 말을 남겨 부호는 돌아갔다. 지금부터는 정당한 후원자로서 지원해 주면다
+		PRINTFORML 
+		CALL COLOR_PRINTW(@"부호가 후원자가 되었습니다", 칼라_주의)
+		PRINTFORML 
+		DVAR:부호_마음에든다ID = GET_ID(대상)
+		DVAR:부호_발생플래그 = -1
+		DVAR:부호_후원자플래그 = 5
+			
+	;1회불의리를 일했다
+	ELSEIF 당신에게로의생각해 >= 10000 && IS_LOVER(대상) && DVAR:부호_네토라레플래그 == 1 
+		CALL SINGLE_DRAWLINE
+		PRINTFORML 
+		PRINTFORML 
+		PRINTFORML 
+		PRINTFORMW 후일, 부호가 다시 방문했다
+		PRINTFORMW 그리고, 하필이면 %ANAME(MASTER)%의 앞에서, %조사처리(ANAME(대상),"를")% 첩에 맞아들이려고 선언했다
+		PRINTFORMW 여기서의 생활보다 상당히 호화로워, 여자로서 최고의 행복을 %ANAME(대상)%에게 주자, 라고 말한다……
+		PRINTFORMW 그 말과 함께, 지금까지 그에게 안겨 새겨져 온 쾌감의 소용돌이가 %ANAME(대상)%의 육체를 쑤시게 해 무심코 군침을 먹인다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 그런 %조사처리(ANAME(대상),"를")%, 다만 지켜본다
+		PRINTFORMW 여기서 %조사처리(ANAME(대상),"가")% 어느 쪽을 선택하려고, 그것은 그녀 자신이 결정한 것이다, 로 각오를 결정한다
+		PRINTFORML 그리고……약간의 망설임의 뒤……
+		PRINTFORML
+		PRINTFORMW
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 부호아래에 걸음 냈다
+		PRINTFORMW ……%조사처리(ANAME(대상),"는")% %조사처리(ANAME(MASTER),"는")% 아니고, 부호의 남자를 선택했다
+		PRINTFORML 「하하하학!   그렇겠지 그렇겠지. 여자라면 그것이 당연하다」
+		PRINTFORMW 「그러면 즉시, 나의 여자가 된다는 증명을 해 받을까……어이」
+		PRINTFORML 남이 눈짓 하면, %조사처리(ANAME(대상),"는")% 그의 곁으로 무릎 꿇는다
+		PRINTFORMW 그 하나의 물건을 노출시키면, 그녀는 %ANAME(MASTER)%의 눈앞에서 남자의 육봉을 열심히 빨기 시작했다
+		PRINTFORMW …그 얼굴에는, %ANAME(MASTER)%에 대한 미안함과 그 이상으로 이 남자의 페니스에 봉사할 수 있는 복종에의 기쁨이 나타나고 있었다
+		PRINTFORMW %ANAME(대상)%에는, 이 훌륭한 페니스가 자신에 가져오는 지상의 쾌락을 잊어 사는 것 따위할 수 없었다…
+		PRINTFORMW 「오오, 이 달라붙음이라고 하면, 시켜지고 있는 사람의 그것은 아니구나. 사랑하지 않았다고 할 수 없는 것이 아닌가?  하하학」
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 아연실색으로 한 표정으로, 남자의 페니스에 봉사하는 %조사처리(ANAME(대상),"를")% 바라본다
+		PRINTFORMW 그 치태는, 지금까지 %조사처리(ANAME(MASTER),"가")% 본 것도 없을 정도(수록) 요염하고 아름답고, 그리고 기뻐하고 있는 것처럼 보였다
+		PRINTFORML 「좋아, 이제 되었다. 다음은, 그렇네…」
+		PRINTFORMW 「여기서 끼워 주자. 너도 %조사처리(ANAME(MASTER),"로")% 보여지면서 끼워지고 싶을 것이다」
+		PRINTFORMW 남은 중얼거리면, 봉사동안에 녹은 %ANAME(대상)%의 암컷구멍에 페니스를 나사입 넣는다
+		PRINTFORMW 생각해 그리워하고 있었음이 분명한 %ANAME(MASTER)%의 눈앞에서, %조사처리(ANAME(대상),"는")% 긴장이 풀린 것처럼 스스로 허리를 흔들어, 추잡한 소리를 질러라
+		PRINTFORML 남의 굵은 육봉으로 자궁까지 찔리는 기쁨의 소리
+		PRINTFORMW 그 소리의 색은, %조사처리(ANAME(MASTER),"와")%의 섹스에서는 (들)물었던 적이 없는 것이었다…
+		PRINTFORMW 그리고 남자가 그녀에게 생의종을 발하면, %조사처리(ANAME(대상),"는")% 최고라고 할듯한 교성과 함께 키를 활처럼 뒤로 젖혀, 절정 했다……
+		PRINTFORMW 「너에게는 감사하고 있어?   이런 좋은 것을 가르쳐 준 것이니까, 나를 위해서(때문에)」
+		PRINTFORML 「쿠쿠쿠…안심하게. 그녀는 내가 돌봐 주자」
+		PRINTFORMW 「자, 돌아갈까. 다음은 나의 저택에서 차분히 범해 주자」
+		PRINTFORMW 지금이다 절정의 여운이 남은 %조사처리(ANAME(대상),"는")% 마지막에 %조사처리(ANAME(MASTER),"를")% 슬쩍 본다
+		PRINTFORMW 그 표정에는 후회의 색은 없고, 여자로서의 기쁨에 녹고 있었다
+		PRINTFORML ……두 명이 떠난 후, %조사처리(ANAME(MASTER),"는")% 한사람 남겨졌다
+		PRINTFORMW 눈앞에서 %조사처리(ANAME(대상),"가")% 범해지고 있는 동안, 말해 알려지지 않는 흥분이 %ANAME(MASTER)%의 신체를 채우고 있었다……
+		PRINTFORML
+		PRINTFORML
+		PRINTFORML
+		CALL SINGLE_DRAWLINE
+		PRINTFORML
+		PRINTFORML
+		PRINTFORML
+
+		PRINTFORMW 부호의 후궁으로, 그의 다른 아내와 함께, %조사처리(ANAME(대상),"는")% 안기고 있다
+		PRINTFORMW 그 표정은, 지금까지 아무도 본 적이 없을 만큼의 행복을 나타내고 있었다
+		PRINTFORMW 남이 허리를 흐느껴 워 그 꿀단지를 후벼팔 때, %조사처리(ANAME(대상),"는")% 견딜 수 없다는 소리를 높인다
+		PRINTFORMW 남이 종을 발하면, 여자로서 최고의 행복에 %조사처리(ANAME(대상),"는")% 격렬하게 절정 했다……
+		IF IS_LOVER(대상)
+			PRINTFORMW 그녀의 머릿속에, %ANAME(MASTER)%의 모습이 일순간 떠오른다
+			PRINTFORMW 그러나 그것도, 곧 사라졌다……
+		ENDIF
+		PRINTFORML
+		PRINTFORML
+		PRINTFORML
+		CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"가")% 없어졌습니다……", 칼라_경고)
+		CALL CHANGE_COUNTRY(대상, 0, 1)
+		CFLAG:대상:특수상태 = 0
+		CALL LOSE_RELATION_TALENT(대상)
+		SETBIT TALENT:대상:데일리계, 소질_데일리_부호의애첩
+		DVAR:부호_마음에든다ID = 0
+		DVAR:부호_마음에든다조교횟수 = 0
+		DVAR:부호_네토라레플래그 = 0
+		DVAR:부호_후원자플래그 = 0
+		
+	;그 이외로 5회 연속해 저것 한다고 저것
+	ELSE
+		CALL SINGLE_DRAWLINE
+		PRINTFORML
+		PRINTFORML
+		PRINTFORML
+		PRINTFORMW %조사처리(ANAME(대상),"가")% 행방을 감추었다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 부하에게 명하고 수색시켰지만, 행방은 몰랐다
+		PRINTFORMW ……%ANAME(대상)%의 방에, 메모가 남아 있었다
+		PRINTFORMW 그 남자에게 안기는 것이, 처음은 싫고 싫고 어쩔 수 없었다
+		PRINTFORMW 그러나, 점차 그가 주는 쾌락에, 열중해 버렸다
+		PRINTFORMW 그런 가운데, 그가 자신의 후궁에 들어오지 않을까 권해 주었다
+		PRINTFORMW 거기서의 생활은,\@ IS_LOVER(대상) ? %조사처리(ANAME(MASTER),"와")%의 # 여기서의 \@생활보다 훨씬 좋을 것 같다
+		PRINTFORMW 자신은 거기서 그에게 일생을 바치기로 하는, 부디 찾지 않으면 좋겠다……
+		PRINTFORML
+		PRINTFORML
+		PRINTFORML
+		CALL SINGLE_DRAWLINE
+		PRINTFORML
+		PRINTFORML
+		PRINTFORML
+
+		PRINTFORMW 부호의 후궁으로, 그의 다른 아내와 함께, %조사처리(ANAME(대상),"는")% 안기고 있다
+		PRINTFORMW 그 표정은, 지금까지 아무도 본 적이 없을 만큼의 행복을 나타내고 있었다
+		PRINTFORMW 남이 허리를 흐느껴 워 그 꿀단지를 후벼팔 때, %조사처리(ANAME(대상),"는")% 견딜 수 없다는 소리를 높인다
+		PRINTFORMW 남이 종을 발하면, 여자로서 최고의 행복에 %조사처리(ANAME(대상),"는")% 격렬하게 절정 했다……
+		IF IS_LOVER(대상)
+			PRINTFORMW 그녀의 머릿속에, %ANAME(MASTER)%의 모습이 일순간 떠오른다
+			PRINTFORMW 그러나 그것도, 곧 사라졌다……
+		ENDIF
+		PRINTFORML
+		PRINTFORML
+		PRINTFORML
+		CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"가")% 없어졌습니다……", 칼라_경고)
+		CALL CHANGE_COUNTRY(대상, 0, 1)
+		CFLAG:대상:특수상태 = 0
+		CALL LOSE_RELATION_TALENT(대상)
+		SETBIT TALENT:대상:데일리계, 소질_데일리_부호의애첩
+		DVAR:부호_마음에든다ID = 0
+		DVAR:부호_마음에든다조교횟수 = 0
+		DVAR:부호_네토라레플래그 = 0
+		DVAR:부호_후원자플래그 = 0
+	ENDIF
+ENDIF
+
+RETURN 1

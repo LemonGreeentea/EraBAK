@@ -1,0 +1,55 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_SUMOU_WITH_KAPPA_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_SUMOU_WITH_KAPPA_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_SUMOU_WITH_KAPPA(대상)
+#DIM 대상
+
+PRINTFORML 강가를 걷고 있으면 강중에서 갓파가 나타났다
+PRINTFORMW 그는 상냥하게 인사를 해, 스모로 이끌어 왔다
+PRINTL
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "무투"))
+CALL ASK_YN("상대 한다" ,"거절한다")
+
+IF RESULT == 1
+	PRINTFORML 흠뻑 젖음의 녀석과 스모는 취하고 싶지 않다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 정중하게 거절했다
+	RETURN 1
+ENDIF
+
+PRINTFORML 의욕만만의 얼굴을 보면 거절 힘들다
+PRINTFORML %조사처리(ANAME(대상),"는")% 그의 앞에서 양주먹을 붙었다
+PRINTFORMW 좋다!
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+IF LIMIT(ABL:대상:무투, 30, 100) >= RAND:75
+	PRINTFORML %조사처리(ANAME(대상),"는")% 훌륭히 승리했다!
+	PRINTFORMW 그는 갔다고 고개를 숙이면 잡을 수 있던지 얼마 안 되는 물고기를 주었다
+	CALL PRINT_ADD_EXP(대상, "무투경험치", RAND:10 + 1, 1)
+ELSE
+	PRINTFORML 갓파는 만만치 않고, 져 버렸다
+	PRINTFORMW 그는 기쁜듯이 웃으면 오이를 주라고 말해 왔다
+	PRINTFORMW 과연 가지고 다니지 않았기 때문에 가까이의 농가까지 데리고 가, 양보해 받았다
+	IF MONEY >= 100
+		MONEY -= 100
+		CALL ICPRINT("금<100>을 지불했다", "L", 칼라_주의)
+	ENDIF
+ENDIF
+
+RETURN 1

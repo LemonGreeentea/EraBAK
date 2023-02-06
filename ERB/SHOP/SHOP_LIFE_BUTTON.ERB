@@ -1,0 +1,411 @@
+﻿;공유하고 있는 버튼이나 버튼에 추적 시키는 정보
+
+;-------------------------------------------------
+;오른쪽 컬럼 캐릭터 리스트용의 캐릭터 버튼
+;
+;버튼 표시 대상 캐릭터=캐릭터 번호
+;선택중색표시 플래그=0:통상 칼라 1:선택중색으로 표시
+;버튼 번호 가산치=NO + 버튼 번호 가산치（100～）
+;캐릭터 표시 가부 판정 결과
+;	@SHOP_LIFE_CHECKCHARA～계의 돌아가 값을 대입
+;	메뉴 파일내의 버튼 지정이다
+;	@SHOP_LIFE_LIST1_BUTTON{메뉴 번호}(ARG:0, ARG:1)나
+;	@SHOP_LIFE_LIST1_BUTTON{메뉴 번호}(ARG:0, ARG:1)로부터 지정할 때는
+;	리스트 함수내에서 이미 판정되어 결과（PRINTOPTION）가 ARG:1에 보존되고 있다
+;	의 것으로, 그대로 ARG:1을 돌려주는 것만으로 좋다
+;행동제표시 플래그=0:행동이 끝난 마크를 붙이는 1:행동이 끝난 마크를 붙이지 않는다
+;상하=이마우에의 리스트나 아래의 리스트인지를 지정한다
+;	메뉴 파일로 버튼의 추적 정보를 상하의 리스트로 나누고 싶을 때에 조작
+;
+;메뉴 파일에서의 사용예）
+;	CALL COLUMN_RIGHT_CHARALIST_BUTTON(ARG:0, CFLAG:(ARG:0):침실호출선택중, SHOP_LIFE_LIST2_ADD_INPUT, ARG:1, "BOTTOM")
+;리스트내에서의 사용예）
+;	CALL COLUMN_RIGHT_CHARALIST_BUTTON(NOW_CHECK_CHARA, 0, SHOP_LIFE_LIST1_ADD_INPUT, PRINTOPTION)
+;-------------------------------------------------
+@COLUMN_RIGHT_CHARALIST_BUTTON(버튼표시대상캐릭터, 선택중색표시플래그 = 0, 버튼번호가산치 = SHOP_LIFE_LIST1_ADD_INPUT, 캐릭터표시가부판정결과 = 1, 행동제표시플래그 = 0, 상하 = "")
+#DIM 버튼표시대상캐릭터
+#DIM 선택중색표시플래그
+#DIM 버튼번호가산치
+#DIM 캐릭터표시가부판정결과
+#DIM 행동제표시플래그
+#DIMS 상하
+;CHECKCHARA의 반환값이 0이라면 표시하지 않는다
+SIF 캐릭터표시가부판정결과 <= 0
+	RETURN 0
+
+PRINT 
+
+SIF 선택중색표시플래그
+	SETCOLOR 칼라_선택중
+
+;통상 표시
+IF 캐릭터표시가부판정결과 == 1
+	CALL PRINTBUTTON_CENTER(@"[%ANAME(버튼표시대상캐릭터), MAX_CHARANAME_LENGTH, LEFT%]", NO:(버튼표시대상캐릭터) + 버튼번호가산치, 0)
+;회색 표시
+ELSEIF 캐릭터표시가부판정결과 == 2
+	CALL PRINTBUTTON_CENTER(@"[%ANAME(버튼표시대상캐릭터), MAX_CHARANAME_LENGTH, LEFT%]", NO:(버튼표시대상캐릭터) + 버튼번호가산치, 0, 0)
+ENDIF
+
+SIF 선택중색표시플래그
+	RESETCOLOR
+
+;행동이 끝난 마크 표시
+IF !행동제표시플래그
+	CALL PRINT_RESTMARK(버튼표시대상캐릭터)
+	PRINT  
+ENDIF
+
+;버튼에 추가의 정보를 표시하는 지정이 있으면
+RESULT = 0
+IF 상하 == "TOP"
+	TRYCCALLFORM SHOP_LIFE_BUTTON_ADD_TOP{FLAG:거점페이즈선택커맨드}(버튼표시대상캐릭터)
+	CATCH
+		TRYCALLFORM SHOP_LIFE_BUTTON_ADD{FLAG:거점페이즈선택커맨드}(버튼표시대상캐릭터)
+	ENDCATCH
+ELSEIF 상하 == "BOTTOM"
+	TRYCCALLFORM SHOP_LIFE_BUTTON_ADD_BOTTOM{FLAG:거점페이즈선택커맨드}(버튼표시대상캐릭터)
+	CATCH
+		TRYCALLFORM SHOP_LIFE_BUTTON_ADD{FLAG:거점페이즈선택커맨드}(버튼표시대상캐릭터)
+	ENDCATCH
+ELSE
+	TRYCALLFORM SHOP_LIFE_BUTTON_ADD{FLAG:거점페이즈선택커맨드}(버튼표시대상캐릭터)
+ENDIF
+;반환값이 1이라면 다른 정보는 표시하지 않는다
+SIF RESULT
+	RETURN 0
+
+CALL IS_KOJO(NO:(버튼표시대상캐릭터))
+IF RESULT
+	PRINT *
+ELSE
+	PRINT  
+ENDIF
+
+CALL PRINT_SEX(버튼표시대상캐릭터, 1, 0, 2)
+
+IF 버튼표시대상캐릭터 == MASTER
+	PRINT   
+ELSEIF CFLAG:(버튼표시대상캐릭터):소속 == CFLAG:MASTER:소속
+	SETCOLOR 0x97f8e8
+	PRINT 자
+ELSEIF CFLAG:(버튼표시대상캐릭터):소속 != 0
+	SETCOLOR 0x28cc28
+	PRINT 외
+ELSEIF CFLAG:(버튼표시대상캐릭터):특수상태 == 특수상태_방랑
+	SETCOLOR 0x874b4e
+	PRINT 랑
+ELSE
+	SETCOLOR 0x808080
+	PRINT 무
+ENDIF
+RESETCOLOR
+PRINT  
+
+CALL TMP_PRINT_CHARA_STARS_NUM(버튼표시대상캐릭터)
+PRINT  
+
+IF 버튼표시대상캐릭터 == MASTER
+	PRINT   
+ELSEIF CFLAG:(버튼표시대상캐릭터):포로처
+	IF CFLAG:(버튼표시대상캐릭터):포로처 == CFLAG:MASTER:소속
+		IF CFLAG:(버튼표시대상캐릭터):연금중 == 0
+			SETCOLOR 0x4434E5
+			PRINT 감
+		ELSE
+			SETCOLOR 0xA39ED7
+			PRINT 금
+		ENDIF
+	ELSE
+		SETCOLOR 0xdf0000
+		PRINT 수
+	ENDIF
+ELSEIF CFLAG:(버튼표시대상캐릭터):외교조교중
+	IF CFLAG:(버튼표시대상캐릭터):외교요구성공플래그 == 2
+		SETCOLOR 칼라_녀
+		PRINT 포
+	ELSE
+		SETCOLOR 0x489200
+		PRINT 협
+	ENDIF
+ELSEIF CFLAG:(버튼표시대상캐릭터):안면
+	SETCOLOR 0xD0D0D0
+	PRINT 회
+ELSE
+	SETCOLOR 0x404040
+	PRINT 회
+ENDIF
+RESETCOLOR
+PRINT  
+IF TALENT:(버튼표시대상캐릭터):붕괴
+	SETCOLOR 칼라_경고
+	PRINT 붕
+ELSEIF TALENT:(버튼표시대상캐릭터):공허
+	SETCOLOR 칼라_경고
+	PRINT 공
+ELSEIF ID_TO_CHARA(FLAG:마음에든다지정캐릭터) == 버튼표시대상캐릭터
+	SETCOLOR 칼라_주의
+	PRINT 추
+ELSEIF TALENT:(버튼표시대상캐릭터):특수세력함락계
+	SETCOLOR 칼라_경고
+	PRINT 타
+ELSEIF TALENT:(버튼표시대상캐릭터):친애
+	SETCOLOR 0xF5CE13
+	PRINT 애
+ELSEIF TALENT:(버튼표시대상캐릭터):연모
+	SETCOLOR 0xFF4080
+	PRINT 모
+ELSEIF TALENT:(버튼표시대상캐릭터):친구
+	SETCOLOR 0xFF8000
+	PRINT 우
+ELSEIF TALENT:(버튼표시대상캐릭터):예속
+	SETCOLOR 0x00FFFF
+	PRINT 예
+ELSEIF TALENT:(버튼표시대상캐릭터):복종
+	SETCOLOR 0x00D0D0
+	PRINT 복
+ELSEIF TALENT:(버튼표시대상캐릭터):소유자
+	SETCOLOR 0xc40055
+	PRINT 소
+ELSEIF TALENT:(버튼표시대상캐릭터):주인
+	SETCOLOR 0xc40055
+	PRINT 주
+
+ELSE
+	PRINT   
+ENDIF
+RESETCOLOR
+
+IF TALENT:(버튼표시대상캐릭터):정실
+	SETCOLOR 0xF5CE13
+	PRINT 정
+ELSEIF TALENT:(버튼표시대상캐릭터):첩
+	SETCOLOR 0xF56000
+	PRINT 첩
+ELSEIF TALENT:(버튼표시대상캐릭터):연인
+	SETCOLOR 0xFF80C0
+	PRINT 연
+ELSEIF TALENT:(버튼표시대상캐릭터):낙인
+	SETCOLOR 0x00FF80
+	PRINT 낙
+ELSE
+	PRINT   
+ENDIF
+RESETCOLOR
+PRINT  
+
+IF CFLAG:(버튼표시대상캐릭터):행동불능상태 == 행동불능_아이
+	SETCOLOR 칼라_초록
+	PRINTPLAIN 유
+ELSEIF CFLAG:(버튼표시대상캐릭터):행동불능상태 == 행동불능_임월
+	SETCOLOR 칼라_임신
+	PRINTPLAIN 림
+ELSEIF TALENT:(버튼표시대상캐릭터):임신
+	SETCOLOR 칼라_임신
+	PRINTPLAIN 임
+ELSEIF CFLAG:(버튼표시대상캐릭터):피임약남은턴
+	SETCOLOR 칼라_임신
+	PRINTPLAIN 피
+ELSEIF IS_OVULATION(버튼표시대상캐릭터)
+	SETCOLOR 칼라_핑크
+	PRINTPLAIN 위
+ELSEIF CFLAG:(버튼표시대상캐릭터):행동불능상태 == 행동불능_육아
+	SETCOLOR 0xFFC0C0
+	PRINTPLAIN 육
+ELSEIF CFLAG:(버튼표시대상캐릭터):행동불능상태 == 3
+	SETCOLOR 칼라_경고
+	PRINTPLAIN 상
+ELSEIF COOLTIME:(버튼표시대상캐릭터):0
+	SETCOLOR 칼라_경고
+	PRINTFORM %TOFULL(TOSTR(COOLTIME:(버튼표시대상캐릭터):0))%
+ELSE
+	PRINTPLAIN   
+ENDIF
+RESETCOLOR
+
+;-------------------------------------------------
+;「포로의조교」의 오른쪽 컬럼 캐릭터 리스트 버튼（상）표시에 추적 시키는 정보
+;  Default의 정보를 표시하지 않는 경우는 RETURN 1
+;-------------------------------------------------
+@SHOP_LIFE_BUTTON_ADD_TOP_PRISONER(ARG:0)
+PRINTPLAIN  
+IF ARG:0 == MASTER
+	PRINT   
+ELSEIF CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속
+	SETCOLOR 0x97f8e8
+	PRINT 자
+ELSEIF CFLAG:(ARG:0):소속 != 0
+	SETCOLOR 0x28cc28
+	PRINT 외
+ELSE
+	SETCOLOR 0x808080
+	PRINT 무
+ENDIF
+IF TALENT:(ARG:0):붕괴
+	SETCOLOR 칼라_경고
+	PRINT 붕
+ELSEIF TALENT:(ARG:0):공허
+	SETCOLOR 칼라_경고
+	PRINT 공
+ELSEIF TALENT:(ARG:0):예속
+	SETCOLOR 0x00FFFF
+	PRINT 예
+ELSEIF TALENT:(ARG:0):복종
+	SETCOLOR 0x00D0D0
+	PRINT 복
+ELSEIF TALENT:(ARG:0):소유자
+	SETCOLOR 0xc40055
+	PRINT 소
+ELSEIF TALENT:(ARG:0):주인
+	SETCOLOR 0xc40055
+	PRINT 주
+ELSE
+	PRINT   
+ENDIF
+IF TALENT:(ARG:0):정실
+	SETCOLOR 0xF5CE13
+	PRINT 정
+ELSEIF TALENT:(ARG:0):첩
+	SETCOLOR 0xF56000
+	PRINT 첩
+ELSEIF TALENT:(ARG:0):연인
+	SETCOLOR 0xFF80C0
+	PRINT 연
+ELSEIF TALENT:(ARG:0):낙인
+	SETCOLOR 0x00FF80
+	PRINT 낙
+ELSE
+	PRINT   
+ENDIF
+RESETCOLOR
+
+IF CFLAG:(ARG:0):행동불능상태 == 행동불능_아이
+	SETCOLOR 칼라_초록
+	PRINTPLAIN 유
+ELSEIF CFLAG:(ARG:0):행동불능상태 == 행동불능_임월
+	SETCOLOR 칼라_임신
+	PRINTPLAIN 림
+ELSEIF TALENT:(ARG:0):임신
+	SETCOLOR 칼라_임신
+	PRINTPLAIN 임
+ELSEIF CFLAG:(ARG:0):피임약남은턴
+	SETCOLOR 칼라_임신
+	PRINTPLAIN 피
+ELSEIF IS_OVULATION(ARG:0)
+	SETCOLOR 칼라_핑크
+	PRINTPLAIN 위
+ELSEIF CFLAG:(ARG:0):행동불능상태 == 행동불능_육아
+	SETCOLOR 0xFFC0C0
+	PRINTPLAIN 육
+ELSEIF CFLAG:(ARG:0):행동불능상태 == 3
+	SETCOLOR 칼라_경고
+	PRINTPLAIN 상
+ELSEIF COOLTIME:(ARG:0):0
+	SETCOLOR 칼라_경고
+	PRINTFORM %TOFULL(TOSTR(COOLTIME:(ARG:0):0))%
+ELSE
+	PRINTPLAIN   
+ENDIF
+RESETCOLOR
+
+PRINTFORM  정액:
+CALL PRINT_GRADATIONBAR(BASE:(ARG:0):정신력, MAXBASE:(ARG:0):정신력, 10, 0x5E9AFF)
+PRINTFORM 호:
+IF CFLAG:(ARG:0):호감도 > 99999
+	PRINTFORM %"다", 6, RIGHT% 
+ELSE
+	PRINTFORM {CFLAG:(ARG:0):호감도, 6, RIGHT} 
+ENDIF
+PRINTFORM 의:
+IF CFLAG:(ARG:0):의존도 > 99999
+	PRINTFORM %"많다", 6, RIGHT% 
+ELSE
+	PRINTFORM {CFLAG:(ARG:0):의존도, 6, RIGHT} 
+ENDIF
+PRINTFORM 종:
+IF CFLAG:(ARG:0):종속도 > 99999
+	PRINTFORM %"많다", 6, RIGHT% 
+ELSE
+	PRINTFORM {CFLAG:(ARG:0):종속도, 6, RIGHT} 
+ENDIF
+
+PRINTFORM 지:
+IF CFLAG:(ARG:0):지배도 > 99999
+	PRINTFORM %"많다", 6, RIGHT% 
+ELSE
+	PRINTFORM {CFLAG:(ARG:0):지배도, 6, RIGHT} 
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+;「포로의조교」의 오른쪽 컬럼 캐릭터 리스트 버튼（하）표시에 추적 시키는 정보
+;  Default의 정보를 표시하지 않는 경우는 RETURN 1
+;-------------------------------------------------
+@SHOP_LIFE_BUTTON_ADD_BOTTOM_PRISONER(ARG:0)
+PRINTPLAIN  
+CALL PRINT_SEX(ARG:0, 1, 0, 2)
+PRINTPLAIN  
+CALL SHOP_LIFE_BUTTON_ADD_ABL_INFO(ARG:0, GETNUM(ABL, "Ｃ감"), GETNUM(ABL, "Ｖ감"), GETNUM(ABL, "Ａ감"), GETNUM(ABL, "Ｂ감"), GETNUM(ABL, "Ｍ감"))
+PRINTPLAIN  
+IF TALENT:(ARG:0):처녀 && IS_FEMALE(ARG:0)
+	PRINT 처
+ELSE
+	PRINT 　
+ENDIF
+IF TALENT:(ARG:0):애널처녀
+	PRINT Ａ
+ELSE
+	PRINT 　
+ENDIF
+IF TALENT:(ARG:0):키스미경험
+	PRINT 입
+ELSE
+	PRINT 　
+ENDIF
+IF TALENT:(ARG:0):동정 && HAS_PENIS(ARG:0)
+	PRINT 동
+ELSE
+	PRINT 　
+ENDIF
+IF IS_OVULATION(ARG:0)
+	SETCOLOR 칼라_핑크
+	PRINTPLAIN 위
+	RESETCOLOR
+ELSEIF CFLAG:(ARG:0):행동불능상태 == 행동불능_임월
+	SETCOLOR 칼라_임신
+	PRINTPLAIN 림
+ELSEIF TALENT:(ARG:0):임신
+	SETCOLOR 칼라_임신
+	PRINTPLAIN 임
+ELSEIF CFLAG:(ARG:0):피임약남은턴
+	SETCOLOR 칼라_임신
+	PRINTPLAIN 피
+ELSEIF IS_OVULATION(ARG:0)
+	SETCOLOR 칼라_핑크
+	PRINTPLAIN 위
+ELSE
+	PRINT 　
+ENDIF
+
+RESETCOLOR
+RETURN 1
+
+
+@SHOP_LIFE_BUTTON_ADD_ABL_INFO(ARG:0, ARG:1 = -1, ARG:2 = -1, ARG:3 = -1, ARG:4 = -1, ARG:5 = -1, ARG:6 = -1, ARG:7 = -1)
+PRINTPLAIN  
+FOR LOCAL, 1, 8
+	SIF ARG:LOCAL == -1
+		BREAK
+	PRINTFORM %SUBSTRINGU(ABLNAME:(ARG:LOCAL), 0, 1)%:
+	SELECTCASE ARG:LOCAL
+		CASE GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "요술"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창")
+			LOCAL:1 = 랭크_ＳＬＧ
+		CASE GETNUM(ABL, "성지식")
+			LOCAL:1 = 랭크_성지식
+		CASEELSE
+			LOCAL:1 = 랭크_그외
+	ENDSELECT
+	CALL PRINT_ALPHABET_RANK(LOCAL:1, ABL:(ARG:0):(ARG:LOCAL))
+	PRINTFORM {ABL:(ARG:0):(ARG:LOCAL), 3}
+	PRINT  
+NEXT

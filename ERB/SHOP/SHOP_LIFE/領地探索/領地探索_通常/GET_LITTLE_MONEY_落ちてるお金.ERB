@@ -1,0 +1,23 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_GET_LITTLE_MONEY_EXISTS()
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_GET_LITTLE_MONEY_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_GET_LITTLE_MONEY(대상)
+#DIM 대상
+PRINTFORML %조사처리(ANAME(대상),"는")% 도로변에 돈이 떨어지고 있는 것을 찾아냈다……
+CALL ICPRINT("금<500>을 손에 넣었다", "L", 칼라_주의)
+MONEY += 500
+RETURN 1

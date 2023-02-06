@@ -1,0 +1,265 @@
+﻿;술을 마신다
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME310
+RESULTS:0 = 술을 먹인다
+RESULTS:1 = 잔을 하게 한다
+RESULTS:2 = 잔을 시킨다
+RESULTS:3 = 술을 먹게 된다
+
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE310
+;공통 부분
+CALL COM_ABLE_COMMON(310)
+SIF RESULT == 0
+	RETURN 0
+;포로 회화에서는 불가
+SIF FLAG:조교모드 == 6
+	RETURN 0
+;주류를 가지고 있을 필요가 있다
+SIF !(ITEM:탁주 || ITEM:청주 || ITEM:포도주 || ITEM:맥주 || ITEM:양조술 || ITEM:과실주 || ITEM:일본술 || ITEM:증류주)
+	RETURN 0
+;키스중은 불가
+SIF IS_EQUIP(MPLY:0, 342)
+	RETURN 0
+;먹게 되는 측이 임신하고 있으면 불가
+SIF TALENT:(MTAR:0):임신
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM310
+#DIM 술배열 = GETNUM(ITEM, "탁주"), GETNUM(ITEM, "청주"), GETNUM(ITEM, "포도주"), GETNUM(ITEM, "맥주"), GETNUM(ITEM, "양조술"), GETNUM(ITEM, "과실주"), GETNUM(ITEM, "일본술"), GETNUM(ITEM, "증류주")
+#DIM 마시는술
+;커맨드의 성공 여부를 TFLAG:18에 세트
+CALL JUDGE_COM_RESULT(MTAR:0, 15, 5)
+
+;주도권이 MASTER에 있으면 술을 선택할 수 있다
+IF TFLAG:45 == MASTER
+	;술의 선택
+	PRINTFORML 어느 술을\@ MPLY:0 == MASTER ? 권합니까?  # 마십니까?  \@
+	FOR LOCAL, 0, VARSIZE("술배열")
+		IF ITEM:(술배열:LOCAL) > 0
+			LOCALS = %"[" + ITEMNAME:(술배열:LOCAL) + "]", 10, LEFT%
+			PRINTBUTTON LOCALS, 술배열:LOCAL
+			PRINT    
+			PRINTFORML {ITEM:(술배열:LOCAL)}개
+		ENDIF
+	NEXT
+	PRINTFORML [99] 돌아온다
+	$INPUT_LOOP_DRINK
+	INPUT
+	IF RESULT == 99
+		PRINTFORMW 그만두기로 했다
+		RETURN 0
+	ELSEIF FINDELEMENT(술배열, RESULT) != -1 && ITEM:RESULT > 0
+		마시는술 = RESULT
+	ELSE
+		GOTO INPUT_LOOP_DRINK
+	ENDIF
+ELSE
+	WHILE 1
+		LOCAL = 술배열:(RAND:(VARSIZE("술배열")))
+		IF ITEM:LOCAL > 0
+			마시는술 = LOCAL
+			BREAK
+		ENDIF
+	WEND
+ENDIF
+
+SELECTCASE 마시는술
+	CASE GETNUM(ITEM, "탁주")
+		ITEM:탁주 --
+		SOURCE:(MTAR:0):취기추가 = 300
+		IF TALENT:(MTAR:0):폭주가
+			LOCAL:0 = 220
+		ELSEIF TALENT:(MTAR:0):유아 || TALENT:(MTAR:0):유치
+			LOCAL:0 = 120
+			TFLAG:18 = -1
+		ELSE
+			LOCAL:0 = 190
+		ENDIF
+		FLAG:커맨드범용 = 1
+	CASE GETNUM(ITEM, "청주")
+		ITEM:청주 --
+		SOURCE:(MTAR:0):취기추가 = 800
+		IF TALENT:(MTAR:0):폭주가
+			LOCAL:0 = 280
+		ELSEIF TALENT:(MTAR:0):유아 || TALENT:(MTAR:0):유치
+			LOCAL:0 = 120
+			TFLAG:18 = -1
+		ELSE
+			LOCAL:0 = 240
+		ENDIF
+		FLAG:커맨드범용 = 2
+	CASE GETNUM(ITEM, "포도주")
+		ITEM:포도주 --
+		SOURCE:(MTAR:0):취기추가 = 600
+		IF TALENT:(MTAR:0):폭주가
+			LOCAL:0 = 320
+		ELSEIF TALENT:(MTAR:0):유아 || TALENT:(MTAR:0):유치
+			LOCAL:0 = 260
+		ELSE
+			LOCAL:0 = 320
+		ENDIF
+		FLAG:커맨드범용 = 3
+	CASE GETNUM(ITEM, "맥주")
+		ITEM:맥주 --
+		SOURCE:(MTAR:0):취기추가 = 800
+		IF TALENT:(MTAR:0):폭주가
+			LOCAL:0 = 320
+		ELSEIF TALENT:(MTAR:0):유아 || TALENT:(MTAR:0):유치
+			LOCAL:0 = 120
+			TFLAG:18 = -1
+		ELSE
+			LOCAL:0 = 270
+		ENDIF
+		FLAG:커맨드범용 = 4
+	CASE GETNUM(ITEM, "양조술")
+		ITEM:양조술 --
+		SOURCE:(MTAR:0):취기추가 = 1800
+		IF TALENT:(MTAR:0):폭주가
+			LOCAL:0 = 360
+		ELSEIF TALENT:(MTAR:0):유아 || TALENT:(MTAR:0):유치
+			LOCAL:0 = 100
+			TFLAG:18 = -1
+		ELSE
+			LOCAL:0 = 300
+		ENDIF
+		FLAG:커맨드범용 = 5
+	CASE GETNUM(ITEM, "과실주")
+		ITEM:과실주 --
+		SOURCE:(MTAR:0):취기추가 = 1200
+		IF TALENT:(MTAR:0):폭주가
+			LOCAL:0 = 360
+		ELSEIF TALENT:(MTAR:0):유아 || TALENT:(MTAR:0):유치
+			LOCAL:0 = 260
+		ELSE
+			LOCAL:0 = 400
+		ENDIF
+		FLAG:커맨드범용 = 6
+	CASE GETNUM(ITEM, "일본술")
+		ITEM:일본술 --
+		SOURCE:(MTAR:0):취기추가 = 3000
+		IF TALENT:(MTAR:0):폭주가
+			LOCAL:0 = 500
+			TFLAG:18 = 1
+		ELSEIF TALENT:(MTAR:0):유아 || TALENT:(MTAR:0):유치
+			LOCAL:0 = 100
+			TFLAG:18 = -1
+		ELSE
+			LOCAL:0 = 360
+		ENDIF
+		FLAG:커맨드범용 = 7
+	CASE GETNUM(ITEM, "증류주")
+		ITEM:증류주 --
+		SOURCE:(MTAR:0):취기추가 = 5000
+		IF TALENT:(MTAR:0):폭주가
+			LOCAL:0 = 500
+			TFLAG:18 = 1
+		ELSE
+			LOCAL:0 = 50
+			TFLAG:18 = -1
+		ENDIF
+		FLAG:커맨드범용 = 8
+	CASEELSE
+		PRINTFORMW 존재하지 않는 술이 지정되었어
+		PRINTFORMW 마시는 술:{마시는술}
+		PRINTFORMW 상의 메세지와 함께 스레로 보고해
+		RETURN 0
+ENDSELECT
+
+;●타겟측의 처리
+;고정으로 획득하는 소스
+SOURCE:(MTAR:0):환락 = LOCAL:0 / 3
+
+;친밀하게 응한 환락의 소스 추가
+CALL ADD_SOURCE_KANRAKU(MTAR:0, LOCAL:0)
+
+;주도권에 응한 소스의 추가
+CALL ADD_SOURCE_INITIATIVE_N(MPLY:0, 50, 50)
+CALL ADD_SOURCE_INITIATIVE_N(MTAR:0, 50, 50)
+
+;실패
+IF TFLAG:18 == -1
+	TIMES SOURCE:(MTAR:0):환락, 0.50
+	SOURCE:(MTAR:0):불만 += 200
+	TFLAG:37 -= 5
+;성공
+ELSEIF TFLAG:18 == 0
+	TFLAG:37 += 2
+;대성공
+ELSE
+	TIMES SOURCE:(MTAR:0):환락, 2.00
+	TFLAG:37 += 10
+ENDIF
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = -1
+
+SELECTCASE ABL:(MTAR:0):주량
+	CASE 0
+		TIMES SOURCE:(MTAR:0):취기추가, 1.5
+	CASE 1
+		TIMES SOURCE:(MTAR:0):취기추가, 1.30
+	CASE 2
+		TIMES SOURCE:(MTAR:0):취기추가, 1.15
+	CASE 3
+		TIMES SOURCE:(MTAR:0):취기추가, 1.00
+	CASE 4
+		TIMES SOURCE:(MTAR:0):취기추가, 0.85
+	CASEELSE
+		TIMES SOURCE:(MTAR:0):취기추가, 0.70
+ENDSELECT
+	
+EXP:(MTAR:0):주량경험치 += SOURCE:(MTAR:0):취기추가 / 100
+
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE310
+IF MPLY:0 == MASTER
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 잔을\@ TFLAG:45 == MPLY:0 ? 했다 # 당했다 \@
+	IF TFLAG:18 == 1
+		IF GROUPMATCH(FLAG:커맨드범용, 3, 4, 5, 6, 7, 8)
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 드문 술을 마실 수 있어 매우 기분이 좋다…
+		ELSE
+			PRINTFORML 좋은 느낌에 취기가 돌아, 언제나 이상으로 이야기가 분위기를 살렸다…
+		ENDIF
+	ELSEIF TFLAG:18 == -1
+		IF GROUPMATCH(FLAG:커맨드범용, 7, 8)
+			PRINTFORML ……%조사처리(ANAME(MTAR:0),"는")% 지나친 도수의 강함키라고 끝내, 격렬하게 기침했다
+		ELSE
+			PRINTFORML %ANAME(MTAR:0)%의 입에는 맞지 않았던 것 같다…
+		ENDIF
+	ENDIF
+ELSE
+	PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 잔을\@ TFLAG:45 == MPLY:0 ? 시켰다 # 되었다 \@…
+ENDIF
+
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST310
+;일상 커맨드에 공통의 지문
+CALL COM_TEXT_LAST_LIFE
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN310
+RETURN 커맨드_일상

@@ -1,0 +1,288 @@
+﻿;-------------------------------------------------
+;작성 가능한 부대중 능력이 최강이 되는 장의 짜맞춤을 조사하는 ARG:0=세력 번호 ARG:1 =정치력에 의한 필터를 무시하는 플래그
+;FREE_XXX 및 CHECK_IS_FREE의 배열은 요소의 위치가 같으면 같은 캐릭터가 데이타를 뽑는 것을 이용
+;※직전에 @TMP_CREATE_IS_FREE_MAP 함수를 호출하고 나서 사용하는 것
+;-------------------------------------------------
+@CHECK_UNIT_COMMANDER_BEST(ARG:0, ARG:1 = 0)
+;후보 캐릭터의 캐릭터 번호 및 그 캐릭터의 각 파워를 기록하는 배열
+;일차 배열로 각각 준비해 있는 것은 배열 검색계의 함수를 이용하기 위해(때문에)
+#DIM CHECK_IS_FREE, 3000
+#DIM FREE_STR, 3000
+#DIM FREE_DEF, 3000
+#DIM FREE_INT, 3000
+#DIM FREE_MAG, 3000
+#DIM FREE_POL, 3000
+#DIM FREE_STAR, 3000
+#DIM FREE_AI_PRIORITY, 5
+;후보 캐릭터의 파워 상승률과 정치 파워 합계
+#DIM FREE_PUP, 3000
+#DIM 후보수
+#DIM SUM_POL
+#DIM 최대치, 5
+#DIM 두명합계, 5
+#DIM 후보, 3
+#DIM 특수세력우선
+VARSET CHECK_IS_FREE, -1
+VARSET UNIT_COMMANDER_BEST, -1
+VARSET FREE_STR, -1
+VARSET FREE_DEF, -1
+VARSET FREE_INT, -1
+VARSET FREE_MAG, -1
+VARSET FREE_POL, -1
+VARSET FREE_PUP, -1
+VARSET FREE_STAR, -1
+VARSET FREE_AI_PRIORITY, 10
+
+DUMPRAND
+후보수 = 0
+FOR LOCAL:0, 0, MIN(CHARANUM, 3000)
+	;자국의 사관만 고려
+	IF CFLAG:(LOCAL:0):소속 == ARG:0 && TMP_IS_FREE:(LOCAL:0):0 == 0
+		;MASTER휘하의 무장은, 제외 플래그를 세우고 있으면 제외한다
+		SIF ARG:0 == CFLAG:MASTER:소속 && CFLAG:(LOCAL):최강편성제외플래그
+			CONTINUE
+		;자유롭게 행동 가능한 캐릭터 번호를 CHECK_IS_FREE에 차례로 격납
+		CHECK_IS_FREE:후보수 = LOCAL:0
+		후보수 ++
+	ENDIF
+NEXT
+
+;후보가 아무도 없으면 되돌린다
+SIF 후보수 == 0
+	RETURN 1
+
+SUM_POL = 0
+
+
+FOR LOCAL:0, 0, 후보수
+	;별 변수에 일단 격납
+	LOCAL:2 = CHECK_IS_FREE:(LOCAL:0)
+	FREE_STR:(LOCAL:0) = ABL_POWER(ABL:(LOCAL:2):무투, LOCAL:2)
+	FREE_DEF:(LOCAL:0) = ABL_POWER(ABL:(LOCAL:2):방위, LOCAL:2)
+	FREE_INT:(LOCAL:0) = ABL_POWER(ABL:(LOCAL:2):지략, LOCAL:2)
+	FREE_MAG:(LOCAL:0) = ABL_POWER(ABL:(LOCAL:2):요술, LOCAL:2)
+	FREE_POL:(LOCAL:0) = ABL_POWER(ABL:(LOCAL:2):정치, LOCAL:2)
+	FREE_STAR:(LOCAL:0) = ABL_POWER(TMP_CHARA_STARS:(LOCAL:2) * 10, LOCAL:2)
+
+	;주인공 우선 설정이 온이라면 정치력 이외를 똥 늘린다
+	IF LOCAL == 0 && CONFIG:310 == 1
+		FREE_STR:(LOCAL:0) = __INT_MAX__
+		FREE_DEF:(LOCAL:0)  = __INT_MAX__
+		FREE_INT:(LOCAL:0)  = __INT_MAX__
+		FREE_MAG:(LOCAL:0)  = __INT_MAX__
+		FREE_STAR:(LOCAL:0) = __INT_MAX__
+	;특수 세력의 캐릭터라면, 각 파워를 1으로 해, 통상 캐릭터가 우선되도록(듯이)해 둔다.
+	ELSEIF IS_SP_COUNTRY_CHARA(LOCAL:2)
+		FREE_STR:(LOCAL:0) = 1
+		FREE_INT:(LOCAL:0) = 1
+		FREE_MAG:(LOCAL:0) = 1
+		;정치 파워를 매우 높게 해 둬, 통상 캐릭터가 정치 파워를 이유로 제외되지 않도록 한다
+		FREE_POL:(LOCAL:0) *= 10
+	ENDIF
+
+	SUM_POL += FREE_POL:(LOCAL:0)
+NEXT
+
+
+IF !ARG:1
+	FOR LOCAL:0, 0, 후보수
+		;행동 가능한 캐릭터의 정치 파워 합계중 일정 비율을 차지하고 있는 캐릭터를 제외
+		IF FREE_POL:(LOCAL:0) > AI_POLITICAL_LIMIT:(COUNTRY_AI_TYPE:(ARG:0)) * SUM_POL / 100
+			FREE_STR:(LOCAL:0) = 0
+			FREE_DEF:(LOCAL:0) = 0
+			FREE_INT:(LOCAL:0) = 0
+			FREE_MAG:(LOCAL:0) = 0
+			FREE_STAR:(LOCAL:0) = 0
+			FREE_POL:(LOCAL:0) = -1
+		ENDIF
+	NEXT
+ENDIF
+
+;무투·지략·요술의 최대치를 비교해 가장 큰 값을 가지는 캐릭터를 후보로 한다
+최대치:0 = MAXARRAY(FREE_STR)
+최대치:1 = MAXARRAY(FREE_DEF)
+최대치:2 = MAXARRAY(FREE_INT)
+최대치:3 = MAXARRAY(FREE_MAG)
+최대치:4 = MAXARRAY(FREE_STAR)
+
+;중시율의 움직임 80～120%
+FREE_AI_PRIORITY:0 = AI_PRIORITY:(COUNTRY_AI_TYPE:(ARG:0)):0 * (80 + RAND:41) / 100
+FREE_AI_PRIORITY:1 = AI_PRIORITY:(COUNTRY_AI_TYPE:(ARG:0)):1 * (80 + RAND:41) / 100
+FREE_AI_PRIORITY:2 = AI_PRIORITY:(COUNTRY_AI_TYPE:(ARG:0)):2 * (80 + RAND:41) / 100
+FREE_AI_PRIORITY:3 = AI_PRIORITY:(COUNTRY_AI_TYPE:(ARG:0)):3 * (80 + RAND:41) / 100
+FREE_AI_PRIORITY:4 = AI_PRIORITY:(COUNTRY_AI_TYPE:(ARG:0)):4 * (80 + RAND:41) / 100
+
+;이 시점에서 모두 동일하면, 제외 처리 후에 후보가 아무도 없게 되었다는 일인 것으로, RETURN
+SIF ALLSAMES(최대치:0, 최대치:1, 최대치:2, 최대치:3, 최대치:4) && 최대치:0 == -1
+	RETURN 1
+
+;1인째를 결정한다
+;가장 중시하는 능력이 가장 높은 캐릭터를 선택한다.
+IF 최대치:0 * FREE_AI_PRIORITY:0 >= 최대치:1 * FREE_AI_PRIORITY:1
+	IF 최대치:0 * FREE_AI_PRIORITY:0 >= 최대치:2 * FREE_AI_PRIORITY:2
+		후보:0 = FINDELEMENT(FREE_STR, 최대치:0)
+	ELSEIF 최대치:1 * FREE_AI_PRIORITY:1 >= 최대치:2 * FREE_AI_PRIORITY:2
+		후보:0 = FINDELEMENT(FREE_DEF, 최대치:1)
+	ELSE
+		후보:0 = FINDELEMENT(FREE_INT, 최대치:2)
+	ENDIF
+ELSEIF 최대치:1 * FREE_AI_PRIORITY:1 >= 최대치:2 * FREE_AI_PRIORITY:2
+	후보:0 = FINDELEMENT(FREE_DEF, 최대치:1)
+ELSE
+	후보:0 = FINDELEMENT(FREE_INT, 최대치:2)
+ENDIF
+
+UNIT_COMMANDER_BEST:0 = CHECK_IS_FREE:(후보:0)
+
+;없으면 마지막 처리에
+SIF UNIT_COMMANDER_BEST:0 < 0
+	GOTO DECIDED
+
+;1인째의 캐릭터를 후보로부터 제외한다（정치 파워에 플래그를 붙인다）
+FREE_POL:(후보:0) = -1
+
+;업율의 합계가 가장 큰 캐릭터를 다음의 후보로 한다
+FOR LOCAL:0, 0, 후보수
+	;남아 있는 캐릭터만을 고려
+	SIF FREE_POL:(LOCAL:0) < 0
+		CONTINUE
+	LOCAL:1 = FREE_STR:(LOCAL:0) * 1000 * FREE_AI_PRIORITY:0 / FREE_STR:(후보:0)
+	LOCAL:2 = FREE_DEF:(LOCAL:0) * 1000 * FREE_AI_PRIORITY:1 / FREE_DEF:(후보:0)
+	LOCAL:3 = FREE_INT:(LOCAL:0) * 1000 * FREE_AI_PRIORITY:2 / FREE_INT:(후보:0)
+	LOCAL:4 = FREE_MAG:(LOCAL:0) * 1000 * FREE_AI_PRIORITY:3 / MAX(FREE_MAG:(후보:0), 1)
+	LOCAL:5 =  FREE_STAR:(LOCAL:0) * 1000 * FREE_AI_PRIORITY:4 / FREE_STAR:(후보:0)
+	FREE_PUP:(LOCAL:0) = LOCAL:1 + LOCAL:2 + LOCAL:3 + LOCAL:4 + LOCAL:5
+NEXT
+후보:1 = FINDELEMENT(FREE_PUP,  MAX(MAXARRAY(FREE_PUP), 0))
+
+;2인째의 캐릭터를 기록해 후보로부터 제외한다
+UNIT_COMMANDER_BEST:1 = 후보:1 >= 0 ? CHECK_IS_FREE:(후보:1) # -1
+
+;없으면 마지막 처리에
+SIF UNIT_COMMANDER_BEST:1 < 0
+	GOTO DECIDED
+
+;두 명의 합계를 기록
+IF UNIT_COMMANDER_BEST:1 >= 0
+	FREE_POL:(후보:1) = -1
+	두명합계:0 = FREE_STR:(후보:0) + FREE_STR:(후보:1)
+	두명합계:1 = FREE_DEF:(후보:0) + FREE_DEF:(후보:1)
+	두명합계:2 = FREE_INT:(후보:0) + FREE_INT:(후보:1)
+	두명합계:3 = MAX(FREE_MAG:(후보:0) + FREE_MAG:(후보:1), 1)
+	두명합계:4 = FREE_STAR:(후보:0) + FREE_STAR:(후보:1)
+ENDIF
+
+VARSET FREE_PUP, -1
+
+;3인째를 결정  요리와 가창도 고려에 넣는다
+
+;1인째, 2인째가 특수 세력의 캐릭터가 아닌 경우, 플래그 세우고
+특수세력우선 = 0
+IF !IS_SP_COUNTRY_CHARA(CHECK_IS_FREE:(후보:0))
+	IF !IS_SP_COUNTRY_CHARA(CHECK_IS_FREE:(후보:1))
+		특수세력우선  = 1
+	ENDIF
+ENDIF
+
+FOR LOCAL:0, 0, 후보수
+	;후보에 남아 있는 캐릭터만을 고려
+	SIF FREE_POL:(LOCAL:0) < 0 || GROUPMATCH(CHECK_IS_FREE:(LOCAL:0), UNIT_COMMANDER_BEST:0, UNIT_COMMANDER_BEST:1)
+		CONTINUE
+	LOCAL:1 = CHECK_IS_FREE:(LOCAL:0)
+	LOCAL:2 = FREE_STR:(LOCAL:0) * 1000 / 두명합계:0 * FREE_AI_PRIORITY:0
+	LOCAL:3 = FREE_DEF:(LOCAL:0) * 1000 / 두명합계:1 * FREE_AI_PRIORITY:0
+	LOCAL:4 = FREE_INT:(LOCAL:0) * 1000 / 두명합계:2 * FREE_AI_PRIORITY:1
+	LOCAL:5 = FREE_MAG:(LOCAL:0) * 1000 / 두명합계:3 * FREE_AI_PRIORITY:2
+	LOCAL:6 = FREE_STAR:(LOCAL:0) * 1000 / 두명합계:4 * FREE_AI_PRIORITY:3
+	LOCAL:7 = (ABL_POWER(ABL:(LOCAL:1):가창, LOCAL:1) + 24000) / 24 - 1000
+	LOCAL:8 = (ABL_POWER(ABL:(LOCAL:1):요리, LOCAL:1) + 24000) / 24 - 1000
+	FREE_PUP:(LOCAL:0) = LOCAL:2 + LOCAL:3 + LOCAL:4 + LOCAL:5 + LOCAL:6 + LOCAL:7 + LOCAL:8
+
+	IF IS_SP_COUNTRY_CHARA(CHECK_IS_FREE:(LOCAL:0)) && 특수세력우선
+		FREE_PUP:(LOCAL:0) = __INT_MAX__
+		BREAK
+	ENDIF
+NEXT
+후보:2 = FINDELEMENT(FREE_PUP, MAX(MAXARRAY(FREE_PUP), 0))
+
+;3인째의 캐릭터를 기록
+UNIT_COMMANDER_BEST:2 = 후보:2 >= 0 ? CHECK_IS_FREE:(후보:2) # -1
+
+;SIF ! NOSAMES(LOCAL:50, LOCAL:51, LOCAL:52)
+;	DEBUGPRINTFORML {DAY, 3}【무장 중복? 】:%ANAME(GET_COUNTRY_BOSS(ARG:0))%@ {LOCAL:50}:{CHECK_IS_FREE:(LOCAL:50)}, {LOCAL:51}:{CHECK_IS_FREE:(LOCAL:51)}, {LOCAL:52}:{CHECK_IS_FREE:(LOCAL:52)}
+
+$DECIDED
+
+;마지막에 NO 순서에 정렬한다
+FOR LOCAL:0, 0, 3
+	IF UNIT_COMMANDER_BEST:(LOCAL:0) >= 0
+		FOR LOCAL:1, LOCAL:0 + 1, 3
+			IF UNIT_COMMANDER_BEST:(LOCAL:1) >= 0
+				IF NO:(UNIT_COMMANDER_BEST:(LOCAL:0)) > NO:(UNIT_COMMANDER_BEST:(LOCAL:1))
+					SWAP UNIT_COMMANDER_BEST:(LOCAL:0), UNIT_COMMANDER_BEST:(LOCAL:1)
+				ENDIF
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+
+INITRAND
+
+;-------------------------------------------------
+;도시 ARG:0에 최적인 수장을 배치. ARG:1을 1으로 하면 두 명 설정할 수 있다. ARG:2를 1으로 하면, 그 도시의 수장을 포함하도록(듯이)한다
+;※직전에 @TMP_CREATE_IS_FREE_MAP 함수를 호출하고 나서 사용하는 것
+;-------------------------------------------------
+@SET_CITY_COMMANDER_BEST(ARG:0, ARG:1 = 0, ARG:2 = 0)
+#DIM LCOUNT
+CALL CHECK_CITY_COMMANDER_BEST(ARG:0, ARG:1, ARG:2)
+FOR LCOUNT:0, 0, MAX_CITY_COMMANDER
+	CALL SET_CITY_COMMANDER(ARG:0, LCOUNT:0, CITY_COMMANDER_BEST:(LCOUNT:0))
+NEXT
+;-------------------------------------------------
+;도시 ARG:0에 최적인 수장을 확인. ARG:1을 1으로 하면 두 명 설정할 수 있다. ARG:2에 1하면, 그 도시의 수장을 포함하도록(듯이)한다
+;※직전에 @TMP_CREATE_IS_FREE_MAP 함수를 호출하고 나서 사용하는 것
+;-------------------------------------------------
+@CHECK_CITY_COMMANDER_BEST(ARG:0, ARG:1 = 0, ARG:2 = 0)
+#DIM 세력
+#DIM 수장, 2
+#DIM LCOUNT,2
+#DIM 최대
+VARSET LOCAL, __INT_MIN__
+VARSET CITY_COMMANDER_BEST, -1
+;도시를 소유하는 세력의 번호를 취득
+세력 = CITY_OWNER:(ARG:0)
+VARSET 수장, -1
+IF ARG:2
+	CALL GET_CITY_COMMANDER_ALL(ARG:0)
+	수장 = RESULT:0, RESULT:1
+ENDIF
+;세력에 소속해 FREE인 각 캐릭터의 능력을 기록
+FOR LCOUNT, 0, CHARANUM
+	IF CFLAG:(LCOUNT):소속 == 세력 && (TMP_IS_FREE:LCOUNT:0 == 0 || (ARG:2 && GROUPMATCH(LCOUNT, 수장:0, 수장:1)))
+		;MASTER휘하의 무장은, 제외 플래그를 세우고 있으면 제외한다
+		SIF 세력 == CFLAG:MASTER:소속 && CFLAG:(LCOUNT):최강편성제외플래그
+			CONTINUE
+		;지략의 중량감은 무투·요술의 1/8
+{
+		LOCAL:(LCOUNT) = MAX(ABL_POWER(ABL:(LCOUNT):무투, LCOUNT), 0) / 2 + MAX(ABL_POWER(ABL:LCOUNT:방위, LCOUNT), 0) + MAX(ABL_POWER(MIN(ABL:(LCOUNT):지략, 110), LCOUNT), 0) / 8 + MAX(ABL_POWER(ABL:(LCOUNT):요술, LCOUNT), 0) + 
+						 MAX(ABL_POWER(ABL:(LCOUNT):요리, LCOUNT), 0) / 8 + MAX(ABL_POWER(ABL:(LCOUNT):가창, LCOUNT), 0) / 8 + 
+						 MAX(ABL_POWER(TMP_CHARA_STARS:(LCOUNT) * 10, LCOUNT), 0)
+}
+	ENDIF
+NEXT
+
+;두 명 설정 플래그가 진이라면 2번 돌린다
+FOR LCOUNT:0, 0, 1 + (ARG:1 == 1)
+	;LOCAL（기록한 각 캐릭터의 능력）로부터, 최대의 것을 탐색
+	최대 = MAXARRAY(LOCAL, 0)
+	;최대의 것이__INT_MIN__는 아니면 （그 도시를 소속해 있는 세력에, IS_FREE인 캐릭터가 남아 있으면）, 그 녀석을 등록
+	IF 최대 != __INT_MIN__
+		FOR LCOUNT:1, 0, CHARANUM
+			IF LOCAL:(LCOUNT:1) == 최대
+				CITY_COMMANDER_BEST:(LCOUNT:0) = LCOUNT:1
+				LOCAL:(LCOUNT:1) = __INT_MIN__
+				BREAK
+			ENDIF
+		NEXT
+	ENDIF
+NEXT

@@ -1,0 +1,94 @@
+﻿@GET_DAILY_INDEX_FROM_ENG(장르,악세사)
+#FUNCTION
+#DIM 장르
+#DIMS 악세사
+FOR LOCAL, 0, VARSIZE("DAILY_EVENT_NAME_ENG", 1)
+	SIF DAILY_EVENT_NAME_ENG:장르:LOCAL == 악세사
+		RETURNF LOCAL
+NEXT
+RETURNF -1
+
+@DAILY_GET_DISABLE_CONFIG(악세사)
+#FUNCTION
+#DIMS 악세사
+#DIM 번호
+번호 = FINDELEMENT(DAILY_DISABLE_NAME, 악세사, 0, VARSIZE("DAILY_DISABLE_NAME"), 1)
+SIF 번호 >= 0
+	RETURNF DAILY_DISABLE:번호
+
+THROW DAILY_DISABLE_NAME상에 존재하지 않는 이름%악세사%가 건네받았습니다
+
+
+@DAILY_SET_DISABLE(악세사, 상태)
+#DIMS 악세사
+#DIM 번호
+#DIM 상태
+번호 = FINDELEMENT(DAILY_DISABLE_NAME, 악세사, 0, VARSIZE("DAILY_DISABLE_NAME"), 1)
+SIF 번호 < 0
+	RETURN 0
+
+DAILY_DISABLE:번호 = 상태
+RETURN 1
+
+
+
+@REGISTER_DAILY(장르, 악세사, 이름)
+#DIM 장르
+#DIMS 악세사
+#DIMS 이름
+#DIMS 파생
+#DIM 번호
+SIF !INRANGE(장르, 데일리_통상, 데일리_통상파생)
+	THROW DAILY_REGISTER에 존재하지 않는 장르{장르}가 건네받았습니다
+
+
+IF 장르 == 데일리_통상파생
+	파생 = DERIVATION_
+ELSE
+	파생 = 
+ENDIF
+
+IF GROUPMATCH(장르, 데일리_통상)
+	TRYCCALLFORM EVENT_DAILY_%악세사%_%파생%RATE()
+	CATCH
+		SETCOLOR 칼라_경고
+		PRINTFORMW DAILY_REGISTER에게 건네진 %이름%, %악세사%의 RATE 함수가 발견되지 않습니다
+		PRINTFORMW 당신이 플레이어라면, 패치에 누락이 없는지, 경합이 없는가를 확인해 주세요
+		PRINTFORMW 당신이 개발 사람이라면, RATE 함수 이하의 필수 함수를 설정했는지를 확인해 주세요
+		RETURN
+	ENDCATCH
+ELSE
+	TRYCCALLFORM EVENT_DAILY_%파생%%악세사%_DISABLE()
+	CATCH
+		SETCOLOR 칼라_경고
+		PRINTFORMW DAILY_REGISTER에게 건네진 %이름%, %악세사%의 DISABLE 함수가 발견되지 않습니다
+		PRINTFORMW 당신이 플레이어라면, 패치에 누락이 없는지, 경합이 없는가를 확인해 주세요
+		PRINTFORMW 당신이 개발 사람이라면, RATE 함수 이하의 필수 함수를 설정했는지를 확인해 주세요
+		RETURN
+	ENDCATCH
+ENDIF
+
+DAILY_EVENT_NAME_ENG:장르:(DAILY_EVENT_NUM:장르) = %악세사%
+DAILY_EVENT_NAME:장르:(DAILY_EVENT_NUM:장르) = %이름%
+
+;파생형은 DISABLE_NAME에 등록할 필요가 없기에 FINALLY에
+SIF 장르 == 데일리_통상파생
+	GOTO FINALLY
+
+번호 = FINDELEMENT(DAILY_DISABLE_NAME, 악세사, 0, VARSIZE("DAILY_DISABLE_NAME"), 1)
+
+;등록이 끝난 상태라면 FINALLY에
+SIF 번호 != -1
+	GOTO FINALLY
+
+;아직 등록하고 있지 않으면, 비어있는 번호를 찾아 등록
+FOR LOCAL, 0, VARSIZE("DAILY_DISABLE_NAME")
+	IF DAILY_DISABLE_NAME:LOCAL == ""
+		DAILY_DISABLE_NAME:LOCAL = %악세사%
+		BREAK
+	ENDIF
+NEXT
+
+$FINALLY
+
+DAILY_EVENT_NUM:장르 ++

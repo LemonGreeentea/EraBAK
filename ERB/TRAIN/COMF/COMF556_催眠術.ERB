@@ -1,0 +1,118 @@
+﻿;납치
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME556
+IF MTAR_NUM > 0 && TCVAR:(MTAR:0):최면중 == 0
+	RESULTS:0 = 최면술을 걸친다
+	RESULTS:1 = 최면술을 걸친다
+	RESULTS:2 = 최면술을 걸친다
+	RESULTS:3 = 최면술을 걸친다
+	RESULTS:4 = 최면술을 걸친다
+	RESULTS:5 = 최면술을 걸친다
+ELSE
+	RESULTS:0 = 최면술을 해제
+	RESULTS:1 = 최면술을 해제
+	RESULTS:2 = 최면술을 해제
+	RESULTS:3 = 최면술을 해제
+	RESULTS:4 = 최면술을 해제
+	RESULTS:5 = 최면술을 해제
+ENDIF
+
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE556
+;공통 부분
+CALL COM_ABLE_COMMON(556)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 1명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 1
+	RETURN 0
+;주인공이 플레이어 때 한정
+SIF MPLY:0 != MASTER
+	RETURN 0
+;타겟이 한사람은 필요
+SIF MTAR_NUM <= 0
+	RETURN 0
+SIF FLAG:주도권소유자 != MASTER && FLAG:주도권소유자 != -1
+	RETURN 0
+LOCAL:1 = 0
+
+FOR LOCAL, 0, MTAR_NUM
+	;해제가 끝난 상태라면 안 돼
+	SIF TCVAR:(MTAR:LOCAL):최면중 == -1
+		RETURN 0
+	;해제하는 경우, 아직 걸치지 않은 녀석이 있으면 안 돼
+	SIF TCVAR:(MTAR:LOCAL):최면중 > 0
+		LOCAL:1 = 1
+	SIF LOCAL:1 && TCVAR:(MTAR:LOCAL):최면중 == 0
+		RETURN 0
+NEXT
+
+SIF !ITEM:최면술
+	RETURN 0
+;플레이어의 입이 막히고 있다면 불가
+SIF IS_BIND(MPLY:0)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM556
+;●실행치의 계산
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;●플레이어측의 처리
+
+;타겟측의 처리
+FOR LOCAL, 0, MTAR_NUM
+	IF TCVAR:(MTAR:LOCAL):최면중 == 0
+		TCVAR:(MTAR:LOCAL):최면중 = 1
+	ELSE
+		TCVAR:(MTAR:LOCAL):최면중 = -1
+	ENDIF
+NEXT
+
+;주도도 변화 기준치
+TFLAG:49 = 1
+
+;도착도 변화 기준치
+TFLAG:50 = 2
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 0
+
+RETURN 1
+
+
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE556
+IF MTAR_NUM > 1
+	LOCALS:0 = 들
+ELSE
+	LOCALS:0 = 
+ENDIF
+IF TCVAR:(MTAR:0):최면중 > 0
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)% %LOCALS:0%에 최면술을 %TARGET_STR("썼다", "써 왔다")%…
+ELSE
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)% %LOCALS:0%의 최면술을 해제%TARGET_STR("했다", "해 왔다")%…
+ENDIF
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN556
+RETURN 커맨드_공통

@@ -1,0 +1,193 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_SUCCUBUS_DISTURBANCE_RATE()
+RETURN 55
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_SUCCUBUS_DISTURBANCE_DECISION()
+#DIM 서큐버스
+서큐버스 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_서큐버스))
+SIF 서큐버스 == -1
+	RETURN 0
+SIF CFLAG:MASTER:소속 == 서큐버스
+	RETURN 0
+
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_SUCCUBUS_DISTURBANCE_GENRE()
+RETURN 데일리_장르_특수세력
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_SUCCUBUS_DISTURBANCE
+#DIM 대상도시
+#DIM 서큐버스
+서큐버스 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_서큐버스))
+
+CALL DAILY_EVENT_RAND_CITYSELECT(0)
+대상도시 = RESULT
+SIF 대상도시 < 0
+	RETURN
+PRINTFORML 서큐버스들의 영향인가, 최근 환상향의 풍기가 흐트러지고 있다…
+PRINTFORML 거리에서도 인기척이 없는 장소를 들여다 보면 남녀가 교접해 있거나 한다
+PRINTFORMW 현재 큰 해는 없고, 또 경제에는 호영향이 나와 있는 것 같다
+PRINTFORML 어떻게 하지?
+CALL ASK_MULTI(@"엄격하게 단속한다" ,"상태를 본다" ,"자신도 섹스 파트너를 찾는다" ,"서큐버스를 찾는다")
+
+IF RESULT == 1
+	PRINTFORMW 한동안 상태를 보는 일로 했다…
+	$SUCCUBUS_KEKKA
+	CALL MODIFY_CITY_ECONOMY(대상도시, RAND(10000, 30000))
+	FOR LOCAL, 1, MAX_COUNTRY
+		IF IS_COUNTRY(LOCAL) && LOCAL != 서큐버스
+			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -30, 30)
+		ELSE
+			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, 100, -100)
+		ENDIF
+	NEXT
+	CALL COLOR_PRINTL("그 후 한동안 풍기는 계속 흐트러져, 타국의 평가가 내려 버렸다", 칼라_주의)
+	CALL COLOR_PRINTW("하지만 서큐버스들로부터는 호의적으로 수취된 것 같다", 칼라_주의)
+ELSEIF RESULT == 0
+	PRINTFORMW 엄격하게 단속했다…
+	CALL MODIFY_CITY_ECONOMY(대상도시, RAND(10000, 30000) * -1)
+	FOR LOCAL, 1, MAX_COUNTRY
+		IF IS_COUNTRY(LOCAL) && LOCAL != 서큐버스
+			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, 30, -30)
+		ELSE
+			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -100, 100)
+		ENDIF
+	NEXT
+	CALL COLOR_PRINTL("풍기를 엄격하게 단속하는 자세는 타국의 평가로 연결되었다", 칼라_주의)
+	CALL COLOR_PRINTW("하지만 서큐버스들로부터는 악평이었던 것 같다", 칼라_주의)
+ELSEIF RESULT == 3
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 원흉일 것인 서큐버스를 찾았다
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+	PRINTFORML 하지만 발견되지 않았다
+	PRINTFORMW 더 이상 깊이 들어가기 하면 자신도 서큐버스의 영향을 받게 될 것 같지만…
+	PRINTFORMW 어떻게 하지?
+	CALL ASK_YN("아직 찾는다" ,"그만둔다")
+	IF RESULT == 1
+		PRINTFORML 그만두었다
+		PRINTFORMW 어쩔 수 없기에 한동안 상태를 보는 일로 했다…
+		GOTO SUCCUBUS_KEKKA
+	ELSEIF RESULT == 0
+		PRINTFORMW 단념하지 않고 아직 찾는 일로 했다
+		PRINTFORML 
+		PRINTFORMW …눈치채면 %ANAME(MASTER)%도 서큐버스의 영향을 접수 머릿속은 쾌락을 추구해 가득 되어 있었다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 발정한 것 같은 표정으로 거리에 내질렀다
+		GOTO SUCCUBUS_SEX
+	ENDIF
+ELSEIF RESULT == 2
+	PRINTFORML 아무래도 자신도 서큐버스의 영향을 받게 된 것 같다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 이 상황을 바람직하게 파악하고 객기를 부리는 일로 했다
+	$SUCCUBUS_SEX
+	PRINTFORML 
+	IF IS_MALE(MASTER) || (HAS_PENIS(MASTER) && RAND:2) || (HAS_PENIS(MASTER) && TALENT:MASTER:남성혐오)
+		SELECTCASE RAND:5
+			CASE 0
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 마을아가씨를 헌팅했다
+				PRINTFORML 그야말로 숫처녀라는 모습의 소녀였지만, 그녀도 또 열에 들뜬 것처럼%ANAME(MASTER)%의 유혹에 넘어가 왔다
+				PRINTFORML 그 열정적인 시선에 인내 할 수 없었던 %조사처리(ANAME(MASTER),"는")% 그녀의 허리에 손을 써 조속히 호텔로 데리고 들어갔다
+				PRINTFORMW 누구에게도 더럽혀진 일이 없는 그녀의 무구한 신체를 마음껏 맛봐, 하룻밤 걸쳐%ANAME(MASTER)%기호에 예의범절을 가르쳐 주었다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "화간")
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "화간")
+			CASE 1
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 있는 아가씨에게 요바이를 걸었다
+				PRINTFORML 낮에 거리에서 보였을 때로부터 정신을 빼앗겨 아무래도 손을 걸고 싶다고 생각하고 있던 소녀다
+				PRINTFORML 아가씨는 몹시 저항했지만, %조사처리(ANAME(MASTER),"는")% 그 표정에 흥분해보다 격렬하게 하나의 물건을 격분하게 해 그녀를 범했다
+				PRINTFORMW 범하고 있는 동안에 그녀도 또 음기에 대어졌는지 마지막에는 스스로 %ANAME(MASTER)%에 매달려 졸라댔다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "강간")
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "강간")
+			CASE 2
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 역헌팅 한 아가씨와 호텔에 있다
+				PRINTFORML 그녀는 발정난 암캐같이 %ANAME(MASTER)%에 다가서, 난폭하게 좋을대로 범하면 좋겠다고 졸라 왔다
+				PRINTFORML 물론 그럴 생각의 %조사처리(ANAME(MASTER),"는")% 그녀를 침대에 쓰러트리고 조속히 격분한 하나의 물건을 그녀에게 쑤셔 넣었다
+				PRINTFORMW 결국 그 날은 밤새, 둘이서 시간을 잊어 단지 계속해서 서로를 요구해 육욕을 서로 탐냈다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "화간")
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "화간")
+			CASE 3
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 퇴치한 요괴의 소녀를 범하고 있다
+				PRINTFORML 인간에 비해 탄탄한 신체는 %ANAME(MASTER)%의 하나의 물건을 격렬하게 졸라, 일발 찌르기마다 사랑스러운 신음소리를 올린다
+				PRINTFORML 입으로는 저항하고 있는 그녀도 음기의 영향을 받고 있는 것 같아, 가볍게 찔러 주는 것만으로 격렬하게 몸을 진동시켰다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀가 진심으로 "뉘우침"해 온순하게 될 때까지 시간을 들여 차분히 예의범절을 가르쳐 주었다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "요괴의 소녀의 입술", "", "요괴의 소녀의 질", "강간")
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "요괴의 소녀의 입술", "", "요괴의 소녀의 질", "강간")
+			CASE 4
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 포로의 여병사를 "심문"하고 있다
+				PRINTFORML 그녀는 초저항해 필사적으로 입을 다물고 있었지만, 본인도 눈치채지 않는 동안에 암컷의 얼굴로 허덕이기 시작했다
+				PRINTFORML 여자의 약점을 찾아낸 %조사처리(ANAME(MASTER),"가")% 거기를 공격해대면 단정치 못하게 강제를 미치게 하면서 크게 뒤로 젖혔다
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀에 대해 아무리 단련해도 결국 여자는 여자인 것이라고 페니스로 철저히 가르쳐 주었다
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "여병사의 입술", "", "여병사의 질", "강간")
+				CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "여병사의 입술", "", "여병사의 질", "강간")
+		ENDSELECT
+	ELSE
+		SELECTCASE RAND:5
+			CASE 0
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 숙소에서 병사의 상대를 하고 있다
+				PRINTFORML 표면은 평소의 노고를 위로하는 위안으로서 본심으로서는 그 씩씩한 신체로 터무니없게 해 받기 때문에(위해)
+				PRINTFORMW 울분이 쌓여 있는 병사에 있어 %조사처리(ANAME(MASTER),"를")% 안을 수 있는 것은 육체적으로도 정신적으로도 극상의 포상이 되었다
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 번갈아 자지를 쑤셔 넣어져 저 좋은 대로 범해지면서 마구 단정치 못하게 좋아한다
+				PRINTFORML 물론 그들이 피임 따위 생각할 리도 없고 그 모이고 모인 진한 수컷국물은 모두 자궁에 따라졌다
+				PRINTFORMW 밤이 끝날 때까지 무수한 병사와 계속 교접한 %조사처리(ANAME(MASTER),"는")%, 쾌락과 피로의 그다지 한동안 움직일 수 없었다…
+				CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, Ｖ성교, Ａ성교, 키스, 펠라티오, 윤간", "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("병사"), @"병사의 \@RAND:2 ? 페니스 # 입술\@", @"병사", "", "윤간")
+				CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, Ｖ성교, Ａ성교, 키스, 펠라티오, 윤간", "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("병사"), @"병사의 \@RAND:2 ? 페니스 # 입술\@", @"병사", "", "윤간")
+			CASE 1
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 환락가에서 야쿠자 같은 남자와 함께 있다
+				PRINTFORML 평상시는 입지 않는 같은 단정치 못한 의상을 몸에 걸쳐, 아첨하는 것 같은 암컷의 시선으로 그에게 휘감긴다
+				PRINTFORMW 안면 따위는 없고, 조금 전 설득해진 직후의 남자이지만 그 수컷 수상함만으로 %조사처리(ANAME(MASTER),"를")% 기대시키기에는 충분했다
+				PRINTFORML 그는 %조사처리(ANAME(MASTER),"를")% 자신의 여자같이 취급해, 욕망을 숨기지 않는 천하게 보인 미소를 띄워 호텔에 데리고 들어갔다
+				PRINTFORML 방에 들어가면 조속히 밀어 쓰러트려져 기대 이상의 씩씩함과 교묘함으로 몇 번이나 여자의 기쁨을 새겨졌다
+				PRINTFORMW 호텔에서 나오는 무렵에는 완전히 그에게 헤롱헤롱 되고 있었던 %조사처리(ANAME(MASTER),"는")% 스스로 그와 연락처를 교환했다…
+				CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, Ｖ성교, 키스, 펠라티오", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("야쿠자"), @"야쿠자의 \@RAND:2 ? 페니스 # 입술\@", @"야쿠자", "", "화간")
+				CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, Ｖ성교, 키스, 펠라티오", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("야쿠자"), @"야쿠자의 \@RAND:2 ? 페니스 # 입술\@", @"야쿠자", "", "화간")
+			CASE 2
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 값싼 여인숙으로 남자에 걸쳐 허리를 흔들고 있다
+				PRINTFORML 보기에도 똘마니풍의 남자는, 좀 더 능숙하게 봉사하는 것처럼%조사처리(ANAME(MASTER),"를")% 매도하면서 밀어올려 온다
+				PRINTFORMW 똘마니 따위에 건방지게 명령되는 굴욕감은 흥분한 %조사처리(ANAME(MASTER),"는")%, 온순하게 그에 따라 필사적으로 허리를 흔드는
+				PRINTFORML 그에게 헌팅된 %조사처리(ANAME(MASTER),"는")%, 그 없었던 일 마을 성욕을 숨기려고 하지 않는 어조에 자궁을 쑤시게 한 권해졌다
+				PRINTFORML 기대 대로에 마치 고기 오나홀과 같은 취급을 되어 %조사처리(ANAME(MASTER),"는")% 기쁨, 암캐같이 그에게 아첨하고 마구 좋아했다
+				PRINTFORMW 사후, 그는 빨리 없게 되어, %조사처리(ANAME(MASTER),"는")% 침대 위에서 여운으로 경련하면서 아헤얼굴을 쬐고 있었다…
+				CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, Ｖ성교, 키스, 펠라티오", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("똘마니"), @"똘마니의 \@RAND:2 ? 페니스 # 입술\@", @"똘마니", "", "화간")
+				CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ｍ, Ｖ성교, 키스, 펠라티오", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("똘마니"), @"똘마니의 \@RAND:2 ? 페니스 # 입술\@", @"똘마니", "", "화간")
+			CASE 3
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 슬럼가에 발길을 옮겼다
+				PRINTFORML 거기서도 서큐버스의 영향이 나오고 있어 곧바로 눈을 핏발이 서게 한 사타구니를 부풀린 부랑자에게 둘러싸였다
+				PRINTFORMW 평상시라면 비명을 올려 도망치는 곳이지만 %조사처리(ANAME(MASTER),"는")% 입맛을 다신다와 스스로 옷을 벗어 떠나 그들을 유혹했다
+				PRINTFORML 여자에 굶은 그들은 주저 없고 %ANAME(MASTER)%에 덤벼 들어, 그 극상의 신체에 가차 없이 육욕을 부딪쳐 온다
+				PRINTFORML 무수한 추접스러운 페니스에 둘러싸인 %조사처리(ANAME(MASTER),"는")% 눈동자에♥를 띄우면서 전신을 사용해 그것들에 봉사했다
+				PRINTFORMW 노래진 정액으로 모두를 더럽혀진 후, 또 봉사하러 오는 것을 약속 당해 간신히 해방되었다…
+				CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, Ｖ성교, Ａ성교, 키스, 펠라티오, 윤간", "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("부랑자"), @"부랑자의 \@RAND:2 ? 페니스 # 입술\@", @"부랑자", "", "윤간")
+				CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, Ｖ성교, Ａ성교, 키스, 펠라티오, 윤간", "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("부랑자"), @"부랑자의 \@RAND:2 ? 페니스 # 입술\@", @"부랑자", "", "윤간")
+			CASE 4
+				PRINTFORML 코트를 걸쳐입었던 %조사처리(ANAME(MASTER),"가")% 숨을 거칠게 하면서 밤길을 걷는다
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 코트아래에 무엇하나몸에 대지 않고, 사람과 엇갈릴 때에 나체를 노출해 섹스로 이끈다
+				PRINTFORMW 대부분의 상대는 다만 경직되거나 도망칠 뿐(만큼)이지만, 그런 그들의 시선이나 반응도 또%조사처리(ANAME(MASTER),"를")% 흥분시킨다
+				PRINTFORML 또 때때로 유혹에 넘어가는 남자가 나타남과 동시에 가까이의 그늘에 향해서는 마음껏 스침 섹스를 즐긴다
+				PRINTFORML 야외에서의 노출 섹스에 의한 배덕감과 노출감에, %조사처리(ANAME(MASTER),"는")% 언제나 이상으로 흥분해 미친듯이 자지러지는 신음소리를 냈다
+				PRINTFORMW 그렇게 하룻밤 걸쳐 몇 번이나 범해지고 만족한 %조사처리(ANAME(MASTER),"는")% 새침한 얼굴로 귀가해 몇시라도의 일하러 돌아왔다…
+				CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, Ｖ성교, Ａ성교, 키스, 펠라티오", "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("지나가는 남자"), @"지나가는 남자의 \@RAND:2 ? 페니스 # 입술\@", @"지나가는 남자", "", "화간")
+				CALL FUCK(MASTER, "욕망, 봉사, 성기술, 성교, 정애, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, Ｖ성교, Ａ성교, 키스, 펠라티오", "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("지나가는 남자"), @"지나가는 남자의 \@RAND:2 ? 페니스 # 입술\@", @"지나가는 남자", "", "화간")
+		ENDSELECT
+	ENDIF
+	PRINTFORMW 
+	FOR LOCAL, 1, MAX_COUNTRY
+		IF IS_COUNTRY(LOCAL) && LOCAL != 서큐버스
+			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -45, 45)
+		ELSE
+			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, 150, -150)
+		ENDIF
+	NEXT
+	CALL COLOR_PRINTL("그 후 한동안 풍기는 계속 흐트러져, 타국의 평가가 내려 버렸다", 칼라_주의)
+	CALL COLOR_PRINTW("하지만 서큐버스들로부터는 호의적으로 수취된 것 같다", 칼라_주의)
+ENDIF
+
+RETURN 1

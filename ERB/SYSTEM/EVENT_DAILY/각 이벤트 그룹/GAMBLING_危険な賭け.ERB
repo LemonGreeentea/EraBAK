@@ -1,0 +1,518 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_GAMBLING_RATE()
+RETURN 35
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_GAMBLING_DECISION()
+RETURN DAY >= 15
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_GAMBLING_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;특정의 조건을 채우는 캐릭터를 랜덤에 선택하는 경우에 이용
+;다른 함수는 필수이지만, 이것만은 없어도 좋다  라고 할까 퍼포먼스에 영향을 주므로 불필요하면 만들어서는 안 된다
+;대상이 존재하지 않고 데일리를 개시 할 수 없는 경우는 0을 돌려주는 것으로 데일리의 발생을 캔슬한다
+;---------------------
+@EVENT_DAILY_GAMBLING_SETTARGET()
+
+;내기의 대상으로 할 수 있는 캐릭터가 있을까만 봐 둔다
+FOR LOCAL, 0, CHARANUM
+	SIF CFLAG:LOCAL:소속 == CFLAG:MASTER:소속 && IS_FEMALE(LOCAL)
+		GOTO FOUND
+NEXT
+RETURN 0
+
+$FOUND
+
+;내기에 져 가지고 가진 캐릭터가 있으면 안 돼
+FOR LOCAL, 0, CHARANUM
+	IF GETBIT(TALENT:LOCAL:데일리계, 소질_데일리_카지노의종업원)
+		RETURN 0
+	ENDIF
+NEXT
+RETURN 1
+
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_GAMBLING()
+#DIM 대상
+#DIM 배당금
+
+배당금 = LIMIT(MONEY / 2, 100000, 500000)
+
+IF DVAR:내기_첫회실행이끝난상태
+	PRINTFORMW 또 예의 뒤카지노로부터의 초대장이 닿았다
+	PRINTFORML 가 볼까……
+	PRINTL
+	CALL ASK_YN()
+ELSE
+	PRINTFORMW %ANAME(MASTER)% 앞으로, 뒤카지노로부터의 초대가 닿았다
+	PRINTFORMW 비합법이지만, 그 만큼 매우 배당은 높고, 일확천금도 꿈은 아니라고 한다
+	PRINTFORML 가 볼까……
+	PRINTL
+	CALL ASK_YN()
+ENDIF
+
+IF RESULT == 1
+	PRINTFORMW ……아니, 그런 것에 손을 대는 일은 없을 것이다
+	PRINTFORMW 그만두기로 했다
+	RETURN 1
+ENDIF
+
+PRINTFORML 모처럼인 것으로 묻기로 했다……
+PRINTFORML 
+PRINTFORML 
+PRINTFORML 
+PRINTFORMW 「어서 오십시오, 기다리고 있었습니다」
+PRINTFORMW 뒤카지노라는 이상에는 이상한 듯한 건물을 상상하고 있던 것이지만, 의외로 착실한 건물인 것 같다
+PRINTFORMW ……이만큼 당당히 영업 되어 있다는 일은, 본고장의 권력과 유착 하고 있을 것이다
+PRINTFORMW 진행되는 대로, %조사처리(ANAME(MASTER),"는")% 자리에 도착한다
+CALL ICPRINT(@"「당카지노의 배당금은 일률<{배당금}>가 되고 있습니다」", "W", 칼라_주의)
+PRINTFORMW 지배인의 남자가 그렇게 설명한다. 내기금에 의해 변동하지 않는 것인지?   라고 물으면, 지배인은 싱글벙글웃으면서 태연하게 말한다
+PRINTFORMW 「당카지노에서는 돈은 걸지 않습니다. 그 대신에, 여자의 신병을 걸어 받는 일이 되어 있습니다」
+PRINTFORMW 「이기면 일확천금, 지면……뭐, 그 여성에게는, 우리의 종업원으로서 일해 받는 일이 되네요」
+PRINTFORMW ……터무니 없는 말을 하기 시작했다
+PRINTFORMW 종업원 따위라고 말하고 있지만, 여기는 뒤카지노다. 지면 건 여자는 성노예로 될 것이다
+PRINTFORML 이지만, 그 파격의 배당금은 매력이다……
+PRINTL
+
+CALL ASK_YN("내기를 한다", "돌아간다")
+
+IF RESULT == 1
+	$CANCEL
+	PRINTFORMW 배당금 동공의 문제는 아니다. 이런 일은 받아들일 수 없다
+	PRINTFORMW 돌아가기로 했다……
+	RETURN 0
+ENDIF
+
+PRINTFORML 「그럼, 어떤 분을 걸어 주십니까?」
+CALL SINGLE_DRAWLINE
+CALL SELECT_CHARA_LIST_ONLY_LOGIC_SEX("GAMBLING", "NONE")
+대상 = RESULT
+SIF 대상 == -1
+	GOTO CANCEL
+IF 대상 == MASTER
+	PRINTFORMW 「자신을?   ……그것은 흥미롭다」
+	PRINTFORMW 「동료 생각인가, 그렇지 않으면 리스크가 있어야만 불타는 타입인가, 그렇지 않으면……」
+	PRINTFORMW 「……범해지고 싶어함의 드 음란한가」
+	PRINTFORMW 「뭐, 이쪽으로서는 머지않아에서 만나도 상관없습니다만」
+ELSE
+	PRINTFORMW 이쪽으로부터는 %조사처리(ANAME(대상),"를")% 건다……
+	PRINTFORMW 그처럼 전했다
+ENDIF
+PRINTFORMW 「그럼, 내기의 시간으로 갈까요……」
+
+SELECTCASE RAND:3
+	CASE 0
+		CALL GAMBLING_SLOT
+	CASE 1
+		CALL GAMBLING_SORT
+	CASE 2
+		CALL GAMBLING_BINGO
+ENDSELECT
+
+SELECTCASE RESULT
+	CASE 1
+		PRINTFORMW 「훌륭하다! 　%ANAME(MASTER)%님 승리입니다」
+		PRINTFORMW 「자, 이쪽이 배당금입니다, 받아 주세요」
+		CALL COLOR_PRINTW(@"{배당금}를 손에 넣었다", 칼라_주의)
+		PRINTFORMW 지배인에게 전송되어, 카지노를 뒤로 했다……
+		MONEY += 배당금
+	CASE 0
+		PRINTFORMW 「이런이런, 유감입니다만 우리 승리인 것 같네요」
+		IF 대상 == MASTER
+			PRINTFORMW 「그럼, 약속대로, 우리를 위해서(때문에) 일해 받아요」
+			PRINTFORMW 「겨우 그 육체로, 우리의 손님을 기쁘게 하는 것입니다」
+			PRINTFORMW 지배인은 빠는 것 같은 시선으로, %조사처리(ANAME(대상),"를")% 보았다……
+		ELSE
+			PRINTFORMW 「그럼, %ANAME(대상)%입은 만여 가요. 뭐, 대우는 나쁘지 않으니까 염려말고」
+			CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"가")% 데려가져 버렸다……", 칼라_경고)
+			PRINTFORMW 지배인에게 전송되어, 카지노를 뒤로 했다……
+			CALL CHANGE_COUNTRY(대상, 0)
+			CFLAG:대상:특수상태 = 0
+		ENDIF
+		SETBIT TALENT:대상:데일리계, 소질_데일리_카지노의종업원
+		CALL SET_PIERCE_RANDOM(대상, 0)
+		SIF RESULT != -1
+			CALL COLOR_PRINTW(@"%ANAME(대상)%의 %GET_PIERCE_NAME(RESULT)%에, 종업원인 증거의 피어스가 장착되었다……", 칼라_핑크)
+	CASE 2
+		PRINTFORMW 「쿠쿠, 해 버렸어요, 그럼 우리 승리입니다」
+		PRINTFORMW 「%조사처리(ANAME(대상),"은")% 종업원으로서 고용하겠습니다만……그 앞에, 패널티군요」
+		PRINTFORMW 「잠시만 기다려 주십시오……쿠쿳」
+		IF 대상 == MASTER
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 가드 맨에게 가게의 안쪽으로 데려가졌다……
+		ELSE
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 가드 맨에게 가게의 안쪽으로 이끌려 갔다……
+		ENDIF
+		PRINTFORML
+		PRINTFORML
+		PRINTFORML
+		CALL GAMBLING_PENALTY(대상)
+		PRINTFORML
+		PRINTFORML
+		PRINTFORML
+		PRINTFORMW 「좋은 쇼였어요, 쿠쿳, 향후도 %ANAME(대상)%에는 활약해 받지 않습니다와」
+		IF 대상 == MASTER
+			PRINTFORMW 「그럼, 약속대로, 우리를 위해서(때문에) 일해 받아요」
+			PRINTFORMW 「겨우 그 육체로, 우리의 손님을 기쁘게 하는 것입니다」
+			PRINTFORMW 지배인은 빠는 것 같은 시선으로, %조사처리(ANAME(대상),"를")% 보았다……
+		ELSE
+			CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"가")% 데려가져 버렸다……", 칼라_경고)
+			PRINTFORMW 지배인에게 전송되어, 카지노를 뒤로 했다……
+		ENDIF
+		SETBIT TALENT:대상:데일리계, 소질_데일리_카지노의종업원
+		CALL SET_PIERCE_RANDOM(대상, 0)
+		SIF RESULT != -1
+			CALL COLOR_PRINTW(@"%ANAME(대상)%의 %GET_PIERCE_NAME(RESULT)%에, 종업원인 증거의 피어스가 장착되었다……", 칼라_핑크)
+ENDSELECT
+
+
+
+DVAR:내기_첫회실행이끝난상태 = 1
+
+;---------------------
+;카지노에서 범 끌었을 때 용무의 페날차
+;---------------------
+@GAMBLING_PENALTY(대상)
+#DIM 대상
+SELECTCASE RAND:5
+	CASE 0
+		PRINTFORML %조사처리(ANAME(대상),"는")% 공개 윤간 쇼에 출연 당했다
+		PRINTFORML 몇 사람이나 되는 남자가 스테이지상에서 %조사처리(ANAME(대상),"를")% 붙잡아 양다리를 억지로에 열리게 한다
+		PRINTFORML 젖지 않은 질에 페니스를 억지로 삽입하면, 격렬하게 전후하기 시작한다
+		PRINTFORML 이윽고 남자가 정액을 풀면, %ANAME(대상)%의 목으로부터 비통한 외침이 올랐다……
+		PRINTFORML 능욕은 스테이지상의 남자 전원이 만족할 때까지 계속되었다
+		CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 성교, 정애, 펠라티오, Ｖ성교, Ａ성교, 마조, 윤간", "키스상실, 처녀상실, Ａ처녀상실, CFLAG 감소, 성벽 취득, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("카지노의 손님"), "카지노의 손님의 페니스", "카지노의 손님", "", "윤간")
+	CASE 1
+		PRINTFORML %조사처리(ANAME(대상),"는")% 공개 자위 쇼에 출연 당했다
+		PRINTFORML 부끄러운 듯이 비부나 가슴을 숨기려고 하는 %ANAME(대상)%에, 관객들은 용서 없는 야유를 마구 퍼붓는다
+		PRINTFORML 하는 수 없이 %조사처리(ANAME(대상),"가")% 스스로를 위로해, 이윽고 절정 하면, 남자들은 그 천주위님을 껄껄 웃는다
+		PRINTFORML 흥분한 그들은 스테이지에 올라, 절정의 피로로 녹초가 된 %조사처리(ANAME(대상),"를")% 윤간하기 시작했다……
+		CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 성교, 정애, 펠라티오, Ｖ성교, Ａ성교, 마조, 윤간, 노출, 자위", "키스상실, 처녀상실, Ａ처녀상실, CFLAG 감소, 성벽 취득, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("카지노의 손님"), "카지노의 손님의 페니스", "카지노의 손님", "", "윤간")
+	CASE 2
+		PRINTFORML %조사처리(ANAME(대상),"는")% 공개 수간 쇼에 출연 당했다
+		PRINTFORML 날뛰는 %조사처리(ANAME(대상),"를")% 대형개가 짜 깔아, 짐승 냄새나는 페니스를 비밀의 틈에 억지로 쑤셔 넣는다
+		PRINTFORML 야성적인 피스톤에, %PRONOUN(대상)%는 의지라든지 변하지 않고 교성을 올려 버린다
+		PRINTFORML 이윽고 모두가 보고 있는 앞에서 씨뿌리기 되는 것과 동시에, %조사처리(ANAME(대상),"는")% 단정치 못한 소리를 질러 절정 했다……
+		CALL FUCK(대상, "Ｃ, Ｖ, Ｂ, Ｍ, 성교, 정애, 펠라티오, Ｖ성교, Ａ성교, 마조, 윤간, 수간", "키스상실, 처녀상실, CFLAG 감소, 성벽 취득, 질내사정, 구강사정", GET_SPERM_ID("개"), "개의 페니스", "개", "", "강간")
+	CASE 3
+		PRINTFORML %조사처리(ANAME(대상),"는")% 공개 SM쇼에 출연 당했다
+		PRINTFORML 밧줄에 눈을 가려, 코걸이에 재갈과 장착 당해져, 난폭하게 범해지고 있다
+		PRINTFORML 몇 번이나 종을 붙여져 있는 동안에, 흐려진 비명은 이윽고 달콤한 교성으로 변해간다
+		PRINTFORML 그렇게 범해지고 있는 동안에, %조사처리(ANAME(대상),"는")% 드디어, 엉덩이를 얻어맞아 절정을 맞이했다……
+		CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 성교, 정애, 펠라티오, Ｖ성교, Ａ성교, 마조, 고통쾌락, 긴박, 윤간", "키스상실, 처녀상실, Ａ처녀상실, CFLAG 감소, 성벽 취득, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("카지노의 손님"), "카지노의 손님의 페니스", "카지노의 손님", "", "윤간")
+	CASE 4
+		PRINTFORML %ANAME(대상)%의 하룻밤은 옥션에 걸쳐졌다
+		PRINTFORML %PRONOUN(대상)%가 나신으로 모두의 앞에 서져 남자들은 거기에 천하게 보인 시선을 퍼붓고 가격을 매긴다
+		PRINTFORML %조사처리(ANAME(대상),"를")% 낙찰한 중년의 남자는, 모두의 앞에서 %조사처리(ANAME(대상),"를")% 범하기 시작했다
+		PRINTFORML 객들에게 보여지면서, %조사처리(ANAME(대상),"는")% 단정치 못한 소리를 질러 질내사정 되었다……
+		CALL FUCK(대상, "Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 성교, 정애, 펠라티오, Ｖ성교, Ａ성교, 마조", "키스상실, 처녀상실, Ａ처녀상실, CFLAG 감소, 성벽 취득, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("카지노의 손님"), "카지노의 손님의 페니스", "카지노의 손님", "", "강간")
+ENDSELECT
+WAIT
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_GAMBLING(대상)
+#DIM 대상
+RETURN !IS_MALE(대상) && CFLAG:대상:소속 == CFLAG:MASTER:소속 && CFLAG:대상:포로처 == 0 && GET_COUNTRY_BOSS(CFLAG:대상:소속) != 대상 && CFLAG:대상:행동불능상태 != 행동불능_아이 && !IS_SP_CHARA(대상) && !IS_ANIMAL(대상) && !GETBIT(TALENT:대상:데일리계, 소질_데일리_카지노의종업원)
+
+
+;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_GAMBLING_AGAIN_RATE()
+RETURN 75
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_GAMBLING_AGAIN_DECISION()
+RETURN DAY >= 15
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_GAMBLING_AGAIN_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;특정의 조건을 채우는 캐릭터를 랜덤에 선택하는 경우에 이용
+;다른 함수는 필수이지만, 이것만은 없어도 좋다  라고 할까 퍼포먼스에 영향을 주므로 불필요하면 만들어서는 안 된다
+;대상이 존재하지 않고 데일리를 개시 할 수 없는 경우는 0을 돌려주는 것으로 데일리의 발생을 캔슬한다
+;---------------------
+@EVENT_DAILY_GAMBLING_AGAIN_SETTARGET()
+
+;내기의 대상으로 할 수 있는 캐릭터가 있을까만 봐 둔다
+FOR LOCAL, 0, CHARANUM
+	SIF CFLAG:LOCAL:소속 == CFLAG:MASTER:소속 && IS_FEMALE(LOCAL)
+		GOTO FOUND
+NEXT
+RETURN 0
+
+$FOUND
+
+;내기에 져 가지고 가진 캐릭터가 있을 필요가 있다
+FOR LOCAL, 0, CHARANUM
+	IF GETBIT(TALENT:LOCAL:데일리계, 소질_데일리_카지노의종업원)
+		DAILY_TARGET:DAILY_TARGET_NUM = LOCAL
+		DAILY_TARGET_NUM ++
+	ENDIF
+NEXT
+
+SIF DAILY_TARGET_NUM <= 0
+	RETURN 0
+
+RETURN 1
+
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_GAMBLING_AGAIN()
+#DIM 대상
+#DIM 마중캐릭터
+#DIM 탈환예정캐릭터
+
+마중캐릭터 = DAILY_TARGET:(RAND:DAILY_TARGET_NUM)
+
+IF GETBIT(TALENT:MASTER:데일리계, 소질_데일리_카지노의종업원)
+	PRINTFORMW ……뒤카지노에서 일해지는 것은 이제(이미/벌써/더는/정말) 미안이다
+	PRINTFORML 뭐든지, 그 내기에서 승리하면, 자신을 되살 수가 있는 것 같다
+	PRINTFORMW 해 볼까……
+ELSE
+	PRINTFORMW ……예의 뒤카지노에 빼앗긴 인재를 만회하지 않으면
+	PRINTFORML (들)물으면, 내기로 이긴 배당금 대신에, 「종업원」으로 된 여자를 만회할 수도 있는 것 같다
+	PRINTFORML 가 볼까……
+ENDIF
+PRINTL
+CALL ASK_YN()
+
+IF RESULT == 1
+	PRINTFORMW ……아니, 그런 일을 하면 한층 더 인재를 잃을 뿐이다
+	PRINTFORMW 단념하기로 했다……
+	RETURN 1
+ENDIF
+
+PRINTFORML 그것 밖에 방법은 없을 것이다
+PRINTFORMW 뜻을 정해 카지노에 탑승했다……
+PRINTFORML 
+PRINTFORML 
+PRINTFORML 
+
+IF 마중캐릭터 != MASTER
+	CALL GAMBLING_AGAIN_DEMUKAE(마중캐릭터)
+	PRINTFORML 
+	PRINTFORML 
+	PRINTFORML 
+ENDIF
+
+IF GETBIT(TALENT:MASTER:데일리계, 소질_데일리_카지노의종업원)
+	PRINTFORMW 「응?   왜 그러십니까?」
+	PRINTFORMW 「오늘은 그렇네요, 스트립 쇼 같은거 출연해 봅니까?」
+	PRINTFORMW 지배인은 히죽히죽 한 미소를 띄워, 이쪽을 응시한다
+	PRINTFORMW 「흠, 자신을 되사고 싶다고?」
+ELSE
+	PRINTFORMW 「야 아무래도, 오래간만이군요」
+	PRINTFORMW 지배인은 방글방글 힘이 빠져 %조사처리(ANAME(MASTER),"를")% 마중했다
+	PRINTFORMW ……그 얼굴은, 「카모가 또 왔다」라고 말하고 있지만……
+	PRINTFORMW 「하하아, 우리가 "고용"한 종업원을 돌려주면 좋겠다고」
+ENDIF
+PRINTFORMW 「좋은, 입니다만 그것은, %ANAME(MASTER)%님이 내기에 승리하면, 입니다만」
+PRINTFORML 「어떻게 하십니까?」
+PRINTL
+
+CALL ASK_YN("내기를 한다", "돌아간다")
+
+IF RESULT == 1
+	$CANCEL
+	PRINTFORMW 「엣……?   아, 하아, 돌아오는 길입니까, 잘 알았습니다」
+	PRINTFORMW 「……뭐하러 온 것입니다?」
+	PRINTFORMW 돌아가기로 했다……
+	RETURN 0
+ENDIF
+
+PRINTFORML 「그럼, 어떤 분을 걸어 주십니까?」
+CALL SINGLE_DRAWLINE
+CALL SELECT_CHARA_LIST_ONLY_LOGIC_SEX("GAMBLING", "NONE")
+대상 = RESULT
+SIF 대상 == -1
+	GOTO CANCEL
+PRINTFORMW 이쪽으로부터는 %조사처리(ANAME(대상),"를")% 건다……
+PRINTFORMW 그처럼 전했다
+PRINTFORMW 「그래서, 누구를 돌려주면 좋겠다고?」
+
+CALL SELECT_CHARA_LIST_ONLY_LOGIC_SEX("GAMBLING_RETURN", "NONE")
+탈환예정캐릭터 = RESULT
+SIF 탈환예정캐릭터 == -1
+	GOTO CANCEL
+
+PRINTFORMW 「그럼, 내기의 시간으로 갈까요……」
+
+SELECTCASE RAND:3
+	CASE 0
+		CALL GAMBLING_SLOT
+	CASE 1
+		CALL GAMBLING_SORT
+	CASE 2
+		CALL GAMBLING_BINGO
+ENDSELECT
+
+SELECTCASE RESULT
+	CASE 1
+		PRINTFORMW 「칫……%ANAME(MASTER)%님 승리입니다」
+		IF 탈환예정캐릭터 == MASTER
+			PRINTFORMW 「에에, 그럼 이제 일하지 않아 상당히」
+			CALL COLOR_PRINTW(@"노동 계약을 파기시켰다", 칼라_주의)
+		ELSE
+			PRINTFORMW 「에에, %ANAME(탈환예정캐릭터)%는 데려 돌아가 주셔 상당히」
+			CALL COLOR_PRINTW(@"%ANAME(탈환예정캐릭터)%를 되찾았다", 칼라_주의)
+		ENDIF
+		PRINTFORMW 지배인에게 전송되어, 카지노를 뒤로 했다……
+		CALL CHANGE_COUNTRY(탈환예정캐릭터, CFLAG:MASTER:소속)
+		CLEARBIT TALENT:탈환예정캐릭터:데일리계, 소질_데일리_카지노의종업원
+	CASE 0
+		PRINTFORMW 「이런이런, 유감입니다만 우리 승리인 것 같네요」
+		IF 대상 == MASTER
+			PRINTFORMW 「그럼, 약속대로, 우리를 위해서(때문에) 일해 받아요」
+			PRINTFORMW 「겨우 그 육체로, 우리의 손님을 기쁘게 하는 것입니다」
+			PRINTFORMW 지배인은 빠는 것 같은 시선으로, %조사처리(ANAME(대상),"를")% 보았다……
+			CALL COLOR_PRINTW(@"노동 계약을 연결되었다……", 칼라_경고)
+		ELSE
+			PRINTFORMW 「그럼, %ANAME(대상)%의 일도 받아 가요. 뭐, 대우는 나쁘지 않으니까 염려말고」
+			CALL COLOR_PRINTW(@"%ANAME(대상)%까지도가 데려가져 버렸다……", 칼라_경고)
+			PRINTFORMW 지배인에게 전송되어, 카지노를 뒤로 했다……
+			CALL CHANGE_COUNTRY(대상, 0)
+			CFLAG:대상:특수상태 = 0
+		ENDIF
+		SETBIT TALENT:대상:데일리계, 소질_데일리_카지노의종업원
+		CALL SET_PIERCE_RANDOM(대상, 0)
+		SIF RESULT != -1
+			CALL COLOR_PRINTW(@"%ANAME(대상)%의 %GET_PIERCE_NAME(RESULT)%에, 종업원인 증거의 피어스가 장착되었다……", 칼라_핑크)
+	CASE 2
+		PRINTFORMW 「쿠쿠, 해 버렸어요, 그럼 우리 승리입니다」
+		PRINTFORMW 「%조사처리(ANAME(대상),"은")% 종업원으로서 고용하겠습니다만……그 앞에, 패널티군요」
+		PRINTFORMW 「잠시만 기다려 주십시오……쿠쿳」
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 가드 맨에게 가게의 안쪽으로 이끌려 갔다……
+		PRINTFORML
+		PRINTFORML
+		PRINTFORML
+		CALL GAMBLING_PENALTY(대상)
+		PRINTFORML
+		PRINTFORML
+		PRINTFORML
+		PRINTFORMW 「좋은 쇼였어요, 쿠쿳, 향후도 %ANAME(대상)%에는 활약해 받지 않습니다와」
+		IF 대상 == MASTER
+			PRINTFORMW 「그럼, 약속대로, 우리를 위해서(때문에) 일해 받아요」
+			PRINTFORMW 「겨우 그 육체로, 우리의 손님을 기쁘게 하는 것입니다」
+			PRINTFORMW 지배인은 빠는 것 같은 시선으로, %조사처리(ANAME(대상),"를")% 보았다……
+			CALL COLOR_PRINTW(@"노동 계약을 연결되었다……", 칼라_경고)
+		ELSE
+			CALL COLOR_PRINTW(@"%ANAME(대상)%까지도가 데려가져 버렸다……", 칼라_경고)
+			PRINTFORMW 지배인에게 전송되어, 카지노를 뒤로 했다……
+			CALL CHANGE_COUNTRY(대상, 0)
+			CFLAG:대상:특수상태 = 0
+		ENDIF
+		SETBIT TALENT:대상:데일리계, 소질_데일리_카지노의종업원
+		CALL SET_PIERCE_RANDOM(대상, 0)
+		SIF RESULT != -1
+			CALL COLOR_PRINTW(@"%ANAME(대상)%의 %GET_PIERCE_NAME(RESULT)%에, 종업원인 증거의 피어스가 장착되었다……", 칼라_핑크)
+ENDSELECT
+
+
+;---------------------
+;마중용 메세지
+;귀찮아서, 토대 단순한 메세지이므로 FUCK는 붙이지 않습니다
+;---------------------
+@GAMBLING_AGAIN_DEMUKAE(대상)
+#DIM 대상
+
+SELECTCASE RAND:12
+	CASE 0
+		PRINTFORML %조사처리(ANAME(MASTER),"를")% 마중한 것은, 무려%조사처리(ANAME(대상),"였")%다
+		PRINTFORML 의복이라고 부를 수 없는 것 같은 추잡한 의상에 몸을 싸, 여자의 향기를 감돌게 하고 있다
+		PRINTFORML 지배인의 슬하로 안내되는 동안, 몇명의 남자와 엇갈렸다
+		PRINTFORML 그들은 %ANAME(대상)%에 호색인 시선을 향해, 어떤 사람은 당연히 %PRONOUN(대상)%의 엉덩이나 유방에 포고까지 한다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 당연히 그것을 받아들이고 있었다……
+	CASE 1
+		PRINTFORML %조사처리(ANAME(MASTER),"를")% 마중한 것은 지배인, 그리고 %조사처리(ANAME(대상),"였")%다
+		PRINTFORML 추잡한 의상에 몸을 감싼 %PRONOUN(대상)%의 비부를, 지배인은 손가락끝으로 질척질척 농락하고 있다
+		PRINTFORML %ANAME(대상)%도 %조사처리(ANAME(대상),"로")%, 특히 저항하는 것도 없애지는 대로 되고 있다……
+	CASE 2
+		PRINTFORML 지배인의 바탕으로 안내되는 도중, 스테이지에서 쇼를 하고 있는 것이 눈에 들어왔다
+		PRINTFORML ……연자는 %조사처리(ANAME(대상),"다")%
+		PRINTFORML %PRONOUN(대상)%는 추잡한 의상에 몸을 싸, 당신의 유방이나 성기, 엉덩이를 강조하는 것 같은 댄스를 피로 하고 있다
+		PRINTFORML 한층 더 간역의 남자가 단상에 오르면, 그의 것을 빨아, 또 사귀기 시작했다……
+	CASE 3
+		PRINTFORML 지배인의 바탕으로 안내되는 도중, 홀에서 접객 하고 있는 %조사처리(ANAME(대상),"가")% 눈에 들어왔다
+		PRINTFORML ……접객이라는 것은, 즉 성적인 의미다
+		PRINTFORML %PRONOUN(대상)%는으로 일까하고 주저앉은 단골다운 남자의 아래에서 무릎 꿇어, 그것에 달라 붙으며 있다
+		PRINTFORML 이윽고 남자가 정액을 발하면, %조사처리(ANAME(대상),"는")% 목을 울려 그것을 다 마셨다……
+	CASE 4
+		PRINTFORML 지배인의 바탕으로 안내되는 도중, 홀에서 접객 하고 있는 %조사처리(ANAME(대상),"가")% 눈에 들어왔다
+		PRINTFORML ……접객이라는 것은, 즉 성적인 의미다
+		PRINTFORML %PRONOUN(대상)%는으로 일까하고 주저앉은 단골다운 남자의 슬하에 걸쳐, 물건을 받아들이고 있다
+		PRINTFORML 이윽고 남자가 정액을 발하면, %조사처리(ANAME(대상),"는")% 등을 딴 데로 돌려 절정 했다……
+	CASE 5
+		PRINTFORML %조사처리(ANAME(MASTER),"가")% 지배인의 아래를 방문하면, 무려 그는 %조사처리(ANAME(대상),"와")% 사귀고 있었다
+		PRINTFORML 뒤로부터 %조사처리(ANAME(대상),"를")% 범하면서, 부드러운 엉덩이에 (하리테)뺨때리기를 먹이고 있다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 싫어하지도 않고, 오히려 달콤한 소리를 질러 쾌락과 고통을 받아들이고 있다
+		PRINTFORML 이윽고 남자는, 당연히 %ANAME(대상)%에 정액을 풀었다……
+	CASE 6
+		PRINTFORML %조사처리(ANAME(MASTER),"가")% 지배인의 아래를 방문하면, 그는 테이블에 대해 일을 하고 있는 곳이었다
+		PRINTFORML ……어쩐지 묘한 소리가 난다고 생각하고 있으면, 테이블아래로부터 %조사처리(ANAME(대상),"가")% 기어나왔다
+		PRINTFORML 그 얼굴에는 찰싹하고 백탁이 부착하고 있다. 아무래도 그에게 개인적인 봉사를 하고 있던 것 같다……
+	CASE 7
+		PRINTFORML 지배인의 바탕으로 안내되는 동안, 사정을 모르는 계의 사람에게 다음번의 쇼의 광고지를 건네받았다
+		PRINTFORML ……내용은 수간 쇼, 연자는 %조사처리(ANAME(대상),"라")%고 한다
+		PRINTFORML 돼지와 함께, %조사처리(ANAME(대상),"가")% 암컷의 표정을 띄우고 미소짓고 있는 것이 비쳐 있다
+		PRINTFORML 전회의 윤간 쇼도 대호평이었던 것이에요와 안내계는 웃고 있었다……
+	CASE 8
+		PRINTFORML 지배인의 바탕으로 안내되는 도중, 홀에서 접객 하고 있는 %조사처리(ANAME(대상),"가")% 눈에 들어왔다
+		PRINTFORML ……접객이라는 것은, 즉 성적인 의미다
+		PRINTFORML 드링크의 주문취옆, %조사처리(ANAME(대상),"는")% 성기나 유방을 버릇없게 농락해지고 있다
+		PRINTFORML %조사처리(ANAME(대상),"는")% 단정치 못한 소리를 질러 절정 해, 그 자리에 비실비실 주저앉아 버렸다……
+	CASE 9
+		PRINTFORML %조사처리(ANAME(MASTER),"가")% 지배인의 아래를 방문하면, 그는 정확히 뭔가의 영상을 보고 있는 곳이었다
+		PRINTFORML ……비쳐 있는 것은 %조사처리(ANAME(대상),"로")%, %PRONOUN(대상)%는 복수의 남자에게 범해지고 있다
+		PRINTFORML (들)물으면, 전회의 윤간 쇼의 영상인 것이라고 한다
+		PRINTFORML 뒤루트를 통해, 대단히 넓게 나돈 것 같다……
+	CASE 10
+		PRINTFORML %조사처리(ANAME(MASTER),"를")% 마중한 것은, 무려%조사처리(ANAME(대상),"였")%다
+		PRINTFORML 의복이라고 부를 수 없는 것 같은 추잡한 의상에 몸을 싸, 여자의 향기를 감돌게 하고 있다
+		PRINTFORML 지배인의 슬하로 안내되는 동안, 몇명의 남자와 엇갈렸다
+		PRINTFORML 있는 남자가 말을 걸 수 있어 %조사처리(ANAME(대상),"는")% 미안합니다라고 말하다가 남겨, 그와 동반해도 어딘가에 가 버렸다
+		PRINTFORML ……수십 분후로 돌아온 %조사처리(ANAME(대상),"는")%, 뺨을 상기시켜, 비부로부터 녹진녹진 흰 것을 흘려 보내고 있었다……
+	CASE 11
+		PRINTFORML %조사처리(ANAME(MASTER),"를")% 마중한 것은, 무려%조사처리(ANAME(대상),"였")%다
+		PRINTFORML 의복이라고 부를 수 없는 것 같은 추잡한 의상에 몸을 싸, 여자의 향기를 감돌게 하고 있다
+		PRINTFORML 지배인의 슬하로 안내되는 동안, 몇명의 남자와 엇갈렸다
+		PRINTFORML 있는 남자가 말을 걸 수 있어 %조사처리(ANAME(대상),"는")% 미안합니다라고 말하다가 남겨, 그와 동반해도 어딘가에 가 버렸다
+		PRINTFORML ……수십 분후로 돌아온 %ANAME(대상)%의 얼굴에는, 흰 것이 흠뻑 착 달라붙고 있었다……
+ENDSELECT
+WAIT
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_GAMBLING_RETURN(대상)
+#DIM 대상
+RETURN FINDELEMENT(DAILY_TARGET, 대상) != -1

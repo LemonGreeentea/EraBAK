@@ -1,0 +1,1430 @@
+﻿;정보 표시에 관련되는 함수
+
+@SHOW_INFO_WITH_UI(대상, 페이지이동, 조교중 = 0)
+#DIM 대상
+#DIM 페이지이동
+#DIM 조교중
+#DIM FIRST_LINE
+#DIM 현기호LV
+#DIM 경험수
+
+FIRST_LINE = LINECOUNT
+
+;주인공이라면 성벽 설정 화면의 표시를 금지
+SIF 대상 == MASTER && FLAG:능력표시모드 == 1
+	FLAG:능력표시모드 = 0
+;고정 캐릭터 이외는 구상 데일리의 표시를 금지
+SIF !IS_FIXED_CHARA(대상) && FLAG:능력표시모드 == 7
+	FLAG:능력표시모드 = 0
+
+;대상 캐릭터의 정보를 표시
+CALL SINGLE_DRAWLINE
+CALL SHOW_INFO(대상, 조교중)
+CALL SINGLE_DRAWLINE
+
+REDRAW 0
+
+PRINTBUTTON "10[돌아온다]", 10
+PRINT   
+CALL PRINTBUTTON_EX(" 0[기본]", 0, 1, FLAG:능력표시모드 == 0)
+CALL PRINTBUTTON_EX(" 1[성벽]", 1,대상 != MASTER, FLAG:능력표시모드 == 1)
+CALL PRINTBUTTON_EX(" 2[능력]", 2, 1, FLAG:능력표시모드 == 2)
+CALL PRINTBUTTON_EX(" 3[가계]", 3, 1, FLAG:능력표시모드 == 3)
+CALL PRINTBUTTON_EX(" 4[스킬]", 4, 1, FLAG:능력표시모드 == 4)
+CALL PRINTBUTTON_EX(" 5[의상]", 5, 1, FLAG:능력표시모드 == 5)
+CALL PRINTBUTTON_EX(" 6[설명]", 6, 1, FLAG:능력표시모드 == 6)
+CALL PRINTBUTTON_EX(" 7[데일리]", 7, IS_FIXED_CHARA(대상), FLAG:능력표시모드 == 7)
+
+
+IF 페이지이동
+	PRINTL
+	PRINTBUTTON " 8[이전캐릭터]", 8
+	PRINTBUTTON " 9[다음캐릭터]", 9
+ENDIF
+PRINTL 
+
+$INPUT_LOOP
+INPUT
+
+IF FLAG:능력표시모드 == 0
+	IF INRANGE(RESULT - 100, 0, 11)
+		INVERTBIT SHOW_INFO_FOLD, RESULT - 100
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RESTART
+	ENDIF
+ELSEIF FLAG:능력표시모드 == 1
+	;「성벽 설정」전용의 입력 처리
+	IF RESULT == 101
+		FLAG:성벽설정페이지수 --
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RESTART
+	ELSEIF RESULT == 102
+		FLAG:성벽설정페이지수 ++
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RESTART
+	ELSEIF RESULT >= 3000 && RESULT < 6000
+		현기호LV = COM_TENDENCY:(대상):(RESULT - 3000)
+		경험수 = COM_EXP:(대상):(RESULT - 3000) /10
+		IF (현기호LV == 0 && 경험수 >= 10) || (현기호LV == 1 && 경험수 >= 35) || (현기호LV == 2 && 경험수 >= 100)
+			COM_TENDENCY:(대상):(RESULT - 3000) ++
+		ENDIF
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RESTART
+	ELSEIF RESULT >= 6000 && RESULT < 9000
+		IF COM_TENDENCY:(대상):(RESULT - 6000) >= 1
+			COM_TENDENCY:(대상):(RESULT - 6000) --
+		ENDIF
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RESTART
+	ELSEIF GROUPMATCH(RESULT, 10000, 11000, 12000, 13000, 14000, 15000)
+		CALL 성벽일괄변경(대상, RESULT)
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RESTART
+	ENDIF
+ELSEIF FLAG:능력표시모드 == 7 && RESULT >= 100
+	LOCAL = RESULT - 100
+	IF LOCAL == 98
+		CALL SET_ALL_KOJO_DAILY_EACH(대상, 0)
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RESTART
+	ELSEIF LOCAL == 99
+		CALL SET_ALL_KOJO_DAILY_EACH(대상, 1)
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RESTART
+	ELSE
+		printformw {local}
+		CALL TOGGLE_KOJO_DAILY(대상, LOCAL)
+		PRINTFORMW {RESULT}
+		CLEARLINE LINECOUNT - FIRST_LINE
+		RESTART
+	ENDIF
+ELSEIF FLAG:능력표시모드 == 5 && GROUPMATCH(CFLAG:MASTER:소속, CFLAG:대상:소속, CFLAG:대상:포로처)
+	IF INRANGE(RESULT, 100, 100 + CLOTH_PART_NUM - 1)
+		 CALL CLOTH_CHANGE_MENU(대상, RESULT - 100)
+		 CLEARLINE LINECOUNT - FIRST_LINE
+		 RESTART
+	ENDIF
+ENDIF
+
+IF RESULT == 10
+	REDRAW 1
+	RETURN
+ELSEIF RESULT >= 0 && RESULT <= 6 && FLAG:능력표시모드 != RESULT && !(RESULT == 1 && 대상 == MASTER)
+	FLAG:능력표시모드 = RESULT
+	CLEARLINE LINECOUNT - FIRST_LINE
+	RESTART
+ELSEIF RESULT == 7 && IS_FIXED_CHARA(대상)
+	FLAG:능력표시모드 = RESULT
+	CLEARLINE LINECOUNT - FIRST_LINE
+	RESTART
+;다음캐릭터
+ELSEIF RESULT == 8 && 페이지이동
+	LOCAL:0 = 0
+	LOCAL:1 = 0
+	WHILE 1
+		LOCAL:2 = SHOP_CHARA_LIST:(LOCAL:0)
+		IF LOCAL:1
+			IF LOCAL:2 != -1
+				대상 = SHOP_CHARA_LIST:(LOCAL:0)
+				BREAK
+			ENDIF
+		ELSEIF LOCAL:2 == 대상
+			LOCAL:1 = 1
+		ENDIF
+		LOCAL:0 --
+		SIF LOCAL:0 < 0
+			LOCAL:0 = CHARANUM - 1
+	WEND
+	CLEARLINE LINECOUNT - FIRST_LINE
+	RESTART
+;뒤의 캐릭터
+ELSEIF RESULT == 9 && 페이지이동
+	LOCAL:0 = 0
+	LOCAL:1 = 0
+	WHILE 1
+		LOCAL:2 = SHOP_CHARA_LIST:(LOCAL:0)
+		IF LOCAL:1
+			IF LOCAL:2 != -1
+				대상 = SHOP_CHARA_LIST:(LOCAL:0)
+				BREAK
+			ENDIF
+		ELSEIF LOCAL:2 == 대상
+			LOCAL:1 = 1
+		ENDIF
+		LOCAL:0 ++
+		SIF LOCAL:0 >= CHARANUM
+			LOCAL:0 = 0
+	WEND
+	CLEARLINE LINECOUNT - FIRST_LINE
+	RESTART
+;★
+ELSEIF RESULT == 1000
+	FLAG:능력표시모드 = 10
+	RESTART
+ENDIF
+GOTO INPUT_LOOP
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 성별 정보를 표시（right justify）
+;ARG:1이 진이라면 1문자 표시
+;ARG:2는 채우기 방향(FALSE =왼쪽, TRUE = 오른쪽)
+;ARG:3은 채우기 자수
+;-------------------------------------------------
+@PRINT_SEX(ARG:0, ARG:1 = 0, ARG:2 = 0, ARG:3 = 0)
+LOCAL:0 = GETCOLOR()
+
+SELECTCASE TALENT:(ARG:0):성별
+	CASE 1
+		SETCOLOR 칼라_녀
+		LOCALS:1 = \@(!ARG:1) ? 여성 # 여\@
+	CASE 0
+		SETCOLOR 칼라_남
+		IF !IS_ANIMAL(ARG:0)
+			LOCALS:1 = \@(!ARG:1) ? 남성 # 남\@
+		ELSE
+			LOCALS:1 = \@(!ARG:1) ? 수컷 # 수\@
+		ENDIF
+	CASE 2
+		SETCOLOR 칼라_여성후타
+		LOCALS:1 = \@(!ARG:1) ? 여성(후타)  # 쌍\@
+	CASE 3
+		SETCOLOR 칼라_남성후타
+		LOCALS:1 = \@(!ARG:1) ? 남성(후타)  # 쌍\@
+	CASE 4
+		SETCOLOR 칼라_오토코노코
+		LOCALS:1 = \@(!ARG:1) ? 오토코노코 # 남\@
+	CASE 5
+		SETCOLOR 칼라_오토코노코후타
+		LOCALS:1 = \@(!ARG:1) ? 오토코노코(쌍) # 쌍\@
+	CASEELSE
+		SETCOLOR 칼라_성별불명
+		LOCALS:1 = \@(!ARG:1) ? 불명 # ？\@
+ENDSELECT
+
+CALL SETCOLORBYSEX(ARG:0)
+IF !ARG:2
+	PRINTFORM %LOCALS:1, ARG:3, LEFT%
+ELSE
+	PRINTFORM %LOCALS:1, ARG:3, RIGHT%
+ENDIF
+
+SETCOLOR LOCAL:0
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 정보를 표시
+;-------------------------------------------------
+@SHOW_INFO(ARG:0, 조교중 = 0)
+#DIM 조교중
+IF FLAG:능력표시모드 == 1
+	CALL SHOW_TENDENCY_SETTING(ARG:0)
+ELSEIF FLAG:능력표시모드 == 2
+	CALL SHOW_ABL_DETAIL(ARG:0)
+ELSEIF FLAG:능력표시모드 == 3
+	CALL SHOW_PREGNANT_RECORD(ARG:0)
+ELSEIF FLAG:능력표시모드 == 4
+	CALL SHOW_SKILLS(ARG:0)
+ELSEIF FLAG:능력표시모드 == 5
+	CALL SHOW_CLOTH_SETTING(ARG:0, GROUPMATCH(CFLAG:MASTER:소속, CFLAG:(ARG:0):소속, CFLAG:(ARG:0):포로처) && !조교중)
+ELSEIF FLAG:능력표시모드 == 6
+	PRINTFORML %NAME_FORMAL(ARG:0)%
+	CALL SINGLE_DRAWLINE
+	CALL SHOW_INFO_ERO_DESCRIPTION(ARG:0)
+ELSEIF FLAG:능력표시모드 == 7
+	PRINTFORML %NAME_FORMAL(ARG:0)%의 구상 데일리
+	CALL SINGLE_DRAWLINE
+	CALL LISTUP_KOJO_DAILY_EACH(ARG:0, 100)
+	PRINTBUTTON "[모두   온]", 198
+	PRINTL
+	PRINTBUTTON "[모두 오프]", 199
+	PRINTL
+ELSEIF FLAG:능력표시모드 == 10
+	CALL SHOW_RELATION_LIST(ARG:0)
+ELSE
+	CALL SHOW_HEADER(ARG:0)
+	IF 조교중
+		;PRINTL ◇ 이번 조교 ◇
+		CALL SMALL_TITLE("이번")
+		CALL NEW_PRINT_ORGASM(ARG:0)
+		PRINTL 
+	ENDIF
+	CALL SMALL_TITLE("기초", 100)
+	SIF !GETBIT(SHOW_INFO_FOLD, 0)
+		CALL SHOW_BASE(ARG:0)
+	PRINTL 
+	CALL SMALL_TITLE("관계", 111)
+	SIF !GETBIT(SHOW_INFO_FOLD, 11)
+		CALL SHOW_RELATION(ARG:0)
+	PRINTL 
+	CALL SMALL_TITLE("전투", 101)
+	SIF !GETBIT(SHOW_INFO_FOLD, 1)
+		CALL NEW_PRINT_SLG_ABL(ARG:0)
+	PRINTL 
+	CALL SMALL_TITLE("성교", 102)
+	SIF !GETBIT(SHOW_INFO_FOLD, 2)
+		CALL NEW_PRINT_ABL(ARG:0)
+	PRINTL 
+	CALL SMALL_TITLE("소질", 103)
+	SIF !GETBIT(SHOW_INFO_FOLD, 3)
+		CALL NEW_PRINT_TALENT(ARG:0)
+	PRINTL 
+	CALL SMALL_TITLE("경험", 104)
+	SIF !GETBIT(SHOW_INFO_FOLD, 4)
+		CALL NEW_PRINT_EXP(ARG:0)
+	PRINTL 
+	CALL SMALL_TITLE("친교", 105)
+	SIF !GETBIT(SHOW_INFO_FOLD, 5)
+		CALL SHOW_FRIENDSHIP(ARG:0)
+	PRINTL 
+	CALL SMALL_TITLE("첫체험", 106)
+	IF !GETBIT(SHOW_INFO_FOLD, 6)
+		CALL NEW_PRINT_SEXUAL_EXPERIENCE(ARG:0)
+		CALL SMALL_TITLE("최근")
+		CALL NEW_PRINT_LAST_EXPERIENCE(ARG:0)
+	ENDIF
+	PRINTL 
+	CALL SMALL_TITLE("함락", 107)
+	IF !GETBIT(SHOW_INFO_FOLD, 7)
+		CALL NEW_PRINT_SPECIAL_TALENT(ARG:0)
+		CALL SMALL_TITLE("음란")
+		CALL NEW_PRINT_SEX_TALENT(ARG:0)
+		CALL SMALL_TITLE("데일리")
+		CALL NEW_PRINT_DAILY_TALENT(ARG:0)
+		CALL SMALL_TITLE("특수")
+		CALL NEW_PRINT_FALLEN_TALENT(ARG:0)
+	ENDIF
+	PRINTL 
+	CALL SMALL_TITLE("관계", 108)
+	SIF !GETBIT(SHOW_INFO_FOLD, 8)
+		CALL SHOW_PARENTS(ARG:0)
+	PRINTL 
+	CALL SMALL_TITLE("신체", 109)
+	SIF !GETBIT(SHOW_INFO_FOLD, 9)
+		CALL SHOW_BODY(ARG:0)
+	PRINTL 
+	CALL SMALL_TITLE("외", 110)
+	SIF !GETBIT(SHOW_INFO_FOLD, 10)
+		CALL SHOW_OTHER_INFO(ARG:0)
+ENDIF
+
+;-------------------------------------------------
+;캐릭터 ARG:0의 스킬 일람표시
+;-------------------------------------------------
+@SHOW_SKILLS(ARG:0)
+PRINTFORML ◆%ANAME(ARG:0)%의 스킬◆
+LOCAL:2 = 0
+FOR LOCAL, 0, SKILL_GENRE_NUM
+	FOR LOCAL:1, 0, MAX_SKILL_SLOT
+		TRYCCALLFORM SKILL_{SKILL_NO_SLOT:(ARG:0):LOCAL:(LOCAL:1)}_%SKILL_GENRE_ENG:LOCAL%_{SKILL_ID_SLOT:(ARG:0):LOCAL:(LOCAL:1)}_EXIST
+		CATCH
+			CONTINUE
+		ENDCATCH
+		CALL COLOR_LINE
+		SETCOLOR 칼라_선택불가
+		PRINT   · 
+		RESETCOLOR
+		CALL SKILL_EXPLANATION(LOCAL, SKILL_NO_SLOT:(ARG:0):LOCAL:(LOCAL:1), SKILL_ID_SLOT:(ARG:0):LOCAL:(LOCAL:1), 5)
+		LOCAL:2 = 1
+	NEXT
+NEXT
+SIF !LOCAL:2
+	PRINTFORML 
+
+;-------------------------------------------------
+;캐릭터 ARG:0의 성벽 설정 화면  표시 처리만
+;-------------------------------------------------
+@SHOW_TENDENCY_SETTING(ARG:0)
+;1페이지에 표시하는 커맨드수의 설정
+LOCAL:5 = 18
+
+;정의되고 있는 커맨드의 수를 센다
+LOCAL:12 = 0
+FOR LOCAL:0, 0, VARSIZE("TRAINNAME")
+	IF TRAINNAME:(LOCAL:0) != ""
+		LOCAL:12 ++
+	ENDIF
+NEXT
+
+;페이지수의 계산
+FLAG:성벽설정최대페이지 = MAX(LOCAL:12 - 1, 0) / LOCAL:5 + 1
+FLAG:성벽설정페이지수 = LIMIT(FLAG:성벽설정페이지수, 1, FLAG:성벽설정최대페이지)
+
+PRINTFORML ◆%ANAME(ARG:0)%의 성벽 설정◆
+CALL SINGLE_DRAWLINE
+PRINTL   각 커맨드의 실행 회수의 확인과 선호 Lv의 변경이 가능합니다
+PRINTL   선호 Lv가 높을 정도 실행시에 중독충족의 소스가 많이 추가되어 맡기기·역조교시의 실행 확률이 증가합니다
+PRINTL   선호 Lv를 올리는데 필요한 실행 회수는  Lv0→1:10회  Lv1→2:35회  Lv2→3:100회
+CALL SINGLE_DRAWLINE
+PRINTL        < 커맨드 명칭 >       < 플레이어 >        <   타겟   >        <  제삼자  >
+PRINT 　　　　　　  　　　　　　　　　
+PRINTBUTTON "[+]", 10000
+PRINTBUTTON "[-]", 11000
+PRINT 　　　　　　　
+PRINTBUTTON "[+]", 12000
+PRINTBUTTON "[-]", 13000
+PRINT 　　　　　　　
+PRINTBUTTON "[+]", 14000
+PRINTBUTTON "[-]", 15000	
+PRINTL 
+LOCAL:13 = (FLAG:성벽설정페이지수 - 1) * LOCAL:5
+LOCAL:14 = FLAG:성벽설정페이지수 * LOCAL:5
+LOCAL:15 = 0
+LOCAL:16 = 0
+FOR LOCAL:0, 0, 290
+	IF TRAINNAME:(LOCAL:0) != ""
+		IF LOCAL:15 >= LOCAL:13 && LOCAL:15 < LOCAL:14
+			PRINT   
+			IF COM_EXP:(ARG:0):(LOCAL:0) + COM_EXP:(ARG:0):(LOCAL:0 + 1000) + COM_EXP:(ARG:0):(LOCAL:0 + 2000) >= 1
+				PRINTFORM %TRAINNAME:(LOCAL:0), 20, RIGHT%
+				CALL PRINT_TENDENCT_CHANGE_BUTTON(ARG:0, LOCAL:0)
+				CALL PRINT_TENDENCT_CHANGE_BUTTON(ARG:0, LOCAL:0 + 1000)
+				CALL PRINT_TENDENCT_CHANGE_BUTTON(ARG:0, LOCAL:0 + 2000)
+			ELSE
+				CALL CHECK_COM_KNOWLEDGE(ARG:0, LOCAL:0)
+				IF RESULT
+					SETCOLOR 0x808080
+					PRINTFORM %TRAINNAME:(LOCAL:0), 20, RIGHT%        미경험    지식있음
+				ELSE
+					SETCOLOR 0x505050
+					PRINTFORM %TRAINNAME:(LOCAL:0), 20, RIGHT%        미경험    지식없음
+				ENDIF
+				RESETCOLOR
+			ENDIF
+			PRINTL 
+			LOCAL:16 ++
+		ENDIF
+		LOCAL:15 ++
+	ENDIF
+NEXT
+FOR LOCAL:0, LOCAL:16, LOCAL:5
+	PRINTL 
+NEXT
+CALL SINGLE_DRAWLINE
+PRINT   
+IF FLAG:성벽설정페이지수 >= 2
+	PRINTBUTTON "101[←이전페이지]", 101
+ELSE
+	SETCOLOR 칼라_선택불가
+	PRINT 101[←이전페이지]
+	RESETCOLOR
+ENDIF
+PRINTFORM         page{FLAG:성벽설정페이지수, 2, RIGHT}/{FLAG:성벽설정최대페이지, 2, LEFT}       
+IF FLAG:성벽설정페이지수 < FLAG:성벽설정최대페이지
+	PRINTBUTTON "102[다음페이지→]", 102
+ELSE
+	SETCOLOR 칼라_선택불가
+	PRINT 102[다음페이지→]
+	RESETCOLOR
+ENDIF
+PRINTL 
+
+;-------------------------------------------------
+;성벽 설정 화면에 있어서의 기호 Lv변경 버튼의 묘화 ARG:0=캐릭터 번호, ARG:1=배열 번호
+;-------------------------------------------------
+@PRINT_TENDENCT_CHANGE_BUTTON(ARG:0, ARG:1)
+PRINTFORM {COM_EXP:(ARG:0):(ARG:1) / 10, 8, RIGHT}회 
+
+SELECTCASE COM_TENDENCY:(ARG:0):(ARG:1)
+	CASE 1
+		SETCOLOR 0x00FF00
+	CASE 2
+		SETCOLOR 칼라_오렌지
+	CASE 3
+		SETCOLOR 0xFF00FF
+ENDSELECT
+PRINTFORM Lv{COM_TENDENCY:(ARG:0):(ARG:1)}
+RESETCOLOR
+
+LOCAL:0 = COM_TENDENCY:(ARG:0):(ARG:1)
+LOCAL:1 = COM_EXP:(ARG:0):(ARG:1) / 10
+IF (LOCAL:0 <= 0 && LOCAL:1 >= 10) || (LOCAL:0 <= 1 && LOCAL:1 >= 35) || (LOCAL:0 <= 2 && LOCAL:1 >= 100)
+	PRINTBUTTON "[+]", ARG:1 + 3000
+ELSE
+	SETCOLOR 칼라_선택불가
+	PRINTPLAIN [+]
+	RESETCOLOR
+ENDIF
+IF LOCAL:0 >= 1
+	PRINTBUTTON "[-]", ARG:1 + 6000
+ELSE
+	SETCOLOR 칼라_선택불가
+	PRINTPLAIN [-]
+	RESETCOLOR
+ENDIF
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 이름을 표시
+;-------------------------------------------------
+@SHOW_HEADER(ARG:0)
+;이름의 표시
+IF CSTR:(ARG:0):0 == "" && CSTR:(ARG:0):1 == "" && NAME:(ARG:0) == CALLNAME:(ARG:0)
+	PRINTFORM 〇%ANAME(ARG:0), 30, LEFT%
+ELSE
+	;성명
+	IF !TALENT:(ARG:0):성명역전
+		LOCALS:0 =%CSTR:(ARG:0):0%
+		SIF CSTR:(ARG:0):5 != "" && CSTR:(ARG:0):0 != CSTR:(ARG:0):5
+			LOCALS:0 = %LOCALS:0%(%TOHALF(CSTR:(ARG:0):5)%)
+		SIF LOCALS:0 != ""
+			LOCALS:0 = %LOCALS:0 + " "%
+		LOCALS:0 = %LOCALS:0%%CSTR:(ARG:0):1%
+		SIF CSTR:(ARG:0):6 != "" && CSTR:(ARG:0):1 != CSTR:(ARG:0):6
+			LOCALS:0 = %LOCALS:0%(%TOHALF(CSTR:(ARG:0):6)%)
+	ELSE
+		LOCALS:0 =%CSTR:(ARG:0):1%
+		SIF CSTR:(ARG:0):6 != "" && CSTR:(ARG:0):1 != CSTR:(ARG:0):6
+			LOCALS:0 = %LOCALS:0%(%TOHALF(CSTR:(ARG:0):6)%)
+		SIF LOCALS:0 != ""
+			LOCALS:0 = %LOCALS:0 + " "%
+		LOCALS:0 = %LOCALS:0%%CSTR:(ARG:0):0%
+		SIF CSTR:(ARG:0):5 != "" && CSTR:(ARG:0):0 != CSTR:(ARG:0):5
+			LOCALS:0 = %LOCALS:0%(%TOHALF(CSTR:(ARG:0):5)%)
+	ENDIF
+
+	;자
+	IF CSTR:(ARG:0):2 != ""
+		LOCALS:0 = %LOCALS:0% %CSTR:(ARG:0):2%
+		SIF CSTR:(ARG:0):7 != ""
+			LOCALS:0 = %LOCALS:0%(%TOHALF(CSTR:(ARG:0):7)%)
+	ENDIF
+	PRINTFORM 〇%LOCALS:0, 40, LEFT%
+ENDIF
+
+LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:(ARG:0):소속)
+IF LOCAL:4 >= 0
+	LOCALS:0 = %ANAME(LOCAL:4), MAX_CHARANAME_LENGTH, LEFT%
+ELSE
+	LOCALS:0 = %"----", MAX_CHARANAME_LENGTH, LEFT%
+ENDIF
+PRINTFORM 소속:%LOCALS:0%
+LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:(ARG:0):포로처)
+IF LOCAL:4 >= 0
+	LOCALS:0 = %ANAME(LOCAL:4)%
+ELSE
+	LOCALS:0 = %"----"%
+ENDIF
+IF LOCAL:4 >= 0
+	IF CFLAG:(ARG:0):연금중 == 0
+		LOCALS:0 = %LOCALS:0+"(감금)"%
+	ELSE
+		LOCALS:0 = %LOCALS:0+"(연금)"%
+	ENDIF
+ENDIF
+PRINTFORM 포로:%LOCALS:0, MAX_CHARANAME_LENGTH+6, LEFT%
+
+CALL PRINT_SEX(ARG:0, 0, 0, 10)
+
+LOCALS:0 = 구분:
+IF ARG:0 != MASTER
+	IF IS_FIXED_CHARA(ARG:0)
+		SETCOLOR 칼라_주의
+		LOCALS:0 = 고정
+	ELSEIF IS_RANDOM_CHARA(ARG:0)
+		SETCOLOR 칼라_시안
+		LOCALS:0 = 범용
+	ELSEIF IS_CHILD(ARG:0)
+		SETCOLOR 0x00FF80
+		LOCALS:0 = 아이
+	ELSEIF TALENT:(ARG:0):커스텀캐릭터
+		SETCOLOR 칼라_오렌지
+		LOCALS:0 = 커스텀
+	ELSE
+		SETCOLOR 칼라_오렌지
+		LOCALS:0 = 특수
+	ENDIF
+ENDIF
+PRINTFORM %LOCALS:0%
+RESETCOLOR
+
+PRINTL
+
+
+CALL SHOW_TAG(ARG:0)
+PRINTL
+
+CALL SINGLE_DRAWLINE
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 태그를 표시
+;-------------------------------------------------
+@SHOW_TAG(ARG:0)
+FOR LOCAL, 0, MAX_TAG
+	SIF TAG:(ARG:0):LOCAL == -1
+		CONTINUE
+	PRINTPLAINFORM [%TAG_NAME:(TAG:(ARG:0):LOCAL)%] 
+NEXT
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 부모님을 표시
+;-------------------------------------------------
+@SHOW_PARENTS(ARG:0)
+
+LOCAL:2 = ID_TO_CHARA(CFLAG:(ARG:0):부친)
+LOCAL:3 = ID_TO_CHARA(CFLAG:(ARG:0):모친)
+IF LOCAL:2 >= 0
+	PRINTFORM 아버지:%ANAME(LOCAL:2), MAX_CHARANAME_LENGTH, LEFT%
+;특수 캐릭터
+ELSE
+	PRINTFORM 아버지:%ID_TO_SP_NAME(CFLAG:(ARG:0):부친), MAX_CHARANAME_LENGTH, LEFT%
+ENDIF
+
+IF LOCAL:3 >= 0
+	PRINTFORM %SMALL_TITLE_SPACE(1)%어머니:%ANAME(LOCAL:3), MAX_CHARANAME_LENGTH, LEFT%
+ELSE
+	PRINTFORM %SMALL_TITLE_SPACE(1)%어머니:%ID_TO_SP_NAME(CFLAG:(ARG:0):모친), MAX_CHARANAME_LENGTH, LEFT%
+ENDIF
+PRINTL
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 BASE 관계를 표시
+;-------------------------------------------------
+@SHOW_BASE(ARG:0)
+
+PRINTFORM 체력:
+CALL PRINT_GRADATIONBAR(BASE:(ARG:0):체력, MAXBASE:(ARG:0):체력, 10, 0xFF5E7E, , 1)
+PRINTFORM {BASE:(ARG:0):체력,6, RIGHT}/{MAXBASE:(ARG:0):체력, 6, RIGHT}
+
+PRINTFORM %SMALL_TITLE_SPACE(1)%낮주도도 
+CALL PRINT_SLIDER(-1000, 1000, ABL:(ARG:0):주도도Ｎ, 30, 0xC040C0, 0x40C040)
+PRINTFORM {ABL:(ARG:0):주도도Ｎ, 5} 
+
+IF ABL:(ARG:0):주도도Ｎ <= -500
+	PRINT 초무기력으로
+ELSEIF ABL:(ARG:0):주도도Ｎ <= -300
+	PRINT 무기력으로
+ELSEIF ABL:(ARG:0):주도도Ｎ <= -100
+	PRINT 침착했다
+ELSEIF ABL:(ARG:0):주도도Ｎ < 100
+	PRINT 친구 감각으로
+ELSEIF ABL:(ARG:0):주도도Ｎ < 300
+	PRINT 건강이 좋다
+ELSEIF ABL:(ARG:0):주도도Ｎ < 500
+	PRINT 강해
+ELSE
+	PRINT 초강기분으로
+ENDIF
+
+PRINTL 
+
+PRINTFORM %SMALL_TITLE_SPACE()%기력:
+CALL PRINT_GRADATIONBAR(BASE:(ARG:0):기력, MAXBASE:(ARG:0):기력, 10, 0x60A74E)
+PRINTFORM {BASE:(ARG:0):기력,6, RIGHT}/{MAXBASE:(ARG:0):기력, 6, RIGHT}
+
+PRINTFORM %SMALL_TITLE_SPACE(1)%밤도착도 
+CALL PRINT_SLIDER(0, 1000, ABL:(ARG:0):도착도, 30, 0x4040C0, 0x4040C0)
+PRINTFORM {ABL:(ARG:0):도착도, 5} 
+
+IF ABL:(ARG:0):도착도 >= 800
+	PRINT 변태적인
+ELSEIF ABL:(ARG:0):도착도 >= 500
+	PRINT 도착적인
+ELSEIF ABL:(ARG:0):도착도 >= 300
+	PRINT 조금 자극적인
+ELSEIF ABL:(ARG:0):도착도 >= 100
+	PRINT 호기심 왕성한
+ELSE
+	PRINT 달달한 
+ENDIF
+
+PRINTL 
+
+PRINTFORM %SMALL_TITLE_SPACE()%정신:
+CALL PRINT_GRADATIONBAR(BASE:(ARG:0):정신력, MAXBASE:(ARG:0):정신력, 10, 0x5E9AFF)
+PRINTFORM {BASE:(ARG:0):정신력,6, RIGHT}/{MAXBASE:(ARG:0):정신력, 6, RIGHT}
+
+PRINTFORM %SMALL_TITLE_SPACE(1)%밤주도도 
+CALL PRINT_SLIDER(-1000, 1000, ABL:(ARG:0):주도도Ｕ, 30, 0xC040C0, 0x40C040)
+PRINTFORM {ABL:(ARG:0):주도도Ｕ, 5} 
+
+IF ABL:(ARG:0):주도도Ｕ <= -500
+	PRINT 도M
+ELSEIF ABL:(ARG:0):주도도Ｕ <= -300
+	PRINT Ｍ
+ELSEIF ABL:(ARG:0):주도도Ｕ <= -100
+	PRINT 미Ｍ
+ELSEIF ABL:(ARG:0):주도도Ｕ < 100
+	PRINT 리바
+ELSEIF ABL:(ARG:0):주도도Ｕ < 300
+	PRINT 미Ｓ
+ELSEIF ABL:(ARG:0):주도도Ｕ < 500
+	PRINT Ｓ
+ELSE
+	PRINT 드Ｓ
+ENDIF
+
+PRINTL 
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 외교 인상을 표시
+;-------------------------------------------------
+@SHOW_RELATION(ARG:0)
+
+SIF FLAG:관전모드
+	RETURN
+
+LOCAL = GET_COUNTRY_BOSS(CFLAG:(ARG:0):소속)
+LOCAL:1 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+
+PRINTFORM %ANAME(MASTER), MAX_CHARANAME_LENGTH, LEFT%
+
+SIF LOCAL != LOCAL:1 && LOCAL:1 != MASTER && LOCAL:1 != -1
+	PRINTFORM %ANAME(LOCAL:1), MAX_CHARANAME_LENGTH, LEFT%
+
+SIF IS_COUNTRY(CFLAG:(ARG:0):소속) && LOCAL != MASTER && LOCAL != (ARG:0) && LOCAL != -1
+	PRINTFORM %ANAME(LOCAL), MAX_CHARANAME_LENGTH, LEFT%
+
+PRINTL
+
+PRINTFORM %SMALL_TITLE_SPACE()%좋아
+CALL PRINT_GRADATIONBAR(REL_LIKE:(ARG:0):MASTER, 1500, 10, 0xFF5E7E)
+PRINTFORM %TOSTR_SPACE(MAX_CHARANAME_LENGTH - 12)%
+
+IF LOCAL != LOCAL:1 && LOCAL:1 != MASTER && LOCAL:1 != -1
+	PRINTFORM 좋아
+	CALL PRINT_GRADATIONBAR(REL_LIKE:(ARG:0):(LOCAL:1), 1500, 10, 0xFF5E7E)
+	PRINTFORM %TOSTR_SPACE(MAX_CHARANAME_LENGTH - 12)%
+ENDIF
+
+IF IS_COUNTRY(CFLAG:(ARG:0):소속) && LOCAL != MASTER && LOCAL != (ARG:0) && LOCAL != -1
+	PRINTFORM 좋아
+	CALL PRINT_GRADATIONBAR(REL_LIKE:(ARG:0):LOCAL, 1500, 10, 0xFF5E7E)
+	PRINTFORM %TOSTR_SPACE(MAX_CHARANAME_LENGTH - 12)%
+ENDIF
+
+
+
+PRINTL
+
+PRINTFORM %SMALL_TITLE_SPACE()%싫어
+CALL PRINT_GRADATIONBAR(REL_HATE:(ARG:0):MASTER, 1500, 10, 0x5E9AFF)
+PRINTFORM %TOSTR_SPACE(MAX_CHARANAME_LENGTH - 12)%
+
+IF LOCAL != LOCAL:1 && LOCAL:1 != MASTER && LOCAL:1 != -1
+	PRINTFORM 싫어
+	CALL PRINT_GRADATIONBAR(REL_HATE:(ARG:0):(LOCAL:1), 1500, 10, 0x5E9AFF)
+	PRINTFORM %TOSTR_SPACE(MAX_CHARANAME_LENGTH - 12)%
+ENDIF
+
+IF IS_COUNTRY(CFLAG:(ARG:0):소속) && LOCAL != MASTER && LOCAL != (ARG:0) && LOCAL != -1
+	PRINTFORM 싫어
+	CALL PRINT_GRADATIONBAR(REL_HATE:(ARG:0):LOCAL, 1500, 10, 0x5E9AFF)
+	PRINTFORM %TOSTR_SPACE(MAX_CHARANAME_LENGTH - 12)%
+ENDIF
+
+PRINTL
+
+
+
+;↓바가 작고 이해하기 어려운 것 같다면 되돌려 주세요
+;（정신력 게이지의 표시. 포로 시한정）
+;IF CFLAG:(ARG:0):포로처 == CFLAG:MASTER:소속 && CFLAG:(ARG:0):연금중 == 0 || CFLAG:(ARG:0):외교 조교 카운터
+;	PRINTFORM   정신력 
+;	CALL PRINT_SHORT_MIND(ARG:0)
+;	PRINTL 
+;ENDIF
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터와의 친교의 깊이를 표시
+;-------------------------------------------------
+@SHOW_FRIENDSHIP(ARG:0)
+
+PRINTFORML 호감도:{CFLAG:(ARG:0):호감도, 12, LEFT}     의존도:{CFLAG:(ARG:0):의존도, 12, LEFT}     종속도:{CFLAG:(ARG:0):종속도, 12, LEFT}     지배도:{CFLAG:(ARG:0):지배도, 12, LEFT}
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 육체에 대해 표시
+;-------------------------------------------------
+@SHOW_BODY(ARG:0)
+
+CALL SHOW_BODYSIZE(ARG:0)
+
+PRINTFORM %SMALL_TITLE_SPACE()%
+PRINTFORM 체격:%TOSTR_BODYSIZE(TALENT:(ARG:0):체격), 12, LEFT%
+PRINTFORM 체형:%TOSTR_BODYTYPE(TALENT:(ARG:0):체형), 12, LEFT%
+PRINTL
+
+PRINTFORM %SMALL_TITLE_SPACE()%
+SIF HAS_VAGINA(ARG:0)
+	PRINTFORM 유방:%TOSTR_BUSTSIZE(GET_BUSTSIZE(ARG:0)), 12, LEFT%
+SIF HAS_PENIS(ARG:0)
+	PRINTFORM 음경:%TOSTR_PENISSIZE(GET_PENISSIZE(ARG:0)), 12, LEFT%
+PRINTFORM 엉덩이:%TOSTR_HIPSIZE(GET_HIPSIZE(ARG:0)), 12, LEFT%
+
+IF HAS_VAGINA(ARG:0)
+	PRINTFORM 질  :%TOSTR_TIGHTNESS(TALENT:(ARG:0):Ｖ조임), 12, LEFT% 
+ENDIF
+PRINTFORM 애널:%TOSTR_TIGHTNESS(TALENT:(ARG:0):Ａ조임), 12, LEFT% 
+PRINTFORM 음모:
+CALL COLOR_PRINT(@"%GET_INMOU_NAME(TALENT:(ARG:0):음모현재치), 12, LEFT%", TALENT:(ARG:0):음모현재치 == 음모_하트형 ? 칼라_핑크 # GETDEFCOLOR())
+PRINTFORM 겨드랑이털:
+CALL PRINT_ARMPIT(ARG:0)
+PRINTL
+
+PRINTFORM %SMALL_TITLE_SPACE()%머리색:
+CALL PRINT_HAIR_COLOR(TALENT:(ARG:0):머리색)
+PRINTFORM 머리길이:%TOSTR_HAIR_LENGTH(TALENT:(ARG:0):머리길이), 12, LEFT% 
+PRINTL
+
+SIF HAS_VAGINA(ARG:0)
+	PRINTFORML %SMALL_TITLE_SPACE()%위험일:%TOFULL(TOSTR(TALENT:(ARG:0):위험일))%, %TOFULL(TOSTR(TALENT:(ARG:0):위험일 + 5))%
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 그 외 분류하기 어려운 걸에 임해서 표시
+;-------------------------------------------------
+
+@SHOW_OTHER_INFO(ARG:0)
+
+LOCAL:1 = 0
+PRINTFORM 기호:
+FOR LOCAL, 0, VARSIZE("SEXUAL_PREFERENCE_EXP")
+	IF GETBIT(SEXUAL_PREFERENCE:(ARG:0):0, LOCAL)
+		PRINTFORM <%SEXUAL_PREFERENCE_STR:LOCAL%>
+		LOCAL:1 = 1
+	ENDIF
+NEXT
+IF LOCAL:1 == 0
+	PRINTFORM 없음
+ENDIF
+PRINTL
+
+PRINTFORM %SMALL_TITLE_SPACE()%문신:
+CALL PRINT_TATTOO(ARG:0)
+PRINTL
+
+PRINTFORM %SMALL_TITLE_SPACE()%피어스:
+CALL PRINT_PIERCE(ARG:0)
+PRINTL 
+
+LOCAL:0 = 0
+
+IF TALENT:(ARG:0):임신
+	SETCOLOR 칼라_핑크
+	PRINTFORM %SMALL_TITLE_SPACE()%
+	IF CFLAG:(ARG:0):행동불능상태 == 행동불능_임월
+		PRINTFORM 임월:
+	ELSE
+		PRINTFORM 임신:
+	ENDIF
+	PRINTFORM \@ID_TO_CHARA(CFLAG:(ARG:0):아이의부친) != -1 ? %ANAME(ID_TO_CHARA(CFLAG:(ARG:0):아이의부친))% # %GET_SPERM_NAME(CFLAG:(ARG:0):아이의부친)% \@
+	PRINTFORM ({CFLAG:(ARG:0):임신기간}/\@ GETBIT(TALENT:(ARG:0):음란계, 소질_음란_양질모태) ? 3 # 7\@)
+	RESETCOLOR
+	LOCAL:0 = 1
+ENDIF
+
+IF TALENT:(ARG:0):모유체질
+	IF !LOCAL:0
+		PRINTFORM %SMALL_TITLE_SPACE()%
+	ELSE
+		PRINTFORM  
+	ENDIF
+	SETCOLOR 칼라_핑크
+	PRINTFORM <모유체질>
+	SIF CFLAG:(ARG:0):일시적모유체질
+		PRINTFORM (일시적)
+	LOCAL:0 = 1
+	RESETCOLOR
+ENDIF
+
+SIF LOCAL:0
+	PRINTL
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터경험을 표시
+;-------------------------------------------------
+@NEW_PRINT_EXP(ARG:0)
+LOCAL:1 = 0
+FOR LOCAL:0, 0, 100
+	;다시 늘어놓은 EXP를 LOCAL:2에 대입
+	LOCAL:2 = GET_SORTED_EXP(LOCAL:0)
+
+	;대응하는 EXP가 없으면 스킵
+	IF LOCAL:2 < 0
+		CONTINUE
+	ENDIF
+
+	IF EXP:(ARG:0):(LOCAL:2) > 0
+		;개행 판정
+		IF LOCAL:1 > 0 && LOCAL:1 % 4 == 0
+			PRINTL 
+			PRINTFORM %SMALL_TITLE_SPACE()%
+		;최초의 1회째만 인덴트 없음
+		ELSEIF LOCAL:1 == 0
+			PRINTFORM 
+		;개행하지 않는 경우
+		ELSE
+			PRINTFORM %SMALL_TITLE_SPACE(1)%
+		ENDIF
+		LOCAL:1 ++
+
+		CALL VALUE_FORM, EXP:(ARG:0):(LOCAL:2), "경험"
+		PRINTFORM %EXPNAME:(LOCAL:2), 12, LEFT%:%RESULTS, 6% 
+	ENDIF
+NEXT
+
+IF LOCAL:1 == 0
+	PRINTFORM 없음
+ENDIF
+PRINTL 
+
+;------------------------
+;ARG:0번의 캐릭터의 처음의 상대를 표시
+;-------------------------
+@NEW_PRINT_SEXUAL_EXPERIENCE(ARG:0)
+
+PRINTFORM Ｍ:%SEXUAL_EXPERIENCE:(ARG:0):첫체험_키스, 27, LEFT% 
+
+IF HAS_PENIS(ARG:0)
+	PRINTFORM Ｐ:%SEXUAL_EXPERIENCE:(ARG:0):첫체험_동정, 18, LEFT% 
+ENDIF
+
+IF HAS_VAGINA(ARG:0)
+	PRINTFORM Ｖ:%SEXUAL_EXPERIENCE:(ARG:0):첫체험_처녀, 18, LEFT% 
+ENDIF
+
+PRINTFORM Ａ:%SEXUAL_EXPERIENCE:(ARG:0):첫체험_애널처녀, 18, LEFT% 
+PRINTL
+
+;------------------------
+;ARG:0번의 캐릭터의 처음의 상대를 표시
+;-------------------------
+@NEW_PRINT_LAST_EXPERIENCE(ARG:0)
+
+PRINTFORM Ｍ:%SEXUAL_LAST_EXPERIENCE:(ARG:0):첫체험_키스, 27, LEFT% 
+
+IF HAS_PENIS(ARG:0)
+	PRINTFORM Ｐ:%SEXUAL_LAST_EXPERIENCE:(ARG:0):첫체험_동정, 18, LEFT% 
+ENDIF
+
+IF HAS_VAGINA(ARG:0)
+	PRINTFORM Ｖ:%SEXUAL_LAST_EXPERIENCE:(ARG:0):첫체험_처녀, 18, LEFT% 
+ENDIF
+
+PRINTFORM Ａ:%SEXUAL_LAST_EXPERIENCE:(ARG:0):첫체험_애널처녀, 18, LEFT% 
+PRINTL
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 SLG계 능력을 표시
+;-------------------------------------------------
+@NEW_PRINT_SLG_ABL(ARG:0)
+;표시하는 ABL의 줄 순서 리스트( 10마다 개행)
+#DIM SHOW_LIST, 30
+VARSET SHOW_LIST, -1
+SHOW_LIST:0 = GETNUM(ABL, "무투")
+SHOW_LIST:1 = GETNUM(ABL, "방위")
+SHOW_LIST:2 = GETNUM(ABL, "지략")
+SHOW_LIST:3 = GETNUM(ABL, "정치")
+SHOW_LIST:4 = GETNUM(ABL, "요술")
+SHOW_LIST:5 = GETNUM(ABL, "요리")
+SHOW_LIST:6 = GETNUM(ABL, "가창")
+SHOW_LIST:7 = GETNUM(ABL, "야심")
+
+PRINT 평가:
+CALL TMP_PRINT_CHARA_STARS(ARG:0)
+
+PRINTFORML %TOSTR_SPACE(7)%성장형: %TOSTR_GROWTYPE(TALENT:(ARG:0):300)%타입(%TOSTR_GROWTYPE_B(TALENT:(ARG:0):300)%에 적정)
+
+PRINTFORM %SMALL_TITLE_SPACE(1)%
+FOR LOCAL:0, 0, VARSIZE("SHOW_LIST")
+	;대응하는 ABL가 없으면 스킵
+	SIF SHOW_LIST:(LOCAL:0) < 0
+		CONTINUE
+	;개행
+	IF LOCAL:0 > 0 && LOCAL:0 % 4 == 0
+		PRINTL 
+		PRINTFORM %SMALL_TITLE_SPACE(1)%
+	ENDIF
+
+	LOCAL:2 = SHOW_LIST:(LOCAL:0)
+
+	;3자리수까지는 right justify, 그 이상은 왼쪽 채우기로 표시
+	IF ABL:(ARG:0):(LOCAL:2) <= 99
+		PRINTFORM %SMALL_TITLE_SPACE(1)%%ABLNAME:(LOCAL:2), 6, LEFT%:{ABL:(ARG:0):(LOCAL:2), 3} 
+	ELSE
+		PRINTFORM %SMALL_TITLE_SPACE(1)%%ABLNAME:(LOCAL:2), 6, LEFT%:{ABL:(ARG:0):(LOCAL:2), 4, LEFT}
+	ENDIF
+	;랭크 짓고
+	CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:(ARG:0):(LOCAL:2))
+NEXT
+PRINTL 
+;PRINTFORML     성격: %TOSTR_CHARATYPE(TALENT:(ARG:0):301)%
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 능력을 표시
+;-------------------------------------------------
+@NEW_PRINT_ABL(ARG:0)
+;표시하는 ABL의 줄 순서 리스트( 10마다 개행)
+#DIM SHOW_LIST, 100
+
+VARSET SHOW_LIST, -1
+
+
+SHOW_LIST:0 = 0
+SHOW_LIST:1 = 1
+SHOW_LIST:2 = 2
+SHOW_LIST:3 = 3
+SHOW_LIST:4 = 4
+SHOW_LIST:5 = 12
+SHOW_LIST:6 = 13
+SHOW_LIST:7 = 14
+SHOW_LIST:8 = 20
+SHOW_LIST:9 = 21
+SHOW_LIST:10 = 22
+SHOW_LIST:11 = 23
+SHOW_LIST:12 = 24
+SHOW_LIST:13 = 25
+SHOW_LIST:14 = 26
+SHOW_LIST:15 = 27
+SHOW_LIST:16 = 28
+SHOW_LIST:17 = 29
+SHOW_LIST:18 = 30
+SHOW_LIST:19 = 31
+SHOW_LIST:20 = 33
+SHOW_LIST:21 = 34
+SHOW_LIST:22 = 35
+SHOW_LIST:23 = 32
+FOR LOCAL:0, 0, 100
+	;대응하는 ABL가 없으면 스킵
+	SIF SHOW_LIST:(LOCAL:0) < 0
+		CONTINUE
+	;개행
+	IF LOCAL:0 > 0 && LOCAL:0 % 6 == 0
+		PRINTL 
+		PRINTFORM %SMALL_TITLE_SPACE()%
+	;최초의 1회째는 인덴트 없음
+	ELSEIF LOCAL:0 == 0
+		PRINTFORM 
+	;개행 없음
+	ELSE
+		PRINTFORM %SMALL_TITLE_SPACE(1)%
+	ENDIF
+
+	LOCAL:2 = SHOW_LIST:(LOCAL:0)
+
+	;3자리수까지는 right justify, 그 이상은 왼쪽 채우기로 표시
+	IF ABL:(ARG:0):(LOCAL:2) <= 99
+		PRINTFORM %ABLNAME:(LOCAL:2), 6, LEFT%:{ABL:(ARG:0):(LOCAL:2), 3} 
+	ELSE
+		PRINTFORM %ABLNAME:(LOCAL:2), 6, LEFT%:{ABL:(ARG:0):(LOCAL:2), 4, LEFT}
+	ENDIF
+	;랭크 짓고
+	IF LOCAL:2 == GETNUM(ABL, "성지식")
+		CALL PRINT_ALPHABET_RANK(랭크_성지식, ABL:(ARG:0):(LOCAL:2))
+	ELSE
+		CALL PRINT_ALPHABET_RANK(랭크_그외, ABL:(ARG:0):(LOCAL:2))
+	ENDIF
+NEXT
+PRINTL 
+
+;-------------------------------------------------
+;수치를 슬라이더로서 표시하는 함수
+;ARG:0=슬라이더의 최소치, ARG:1=슬라이더의 최대치, ARG:2=슬라이더의 값, ARG:3=슬라이더의 폭, ARG:4=바의 색(정), ARG:5=바의 색(부)
+;-------------------------------------------------
+@PRINT_SLIDER(ARG:0, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5)
+;슬라이더의 위치를 사사오입으로 요구한다
+LOCAL:2 = LIMIT((ARG:2 - ARG:0) * (ARG:3 * 2 + 1) / ((ARG:1 - ARG:0) * 2), 0, ARG:3 - 1)
+
+FOR LOCAL:0, 0, ARG:3
+	IF LOCAL:0 == LOCAL:2
+		PRINTFORM %UNICODE(0x2588)%
+	ELSE
+		LOCAL:3 = ARG:0 + (ARG:1 - ARG:0) * (LOCAL:0 * 2 + 1) / (ARG:3 * 2)
+
+		IF LOCAL:3 >= 0
+			SETCOLOR ARG:4
+		ELSE
+			SETCOLOR ARG:5
+		ENDIF
+;원본
+;		FONTSTYLE 4
+;		IF LOCAL:0 == 0
+;			PRINTFORM %UNICODE(0x25E3)%
+;		ELSEIF LOCAL:0 == ARG:3 - 1
+;			PRINTFORM %UNICODE(0x25E2)%
+;		ELSE
+;			PRINTFORM  
+;		ENDIF
+;		FONTSTYLE 0
+;모바일용 수정
+		IF LOCAL:0 == 0
+			PRINT |
+		ELSEIF LOCAL:0 == ARG:3 - 1
+			PRINT |
+		ELSE
+			PRINT -
+		ENDIF
+	ENDIF
+	RESETCOLOR
+NEXT
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 소질을 표시
+;-------------------------------------------------
+@NEW_PRINT_TALENT(ARG:0)
+#DIMS TN
+
+LOCAL:1 = 0
+FOR LOCAL:0, 1, 300
+	IF TALENT:(ARG:0):(LOCAL:0)
+		TN = %TALENTNAME:(LOCAL:0)%
+
+		SIF TN == ""
+			CONTINUE
+
+		;비표시소질의 스킵
+		IF !HAS_VAGINA(ARG:0) && (TN == "처녀" || TN == "음호" || TN == "Ｖ민감" || TN == "Ｖ둔감")
+			CONTINUE
+		ELSEIF TN == "동정" || TN == "페니스사이즈"
+			CONTINUE
+		ELSEIF TN == "가슴크기"
+			CONTINUE
+		ELSEIF HAS_VAGINA(ARG:0) && TN == "잉태가능"
+			CONTINUE
+		ELSEIF TN == "처녀" || TN == "애널처녀" || TN == "키스미경험"　|| TN == "동정"
+			CONTINUE
+		ELSEIF TN == "연모" || TN == "친애" || TN == "복종" || TN == "예속" || TN == "연인" || TN == "낙인" || TN == "주인" || TN == "소유자"
+			CONTINUE
+		ENDIF
+
+		IF (TN == "정실" || TN == "첩") && IS_HUSBAND(ARG:0)
+			TN = 남편
+		ELSEIF TN == "처녀" && TALENT:(ARG:0):(LOCAL:0) == 2
+			TN = 무자각비처녀
+		ELSEIF TN == "동정" && TALENT:(ARG:0):(LOCAL:0) == 2
+			TN = 무자각비동정
+		ENDIF
+
+		;개행 판정
+		LOCAL:3 = STRLENS(TN) + 3
+		LOCAL:1 += LOCAL:3
+		IF LOCAL:1 >= 95
+			LOCAL:1 = LOCAL:3
+			PRINTL 
+			PRINTFORM %SMALL_TITLE_SPACE()%
+		ENDIF
+
+		PRINTFORM <%TN%> 
+	ENDIF
+NEXT
+PRINTL 
+
+
+
+
+;-------------------------------------------------
+;ARG:0번의 함락·특수 세력 함락·데일리 함락소질을 일람표시
+;-------------------------------------------------
+@NEW_PRINT_SPECIAL_TALENT(ARG:0)
+#DIM 표시
+#DIMS TN
+#DIM 표시소질 = GETNUM(TALENT, "연모"), GETNUM(TALENT, "친애"), GETNUM(TALENT, "복종"), GETNUM(TALENT, "예속"), GETNUM(TALENT, "연인"), GETNUM(TALENT, "낙인"), GETNUM(TALENT, "주인"), GETNUM(TALENT, "소유자")
+LOCAL:1 = 0
+표시 = 0
+FOR LOCAL:0, 0, VARSIZE("표시소질")
+	IF TALENT:(ARG:0):(표시소질:LOCAL)
+		TN = %TALENTNAME:(표시소질:LOCAL)%
+		;개행 판정
+		LOCAL:3 = STRLENS(TN) + 3
+		LOCAL:1 += LOCAL:3
+		IF LOCAL:1 >= 95
+			LOCAL:1 = LOCAL:3
+			PRINTL 
+			PRINTFORM %SMALL_TITLE_SPACE()%
+		ENDIF
+		PRINTFORM <%TN%> 
+		표시 = 1
+	ENDIF
+NEXT
+SIF !표시
+	PRINTFORM 없음
+PRINTL
+
+@NEW_PRINT_SEX_TALENT(ARG:0)
+#DIM 표시
+#DIMS TN
+LOCAL:1 = 0
+표시 = 0
+FOR LOCAL:0, 0, VARSIZE("SEX_TALENT_NAME")
+	IF GETBIT(TALENT:(ARG:0):음란계, LOCAL) && SEX_TALENT_NAME:(LOCAL:0) != ""
+		TN = %SEX_TALENT_NAME:(LOCAL:0)%
+		;개행 판정
+		LOCAL:3 = STRLENS(TN) + 3
+		LOCAL:1 += LOCAL:3
+		IF LOCAL:1 >= 95
+			LOCAL:1 = LOCAL:3
+			PRINTL 
+			PRINTFORM %SMALL_TITLE_SPACE()%
+		ENDIF
+		PRINTFORM <%TN%> 
+		표시 = 1
+	ENDIF
+NEXT
+SIF !표시
+	PRINTFORM 없음
+PRINTL
+
+@NEW_PRINT_DAILY_TALENT(ARG:0)
+#DIM 표시
+#DIMS TN
+LOCAL:1 = 0
+표시 = 0
+FOR LOCAL:0, 0, VARSIZE("DAILY_TALENT_NAME")
+	IF GETBIT(TALENT:(ARG:0):데일리계, LOCAL) && DAILY_TALENT_NAME:LOCAL != ""
+		TN = %DAILY_TALENT_NAME:(LOCAL:0)%
+		;개행 판정
+		LOCAL:3 = STRLENS(TN) + 3
+		LOCAL:1 += LOCAL:3
+		IF LOCAL:1 >= 95
+			LOCAL:1 = LOCAL:3
+			PRINTL 
+			PRINTFORM %SMALL_TITLE_SPACE()%
+		ENDIF
+		PRINTFORM <%TN%> 
+		표시 = 1
+	ENDIF
+NEXT
+SIF !표시
+	PRINTFORM 없음
+PRINTL
+
+@NEW_PRINT_FALLEN_TALENT(ARG:0)
+#DIM 표시
+#DIMS TN
+LOCAL:1 = 0
+표시 = 0
+FOR LOCAL:0, 0, MAX_SP_COUNTRY
+	IF GETBIT(TALENT:(ARG:0):특수세력함락계, LOCAL) && SP_FALLEN_TALENT_NAME:(LOCAL:0) != ""
+		TN = %SP_FALLEN_TALENT_NAME:(LOCAL:0)%
+		;개행 판정
+		LOCAL:3 = STRLENS(TN) + 3
+		LOCAL:1 += LOCAL:3
+		IF LOCAL:1 >= 95
+			LOCAL:1 = LOCAL:3
+			PRINTL 
+			PRINTFORM %SMALL_TITLE_SPACE()%
+		ENDIF
+		PRINTFORM <%TN%> 
+		표시 = 1
+	ENDIF
+NEXT
+SIF !표시
+	PRINTFORM 없음
+PRINTL
+
+;-------------------------------------------------
+;ARG:0번의 이번 조교에서의 사정·사정되고·절정 회수를 표시
+;-------------------------------------------------
+@NEW_PRINT_ORGASM(대상)
+#DIM 대상
+#DIM 부위
+#DIM 표시플래그
+표시플래그 = 0
+
+FOR 부위, 0, CUM_SLOT_NUM
+	SIF CUM_GET_COUNT:대상:부위 <= 0
+		CONTINUE
+	IF 표시플래그 == 0
+		PRINTFORM 이번 받아 들인 정액:
+		표시플래그 = 1
+	ENDIF
+	SIF GROUPMATCH(부위, 사정부위_질내, 사정부위_애널)
+		SETCOLOR 칼라_핑크
+	PRINTFORM %CUM_SLOT_NAME:부위, 8, RIGHT%:{CUM_GET_COUNT:대상:부위, 4, RIGHT}
+	RESETCOLOR
+NEXT
+IF 표시플래그
+	PRINTL 
+	PRINTFORM %SMALL_TITLE_SPACE()%
+	표시플래그 = 0
+ENDIF
+
+FOR 부위, 0, CUM_SLOT_NUM
+	SIF CUM_TO_COUNT:대상:부위 <= 0
+		CONTINUE
+	IF 표시플래그 == 0
+		PRINTFORM 이번 푼 정액:
+		표시플래그 = 1
+	ENDIF
+
+	SIF GROUPMATCH(부위, 사정부위_질내, 사정부위_애널)
+		SETCOLOR 칼라_핑크
+	PRINTFORM %CUM_SLOT_NAME:부위, 8, RIGHT%:{CUM_TO_COUNT:대상:부위, 4, RIGHT}
+	RESETCOLOR
+NEXT
+IF 표시플래그
+	PRINTL 
+	PRINTFORM %SMALL_TITLE_SPACE()%
+	표시플래그 = 0
+ENDIF
+
+FOR 부위, 0, VARSIZE("EX")
+	SIF EX:대상:부위 <= 0
+		CONTINUE
+	IF 표시플래그 == 0
+		PRINTFORM 이번 절정 강도:
+		표시플래그 = 1
+	ENDIF
+	PRINTFORM %EXNAME:부위, 8, RIGHT%:{EX:대상:부위, 4, RIGHT}
+NEXT
+PRINTL
+
+;-------------------------------------------------
+;수치 표시 변경
+;-------------------------------------------------
+@VALUE_FORM(ARG, ARGS)
+VARSET LOCAL, 0
+VARSET LOCALS, ""
+
+IF ARGS == "구슬"
+	IF ARG <= 9999999
+		RESULTS = {ARG}
+		RETURN
+	ENDIF
+ELSEIF ARGS == "경험"
+	IF ARG <= 999999
+		RESULTS = {ARG}
+		RETURN
+	ENDIF
+ELSE
+	IF ARG <= 99999999
+		RESULTS = {ARG}
+		RETURN
+	ENDIF
+ENDIF
+
+LOCAL:0 = 10000000000000000
+LOCAL:1 = 1000000000000
+LOCAL:2 = 100000000
+LOCAL:3 = 10000
+LOCAL:4 = 1
+LOCALS:0 = 경
+LOCALS:1 = 조
+LOCALS:2 = 억
+LOCALS:3 = 만
+
+FOR LOCAL:98, 0, 4
+	IF ARG >= LOCAL:(LOCAL:98)
+		LOCAL:99 = LOCAL:98
+		BREAK
+	ENDIF
+NEXT
+
+LOCAL:10 = ARG / LOCAL:(LOCAL:99)
+LOCAL:11 = (ARG % LOCAL:(LOCAL:99)) / LOCAL:(LOCAL:99 + 1)
+
+IF ARGS == "구슬" || ARGS == "경험"
+	RESULTS = {LOCAL:10}%LOCALS:(LOCAL:99)%
+ELSE
+	RESULTS = {LOCAL:10}%LOCALS:(LOCAL:99)%{LOCAL:11}%LOCALS:(LOCAL:99 + 1)%
+ENDIF
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 능력 성장 상황을 상세 표시
+;-------------------------------------------------
+@SHOW_ABL_DETAIL(ARG:0)
+;표시하는 ABL의 줄 순서 리스트( 10마다 개행)
+#DIM SHOW_LIST, 100
+
+VARSET SHOW_LIST, -1
+
+SHOW_LIST:0 = 50
+SHOW_LIST:1 = 51
+SHOW_LIST:2 = 52
+SHOW_LIST:3 = 53
+SHOW_LIST:4 = 54
+SHOW_LIST:5 = 60
+SHOW_LIST:6 = 61
+SHOW_LIST:10 = 0
+SHOW_LIST:11 = 1
+SHOW_LIST:12 = 2
+SHOW_LIST:13 = 3
+SHOW_LIST:14 = 4
+
+SHOW_LIST:20 = 12
+SHOW_LIST:21 = 13
+SHOW_LIST:22 = 20
+SHOW_LIST:23 = 21
+SHOW_LIST:24 = 22
+SHOW_LIST:25 = 23
+SHOW_LIST:30 = 24
+SHOW_LIST:31 = 25
+SHOW_LIST:32 = 26
+SHOW_LIST:33 = 27
+SHOW_LIST:34 = 28
+SHOW_LIST:35 = 29
+SHOW_LIST:40 = 30
+SHOW_LIST:41 = 31
+SHOW_LIST:42 = 33
+SHOW_LIST:43 = 34
+SHOW_LIST:44 = 35
+SHOW_LIST:45 = 32
+
+
+PRINTFORML ◆%ANAME(ARG:0)%의 능력 성장 상황◆
+LOCAL:1 = 0
+FOR LOCAL:0, 0, 100
+	;대응하는 ABL가 없으면 스킵
+	IF SHOW_LIST:(LOCAL:0) >= 0
+		;개행 판정
+		IF LOCAL:1 > 0 && LOCAL:1 % 2 == 0
+			PRINTL 
+		ENDIF
+		LOCAL:1 ++
+
+		LOCAL:2 = SHOW_LIST:(LOCAL:0)
+
+		PRINTFORM %ABLNAME:(LOCAL:2), 8%:{ABL:(ARG:0):(LOCAL:2), 4}
+
+		RESULT = 0
+		;필요한 경험치의 계산
+		TRYCALLFORM CALC_ABLUP_EXP{LOCAL:2}(ARG:0)
+		IF RESULT >= 1 && LOCAL:2 < 9999
+			LOCAL:5 = RESULT
+			RESULTS = 
+			;능력에 대응하는 경험치의 명칭을 취득
+			TRYCALLFORM ABLUP_EXPNAME{LOCAL:2}
+			LOCAL:6 = GETNUM(EXP, RESULTS)
+			IF LOCAL:6 >= 0
+				LOCAL:7 = EXP:(ARG:0):(LOCAL:6) * 20 / LOCAL:5
+				IF LOCAL:7 >= 17
+					LOCAL:8 = 0x00FF00
+				ELSEIF LOCAL:7 >= 12
+					LOCAL:8 = 칼라_주의
+				ELSE
+					LOCAL:8 = 0xC0C0C0
+				ENDIF
+				FONTSTYLE 4
+				FOR LOCAL:4, 0, 20
+					IF LOCAL:4 < LOCAL:7
+						SETCOLOR LOCAL:8
+					ELSE
+						SETCOLOR 0x404040
+					ENDIF
+					PRINTFORM  
+				NEXT
+				FONTSTYLE 0
+				RESETCOLOR
+			ENDIF
+		ELSE
+			SETCOLOR 0x8080D0
+			FONTSTYLE 4
+			PRINT        
+			FONTSTYLE 0
+			PRINT  최대 
+			FONTSTYLE 4
+			PRINT        
+			FONTSTYLE 0
+			RESETCOLOR
+		ENDIF
+		PRINT   
+	ENDIF
+NEXT
+PRINTL 
+
+;-------------------------------------------------
+;ARG:0번의 타캐릭터에 대한 호감도·적대치를 일람표시
+;-------------------------------------------------
+@SHOW_RELATION_LIST(ARG:0)
+FOR LOCAL:0, 0, CHARANUM
+	PRINTFORM %ANAME(LOCAL:0), 8, RIGHT%
+	PRINTFORM   {REL_LIKE:(ARG:0):(LOCAL:0), 5, RIGHT}
+	PRINTFORM   {REL_HATE:(ARG:0):(LOCAL:0), 5, RIGHT}
+	PRINTL 
+NEXT

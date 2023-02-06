@@ -1,0 +1,49 @@
+﻿;조교중의 EQUIP 표시(복장이나 에로아이템 장비 따위)
+
+;-------------------------------------------------
+;EQUIP의 상황을 표시하는 함수
+;-------------------------------------------------
+@SHOW_EQUIP
+FOR LOCAL:0, 0, MEQUIP_NUM
+	RESULTS = 
+
+	;★
+	;PRINTFORML 계속 메세지 배열 번호={LOCAL:0} MEQUIP={MEQUIP:(LOCAL:0)} PN={MEQUIP_PLAYER_NUM:(LOCAL:0)} TN={MEQUIP_TARGET_NUM:(LOCAL:0)}
+	;PRINTFORMW                P1={MEQUIP_PLAYER:(LOCAL:0):0} T1={MEQUIP_TARGET:(LOCAL:0):0}
+
+	;계속 메세지를 RESULTS에 취득
+	TRYCALLFORM EQUIP_MESSAGE{MEQUIP:(LOCAL:0)}(LOCAL:0)
+
+	IF RESULTS != ""
+		PRINTPLAINFORM %RESULTS, 50, LEFT%
+
+		;역조교중은 해제 불가
+		IF GROUPMATCH(FLAG:조교모드, 4, 5, 7)
+			SETCOLOR 칼라_선택불가
+			PRINTPLAINFORM [{LOCAL:0 + 1000}] 해제
+			RESETCOLOR
+			PRINTL 
+		ELSE
+			PRINTFORML [{LOCAL:0 + 1000}] 해제
+		ENDIF
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;삽입중의 체위를 나타내는 변수(ARG:0)를 문자열으로 변환하는 함수
+;-------------------------------------------------
+@TOSTR_INSERT_STATE(ARG:0)
+#FUNCTIONS
+SELECTCASE ARG:0
+	CASE 1
+		RETURNF "정상위"
+	CASE 2
+		RETURNF "후배위"
+	CASE 3
+		RETURNF "대면좌위"
+	CASE 4
+		RETURNF "배면좌위"
+	CASE 5
+		RETURNF "기승위"
+ENDSELECT
+RETURNF "----"

@@ -1,0 +1,230 @@
+﻿;-------------------------------------------------
+;「포로의취급」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE_NAME33
+RESULTS:0 '= "포로의취급"
+
+;-------------------------------------------------
+;「포로의취급」의 선택 가부 판정
+;-------------------------------------------------
+@SHOP_LIFE_CHECK33
+SIF CONFIG:7 != 1
+	RETURN 0
+SIF CFLAG:MASTER:포로처
+	RETURN 0
+SIF !CFLAG:MASTER:소속
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「포로의취급」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA33(ARG:0)
+;주인공이라면 안 돼
+SIF ARG:0 == MASTER
+	RETURN 0
+
+;주인공 세력의 포로, 혹은 외교 조교의 대상
+RETURN CFLAG:(ARG:0):포로처 == CFLAG:MASTER:소속 || CFLAG:(ARG:0):외교조교중
+
+RETURN 0
+
+;-------------------------------------------------
+;「포로의취급」의 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY33
+FLAG:거점페이즈페이지 = 1
+FLAG:요바이 = 0
+RETURN 0
+
+;-------------------------------------------------
+;「포로의취급」의 오른쪽 컬럼 버튼 입력치를 캐릭터 번호로 변환하는 처리의 오프 판정
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP_COLUMN_RIGHT_CONVERT_CHARANUM_OFF_CHECK33
+
+;-------------------------------------------------
+;「포로의취급」의 오른쪽 컬럼 캐릭터 리스트 1의 버튼
+;-------------------------------------------------
+@SHOP_LIFE_LIST1_BUTTON33(ARG:0, ARG:1)
+#DIM SYOKUSYU_FLAG
+;촉수조교 선택 가부
+SYOKUSYU_FLAG = ITEM:촉수의방 && ID_TO_CHARA(FLAG:촉수의방관리자) >= 0 && IS_SYOKUSYU_MANAGE(ID_TO_CHARA(FLAG:촉수의방관리자))
+
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+PRINTFORM %SNAME(ARG:0), MAX_CHARANAME_LENGTH / 2, LEFT%
+CALL SHOP_LIFE_BUTTON33(ARG:0, CFLAG:(ARG:0):연금중 == 0 && CFLAG:(ARG:0):포로의취급 == 0, 1, "감금")
+CALL SHOP_LIFE_BUTTON33(ARG:0, CFLAG:(ARG:0):연금중 == 1 && CFLAG:(ARG:0):포로의취급 == 0, 2, "연금")
+CALL SHOP_LIFE_BUTTON33(ARG:0, CFLAG:(ARG:0):연금중 == 0 && CFLAG:(ARG:0):포로의취급 == 2, 3, "고문")
+CALL SHOP_LIFE_BUTTON33(ARG:0, CFLAG:(ARG:0):연금중 == 0 && CFLAG:(ARG:0):포로의취급 == 3, 4, "신체개발")
+CALL SHOP_LIFE_BUTTON33(ARG:0, CFLAG:(ARG:0):연금중 == 0 && CFLAG:(ARG:0):포로의취급 == 4, 5, "설득")
+CALL SHOP_LIFE_BUTTON33(ARG:0, CFLAG:(ARG:0):연금중 == 0 && CFLAG:(ARG:0):포로의취급 == 5, 6, "성처리")
+IF SYOKUSYU_FLAG
+	CALL SHOP_LIFE_BUTTON33(ARG:0, CFLAG:(ARG:0):연금중 == 0 && CFLAG:(ARG:0):포로의취급 == 6, 7, "촉수")
+ENDIF
+CALL SHOP_LIFE_BUTTON33(ARG:0, CFLAG:(ARG:0):연금중 == 0 && CFLAG:(ARG:0):포로의취급 == 7, 8, "창관")
+CALL SHOP_LIFE_BUTTON33(ARG:0, CFLAG:(ARG:0):연금중 == 0 && CFLAG:(ARG:0):포로의취급 == 8, 9, "착유")
+CALL COLUMN_RIGHT_PRINTL
+
+SETCOLOR 칼라_주석
+PRINTFORM 정신력:
+RESETCOLOR
+CALL PRINT_GRADATIONBAR(BASE:(ARG:0):정신력, MAXBASE:(ARG:0):정신력, 10, 0x5E9AFF)
+SETCOLOR 칼라_주석
+;정신력 1/3이하라면 강조
+SIF BASE:(ARG:0):정신력 <= MAXBASE:(ARG:0):정신력 / 3
+	SETCOLOR 칼라_선택중
+PRINTFORM {BASE:(ARG:0):정신력,6, RIGHT}
+SETCOLOR 칼라_주석
+PRINTFORM /{MAXBASE:(ARG:0):정신력, 6, RIGHT}
+
+PRINTPLAIN   
+CALL COLOR_PRINT("상태:", 칼라_주석)
+IF TALENT:(ARG:0):붕괴
+	CALL COLOR_PRINT("붕괴", 0xF03333)
+ELSEIF TALENT:(ARG:0):공허
+	CALL COLOR_PRINT("공허", 0xEE4833)
+ELSE
+	CALL COLOR_PRINT("건강", 칼라_주석)
+ENDIF
+
+SETCOLOR 칼라_주석
+PRINTPLAIN   
+IF CFLAG:(ARG:0):소속
+	PRINTFORM 소속:%ANAME(GET_COUNTRY_BOSS(CFLAG:(ARG:0):소속)), MAX_CHARANAME_LENGTH , LEFT%
+ELSE
+	PRINTFORM 소속:%@"미소속", MAX_CHARANAME_LENGTH , LEFT%
+ENDIF
+RESETCOLOR
+
+PRINTPLAIN   
+CALL PRINT_SEX(ARG:0, 1)
+
+PRINTPLAIN  
+CALL TMP_PRINT_CHARA_STARS_NUM(ARG:0)
+
+RETURN 0
+
+;-------------------------------------------------
+;「포로의취급」의 오른쪽 컬럼 표시 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SHOW33
+#DIM SYOKUSYU_FLAG
+SYOKUSYU_FLAG = 0
+;촉수조교 선택 가부
+SYOKUSYU_FLAG = ITEM:촉수의방 && ID_TO_CHARA(FLAG:촉수의방관리자) >= 0 && IS_SYOKUSYU_MANAGE(ID_TO_CHARA(FLAG:촉수의방관리자))
+;타이틀
+CALL COLUMN_RIGHT_TITLE("취급을 선택", "", "", "0", "0")
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+;일괄 지정 버튼
+SETCOLOR 칼라_주석
+PRINTFORM %"일괄", MAX_CHARANAME_LENGTH / 2% 
+RESETCOLOR
+
+PRINTBUTTON "[감금]", 0
+PRINTPLAIN  
+PRINTBUTTON "[연금]", 1
+PRINTPLAIN  
+PRINTBUTTON "[고문]", 2
+PRINTPLAIN  
+PRINTBUTTON "[신체개발]", 3
+PRINTPLAIN  
+PRINTBUTTON "[설득]", 4
+PRINTPLAIN  
+PRINTBUTTON "[성처리]", 5
+IF SYOKUSYU_FLAG
+	PRINTPLAIN  
+	PRINTBUTTON "[촉수]",6
+ENDIF
+PRINTPLAIN  
+PRINTBUTTON "[창관]",7
+PRINTPLAIN  
+PRINTBUTTON "[착유]",8
+CALL COLUMN_RIGHT_PRINTL
+
+;표준적인 캐릭터 리스트와 페이지 이동 1열 1 버튼, 1 버튼 3행
+;버튼에 라인을 포함하기 (위해)때문에 개시전에 라인을 끌지 않는다
+CALL COLUMN_RIGHT_CHARALIST(1, 3)
+RETURN 0
+
+;-------------------------------------------------
+;「포로의취급」의 오른쪽 컬럼 버튼의 입력 처리 보좌
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SUB33(ARG:0)
+;일괄 버튼이 밀렸을 경우
+FOR LOCAL:0, 0, CHARANUM
+	TRYCALLFORM SHOP_LIFE_CHECKCHARA{FLAG:거점페이즈선택커맨드}(LOCAL:0)
+	IF RESULT
+		;연금의 경우
+		IF ARG:0 == 1
+			CFLAG:(LOCAL:0):연금중 = 1
+			CFLAG:(LOCAL:0):포로의취급 = 0
+		;그 이외
+		ELSE
+			CFLAG:(LOCAL:0):연금중 = 0
+			CFLAG:(LOCAL:0):포로의취급 = ARG:0
+		ENDIF
+	ENDIF
+NEXT
+RETURN 0
+
+;-------------------------------------------------
+;「포로의취급」의 리스트 1 입력 처리
+;  SHOP_LIFE_USERSHOP_COLUMN_RIGHT_CONVERT_CHARANUM_OFF_CHECK를 지정하고 있기 때문에 ARG:0=입력치
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP33(ARG:0)
+#DIM 항목번호
+#DIM 캐릭터번호
+
+항목번호 = ARG:0 / 1000
+캐릭터번호 = ARG:0 - (1000 * 항목번호)
+
+;손입력으로 번호외를 선택했을 때의 퇴피 처리
+;SHOP_LIFE_USERSHOP_COLUMN_RIGHT_CONVERT_CHARANUM_OFF_CHECK를 지정하고 있을 때는
+;캐릭터 번호외를 자동적으로 연주하지 않기 때문에 주의가 있다
+SIF 항목번호 <= 0 || 항목번호 > 9
+	RETURN 0
+
+SIF 캐릭터번호 <= 0 || 캐릭터번호 > CHARANUM
+	RETURN 0
+
+RESULT = 0
+TRYCALLFORM SHOP_LIFE_CHECKCHARA{FLAG:거점페이즈선택커맨드}(캐릭터번호)
+IF RESULT
+	;연금 때
+	IF 항목번호 == 2
+		CFLAG:(캐릭터번호):연금중 = 1
+		CFLAG:(캐릭터번호):포로의취급 = 0
+	;그 이외
+	ELSE
+		항목번호 = 항목번호 - 1
+		CFLAG:(캐릭터번호):연금중 = 0
+		CFLAG:(캐릭터번호):포로의취급 = 항목번호
+	ENDIF
+ENDIF
+
+RETURN 0
+
+;-------------------------------------------------
+;취급 지정 전용 버튼 표시
+;0:포로의 캐릭터 번호 1:취급의 종별 번호 2:버튼 표시 문자열
+;-------------------------------------------------
+@SHOP_LIFE_BUTTON33(캐릭터번호, 선택중색플래그, 종별지정번호, 버튼표시문자열)
+#DIM 캐릭터번호
+#DIM 선택중색플래그
+#DIM 종별지정번호
+#DIMS 버튼표시문자열
+
+PRINTPLAIN  
+IF 선택중색플래그
+	SETCOLOR 칼라_선택중
+	PRINTPLAINFORM \[%버튼표시문자열%\]
+	RESETCOLOR
+ELSE
+	PRINTBUTTON @"\[%버튼표시문자열%\]", 캐릭터번호 + (종별지정번호 * 1000)
+ENDIF
+

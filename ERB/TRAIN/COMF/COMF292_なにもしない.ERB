@@ -1,0 +1,88 @@
+﻿;아무것도하지않는다
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME292
+RESULTS:0 = 아무것도하지않는다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE292
+;공통 부분
+CALL COM_ABLE_COMMON(292)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 1명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 1
+	RETURN 0
+;주인공이 플레이어 때 한정
+SIF MPLY:0 != MASTER
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM292
+#DIM 커맨드참가수
+#DIM 기본비율
+PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 아무것도 하지 않았다……
+
+;체력과 기력을 회복
+FOR LOCAL, 0, CHARANUM
+	SIF !IS_PARTICIPATE_TRAIN(LOCAL)
+		CONTINUE
+
+	;기본적인 회복 비율은 5~10%
+	기본비율 = RAND(5, 10) + TALENT:LOCAL:회복빠름 * 5 - TALENT:LOCAL:회복느림 * 5
+	커맨드참가수 = 0
+	;커맨드에 참가하고 있을수록, 회복 하기 어려워진다
+	FOR LOCAL:1, 0, MEQUIP_NUM
+		FOR LOCAL:2, 0, MEQUIP_PLAYER_NUM:(LOCAL:1)
+			IF MEQUIP_PLAYER:(LOCAL:1):(LOCAL:2) == LOCAL
+				커맨드참가수 ++
+				GOTO FOUND
+			ENDIF
+		NEXT
+		FOR LOCAL:2, 0, MEQUIP_TARGET_NUM:(LOCAL:1)
+			IF MEQUIP_TARGET:(LOCAL:1):(LOCAL:2) == LOCAL
+				커맨드참가수 ++
+				GOTO FOUND
+			ENDIF
+		NEXT
+		$FOUND
+	NEXT
+
+	IF FLAG:조교모드 == 조교_포로조교 && FINDELEMENT(PRISONER_TARGET, LOCAL) != -1
+		BASE:LOCAL:정신력 = MIN(MAXBASE:LOCAL:정신력, BASE:LOCAL:정신력 + MAXBASE:LOCAL:정신력 * 기본비율 / 100)
+		SIF BASE:LOCAL:정신력 > 0 && CFLAG:LOCAL:붕괴
+			CFLAG:LOCAL:붕괴 = MAX(CFLAG:LOCAL:붕괴 - BASE:LOCAL:정신력 / 5, 0)
+	ENDIF
+
+	기본비율 = MAX(기본비율 - 커맨드참가수, 0)
+
+	IF TCVAR:(LOCAL:0):51
+		SOURCE:(LOCAL:0):피로회복 = RAND(100, 300) + TALENT:LOCAL:회복빠름 * 50 - TALENT:LOCAL:회복느림 * 50
+	ELSE
+		BASE:LOCAL:체력 = MIN(MAXBASE:LOCAL:체력, BASE:LOCAL:체력 + MAXBASE:LOCAL:체력 * 기본비율 / 100)
+	ENDIF
+
+	IF TCVAR:(LOCAL:0):52
+		SOURCE:(LOCAL:0):기절회복 = RAND(100, 300) + TALENT:LOCAL:회복빠름 * 50 - TALENT:LOCAL:회복느림 * 50
+	ELSE
+		BASE:LOCAL:기력 = MIN(MAXBASE:LOCAL:체력, BASE:LOCAL:기력 + MAXBASE:LOCAL:기력 * 기본비율 / 100)
+	ENDIF
+
+NEXT
+
+RETURN 1
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN292
+RETURN 커맨드_공통

@@ -1,0 +1,85 @@
+﻿;-------------------------------------------------
+;정기 이벤트
+;-------------------------------------------------
+@VIGILANTE_REV_TRAIN_REGULAR_EVENT(세력)
+#DIM 세력
+
+SIF FLAG:역조교회수 == 0 || FLAG:역조교회수 % 4 != 0
+	RETURN 0
+
+PRINTFORML 「교육」의 시간이 가까워지면, %조사처리(ANAME(MASTER),"는")% 여느 때처럼 「지도실」에 던져 넣어져
+PRINTFORML 후는 남자들에게 더럽혀지는 것을 기다릴 뿐되었다
+PRINTFORML 온 단원들은, 슬슬 우리의 사상을 이해해 주었는지, 라고 물었다
+PRINTFORMW 단에 참가하면, 우리도 이런 비도인 일을 하지 않아도 끝나지만, 이라고 말하기 시작한다
+PRINTFORML 단원이 되면, 최저한의 행동은 인정될 것이다
+PRINTFORML 하지만 그것은, 그들에게 혹사해져 더럽혀지고 계속하는 것을 의미하고 있다
+PRINTFORMW 한편, 목을 세로에 거절하면, 지금 이 순간은 편해질 것이다
+PRINTFORML 어떻게 해야 할 것일까……
+CALL ASK_YN("단념해 입단한다(노예화)", "누가 너희들 동료 따위에 될까")
+
+IF RESULT == 0
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 수긍하면, 단원들은 이상하게 밝은 미소를 띄웠다
+	PRINTFORML 에서는 단원의 표를 붙여 주자고 하기 시작했다
+	IF HAS_PENIS(MASTER)
+		CALL SET_PIERCE(MASTER, 피어스_페니스, 0)
+		IF RESULT
+			CALL COLOR_PRINTW(@"그리고 그 페니스에, 딱한 피어스를 달았다……", 칼라_핑크)
+		ELSE
+			CALL COLOR_PRINTW(@"그리고 그 페니스에, 두 번 다시 사라지지 않는 소인을 새겼다……", 칼라_핑크)
+		ENDIF
+	ELSE
+		CALL SET_PIERCE(MASTER, 피어스_유두, 0)
+		IF RESULT
+			CALL COLOR_PRINTW(@"그리고 그 유두에, 딱한 피어스를 달았다……", 칼라_핑크)
+		ELSE
+			CALL COLOR_PRINTW(@"그리고 그 유방에, 두 번 다시 사라지지 않는 소인을 새겼다……", 칼라_핑크)
+		ENDIF
+	ENDIF
+	SETCOLOR 칼라_주의
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 자경단에 참가 당했습니다
+	RESETCOLOR
+	SETBIT TALENT:MASTER:특수세력함락계, 특수세력_자경단
+	CALL CHANGE_COUNTRY(MASTER, 세력, 1)
+	CALL PLAYER_FALLEN_TO_SP_COUNTRY(세력)
+	RETURN 1
+ELSE
+	PRINTFORML %조사처리(ANAME(MASTER),"가")%거부한다와 아직 모르는 것인지!   와 그들은 격앙한다
+	PRINTFORML 이해할 때까지 교육을 계속할거니까!   와 난폭하게 %ANAME(MASTER)%에 모여 간다
+	PRINTFORML 거기에 정의나 윤리라고 부를 수 있는 것은, 전연 존재하고 있지 않았다……
+ENDIF
+
+;-------------------------------------------------
+;아는 사람이 왔을 때의 이벤트
+;-------------------------------------------------
+@VIGILANTE_REV_TRAIN_MSG(세력, 아는사람참가자, 아는사람참가수)
+#DIM 세력
+#DIM REF 아는사람참가자
+#DIM 아는사람참가수
+CALL SINGLE_DRAWLINE
+PRINTFORML 「교육」의 시간이 가까워지면, %조사처리(ANAME(MASTER),"는")% 여느 때처럼 「지도실」에 던져 넣어져
+PRINTFORML 후는 남자들에게 더럽혀지는 것을 기다릴 뿐되었다
+PRINTFORMW 온 자경단원들은, %조사처리(ANAME(MASTER),"가")% 자주(잘) 면식이 있던 상대를 데리고 와서 있었다
+PRINTFORMW %ANAME(아는사람참가자:0, 아는사람참가수)%…
+PRINTFORMW 의복을 몸에 대지 않고, 전신은 백탁 투성이가 되어 있다. 그들의 「활동」을 돕고 있었을 것이다
+PRINTFORMW 비참한 취급일 것이지만, 모두 이상할 정도까지 눈동자를 빛내, 자경단의 사상의 올바름을 %ANAME(MASTER)%에 말해 온다
+PRINTFORMW 도저히 제정신이라고는 생각되지 않는 웃는 얼굴과 함께……
+PRINTFORMW 자경단원은 얻고 싶은 것 모르는 미소를 띄워, 「아는 사람이 참가하고 있다고 되면 안심이고, 외로운 것도 아닐 것이다!」라고 말해 왔다
+PRINTFORMW 일찍이 %ANAME(아는사람참가자:0, 아는사람참가수)%라고 아는 사람 「(이었)였다」일을, 잡고 있는 것 같다……
+PRINTFORMW 그런데, 오늘도 모두가 연수를 실시하려고 단원이 말하면, %ANAME(아는사람참가자:0, 아는사람참가수)%는 온순하게 가랑이를 열었다……
+
+
+;-------------------------------------------------
+;참가자 선택 알고리즘
+;-------------------------------------------------
+@VIGILANTE_REV_TRAIN_CHOOSE_PARTICIPANT(세력)
+#DIM 세력
+FOR LOCAL:0, 0, 4
+	;확률로 견돈이 대상으로
+	FOR LOCAL:1, 0, CHARANUM
+		IF TALENT:(LOCAL:1):특수세력소질 == 특수세력_자경단 && !CFLAG:(LOCAL:1):조교참가플래그 && CFLAG:(LOCAL:1):소속 == 세력
+			CFLAG:(LOCAL:1):조교참가플래그 = 1
+			CFLAG:(LOCAL:1):TEXT_LAST비표시 = 1
+			BREAK
+		ENDIF
+	NEXT
+NEXT

@@ -1,0 +1,1349 @@
+﻿;------------------------------
+;인계용 캐릭터 셀렉트 부분
+;------------------------------
+@PASS_CHARA_CHARASELECT()
+#DIM FIRST_LINE
+#DIM 대상
+#DIM 표시위치
+#DIM 표시페이지
+#DIM 총페이지수
+#DIM 캐릭터수
+#DIM 캐릭터카운터
+#DIM 표시개시위치
+#DIM 표시종료위치
+
+VARSET 캐릭터수
+FOR LOCAL, 0, CHARANUM
+	SIF IS_FIXED_CHARA(LOCAL) && LOCAL != NAME_TO_CHARA("당신")
+		캐릭터수 ++
+NEXT
+총페이지수 = (캐릭터수 - 1) / 60 + 1
+표시페이지 = 1
+
+
+FIRST_LINE = LINECOUNT
+
+$SHOW_LOOP
+
+VARSET 표시위치
+VARSET 캐릭터카운터
+표시개시위치 = (표시페이지 - 1) * 60
+표시종료위치 = 표시페이지 * 60
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 다음의 주에 캐릭터의 능력을 계승할 수 있습니다
+PRINTFORML 설정하는 캐릭터를 선택해 주세요  
+PRINTBUTTON "[통합 설정]", 3
+PRINTBUTTON "[통합 해제]", 4
+PRINTL
+CALL SINGLE_DRAWLINE
+
+
+FOR LOCAL:0, 0, CHARANUM
+	SIF !IS_FIXED_CHARA(LOCAL) || LOCAL == NAME_TO_CHARA("당신")
+		CONTINUE
+	IF 표시개시위치 <= 캐릭터카운터 && 캐릭터카운터 < 표시종료위치
+		IF 표시위치 % 3!= 0
+			PRINT     
+		ELSEIF 표시위치 > 0
+			PRINTL 
+		ENDIF
+		SIF 인계설정이끝난상태:LOCAL:0
+			SETCOLOR 0x00FFFF
+		PRINTFORM [{LOCAL + 99, 3, LEFT}]%ANAME(LOCAL), MAX_CHARANAME_LENGTH, LEFT%
+		RESETCOLOR
+		표시위치 ++
+	ENDIF
+	캐릭터카운터 ++
+NEXT
+
+PRINTL 
+CALL SINGLE_DRAWLINE
+
+IF 총페이지수 >= 2
+	IF 표시페이지 > 1
+		PRINT [  1] 이전페이지            
+	ELSE
+		PRINT                             
+	ENDIF
+	IF 표시페이지 < 총페이지수
+		PRINT [  2] 다음페이지
+	ENDIF
+	PRINTL 
+	CALL SINGLE_DRAWLINE
+ENDIF
+
+PRINTL [  0] 이것으로 좋다
+
+REDRAW 0
+
+
+$INPUT_LOOP
+INPUT
+IF RESULT == 1 && 표시페이지 > 1
+	표시페이지 --
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 2 && 표시페이지 < 총페이지수
+	표시페이지 ++
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 3
+	CALL PASS_CHARA_UI(-1)
+	RESTART
+ELSEIF RESULT == 4
+	CALL CLEAR_ALL_PASS_SETTINGS
+	RESTART
+ELSEIF RESULT == 0
+RETURN
+ENDIF
+
+대상 = RESULT - 99
+IF 대상 > CHARANUM || 대상 < 0 || !IS_FIXED_CHARA(대상) || 대상 == NAME_TO_CHARA("당신")
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+CALL PASS_CHARA_UI(대상)
+RESTART
+
+
+;-------------------------------------------
+;캐릭터마다（없고 전원）의 인계 항목을 설정한다
+;-------------------------------------------
+@PASS_CHARA_UI(대상)
+#DIM 대상
+#DIM FIRST_LINE
+#DIM 소질페이지
+#DIM 경험페이지
+
+LOADGLOBAL
+
+CALL PASS_CHARA_COPY_ORIGINAL_TO_TMP(대상)
+
+FIRST_LINE = LINECOUNT
+
+$SHOW_LOOP
+
+REDRAW 1
+PRINTFORML 계승하고 싶은 요소를 선택해 주세요
+CALL SINGLE_DRAWLINE
+PRINTL □성별□
+CALL PRINT_TOGGLE_BUTTON(@"[성별]", 0, 성별인계_TMP)
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTL □체력□
+FOR LOCAL, 0, 5
+	SIF BASENAME:LOCAL != ""
+		CALL PRINT_TOGGLE_BUTTON(@"%"[" + BASENAME:LOCAL + "]", 16, LEFT%", 100 + LOCAL, BASE인계_TMP:LOCAL)
+NEXT
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTL □호감도□
+CALL PRINT_TOGGLE_BUTTON(@"%"[호감도]", 16, LEFT%", 200 + GETNUM(CFLAG, "호감도"), CFLAG인계_TMP:GETNUM(CFLAG, "호감도"))
+CALL PRINT_TOGGLE_BUTTON(@"%"[종속도]", 16, LEFT%", 200 + GETNUM(CFLAG, "종속도"), CFLAG인계_TMP:GETNUM(CFLAG, "종속도"))
+CALL PRINT_TOGGLE_BUTTON(@"%"[의존도]", 16, LEFT%", 200 + GETNUM(CFLAG, "의존도"), CFLAG인계_TMP:GETNUM(CFLAG, "의존도"))
+CALL PRINT_TOGGLE_BUTTON(@"%"[지배도]", 16, LEFT%", 200 + GETNUM(CFLAG, "지배도"), CFLAG인계_TMP:GETNUM(CFLAG, "지배도"))
+
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTL □능력□
+PRINTBUTTON @"%"[모두 오프]", 16, LEFT%", 2000
+PRINTBUTTON @"%"[모두 온]", 16, LEFT%", 2001
+PRINTL
+FOR LOCAL, 0, VARSIZE("ABL")
+	SIF ABLNAME:LOCAL != ""
+		CALL PRINT_TOGGLE_BUTTON(@"%"[" + ABLNAME:LOCAL +"]", 16, LEFT%", 300 + LOCAL, ABL인계_TMP:LOCAL)
+NEXT
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTL □소질□
+PRINTBUTTON @"%"[모두 오프]", 16, LEFT%", 2100
+PRINTBUTTON @"%"[모두 온]", 16, LEFT%", 2101
+PRINTL
+FOR LOCAL, 0, 300
+	SIF TALENTNAME:LOCAL != "" && PASS_CHARA_CHECK_SHOW_TALENT(LOCAL)
+		CALL PRINT_TOGGLE_BUTTON(@"%"[" + TALENTNAME:LOCAL + "]", 16, LEFT%", 500 + LOCAL, TALENT인계_TMP:LOCAL)
+NEXT
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTL □경험□
+PRINTBUTTON @"%"[모두 오프]", 16, LEFT%", 2200
+PRINTBUTTON @"%"[모두 온]", 16, LEFT%", 2201
+PRINTL
+FOR LOCAL, 40, 70
+	SIF EXPNAME:LOCAL != ""
+		CALL PRINT_TOGGLE_BUTTON(@"%"[" + EXPNAME:LOCAL + "]", 16, LEFT%", 800 + LOCAL, EXP인계_TMP:LOCAL)
+NEXT
+FOR LOCAL, 90, 94
+	SIF EXPNAME:LOCAL != ""
+		CALL PRINT_TOGGLE_BUTTON(@"%"[" + EXPNAME:LOCAL + "]", 16, LEFT%", 800 + LOCAL, EXP인계_TMP:LOCAL)
+NEXT
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTL □그 외□
+CALL PRINT_TOGGLE_BUTTON(@"%"[함락소질]", 16, LEFT%", 1000, 함락소질인계_TMP)
+CALL PRINT_TOGGLE_BUTTON(@"%"[음란 소질]", 16, LEFT%", 1001, 음란소질인계_TMP)
+CALL PRINT_TOGGLE_BUTTON(@"%"[특수 세력 함락]", 16, LEFT%", 1003, 특수세력함락인계_TMP)
+PRINTL
+CALL PRINT_TOGGLE_BUTTON(@"%"[조임]", 16, LEFT%", 1010, 조임인계_TMP)
+CALL PRINT_TOGGLE_BUTTON(@"%"[음모]", 16, LEFT%", 1011, 음모인계_TMP)
+CALL PRINT_TOGGLE_BUTTON(@"%"[겨드랑이털]", 16, LEFT%", 1014, 겨드랑이털인계_TMP)
+CALL PRINT_TOGGLE_BUTTON(@"%"[피어스]", 16, LEFT%", 1012, 피어스인계_TMP)
+CALL PRINT_TOGGLE_BUTTON(@"%"[문신]", 16, LEFT%", 1013, 문신인계_TMP)
+PRINTL
+CALL PRINT_TOGGLE_BUTTON(@"%"[키스 첫체험]", 16, LEFT%", 1020, 키스인계_TMP)
+CALL PRINT_TOGGLE_BUTTON(@"%"[처녀상실]", 16, LEFT%", 1021, 처녀인계_TMP)
+CALL PRINT_TOGGLE_BUTTON(@"%"[Ａ처녀상실]", 16, LEFT%", 1022, 애널처녀인계_TMP)
+CALL PRINT_TOGGLE_BUTTON(@"%"[동정상실]", 16, LEFT%", 1023, 동정인계_TMP)
+PRINTL
+CALL PRINT_TOGGLE_BUTTON(@"%"[성적 기호]", 16, LEFT%", 1032, 성적기호인계_TMP)
+CALL PRINT_TOGGLE_BUTTON(@"%"[임신 기록]", 16, LEFT%", 1033, 임신기록인계_TMP)
+PRINTL
+CALL PRINT_TOGGLE_BUTTON(@"%"[스킬]", 16, LEFT%", 1034, 스킬인계_TMP)
+CALL PRINT_TOGGLE_BUTTON(@"%"[의상]", 16, LEFT%", 1035, 의상인계_TMP)
+PRINTL
+CALL PRINT_TOGGLE_BUTTON(@"%"[쓰리 사이즈]", 16, LEFT%", 1040, 쓰리사이즈인계_TMP)
+CALL PRINT_TOGGLE_BUTTON(@"%"[체형]", 16, LEFT%", 1041, 체형인계_TMP)
+CALL PRINT_TOGGLE_BUTTON(@"%"[체격]", 16, LEFT%", 1042, 체격인계_TMP)
+CALL PRINT_TOGGLE_BUTTON(@"%"[가슴크기]", 16, LEFT%", 1043, 가슴크기인계_TMP)
+CALL PRINT_TOGGLE_BUTTON(@"%"[페니스사이즈]", 16, LEFT%", 1044, 페니스사이즈인계_TMP)
+CALL PRINT_TOGGLE_BUTTON(@"%"[엉덩이크기]", 16, LEFT%", 1045, 엉덩이크기인계_TMP)
+
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "[pre-set 세이브]", 9997
+PRINT 
+PRINTBUTTON "[pre-set 로드]", 9998
+PRINT 
+PRINTBUTTON "[이것으로 좋다]", 9999
+
+INPUT
+SELECTCASE RESULT
+	CASE 0
+		성별인계_TMP = !성별인계_TMP
+	CASE IS < 200
+		RESULT = RESULT - 100
+		SIF BASENAME:RESULT != ""
+			BASE인계_TMP:RESULT = !BASE인계_TMP:RESULT
+	CASE IS < 300
+		RESULT = RESULT - 200
+		SIF GROUPMATCH(RESULT, GETNUM(CFLAG, "호감도"), GETNUM(CFLAG, "의존도"), GETNUM(CFLAG, "종속도"), GETNUM(CFLAG, "지배도"))
+			CFLAG인계_TMP:RESULT = !CFLAG인계_TMP:RESULT
+	CASE IS < 500
+		RESULT = RESULT - 300
+		SIF ABLNAME:RESULT != ""
+			ABL인계_TMP:RESULT = !ABL인계_TMP:RESULT
+	CASE IS < 800
+		RESULT = RESULT - 500
+		SIF TALENTNAME:RESULT != "" && PASS_CHARA_CHECK_SHOW_TALENT(RESULT)
+			TALENT인계_TMP:RESULT = !TALENT인계_TMP:RESULT
+	CASE 840 TO 870
+		RESULT = RESULT - 800
+		SIF EXPNAME:RESULT != ""
+			EXP인계_TMP:RESULT = !EXP인계_TMP:RESULT
+	CASE 1000
+		함락소질인계_TMP = !함락소질인계_TMP
+	CASE 1001
+		음란소질인계_TMP = !음란소질인계_TMP
+	CASE 1003
+		특수세력함락인계_TMP = !특수세력함락인계_TMP
+	CASE 1010
+		조임인계_TMP = !조임인계_TMP
+	CASE 1011
+		음모인계_TMP = !음모인계_TMP
+	CASE 1012
+		피어스인계_TMP = !피어스인계_TMP
+	CASE 1013
+		문신인계_TMP = !문신인계_TMP
+	CASE 1014
+		겨드랑이털인계_TMP = !겨드랑이털인계_TMP
+	CASE 1020
+		키스인계_TMP = !키스인계_TMP
+	CASE 1021
+		처녀인계_TMP = !처녀인계_TMP
+	CASE 1022
+		애널처녀인계_TMP = !애널처녀인계_TMP
+	CASE 1023
+		동정인계_TMP = !동정인계_TMP
+	CASE 1032
+		성적기호인계_TMP = !성적기호인계_TMP
+	CASE 1033
+		임신기록인계_TMP = !임신기록인계_TMP
+	CASE 1034
+		스킬인계_TMP = !스킬인계_TMP
+	CASE 1035
+		의상인계_TMP = !의상인계_TMP
+	CASE 1040
+		쓰리사이즈인계_TMP = !쓰리사이즈인계_TMP
+		성별인계_TMP = 1
+		체형인계_TMP = 1
+		체격인계_TMP = 1
+		가슴크기인계_TMP = 1
+		페니스사이즈인계_TMP = 1
+		엉덩이크기인계_TMP = 1
+		TALENT인계_TMP:GETNUM(TALENT, "유아") = 1
+		TALENT인계_TMP:GETNUM(TALENT, "더러운아저씨") = 1
+		TALENT인계_TMP:GETNUM(TALENT, "예쁜엉덩이") = 1
+	CASE 1041
+		체형인계_TMP = !체형인계_TMP
+	CASE 1042
+		체격인계_TMP = !체격인계_TMP
+	CASE 1043
+		가슴크기인계_TMP = !가슴크기인계_TMP
+	CASE 1044
+		페니스사이즈인계_TMP = !페니스사이즈인계_TMP
+	CASE 1045
+		엉덩이크기인계_TMP = !엉덩이크기인계_TMP
+	CASE 2000, 2001
+		RESULT = RESULT - 2000
+		FOR LOCAL, 0, VARSIZE("ABL")
+			SIF ABLNAME:LOCAL != ""
+				ABL인계_TMP:LOCAL = RESULT
+		NEXT
+	CASE 2100, 2101
+		RESULT = RESULT - 2100
+		FOR LOCAL, 0, 300
+			SIF TALENTNAME:LOCAL != "" && PASS_CHARA_CHECK_SHOW_TALENT(LOCAL)
+				TALENT인계_TMP:LOCAL = RESULT
+		NEXT
+	CASE 2200, 2201
+		RESULT = RESULT - 2200
+		FOR LOCAL, 40, 70
+			SIF EXPNAME:LOCAL != ""
+				EXP인계_TMP:LOCAL = RESULT
+		NEXT
+		FOR LOCAL, 90, 94
+			SIF EXPNAME:LOCAL != ""
+				EXP인계_TMP:LOCAL = RESULT
+		NEXT
+	CASE 9997
+		CALL PASS_CHARA_SAVE_GLOBAL
+	CASE 9998
+		CALL PASS_CHARA_LOAD_GLOBAL
+	CASE 9999
+		CALL PASS_CHARA_COPY_TMP_TO_ORIGINAL(대상)
+		RETURN
+ENDSELECT
+
+{
+IF 쓰리사이즈인계_TMP && !ALLSAMES(1, 성별인계_TMP, 체형인계_TMP, 체격인계_TMP, 가슴크기인계_TMP, 페니스사이즈인계_TMP, 
+				엉덩이크기인계_TMP, TALENT인계_TMP:GETNUM(TALENT, "유아"), TALENT인계_TMP:GETNUM(TALENT, "더러운아저씨"), TALENT인계_TMP:GETNUM(TALENT, "예쁜엉덩이"))
+}
+	PRINTFORMW 쓰리 사이즈 인계에 전제가 되는 요소가 인계되지 않는 설정이 되었기 때문에, 쓰리 사이즈 인계를 오프로 합니다
+	쓰리사이즈인계_TMP = 0
+ENDIF
+
+CLEARLINE LINECOUNT - FIRST_LINE
+GOTO SHOW_LOOP
+
+;-------------------------------------------
+;캐릭터의 인계 설정을 TMP에 카피한다
+;-------------------------------------------
+@PASS_CHARA_COPY_ORIGINAL_TO_TMP(대상)
+#DIM 대상
+VARSET 성별인계_TMP
+VARSET ABL인계_TMP
+VARSET TALENT인계_TMP
+VARSET EXP인계_TMP
+VARSET CFLAG인계_TMP
+VARSET BASE인계_TMP
+VARSET 함락소질인계_TMP
+VARSET 음란소질인계_TMP
+VARSET 조임인계_TMP
+VARSET 음모인계_TMP
+VARSET 겨드랑이털인계_TMP
+VARSET 피어스인계_TMP
+VARSET 특수세력함락인계_TMP
+VARSET 성적기호인계_TMP
+VARSET 문신인계_TMP
+VARSET 키스인계_TMP
+VARSET 동정인계_TMP
+VARSET 처녀인계_TMP
+VARSET 애널처녀인계_TMP
+VARSET 임신기록인계_TMP
+VARSET 쓰리사이즈인계_TMP
+VARSET 가슴크기인계_TMP
+VARSET 페니스사이즈인계_TMP
+VARSET 엉덩이크기인계_TMP
+VARSET 체형인계_TMP
+VARSET 체격인계_TMP
+
+IF INRANGE(대상, 0, CHARANUM)
+	;ARRAYCOPY가 캐릭터 변수에 대응하고 있으면 이런 일은 하지 않고 끝나지만:-(
+	FOR LOCAL, 0, VARSIZE("ABL인계")
+		ABL인계_TMP:LOCAL = ABL인계:대상:LOCAL
+	NEXT
+
+	FOR LOCAL, 0, VARSIZE("TALENT인계")
+		TALENT인계_TMP:LOCAL = TALENT인계:대상:LOCAL
+	NEXT
+
+
+	FOR LOCAL, 0, VARSIZE("EXP인계")
+		EXP인계_TMP:LOCAL = EXP인계:대상:LOCAL
+	NEXT
+
+
+	FOR LOCAL, 0, VARSIZE("CFLAG인계") 
+		CFLAG인계_TMP:LOCAL = CFLAG인계:대상:LOCAL
+	NEXT
+
+
+	FOR LOCAL, 0, VARSIZE("BASE인계")
+		BASE인계_TMP:LOCAL = BASE인계:대상:LOCAL
+	NEXT
+	성별인계_TMP = 성별인계:대상:0
+	함락소질인계_TMP = 함락소질인계:대상:0
+	음란소질인계_TMP = 음란소질인계:대상:0
+	조임인계_TMP = 조임인계:대상:0
+	음모인계_TMP = 음모인계:대상:0
+	겨드랑이털인계_TMP = 겨드랑이털인계:대상:0
+	피어스인계_TMP = 피어스인계:대상:0
+	특수세력함락인계_TMP = 특수세력함락인계:대상:0
+	성적기호인계_TMP = 성적기호인계:대상:0
+	문신인계_TMP = 문신인계:대상:0
+	키스인계_TMP = 키스인계:대상:0
+	동정인계_TMP = 동정인계:대상:0
+	처녀인계_TMP = 처녀인계:대상:0
+	애널처녀인계_TMP = 애널처녀인계:대상:0
+	가슴크기인계_TMP = 가슴크기인계:대상:0
+	페니스사이즈인계_TMP = 페니스사이즈인계:대상:0
+	임신기록인계_TMP = 임신기록인계:대상:0
+	쓰리사이즈인계_TMP = 쓰리사이즈인계:대상:0
+	가슴크기인계_TMP = 가슴크기인계:대상:0
+	페니스사이즈인계_TMP = 페니스사이즈인계:대상:0
+	엉덩이크기인계_TMP = 엉덩이크기인계:대상:0
+	체형인계_TMP = 체형인계:대상:0
+	체격인계_TMP = 체격인계:대상:0
+ELSE
+
+	;ARRAYCOPY가 캐릭터 변수에 대응하고 있으면 이런 일은 하지 않고 끝나지만:-(
+	FOR LOCAL, 0, VARSIZE("ABL인계")
+		SIF (CMATCH(ABL인계:LOCAL, 1)) == CHARANUM
+			ABL인계_TMP:LOCAL = 1
+	NEXT
+
+	FOR LOCAL, 0, VARSIZE("TALENT인계")
+		SIF (CMATCH(TALENT인계:LOCAL, 1)) == CHARANUM
+			TALENT인계_TMP:LOCAL = 1
+	NEXT
+
+	FOR LOCAL, 0, VARSIZE("EXP인계")
+		SIF (CMATCH(EXP인계:LOCAL, 1)) == CHARANUM
+			EXP인계_TMP:LOCAL = 1
+	NEXT
+
+
+	FOR LOCAL, 0, VARSIZE("CFLAG인계")
+		SIF (CMATCH(CFLAG인계:LOCAL, 1)) == CHARANUM
+			CFLAG인계_TMP:LOCAL = 1
+	NEXT
+
+
+	FOR LOCAL, 0, VARSIZE("BASE인계")
+		SIF (CMATCH(BASE인계:LOCAL, 1)) == CHARANUM
+			BASE인계_TMP:LOCAL = 1
+	NEXT
+	SIF (CMATCH(성별인계:0, 1)) == CHARANUM
+		성별인계_TMP = 1
+	SIF (CMATCH(함락소질인계:0, 1)) == CHARANUM
+		함락소질인계_TMP = 1
+	SIF (CMATCH(음란소질인계:0, 1)) == CHARANUM
+		음란소질인계_TMP = 1
+	SIF (CMATCH(조임인계:0, 1)) == CHARANUM
+		조임인계_TMP = 1
+	SIF (CMATCH(음모인계:0, 1)) == CHARANUM
+		음모인계_TMP = 1
+	SIF (CMATCH(겨드랑이털인계:0, 1)) == CHARANUM
+		겨드랑이털인계_TMP = 1
+	SIF (CMATCH(피어스인계:0, 1)) == CHARANUM
+		피어스인계_TMP = 1
+	SIF (CMATCH(특수세력함락인계:0, 1)) == CHARANUM
+		특수세력함락인계_TMP = 1
+	SIF (CMATCH(성적기호인계:0, 1)) == CHARANUM
+		성적기호인계_TMP = 1
+	SIF (CMATCH(문신인계:0, 1)) == CHARANUM
+		문신인계_TMP = 1
+	SIF (CMATCH(키스인계:0, 1)) == CHARANUM
+		키스인계_TMP = 1
+	SIF (CMATCH(동정인계:0, 1)) == CHARANUM
+		동정인계_TMP = 1
+	SIF (CMATCH(처녀인계:0, 1)) == CHARANUM
+		처녀인계_TMP = 1
+	SIF (CMATCH(애널처녀인계:0, 1)) == CHARANUM
+		애널처녀인계_TMP = 1
+	SIF (CMATCH(임신기록인계:0, 1)) == CHARANUM
+		임신기록인계_TMP = 1
+	SIF (CMATCH(쓰리사이즈인계:0, 1)) == CHARANUM
+		쓰리사이즈인계_TMP = 1
+	SIF (CMATCH(가슴크기인계:0, 1)) == CHARANUM
+		가슴크기인계_TMP = 1
+	SIF (CMATCH(페니스사이즈인계:0, 1)) == CHARANUM
+		페니스사이즈인계_TMP = 1
+	SIF (CMATCH(엉덩이크기인계:0, 1)) == CHARANUM
+		엉덩이크기인계_TMP = 1
+	SIF (CMATCH(체형인계:0, 1)) == CHARANUM
+		체형인계_TMP = 1
+	SIF (CMATCH(체격인계:0, 1)) == CHARANUM
+		체격인계_TMP = 1
+ENDIF
+
+;-------------------------------------------
+;TMP를 캐릭터의 인계 설정에 반영한다
+;하는 김에 설정이 끝난 플래그를 세우거나 꺾거나
+;-------------------------------------------
+@PASS_CHARA_COPY_TMP_TO_ORIGINAL(대상)
+#DIM 대상
+#DIM 설정이끝난플래그
+설정이끝난플래그 = 0
+IF INRANGE(대상, 0, CHARANUM)
+	FOR LOCAL, 0, VARSIZE("ABL인계")
+		SIF ABL인계_TMP:LOCAL
+			설정이끝난플래그  = 1
+		ABL인계:대상:LOCAL = ABL인계_TMP:LOCAL
+	NEXT
+
+	FOR LOCAL, 0, VARSIZE("TALENT인계")
+		SIF TALENT인계_TMP:LOCAL
+			설정이끝난플래그  = 1
+		TALENT인계:대상:LOCAL = TALENT인계_TMP:LOCAL
+	NEXT
+
+
+	FOR LOCAL, 0, VARSIZE("EXP인계")
+		SIF EXP인계_TMP:LOCAL
+			설정이끝난플래그  = 1
+		EXP인계:대상:LOCAL = EXP인계_TMP:LOCAL
+	NEXT
+
+
+	FOR LOCAL, 0, VARSIZE("CFLAG인계") 
+		SIF CFLAG인계_TMP:LOCAL
+			설정이끝난플래그  = 1
+		CFLAG인계:대상:LOCAL =CFLAG인계_TMP:LOCAL
+	NEXT
+
+
+	FOR LOCAL, 0, VARSIZE("BASE인계")
+		SIF BASE인계_TMP:LOCAL
+			설정이끝난플래그 = 1
+		BASE인계:대상:LOCAL = BASE인계_TMP:LOCAL
+	NEXT
+	SIF 성별인계_TMP
+		설정이끝난플래그  = 1
+	SIF 함락소질인계_TMP
+		설정이끝난플래그  = 1
+	SIF 음란소질인계_TMP
+		설정이끝난플래그  = 1
+	SIF 조임인계_TMP
+		설정이끝난플래그  = 1
+	SIF 음모인계_TMP
+		설정이끝난플래그  = 1
+	SIF 겨드랑이털인계_TMP
+		설정이끝난플래그  = 1
+	SIF 피어스인계_TMP
+		설정이끝난플래그  = 1
+	SIF 특수세력함락인계_TMP
+		설정이끝난플래그  = 1
+	SIF 성적기호인계_TMP
+		설정이끝난플래그  = 1
+	SIF 문신인계_TMP
+		설정이끝난플래그  = 1
+	SIF 키스인계_TMP
+		설정이끝난플래그  = 1
+	SIF 동정인계_TMP
+		설정이끝난플래그  = 1
+	SIF 처녀인계_TMP
+		설정이끝난플래그  = 1
+	SIF 애널처녀인계_TMP
+		설정이끝난플래그  = 1
+	SIF 가슴크기인계_TMP
+		설정이끝난플래그  = 1
+	SIF 페니스사이즈인계_TMP
+		설정이끝난플래그  = 1
+	SIF 임신기록인계_TMP
+		설정이끝난플래그  = 1
+	SIF 스킬인계_TMP
+		설정이끝난플래그 = 1
+	SIF 의상인계_TMP
+		설정이끝난플래그 = 1
+	SIF 쓰리사이즈인계_TMP
+		설정이끝난플래그 = 1
+	SIF 가슴크기인계_TMP
+		설정이끝난플래그 = 1
+	SIF 페니스사이즈인계_TMP
+		설정이끝난플래그 = 1
+	SIF 엉덩이크기인계_TMP
+		설정이끝난플래그 = 1
+	SIF 체형인계_TMP
+		설정이끝난플래그 = 1
+	SIF 체격인계_TMP
+		설정이끝난플래그 = 1
+	성별인계:대상:0 = 성별인계_TMP
+	함락소질인계:대상:0 = 함락소질인계_TMP
+	음란소질인계:대상:0 = 음란소질인계_TMP
+	조임인계:대상:0 = 조임인계_TMP
+	음모인계:대상:0 = 음모인계_TMP
+	겨드랑이털인계:대상:0 = 겨드랑이털인계_TMP
+	피어스인계:대상:0 = 피어스인계_TMP
+	특수세력함락인계:대상:0 = 특수세력함락인계_TMP
+	성적기호인계:대상:0 = 성적기호인계_TMP
+	문신인계:대상:0 = 문신인계_TMP
+	키스인계:대상:0 = 키스인계_TMP
+	동정인계:대상:0 = 동정인계_TMP
+	처녀인계:대상:0 = 처녀인계_TMP
+	애널처녀인계:대상:0 = 애널처녀인계_TMP
+	임신기록인계:대상:0 = 임신기록인계_TMP
+	스킬인계:대상:0 = 스킬인계_TMP
+	의상인계:대상:0 = 의상인계_TMP
+	쓰리사이즈인계:대상:0 = 쓰리사이즈인계_TMP
+	가슴크기인계:대상:0 = 가슴크기인계_TMP
+	페니스사이즈인계:대상:0 = 페니스사이즈인계_TMP
+	엉덩이크기인계:대상:0 = 엉덩이크기인계_TMP
+	체형인계:대상:0 = 체형인계_TMP
+	체격인계:대상:0 = 체격인계_TMP
+	인계설정이끝난상태:대상:0 = 설정이끝난플래그
+ELSE
+
+	FOR LOCAL, 0, VARSIZE("ABL인계")
+		CVARSET ABL인계, LOCAL, ABL인계_TMP:LOCAL
+		SIF MATCH(ABL인계_TMP:LOCAL, 1)
+			설정이끝난플래그 = 1
+	NEXT
+
+	FOR LOCAL, 0, VARSIZE("TALENT인계")
+		CVARSET TALENT인계, LOCAL, TALENT인계_TMP:LOCAL
+		SIF MATCH(TALENT인계_TMP:LOCAL, 1)
+			설정이끝난플래그 = 1
+	NEXT
+
+	FOR LOCAL, 0, VARSIZE("BASE인계")
+		CVARSET BASE인계, LOCAL, BASE인계_TMP:LOCAL
+		SIF MATCH(BASE인계_TMP:LOCAL, 1)
+			설정이끝난플래그 = 1
+	NEXT
+
+	FOR LOCAL, 0, VARSIZE("EXP인계")
+		CVARSET EXP인계, LOCAL, EXP인계_TMP:LOCAL
+		SIF MATCH(EXP인계_TMP:LOCAL, 1)
+			설정이끝난플래그 = 1
+	NEXT
+
+
+	FOR LOCAL, 0, VARSIZE("CFLAG인계")
+		CVARSET CFLAG인계, LOCAL, CFLAG인계_TMP:LOCAL
+		SIF MATCH(CFLAG인계_TMP:LOCAL, 1)
+			설정이끝난플래그 = 1
+	NEXT
+	SIF 성별인계_TMP
+		설정이끝난플래그 = 1
+	SIF 함락소질인계_TMP
+		설정이끝난플래그  = 1
+	SIF 음란소질인계_TMP
+		설정이끝난플래그  = 1
+	SIF 조임인계_TMP
+		설정이끝난플래그  = 1
+	SIF 음모인계_TMP
+		설정이끝난플래그  = 1
+	SIF 겨드랑이털인계_TMP
+		설정이끝난플래그  = 1
+	SIF 피어스인계_TMP
+		설정이끝난플래그  = 1
+	SIF 특수세력함락인계_TMP
+		설정이끝난플래그  = 1
+	SIF 성적기호인계_TMP
+		설정이끝난플래그  = 1
+	SIF 문신인계_TMP
+		설정이끝난플래그  = 1
+	SIF 키스인계_TMP
+		설정이끝난플래그  = 1
+	SIF 동정인계_TMP
+		설정이끝난플래그  = 1
+	SIF 처녀인계_TMP
+		설정이끝난플래그  = 1
+	SIF 애널처녀인계_TMP
+		설정이끝난플래그  = 1
+	SIF 임신기록인계_TMP
+		설정이끝난플래그  = 1
+	SIF 스킬인계_TMP
+		설정이끝난플래그 = 1
+	SIF 의상인계_TMP
+		설정이끝난플래그 = 1
+	SIF 쓰리사이즈인계_TMP
+		설정이끝난플래그 = 1
+	SIF 가슴크기인계_TMP
+		설정이끝난플래그 = 1
+	SIF 페니스사이즈인계_TMP
+		설정이끝난플래그 = 1
+	SIF 엉덩이크기인계_TMP
+		설정이끝난플래그 = 1
+	SIF 체형인계_TMP
+		설정이끝난플래그 = 1
+	SIF 체격인계_TMP
+		설정이끝난플래그 = 1
+	CVARSET 성별인계, 0, 성별인계_TMP
+	CVARSET 함락소질인계, 0, 함락소질인계_TMP
+	CVARSET 음란소질인계, 0, 음란소질인계_TMP
+	CVARSET 조임인계, 0, 조임인계_TMP
+	CVARSET 음모인계, 0, 음모인계_TMP
+	CVARSET 겨드랑이털인계, 0, 겨드랑이털인계_TMP
+	CVARSET 피어스인계, 0, 피어스인계_TMP
+	CVARSET 특수세력함락인계, 0, 특수세력함락인계_TMP
+	CVARSET 성적기호인계, 0, 성적기호인계_TMP
+	CVARSET 문신인계, 0, 문신인계_TMP
+	CVARSET 키스인계, 0, 키스인계_TMP
+	CVARSET 동정인계, 0, 동정인계_TMP
+	CVARSET 처녀인계, 0, 처녀인계_TMP
+	CVARSET 애널처녀인계, 0, 애널처녀인계_TMP
+	CVARSET 임신기록인계, 0, 임신기록인계_TMP
+	CVARSET 스킬인계, 0, 스킬인계_TMP
+	CVARSET 의상인계, 0, 의상인계_TMP
+	CVARSET 쓰리사이즈인계, 0, 쓰리사이즈인계_TMP
+	CVARSET 가슴크기인계, 0, 가슴크기인계_TMP
+	CVARSET 페니스사이즈인계, 0, 페니스사이즈인계_TMP
+	CVARSET 엉덩이크기인계, 0, 엉덩이크기인계_TMP
+	CVARSET 체형인계, 0, 체형인계_TMP
+	CVARSET 체격인계, 0, 체격인계_TMP
+	CVARSET 인계설정이끝난상태, 0, 설정이끝난플래그
+ENDIF
+
+;-------------------------------------------
+;pre-set 세이브
+;-------------------------------------------
+@PASS_CHARA_SAVE_GLOBAL
+#DIM FIRST_LINE
+FIRST_LINE = LINECOUNT
+CALL SINGLE_DRAWLINE
+PRINTFORML 인계（일인분）를 pre-set로서 세이브합니다
+PRINTFORML 5개까지 세이브할 수 있습니다
+CALL SINGLE_DRAWLINE
+FOR LOCAL, 0, MAX_PASS_GLOBAL_SAVE
+	PRINTFORML [{LOCAL}] - %PASS_GLOBAL_SAVE_NAME:LOCAL%
+NEXT
+CALL SINGLE_DRAWLINE
+PRINTFORML [9] 돌아온다
+INPUT
+IF RESULT == 9
+	RETURN
+ELSEIF INRANGE(RESULT, 0, MAX_PASS_GLOBAL_SAvE)
+	LOCAL:1 = RESULT
+	FOR LOCAL, 0, VARSIZE("ABL인계")
+		ABL인계_G:(LOCAL:1):LOCAL = ABL인계_TMP:LOCAL
+	NEXT
+	FOR LOCAL, 0, VARSIZE("BASE인계")
+		BASE인계_G:(LOCAL:1):LOCAL = BASE인계_TMP:LOCAL
+	NEXT
+	FOR LOCAL, 0, VARSIZE("TALENT인계")
+		TALENT인계_G:(LOCAL:1):LOCAL = TALENT인계_TMP:LOCAL
+	NEXT
+	FOR LOCAL, 0, VARSIZE("CFLAG인계")
+		CFLAG인계_G:(LOCAL:1):LOCAL = CFLAG인계_TMP:LOCAL
+	NEXT
+	FOR LOCAL, 0, VARSIZE("EXP인계")
+		EXP인계_G:(LOCAL:1):LOCAL = EXP인계_TMP:LOCAL
+	NEXT
+
+	성별인계_G:(LOCAL:1) = 성별인계_TMP
+	함락소질인계_G:(LOCAL:1) = 함락소질인계_TMP
+	음란소질인계_G:(LOCAL:1) = 음란소질인계_TMP
+	조임인계_G:(LOCAL:1) = 조임인계_TMP
+	음모인계_G:(LOCAL:1) = 음모인계_TMP
+	겨드랑이털인계_G:(LOCAL:1) = 겨드랑이털인계_TMP
+	피어스인계_G:(LOCAL:1) = 피어스인계_TMP
+	특수세력함락인계_G:(LOCAL:1) = 특수세력함락인계_TMP
+	성적기호인계_G:(LOCAL:1) = 성적기호인계_TMP
+	문신인계_G:(LOCAL:1) = 문신인계_TMP
+	키스인계_G:(LOCAL:1) = 키스인계_TMP
+	동정인계_G:(LOCAL:1) = 동정인계_TMP
+	처녀인계_G:(LOCAL:1) = 처녀인계_TMP
+	애널처녀인계_G:(LOCAL:1) = 애널처녀인계_TMP
+	임신기록인계_G:(LOCAL:1) = 임신기록인계_TMP
+	스킬인계_G:(LOCAL:1) = 스킬인계_TMP
+	의상인계_G:(LOCAL:1) = 의상인계_TMP
+	쓰리사이즈인계_G:(LOCAL:1) = 쓰리사이즈인계_TMP
+	가슴크기인계_G:(LOCAL:1) = 가슴크기인계_TMP
+	페니스사이즈인계_G:(LOCAL:1) = 페니스사이즈인계_TMP
+	엉덩이크기인계_G:(LOCAL:1) = 엉덩이크기인계_TMP
+	체형인계_G:(LOCAL:1) = 체형인계_TMP
+	체격인계_G:(LOCAL:1) = 체격인계_TMP
+	PRINTFORML 이름을 입력해 주세요
+	INPUTS
+	IF RESULTS == ""
+		RESULTS = %GETTIMES()%
+	ENDIF
+	PASS_GLOBAL_SAVE_NAME:(LOCAL:1) = %RESULTS%
+	SAVEGLOBAL
+ENDIF
+CLEARLINE LINECOUNT - FIRST_LINE
+RESTART
+
+;-------------------------------------------
+;pre-set 세이브
+;-------------------------------------------
+@PASS_CHARA_LOAD_GLOBAL
+#DIM FIRST_LINE
+FIRST_LINE = LINECOUNT
+CALL SINGLE_DRAWLINE
+PRINTFORML 인계 pre-set를 로드합니다
+CALL SINGLE_DRAWLINE
+FOR LOCAL, 0, MAX_PASS_GLOBAL_SAVE
+	PRINTFORML [{LOCAL}] - %PASS_GLOBAL_SAVE_NAME:LOCAL%
+NEXT
+CALL SINGLE_DRAWLINE
+PRINTFORML [9] 돌아온다
+INPUT
+IF RESULT == 9
+	RETURN
+ELSEIF INRANGE(RESULT, 0, MAX_PASS_GLOBAL_SAvE)
+	LOCAL:1 = RESULT
+	FOR LOCAL, 0, VARSIZE("ABL인계")
+		ABL인계_TMP:LOCAL = ABL인계_G:(LOCAL:1):LOCAL
+	NEXT
+	FOR LOCAL, 0, VARSIZE("BASE인계")
+		BASE인계_TMP:LOCAL = BASE인계_G:(LOCAL:1):LOCAL
+	NEXT
+	FOR LOCAL, 0, VARSIZE("TALENT인계")
+		TALENT인계_TMP:LOCAL = TALENT인계_G:(LOCAL:1):LOCAL
+	NEXT
+	FOR LOCAL, 0, VARSIZE("CFLAG인계")
+		CFLAG인계_TMP:LOCAL = CFLAG인계_G:(LOCAL:1):LOCAL
+	NEXT
+	FOR LOCAL, 0, VARSIZE("EXP인계")
+		EXP인계_TMP:LOCAL = EXP인계_G:(LOCAL:1):LOCAL
+	NEXT
+
+	성별인계_TMP = 성별인계_G:(LOCAL:1)
+	함락소질인계_TMP = 함락소질인계_G:(LOCAL:1)
+	음란소질인계_TMP = 음란소질인계_G:(LOCAL:1)
+	조임인계_TMP = 조임인계_G:(LOCAL:1)
+	음모인계_TMP = 음모인계_G:(LOCAL:1)
+	겨드랑이털인계_TMP = 겨드랑이털인계_G:(LOCAL:1)
+	피어스인계_TMP = 피어스인계_G:(LOCAL:1)
+	특수세력함락인계_TMP = 특수세력함락인계_G:(LOCAL:1)
+	성적기호인계_TMP = 성적기호인계_G:(LOCAL:1)
+	문신인계_TMP = 문신인계_G:(LOCAL:1)
+	키스인계_TMP = 키스인계_G:(LOCAL:1)
+	동정인계_TMP = 동정인계_G:(LOCAL:1)
+	처녀인계_TMP = 처녀인계_G:(LOCAL:1)
+	애널처녀인계_TMP = 애널처녀인계_G:(LOCAL:1)
+	임신기록인계_TMP = 임신기록인계_G:(LOCAL:1)
+	스킬인계_TMP = 스킬인계_G:(LOCAL:1)
+	의상인계_TMP = 의상인계_G:(LOCAL:1)
+	쓰리사이즈인계_TMP = 쓰리사이즈인계_G:(LOCAL:1)
+	가슴크기인계_TMP = 가슴크기인계_G:(LOCAL:1)
+	페니스사이즈인계_TMP = 페니스사이즈인계_G:(LOCAL:1)
+	엉덩이크기인계_TMP = 엉덩이크기인계_G:(LOCAL:1)
+	체형인계_TMP = 체형인계_G:(LOCAL:1)
+	체격인계_TMP = 체격인계_G:(LOCAL:1)
+	PRINTFORMW 로드했습니다
+ENDIF
+CLEARLINE LINECOUNT - FIRST_LINE
+RESTART
+
+;-------------------------------------------
+;TMP를 캐릭터의 인계 설정에 반영한다
+;하는 김에 설정이 끝난 플래그를 세우거나 꺾거나
+;-------------------------------------------
+@CLEAR_ALL_PASS_SETTINGS()
+FOR LOCAL, 0, VARSIZE("ABL인계")
+	CVARSET ABL인계, LOCAL, 0
+NEXT
+
+FOR LOCAL, 0, VARSIZE("TALENT인계")
+	CVARSET TALENT인계, LOCAL, 0
+NEXT
+
+FOR LOCAL, 0, VARSIZE("BASE인계")
+	CVARSET BASE인계, LOCAL, 0
+NEXT
+
+FOR LOCAL, 0, VARSIZE("EXP인계")
+	CVARSET EXP인계, LOCAL, 0
+NEXT
+
+
+FOR LOCAL, 0, VARSIZE("CFLAG인계")
+	CVARSET CFLAG인계, LOCAL, 0
+NEXT
+CVARSET 성별인계, 0, 0
+CVARSET 함락소질인계, 0, 0
+CVARSET 음란소질인계, 0, 0
+CVARSET 조임인계, 0, 0
+CVARSET 음모인계, 0, 0
+CVARSET 겨드랑이털인계, 0, 0
+CVARSET 피어스인계, 0, 0
+CVARSET 특수세력함락인계, 0, 0
+CVARSET 성적기호인계, 0, 0
+CVARSET 문신인계, 0, 0
+CVARSET 키스인계, 0, 0
+CVARSET 동정인계, 0, 0
+CVARSET 처녀인계, 0, 0
+CVARSET 애널처녀인계, 0, 0
+CVARSET 가슴크기인계, 0, 0
+CVARSET 페니스사이즈인계, 0, 0
+CVARSET 임신기록인계, 0, 0
+CVARSET 스킬인계, 0, 0
+CVARSET 의상인계, 0, 0
+CVARSET 쓰리사이즈인계, 0, 0
+CVARSET 가슴크기인계, 0, 0
+CVARSET 페니스사이즈인계, 0, 0
+CVARSET 엉덩이크기인계, 0, 0
+CVARSET 체형인계, 0, 0
+CVARSET 체격인계, 0, 0
+CVARSET 인계설정이끝난상태, 0, 0
+
+
+
+;-------------------------------------------
+;캐릭터를 계승하는 처리
+;-------------------------------------------
+@PASS_CHARA(대상)
+#DIM 대상
+#DIM 성별보존
+#DIM ABL보존, VARSIZE("ABL인계")
+#DIM TALENT보존, VARSIZE("TALENT인계")
+#DIM EXP보존, VARSIZE("EXP인계")
+#DIM CFLAG보존, VARSIZE("CFLAG인계")
+#DIM BASE보존, VARSIZE("BASE인계")
+;#DIM 함락소질 보존
+#DIM 음란소질보존
+#DIM Ｖ조임보존
+#DIM Ａ조임보존
+#DIM 음모목표치보존
+#DIM 음모현재치보존
+#DIM 겨드랑이털목표치보존
+#DIM 겨드랑이털현재치보존
+#DIM 피어스보존
+#DIM 피어스구멍보존
+#DIM 특수세력함락보존
+#DIM 조교카운트보존, VARSIZE("SP_TRAIN_COUNT")
+#DIM 성적기호보존
+#DIM 성적기호경험보존, VARSIZE("SEXUAL_PREFERENCE_EXP")
+#DIM COM_EXP보존, VARSIZE("COM_EXP")
+#DIMS 문신보존, VARSIZE("TATTOO")
+#DIMS 키스보존
+#DIMS 동정보존
+#DIMS 처녀보존
+#DIMS 애널처녀보존
+#DIMS 키스시츄보존
+#DIMS 동정시츄보존
+#DIMS 처녀시츄보존
+#DIMS 애널처녀시츄보존
+#DIM 가슴크기보존
+#DIM 페니스사이즈보존
+#DIM 엉덩이크기보존
+#DIM 체형보존
+#DIM 체격보존
+
+#DIM PREGNANT_RECORD_TIMES보존, PREGNANT_RECORD_MAX
+#DIM PREGNAMT_RECORD_FATHER보존, PREGNANT_RECORD_MAX
+#DIM SKILL_ID_SLOT보존, SKILL_GENRE_NUM, MAX_SKILL_SLOT
+#DIM SKILL_NO_SLOT보존, SKILL_GENRE_NUM, MAX_SKILL_SLOT
+#DIM 의상보존, CLOTH_PART_NUM
+VARSET 성별보존
+VARSET ABL보존
+VARSET TALENT보존
+VARSET EXP보존
+VARSET CFLAG보존
+VARSET BASE보존
+;VARSET 함락소질 보존
+VARSET 음란소질보존
+VARSET Ｖ조임보존
+VARSET Ａ조임보존
+VARSET 음모목표치보존
+VARSET 음모현재치보존
+VARSET 겨드랑이털목표치보존
+VARSET 겨드랑이털현재치보존
+VARSET 피어스보존
+VARSET 피어스구멍보존
+VARSET 특수세력함락보존
+VARSET 조교카운트보존
+VARSET 성적기호보존
+VARSET 성적기호경험보존
+VARSET COM_EXP보존
+VARSET 문신보존
+VARSET 키스보존
+VARSET 동정보존
+VARSET 처녀보존
+VARSET 애널처녀보존
+VARSET 키스시츄보존
+VARSET 동정시츄보존
+VARSET 처녀시츄보존
+VARSET 애널처녀시츄보존
+VARSET 가슴크기보존
+VARSET 페니스사이즈보존
+VARSET 엉덩이크기보존
+VARSET 체형보존
+VARSET 체격보존
+
+VARSET PREGNANT_RECORD_TIMES보존
+VARSET PREGNAMT_RECORD_FATHER보존
+VARSET SKILL_ID_SLOT보존, -1
+VARSET SKILL_NO_SLOT보존, -1
+VARSET 의상보존
+;데일리계는 PASS_CHARA로 취급하지 않는다
+TALENT보존:GETNUM(TALENT, "데일리계") = TALENT:대상:데일리계
+
+;ABL를 보존
+FOR LOCAL, 0, VARSIZE("ABL인계")
+	SIF ABL인계:대상:LOCAL
+		ABL보존:LOCAL = ABL:대상:LOCAL
+NEXT
+
+;TALENT를 보존
+FOR LOCAL, 0, VARSIZE("TALENT인계")
+	SIF TALENT인계:대상:LOCAL
+		TALENT보존:LOCAL = TALENT:대상:LOCAL
+NEXT
+
+;EXP를 보존
+FOR LOCAL, 40, 70
+	SIF EXP인계:대상:LOCAL
+		EXP보존:LOCAL = EXP:대상:LOCAL
+NEXT
+
+;별도 보존하는 녀석
+FOR LOCAL, 90, 94
+	SIF EXP인계:대상:LOCAL
+		EXP보존:LOCAL = EXP:대상:LOCAL
+NEXT
+
+
+;CFLAG를 보존
+SIF CFLAG인계:대상:GETNUM(CFLAG, "호감도")
+	CFLAG보존:GETNUM(CFLAG, "호감도") = CFLAG:대상:호감도
+SIF CFLAG인계:대상:GETNUM(CFLAG, "종속도")
+	CFLAG보존:GETNUM(CFLAG, "종속도") = CFLAG:대상:종속도
+SIF CFLAG인계:대상:GETNUM(CFLAG, "의존도")
+	CFLAG보존:GETNUM(CFLAG, "의존도") = CFLAG:대상:의존도
+SIF CFLAG인계:대상:GETNUM(CFLAG, "지배도")
+	CFLAG보존:GETNUM(CFLAG, "지배도") = CFLAG:대상:지배도
+
+;BASE를 보존
+FOR LOCAL, 0, VARSIZE("BASE인계")
+	SIF GROUPMATCH(LOCAL, GETNUM(BASE, "신장"), GETNUM(BASE, "체중"), GETNUM(BASE, "가슴"), GETNUM(BASE, "허리"), GETNUM(BASE, "엉덩이"), GETNUM(BASE, "페니스"))
+		CONTINUE
+	SIF BASE인계:대상:LOCAL
+		BASE보존:LOCAL = MAXBASE:대상:LOCAL
+NEXT
+
+;함락소질을 보존
+IF 함락소질인계:대상:0
+	FOR LOCAL, 150, 157
+		TALENT보존:LOCAL = TALENT:대상:LOCAL
+	NEXT
+ENDIF
+
+SIF 성별인계:대상:0
+	성별보존 = TALENT:대상:성별
+
+SIF 음란소질인계:대상:0
+	음란소질보존 = TALENT:대상:음란계
+
+IF 조임인계:대상:0
+	Ｖ조임보존 = TALENT:대상:Ｖ조임
+	Ａ조임보존 = TALENT:대상:Ａ조임
+ENDIF
+
+IF 음모인계:대상:0
+	음모현재치보존 = TALENT:대상:음모현재치
+	음모목표치보존 = TALENT:대상:음모목표치
+ENDIF
+
+IF 겨드랑이털인계:대상:0
+	겨드랑이털현재치보존 = TALENT:대상:겨드랑이털현재치
+	겨드랑이털목표치보존 = TALENT:대상:겨드랑이털목표치
+ENDIF
+
+IF 피어스인계:대상:0
+	피어스보존 = TALENT:대상:피어스
+	피어스구멍보존 = TALENT:대상:피어스구멍
+ENDIF
+
+IF 특수세력함락인계:대상:0
+	특수세력함락보존 = TALENT:대상:특수세력함락계
+	FOR LOCAL, 0, VARSIZE("SP_TRAIN_COUNT")
+		조교카운트보존:LOCAL = SP_TRAIN_COUNT:대상:LOCAL
+	NEXT
+ENDIF
+
+IF 성적기호인계:대상:0
+	성적기호보존 = SEXUAL_PREFERENCE:대상:0
+	FOR LOCAL, 0, VARSIZE("SEXUAL_PREFERENCE_EXP")
+		성적기호경험보존:LOCAL = SEXUAL_PREFERENCE_EXP:대상:LOCAL
+	NEXT
+ENDIF
+
+IF 문신인계:대상:0
+	FOR LOCAL, 0, VARSIZE("TATTOO")
+		문신보존:LOCAL = %TATTOO:대상:LOCAL%
+	NEXT
+ENDIF
+
+IF 키스인계:대상:0
+	키스보존 = %SEXUAL_EXPERIENCE:대상:첫체험_키스%
+	키스시츄보존 = %SEXUAL_EXPERIENCE_SITUATION:대상:첫체험_키스%
+	TALENT보존:GETNUM(TALENT, "키스미경험") = TALENT:대상:키스미경험
+ENDIF
+IF 동정인계:대상:0
+	동정보존 = %SEXUAL_EXPERIENCE:대상:첫체험_동정%
+	동정시츄보존 = %SEXUAL_EXPERIENCE_SITUATION:대상:첫체험_동정%
+	TALENT보존:GETNUM(TALENT, "동정") = TALENT:대상:동정
+ENDIF
+IF 처녀인계:대상:0
+	처녀보존 = %SEXUAL_EXPERIENCE:대상:첫체험_처녀%
+	처녀시츄보존 = %SEXUAL_EXPERIENCE_SITUATION:대상:첫체험_처녀%
+	TALENT보존:GETNUM(TALENT, "처녀") = TALENT:대상:처녀
+ENDIF
+IF 애널처녀인계:대상:0
+	애널처녀보존 = %SEXUAL_EXPERIENCE:대상:첫체험_애널처녀%
+	애널처녀시츄보존 = %SEXUAL_EXPERIENCE_SITUATION:대상:첫체험_애널처녀%
+	TALENT보존:GETNUM(TALENT, "애널처녀") = TALENT:대상:애널처녀
+ENDIF
+
+IF 쓰리사이즈인계:대상:0
+	BASE보존:GETNUM(BASE, "신장") = BASE:대상:신장
+	BASE보존:GETNUM(BASE, "체중") = BASE:대상:체중
+	BASE보존:GETNUM(BASE, "가슴") = BASE:대상:가슴
+	BASE보존:GETNUM(BASE, "허리") = BASE:대상:허리
+	BASE보존:GETNUM(BASE, "엉덩이") = BASE:대상:엉덩이
+	BASE보존:GETNUM(BASE, "페니스") = BASE:대상:페니스
+ENDIF
+
+IF 가슴크기인계:대상:0
+	IF CFLAG:대상:임신시가슴크기증가
+		가슴크기보존 = GET_BUSTSIZE(대상) - 1
+	ELSE
+		가슴크기보존 = GET_BUSTSIZE(대상)
+	ENDIF
+ENDIF
+
+SIF 페니스사이즈인계:대상:0
+	페니스사이즈보존 = GET_PENISSIZE(대상)
+SIF 엉덩이크기인계:대상:0
+	엉덩이크기보존 = GET_HIPSIZE(대상)
+SIF 체격인계:대상:0
+	체격보존 = TALENT:대상:체격
+SIF 체형인계:대상:0
+	체형보존 = TALENT:대상:체형
+
+
+IF 임신기록인계:대상:0
+	FOR LOCAL, 0, PREGNANT_RECORD_MAX
+		PREGNAMT_RECORD_FATHER보존:LOCAL = PREGNANT_RECORD_FATHER:대상:LOCAL
+		PREGNANT_RECORD_TIMES보존:LOCAL = PREGNANT_RECORD_TIMES:대상:LOCAL
+	NEXT
+ENDIF
+
+IF 스킬인계:대상:0
+	FOR LOCAL, 0, SKILL_GENRE_NUM
+		FOR LOCAL:1, 0, MAX_SKILL_SLOT
+			SKILL_NO_SLOT보존:LOCAL:(LOCAL:1) = SKILL_NO_SLOT:대상:LOCAL:(LOCAL:1)
+			SKILL_ID_SLOT보존:LOCAL:(LOCAL:1) = SKILL_ID_SLOT:대상:LOCAL:(LOCAL:1)
+		NEXT
+	NEXT
+ENDIF
+
+IF 의상인계:대상:0
+	FOR LOCAL, 0, CLOTH_PART_NUM
+		의상보존:LOCAL = CLOTH:대상:LOCAL
+	NEXT
+ENDIF
+
+;초기화
+CALL INIT_CHARA(대상)
+
+;-----------여기로부터 되돌리는 작업--------------
+TALENT:대상:데일리계 = TALENT보존:GETNUM(TALENT, "데일리계")
+
+
+;ABL를 되돌린다
+FOR LOCAL, 0, VARSIZE("ABL인계")
+	SIF ABL인계:대상:LOCAL
+		ABL:대상:LOCAL = ABL보존:LOCAL
+NEXT
+
+;TALENT를 되돌린다
+FOR LOCAL, 0, VARSIZE("TALENT인계")
+	SIF TALENT인계:대상:LOCAL
+		TALENT:대상:LOCAL = TALENT보존:LOCAL
+NEXT
+
+;EXP를 되돌린다
+FOR LOCAL, 40, 70
+	SIF EXP인계:대상:LOCAL
+		EXP:대상:LOCAL = EXP보존:LOCAL
+NEXT
+
+;별도 보존하는 녀석
+FOR LOCAL, 90, 94
+	SIF EXP인계:대상:LOCAL
+		EXP:대상:LOCAL = EXP보존:LOCAL
+NEXT
+
+
+;CFLAG를 되돌린다
+SIF CFLAG인계:대상:GETNUM(CFLAG, "호감도")
+	CFLAG:대상:호감도 = CFLAG보존:GETNUM(CFLAG, "호감도")
+SIF CFLAG인계:대상:GETNUM(CFLAG, "종속도")
+	CFLAG:대상:종속도 = CFLAG보존:GETNUM(CFLAG, "종속도")
+SIF CFLAG인계:대상:GETNUM(CFLAG, "의존도")
+	CFLAG:대상:의존도 = CFLAG보존:GETNUM(CFLAG, "의존도")
+SIF CFLAG인계:대상:GETNUM(CFLAG, "지배도")
+	CFLAG:대상:지배도 = CFLAG보존:GETNUM(CFLAG, "지배도")
+
+;BASE를 되돌린다
+FOR LOCAL, 0, VARSIZE("BASE인계")
+	SIF GROUPMATCH(LOCAL, GETNUM(BASE, "신장"), GETNUM(BASE, "체중"), GETNUM(BASE, "가슴"), GETNUM(BASE, "허리"), GETNUM(BASE, "엉덩이"), GETNUM(BASE, "페니스"))
+		CONTINUE
+	SIF BASE인계:대상:LOCAL
+		MAXBASE:대상:LOCAL = BASE보존:LOCAL
+NEXT
+
+SIF 성별인계:대상:0
+	TALENT:대상:성별 = 성별보존
+
+;함락소질을 되돌린다
+IF 함락소질인계:대상:0
+	FOR LOCAL, 150, 157
+		TALENT:대상:LOCAL = TALENT보존:LOCAL
+	NEXT
+ENDIF
+
+SIF 음란소질인계:대상:0
+	TALENT:대상:음란계 = 음란소질보존
+
+IF 조임인계:대상:0
+	TALENT:대상:Ｖ조임 = Ｖ조임보존
+	TALENT:대상:Ａ조임 = Ａ조임보존
+ENDIF
+
+IF 음모인계:대상:0
+	TALENT:대상:음모현재치 = 음모현재치보존
+	TALENT:대상:음모목표치 = 음모목표치보존
+ENDIF
+
+IF 겨드랑이털인계:대상:0
+	TALENT:대상:겨드랑이털현재치 = 겨드랑이털현재치보존
+	TALENT:대상:겨드랑이털목표치 = 겨드랑이털목표치보존
+ENDIF
+
+IF 피어스인계:대상:0
+	TALENT:대상:피어스 = 피어스보존
+	TALENT:대상:피어스구멍 =피어스구멍보존
+ENDIF
+
+IF 특수세력함락인계:대상:0
+	TALENT:대상:특수세력함락계 = 특수세력함락보존
+	FOR LOCAL, 0, VARSIZE("SP_TRAIN_COUNT")
+		SP_TRAIN_COUNT:대상:LOCAL = 조교카운트보존:LOCAL
+	NEXT
+ENDIF
+
+IF 성적기호인계:대상:0
+	SEXUAL_PREFERENCE:대상:0 = 성적기호보존
+	FOR LOCAL, 0, VARSIZE("SEXUAL_PREFERENCE_EXP")
+		SEXUAL_PREFERENCE_EXP:대상:LOCAL = 성적기호경험보존:LOCAL
+	NEXT
+ENDIF
+
+IF 문신인계:대상:0
+	FOR LOCAL, 0, VARSIZE("TATTOO")
+		TATTOO:대상:LOCAL = %문신보존:LOCAL%
+	NEXT
+ENDIF
+
+IF 키스인계:대상:0
+	SEXUAL_EXPERIENCE:대상:첫체험_키스 = %키스보존%
+	SEXUAL_LAST_EXPERIENCE:대상:첫체험_키스 = %키스보존%
+	SEXUAL_EXPERIENCE_SITUATION:대상:첫체험_키스 = %키스시츄보존%
+	SEXUAL_LAST_EXPERIENCE_SITUATION:대상:첫체험_키스 = %키스시츄보존%
+	TALENT:대상:키스미경험 = TALENT보존:GETNUM(TALENT, "키스미경험")
+ENDIF
+IF 동정인계:대상:0
+	SEXUAL_EXPERIENCE:대상:첫체험_동정 = %동정보존%
+	SEXUAL_LAST_EXPERIENCE:대상:첫체험_동정 = %동정보존%
+	TALENT:대상:동정 = TALENT보존:GETNUM(TALENT, "동정")
+	SEXUAL_EXPERIENCE_SITUATION:대상:첫체험_동정 = %동정시츄보존%
+	SEXUAL_LAST_EXPERIENCE_SITUATION:대상:첫체험_동정 = %동정시츄보존%
+ENDIF
+IF 처녀인계:대상:0
+	SEXUAL_EXPERIENCE:대상:첫체험_처녀 = %처녀보존%
+	SEXUAL_LAST_EXPERIENCE:대상:첫체험_처녀 = %처녀보존%
+	TALENT:대상:처녀 = TALENT보존:GETNUM(TALENT, "처녀")
+	SEXUAL_EXPERIENCE_SITUATION:대상:첫체험_처녀 = %처녀시츄보존%
+	SEXUAL_LAST_EXPERIENCE_SITUATION:대상:첫체험_처녀 = %처녀시츄보존%
+ENDIF
+IF 애널처녀인계:대상:0
+	SEXUAL_EXPERIENCE:대상:첫체험_애널처녀 = %애널처녀보존%
+	SEXUAL_LAST_EXPERIENCE:대상:첫체험_애널처녀 = %애널처녀보존%
+	SEXUAL_EXPERIENCE_SITUATION:대상:첫체험_애널처녀 = %애널처녀시츄보존%
+	SEXUAL_LAST_EXPERIENCE_SITUATION:대상:첫체험_애널처녀 = %애널처녀시츄보존%
+
+	TALENT:대상:애널처녀 = TALENT보존:GETNUM(TALENT, "애널처녀")
+ENDIF
+
+SIF 가슴크기인계:대상:0
+	CALL SET_BUSTSIZE(대상, 가슴크기보존)
+
+SIF 페니스사이즈인계:대상:0
+	CALL SET_PENISSIZE(대상, 페니스사이즈보존)
+
+SIF 엉덩이크기인계:대상:0
+	CALL SET_HIPSIZE(대상, 엉덩이크기보존)
+
+SIF 체격인계:대상:0
+	TALENT:대상:체격 = 체격보존
+SIF 체형인계:대상:0
+	TALENT:대상:체형 = 체형보존
+
+IF 쓰리사이즈인계:대상:0
+	MAXBASE:대상:신장 = BASE보존:GETNUM(BASE, "신장")
+	MAXBASE:대상:체중 = BASE보존:GETNUM(BASE, "체중")
+	MAXBASE:대상:가슴 = BASE보존:GETNUM(BASE, "가슴")
+	MAXBASE:대상:허리 = BASE보존:GETNUM(BASE, "허리")
+	MAXBASE:대상:엉덩이 = BASE보존:GETNUM(BASE, "엉덩이")
+	MAXBASE:대상:페니스 = BASE보존:GETNUM(BASE, "페니스")
+	BASE:대상:신장 = MAXBASE:대상:신장
+	BASE:대상:체중 = MAXBASE:대상:체중
+	BASE:대상:가슴 = MAXBASE:대상:가슴
+	BASE:대상:허리 = MAXBASE:대상:허리
+	BASE:대상:엉덩이  = MAXBASE:대상:엉덩이
+	BASE:대상:페니스 = MAXBASE:대상:페니스
+ENDIF
+
+IF 임신기록인계:대상:0
+	FOR LOCAL, 0, PREGNANT_RECORD_MAX
+		PREGNANT_RECORD_FATHER:대상:LOCAL = PREGNAMT_RECORD_FATHER보존:LOCAL
+		PREGNANT_RECORD_TIMES:대상:LOCAL = PREGNANT_RECORD_TIMES보존:LOCAL
+	NEXT
+ENDIF
+
+IF 스킬인계:대상:0
+	FOR LOCAL, 0, SKILL_GENRE_NUM
+		FOR LOCAL:1, 0, MAX_SKILL_SLOT
+			SKILL_NO_SLOT:대상:LOCAL:(LOCAL:1) = SKILL_NO_SLOT보존:LOCAL:(LOCAL:1)
+			SKILL_ID_SLOT:대상:LOCAL:(LOCAL:1) = SKILL_ID_SLOT보존:LOCAL:(LOCAL:1)
+		NEXT
+	NEXT
+ENDIF
+
+IF 의상인계:대상:0
+	FOR LOCAL, 0, CLOTH_PART_NUM
+		CLOTH:대상:LOCAL = 의상보존:LOCAL
+	NEXT
+ENDIF
+
+RETURN 
+
+
+@PASS_CHARA_CHECK_SHOW_TALENT(ARG:0)
+#FUNCTION
+{
+RETURNF !GROUPMATCH(ARG:0, GETNUM(TALENT, "성별"), GETNUM(TALENT, "동정"), GETNUM(TALENT, "처녀"), GETNUM(TALENT, "키스미경험"), GETNUM(TALENT, "애널처녀"), 
+GETNUM(TALENT, "연모"), GETNUM(TALENT, "친애"), GETNUM(TALENT, "연인"), GETNUM(TALENT, "복종"), GETNUM(TALENT, "예속"), GETNUM(TALENT, "낙인"), GETNUM(TALENT,"주인"), GETNUM(TALENT, "소유자"), GETNUM(TALENT, "친구"),
+GETNUM(TALENT, "붕괴"), GETNUM(TALENT, "공허"), GETNUM(TALENT, "정실"), GETNUM(TALENT, "첩"), GETNUM(TALENT, "임신"), GETNUM(TALENT, "육아중"), 
+GETNUM(TALENT, "촉수임신"), GETNUM(TALENT, "Ａ촉수임신"), GETNUM(TALENT, "아이인질"), 
+GETNUM(TALENT, "가슴크기"), GETNUM(TALENT, "페니스사이즈"),
+GETNUM(TALENT, "잉태가능"), GETNUM(TALENT, "모성"))
+}

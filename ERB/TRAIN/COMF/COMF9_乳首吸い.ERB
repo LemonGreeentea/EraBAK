@@ -1,0 +1,520 @@
+﻿;유두빨기
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME9
+	LOCALS:1 = 유두빨기
+
+IF MTAR_NUM >= 2
+	LOCALS:0 = 동시 %LOCALS:1%
+ELSE
+	LOCALS:0 = %LOCALS:1%
+ENDIF
+
+RESULTS:0 = %LOCALS:0%한다
+RESULTS:1 = %LOCALS:0%당한다
+RESULTS:2 = %LOCALS:0%시킨다
+RESULTS:3 = %LOCALS:0%된다
+RESULTS:4 = %LOCALS:0%시킨다
+RESULTS:5 = %LOCALS:0%과시하고
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE9
+;공통 부분
+CALL COM_ABLE_COMMON(9)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 2명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 2
+	RETURN 0
+;타겟은 최대로 2명까지
+SIF MTAR_NUM <= 0 || MTAR_NUM > 2
+	RETURN 0
+;2-2는 불가
+SIF MPLY_NUM == 2 && MTAR_NUM == 2
+	RETURN 0
+;모든 플레이어에 대해 판정
+FOR LOCAL:0, 0, MPLY_NUM
+	;행동불능이라면 불가
+	SIF !IS_PLAYABLE(MPLY:(LOCAL:0))
+		RETURN 0
+	;안면승마 되고 있다면 불가
+	SIF IS_RIDDEN(MPLY:(LOCAL:0))
+		RETURN 0
+	;쿤닐링구스·페라·파이즈리·키스·전기안마중은 불가
+	SIF IS_EQUIP_PLAYER(MPLY:(LOCAL:0), 2, 11, 12, 20, 103)
+		RETURN 0
+	;바닥에 엎드리며 있다면 불가
+	SIF IS_EQUIP_PLAYER(MPLY:(LOCAL:0), 110)
+		RETURN 0
+	;구가 막히고 있으면 안 돼
+	SIF IS_M_HOLD(MPLY:(LOCAL:0))
+		RETURN 0
+	;타겟으로부터 플레이어에 다리 빨고 안이라면 불가
+	SIF SEARCH_EQUIP_IC(104, MPLY:0, MTAR:0) >= 0
+		RETURN 0
+	;모든 타겟으로 붙어 판정
+	FOR LOCAL:1, 0, MTAR_NUM
+		;타겟으로부터 플레이어에 삽입중에서 체위가 후배위·배면좌위·배면기승위라면 불가
+		SIF GROUPMATCH(GET_SEX_POSITION(MTAR:(LOCAL:1), MPLY:(LOCAL:0)), 2, 4, 6)
+			RETURN 0
+		;플레이어로부터 타겟으로 삽입중에서 체위가 후배위·배면좌위·배면기승위라면 불가
+		SIF GROUPMATCH(GET_SEX_POSITION(MTAR:(LOCAL:0), MPLY:(LOCAL:1)), 2, 4, 6)
+			RETURN 0
+		;플레이어와 타겟이 서로 조개맞대기중이라면 불가
+		SIF SEARCH_EQUIP_IC(21, MPLY:(LOCAL:0), MTAR:(LOCAL:1)) >= 0
+			RETURN 0
+		;플레이어와 타겟이 서로 쌍두바이브로 결합중이라면 불가
+		SIF SEARCH_EQUIP_IC(22, MPLY:(LOCAL:0), MTAR:(LOCAL:1)) >= 0
+			RETURN 0
+		;플레이어로부터 타겟／타겟으로부터 플레이어에 엉덩이코키중이라면 불가
+		SIF SEARCH_EQUIP_IC(15, MPLY:(LOCAL:0), MTAR:(LOCAL:1)) >= 0
+			RETURN 0
+		;플레이어로부터 타겟／타겟으로부터 플레이어에 전기안마중이라면 불가
+		SIF SEARCH_EQUIP_IC(103, MPLY:(LOCAL:0), MTAR:(LOCAL:1)) >= 0
+			RETURN 0
+	NEXT
+NEXT
+;모든 타겟으로 붙어 판정
+FOR LOCAL:0, 0, MTAR_NUM
+	;파이즈리중·촉수가슴애무·촉수착유중은 불가
+	SIF IS_EQUIP_PLAYER(MPLY:(LOCAL:0), 12, 204, 207)
+		RETURN 0
+	;
+	;타겟이 유두캡 사용중이라면 불가
+	SIF IS_EQUIP_TARGET(MTAR:(LOCAL:0),  64)
+		RETURN 0
+NEXT
+
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM9
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;●인원수 보정의 설정
+LOCAL:10 = 100
+
+SELECTCASE MPLY_NUM
+	CASE 2
+		TIMES LOCAL:10, 0.75
+ENDSELECT
+
+SELECTCASE MTAR_NUM
+	CASE 2
+		TIMES LOCAL:10, 0.75
+ENDSELECT
+
+;전플레이어에 대해 처리
+FOR LOCAL:0, 0, MPLY_NUM
+	LOCAL:2 = MPLY:(LOCAL:0)
+
+	DOWNBASE:(LOCAL:2):체력 += 100
+
+	EXP:(LOCAL:2):성기술경험치 += 1
+
+	SOURCE:(LOCAL:2):봉사 = SERVE_HOUSHI(LOCAL:2, 200)
+	SOURCE:(LOCAL:2):접촉 = 60
+	SOURCE:(LOCAL:2):성행동 = 120
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:2, 100, 40)
+
+	;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+	TCVAR:(LOCAL:2):4 = 1
+
+	;전 타겟으로 주는 쾌감계 소스를 계산
+	FOR LOCAL:1, 0, MTAR_NUM
+		LOCAL:3 = MTAR:(LOCAL:1)
+		SOURCE:(LOCAL:3):쾌Ｂ += SENSE_HOUSHI(LOCAL:2, LOCAL:3, 1800) * LOCAL:10 / 100
+
+		;사정 개소와 대상을 세트
+		CALL STACK_SPERM(LOCAL:3, LOCAL:2, 0)
+	NEXT
+NEXT
+
+;전 타겟으로 붙어 처리
+FOR LOCAL:0, 0, MTAR_NUM
+	LOCAL:1 = MTAR:(LOCAL:0)
+
+	DOWNBASE:(LOCAL:1):체력 += 60
+
+	SOURCE:(LOCAL:1):노출 = 100
+	SOURCE:(LOCAL:1):접촉 = 60
+	SOURCE:(LOCAL:1):성행동 = 240
+
+	;노예의Ｂ⇔조교자의 손가락의 더러움이 이동
+	;STAIN:(LOCAL:1):5 |= STAIN:PLAYER:1
+	;STAIN:PLAYER:1 |= STAIN:(LOCAL:1):5
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:1, 80, 0)
+
+	;사정 개소와 대상을 세트
+	FOR LOCAL:2, 0, MPLY_NUM
+		LOCAL:3 = MPLY:(LOCAL:2)
+		CALL STACK_SPERM(LOCAL:3, LOCAL:1, 0)
+	NEXT
+NEXT
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = -1
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 5
+
+RETURN 1
+
+;-------------------------------------------------
+;계속 커맨드인가 어떤가를 설정
+;-------------------------------------------------
+@COM_IS_EQUIP9
+RETURN 1
+
+;-------------------------------------------------
+;계속 상태의 처리
+;-------------------------------------------------
+@COM_EQUIP9(ARG:0)
+;●인원수 보정의 설정
+LOCAL:10 = 100
+
+SELECTCASE MEQUIP_PLAYER_NUM:(ARG:0)
+	CASE 2
+		TIMES LOCAL:10, 0.75
+ENDSELECT
+
+SELECTCASE MEQUIP_TARGET_NUM:(ARG:0)
+	CASE 2
+		TIMES LOCAL:10, 0.75
+ENDSELECT
+
+;●전플레이어에 대해 판정
+FOR LOCAL:0, 0, MEQUIP_PLAYER_NUM:(ARG:0)
+	LOCAL:2 = MEQUIP_PLAYER:(ARG:0):(LOCAL:0)
+
+	DOWNBASE:(LOCAL:2):체력 += 20
+
+	EXP:(LOCAL:2):성기술경험치 += 1
+
+	SOURCE:(LOCAL:2):봉사 += SERVE_HOUSHI(LOCAL:2, 60)
+	SOURCE:(LOCAL:2):접촉 += 30
+	SOURCE:(LOCAL:2):성행동 += 45
+
+	;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+	TCVAR:(LOCAL:2):4 = 1
+
+	;전 타겟으로 주는 쾌감계 소스를 계산
+	FOR LOCAL:1, 0, MEQUIP_TARGET_NUM:(ARG:0)
+		LOCAL:3 = MEQUIP_TARGET:(ARG:0):(LOCAL:1)
+		SOURCE:(LOCAL:3):쾌Ｂ += SENSE_HOUSHI(LOCAL:2, LOCAL:3, 600) * LOCAL:10 / 100
+
+		;사정 개소와 대상을 세트
+		CALL STACK_SPERM(LOCAL:3, LOCAL:2, 0)
+	NEXT
+
+	;도착도 변화 기준치
+	TCVAR:(LOCAL:2):50 -= 1
+NEXT
+
+;●전 타겟으로 붙어 판정
+FOR LOCAL:0, 0, MEQUIP_TARGET_NUM:(ARG:0)
+	LOCAL:2 = MEQUIP_TARGET:(ARG:0):(LOCAL:0)
+
+	DOWNBASE:(LOCAL:2):체력 += 10
+
+	SOURCE:(LOCAL:2):노출 += 50
+	SOURCE:(LOCAL:2):접촉 += 30
+	SOURCE:(LOCAL:2):성행동 += 90
+
+	;사정 개소와 대상을 세트
+	FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(ARG:0)
+		LOCAL:3 = MEQUIP_PLAYER:(ARG:0):(LOCAL:1)
+		CALL STACK_SPERM(LOCAL:3, LOCAL:2, 0, 0)
+	NEXT
+
+	;도착도 변화 기준치
+	TCVAR:(LOCAL:2):50 -= 1
+NEXT
+
+;-------------------------------------------------
+;계속중의 표시
+;-------------------------------------------------
+@EQUIP_MESSAGE9(ARG:0)
+LOCAL:2 = 0
+FOR LOCAL:0, 0, MEQUIP_TARGET_NUM:(ARG:0)
+	IF IS_FEMALE(MEQUIP_TARGET:(ARG:0):(LOCAL:0))
+		LOCAL:2 = 1
+	ENDIF
+NEXT
+	RESULTS = %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"가")% %EQUIP_TARGET_ANAME(ARG:0)%에 유두빨기 안
+
+
+;-------------------------------------------------
+;계속중의 지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE_EQUIP9(ARG:0)
+LOCAL:2 = 0
+FOR LOCAL:0, 0, MEQUIP_TARGET_NUM:(ARG:0)
+	IF IS_FEMALE(MEQUIP_TARGET:(ARG:0):(LOCAL:0))
+		LOCAL:2 = 1
+	ENDIF
+NEXT
+
+	PRINTFORML %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"가")% %EQUIP_TARGET_ANAME(ARG:0)%의 유두에 달라붙고 있다…
+
+
+;-------------------------------------------------
+;계속을 해제했을 때의 지문
+;-------------------------------------------------
+@COM_TEXT_RELEASE_EQUIP9(ARG:0)
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER9(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 60
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 4)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 2, 20))
+
+IF TCVAR:(ARG:0):60
+	CALL COM_ORDER_ELEMENT(ARG:0, "미약", 6)
+ENDIF
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -1)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 6)
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -1)
+ENDIF
+
+;합의
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -10)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE9
+;플레이어가 2명
+IF MPLY_NUM == 2
+	LOCALS:0 = %조사처리(ANAME(MPLY:0),"와")% %ANAME(MPLY:1)%
+;플레이어가 1명
+ELSE
+	LOCALS:0 = %ANAME(MPLY:0)%
+ENDIF
+
+;타겟이 2명
+IF MTAR_NUM == 2
+	LOCALS:1 = %조사처리(ANAME(MTAR:0),"와")% %ANAME(MTAR:1)%
+;타겟이 1명
+ELSE
+	LOCALS:1 = %ANAME(MTAR:0)%
+ENDIF
+
+IF MTAR_NUM == 2 && IS_PIERCED(MTAR:0, 피어스_유두) && IS_PIERCED(MTAR:0, 피어스_유두)
+	LOCALS:2 = 피어스가 장착된
+ELSEIF MTAR_NUM == 1 && IS_PIERCED(MTAR:0, 피어스_유두)
+	LOCALS:2 = 피어스가 장착된
+ELSE
+	LOCALS:2 = 
+ENDIF
+
+;타겟이 2명
+IF MTAR_NUM == 2
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			;다른 한쪽이 남성
+			IF IS_MALE(MTAR:0) || IS_MALE(MTAR:1)
+				PRINTFORMW %조사처리(LOCALS:0,"는")% %LOCALS:2% %LOCALS:1%의 유두를 입에 넣어, 두 명 동시에 혀끝에서모습 돌%TARGET_STR("렸다", "려 왔다")%…
+			;두 사람 모두 미유 이하
+			ELSEIF GET_BUSTSIZE(MTAR:0) <= -1 && GET_BUSTSIZE(MTAR:1) <= -1
+				PRINTFORMW %조사처리(LOCALS:0,"는")% %LOCALS:1%의 얇은 가슴의 돌기를, 정리해 차분히 빨아 올%TARGET_STR("렸다", "려 왔다")%…
+			ELSE
+				PRINTFORMW %조사처리(LOCALS:0,"는")% %LOCALS:1%의, 합해 4개의 %LOCALS:2% 유방을 소리를 내 흡인%TARGET_STR("했다", "해 왔다")%…
+			ENDIF
+		;타겟으로 주도권
+		CASE 1
+			;다른 한쪽이 남성
+			IF IS_MALE(MTAR:0) || IS_MALE(MTAR:1)
+				PRINTFORMW %조사처리(LOCALS:1,"는")% %LOCALS:2%각각의 유두를 %LOCALS:0%에 들이마시게 해, 기분 좋게 하도록(듯이) 명령했다…
+			;두 사람 모두 미유 이하
+			ELSEIF GET_BUSTSIZE(MTAR:0) <= -1 && GET_BUSTSIZE(MTAR:1) <= -1
+				PRINTFORMW %조사처리(LOCALS:1,"는")% %LOCALS:2%각각의 얇은 가슴을 %LOCALS:0%에 들이마시게 해, 기분 좋게 하도록(듯이) 명령했다…
+			ELSE
+				PRINTFORMW %조사처리(LOCALS:1,"는")% %LOCALS:2%각각의 유방을 %LOCALS:0%의 입에 강압하면, 유두를 들이마셔 기분 좋게 하도록(듯이) 명령했다…
+			ENDIF
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %LOCALS:0%에 %LOCALS:2% %LOCALS:1%의 가슴을 들이마시도록(듯이) 명령했다
+			;다른 한쪽이 남성
+			IF IS_MALE(MTAR:0) || IS_MALE(MTAR:1)
+				PRINTFORMW %조사처리(LOCALS:0,"는")% %LOCALS:2% %LOCALS:1%의 유두를 빨아 올려, 두 명 동시에 혀끝에서모습 돌렸다…
+			;두 사람 모두 미유 이하
+			ELSEIF GET_BUSTSIZE(MTAR:0) <= -1 && GET_BUSTSIZE(MTAR:1) <= -1
+				PRINTFORMW %조사처리(LOCALS:0,"는")% %LOCALS:2% %LOCALS:1%의 얇은 가슴을 정리해 빨아 올렸다…
+			ELSE
+				PRINTFORMW %조사처리(LOCALS:0,"는")% %LOCALS:1%의, 합해 4개의 %LOCALS:2% 유방을 소리를 내 흡인했다…
+			ENDIF
+	ENDSELECT
+
+;타겟이 1명
+ELSE
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			PRINTFORM %조사처리(LOCALS:0,"는")% %LOCALS:1%의 %LOCALS:2%
+			IF IS_MALE(MTAR:0)
+				PRINTFORMW 볼록 부풀어 오른 유두를 입안에서 흡인%TARGET_STR("했다", "해 왔다")%…
+			ELSE
+				SELECTCASE GET_BUSTSIZE(MTAR:0)
+					CASE -2
+						PRINTFORMW 평평한 가슴을 천천히 빨아 올%TARGET_STR("렸다", "려왔다")%…
+					CASE -1
+						PRINTFORMW 작은 가슴을 차분히 빨아 올%TARGET_STR("렸다", "려왔다")%…
+					CASE 0
+						PRINTFORMW 적당한 크기의 가슴을 차분히 빨아 올%TARGET_STR("렸다", "려왔다")%…
+					CASE 1
+						PRINTFORMW 거유를 차분히 빨아 올%TARGET_STR("렸다", "려왔다")%…
+					CASE 2
+						PRINTFORMW 손으로부터 흘러넘칠 만큼 큰 가슴을 차분히 빨아 올%TARGET_STR("렸다", "려왔다")%…
+				ENDSELECT
+			ENDIF
+		;타겟으로 주도권
+		CASE 1
+			IF IS_MALE(MTAR:0)
+				PRINTFORMW %조사처리(LOCALS:1,"는")% %LOCALS:2% 유두를 %LOCALS:0%에 들이마시게 해, 기분 좋게 하도록(듯이) 명령했다…
+			ELSE
+				PRINTFORM %조사처리(LOCALS:1,"는")% %LOCALS:0%의 손에 자신의 %LOCALS:2%
+				SELECTCASE GET_BUSTSIZE(MTAR:0)
+					CASE -2
+						PRINTFORMW 평평한 가슴을 강압하면, 들이마셔 기분 좋게 하도록(듯이) 명령했다…
+					CASE -1
+						PRINTFORMW 작은 가슴을 강압하면, 들이마셔 기분 좋게 하도록(듯이) 명령했다…
+					CASE 0
+						PRINTFORMW 가슴을 강압하면, 들이마셔 기분 좋게 하도록(듯이) 명령했다…
+					CASE 1
+						PRINTFORMW 큰 가슴을 강압하면, 들이마셔 기분 좋게 하도록(듯이) 명령했다…
+					CASE 2
+						PRINTFORMW 손으로부터 흘러넘칠 만큼 큰 가슴을 강압하면, 들이마셔 기분 좋게 하도록(듯이) 명령했다…
+				ENDSELECT
+			ENDIF
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %LOCALS:0%에 %LOCALS:1%의 가슴을 애무하도록(듯이) 명령했다
+			PRINTFORM %조사처리(LOCALS:0,"는")% %LOCALS:1%의 %LOCALS:2%
+			IF IS_MALE(MTAR:0)
+				PRINTFORMW 볼록 부풀어 오른 유두를 입안에서 흡인했다…
+			ELSE
+				SELECTCASE GET_BUSTSIZE(MTAR:0)
+					CASE -2
+						PRINTFORMW 평평한 가슴을 천천히 빨아 올렸다…
+					CASE -1
+						PRINTFORMW 작은 가슴을 차분히 빨아 올렸다…
+					CASE 0
+						PRINTFORMW 적당한 크기의 가슴을 차분히 빨아 올렸다…
+					CASE 1
+						PRINTFORMW 거유를 차분히 빨아 올렸다…
+					CASE 2
+						PRINTFORMW 손으로부터 흘러넘칠 만큼 큰 가슴을 차분히 빨아 올렸다…
+				ENDSELECT
+			ENDIF
+	ENDSELECT
+ENDIF
+
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST9
+FOR LOCAL:0, 0, MTAR_NUM
+	LOCAL:1 = MTAR:(LOCAL:0)
+
+	IF LOCAL:1 != MASTER
+		LOCAL:2 = CUP:(LOCAL:1):쾌Ｂ
+
+		IF IS_MALE(LOCAL:1)
+			IF TCVAR:(LOCAL:1):52
+				;기절중
+				PRINTFORML 의식을 잃었던 %조사처리(ANAME(LOCAL:1),"는")% 유두에의 자극에 흠칫 작게 몸을 진동시켰다
+			ELSEIF LOCAL:2 < 300
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 아직 유두로 쾌락을 느낌까지는 도달하지 않는 것 같다
+			ELSEIF LOCAL:2 < 1000
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 조금씩 쾌감을 느끼기 시작한 것 같고, 근지러운 듯이 몸을 비틀었다
+			ELSEIF LOCAL:2 < 3000
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 유두에의 자극에 느끼고 있는지, 뜨거운 한숨을 흘리기 시작하고 있다
+			ELSEIF LOCAL:2 < 6000
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 유두에의 쾌감에 표정을 느슨해지게 해 되는 대로 되어 있다
+			ELSEIF LOCAL:2 < 10000
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 마구 느끼고 있어 유두를 튕겨질 때마다 격렬하게 몸부림치고 있다
+			ELSE
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 완전히 유두에의 쾌감의 포로가 되어, 유두를 들이마셔지면 여자같이 신체를 뛰게 해 몸부림쳤다
+			ENDIF
+		ELSE
+			IF TCVAR:(LOCAL:1):52
+				;기절중
+				PRINTFORML 의식을 잃었던 %조사처리(ANAME(LOCAL:1),"는")% 가슴에의 자극에 흠칫 작게 몸을 진동시켰다
+			ELSEIF LOCAL:2 < 300
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 아직 가슴으로 쾌락을 느낌까지는 도달하지 않는 것 같다
+			ELSEIF LOCAL:2 < 1000
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 조금씩 쾌감을 느끼기 시작한 것 같고, 근지러운 듯이 몸을 비틀었다
+			ELSEIF LOCAL:2 < 3000
+				PRINTFORML %ANAME(LOCAL:1)%의 가슴을 계속 들이마셔 주면 유두는 단단하게 응어리져 가 뜨거운 한숨을 흘리기 시작하고 있다
+			ELSEIF LOCAL:2 < 6000
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 유두에의 애무에 몽롱하게 한 표정이 되는 대로 되어 있다
+			ELSEIF LOCAL:2 < 10000
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 마구 느끼고 있어 가슴에의 자극만으로 법열을 다하려고 하고 있다
+			ELSE
+				PRINTFORM %ANAME(LOCAL:1)%의 가슴을 계속 들이마셔 주면 그것만으로 마구 느껴 신체를 뛰게 해
+				IF GET_BUSTSIZE(LOCAL:1) == 1
+					PRINTL 눈앞에서 그 거유를 튀게 해 이쪽의 눈을 즐겁게 해 주었다
+				ELSEIF GET_BUSTSIZE(LOCAL:1) == 2
+					PRINTL 눈앞에서 그 폭유를 크게 튀게 해 이쪽의 눈을 즐겁게 해 주었다
+				ELSE
+					PRINTL 느슨해진 표정으로 쾌락에 몸을 맡겼다
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN9
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_9()
+RETURN POWER(2, 성적기호_애무하고싶다)
+
+@COM_PREFERENCE_TARGET_9()
+RETURN POWER(2, 성적기호_애무되고싶다)
+

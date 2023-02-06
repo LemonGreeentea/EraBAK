@@ -1,0 +1,199 @@
+﻿;-------------------------------------------------
+;카테고리 타이틀
+;  ARGS:0=표시하는 텍스트（전각 3문자까지）
+;-------------------------------------------------
+@SMALL_TITLE(ARGS:0, ARG:1 = -1)
+#DIM ARGSLEN
+ARGSLEN = STRLENS(ARGS:0)
+SETCOLOR 칼라_실버
+;텍스트 표시에 반각 4 매스
+;좌우에 2 스페이스에서 총반각 8 매스
+PRINTFORM %TOSTR_SPACE(LIMIT(6 - ARGSLEN, 0, 2))%
+IF ARG:1 == -1
+	PRINTFORM %ARGS:0, MAX(ARGSLEN, 4), LEFT%
+ELSE
+	PRINTBUTTON @"%ARGS:0, MAX(ARGSLEN, 4), LEFT%", ARG:1
+ENDIF
+PRINTFORM %TOSTR_SPACE(2 - ABS(MIN(6 - ARGSLEN, 0)))%
+RESETCOLOR
+RETURN
+
+;-------------------------------------------------
+;카테고리 타이틀에 대응하는 인덴트
+;  ARG:0=1  ABL나 EXP등의 사이에 들어갈 수 있는 스페이스
+;-------------------------------------------------
+@SMALL_TITLE_SPACE(ARG:0)
+#FUNCTIONS
+IF ARG:0 == 1
+	PRINTFORM %TOSTR_SPACE(4)%
+ELSE
+	PRINTFORM %TOSTR_SPACE(8)%
+ENDIF
+RETURNF
+
+;-------------------------------------------------
+;그라데이션바（삼각 화살표형·기호의 Unicode로 바꾸어 주세요）
+;  GBAR_NOW			현재가  BASE:(ARG:0):기력 따위
+;  GBAR_MAX			최대치  MAXBASE:(ARG:0):기력 따위
+;  GBAR_MAX_SQUARE	바의 폭（Unicode의 개수）
+;  GBAR_ONCOLOR		온의 색（그라데이션은 자동적으로 걸친다）
+;  GBAR_OFFCOLOR	오프의 색·지정 불요（오프의 색은 그대로 표시·Default로 0 x222222）
+;  GBAR_ANGLE		색상을 어느 쪽의 각도에 움직일까·지정 불요（0=플러스 1=마이너스 Default 0）
+;					그대로는 자연스러운 색상이 되지 않을 때 용
+;-------------------------------------------------
+@PRINT_GRADATIONBAR(GBAR_NOW, GBAR_MAX, GBAR_MAX_SQUARE, GBAR_ONCOLOR, GBAR_OFFCOLOR, GBAR_ANGLE)
+#DIM GBAR_NOW
+#DIM GBAR_MAX
+#DIM GBAR_MIN
+#DIM GBAR_MAX_SQUARE
+#DIM GBAR_ONCOLOR
+#DIM GBAR_OFFCOLOR
+#DIM GBAR_ANGLE
+#DIM GBAR_H
+#DIM GBAR_S
+#DIM GBAR_V
+#DIM GBAR_ONE_SQUARE
+#DIM GBAR_NOW_SQUARE
+
+;바의 초기치 조정
+;최소치는 Default로 0
+GBAR_MIN = 0
+GBAR_ONE_SQUARE = 0
+GBAR_NOW_SQUARE = 0
+
+IF !GBAR_OFFCOLOR
+	GBAR_OFFCOLOR = 0x222222
+ENDIF
+
+;칼라 초기치 조정
+GBAR_H = RGB_TO_H(GBAR_ONCOLOR) - (GBAR_MAX_SQUARE / 2)
+GBAR_S = RGB_TO_S(GBAR_ONCOLOR) - GBAR_MAX_SQUARE * 2
+GBAR_V = RGB_TO_V(GBAR_ONCOLOR)
+IF GBAR_H <= 3
+	GBAR_H = 359
+ENDIF
+IF GBAR_S <= 10
+	GBAR_S = 10
+ENDIF
+IF GBAR_V >= 80
+	GBAR_V = 80
+ENDIF
+
+;만약 바의 GBAR_MAX（최대치）가 BAR_MAX_SQUARE（바폭·Unicode 개수）보다 작으면
+IF GBAR_MAX < GBAR_MAX_SQUARE
+	;최대치는 Unicode 개수로 덧쓰기
+	GBAR_MAX = GBAR_MAX_SQUARE
+ENDIF
+
+;GBAR_ONE_SQUARE（하나의 매스에 색을 칠하는 것에 대해, 수치 몇개분 증가했다고 간주하는 것인가）를 요구한다
+GBAR_ONE_SQUARE = GBAR_MAX / GBAR_MAX_SQUARE
+
+;1미만이 되어 버린다면 1
+IF GBAR_ONE_SQUARE < 1
+	GBAR_ONE_SQUARE = 1
+ENDIF
+
+;GBAR_NOW（현재가）는 무엇 매스분인지를 요구한다
+GBAR_NOW_SQUARE = GBAR_NOW / GBAR_ONE_SQUARE
+
+;만약 현재가가 1 미만이라면 0
+IF GBAR_NOW_SQUARE < 1
+	GBAR_NOW_SQUARE = 0
+ENDIF
+
+;GBAR_MAX_SQUARE（바의 폭·Unicode 개수）까지 반복해
+FOR LOCAL:0, 0, GBAR_MAX_SQUARE
+	;GBAR_NOW_SQUARE（현재가의 매스수）이하라면 온 칼라（물이 들어라）
+	IF LOCAL:0 < GBAR_NOW_SQUARE
+		SETCOLOR HSV_TO_RGB(LIMIT(GBAR_H, 0, 359), LIMIT(GBAR_S, 0, 100), LIMIT(GBAR_V, 0, 100))
+		PRINTFORM %UNICODE(0x25B6)%
+		;매스를 표시할 때마다 색상·채도·휘도를 움직여 그라데이션을 걸친다
+		IF GBAR_ANGLE
+			GBAR_H -= 3
+			GBAR_V -= 2
+			GBAR_S += 2
+			IF GBAR_H <= 2
+				GBAR_H = 359
+			ENDIF
+			IF GBAR_S >= 100
+				GBAR_S = 100
+			ENDIF
+		ELSE
+			GBAR_H += 3
+			GBAR_V -= 2
+			GBAR_S += 2
+			IF GBAR_H >= 358
+				GBAR_H = 1
+			ENDIF
+			IF GBAR_S >= 100
+				GBAR_S = 100
+			ENDIF
+		ENDIF
+	;GBAR_NOW_SQUARE（현재가의 매스수）이상이라면 오프 칼라（회색）
+	ELSE
+		SETCOLOR GBAR_OFFCOLOR
+		PRINTFORM %UNICODE(0x25B6)%
+	ENDIF
+NEXT
+RESETCOLOR
+
+RETURN 0
+
+;-------------------------------------------------
+;서로 마주 보는 화살표를 표시하는 바  그라데이션은 하지 않는다
+;GBAR_LEFT 좌측 화살표에 이용하는 수치
+;GBAR_RIGHT 우측 화살표에 이용하는 수치
+;GBAR_MAX_SQUARE 합계의 화살표수
+;GBAR_LEFT/RIGHTCOLOR 각각 화살표에 이용하는 색
+;-------------------------------------------------
+@PRINT_VERSUSBAR(GBAR_LEFT, GBAR_RIGHT, GBAR_MAX_SQUARE, GBAR_LEFTCOLOR, GBAR_RIGHTCOLOR)
+#DIM GBAR_LEFT
+#DIM GBAR_RIGHT
+#DIM GBAR_LEFT_SQUARE
+#DIM GBAR_MAX_SQUARE
+#DIM GBAR_LEFTCOLOR
+#DIM GBAR_RIGHTCOLOR
+#DIM GBAR_ONE_SQUARE
+
+;양쪽 모두 제로라면 함께 최대에
+IF ALLSAMES(0, GBAR_LEFT, GBAR_RIGHT)
+	GBAR_LEFT = GBAR_MAX_SQUARE
+	GBAR_RIGHT = GBAR_MAX_SQUARE
+ENDIF
+
+;만약 좌우의 값의 합계가 삼각형 합계보다 작으면, GBAR_MAX_SQUARE를 걸치는 것으로 억지로 좋은가 응 글자로 한다
+IF GBAR_LEFT + GBAR_RIGHT < GBAR_MAX_SQUARE
+	GBAR_LEFT = GBAR_LEFT * GBAR_MAX_SQUARE
+	GBAR_RIGHT = GBAR_RIGHT * GBAR_MAX_SQUARE
+ENDIF
+
+;GBAR_ONE_SQUARE（하나의 매스에 색을 칠하는 것에 대해, 수치 몇개분 증가했다고 간주하는 것인가）를 요구한다
+GBAR_ONE_SQUARE = (GBAR_LEFT + GBAR_RIGHT) / GBAR_MAX_SQUARE
+
+;1미만이 되어 버린다면 1
+IF GBAR_ONE_SQUARE < 1
+	GBAR_ONE_SQUARE = 1
+ENDIF
+
+;GBAR_LEFT（현재가）는 무엇 매스분인지를 요구한다
+GBAR_LEFT_SQUARE = GBAR_LEFT / GBAR_ONE_SQUARE
+
+;만약 현재가가 1 미만이라면 0
+IF GBAR_LEFT_SQUARE < 1
+	GBAR_LEFT_SQUARE = 0
+ENDIF
+
+;GBAR_MAX_SQUARE（바의 폭·Unicode 개수）까지 반복해
+FOR LOCAL:0, 0, GBAR_MAX_SQUARE
+	;GBAR_NOW_SQUARE（현재가의 매스수）이하라면 온 칼라（물이 들어라）
+	IF LOCAL:0 < GBAR_LEFT_SQUARE
+		SETCOLOR GBAR_LEFTCOLOR
+		PRINTFORM %UNICODE(0x25B6)%
+	ELSE
+		SETCOLOR GBAR_RIGHTCOLOR
+		PRINTFORM %UNICODE(0x25C0)%
+	ENDIF
+NEXT
+RESETCOLOR
+
+RETURN 0

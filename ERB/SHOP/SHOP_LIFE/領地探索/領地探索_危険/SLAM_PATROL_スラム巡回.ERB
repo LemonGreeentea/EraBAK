@@ -1,0 +1,99 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_SLAM_PATROL_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_SLAM_PATROL_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_SLAM_PATROL(대상)
+#DIM 대상
+
+PRINTFORML 치안이 나쁘다고 소문난 slum을 우연히 지나갔다
+PRINTFORMW 어떻게 하지?
+PRINTL
+CALL ASK_YN("순회한다" ,"피한다")
+IF RESULT == 1
+	PRINTFORML 위험하게 가까워질 필요는 없다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 다른 장소에 향했다
+	RETURN
+ENDIF
+
+PRINTFORMW 순회하는 일로 했다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+SELECTCASE RAND:3
+	CASE 0
+		PRINTFORMW 강도의 현장에 조우했다!
+		IF LIMIT(ABL:대상:무투, 30, 80) > RAND:100
+			PRINTFORML %조사처리(ANAME(대상),"를")% 눈치챈 강도는 도망쳐 갔다
+			PRINTFORMW 주민으로부터 답례를 말해졌다
+		ELSE
+			PRINTFORML 강도의 수가 많다
+			PRINTFORMW 어쩔 수 없기에 보고도 못 본 척을 했다
+		ENDIF
+	CASE 1
+		PRINTFORMW 노출광에 조우했다!
+		IF RAND:2
+			PRINTFORMW 생각하지 않는 상대에게 경직된 틈에 도망쳐져 버렸다
+		ELSE
+			PRINTFORMW 무심코 경직되었지만, 제 정신이 된 %조사처리(ANAME(대상),"는")% 변태를 잡았다
+		ENDIF
+		PRINTFORMW 그의 만족할 것 같은 표정과 몸이 눈에 늘어붙었다
+		CALL FUCK(대상, "노출")
+	CASE 2
+		PRINTFORML 추잡한 의복의 여성이 나란히 서 있는 골목에 나왔다
+		PRINTFORML 여기는 부랑자가 이용하는 창녀들의 입장소인것 같다
+		IF IS_MALE(대상) || (HAS_PENIS(대상) && RAND:2)
+			PRINTFORMW 모두 좋은 신체를 하고 있는 것이 옷의 위로부터도 안다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_YN("한사람 산다" ,"떠난다")
+			IF RESULT == 1
+				PRINTFORMW 하지만 그런 기분이 아니다 %조사처리(ANAME(대상),"는")% 그 자리를 떠났다
+				RETURN
+			ENDIF
+			PRINTFORMW 불끈불끈 하고 있었던 %조사처리(ANAME(대상),"는")% 한사람의 소녀를 샀다
+			PRINTFORML 
+			PRINTFORML 소녀는 어리면서 과연 프로의 창녀인것 같고 교묘하게 %조사처리(ANAME(대상),"를")% 즐겁게 해 주었다
+			PRINTFORML 약간 좁은 질 구멍은 끈적 하나의 물건에 휘감겨 그녀의 허리의 움직임에 맞추어 기분 좋은 자극을 주어 온다
+			PRINTFORML 가슴을 비비어 주면 그녀는 사랑스러운 소리를 흘려 신체를 구불거리게 해, 응석부리는 것처럼 껴안아 왔다
+			PRINTFORMW 완전히 열중하게하게 한 %조사처리(ANAME(대상),"는")% 연장 요금을 지불해 밤새 그녀와의 밀회를 즐겁게 해 받았다……
+			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", "창녀의 질", "매춘")
+			PRINTFORML 
+			PRINTFORMW 또 오는 것을 전하면 소녀는 뺨을 붉히고 부끄러워했다
+		ELSE
+			PRINTFORMW 착각 한 부랑자가 말을 걸려졌다
+			PRINTFORML 어떻게 하지?
+			CALL ASK_YN("오해를 푼다" ,"떠난다")
+			IF RESULT == 1
+				PRINTFORMW 상대를 할 생각 따위 없는 %조사처리(ANAME(대상),"는")% 그 자리를 떠났다
+				RETURN
+			ENDIF
+			PRINTFORML %조사처리(ANAME(대상),"는")% 그의 오해를 풀려고 했다
+			PRINTFORML 하지만 그는 %ANAME(대상)%의 말을 (들)물으려고 하지 않고 억지로 임박해 왔다
+			PRINTFORMW 그 끈질김에 도망치는 것에 도망쳐지는 두 그의 보금자리로 데려가져 버렸다
+			PRINTFORMW 
+			PRINTFORML 그의 보금자리에 데리고 들어가진 %조사처리(ANAME(대상),"는")% 성도구로 되어 저 좋은 대로 희롱해져 버렸다
+			PRINTFORML 펠라치오, 파이즈리, 애널핥기, 백, 기승위, 키스 삽입 교미 등등, 여러가지 플레이로 체내를 더럽혀졌다
+			PRINTFORML 오랜만의 여자에게 그는 흥분 무성, 때투성이의 냄새나는 자지는 쇠약해지는 일 없이 몇 번이나 %ANAME(대상)%에 정액을 털어 놓는다
+			PRINTFORML 추접스러운 부랑자와의 섹스에도 구애받지 않고 하지만 왜일까%조사처리(ANAME(대상),"는")% 격렬하게 흥분해, 점차 스스로 허리를 흔들고 있었다
+			PRINTFORMW 그리고 10번째의 절정과 함께 질 내 되면서, %조사처리(ANAME(대상),"는")% 그에게 (듣)묻는 대로 성노예가 되는 선언을 하고 있었다……
+			CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, Ａ, 키스, 펠라티오, Ｖ성교, Ａ성교", "처녀상실, 질내사정, 키스상실, 구강사정, Ａ처녀상실, 장내사정", GET_SPERM_ID("부랑자"), @"부랑자의 \@RAND:2 ? 페니스 # 입술\@", "부랑자", "", "보금자리에서의 매춘")
+			PRINTFORML 
+			PRINTFORML 밤새도록 범해진 후, 새벽녘에 간신히 해방되었다
+			PRINTFORMW 그는 %ANAME(대상)%의 하복부를 추잡하게 어루만지면서 또 오도록(듯이)와 속삭였다
+		ENDIF
+ENDSELECT
+
+RETURN 1

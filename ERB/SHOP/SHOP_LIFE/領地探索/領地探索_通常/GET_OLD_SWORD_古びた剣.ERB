@@ -1,0 +1,57 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_GET_OLD_SWORD_EXISTS()
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_GET_OLD_SWORD_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_GET_OLD_SWORD(대상)
+#DIM 대상
+PRINTFORML 탐색중, 오래된 검을 찾아냈다
+PRINTFORML 오랫동안 방치되어 있던 것 같지만, 닦으면 사용할 수 있을 것 같다
+
+PRINTL
+CALL ASK_MULTI("가지고 돌아가 닦는다", "무기가게에 판다", "버려 둔다")
+
+IF RESULT == 2
+	PRINTFORML 이런 너덜너덜의 무기는 사용할 수 없다
+	PRINTFORMW 내던져 거점에 돌아왔다
+	RETURN 1
+ELSEIF RESULT == 1
+	PRINTFORML 이런 것이라도 팔면 사용할 수 있을지도 모른다
+	PRINTFORML 검을 무기가게에 가져 갔다
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+	CALL ICPRINT("검은 금<1000>으로 팔렸다!", "W", 칼라_주의)
+	PRINTFORMW 생각하지 않는 임시 수입에 %조사처리(ANAME(대상),"는")% 싱글싱글 얼굴로 거점에 돌아왔다
+	RETURN 1
+ENDIF
+
+PRINTFORML 어쩌면 좋은 것일지도 모른다
+PRINTFORMW %조사처리(ANAME(대상),"는")% 거점에 검을 가지고 돌아가, 닦아 보았다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+IF RAND:3 == 0
+	PRINTFORML 상당한 잘 드는 칼이었다
+	PRINTFORML 마음에 들었으므로 스스로 사용하기로 했다
+	CALL PRINT_ADD_EXP(대상, "무투경험치", RAND:5 + 1, 1)
+ELSE
+	PRINTFORML 그 정도로 손에 들어 오는 보통 검이었다
+	PRINTFORML 자신에게는 불필요하다고 생각해, 부하에게 주기로 했다
+ENDIF
+
+RETURN 1
+

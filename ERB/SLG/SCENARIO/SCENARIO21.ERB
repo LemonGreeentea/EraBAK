@@ -1,0 +1,1311 @@
+﻿;============================================================================== 
+;■시나리오 21
+;  미인들의 난폭한 유희의 기억
+;  eraTohloveKH의 시나리오 3을 타인이 이식
+;============================================================================== 
+;============================================================================== 
+;◆초기설정
+;============================================================================== 
+@SCENARIO_NAME_21
+RESULTS = 미인들의난폭한유희의기억
+RETURN
+
+@SCENARIO_INTRO_21
+PRINTFORML
+PRINTFORMW 환상향은 분열했다!
+PRINTFORMW 각각이 여러가지 기대를 관련되어, 서로 싸운다!
+PRINTFORMW 분쟁의 원인은……플레이어 자신!?
+PRINTFORMW 뭔가 저주와 같은 물건을 걸쳐진 것 같다……
+PRINTFORML
+PRINTFORML ※랜덤계 시나리오입니다
+PRINTFORML ※얀데레에 약한 (분)편은 through하는 편이 좋을지도 모릅니다
+PRINTFORML ※얀데레를 좋아하는 (분)편에게는 기쁜 시나리오, 화도인가는 확실하지는 않습니다
+PRINTFORMW
+PRINTL
+
+;랜덤 캐릭터는 선택에 맡긴다
+FLAG:OP랜덤캐릭터사용 = 0
+
+@SCENARIO_MAPSELECT_21
+PRINTFORML
+PRINTFORML 어느 맵으로 플레이 합니까?
+CALL ASK_MULTI("Default", "일본", "유럽")
+SELECTCASE RESULT
+	CASE 0
+		MAPID '= "DEFAULT"
+	CASE 1
+		MAPID '= "JAPAN"
+	CASE 2
+		MAPID '= "EU"
+ENDSELECT
+
+@SCENARIO_PLACEMENT_21
+;◇세력 설정
+
+;●빈 세력
+COUNTRY_BOSS:0 = 0
+COUNTRY_COLOR:0 = GETDEFCOLOR()
+;전국 빈 세력
+FOR LOCAL:0, 0, MAX_CITY
+	;빈 세력
+	CITY_OWNER:(LOCAL:0) = 0
+	;빈 세력국에의 군사 배치（500～5000）
+	CITY_SOLDIER:(LOCAL:0) = RAND:4500 + 4000
+NEXT
+
+;전원 무소속·방랑
+FOR LOCAL:0, 1, CHARANUM
+	IF CSTR:(LOCAL:0):99 != "당신"
+		;소속 세력
+		CFLAG:(LOCAL:0):소속 = 0
+		;특수상태
+		CFLAG:(LOCAL:0):특수상태 = 특수상태_방랑
+	ENDIF
+NEXT
+
+;◇경제 규모의 설정
+;CALL SHARED_SETTING_ECONOMY
+
+;◇방위배율의 설정
+;CALL SHARED_SETTING_GUARD
+
+;◇병력의 초기 배치
+CALL INIT_ARMY
+
+;◇관계 설정
+CALL SHARED_SETTING_RELATION
+
+; 사실은 시나리오 개시 후에 건국 해 주었으면 하지만, 1개도 세력이 없는 상태로[랜덤]을 선택하면 에러 초월하는 같기 때문에 회피
+CALL SCENARIO_21_SELECT_RBOSS(7, 12)
+
+
+;============================================================================== 
+;◆정례 이벤트
+;  턴 엔드시에 불려 간다
+;============================================================================== 
+@SCENARIO_EVENT_21
+#DIM 대상사관번호
+#DIM 어둠에떨어진군주번호
+
+대상사관번호 = ID_TO_CHARA(SCVAR:3)
+어둠에떨어진군주번호 = ID_TO_CHARA(SCVAR:4)
+
+IF SCVAR:2 && (대상사관번호 < 0 || 어둠에떨어진군주번호 < 0)
+	; 에러 초월하지 않는 것을 최우선으로 한다
+	CALL SCENARIO_21_RESET_SCVARS
+ENDIF
+
+;IF DAY == 1
+;	CALL SCENARIO_21_SELECT_RBOSS(7, 12)
+;ENDIF
+
+;───────────────────────────────────── 
+;◇미인(SCVAR:2 SCVAR:3 SCVAR:4 사용)
+;●개요
+;○사용하고 있는 시나리오용 변수
+;  ▼SCVAR:2……이벤트 진행도
+;  ▼SCVAR:3……대상 사관 ID
+;  ▼SCVAR:4……어둠에 떨어진 군주 ID
+;이벤트의 개요:
+;○진행도 0……매턴 함락 소유는 확률로 자기보다 주인공에게로의 호감도가 높은 캐릭터에게 우호도-적대도+.
+;　　　　　　　친애라면 적대도의 오르는 방법이 보다 커진다.
+;　　　　　　　자군 사관과 타군에서 각각, 가장 주인공에게로의 호의가 높은 사람은 우호도·적대도를 표시한다.
+;○진행도 1……자군 군주가 자군 사관에게 적대도가 높아진다고 경고한다.
+;　　　　　　　▼「군주가 중요」 「동료가 중요」……로 호감도+적대도-.
+;　　　　　　　▼「사관이 중요」……진행도 2의 플래그 온.
+;○진행도 2……주인공 세력의 군주에 노려봐진 일행 씨름꾼관이 독립으로 이끌어 온다.
+;　　　　　　　▼「따라간다」……독립
+;　　　　　　　▼「만류한다」……진행도 3의 플래그 온.
+;○진행도 3……주인공 세력의 군주에 노려봐진 일행 씨름꾼관이 지방 파견되고 방랑한다
+;　　　　　　　내부적으로는 미등장 취급이 되어 지방 파견과 같게 능력에 응해 군사 추가된다.
+;　　　　　　　▼「뒤를 쫓는다」……자군 군주에 감금되어 포로가 된다.
+;　　　　　　　▼「입을 다문다」……현상 유지가 된다. 진행도 4의 플래그 온.
+;○진행도 4　　상황이 크게 변화하면, 거기에 응해 대상을 되살려, 상황에 따른 처리를 한다.
+;　　　　　　　▼주인공의 참수……대상을 되살린다（참수 구상을 표시할 수 있도록(듯이)할 뿐）
+;　　　　　　　▼주인공의 독립……대상을 되살려 주인공 세력에 사관 시킨다.
+;　　　　　　　▼주인공의 사관처 변경……대상을 되살려 주인공 세력에 사관 시킨다.
+;　　　　　　　▼주인공의 무소속화·포로가 아니다（멸망）……대상을 되살려 최대 세력으로부터 나라를 하나 받아 독립, 주인공이 거기에 사관.
+;　　　　　　　▼상기에 들어맞지 않는 경우, 2 턴 경과후, 대상이 살아 있다고 소문에 듣는다. 이 단계에서는 내부적으로는 죽은 채로.
+;　　　　　　　▼3 턴 경과후, 대상을 되살려 선택지를 표시한다.
+;　　　　　　　▼「독립한다」……대상을 되살려 최대군으로부터 나라를 하나 받아 독립, 주인공이 거기에 사관.
+;　　　　　　　▼「타세력에 권한다」……대상을 되살려 타군의 지배국수를 표시한 린크를 내, 선택한 앞에 대상과 주인공이 둘이서 관직에 오름.
+;　　　　　　　▼「여기에 남는다」……대상을 되살려 대상을 지방 파견한 군주에의 적대도가 가장 높은 군주가 있는 군에 사관.
+;　　　　　　　주인공은 무소속이라면 자신을 감금한 군주에 사관 해 포로 상태를 해제. 무소속은 아니면 현상 유지.
+;───────────────────────────────────── 
+;●이벤트 1～2의 리셋트
+;───────────────────────────────────── 
+;경고·도피행 독립까지는 리셋트가능
+;3·4·5·6은 뒤로 물러날 수 없는 상황인 것으로 리셋트 하지 않는다
+IF DAY % 1 == 0 && SCVAR:2 >= 1 && SCVAR:2 < 3
+	;○주인공이 방랑, 또는 포로, 또는 임신 따위의 행동불능
+	IF CFLAG:MASTER:소속 == 0 || CFLAG:MASTER:포로처 || CFLAG:MASTER:행동불능상태
+		CALL SCENARIO_21_RESET_SCVARS
+	;주인공의 군주가 변한다
+	ELSEIF 어둠에떨어진군주번호 != GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+		CALL SCENARIO_21_RESET_SCVARS
+	ENDIF
+	;○대상이 특수 상황（방랑 또는 사망）또는 포로, 또는 임신 따위의 행동불능
+	IF CFLAG:대상사관번호:특수상태 || CFLAG:대상사관번호:포로처 || CFLAG:대상사관번호:행동불능상태
+		CALL SCENARIO_21_RESET_SCVARS
+	;대상의 군주가 변한다
+	ELSEIF 어둠에떨어진군주번호 != GET_COUNTRY_BOSS(CFLAG:대상사관번호:소속)
+		CALL SCENARIO_21_RESET_SCVARS
+	ENDIF
+	;○어둠에 떨어진 군주 특수 상황（방랑 또는 사망）또는 포로, 또는 임신 따위의 행동불능
+	IF CFLAG:어둠에떨어진군주번호:특수상태 || CFLAG:어둠에떨어진군주번호:포로처 || CFLAG:어둠에떨어진군주번호:행동불능상태
+		CALL SCENARIO_21_RESET_SCVARS
+	;어둠에 떨어진 군주가 군주가 아니게 되고 있다
+	ELSEIF 어둠에떨어진군주번호 != GET_COUNTRY_BOSS(CFLAG:어둠에떨어진군주번호:소속)
+		CALL SCENARIO_21_RESET_SCVARS
+	ENDIF
+	;○호감도 역전（어둠에 떨어진 할 것 같은 군주의 호감도＞대상의 호감도）
+	IF CFLAG:어둠에떨어진군주번호:호감도 > CFLAG:대상사관번호:호감도
+		CALL SCENARIO_21_RESET_SCVARS
+	ENDIF
+ENDIF
+
+;───────────────────────────────────── 
+;●미인 진행도 4 감금 또는 일상으로부터의 구출
+;───────────────────────────────────── 
+;발생 조건:
+;이벤트 진행도가 3이상
+;특히 아무 일도 없으면 지방 파견이 일어나고 나서 2기 계속되어, 3기째에 종료한다
+IF DAY % 1 == 0 && SCVAR:2 >= 3
+	대상사관번호 = ID_TO_CHARA(SCVAR:3)
+	어둠에떨어진군주번호 = ID_TO_CHARA(SCVAR:4)
+	;---------------------------------------------------------------------- 
+	;○도중 ·주인공이 참수 되었다
+	;---------------------------------------------------------------------- 
+	IF FLAG:강제엔드플래그
+		;주인공 처형시의 구상을 내기 위해서(때문에) 되살린다
+		CALL CHANGE_COUNTRY(대상사관번호, 0, 1, 0)
+	;---------------------------------------------------------------------- 
+	;○도중 ·주인공이 독립했다
+	;---------------------------------------------------------------------- 
+	ELSEIF CFLAG:MASTER:소속 && GET_COUNTRY_BOSS(CFLAG:MASTER:소속) == MASTER
+		;대상이 미등장 상태로부터 통상 상태가 된다
+		;주인공의 세력에 대상이 사관
+		CALL CHANGE_COUNTRY(대상사관번호, CFLAG:MASTER:소속, 1, 0)
+		CALL SCENARIO_21_COLOR_LINE
+		SETCOLOR 칼라_오렌지
+		PRINTFORMW 방랑하고 있었던 %조사처리(ANAME(대상사관번호),"가")% 우리 진에게 사관 했다!
+		RESETCOLOR
+		CALL SCENARIO_21_COLOR_LINE
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 종종걸음으로 되어 %조사처리(ANAME(대상사관번호),"를")% 마중했다
+		PRINTFORML 
+		PRINTFORMW %조사처리(ANAME(대상사관번호),"는")% %ANAME(어둠에떨어진군주번호)%의 군사에 쫓겨 몸을 감추고 있던 것 같다
+		PRINTFORMW %ANAME(MASTER)%의 독립을 알아 안절부절 못하고, 사관 하러 온 것을 이야기했다
+		PRINTFORML 
+		IF TALENT:대상사관번호:자제심 || TALENT:대상사관번호:선을넘지않음
+			PRINTFORMW %조사처리(ANAME(대상사관번호),"는")% 입다물어 %조사처리(ANAME(MASTER),"를")% 껴안아 침착할 때까지 등을 계속 어루만졌다…
+		ELSEIF TALENT:대상사관번호:얌전함 || TALENT:대상사관번호:비관적
+			PRINTFORMW %조사처리(ANAME(대상사관번호),"는")% %조사처리(ANAME(MASTER),"를")% 껴안아 감격한 눈물을 흘렸다…
+		ELSEIF TALENT:대상사관번호:프라이드높음 || TALENT:대상사관번호:꿋꿋함 || TALENT:대상사관번호:낙관적
+			PRINTFORMW %조사처리(ANAME(대상사관번호),"는")% %조사처리(ANAME(MASTER),"를")% 껴안아, 잘 참아 기다리고 있어 주었다고 몇 번이나 칭찬했다…
+		ELSE
+			PRINTFORMW 두 명은 서로의 재회를 기뻐해, 두 번 다시 떨어지지 않으려고 서로 맹세했다…
+		ENDIF
+		WAIT
+		CALL SCENARIO_21_RESET_SCVARS
+	;---------------------------------------------------------------------- 
+	;○도중 ·주인공은 무소속이 아니고, 사관처가 어둠에 떨어진 군주가 아니다
+	;---------------------------------------------------------------------- 
+	ELSEIF CFLAG:MASTER:소속 && GET_COUNTRY_BOSS(CFLAG:MASTER:소속) != 어둠에떨어진군주번호
+		;대상이 미등장 상태로부터 통상 상태가 된다
+		;주인공의 세력에 대상이 사관
+		CALL CHANGE_COUNTRY(대상사관번호, CFLAG:MASTER:소속, 1, 0)
+		CALL SCENARIO_21_COLOR_LINE
+		SETCOLOR 칼라_오렌지
+		PRINTFORMW 방랑하고 있었던 %조사처리(ANAME(대상사관번호),"가")% 우리 진에게 사관 했다!
+		RESETCOLOR
+		CALL SCENARIO_21_COLOR_LINE
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 종종걸음으로 되어 %조사처리(ANAME(대상사관번호),"를")% 마중했다
+		PRINTL 
+		PRINTFORML %조사처리(ANAME(대상사관번호),"는")% %ANAME(어둠에떨어진군주번호)%의 군사에 쫓겨 몸을 감추고 있던 것 같다
+		PRINTFORMW %조사처리(ANAME(어둠에떨어진군주번호),"가")% 없게 되어 자유의 몸이 되어, %조사처리(ANAME(MASTER),"를")% 만나러 온 것을 이야기했다
+		PRINTL 
+		PRINTFORML %조사처리(ANAME(어둠에떨어진군주번호),"와")%도 친한 관계인 %조사처리(ANAME(MASTER),"는")% 기분도 입장도 복잡하지만
+		PRINTFORMW 지금은 다만 %조사처리(ANAME(대상사관번호),"와")% 재회할 수 있던 것을 깊게 기뻐했다
+		PRINTL 
+		IF TALENT:대상사관번호:자제심 || TALENT:대상사관번호:선을넘지않음
+			PRINTFORMW %조사처리(ANAME(대상사관번호),"는")% 입다물어 %조사처리(ANAME(MASTER),"를")% 껴안아 침착할 때까지 등을 계속 어루만졌다…
+		ELSEIF TALENT:대상사관번호:얌전함 || TALENT:대상사관번호:비관적
+			PRINTFORMW %조사처리(ANAME(대상사관번호),"는")% %조사처리(ANAME(MASTER),"를")% 껴안아 감격한 눈물을 흘렸다…
+		ELSEIF TALENT:대상사관번호:프라이드높음 || TALENT:대상사관번호:꿋꿋함 || TALENT:대상사관번호:낙관적
+			PRINTFORMW %조사처리(ANAME(대상사관번호),"는")% %조사처리(ANAME(MASTER),"를")% 껴안아, 잘 참아 기다리고 있어 주었다고 몇 번이나 칭찬했다…
+		ELSE
+			PRINTFORMW 두 명은 서로의 재회를 기뻐해, 두 번 다시 떨어지지 않으려고 서로 맹세했다…
+		ENDIF
+		CALL SCENARIO_21_RESET_SCVARS
+	;---------------------------------------------------------------------- 
+	;○도중 ·주인공은 무소속으로, 포로는 아니다（감금중이 아니지만 무소속=자국이 멸해진 등 ）
+	;---------------------------------------------------------------------- 
+	ELSEIF CFLAG:MASTER:포로처 == 0 && CFLAG:MASTER:소속 == 0 && GET_NEW_COUNTRY() > 0
+		;비어있는 세력의 번호를 취득
+		LOCAL:4 = GET_NEW_COUNTRY()
+		;대상을 새로운 세력의 군주로 한다
+		COUNTRY_BOSS:(LOCAL:4) = GET_ID(대상사관번호)
+		;대상의 새로운 세력의 칼라를 설정（어느 정도 보일 것 같은 밝음의 색으로 랜덤）
+		LOCAL:10 = RAND:359
+		LOCAL:11 = RAND:60 + 10
+		LOCAL:12 = RAND:40 + 50
+		COUNTRY_COLOR:(LOCAL:4) = HSV_TO_RGB(LOCAL:10, LOCAL:11, LOCAL:12)
+		;새로운 세력의 경제력 설정
+		COUNTRY_SOLDIER:(LOCAL:4) = 10000
+		;대상은 사관으로서도 이사 가
+		CALL CHANGE_COUNTRY(대상사관번호, LOCAL:4, 1, 0)
+		;주인공을 새로운 세력에 사관 시킨다
+		CALL CHANGE_COUNTRY(MASTER, LOCAL:4, 1, 0)
+		;제일 많이 나라를 가지고 있는 세력을 체크해 LOCAL:15에 대입
+		LOCAL:13 = 0
+		LOCAL:14 = 0
+		LOCAL:15 = 0
+		FOR LOCAL:0, 1, MAX_COUNTRY
+			;세력이 존재하면 소유국을 세어 다음의 세력과 비교
+			IF IS_COUNTRY(LOCAL:0)
+				LOCAL:13 = GET_OWN_CITY(LOCAL:0)
+				IF LOCAL:13 > LOCAL:14
+					LOCAL:14 = LOCAL:13
+					LOCAL:15 = LOCAL:0
+				ENDIF
+			ENDIF
+		NEXT
+		;제일 많이 나라를 가지고 있는 세력으로부터 나라를 하나 빼앗는다
+		FOR LOCAL:0, 0, MAX_CITY
+			IF CITY_OWNER:(MAX_CITY-1-LOCAL:0) == LOCAL:15
+				CITY_OWNER:(MAX_CITY-1-LOCAL:0) = LOCAL:4
+				BREAK
+			ENDIF
+		NEXT
+		;대상의 개양
+		CALL SCENARIO_21_COLOR_LINE
+		PRINTFORMW 정처 없이 방랑하는 %ANAME(MASTER)%의 원래로 %조사처리(ANAME(대상사관번호),"가")% 물어 왔다
+		PRINTL 
+		PRINTFORML 그리운 얼굴을 봐 %조사처리(ANAME(MASTER),"가")% 소리를 높이면
+		IF TALENT:대상사관번호:자제심 || TALENT:대상사관번호:선을넘지않음
+			PRINTFORMW %조사처리(ANAME(대상사관번호),"는")% 입다물어 %조사처리(ANAME(MASTER),"를")% 껴안아 침착할 때까지 등을 계속 어루만졌다
+		ELSEIF TALENT:대상사관번호:얌전함 || TALENT:대상사관번호:비관적
+			PRINTFORMW %조사처리(ANAME(대상사관번호),"는")% %조사처리(ANAME(MASTER),"를")% 껴안아 감격한 눈물을 흘렸다
+		ELSEIF TALENT:대상사관번호:프라이드높음 || TALENT:대상사관번호:꿋꿋함 || TALENT:대상사관번호:낙관적
+			PRINTFORMW %조사처리(ANAME(대상사관번호),"는")% %조사처리(ANAME(MASTER),"를")% 껴안아, 잘 참아 기다리고 있어 주었다고 몇 번이나 칭찬했다
+		ELSE
+			PRINTFORMW %조사처리(ANAME(대상사관번호),"는")% 두 번 다시 떨어지지 않으려고 단단하게 %조사처리(ANAME(MASTER),"를")% 껴안았다
+		ENDIF
+		PRINTL 
+		PRINTFORML %조사처리(ANAME(대상사관번호),"는")% 역시 %ANAME(어둠에떨어진군주번호)%의 군사에 쫓기고 위험한 꼴을 당한 것 같다
+		PRINTFORMW 개양을 하는, 마중 나왔다는 말에, %조사처리(ANAME(MASTER),"는")% 반복해 수긍했다…
+		CALL SCENARIO_21_COLOR_LINE
+		SETCOLOR 칼라_노랑
+		PRINTFORMW %조사처리(ANAME(대상사관번호),"가")% 개양 했다!
+		RESETCOLOR
+		PRINTFORMW %조사처리(ANAME(MASTER),"가")% %ANAME(대상사관번호)%의 원래로 달려 들었다
+		WAIT
+		CALL SCENARIO_21_RESET_SCVARS
+	;---------------------------------------------------------------------- 
+	;○3기 클리어 해 4기째
+	;---------------------------------------------------------------------- 
+	ELSEIF SCVAR:2 >= 6
+		;주인공이 포로가 아니다
+		IF CFLAG:MASTER:포로처 == 0
+			CALL SCENARIO_21_COLOR_LINE
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 잡무를 위해서(때문에) 진외에 나왔다
+			PRINTL 
+			PRINTFORMW 누군가에게 말을 걸 수 있어 발을 멈추어, 되돌아 보면 거기에는 그리운 %ANAME(대상사관번호)%의 모습이 있었다
+			IF TALENT:대상사관번호:자제심 || TALENT:대상사관번호:선을넘지않음
+				PRINTFORMW %조사처리(ANAME(대상사관번호),"는")% 입다물어 %조사처리(ANAME(MASTER),"를")% 껴안아 침착할 때까지 등을 계속 어루만졌다
+			ELSEIF TALENT:대상사관번호:얌전함 || TALENT:대상사관번호:비관적
+				PRINTFORMW %조사처리(ANAME(대상사관번호),"는")% %조사처리(ANAME(MASTER),"를")% 껴안아 감격한 눈물을 흘렸다
+			ELSEIF TALENT:대상사관번호:프라이드높음 || TALENT:대상사관번호:꿋꿋함 || TALENT:대상사관번호:낙관적
+				PRINTFORMW %조사처리(ANAME(대상사관번호),"는")% %조사처리(ANAME(MASTER),"를")% 껴안아, 잘 참아 기다리고 있어 주었다고 몇 번이나 칭찬했다
+			ELSE
+				PRINTFORMW %조사처리(ANAME(대상사관번호),"는")% 두 번 다시 떨어지지 않으려고 단단하게 %조사처리(ANAME(MASTER),"를")% 껴안았다
+			ENDIF
+		;주인공이 포로
+		ELSE
+			;주인공이 포로가 아니게 된다
+			CFLAG:MASTER:포로처 = 0
+			CALL SCENARIO_21_COLOR_LINE
+			PRINTFORML 속박된 채로 범해지는 것을 기다릴 뿐(만큼)의 나날을 보내는 %ANAME(MASTER)%의 감옥에 %조사처리(ANAME(대상사관번호),"가")% 잠입해 왔다
+			PRINTFORML 감동의 소리를 높일 것 같게 된 %ANAME(MASTER)%의 입을 눌러 조용하게라고 귀엣말해, 밧줄을 풀어 밖에 데리고 나간다
+			PRINTFORMW 안전한 장소까지 멀어지면, %조사처리(ANAME(대상사관번호),"는")% 마중이 늦어진 것을 반복해 사과해 여위었던 %조사처리(ANAME(MASTER),"를")% 걱정했다
+			PRINTL 
+			IF TALENT:대상사관번호:자제심 || TALENT:대상사관번호:선을넘지않음
+				PRINTFORML 입다물어 %조사처리(ANAME(MASTER),"를")% 껴안아 침착할 때까지 등을 어루만진다
+			ELSEIF TALENT:대상사관번호:얌전함 || TALENT:대상사관번호:비관적
+				PRINTFORML %조사처리(ANAME(MASTER),"를")% 껴안아 감격한 눈물을 흘린다
+			ELSEIF TALENT:대상사관번호:프라이드높음 || TALENT:대상사관번호:꿋꿋함 || TALENT:대상사관번호:낙관적
+				PRINTFORML %조사처리(ANAME(MASTER),"를")% 껴안아, 잘 참아 기다리고 있어 주었다고 몇 번이나 칭찬한다
+			ELSE
+				PRINTFORML 두 번 다시 떨어지지 않으려고 단단하게 %조사처리(ANAME(MASTER),"를")% 껴안는다
+			ENDIF
+		ENDIF
+		PRINTFORML %조사처리(ANAME(대상사관번호),"는")% 역시 %ANAME(어둠에떨어진군주번호)%의 군사에 쫓기고 위험한 꼴을 당한 것 같다
+		PRINTFORML %조사처리(ANAME(MASTER),"를")% 마중 나온, 이번이야말로 함께 독립하려고 권하고 있다…
+		PRINTL 
+		CALL ASK_MULTI_JUDGE(@"%조사처리(ANAME(대상사관번호),"와")% 둘이서 독립한다", GET_NEW_COUNTRY() > 0, "외 세력에 권한다", GET_COUNTRY_NUM() > 1, @"%ANAME(어둠에떨어진군주번호)%의 세력에 남는다", 1)
+		;▼0_독립한다
+		IF RESULT == 0
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 단단히수긍했다…
+			;주인공이 사관 하고 있다면
+			IF CFLAG:MASTER:소속
+				;주인공 세력의 수장과 부대를 해제
+				FOR LOCAL:0, 0, MAX_CITY
+					IF CITY_OWNER:(LOCAL:0) == CFLAG:MASTER:소속
+						CITY_COMMANDER:(LOCAL:0) = 0
+					ENDIF
+				NEXT
+				;주인공이 있던 진영의 부대를 해산
+				CALL CLEAR_ALL_UNIT(CFLAG:MASTER:소속)
+			ENDIF
+			;비어있는 세력의 번호를 취득
+			LOCAL:4 = GET_NEW_COUNTRY()
+			;대상을 새로운 세력의 군주로 한다
+			COUNTRY_BOSS:(LOCAL:4) = GET_ID(대상사관번호)
+			;대상의 새로운 세력의 칼라를 설정（어느 정도 보일 것 같은 밝음의 색으로 랜덤）
+			LOCAL:10 = RAND:359
+			LOCAL:11 = RAND:60 + 10
+			LOCAL:12 = RAND:40 + 50
+			COUNTRY_COLOR:(LOCAL:4) = HSV_TO_RGB(LOCAL:10, LOCAL:11, LOCAL:12)
+			;제일 많이 나라를 가지고 있는 세력을 LOCAL:15에 보존한다
+			LOCAL:13 = 0
+			LOCAL:14 = 0
+			LOCAL:15 = 0
+			FOR LOCAL:0, 1, MAX_COUNTRY
+				;세력이 존재하면, 지배국수를 다음의 세력과 비교
+				IF IS_COUNTRY(LOCAL:0)
+					LOCAL:13 = GET_OWN_CITY(LOCAL:0)
+					IF LOCAL:13 > LOCAL:14
+						LOCAL:14 = LOCAL:13
+						LOCAL:15 = LOCAL:0
+					ENDIF
+				ENDIF
+			NEXT
+			;제일 많이 나라를 가지고 있는 세력으로부터 나라를 하나 빼앗는다
+			FOR LOCAL:0, 0, MAX_CITY
+				IF CITY_OWNER:(MAX_CITY-1-LOCAL:0) == LOCAL:15
+					CITY_OWNER:(MAX_CITY-1-LOCAL:0) = LOCAL:4
+					BREAK
+				ENDIF
+			NEXT
+			;대상의 새로운 세력의 경제력 설정
+			COUNTRY_SOLDIER:(LOCAL:4) = 10000
+			;대상은 사관으로서도 이사 가
+			CALL CHANGE_COUNTRY(대상사관번호, LOCAL:4, 1, 0)
+			;주인공을 새로운 세력에 사관 시킨다
+			CALL CHANGE_COUNTRY(MASTER, LOCAL:4, 1, 0)
+			;대상이 전 군주로부터 미움받는다
+			CALL CHANGE_RELATION_O_TO_O(어둠에떨어진군주번호, 대상사관번호, -1000, 1000)
+			;대상이 전 군주를 싫어한다
+			CALL CHANGE_RELATION_O_TO_O(대상사관번호, 어둠에떨어진군주번호, -1000, 1000)
+			;대상의 독립 or개양
+			CALL SCENARIO_21_COLOR_LINE
+			SETCOLOR 칼라_노랑
+			PRINTFORML %조사처리(ANAME(대상사관번호),"가")% 개양 했다!
+			RESETCOLOR
+			PRINTFORML %조사처리(ANAME(MASTER),"가")% %ANAME(대상사관번호)%의 원래로 달려 들었다
+			WAIT
+			CALL SCENARIO_21_RESET_SCVARS
+		;▼1_외 세력에 권한다
+		ELSEIF RESULT == 1
+			;주인공의 소속하는 세력이 있다면, 수장과 부대를 해제
+			IF CFLAG:MASTER:소속
+				;주인공이 있던 세력의 나라의 수장을 해제
+				FOR LOCAL:0, 0, MAX_CITY
+					IF CITY_OWNER:(LOCAL:0) == CFLAG:MASTER:소속
+						CITY_COMMANDER:(LOCAL:0) = 0
+					ENDIF
+				NEXT
+				;주인공이 있던 진영의 부대를 해산
+				CALL CLEAR_ALL_UNIT(CFLAG:MASTER:소속)
+			ENDIF
+			CALL SCENARIO_21_COLOR_LINE
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 조금 생각해, 지금 단 둘이서 독립하는 것은 무모하다면 제지했다
+			PRINTFORMW 냉정한 %ANAME(MASTER)%의 말에 %조사처리(ANAME(대상사관번호),"가")% 수긍한다
+			PRINTFORML 각 진의 내정은 모르지만, 전황은 %조사처리(ANAME(대상사관번호),"로")%부터 (들)물을 수가 있었다
+			PRINTFORML 어느 세력을 의지하자…
+			FOR LOCAL:0, 0, MAX_COUNTRY
+				;존재하는·주인공의 소속하는 세력·또는 군주의 세력은 아니면 
+				IF IS_COUNTRY(LOCAL:0) && LOCAL:0 != CFLAG:MASTER:소속 && LOCAL:0 != CFLAG:어둠에떨어진군주번호:소속
+					LOCAL:1 = GET_COUNTRY_BOSS(LOCAL:0)
+					PRINTFORML [{LOCAL:0}] %ANAME(LOCAL:1)%（지배국수 : {GET_OWN_CITY(LOCAL:0)}）
+				ENDIF
+			NEXT
+			WHILE 1
+				INPUT
+				;▽세력 결정
+				SIF IS_COUNTRY(RESULT) && RESULT != CFLAG:MASTER:소속 && RESULT != CFLAG:어둠에떨어진군주번호:소속
+					BREAK
+			WEND
+			;결정한 세력 번호를 보존
+			LOCAL:2 = RESULT
+			;군주 나토리 이득
+			LOCAL:3 = GET_COUNTRY_BOSS(LOCAL:2)
+			PRINTFORMW 두 명은 손을 마주 잡아 %ANAME(LOCAL:3)%진에게 향했다…
+			;사관
+			CALL CHANGE_COUNTRY(MASTER, LOCAL:2, 1, 0)
+			CALL CHANGE_COUNTRY(대상사관번호, LOCAL:2, 1, 0)
+			CALL SCENARIO_21_COLOR_LINE
+			SETCOLOR 칼라_노랑
+			PRINTFORML %조사처리(ANAME(대상사관번호),"가")% %ANAME(LOCAL:3)%에 사관 했다!
+			PRINTFORMW %조사처리(ANAME(MASTER),"가")% %ANAME(LOCAL:3)%에 사관 했다!
+			RESETCOLOR
+			WAIT
+			CALL SCENARIO_21_RESET_SCVARS
+		;▼3_어둠에 떨어진 군주의 바탕으로 남는다
+		ELSE
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 조금 헤매어 %ANAME(대상사관번호)%의 권유를 거절해, %ANAME(어둠에떨어진군주번호)%의 세력에 남는다고 이야기했다
+			PRINTFORML %조사처리(ANAME(대상사관번호),"는")% 절구 해, 신하의 생명을 노리는 만큼 난심 한 군주에 왜 수행하는지 묻는다
+			PRINTFORMW 그만큼 모습이 이상하기 때문에야말로 지금의 %조사처리(ANAME(어둠에떨어진군주번호),"를")% 내버려는 둘 수 없다, 라고 %조사처리(ANAME(MASTER),"는")% 이야기한다
+			PRINTL 
+			PRINTFORML %조사처리(ANAME(대상사관번호),"는")% 한동안 입을 다물어, 이윽고 떨리는 소리로 고독을 선택하는지 중얼거렸다
+			PRINTFORML 두 번 다시 %ANAME(어둠에떨어진군주번호)% 이외의 누구와도 친해져서는 안 된다
+			PRINTFORMW 다음의 상대는 생명까지 빼앗길지도 모르는, 그렇게 되면 누구보다 다치는 것은 %조사처리(ANAME(MASTER),"라")%고 계속한다
+			PRINTL 
+			PRINTFORML %조사처리(ANAME(MASTER),"가")% 수긍하는 것을 지켜보면, %조사처리(ANAME(대상사관번호),"는")% 체관의 표정을 띄우고 떠났다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(대상사관번호)%의 등을 전송해 뒤꿈치를 돌려주어, %ANAME(어둠에떨어진군주번호)%의 진에게 돌아왔다…
+			;주인공이 무소속이었다면
+			IF CFLAG:MASTER:소속 == 0
+				;어둠에 떨어진 군주의 세력에 사관
+				CALL CHANGE_COUNTRY(MASTER, CFLAG:어둠에떨어진군주번호:소속, 1, 0)
+				;사관 표시
+				CALL SCENARIO_21_COLOR_LINE
+				SETCOLOR 칼라_노랑
+				PRINTFORML %조사처리(ANAME(MASTER),"가")% %ANAME(어둠에떨어진군주번호)%에 사관 했다!
+				RESETCOLOR
+				CALL SCENARIO_21_COLOR_LINE
+				PRINTFORML 잡고 있었던 %조사처리(ANAME(MASTER),"가")% 갑자기 사관 한 일에 %조사처리(ANAME(어둠에떨어진군주번호),"는")% 충격을 받은 것 같다
+				PRINTFORML 누군가에게 도와져 하지만 돌아온 것을 헤아렸을 것이다
+				PRINTFORMW %ANAME(어둠에떨어진군주번호)% 붙인 것처럼 우두커니 서, 이윽고 고개 숙여 %ANAME(MASTER)%에 사죄했다
+			ENDIF
+			;어둠에 떨어진 군주에 대해 최대의 적대도를 가지는 세력을 조사해 LOCAL:4에 대입
+			LOCAL:1 = 0
+			LOCAL:2 = 0
+			LOCAL:3 = -9999
+			LOCAL:4 = 0
+			LOCAL:5 = CFLAG:어둠에떨어진군주번호:소속
+			;존재하는 어둠에 떨어진 군주 세력이 아닌 세력
+			FOR LOCAL:0, 1, MAX_COUNTRY
+				IF IS_COUNTRY(LOCAL:0) && LOCAL:0 != LOCAL:5
+					;이번 체크하는 세력의 군주（※여기 수정）
+					LOCAL:1 = GET_COUNTRY_BOSS(LOCAL:0)
+					;어둠에 떨어진 군주에의 적대도（※여기 수정）
+					LOCAL:2 = REL_HATE:(LOCAL:1):어둠에떨어진군주번호
+					;보존한 최대 적대도의 세력보다 이번 체크한 세력 쪽이 적대도가 크면
+					IF LOCAL:2 > LOCAL:3
+						;이번 체크한 적대도를 보존
+						LOCAL:3 = LOCAL:2
+						;이번 체크한 세력을 보존
+						LOCAL:4 = LOCAL:0
+					ENDIF
+				ENDIF
+			NEXT
+			IF !IS_COUNTRY(LOCAL:4)
+				; 천하 통일과 같은 타이밍에 발생하면 여기에 들어갈지도? 만약을 위해 대응.
+				CALL CHANGE_COUNTRY(대상사관번호, 0, 1, 0)
+				CALL SCENARIO_21_RESET_SCVARS
+				RETURN
+			ENDIF
+			;어둠에 떨어진 군주에의 적대도가 최대의 세력은 LOCAL:4로 결정, 거기에 대상을 사관 시킨다
+			CALL CHANGE_COUNTRY(대상사관번호, LOCAL:4, 1, 0)
+			LOCAL:6 = GET_COUNTRY_BOSS(LOCAL:4)
+			;대상세력과 군주 세력, 서로의 우호도-적대도+
+			CALL CHANGE_RELATION_C_TO_C(LOCAL:5, LOCAL:4, -1000, +1000)
+			CALL CHANGE_RELATION_C_TO_C(LOCAL:4, LOCAL:5, -1000, +1000)
+			;사관 표시
+			CALL SCENARIO_21_COLOR_LINE
+			SETCOLOR 칼라_노랑
+			PRINTFORMW %조사처리(ANAME(대상사관번호),"가")% %ANAME(LOCAL:6)%에 사관 했다!
+			RESETCOLOR
+			CALL SCENARIO_21_COLOR_LINE
+			PRINTFORML %조사처리(ANAME(대상사관번호),"가")% 사관 한 세력은, %ANAME(어둠에떨어진군주번호)%의 세력과 가장 적대하고 있다
+			PRINTFORMW 모두는 당신이 선택한 길이다. 각오를 결정하는 것이 너무 늦은 것을 후회는 해도, 반복은 하지 않는다…
+			CALL SCENARIO_21_RESET_SCVARS
+		ENDIF
+	;---------------------------------------------------------------------- 
+	;○2기 클리어 해 3기째
+	;---------------------------------------------------------------------- 
+	ELSEIF SCVAR:2 >= 5
+		;이벤트 진행도를 6으로 한다
+		SCVAR:2 = 6
+		;어둠에 떨어진 군주의 감정
+		PALAM:어둠에떨어진군주번호:로외 += 5000
+		;▼주인공이 포로가 아니다
+		IF CFLAG:MASTER:포로처 == 0
+			CALL SCENARIO_21_COLOR_LINE
+			SETCOLOR 칼라_노랑
+			PRINTFORML %조사처리(ANAME(대상사관번호),"로")%부터 무사를 알리는 밀서가 도착했다
+			PRINTFORMW 남의 눈을 신경써인가 지장이 없는 아야장이지만 틀림없이 본 기억이 있는 필적이다…
+			RESETCOLOR
+		;▼주인공이 포로
+		ELSE
+			;설득하고 나서의 기간을 리셋트
+			FLAG:권유경과기간 = 0
+			;해방카운터를 리셋트
+			CFLAG:MASTER:해방카운터 = 0
+			;포로 역조교의 메인 조교자를 어둠에 떨어진 군주로 한다
+			FLAG:역조교메인조교자 = GET_ID(어둠에떨어진군주번호)
+			CALL SCENARIO_21_COLOR_LINE
+			SETCOLOR 칼라_노랑
+			PRINTFORML 감옥의 밖으로부터 간수의 서로 속삭이는 소리가 들렸다
+			PRINTFORML %조사처리(ANAME(대상사관번호),"가")% %ANAME(어둠에떨어진군주번호)%의 애첩에게 손을 대어 진을 쫓겼다고 소문하고 있다…
+			PRINTFORMW %조사처리(ANAME(어둠에떨어진군주번호),"로")%부터 감옥의 경계를 강하게 하도록(듯이) 명령받은 것 같다
+			RESETCOLOR
+		ENDIF
+	;---------------------------------------------------------------------- 
+	;○그 이외로 포로
+	;---------------------------------------------------------------------- 
+	ELSEIF CFLAG:MASTER:포로처
+		;설득하고 나서의 기간을 리셋트
+		FLAG:권유경과기간 = 0
+		;해방카운터를 리셋트
+		CFLAG:MASTER:해방카운터 = 0
+		;포로 역조교의 메인 조교자를 어둠에 떨어진 군주로 한다
+		FLAG:역조교메인조교자 = GET_ID(어둠에떨어진군주번호)
+		;이벤트의 진행 플래그를 카운터에 사용한다
+		SCVAR:2 = SCVAR:2 + 1
+	;---------------------------------------------------------------------- 
+	;○그 이외
+	;---------------------------------------------------------------------- 
+	ELSE
+		;이벤트의 진행 플래그를 카운터에 사용한다
+		SCVAR:2 = SCVAR:2 + 1
+	ENDIF
+ENDIF
+
+;───────────────────────────────────── 
+;●미인 진행도 3 지방 파견
+;───────────────────────────────────── 
+;발생 조건:
+;이벤트 진행도 2（도피행 독립이 1회이상 일어나고 있다）
+;주인공이 포로가 아니다
+;주인공이 행동불능（임신·상처·육아）가 아니다
+;참수 엔드 플래그가 서 있지 않다
+;주인공의 군주가 어둠에 떨어진 군주인 채
+;주인공의 소속 세력이 3국 이상 소유
+;대상이 주인공과 일행력
+;대상이 포로가 아니다
+;대상이 행동불능（임신·상처·육아）가 아니다
+;대상이 특수상태（방랑·사망·삭제 대기）가 아니다
+IF DAY % 3 == 0 && SCVAR:2 == 2 && CFLAG:MASTER:소속 && CFLAG:MASTER:포로처 == 0 && CFLAG:MASTER:행동불능상태 == 0 && FLAG:강제엔드플래그 == 0
+	대상사관번호 = ID_TO_CHARA(SCVAR:3)
+	어둠에떨어진군주번호 = ID_TO_CHARA(SCVAR:4)
+	IF GET_COUNTRY_BOSS(CFLAG:MASTER:소속) == 어둠에떨어진군주번호 && GET_OWN_CITY(CFLAG:MASTER:소속) >= 3 && CFLAG:MASTER:소속 == CFLAG:대상사관번호:소속 && CFLAG:대상사관번호:포로처 == 0 && CFLAG:대상사관번호:특수상태 == 0 && CFLAG:대상사관번호:행동불능상태 == 0
+		;어둠에 떨어진 군주가 있는 세력 번호
+		LOCAL:1 = CFLAG:어둠에떨어진군주번호:소속
+		;어둠에 떨어진 군주로부터 대상 사관에게로의 우호도와 적대도를 체크
+		LOCAL:3 = REL_LIKE:어둠에떨어진군주번호:대상사관번호
+		LOCAL:4 = REL_HATE:어둠에떨어진군주번호:대상사관번호
+		;우호도 100 미만·적대도시 900이상이라면
+		IF LOCAL:3 < 100 && LOCAL:4 >= 900
+			;어둠에 떨어진 군주가 대상 사관을 지방 파견한다
+			CALL SCENARIO_21_COLOR_LINE
+			SETCOLOR 칼라_노랑
+			PRINTFORMW %조사처리(ANAME(대상사관번호),"가")% 지방에파견 되어 방랑했다
+			RESETCOLOR
+			;병 수의 증가량(무투·지략·가창)
+			LOCAL:2 = (ABL:대상사관번호:무투 + ABL:대상사관번호:지략 + ABL:대상사관번호:가창) * 15 + 300
+			;병 수의 증가(일시적으로 병수의 한계를 넘을 수 있다)
+			COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += LOCAL:2
+			PRINTFORM 우리 진의 병수가
+			SETCOLOR 칼라_오렌지
+			PRINTFORM {LOCAL:2}
+			RESETCOLOR
+			PRINTFORMW 증가했다
+
+			CALL SCENARIO_21_COLOR_LINE
+			IF TALENT:어둠에떨어진군주번호:자제심 || TALENT:어둠에떨어진군주번호:선을넘지않음
+				PRINTFORMW 다른 사관으로부터 %ANAME(대상사관번호)%의 방랑에 대해 배운 %조사처리(ANAME(MASTER),"는")%, %조사처리(ANAME(어둠에떨어진군주번호),"를")% 캐물었다
+				PRINTL 
+				PRINTFORML 평소보다 동요하지 않는 인품이라고는 해도, %조사처리(ANAME(어둠에떨어진군주번호),"는")% 사정을 확인하는 심산도 없는 것 같다
+				PRINTFORMW %ANAME(대상사관번호)%의 이야기를 좀 더 (들)물어 두어야 했던가, 이것도 저주의 영향인 것일까
+			ELSEIF TALENT:어둠에떨어진군주번호:얌전함 || TALENT:어둠에떨어진군주번호:비관적
+				PRINTFORMW %조사처리(ANAME(어둠에떨어진군주번호),"는")% 조심스럽게 %ANAME(대상사관번호)%의 방랑에 대해 %ANAME(MASTER)%에 전했다
+				PRINTL 
+				PRINTFORML 돌연 동료를 잃었는데, %조사처리(ANAME(어둠에떨어진군주번호),"는")% 슬퍼하는 것보다 %ANAME(MASTER)%의 태도를 신경쓰고 있는 것 같다
+				PRINTFORMW %ANAME(대상사관번호)%의 이야기를 좀 더 (들)물어 두어야 했던가, 이것도 저주의 영향인 것일까
+			ELSEIF TALENT:어둠에떨어진군주번호:프라이드높음 || TALENT:어둠에떨어진군주번호:꿋꿋함 || TALENT:어둠에떨어진군주번호:낙관적
+				PRINTFORMW %조사처리(ANAME(어둠에떨어진군주번호),"는")% %ANAME(대상사관번호)%의 방랑을 %ANAME(MASTER)%에 고했다
+				PRINTL 
+				PRINTFORML 사관에게 키를 향해져 버렸다는데%조사처리(ANAME(어둠에떨어진군주번호),"는")% 묘하게 만족기분이다
+				PRINTFORMW %ANAME(대상사관번호)%의 이야기를 좀 더 (들)물어 두어야 했던가, 이것도 저주의 영향인 것일까
+			ELSE
+				PRINTFORMW %조사처리(ANAME(어둠에떨어진군주번호),"는")% %ANAME(대상사관번호)%의 방랑을 %ANAME(MASTER)%에 고했다
+				PRINTL 
+				PRINTFORML 갑작스러운 방랑으로 의지할 수 있는 사관을 잃었음에도 관계없이, %조사처리(ANAME(어둠에떨어진군주번호),"는")% 전혀 동요의 색을 보이지 않는다
+				PRINTFORMW %ANAME(대상사관번호)%의 이야기를 좀 더 (들)물어 두어야 했던가, 이것도 저주의 영향인 것일까
+			ENDIF
+			PRINTFORML 혼란하는 %ANAME(MASTER)%에, %조사처리(ANAME(어둠에떨어진군주번호),"는")% %ANAME(대상사관번호)%의 뒤를 쫓지 않아도 괜찮은 것인지 물어 왔다…
+			PRINTL 
+			CALL ASK_YN("뒤를 쫓는다", "입을 다문다")
+			;○0_뒤를 쫓는다
+			IF RESULT == 0
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 곧바로 뒤를 뒤쫓으려고 했다
+				PRINTFORMW %NAME:(어둠에떨어진군주번호)%는 슬픈 듯이 눈을 피해, %조사처리(ANAME(MASTER),"를")% 투옥하도록(듯이) 군사에게 명했다…
+				SETCOLOR 칼라_노랑
+				PRINTFORMW %조사처리(ANAME(MASTER),"는")% %NAME:(어둠에떨어진군주번호)%에 감금되었다
+				RESETCOLOR
+				;어둠에 떨어진 군주 세력의 나라의 수장을 해제
+				FOR LOCAL:0, 0, MAX_CITY
+					IF CITY_OWNER:(LOCAL:0) == LOCAL:1
+						CITY_COMMANDER:(LOCAL:0) = 0
+					ENDIF
+				NEXT
+				;어둠에 떨어진 군주 세력의 부대를 해산
+				CALL CLEAR_ALL_UNIT(LOCAL:1)
+				;대상이 미등장 취급이 된다
+				CALL CHANGE_COUNTRY(대상사관번호, 0)
+				CFLAG:대상사관번호:특수상태 = 0
+				;주인공이 일시적으로 무소속이 된다
+				;주인공이 어둠에 떨어진 군주 세력의 포로가 된다
+				CALL CHANGE_COUNTRY(MASTER, 0)
+				CALL CAPTURE(MASTER, LOCAL:1)
+				;포로 역조교의 메인 조교자를 어둠에 떨어진 군주로 한다
+				FLAG:역조교메인조교자 = GET_ID(어둠에떨어진군주번호)
+				;기성 사실 Lv3에 상당
+				CALL SET_COUPLE_STEP(어둠에떨어진군주번호, 3)
+				;밧줄을 장비
+				;CALL SET_EQUIP(85, 1)
+				;어둠에 떨어진 군주의 감정
+				PALAM:어둠에떨어진군주번호:액주 += 5000
+			;○1_입을 다문다
+			ELSE
+				PRINTFORMW 부추겨지고 있는 것을 헤아린 %조사처리(ANAME(MASTER),"는")% 입을 다물 수밖에 없었다…
+				;어둠에 떨어진 군주 세력의 나라의 수장을 해제
+				FOR LOCAL:0, 0, MAX_CITY
+					IF CITY_OWNER:(LOCAL:0) == LOCAL:1
+						CITY_COMMANDER:(LOCAL:0) = 0
+					ENDIF
+				NEXT
+				;어둠에 떨어진 군주 세력의 부대를 해산
+				CALL CLEAR_ALL_UNIT(LOCAL:1)
+				;대상이 미등장 취급이 된다
+				CALL CHANGE_COUNTRY(대상사관번호, 0)
+				CFLAG:대상사관번호:특수상태 = 0
+				;어둠에 떨어진 군주의 감정
+				PALAM:어둠에떨어진군주번호:액주 += 1000
+			ENDIF
+			;이벤트의 진행도를 3에
+			SCVAR:2 = 3
+		ENDIF
+	ENDIF
+ENDIF
+
+;───────────────────────────────────── 
+;●미인 진행도 2 도피행 독립
+;───────────────────────────────────── 
+;발생 조건:
+;이벤트 진행도 1또는 2（어둠에 떨어진 군주의 경고 후, 반복한다）
+;주인공이 포로가 아니다
+;주인공이 행동불능（임신·상처·육아）가 아니다
+;참수 엔드 플래그가 서 있지 않다
+;주인공의 군주가 어둠에 떨어진 군주인 채
+;주인공의 소속 세력이 2국 이상 소유
+;대상이 주인공과 일행력
+;대상이 포로가 아니다
+;대상이 행동불능（임신·상처·육아）가 아니다
+;대상이 특수상태（방랑·사망·삭제 대기）가 아니다
+IF DAY % 3 == 0 && (SCVAR:2 == 1 || SCVAR:2 == 2) && CFLAG:MASTER:소속 && CFLAG:MASTER:포로처 == 0 && CFLAG:MASTER:행동불능상태 == 0 && FLAG:강제엔드플래그 == 0
+	대상사관번호 = ID_TO_CHARA(SCVAR:3)
+	어둠에떨어진군주번호 = ID_TO_CHARA(SCVAR:4)
+	IF GET_COUNTRY_BOSS(CFLAG:MASTER:소속) == 어둠에떨어진군주번호 && GET_OWN_CITY(CFLAG:MASTER:소속) >= 2 && CFLAG:MASTER:소속 == CFLAG:대상사관번호:소속 && CFLAG:대상사관번호:포로처 == 0 && CFLAG:대상사관번호:특수상태 == 0 && CFLAG:대상사관번호:행동불능상태 == 0 && GET_NEW_COUNTRY() > 0
+		;어둠에 떨어진 군주가 있는 세력 번호
+		LOCAL:1 = CFLAG:어둠에떨어진군주번호:소속
+		CALL SCENARIO_21_COLOR_LINE
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(대상사관번호)%의 사실에 불려 갔다
+		PRINTFORML 
+		;첫회
+		IF SCVAR:2 == 1
+			PRINTFORML %조사처리(ANAME(어둠에떨어진군주번호),"가")% %조사처리(ANAME(MASTER),"와")% %ANAME(대상사관번호)%의 사이에 대해서 이야기한 것을 들은 것 같다
+			PRINTFORML 군주가 두 명의 관계를 기분 좋다고 생각하지 않은 것은 %ANAME(대상사관번호)%도 알고 있던 것 같다
+			IF TALENT:대상사관번호:자제심 || TALENT:대상사관번호:선을넘지않음
+				PRINTFORML 를 이야기하면 %조사처리(ANAME(대상사관번호),"는")% 입을 다물어 버렸다
+				PRINTFORML 호출하는 것은 드문 일이니까 뭔가 용건이 있는 것은 아닐까%조사처리(ANAME(MASTER),"로")%부터 묻는다
+				PRINTFORML %조사처리(ANAME(대상사관번호),"는")% 답답한 소리로, %조사처리(ANAME(어둠에떨어진군주번호),"로")%부터 독립할 준비가 있다고 이야기했다…
+			ELSEIF TALENT:대상사관번호:얌전함 || TALENT:대상사관번호:비관적
+				PRINTFORML %조사처리(ANAME(대상사관번호),"는")% 군사를 둬%조사처리(ANAME(어둠에떨어진군주번호),"로")%부터 독립할 준비가 있으면 %ANAME(MASTER)%에 이야기했다
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 따라 와 줄까와 불안에 거론되었다…
+			ELSEIF TALENT:대상사관번호:프라이드높음 || TALENT:대상사관번호:꿋꿋함 || TALENT:대상사관번호:낙관적
+				PRINTFORML %조사처리(ANAME(대상사관번호),"는")% 군사를 둬%조사처리(ANAME(어둠에떨어진군주번호),"로")%부터 독립할 준비가 있으면 %ANAME(MASTER)%에 이야기했다
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% 당연 붙어 올 것이라고 확인되었다…
+			ELSE
+				PRINTFORML %조사처리(ANAME(대상사관번호),"는")% 군사를 둬%조사처리(ANAME(어둠에떨어진군주번호),"로")%부터 독립할 준비가 있으면 %ANAME(MASTER)%에 이야기했다
+				PRINTFORML %ANAME(MASTER)%에 따라 왔으면 좋겠다고 말하고 있다…
+			ENDIF
+		;2회째 이후
+		ELSE
+			IF TALENT:대상사관번호:자제심 || TALENT:대상사관번호:선을넘지않음
+				PRINTFORML %조사처리(ANAME(대상사관번호),"는")% 말하기 어려운 듯이, 하지만 몰아낼 수 있었던 모습으로 %조사처리(ANAME(MASTER),"를")% 독립으로 이끌었다
+				PRINTFORML 이대로는 오히려 좋지 않는 (분)편에게 향하는 것은 아닌지라고 이야기하고 있다
+			ELSEIF TALENT:대상사관번호:얌전함 || TALENT:대상사관번호:비관적
+				PRINTFORML %조사처리(ANAME(대상사관번호),"는")% 다시 독립에 대해 화제로 했다
+				PRINTFORML 스스로는 의지가 되지 않을까와 입술을 깨물고 있다…
+			ELSEIF TALENT:대상사관번호:프라이드높음 || TALENT:대상사관번호:꿋꿋함 || TALENT:대상사관번호:낙관적
+				PRINTFORML %조사처리(ANAME(대상사관번호),"는")% 초조해 할 수 있었던 모습으로, 다시 %조사처리(ANAME(MASTER),"를")% 독립으로 이끌었다
+				PRINTFORML 피하지 않으면 이윽고 찢어진다고 단언하고 있지만, 소리도 눈동자도 농담에는 안보인다
+			ELSE
+				PRINTFORML %조사처리(ANAME(대상사관번호),"는")% 다시 %조사처리(ANAME(MASTER),"를")% 독립으로 이끌었다
+				PRINTFORML 붙어 왔으면 좋겠다고 재차 말하고 있다…
+			ENDIF
+		ENDIF
+		PRINTFORML 
+		CALL ASK_YN("따라간다", "만류한다")
+		;○0_따라간다
+		IF RESULT == 0
+			PRINTFORMW %조사처리(ANAME(대상사관번호),"는")% %조사처리(ANAME(MASTER),"를")% 절대로 떼어 놓지 않으면 껴안았다
+			CALL SCENARIO_21_COLOR_LINE
+			SETCOLOR 칼라_노랑
+			PRINTFORML %조사처리(ANAME(대상사관번호),"가")% 군사를 둬, %조사처리(ANAME(어둠에떨어진군주번호),"로")%부터 독립했다!
+			RESETCOLOR
+			PRINTFORML %조사처리(ANAME(MASTER),"가")% %ANAME(대상사관번호)%의 원래로 달려 들었다
+			WAIT
+			;원 있던 세력의 나라의 수장을 해제
+			FOR LOCAL:0, 0, MAX_CITY
+				IF CITY_OWNER:(LOCAL:0) == LOCAL:1
+					CITY_COMMANDER:(LOCAL:0) = 0
+				ENDIF
+			NEXT
+			;비어있는 세력의 번호를 취득
+			LOCAL:3 = GET_NEW_COUNTRY()
+			;새로운 세력의 군주는 대상 사관
+			COUNTRY_BOSS:(LOCAL:3) = GET_ID(대상사관번호)
+			;새로운 세력의 칼라
+			LOCAL:10 = RAND:359
+			LOCAL:11 = RAND:60 + 10
+			LOCAL:12 = RAND:40 + 50
+			COUNTRY_COLOR:(LOCAL:3) = HSV_TO_RGB(LOCAL:10, LOCAL:11, LOCAL:12)
+			;어둠에 떨어진 군주 세력의 나라를 하나 빼앗는다
+			FOR LOCAL:0, 0, MAX_CITY
+				IF CITY_OWNER:(MAX_CITY-1-LOCAL:0) == LOCAL:1
+					CITY_OWNER:(MAX_CITY-1-LOCAL:0) = LOCAL:3
+					BREAK
+				ENDIF
+			NEXT
+			;경제력 설정
+			COUNTRY_SOLDIER:(LOCAL:3) = 10000
+			;대상은 사관으로서도 이사 가
+			CFLAG:대상사관번호:소속 = LOCAL:3
+			;대상이 어둠에 떨어진 군주로부터 미움받는다
+			CALL CHANGE_RELATION_O_TO_O(어둠에떨어진군주번호, 대상사관번호, -300, 300)
+			;대상이 어둠에 떨어진 군주를 싫어한다
+			CALL CHANGE_RELATION_O_TO_O(대상사관번호, 어둠에떨어진군주번호, -300, 300)
+			;어둠에 떨어진 군주 세력의 나라의 수장을 해제
+			FOR LOCAL:0, 0, MAX_CITY
+				IF CITY_OWNER:(LOCAL:0) == LOCAL:1
+					CITY_COMMANDER:(LOCAL:0) = 0
+				ENDIF
+			NEXT
+			;어둠에 떨어진 군주의 부대를 해산
+			CALL CLEAR_ALL_UNIT(LOCAL:1)
+			;주인공을 사관 시킨다
+			CFLAG:MASTER:소속 = LOCAL:3
+			CALL SCENARIO_21_RESET_SCVARS
+		;○1_만류한다
+		ELSE
+			PRINTFORMW %조사처리(ANAME(MASTER),"가")% 만류하면, %조사처리(ANAME(대상사관번호),"는")% 고개 숙여 방으로부터 나가도록(듯이) 말했다…
+			;이벤트의 진행도를 2에
+			SCVAR:2 = 2
+		ENDIF
+	ENDIF
+ENDIF
+
+;───────────────────────────────────── 
+;●미인 진행도 1 군주의 어둠에 떨어진 경고
+;───────────────────────────────────── 
+;발생 조건:
+;이벤트 진행도가 0
+;주인공이 어딘가의 세력에 있다
+;주인공이 군주가 아니다
+;주인공이 행동불능（임신·상처·육아）가 아니다
+;참수 엔드 플래그가 서 있지 않다
+;주인공의 소속 세력이 3국 이상 소유
+IF DAY % 3 == 0 && SCVAR:2 == 0 && CFLAG:MASTER:소속 && GET_COUNTRY_BOSS(CFLAG:MASTER:소속) != MASTER && CFLAG:MASTER:행동불능상태 == 0 && FLAG:강제엔드플래그 == 0 && GET_OWN_CITY(CFLAG:MASTER:소속) >= 3
+	;주인공이 시중들고 있는 어둠에 떨어진 할 것 같은 군주
+	LOCAL:1 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+	;주인공의 세력내에서 가장 주인공에게로의 호의가 높은 군주 이외의 사관을 LOCAL:10에 대입
+	LOCAL:0 = 0
+	LOCAL:10 = 0
+	LOCAL:11 = -9999
+	LOCAL:12 = 0
+	FOR LOCAL:0, 0, CHARANUM
+		IF CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속 && LOCAL:0 != MASTER && LOCAL:0 != LOCAL:1 && !IS_SP_CHARA(LOCAL:0) && !IS_ANIMAL(LOCAL:0)
+			;LOCAL:0의 호의를 대입
+			LOCAL:12 = CFLAG:(LOCAL:0):호감도
+			IF LOCAL:12 >= LOCAL:11
+				;캐릭터 번호를 대입
+				LOCAL:10 = LOCAL:0
+				;비교용 호의를 대입
+				LOCAL:11 = LOCAL:12
+			ENDIF
+		ENDIF
+	NEXT
+	;군주 이외로 주인공에게로의 호의가 최대의 사관
+	LOCAL:0 = LOCAL:10
+	;어둠에 떨어진 할 것 같은 군주가 친애＆대상이 친애＆대상이 군주가 아닌＆대상이 주인공이 아닌＆대상이 주인공과 동일 세력＆어둠에 떨어진 할 것 같은 군주의 호감도+300＜대상의 호감도
+	IF TALENT:(LOCAL:1):친애 && TALENT:(LOCAL:0):친애 && LOCAL:0 != LOCAL:1 && LOCAL:0 != MASTER && CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속 && CFLAG:(LOCAL:1):호감도 + 300 < CFLAG:(LOCAL:0):호감도
+		;어둠에 떨어진 군주로부터의 호의와 적의를 체크
+		LOCAL:3 = REL_LIKE:(LOCAL:1):(LOCAL:0)
+		LOCAL:4 = REL_HATE:(LOCAL:1):(LOCAL:0)
+		;우호도 300 미만·적대도 600이상이라면
+		IF LOCAL:3 < 300 && LOCAL:4 >= 600
+			;대상이 포로가 아니다
+			IF CFLAG:(LOCAL:0):포로처 == 0
+				CALL SCENARIO_21_COLOR_LINE
+				PRINTFORML %ANAME(MASTER)%의 방에 %조사처리(ANAME(LOCAL:1),"가")% 술을 가지고 방문했다
+				PRINTFORML 
+				;어둠에 떨어진 할 것 같은 군주의 정실
+				IF TALENT:(LOCAL:1):정실
+					IF TALENT:(LOCAL:1):자제심 || TALENT:(LOCAL:1):선을넘지않음
+						PRINTFORML 몇 번이나 말을 삼키는 %ANAME(LOCAL:1)%에, 초조해 할 수 있었던 %조사처리(ANAME(MASTER),"가")% 이야기를 알아낸다
+						PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% %조사처리(ANAME(MASTER),"와")% %ANAME(LOCAL:0)%의 관계를 신경쓰고 있으면 주저하기 십상에 대답했다
+					ELSEIF TALENT:(LOCAL:1):얌전함 || TALENT:(LOCAL:1):비관적
+						PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 쭉 막은 표정으로 가져온 술을 빨고 있었다
+						PRINTFORML 취기가 도는 무렵이 되어 간신히, %조사처리(ANAME(LOCAL:0),"를")% 사랑하고 있는지 쉰 목소리로 물었다
+					ELSEIF TALENT:(LOCAL:1):프라이드높음 || TALENT:(LOCAL:1):꿋꿋함 || TALENT:(LOCAL:1):낙관적
+						PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 한동안 없는 (분)편을 노려보면서 마시고 있었지만
+						PRINTFORML 당돌하게, 분수를 분별하지 않고 군주의 배우자에게 연모하고 있는 %조사처리(ANAME(LOCAL:0),"는")% 신하로서 신뢰할 가치가 있지 않다
+						PRINTFORML 이 위 아직 분별 없게 접하는 것 같으면 생각이 있으면 분개하기 시작했다
+					ELSE
+						PRINTFORML 최초중 %조사처리(ANAME(LOCAL:1),"는")% 말끝을 흐리고 있었지만, 점차 취기도 돈 것 같아 이야기를 시작했다
+						PRINTFORMW %조사처리(ANAME(LOCAL:1),"는")% 자기보다 %조사처리(ANAME(LOCAL:0),"를")% 소중히 생각하고 있는지 물어 왔다
+					ENDIF
+					PRINTFORML 확실히 %조사처리(ANAME(MASTER),"는")% 요즘, 배우자인 %ANAME(LOCAL:1)%보다 %ANAME(LOCAL:0)%와 친하겠지만…
+				;사관의 정실
+				ELSEIF TALENT:(LOCAL:0):정실
+					IF TALENT:(LOCAL:1):자제심 || TALENT:(LOCAL:1):선을넘지않음
+						PRINTFORML 몇 번이나 말을 삼키는 %ANAME(LOCAL:1)%에, 초조해 할 수 있었던 %조사처리(ANAME(MASTER),"가")% 이야기를 알아낸다
+						PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% %조사처리(ANAME(MASTER),"가")% %조사처리(ANAME(LOCAL:0),"를")% 지금도 깊게 생각하고 있는지 주저하기 십상에게 물어 왔다
+					ELSEIF TALENT:(LOCAL:1):얌전함 || TALENT:(LOCAL:1):비관적
+						PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 쭉 막은 표정으로 가져온 술을 빨고 있었다
+						PRINTFORML 취기가 도는 무렵이 되어 간신히, %조사처리(ANAME(LOCAL:0),"를")% 사랑하는 기분에 변화는 없는 것인지와 쉰 목소리로 물었다
+					ELSEIF TALENT:(LOCAL:1):프라이드높음 || TALENT:(LOCAL:1):꿋꿋함 || TALENT:(LOCAL:1):낙관적
+						PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 한동안%조사처리(ANAME(MASTER),"를")% 노려보면서 마시고 있었지만
+						PRINTFORML 당돌하게, 군주의 좋아하는 사람인 %조사처리(ANAME(MASTER),"를")% 완고하게 양보하지 않는 %조사처리(ANAME(LOCAL:0),"는")% 신하로서 신뢰할 가치가 있지 않다
+						PRINTFORML 이 위 아직 자기 것인양을 하는 것 같으면 생각이 있으면 무리한 말을 하기 시작했다
+					ELSE
+						PRINTFORML 최초중 %조사처리(ANAME(LOCAL:1),"는")% 말끝을 흐리고 있었지만, 점차 취기도 돈 것 같아 이야기를 시작했다
+						PRINTFORMW %조사처리(ANAME(LOCAL:1),"는")% 자기보다 %조사처리(ANAME(LOCAL:0),"를")% 소중히 생각하고 있는지 물어 왔다
+					ENDIF
+					PRINTFORML %조사처리(ANAME(MASTER),"가")% %ANAME(LOCAL:0)%의 배우자인 이상, 당연한일인 것이지만…
+				;그 이외
+				ELSE
+					IF TALENT:(LOCAL:1):자제심 || TALENT:(LOCAL:1):선을넘지않음
+						PRINTFORML 몇 번이나 말을 삼키는 %ANAME(LOCAL:1)%에, 초조해 할 수 있었던 %조사처리(ANAME(MASTER),"가")% 이야기를 알아낸다
+						PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% %조사처리(ANAME(MASTER),"와")% %ANAME(LOCAL:0)%의 관계를 신경쓰고 있는 것을 주저하기 십상에 대답했다
+					ELSEIF TALENT:(LOCAL:1):얌전함 || TALENT:(LOCAL:1):비관적
+						PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 쭉 막은 표정으로 가져온 술을 빨고 있었다
+						PRINTFORML 취기가 도는 무렵이 되어 간신히, %조사처리(ANAME(LOCAL:0),"를")% 사랑하고 있는지 쉰 목소리로 물었다
+					ELSEIF TALENT:(LOCAL:1):프라이드높음 || TALENT:(LOCAL:1):꿋꿋함 || TALENT:(LOCAL:1):낙관적
+						PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 한동안%조사처리(ANAME(MASTER),"를")% 노려보면서 마시고 있었지만
+						PRINTFORML 당돌하게, 군주의 애첩인 %ANAME(MASTER)%에 관심을 끄는 %조사처리(ANAME(LOCAL:0),"는")% 신용 할 수 없다
+						PRINTFORML 이 위 아직 분별 없게 접하는 것 같으면 생각이 있다고 말하기 시작했다
+					ELSE
+						PRINTFORML 최초중 %조사처리(ANAME(LOCAL:1),"는")% 말끝을 흐리고 있었지만, 점차 취기도 돈 것 같아 이야기를 시작했다
+						PRINTFORMW %조사처리(ANAME(LOCAL:1),"는")% 자기보다 %조사처리(ANAME(LOCAL:0),"를")% 소중히 생각하고 있는지 물어 왔다
+					ENDIF
+					PRINTFORML 확실히 %조사처리(ANAME(MASTER),"는")% 요즘, %ANAME(LOCAL:0)%와 친하겠지만…
+				ENDIF
+				SETCOLOR 칼라_명회색
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"로")%부터 %ANAME(MASTER)%에의 호감도 : {CFLAG:(LOCAL:1):호감도}
+				PRINTFORML %조사처리(ANAME(LOCAL:0),"로")%부터 %ANAME(MASTER)%에의 호감도 : {CFLAG:(LOCAL:0):호감도}
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"로")%부터 %ANAME(LOCAL:0)%에의 우호도 : {LOCAL:3}
+				PRINTFORML %조사처리(ANAME(LOCAL:1),"로")%부터 %ANAME(LOCAL:0)%에의 적대도 : {LOCAL:4}
+				RESETCOLOR
+				PRINTFORML 
+				CALL ASK_MULTI(@"%조사처리(ANAME(LOCAL:1),"가")% 중요", "동료의 중요함은 비교 할 수 없다", @"%조사처리(ANAME(LOCAL:0),"가")% 중요")
+				;○0_어둠에 떨어진 군주가 중요
+				IF RESULT == 0
+					PRINTFORML 미혹이 없는 %ANAME(MASTER)%의 말에, %조사처리(ANAME(LOCAL:1),"는")% %ANAME(LOCAL:0)%에의 적개심을 안정시킨 것 같다
+					PRINTFORMW 한동안%ANAME(MASTER)%의 머리를 어루만지거나 껴안거나 해, 만족기분에 떠나 갔다…
+					SETCOLOR 칼라_명회색
+					PRINTFORML %조사처리(ANAME(LOCAL:1),"로")%부터 %ANAME(MASTER)%에의 호감도 : {CFLAG:(LOCAL:1):호감도} + 100 = \@ CFLAG:(LOCAL:1):호감도 + 100 <= 0 ? 0 # {CFLAG:(LOCAL:1):호감도 + 100} \@
+					PRINTFORML %조사처리(ANAME(LOCAL:0),"로")%부터 %ANAME(MASTER)%에의 호감도 : {CFLAG:(LOCAL:0):호감도} - 100 = \@ CFLAG:(LOCAL:0):호감도 - 100 <= 0 ? 0 # {CFLAG:(LOCAL:0):호감도 - 100} \@
+					PRINTFORML %조사처리(ANAME(LOCAL:1),"로")%부터 %ANAME(LOCAL:0)%에의 우호도 : {LOCAL:3}
+					PRINTFORML %조사처리(ANAME(LOCAL:1),"로")%부터 %ANAME(LOCAL:0)%에의 적대도 : {LOCAL:4} - 1000 = \@ LOCAL:4 - 1000 <= 0 ? 0 # {LOCAL:4 - 1000} \@
+					RESETCOLOR
+					;실행자（LOCAL:1）로부터 대상자（LOCAL:0）에의 적대도-
+					CALL CHANGE_RELATION_O_TO_O(LOCAL:1, LOCAL:0, 0, -1000)
+					;실행자의 호의+
+					CFLAG:(LOCAL:1):호감도 += 100
+					;대상의 호의-
+					CFLAG:(LOCAL:0):호감도 -= 100
+				;○1_동료의 중요함은 비교 할 수 없다
+				ELSEIF RESULT == 1
+					PRINTFORMW %조사처리(ANAME(LOCAL:1),"는")% 석연치 않는 모습이었지만, 마지못해 수긍해 자기 방으로 돌아간 것 같다…
+					SETCOLOR 칼라_명회색
+					PRINTFORML %조사처리(ANAME(LOCAL:1),"로")%부터 %ANAME(MASTER)%에의 호감도 : {CFLAG:(LOCAL:1):호감도}
+					PRINTFORML %조사처리(ANAME(LOCAL:0),"로")%부터 %ANAME(MASTER)%에의 호감도 : {CFLAG:(LOCAL:0):호감도}
+					PRINTFORML %조사처리(ANAME(LOCAL:1),"로")%부터 %ANAME(LOCAL:0)%에의 우호도 : {LOCAL:3}
+					PRINTFORML %조사처리(ANAME(LOCAL:1),"로")%부터 %ANAME(LOCAL:0)%에의 적대도 : {LOCAL:4} - 500 = \@ LOCAL:4 - 500 <= 0 ? 0 # {LOCAL:4 - 500} \@
+					RESETCOLOR
+					;실행자（LOCAL:1）로부터 대상자（LOCAL:0）에의 적대도-
+					CALL CHANGE_RELATION_O_TO_O(LOCAL:1, LOCAL:0, 0, -500)
+				;○2_대상이 중요
+				ELSE
+					PRINTFORML %ANAME(LOCAL:1)%의 눈의 색이 바뀌었다
+					PRINTFORMW 표정을 지워 조용하게 뒤꿈치를 돌려주었던 %조사처리(ANAME(LOCAL:1),"는")% 뭔가를 결의한 것처럼 보인다…
+					SETCOLOR 칼라_명회색
+					PRINTFORML %조사처리(ANAME(LOCAL:1),"로")%부터 %ANAME(MASTER)%에의 호감도 : {CFLAG:(LOCAL:1):호감도} - 100 = \@ CFLAG:(LOCAL:1):호감도 - 100 <= 0 ? 0 # {CFLAG:(LOCAL:1):호감도 - 100} \@
+					PRINTFORML %조사처리(ANAME(LOCAL:0),"로")%부터 %ANAME(MASTER)%에의 호감도 : {CFLAG:(LOCAL:0):호감도} + 100 = \@ CFLAG:(LOCAL:0):호감도 + 100 <= 0 ? 0 # {CFLAG:(LOCAL:0):호감도 + 100} \@
+					PRINTFORML %조사처리(ANAME(LOCAL:1),"로")%부터 %ANAME(LOCAL:0)%에의 우호도 : {LOCAL:3} - 500 = \@ LOCAL:3 - 500 <= 0 ? 0 # {LOCAL:3 - 500} \@
+					PRINTFORML %조사처리(ANAME(LOCAL:1),"로")%부터 %ANAME(LOCAL:0)%에의 적대도 : {LOCAL:4} + 500 = \@ LOCAL:4 + 500 <= 0 ? 0 # {LOCAL:4 + 500} \@
+					RESETCOLOR
+					;실행자（LOCAL:0）로부터 대상자（LOCAL:1）에의 호의-적대도+
+					CALL CHANGE_RELATION_O_TO_O(LOCAL:1, LOCAL:0, -500, 500)
+					;실행자의 호의-
+					CFLAG:(LOCAL:1):호감도 -= 100
+					;대상의 호의+
+					CFLAG:(LOCAL:0):호감도 += 100
+					;이벤트의 진행도를 1에
+					SCVAR:2 = 1
+					;대상 사관을 보존
+					SCVAR:3 = GET_ID(LOCAL:0)
+					;어둠에 떨어진 한 군주를 보존
+					SCVAR:4 = GET_ID(LOCAL:1)
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;───────────────────────────────────── 
+;●미인 진행도 0 미인
+;───────────────────────────────────── 
+;발생 조건:
+;주인공이 어딘가의 세력에 있다
+;주인공이 군주가 아니다
+;참수 엔드 플래그가 서 있지 않다
+IF DAY % 1 == 0 && CFLAG:MASTER:소속 && GET_COUNTRY_BOSS(CFLAG:MASTER:소속) != MASTER && FLAG:강제엔드플래그 == 0
+	;주인공의 시중드는 군주
+	LOCAL:2 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+	;국내의 표시 대상자 결정
+	;주인공의 세력내에서 가장 주인공에게로의 호의가 높은 군주 이외의 사관을 LOCAL:10에 대입
+	LOCAL:0 = 0
+	LOCAL:10 = 0
+	LOCAL:11 = -9999
+	LOCAL:12 = 0
+	FOR LOCAL:0, 0, CHARANUM
+		IF CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속 && LOCAL:0 != MASTER && LOCAL:0 != LOCAL:2
+			;LOCAL:0의 호의를 대입
+			LOCAL:12 = CFLAG:(LOCAL:0):호감도
+			IF LOCAL:12 >= LOCAL:11
+				;캐릭터 번호를 대입
+				LOCAL:10 = LOCAL:0
+				;비교용 호의를 대입
+				LOCAL:11 = LOCAL:12
+			ENDIF
+		ENDIF
+	NEXT
+	;국외의 표시 실행자 결정
+	;주인공의 세력 이외로 가장 주인공에게로의 호의가 높은 사관을 LOCAL:20에 대입
+	LOCAL:0 = 0
+	LOCAL:20 = 0
+	LOCAL:21 = -9999
+	LOCAL:22 = 0
+	FOR LOCAL:0, 0, CHARANUM
+		IF CFLAG:(LOCAL:0):소속 != CFLAG:MASTER:소속 && LOCAL:0 != MASTER
+			;LOCAL:0의 호의를 대입
+			LOCAL:22 = CFLAG:(LOCAL:0):호감도
+			IF LOCAL:22 >= LOCAL:21
+				;캐릭터 번호를 대입
+				LOCAL:20 = LOCAL:0
+				;비교용 호의를 대입
+				LOCAL:21 = LOCAL:22
+			ENDIF
+		ENDIF
+	NEXT
+	;체크 개시
+	FOR LOCAL:0, 0, CHARANUM
+		;실행자(LOCAL:0)가 주인공이 아니고, 실행자에게 함락소질이 있을 때
+		IF LOCAL:0 != MASTER && ( TALENT:(LOCAL:0):연모 || TALENT:(LOCAL:0):복종 || TALENT:(LOCAL:0):주인 )
+			FOR LOCAL:1, 0, CHARANUM
+				;실행자(LOCAL:0)와 대상자(LOCAL:1)가 같지 않고, 대상자가 주인공이 아니고, 실행자 호감도+300보다 대상자 호감도가 높다
+				;（실행자보다 대상자가 주인공으로부터 귀여워해지고 있으면 간주한다）
+				IF LOCAL:0 != LOCAL:1 && LOCAL:1 != MASTER && CFLAG:(LOCAL:0):호감도 + 300 < CFLAG:(LOCAL:1):호감도
+					;실행자와 주인공, 대상자와 주인공이 동일 세력이라면 확률로
+					IF CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속 && CFLAG:(LOCAL:1):소속 == CFLAG:MASTER:소속 && RAND:10000 <= 3500
+						;상위 함락때
+						IF TALENT:(LOCAL:0):친애 || TALENT:(LOCAL:0):예속 || TALENT:(LOCAL:0):소유자
+							;질투 실행자（LOCAL:0）로부터 질투 대상자（LOCAL:1）에의 우호도-적대도+
+							CALL CHANGE_RELATION_O_TO_O(LOCAL:0, LOCAL:1, -200, 200)
+						;함락때
+						ELSEIF TALENT:(LOCAL:0):연모 || TALENT:(LOCAL:0):복종 || TALENT:(LOCAL:0):주인
+							;질투 실행자（LOCAL:0）로부터 질투 대상자（LOCAL:1）에의 우호도-적대도+
+							CALL CHANGE_RELATION_O_TO_O(LOCAL:0, LOCAL:1, -50, 50)
+						ELSE
+						ENDIF
+						;화면에 표시하는 대상은 국내에서 최대 호감도의 한사람만（최대 호감도의 캐릭터만 질투해져 있는 것처럼 보인다）
+						IF LOCAL:1 == LOCAL:10
+							CALL SCENARIO_21_COLOR_LINE
+							IF TALENT:(LOCAL:0):자제심 || TALENT:(LOCAL:0):선을넘지않음
+								PRINTFORML %조사처리(ANAME(MASTER),"가")% %조사처리(ANAME(LOCAL:1),"와")% 친하게 지내고 있으면 %ANAME(LOCAL:0)%의 모습이 조금 이상하다…
+							ELSEIF TALENT:(LOCAL:0):얌전함 || TALENT:(LOCAL:0):비관적
+								PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% %조사처리(ANAME(MASTER),"와")% 친함%ANAME(LOCAL:1)%에 열등감을 안고 있는 것 같다…
+							ELSEIF TALENT:(LOCAL:0):프라이드높음 || TALENT:(LOCAL:0):꿋꿋함 || TALENT:(LOCAL:0):낙관적
+								PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% %조사처리(ANAME(MASTER),"와")% 친함%ANAME(LOCAL:1)%에 대항 의식을 태우고 있다…
+							ELSE
+								PRINTFORML %조사처리(ANAME(LOCAL:0),"가")% %조사처리(ANAME(MASTER),"와")% 친함%ANAME(LOCAL:1)%에 질투하고 있는 것 같다…
+							ENDIF
+							SETCOLOR 칼라_명회색
+							PRINTFORML %조사처리(ANAME(LOCAL:0),"로")%부터 %ANAME(LOCAL:1)%에의 우호도 : {REL_LIKE:(LOCAL:0):(LOCAL:1)}
+							PRINTFORMW %조사처리(ANAME(LOCAL:0),"로")%부터 %ANAME(LOCAL:1)%에의 적대도 : {REL_HATE:(LOCAL:0):(LOCAL:1)}
+							RESETCOLOR
+						ENDIF
+					ENDIF
+					;실행자가 주인공의 세력이 아니고, 대상이 주인공의 시중드는 군주라면 확률로
+					IF CFLAG:(LOCAL:0):소속 != CFLAG:MASTER:소속 && LOCAL:1 == LOCAL:2 && RAND:10000 <= 3500
+						;상위 함락때
+						IF TALENT:(LOCAL:0):친애 || TALENT:(LOCAL:0):예속 || TALENT:(LOCAL:0):소유자
+							;질투 실행자（LOCAL:0）로부터 질투 대상자（LOCAL:1）에의 호의-적대도+
+							CALL CHANGE_RELATION_O_TO_O(LOCAL:0, LOCAL:1, -250, 250)
+						;함락때
+						ELSEIF TALENT:(LOCAL:0):연모 || TALENT:(LOCAL:0):복종 || TALENT:(LOCAL:0):주인
+							;질투 실행자（LOCAL:0）로부터 질투 대상자（LOCAL:1）에의 호의-적대도+
+							CALL CHANGE_RELATION_O_TO_O(LOCAL:0, LOCAL:1, -60, 60)
+						ELSE
+						ENDIF
+						;화면에 표시하는 실행자는 국외에서 최대 호감도의 한사람만（최대 호감도의 캐릭터만 질투해 있는 것처럼 보인다）
+						IF LOCAL:0 == LOCAL:20
+							CALL SCENARIO_21_COLOR_LINE
+							PRINTFORML %조사처리(ANAME(LOCAL:0),"로")%부터 편지가 도착했다. %ANAME(MASTER)%의 안부를 신경쓰는 취지가 써지고 있다
+							IF TALENT:(LOCAL:0):자제심 || TALENT:(LOCAL:0):선을넘지않음
+								PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% %ANAME(LOCAL:2)%의 화제를 피하고 있는 것 같다…
+							ELSEIF TALENT:(LOCAL:0):얌전함 || TALENT:(LOCAL:0):비관적
+								PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% %ANAME(LOCAL:2)%에 약한 것 같다…
+							ELSEIF TALENT:(LOCAL:0):프라이드높음 || TALENT:(LOCAL:0):꿋꿋함 || TALENT:(LOCAL:0):낙관적
+								PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% %ANAME(LOCAL:2)%에 반감을 안고 있는 것 같다…
+							ELSE
+								PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% %ANAME(MASTER)%의 군주%조사처리(ANAME(LOCAL:2),"로")% 생각하는 곳이 있는 것 같다…
+							ENDIF
+							SETCOLOR 칼라_명회색
+							PRINTFORML %조사처리(ANAME(LOCAL:0),"로")%부터 %ANAME(LOCAL:2)%에의 우호도 : {REL_LIKE:(LOCAL:0):(LOCAL:2)}
+							PRINTFORMW %조사처리(ANAME(LOCAL:0),"로")%부터 %ANAME(LOCAL:2)%에의 적대도 : {REL_HATE:(LOCAL:0):(LOCAL:2)}
+							RESETCOLOR
+						ENDIF
+					ENDIF
+				ENDIF
+			NEXT
+		ENDIF
+	NEXT
+ENDIF
+
+;───────────────────────────────────── 
+;◇아이들 놀이의 하나（인질이 요구된다）
+;───────────────────────────────────── 
+;발생 조건:
+;주인공이 포로가 아니다
+;주인공이 행동불능（임신·상처·육아）가 아니다
+;주인공이 군주가 아니다
+;주인공의 소속 세력이 태어난 고향유 3 이하（조건을 플레이어 측에서의 인질 요구의 조건과 같게 개변할 수 있으면 깎고 싶다）
+IF DAY % 9 == 0 && CFLAG:MASTER:소속 && CFLAG:MASTER:포로처 == 0 && CFLAG:MASTER:행동불능상태 == 0 && GET_COUNTRY_BOSS(CFLAG:MASTER:소속) != MASTER && GET_OWN_CITY(CFLAG:MASTER:소속) <= 3 && RAND:10000 <= 5000
+	;제일 많이 나라를 가지고 있는 세력을 체크해 LOCAL:15에 대입
+	LOCAL:13 = 0
+	LOCAL:14 = 0
+	LOCAL:15 = 0
+	FOR LOCAL:0, 1, MAX_COUNTRY
+		;세력이 존재하면 소유국을 세어 다음의 세력과 비교
+		IF IS_COUNTRY(LOCAL:0)
+			LOCAL:13 = GET_OWN_CITY(LOCAL:0)
+			IF LOCAL:13 > LOCAL:14
+				LOCAL:14 = LOCAL:13
+				LOCAL:15 = LOCAL:0
+			ENDIF
+		ENDIF
+	NEXT
+	;최대 세력의 군주
+	LOCAL:1 = GET_COUNTRY_BOSS(LOCAL:15)
+	;주인공 세력의 군주
+	LOCAL:2 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+	;최대 세력의 군주가 주인공 세력의 군주가 아니고, 연합 참가중이 아닌, 동맹이 아닌, 주인공에게 함락소질을 가지고 있으면 이따금 인질 요구해 온다
+	IF GET_COUNTRY_BOSS(LOCAL:15) != GET_COUNTRY_BOSS(CFLAG:MASTER:소속) && GET_UNION_TARGET(CFLAG:MASTER:소속) == -1 && CHECK_COUNTRY_RELATION_F(LOCAL:15, CFLAG:MASTER:소속) < 2 && ( TALENT:(LOCAL:1):연모 || TALENT:(LOCAL:1):복종 || TALENT:(LOCAL:1):주인 )
+		CALL SCENARIO_21_COLOR_LINE
+		PRINTFORML %ANAME(LOCAL:1)%진보다 사자가 방문해, 요구를 전하는 서신을 읽어 내렸다
+		PRINTFORML 송구해한 표현을 하고 있지만, 결론적으로 %조사처리(ANAME(MASTER),"를")% 인질에게 넘기라고 말하는 내용인 것 같다
+		PRINTFORML 
+		PRINTFORML 하늘을 나는 새를 떨어뜨릴 기세의 %ANAME(LOCAL:1)%진이 이제 와서 인질을 갖고 싶어한다 따위
+		PRINTFORML 거절당하는 것을 예측해 개전 이유에 사용하는 심산으로 밖에 생각되지 않는다
+		PRINTFORML 이니까야말로, 요구에 응하면 응한대로, 착실한 대우는 기대 할 수 없을 것이다
+		PRINTFORML 
+		;군주에도 함락이 있으면 반대한다
+		IF TALENT:(LOCAL:2):연모 || TALENT:(LOCAL:2):복종 || TALENT:(LOCAL:2):주인
+			PRINTFORML %조사처리(ANAME(MASTER),"가")% 대답해 싫증나고 있으면, %조사처리(ANAME(LOCAL:2),"가")% 주어진 술병을 두드려 나누었다
+			PRINTFORML 격앙 해 사자를 베라고 명하고 있다
+		PRINTFORML 
+		ENDIF
+		;플레이어가 어떻게 할까 결정한다
+		CALL ASK_YN("요구를 삼킨다", "요구를 거절한다")
+		;……………………………………………………………………………………… 
+		;●0_요구를 삼킨다
+		;……………………………………………………………………………………… 
+		IF RESULT == 0
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:1)%진으로 향해 간다고 했다
+			;군주에 함락이 있으면
+			IF TALENT:(LOCAL:2):연모 || TALENT:(LOCAL:2):복종 || TALENT:(LOCAL:2):주인
+				PRINTFORML %조사처리(ANAME(LOCAL:2),"가")% 절구 해 머리를 움켜 쥔다
+			ENDIF
+			PRINTFORML 사자는 여기라는 듯이 무력을 배경으로 한 위협을 걸쳐 간직했다
+			PRINTFORML 진영을 지켜야 할 군주의 입장으로부터 %조사처리(ANAME(LOCAL:2),"는")% 아무것도 말할 수 없게 된 것 같다…
+			CALL SCENARIO_21_COLOR_LINE
+			SETCOLOR 칼라_노랑
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(LOCAL:1)%진영의 포로가 되었다
+			RESETCOLOR
+			WAIT
+			;주인공이 최대 세력의 포로가 된다
+			CFLAG:MASTER:포로처 = LOCAL:15
+			;포로 역조교의 메인 조교자를 최대 세력의 군주로 한다
+			FLAG:역조교메인조교자 = GET_ID(LOCAL:1)
+			;주인공 세력의 나라의 수장을 해제
+			FOR LOCAL:0, 0, MAX_CITY
+				IF CITY_OWNER:(LOCAL:0) == CFLAG:MASTER:소속
+					CITY_COMMANDER:(LOCAL:0) = 0
+				ENDIF
+			NEXT
+			;주인공 세력의 부대를 해산
+			CALL CLEAR_ALL_UNIT(CFLAG:MASTER:소속)
+			;최대 세력의 군주의 감정
+			PALAM:(LOCAL:1):욕정 += 5000
+			;주인공 세력의 군주의 감정
+			PALAM:(LOCAL:2):액주 += 5000
+			;최대 세력 군주로부터 주인공 세력 군주에의 우호도+적대도-
+			CALL CHANGE_RELATION_O_TO_O(LOCAL:1, LOCAL:2, 500, -500)
+			;주인공 세력 군주로부터 최대 세력 군주에의 우호도-적대도+
+			CALL CHANGE_RELATION_O_TO_O(LOCAL:1, LOCAL:2, -500, 500)
+		;……………………………………………………………………………………… 
+		;●1_요구를 거절한다
+		;……………………………………………………………………………………… 
+		ELSE
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 요구를 물리쳤다
+			PRINTFORML 우리 진영은 %ANAME(LOCAL:1)%의 분노를 산 것 같다
+			PRINTFORML 
+			WAIT
+			;최대 세력의 군주의 감정
+			PALAM:(LOCAL:1):로외 += 5000
+			;주인공 세력의 군주의 감정
+			PALAM:(LOCAL:2):로외 += 5000
+			;최대 세력 군주로부터 주인공 세력 군주에의 우호도-적대도+
+			CALL CHANGE_RELATION_O_TO_O(LOCAL:1, LOCAL:2, -500, 500)
+			;주인공 세력 군주로부터 최대 세력 군주에의 우호도-적대도+
+			CALL CHANGE_RELATION_O_TO_O(LOCAL:1, LOCAL:2, -500, 500)
+		ENDIF
+	ENDIF	
+ENDIF
+
+@SCENARIO_21_RESET_SCVARS
+;이벤트 진행도를 리셋트
+SCVAR:2 = 0
+;보존하고 있던 대상을 소거
+SCVAR:3 = 0
+;보존하고 있던 어둠에 떨어진 군주를 소거
+SCVAR:4 = 0
+
+@SCENARIO_21_AFTERSELECT
+[IF_NDEBUG]
+RETURN
+[ENDIF]
+PRINTFORML
+PRINTFORML ※ 디버그 모드로 기동하고 있는 플레이어에의 제안:
+PRINTFORML 이 시나리오는, 친애의 캐릭터가 적은 경우는 충분히 즐길 수 없을지도 모릅니다
+PRINTFORML 치트 합니까?
+PRINTFORML （현시점에서의 등장이 끝난 전원을 친애로 해, 호감도나 의존도나 소질 따위도 적당하게 설정합니다）
+PRINTFORML （함락 보너스의 대상에는 안 됩니다）
+CALL ASK_YN
+SIF RESULT != 0
+	RETURN
+
+; ERB\TRAIN\TALENT_CHECK.ERB 로 연모나 친애가 붙었을 경우와 모순이 없도록 한 생각
+FOR LOCAL, 0, CHARANUM
+	SIF LOCAL == MASTER
+		CONTINUE
+	SIF CSTR:LOCAL:99 == "당신"
+		CONTINUE
+	SIF CFLAG:LOCAL:소속 == 0 && CFLAG:LOCAL:특수상태 == 0
+		CONTINUE
+	SIF IS_SAMESEX(MASTER, LOCAL) && !TALENT:LOCAL:바이
+		TALENT:LOCAL:연인 = 1
+	TALENT:LOCAL:공허 = 0
+	TALENT:LOCAL:붕괴 = 0
+	TALENT:LOCAL:연모 = 1
+	TALENT:LOCAL:친애 = 1
+	TALENT:LOCAL:친구 = 0
+	TALENT:LOCAL:복종 = 0
+	TALENT:LOCAL:예속 = 0
+	TALENT:LOCAL:낙인 = 0
+	TALENT:LOCAL:주인 = 0
+	TALENT:LOCAL:소유자 = 0
+	TALENT:LOCAL:선을넘지않음 = 0
+	TALENT:LOCAL:무관심 = 0
+	TALENT:LOCAL:고고함 = 0
+	CFLAG:LOCAL:함락완료 = 1
+	CFLAG:LOCAL:호감도 = MAX(CFLAG:LOCAL:호감도, 10000 + LOCAL * 100)
+	CFLAG:LOCAL:의존도 = MAX(CFLAG:LOCAL:의존도, 3000)
+	ABL:LOCAL:봉사 = MAX(ABL:LOCAL:봉사, 랭크역치:랭크_그외:랭크_C)
+NEXT
+
+
+
+; 여기서부터는, eraTohloveKH의 함수를 적당하게 이식 또는 대용품을 준비한 것
+
+@SCENARIO_21_COLOR_LINE
+#DIM 원의색
+
+원의색 = GETCOLOR()
+SETCOLOR 칼라_회색
+DRAWLINE
+SETCOLOR 원의색
+
+;============================================================================== 
+;◆랜덤 군주 결정
+;ARG:0 세력수최소치
+;ARG:1 세력수최대치
+;============================================================================== 
+@SCENARIO_21_SELECT_RBOSS(ARG:0, ARG:1)
+#DIM 지금이야기의초기세력수
+#DIM 신군주번호
+#DIM 신세력번호
+#DIM 신세력의지배국번호
+#DIM 신세력칼라
+
+지금이야기의초기세력수 = ARG:0
+IF ARG:1 - ARG:0 > 0
+	지금이야기의초기세력수 += RAND:(ARG:1 - ARG:0)
+ENDIF
+
+;루프 카운터
+LOCAL:0 = 1
+
+;랜덤 군주 결정·루프 카운터가 세력수를 채우면 빠진다
+WHILE LOCAL:0 <= 지금이야기의초기세력수
+	;RAND는 0이 선택되므로 1더한다
+	LOCAL:1 = 1 + RAND:(CHARANUM - 1)
+	;---------------------------------------------------------------------- 
+	;◇난수로 선택된 캐릭터가 미소속이 아닌 or 사망하고 있는 or 주인공 or CSV의 당신
+	;---------------------------------------------------------------------- 
+	SIF CFLAG:(LOCAL:1):소속 || CFLAG:(LOCAL:1):특수상태 == 특수상태_사망 || LOCAL:1 == MASTER || CSTR:(LOCAL:0):99 == "당신"
+		CONTINUE
+	;미등장도 제외한다
+	SIF CFLAG:(LOCAL:1):소속 == 0 && CFLAG:(LOCAL:1):특수상태 == 0
+		CONTINUE
+	;고정 캐릭터 한정으로 한다（시나리오 선택 후에, 계승한 캐릭터·커스텀 캐릭터의 출현 설정이 되므로）
+	SIF !IS_FIXED_CHARA(LOCAL:1)
+		CONTINUE
+	;---------------------------------------------------------------------- 
+	;◇그 이외라면 LOCAL:1이 군주로 당선
+	;---------------------------------------------------------------------- 
+	신군주번호 = LOCAL:1
+	;비어있는 세력의 번호를 취득
+	신세력번호 = GET_NEW_COUNTRY()
+	SIF 신세력번호 == -1
+		RETURN 0 ; 만약을 위해
+	;당선한 군주를 새로운 세력에 배속시킨다
+	CALL CHANGE_COUNTRY(신군주번호, 신세력번호, 1, 0)
+	;새로운 세력의 군주로서 신군주 ID를 설정
+	COUNTRY_BOSS:(신세력번호) = GET_ID(신군주번호)
+
+	COUNTRY_COLOR:신세력번호 = CHARA_COUNTRY_COLOR(신군주번호)
+
+	COUNTRY_SOLDIER:(신세력번호) = 8000
+
+	CALL SP_COUNTRY_RISE(신세력번호, 0)
+	;루프 카운터를 추가해 반복
+	LOCAL:0 += 1
+WEND
+

@@ -1,0 +1,247 @@
+﻿;음담
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME309
+RESULTS:0 = 엣치한 이야기를 꺼낸다
+RESULTS:1 = 엣치한 이야기를 꺼내진다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE309
+;공통 부분
+CALL COM_ABLE_COMMON(309)
+SIF RESULT == 0
+	RETURN 0
+;주인공이 플레이어 때 한정
+SIF MPLY:0 != MASTER
+	RETURN 0
+;키스중은 불가
+SIF IS_EQUIP(MPLY:0, 342)
+	RETURN 0
+;플레이어와 타겟의 성지식이 함께 Lv1 이상 없으면 불가
+SIF ABL:(MPLY:0):성지식 < 1 || ABL:(MTAR:0):성지식 < 1
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM309
+;실행치의 계산
+CALL COM_ORDER_309(MTAR:0)
+LOCAL:5 = RESULT
+
+;성공
+IF LOCAL:5 >= 0
+	TFLAG:17 = 1
+
+	SOURCE:(MTAR:0):환락 = 20 + MIN(LOCAL:5 / 2, 30)
+	;친밀하게 응한 환락의 소스 추가
+	CALL ADD_SOURCE_KANRAKU(MTAR:0, 100 + MIN(LOCAL:5 / 3, 60))
+	SOURCE:(MTAR:0):감응 = 50 + MIN(LOCAL:5, 100)
+
+	;무드의 증가
+	TFLAG:37 += 4 + MIN(LOCAL:5 / 10, 16)
+
+	;주도권에 응한 소스의 추가
+	CALL ADD_SOURCE_INITIATIVE_N(MTAR:0, 50, 50)
+
+	LOCAL:2 = 10
+	IF TALENT:(MPLY:0):호기심
+		TIMES LOCAL:2, 1.50
+	ENDIF
+	IF TALENT:(MPLY:0):습득빠름
+		TIMES LOCAL:2, 1.50
+	ENDIF
+	IF TALENT:(MPLY:0):습득느림
+		TIMES LOCAL:2, 0.80
+	ENDIF
+
+	LOCAL:3 = 10
+	IF TALENT:(MTAR:0):호기심
+		TIMES LOCAL:2, 1.50
+	ENDIF
+	IF TALENT:(MTAR:0):습득빠름
+		TIMES LOCAL:2, 1.50
+	ENDIF
+	IF TALENT:(MTAR:0):습득느림
+		TIMES LOCAL:2, 0.80
+	ENDIF
+
+	IF ABL:(MPLY:0):성지식 <= 2
+		EXP:(MPLY:0):성지식경험치 += LOCAL:2 / ABL:(MPLY:0):성지식
+	ENDIF
+	IF ABL:(MTAR:0):성지식 <= 2
+		EXP:(MTAR:0):성지식경험치 += LOCAL:3 / ABL:(MPLY:0):성지식
+	ENDIF
+
+;실패
+ELSE
+	TFLAG:17 = 0
+
+	SOURCE:(MTAR:0):반감 = 150 + LIMIT(-LOCAL:5 * 5, 0, 600)
+ENDIF
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = 1
+
+RETURN 1
+
+;-------------------------------------------------
+;성공 여부 판정
+;-------------------------------------------------
+@COM_ORDER_309(ARG:0)
+CVARSET TCVAR, 24, -10000
+CVARSET TCVAR, 25, 10000
+
+TCVAR:(ARG:0):25 = 80
+
+CALL COM_ORDER_BASE(ARG:0)
+
+IF TALENT:(ARG:0):반항적
+	CALL COM_ORDER_ELEMENT(ARG:0, "반항적", -5)
+ENDIF
+IF TALENT:(ARG:0):프라이드높음
+	CALL COM_ORDER_ELEMENT(ARG:0, "프라이드높음", -15)
+ENDIF
+IF TALENT:(ARG:0):프라이드낮음
+	CALL COM_ORDER_ELEMENT(ARG:0, "프라이드낮음", 5)
+ENDIF
+IF TALENT:(ARG:0):자제심
+	CALL COM_ORDER_ELEMENT(ARG:0, "자제심", -8)
+ENDIF
+IF TALENT:(ARG:0):무관심
+	CALL COM_ORDER_ELEMENT(ARG:0, "무관심", -6)
+ENDIF
+IF TALENT:(ARG:0):호기심
+	CALL COM_ORDER_ELEMENT(ARG:0, "호기심", 15)
+ENDIF
+IF TALENT:(ARG:0):보수적
+	CALL COM_ORDER_ELEMENT(ARG:0, "보수적", -10)
+ENDIF
+IF TALENT:(ARG:0):억압
+	CALL COM_ORDER_ELEMENT(ARG:0, "억압", -10)
+ENDIF
+IF TALENT:(ARG:0):고고함
+	CALL COM_ORDER_ELEMENT(ARG:0, "고고함", -(20 * KOKOU_RATE(ARG:0) / 100))
+ENDIF
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -10)
+ENDIF
+IF TALENT:(ARG:0):수치심옅음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수치심옅음", 8)
+ENDIF
+IF TALENT:(ARG:0):쾌감에솔직
+	CALL COM_ORDER_ELEMENT(ARG:0, "쾌감에솔직", 10)
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -35)
+ENDIF
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음란)
+	CALL COM_ORDER_ELEMENT(ARG:0, "음란", 20)
+ENDIF
+
+IF IS_SAMESEX(MPLY:0, ARG:0)
+	CALL COM_ORDER_ELEMENT(ARG:0, "동성", 50)
+ELSE
+	IF TALENT:(ARG:0):선을넘지않음
+		CALL COM_ORDER_ELEMENT(ARG:0, "선을넘지않음", -15)
+	ENDIF
+ENDIF
+
+IF TALENT:(ARG:0):친애
+	CALL COM_ORDER_ELEMENT(ARG:0, "친애", 25)
+ELSEIF TALENT:(ARG:0):연모
+	CALL COM_ORDER_ELEMENT(ARG:0, "연모", 10)
+ENDIF
+
+IF TALENT:(ARG:0):연인
+	CALL COM_ORDER_ELEMENT(ARG:0, "연인", 20)
+ELSEIF TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "친구", 20)
+ENDIF
+
+IF TALENT:(ARG:0):예속
+	CALL COM_ORDER_ELEMENT(ARG:0, "예속", 25)
+ELSEIF TALENT:(ARG:0):복종
+	CALL COM_ORDER_ELEMENT(ARG:0, "복종", 10)
+ENDIF
+
+IF TALENT:(ARG:0):낙인
+	CALL COM_ORDER_ELEMENT(ARG:0, "낙인", 20)
+ENDIF
+
+IF TALENT:(ARG:0):소유자
+	CALL COM_ORDER_ELEMENT(ARG:0, "소유자", 25)
+ELSEIF TALENT:(ARG:0):주인
+	CALL COM_ORDER_ELEMENT(ARG:0, "주인", 10)
+ENDIF
+
+
+CALL COM_ORDER_ELEMENT(ARG:0, "합의", 15)
+
+IF TALENT:(ARG:0):프라이드높음
+	LOCAL:0 = 4
+ELSEIF TALENT:(ARG:0):프라이드낮음
+	LOCAL:0 = 1
+ELSE
+	LOCAL:0 = 2
+ENDIF
+IF MARK:(ARG:0):기성사실 >= 1
+	CALL COM_ORDER_ELEMENT(ARG:0, @"기성 사실 Lv{MARK:(ARG:0):기성사실}", MARK:(ARG:0):기성사실 * 3 * LOCAL:0)
+ENDIF
+
+IF TALENT:MASTER:매혹
+	CALL COM_ORDER_ELEMENT(ARG:0, "주인공의 매혹", 6)
+ENDIF
+IF TALENT:MASTER:수수께끼의매력
+	CALL COM_ORDER_ELEMENT(ARG:0, "주인공의 수수께끼의매력", 6)
+ENDIF
+
+IF PALAM:(ARG:0):취기 >= 150
+	CALL COM_ORDER_ELEMENT(ARG:0, "취기", PALAM:(ARG:0):취기 / 150)
+ENDIF
+
+;판정 결과를 표시
+PRINTFORMW  = {TCVAR:(ARG:0):24} %TOSTR_COMPARE(TCVAR:(ARG:0):24, TCVAR:(ARG:0):25)% 실행치{TCVAR:(ARG:0):25}
+
+RETURN TCVAR:(ARG:0):24 - TCVAR:(ARG:0):25
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE309
+;성공
+IF TFLAG:17
+	;주도권이 주인공측
+	IF IS_INITIATIVE(MASTER)
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 엣치한 이야기로 분위기를 살렸다…
+	;주도권이 상대측
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 엣치한 화제를 털어 조롱했다…
+	ENDIF
+;실패
+ELSE
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 엣치한 화제를 털었지만, %ANAME(MTAR:0)%에 차가운 눈으로 보여져 버렸다…
+ENDIF
+
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST309
+;일상 커맨드에 공통의 지문
+CALL COM_TEXT_LAST_LIFE
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN309
+RETURN 커맨드_일상

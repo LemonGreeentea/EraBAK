@@ -1,0 +1,43 @@
+﻿;-------------------------------------------------
+;영구 동맹을 신청한다
+;-------------------------------------------------
+@DIPLOMACY_ALLIANCE_INDIFINITE(상대세력)
+#DIM 세력
+#DIM 상대세력
+#DIM 군주
+#DIM 상대군주
+#DIM 상대외교계획
+#DIM 판정치
+#DIM 기간
+세력 = CFLAG:MASTER:소속
+
+IF CHECK_COUNTRY_RELATION_F(세력, 상대세력) != 3
+	PRINTFORMW 영구 동맹은, 현재 동맹중의 세력으로밖에 제안할 수가 없습니다
+	RETURN 0
+ENDIF
+
+IF IS_SP_COUNTRY(상대세력)
+	PRINTFORMW 이런 무리와 손을 잡을 수는 없습니다
+	RETURN 0
+ENDIF
+
+군주 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+상대군주 = GET_COUNTRY_BOSS(상대세력)
+
+PRINTFORMW %조사처리(ANAME(군주),"는")% %ANAME(상대군주)%에 무기한의 동맹을 제안했다
+
+;호감도 1200이상, 적대치 0
+IF REL_LIKE:상대군주:군주 >= 1200 && REL_HATE:상대군주:군주 <= 0
+	PRINTFORMW %조사처리(ANAME(상대군주),"는")% %조사처리(ANAME(군주),"와")% 함께 천하를 통괄할 결의를 굳힌 것 같다…
+	CALL INIT_ALLIANCE(세력, 상대세력, 9999)
+
+	PRINTL 
+	SETCOLOR 칼라_주의
+	PRINTFORMW %조사처리(ANAME(상대군주),"와")% 무기한의 동맹이 성립했습니다
+	RESETCOLOR
+;불성립
+ELSE
+	PRINTFORML 이지만, %조사처리(ANAME(상대군주),"는")% %ANAME(군주)%의 제안을 거절했다
+	PRINTFORMW 아직 %조사처리(ANAME(군주),"를")% 거기까지 신용 할 수 없는 것 같다…
+ENDIF
+

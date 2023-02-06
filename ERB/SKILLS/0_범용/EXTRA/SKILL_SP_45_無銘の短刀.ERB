@@ -1,0 +1,107 @@
+﻿;-----------------------------------
+;기본치 계산에 앞서 처리하는 것
+;-----------------------------------
+@SKILL_0_SP_45_EXIST
+RETURN 1
+
+@SKILL_0_SP_45_NAME(ARG:0)
+RESULTS = 무명의 단도
+
+;레벨은 1-6까지. 6은 보구에 사용
+@SKILL_0_SP_45_LEVEL(ARG:0)
+RETURN 4
+
+;대상 선택
+@SKILL_0_SP_45_SETTARGET(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+대상측 = !발동측
+SIF BATTLE_COMMANDER_NUM:대상측 == 0
+	RETURN 0
+COMBAT_SKILL_TARGET = RAND:(BATTLE_COMMANDER_NUM:대상측)
+RETURN 1
+
+;발동 판정
+@SKILL_0_SP_45_CAN_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+대상측 = !발동측
+;여러 가지 할 수 있다. 비슷한 스킬로부터 이끌어 오는 것.
+;특히 없으면 아래의 것만으로 좋다.
+RETURN 1
+
+;발동 텍스트를 오바라이드 하고 싶을 때에.
+;「아무개의 스킬 발동!   00했다!」의 「00했다!」의 부분을 실장하고 싶은 경우는,
+;이것이 아니고 INVOKE로 쓰면 좋습니다.
+;@SKILL_0_SP_45_INVOKE_TEXT(발동자, 스킬, 장르)
+;#DIM 발동자
+;#DIM 스킬
+;#DIMS 장르
+
+;효과를 여기에 기술
+@SKILL_0_SP_45_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+대상측 = !발동측
+
+PRINTFORML  %조사처리(ANAME(발동자),"는")% 이름도 없는 단도를 들고, %ANAME(BATTLE_COMMANDER:대상측:COMBAT_SKILL_TARGET)%에게 달려들었다!
+
+IF RAND:100 < 20
+	PRINTFORML  검은빛의 칼날은 급소를 찔렀다! 　%조사처리(ANAME(BATTLE_COMMANDER:대상측:COMBAT_SKILL_TARGET),"는")% 이 전투에 참가 할 수 없다!
+	CALL COMBAT_ASSASINATE(대상측, COMBAT_SKILL_TARGET)
+ELSE
+	PRINTFORML  %ANAME(BATTLE_COMMANDER:대상측:COMBAT_SKILL_TARGET)%의 무투와 방위가 다운!
+	TIMES BATTLE_무투파워:대상측:COMBAT_SKILL_TARGET, 0.88
+	TIMES BATTLE_방위파워:대상측:COMBAT_SKILL_TARGET, 0.88
+ENDIF
+
+;스킬 설명.
+@SKILL_0_SP_45_EXPLANATION
+RESULTS = 적한사람 무투와 방위를 다운해, 저확률로 전투 불능 상태를 부여.
+
+;게임 개시시에 기억하게 하고 싶지 않은 경우. 파워업 후 전용 따위.
+;@SKILL_0_SP_45_NO_LEARN_INIT
+
+;숍으로부터 기억하게 하지 않는 경우. 위와 아울러 사용하는 것이 많다.
+@SKILL_0_SP_45_CANT_LEARN_FROM_SHOP
+
+;캐릭터가 소속해 있어도 숍으로부터 구입 할 수 없도록 한다.
+@SKILL_0_SP_45_CANT_TELL
+
+;발동율. 천분율.
+@SKILL_0_SP_45_RATE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+RETURN 200

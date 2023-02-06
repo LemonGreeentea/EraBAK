@@ -1,0 +1,114 @@
+﻿@SLG_AI_PERSUASION(세력)
+#DIM 세력
+#DIM 세력군주
+#DIM 대상
+#DIM 대상군주
+#DIM FIRST_LINE
+FIRST_LINE = LINECOUNT
+세력군주 = GET_COUNTRY_BOSS(세력)
+
+AI_PERSUASION_TERM:세력 --
+
+;설득 기한 마감 + 포로가 있는 것 같으면 플랜 생성
+SIF AI_PERSUASION_TERM:세력 <= 0 && CMATCH(CFLAG:포로처, 세력) > 0
+	CALL AI_PERSUASION_CREATE_PLAN(세력)
+
+FOR LOCAL, 0, AI_PERSUASION_MAX_TAREGET
+	대상 = ID_TO_CHARA(AI_PERSUASION_TARGET:세력:LOCAL)
+	SIF 대상 == -1
+		CONTINUE
+	IF CFLAG:대상:포로처 != 세력
+		AI_PERSUASION_TARGET:세력:LOCAL = 0
+		CONTINUE
+	ENDIF
+	대상군주 = GET_COUNTRY_BOSS(CFLAG:대상:소속)
+	CALL CHANGE_RELATION_O_TO_C(대상, 세력, RAND(10, 20), RAND(10, 20) * -1)
+	SIF CFLAG:대상:소속
+		CALL CHANGE_RELATION_O_TO_C(대상, CFLAG:대상:소속, RAND(5, 10) * -1, RAND(5, 10))
+	IF (CFLAG:대상:소속 && REL_LIKE:대상:세력군주 - REL_HATE:대상:세력군주 > REL_LIKE:대상:대상군주 - REL_HATE:대상:대상군주 + 300) || (CFLAG:대상:소속 == 0 && REL_LIKE:대상:세력군주 - REL_HATE:대상:세력군주 > 300)
+		PRINTFORML %조사처리(ANAME(세력군주),"는")% 잡은 %조사처리(ANAME(대상),"를")% 설득하고 있다……
+		CALL COLOR_PRINTL(@"설득의 끝, %조사처리(ANAME(대상),"는")% 이적의 의지를 굳혔다", CFLAG:대상:소속 > 0 && CFLAG:대상:소속 == CFLAG:MASTER:소속 ? 칼라_경고 # 칼라_주의)
+		CALL COLOR_PRINTL(@"%조사처리(ANAME(대상),"가")% %ANAME(세력군주)%에 이적했다", CFLAG:대상:소속 > 0 && CFLAG:대상:소속 == CFLAG:MASTER:소속 ? 칼라_경고 # 칼라_주의)
+		CALL CHANGE_COUNTRY(대상, 세력, 1)
+	ENDIF
+NEXT
+
+@AI_PERSUASION_CREATE_PLAN(세력)
+#DIM 세력
+#DIM 세력군주
+#DIM 포로리스트, 3000
+#DIM 능력치리스트, 3000
+#DIM 호감도리스트, 3000
+#DIM 불만도리스트, 3000
+#DIM 포로수
+#DIM 설득대상, AI_PERSUASION_MAX_TAREGET
+#DIM 설득대상수
+#DIM 대상
+VARSET 포로리스트
+VARSET 능력치리스트, __INT_MIN__
+VARSET 호감도리스트, __INT_MIN__
+VARSET 불만도리스트, __INT_MIN__
+VARSET 포로수
+VARSET 설득대상수
+VARSET 설득대상
+
+
+FOR 대상, 0, AI_PERSUASION_MAX_TAREGET
+	AI_PERSUASION_TARGET:세력:대상 = 0
+NEXT
+
+세력군주 = GET_COUNTRY_BOSS(세력)
+
+FOR 대상, 0, CHARANUM
+	IF CFLAG:대상:소속 != 세력 && CFLAG:대상:포로처 == 세력
+		포로리스트:포로수 = 대상
+		능력치리스트:포로수 = ABL:대상:무투 + ABL:대상:지략 + ABL:대상:방위 + ABL:대상:요술 + ABL:대상:요리 + ABL:대상:가창 + ABL:대상:정치
+		호감도리스트:포로수 = REL_LIKE:대상:세력군주
+		불만도리스트:포로수 = IS_COUNTRY(CFLAG:대상:소속) ? REL_HATE:LOCAL:GET_COUNTRY_BOSS(CFLAG:대상:소속) # 1500
+		포로수 ++
+	ENDIF
+NEXT
+
+SIF 포로수 == 0
+	RETURN
+
+;우선은 능력이 최대의 캐릭터
+IF 포로수 > 0
+	대상 = FINDELEMENT(능력치리스트, MAXARRAY(능력치리스트))
+	AI_PERSUASION_TARGET:세력:설득대상수 = GET_ID(포로리스트:대상)
+	포로리스트:대상 = 0
+	능력치리스트:대상 = __INT_MIN__
+	호감도리스트:대상 = __INT_MIN__
+	불만도리스트:대상 = __INT_MIN__
+	포로수 --
+	설득대상수 ++
+ENDIF
+
+;계속되어 호감도가 최대의 캐릭터
+IF 포로수 > 0
+	대상 = FINDELEMENT(호감도리스트, MAXARRAY(호감도리스트))
+	AI_PERSUASION_TARGET:세력:설득대상수 = GET_ID(포로리스트:대상)
+	포로리스트:대상 = 0
+	능력치리스트:대상 = __INT_MIN__
+	호감도리스트:대상 = __INT_MIN__
+	불만도리스트:대상 = __INT_MIN__
+	포로수 --
+	설득대상수 ++
+ENDIF
+
+;계속되어 무소속 캐릭터, 없으면 현재의 군주에 가장 불만을 품고 있는 캐릭터
+IF 포로수 > 0
+	대상 = FINDELEMENT(불만도리스트, MAXARRAY(불만도리스트))
+	AI_PERSUASION_TARGET:세력:설득대상수 = GET_ID(포로리스트:대상)
+	포로리스트:대상 = 0
+	능력치리스트:대상 = __INT_MIN__
+	호감도리스트:대상 = __INT_MIN__
+	불만도리스트:대상 = __INT_MIN__
+	포로수 --
+	설득대상수 ++
+ENDIF
+
+SIF 설득대상수 > 0
+	AI_PERSUASION_TERM:세력 = RAND(3, 5)
+
+RETURN

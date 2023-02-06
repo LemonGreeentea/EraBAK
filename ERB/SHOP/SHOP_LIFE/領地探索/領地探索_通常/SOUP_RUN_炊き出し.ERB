@@ -1,0 +1,43 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_SOUP_RUN_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_SOUP_RUN_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_SOUP_RUN(대상)
+#DIM 대상
+
+PRINTFORML 빈민굴에서, 식사제공의 현장을 당했다
+PRINTFORML 
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "요리"))
+CALL ASK_YN("돕는다", "그만둔다")
+
+IF RESULT == 1
+	PRINTFORMW 봉사 활동에 흥미는 없다
+	PRINTFORML 방치했다
+	RETURN 1
+ENDIF
+
+IF LIMIT(ABL:대상:요리, 50, 80) >= RAND:100
+	PRINTFORMW 솜씨 좋게 도울 수 있었다
+	PRINTFORML 줄지어 있던 부랑자들에게 답례를 말해졌다
+	CALL PRINT_ADD_EXP(대상, "요리경험치", RAND:10 + 5)
+ELSE
+	PRINTFORMW 조금 얽혀들어 버렸다
+	PRINTFORML 줄지어 있던 부랑자들에게 답례를 말해졌다
+	CALL PRINT_ADD_EXP(대상, "요리경험치", RAND:5 + 1)
+ENDIF    
+
+RETURN 1

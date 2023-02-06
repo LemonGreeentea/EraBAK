@@ -1,0 +1,50 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_WEIRD_MERCHANT_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_WEIRD_MERCHANT_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_WEIRD_MERCHANT(대상)
+#DIM 대상
+
+PRINTFORML 행상인에 말을 걸려졌다
+PRINTFORML 뭐든지 신발매의 약의 시공을 실시하고 있으면다
+PRINTFORML 정력이 붙는 자신작인것 같다
+PRINTL
+CALL ASK_YN("마신다", "그만둔다")
+
+IF RESULT == 1
+	PRINTFORML 그렇게 이상한 것 들어가지 않는다
+	PRINTFORML 거절했다
+	RETURN 1
+ENDIF
+
+PRINTFORML 재미있을 것 같다
+PRINTFORML 시험삼아 마셔 보기로 했다
+
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+IF !RAND:4
+	PRINTFORML ……마음 탓인지 기분이 좋아졌다
+	MAXBASE:대상:기력 += 100
+	CALL ICPRINT(@"기력 최대치가<100>올라, {MAXBASE:대상:기력}가 되었다", "L", 칼라_주의)
+ELSE
+	PRINTFORML ……아무것도 일어나지 않았다
+	PRINTFORML 효과는 개인차라고 고해, 행상인은 떠났다
+ENDIF
+
+RETURN 1

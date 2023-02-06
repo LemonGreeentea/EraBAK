@@ -1,0 +1,52 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_NICE_FRUIT_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_NICE_FRUIT_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_NICE_FRUIT(대상)
+#DIM 대상
+
+PRINTFORML 시골길을 걷고 있으면 토실토실 여문 맛있을 것 같은 과일을 찾아냈다
+PRINTFORMW 어떻게 하지?
+CALL ASK_YN("빼앗아 먹는다", "그냥 지나침 한다")
+
+IF RESULT == 1
+	PRINTFORML 과연 탐욕스럽다
+	PRINTFORML 그만두었다
+	RETURN 1
+ENDIF
+
+PRINTFORML 모처럼이니까 먹어볼게요
+PRINTFORMW %조사처리(ANAME(대상),"는")% 손을 뻗으면 과일을 빼앗아, 덥석 물었다
+PRINTFORML 
+IF RAND:2
+	PRINTFORML 맛있다!
+	PRINTFORML 과실은 매우 신선하고, 달콤했다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 기력을 충실시켜 탐색을 계속했다
+	MAXBASE:대상:체력 += 50
+	CALL ICPRINT(@"체력 최대치가<50>올라,<{MAXBASE:대상:체력}>가 되었다", "L", 칼라_주의)
+ELSE
+	PRINTFORML 곤란하다!
+	PRINTFORML 과육은 모래 같고, 한입으로 저리는 것 같은 쓴 맛이 덮쳐 왔다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 과일을 내던지면, 당황해 토해냈다
+	PRINTFORMW 구의 안에 남는 쓴 맛에 얼굴을 찡그리면서 서둘러 떠났다
+	IF MAXBASE:대상:체력 > 50
+		MAXBASE:대상:체력 -= 50
+		CALL ICPRINT(@"체력 최대치가<50>내려,<{MAXBASE:대상:체력}>가 되었다", "L", 칼라_주의)
+	ENDIF
+ENDIF
+
+RETURN 1

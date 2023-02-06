@@ -1,0 +1,129 @@
+﻿;-------------------------------------------------
+;첫회 조교시의 이벤트
+;-------------------------------------------------
+@BANDIT_REV_TRAIN_SP_EVENT(세력)
+#DIM 대상
+#DIM 세력
+SIF FLAG:역조교회수 > 0
+	RETURN 0
+
+IF SP_COUNTRY_START:특수세력_도둑 == 특수세력스타트_사관
+	PRINTFORMW 방에 우르르 들어 온 도둑들은, %ANAME(MASTER)%의 모습을 봐 폭소했다
+	PRINTFORMW 뭐자신의 세력에 붙잡히고 있다 너는과 각자가 흥을 돋운다
+	PRINTFORMW 한 바탕 웃은 후, 도둑들은 %ANAME(MASTER)%의 밧줄을 풀어, 감옥에서 냈다……
+	CALL COLORPRINT (@"%조사처리(ANAME(MASTER),"는")% 도둑에게 복귀했습니다", 칼라_주의, "L")
+	CALL CHANGE_COUNTRY(MASTER, CFLAG:MASTER:포로처, 1)
+	RETURN 1
+ELSEIF SP_COUNTRY_START:특수세력_도둑 == 특수세력스타트_노예
+	PRINTFORMW 방에 우르르 들어 온 도둑들은, %ANAME(MASTER)%의 모습을 봐 히죽히죽 웃는다
+	PRINTFORMW 노예 생활을 잊을 수 없어서 돌아와 버렸는지, 라고
+	PRINTFORMW 아무래도, %조사처리(ANAME(MASTER),"가")% 노예가 되는 것을 인정하면, 감옥에서 낼 생각으로 있는 것 같다……
+	PRINTFORML
+	CALL ASK_YN("다시 노예가 된다", "노예가 되다니 미안이다")
+	IF RESULT == 0
+		PRINTFORMW 그렇게 오지 않으면와 웃어, 도둑들은 %ANAME(MASTER)%의 밧줄을 풀었다
+		PRINTFORMW 는 조속히 노예를 해 받을까하고, 그들은 스스로의 페니스를 노출시킨다
+		PRINTFORMW 그리고 %조사처리(ANAME(MASTER),"는")%, 잠깐의 사이, 노예로서의 일에 종사했다……
+		CALL FUCK_GANGBANG(MASTER, GET_SPERM_ID("도둑"), @"도둑의 \@ RAND:2 ? 페니스 # 입술\@", "도둑")
+		CALL CHANGE_COUNTRY(MASTER, CFLAG:MASTER:포로처, 1)
+		RETURN 1
+	ELSE
+		PRINTFORMW 이제(이미/벌써/더는/정말) 너희가 좋은 대로는 안 된다……%조사처리(ANAME(MASTER),"는")% 의연히 말한다
+		PRINTFORMW 도둑들은 그것을 웃어 버려, 입장이라는 것을 가르쳐 준다며 %ANAME(MASTER)%에 모이기 시작했다……
+	ENDIF
+ENDIF
+
+
+;-------------------------------------------------
+;정기 이벤트
+;-------------------------------------------------
+@BANDIT_REV_TRAIN_REGULAR_EVENT(세력)
+#DIM 세력
+
+SIF FLAG:역조교회수 == 0 || FLAG:역조교회수 % 4 != 0
+	RETURN 0
+
+PRINTFORMW 방에 우르르 들어 온 도둑들은, %ANAME(MASTER)%의 모습을 봐 히죽히죽 웃는다
+PRINTFORMW 노예 근성이 배어든 녀석이라면, 내 주어도 괜찮지만 말야-, 등이라고 말하기 시작했다……
+PRINTFORMW 아무래도, %조사처리(ANAME(MASTER),"가")% 노예가 되는 것을 인정하면, 감옥에서 낼 생각으로 있는 것 같다……
+PRINTFORML
+CALL ASK_YN("노예가 된다", "노예가 되다니 미안이다")
+IF RESULT == 0
+	PRINTFORMW 그렇게 오지 않으면와 웃어, 도둑들은 %ANAME(MASTER)%의 밧줄을 풀었다
+	PRINTFORMW 는 조속히 노예를 해 받을까하고, 그들은 스스로의 페니스를 노출시킨다
+	PRINTFORMW 그리고 %조사처리(ANAME(MASTER),"는")%, 잠깐의 사이, 노예로서의 일에 종사했다……
+	CALL FUCK_GANGBANG(MASTER, GET_SPERM_ID("도둑"), @"도둑의 \@ RAND:2 ? 페니스 # 입술\@", "도둑")
+	CALL CHANGE_COUNTRY(MASTER, CFLAG:MASTER:포로처, 1)
+	CALL PLAYER_FALLEN_TO_SP_COUNTRY(세력)
+	IF RAND:3
+		CALL SET_PIERCE_RANKED(MASTER, 0, 피어스_음순, 피어스_페니스, 피어스_클리토리스, 피어스_유두, 피어스_배꼽, 피어스_귀, 피어스_혀, 피어스_코)
+		SIF RESULT != -1
+			CALL COLOR_PRINTW(@"%ANAME(MASTER)%의 %GET_PIERCE_NAME(RESULT)%에, 복종의 증거의 피어스가 장착되었다……", 칼라_핑크)
+	ELSE
+		IF GET_INMOU(MASTER) >= 음모_표준
+			CALL COLOR_PRINTW(@"복종이 증거로 삼아, %ANAME(MASTER)%의 음모는 하트형에 정돈되었다……", 칼라_핑크)
+			TALENT:MASTER:음모목표치 = 음모_하트형
+			TALENT:MASTER:음모현재치 = 음모_하트형
+		ELSE
+			CALL COLOR_PRINTW(@"복종이 증거로 삼아, %ANAME(MASTER)%의 음모는 영구 제모되었다……", 칼라_핑크)
+			TALENT:MASTER:음모목표치 = 음모_백보지
+			TALENT:MASTER:음모현재치 = 음모_백보지
+		ENDIF
+	ENDIF
+	RETURN 1
+ELSE
+	PRINTFORMW 누가 너희의 노예 따위에와……%조사처리(ANAME(MASTER),"는")% 의연히 말한다
+	PRINTFORMW 도둑들은 그것을 웃어 버려, 입장이라는 것을 가르쳐 준다며 %ANAME(MASTER)%에 모이기 시작했다……
+ENDIF
+
+;-------------------------------------------------
+;아는 사람이 왔을 때의 이벤트
+;-------------------------------------------------
+@BANDIT_REV_TRAIN_MSG(세력, 아는사람참가자, 아는사람참가수)
+#DIM 세력
+#DIM REF 아는사람참가자
+#DIM 아는사람참가수
+CALL SINGLE_DRAWLINE
+PRINTFORML 조교의 시간이 가까워지면, %조사처리(ANAME(MASTER),"는")% 여느 때처럼 조교 방에서 구속되어
+PRINTFORMW 후는 남자들에게 더럽혀지는 것을 기다릴 뿐되었다
+PRINTFORMW 온 도둑은, %조사처리(ANAME(MASTER),"가")% 자주(잘) 면식이 있던 상대를 데리고 와서 있었다
+PRINTFORMW %ANAME(아는사람참가자:0, 아는사람참가수)%다…
+PRINTFORMW 튼튼한 목걸이를 끼워지고 있는 이외는 모두 한가닥의 실 휘감지 않은 모습으로, 전신에 추잡한 낙서를 베풀어지고 있다
+IF IS_FEMALE(아는사람참가자:0)
+	PRINTFORMW 사전에 한껏 범해져 왔을 것이다, 얼굴이나 유방도 양구멍도, 이미 애액이나 정액으로 질척질척이 되어 있다……
+ELSE
+	PRINTFORMW 사전에 한껏 범해져 왔을 것이다, 여기저기를 백탁으로 더럽혀지고 있다……
+ENDIF
+PRINTFORMW 목걸이를 도둑은 억지로 끌어들이지만, %ANAME(아는사람참가자:0, 아는사람참가수)%는싫어한다는 커녕, 온순하게 붙어 간다……
+PRINTFORMW 도둑은 히죽히죽 웃으면서, 너의 아는 사람을 여기서 해줘라고 말하기 시작했다…
+PRINTFORMW 지금부터 행해지는 것을, %ANAME(아는사람참가자:0, 아는사람참가수)%는 이해했을 것이다. 가랑이를 열어, 허리를 구불거리게 해, 추잡한 말로 육봉을 조르기 시작했다……
+
+
+;-------------------------------------------------
+;참가자 선택 알고리즘
+;-------------------------------------------------
+@BANDIT_REV_TRAIN_CHOOSE_PARTICIPANT(세력)
+#DIM 세력
+
+FOR LOCAL:0, 0, 4
+	;확률로 견돈이 대상으로
+	IF !RAND:20
+		FOR LOCAL:1, 0, CHARANUM
+			IF CFLAG:(LOCAL:1):소속 == 세력 && IS_ANIMAL(LOCAL:1) && !CFLAG:(LOCAL:1):조교참가플래그
+				CFLAG:(LOCAL:1):조교참가플래그 = 1
+				BREAK
+			ENDIF
+		NEXT
+		CALL ADD_ANIMAL(세력, RAND:3 + 1)
+		CFLAG:(CHARANUM -1):조교참가플래그 = 1
+	;보통으로 도둑을 선출
+	ELSE
+		FOR LOCAL:1, 0, CHARANUM
+			IF TALENT:(LOCAL:1):특수세력소질 == 특수세력_도둑 && !CFLAG:(LOCAL:1):조교참가플래그 && CFLAG:(LOCAL:1):소속 == 세력
+				CFLAG:(LOCAL:1):조교참가플래그 = 1
+				CFLAG:(LOCAL:1):TEXT_LAST비표시 = 1
+				BREAK
+			ENDIF
+		NEXT
+	ENDIF
+NEXT

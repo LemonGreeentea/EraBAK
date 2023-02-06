@@ -1,0 +1,245 @@
+﻿;로션
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME75
+LOCALS:0 = 콘돔
+
+IF MTAR_NUM > 0
+	RESULTS:0 = %LOCALS:0%장착을 과시한다
+	RESULTS:1 = %LOCALS:0%장착 당해진다
+	RESULTS:2 = %LOCALS:0%장착시킨다
+	RESULTS:3 = %LOCALS:0%장착을 보게 된다
+	RESULTS:4 = %LOCALS:0%장착시킨다
+	RESULTS:5 = %LOCALS:0%장착 과시하고
+ELSE
+	RESULTS:0 = %조사처리(LOCALS:0,"를")% 붙인다
+ENDIF
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE75
+;공통 부분
+CALL COM_ABLE_COMMON(75)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 1명 이상
+SIF MPLY_NUM <= 0
+	RETURN 0
+;플레이어가 행동불능이라면 불가
+SIF !IS_PLAYABLE(MPLY:0)
+	RETURN 0
+FOR LOCAL, 0, MPLY_NUM
+	;플레이어가Ｐ삽입중이라면 불가
+	SIF IS_INSERT_SINGLE(MPLY:(LOCAL:0), "Ｐ")
+		RETURN 0
+	;플레이어에 자지가 필요
+	SIF !HAS_PENIS(MPLY:(LOCAL:0))
+		RETURN 0
+	;이미 고무 붙이고 있다면 안 돼
+	SIF IS_EQUIP_PLAYER(MPLY:(LOCAL:0), 75)
+		RETURN 0
+NEXT
+;콘돔이 인원수분 필요
+SIF ITEM:콘돔 < MPLY_NUM && ITEM:A_콘돔 < MPLY_NUM
+	RETURN 0
+;플레이어가 구속중이라면 불가
+SIF IS_BIND(MPLY:0)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM75
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+IF MTAR_NUM == 0
+	IF MPLY_NUM >= 2
+		LOCALS = %ANAME(MPLY:0)%들
+	ELSE
+		LOCALS = %ANAME(MPLY:0)%
+	ENDIF
+	SELECTCASE GET_COM_INITIATIVE()
+		CASE 0
+			PRINTFORMW %조사처리(LOCALS:0,"는")% 페니스에 콘돔을 씌웠다……
+		CASE 1
+			;응
+		CASE 2
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %LOCALS:0%에, 페니스에 콘돔을 붙이도록(듯이) 요구했다…
+			PRINTFORMW %조사처리(LOCALS:0,"는")% (듣)묻는 대로, 자신의 페니스에 콘돔을 달았다…
+	ENDSELECT
+ENDIF
+
+;로션을 1개 감소시킨다(추가 아이템 사용시는 감소시키지 않다)
+IF ITEM:A_콘돔 <= 0
+	ITEM:콘돔 = MAX(ITEM:콘돔 - MPLY_NUM, 0)
+ENDIF
+
+;주도도 변화 기준치
+TFLAG:49 = 1
+
+;도착도 변화 기준치
+TFLAG:50 = 0
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 2
+
+;경과시간을 무리하게 1줄인다
+TFLAG:55 --
+
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE75
+IF MPLY_NUM >= 2
+	LOCALS = %ANAME(MPLY:0)%들
+ELSE
+	LOCALS = %ANAME(MPLY:0)%
+ENDIF
+IF MTAR_NUM == 0
+	LOCALS:1 = 
+ELSEIF MTAR_NUM >= 2
+	LOCALS:1 = %ANAME(MTAR:0)%들
+ELSE
+	LOCALS:1 = %ANAME(MTAR:0)%
+ENDIF
+
+SELECTCASE MTAR_NUM
+	CASE 0
+		;여기에 써도 실행되지 않아서 본문에서 기술
+	CASEELSE
+		SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			PRINTFORMW %조사처리(LOCALS:0,"는")% %LOCALS:1%에, 페니스에 콘돔을 씌우는 것을 과시%TARGET_STR("했다", "해 왔다")%…
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORML %조사처리(LOCALS:1,"는")% %LOCALS:0%에, 페니스에 콘돔을 붙이도록(듯이) 요구했다…
+			PRINTFORMW %조사처리(LOCALS:0,"는")% (듣)묻는 대로, 자신의 페니스에 콘돔을 달았다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %LOCALS:0%에, %LOCALS:1%의 눈앞에서 페니스에 콘돔을 붙이도록(듯이) 요구했다…
+			PRINTFORMW %조사처리(LOCALS:0,"는")% (듣)묻는 대로, 자신의 페니스에 콘돔을 달았다…
+	ENDSELECT
+ENDSELECT
+
+;-------------------------------------------------
+;지문(실행 후)
+;-------------------------------------------------
+@COM_TEXT_AFTER75
+
+SIF MTAR_NUM == 0
+	RETURN
+
+
+IF MPLY_NUM >= 2
+	LOCALS = %ANAME(MPLY:0)%들
+ELSE
+	LOCALS = %ANAME(MPLY:0)%
+ENDIF
+IF MTAR_NUM == 0
+	LOCALS:1 = 
+ELSEIF MTAR_NUM >= 2
+	LOCALS:1 = %ANAME(MTAR:0)%들
+ELSE
+	LOCALS:1 = %ANAME(MTAR:0)%
+ENDIF
+
+IF MTAR:0 != MASTER
+	IF IS_LOVER(MTAR:0) && MPLY:0 == MASTER
+		IF GETBIT(TALENT:(MTAR:0):음란계, 소질_음란_임신하고싶어함)　|| GETBIT(TALENT:(MTAR:0):음란계, 소질_음란_노콘섹스중독)
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 생 쪽이 절대 기분이 좋은데라고 중얼거리면서, %LOCALS:0%의 페니스에 붙여진 콘돔을 쳐다보%TARGET_STR("았다", "아 왔다")%…
+		ELSE
+			SIF TALENT:(MTAR:0):육아중
+				PRINT 육아의 한중간의
+			IF TALENT:(MTAR:0):임신
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 배가 커진 것을 걱정해 주는 것을 행복감을 느끼면서, %LOCALS:0%의 페니스에 붙여진 콘돔을 쳐다보%TARGET_STR("았다", "아 왔다")%…
+			ELSE
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 몸을 걱정해 주는 것을 기뻐하면서 %LOCALS:0%의 페니스에 붙여진 콘돔을 쳐다보%TARGET_STR("았다", "아 왔다")%…
+			ENDIF
+		ENDIF
+	;포로 조교의 메인 타겟
+	ELSEIF FLAG:조교모드 == 2 && FINDELEMENT(PRISONER_TARGET, MTAR:0) != -1
+		IF TALENT:(MTAR:0):임신
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 이미 임신하고 있는데 무의미하다고 생각하면서, %LOCALS:0%의 페니스에 붙여진 콘돔을 쳐다보%TARGET_STR("았다", "아 왔다")%…
+		ELSE
+			IF GETBIT(TALENT:(MTAR:0):음란계, 소질_음란_임신하고싶어함)　|| GETBIT(TALENT:(MTAR:0):음란계, 소질_음란_노콘섹스중독)
+				PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 어딘가 유감스러운 듯이 하면서도, %LOCALS:0%의 페니스에 붙여진 콘돔을 쳐다보%TARGET_STR("았다", "아 왔다")%…
+			ELSE
+				IF TALENT:(MTAR:0):남성혐오 && IS_MALE(MTAR:0)
+					PRINT 남에 범해지는 것이라는 것을 혐오감을 안으면서도,
+				ELSEIF TALENT:(MTAR:0):프라이드높음
+					PRINT 굴욕에 얼굴을 찡그리면서도
+				ELSEIF TALENT:(MTAR:0):정조관념
+					PRINT 지금부터 범해지는 것을 상상해 혐오감을 안으면서도,
+				ENDIF
+				PRINTFORML 생으로 되는 것보다 좋다고 생각해, %조사처리(ANAME(MTAR:0),"는")% %LOCALS:0%의 페니스에 붙여진 콘돔을 쳐다보%TARGET_STR("았다", "아 왔다")%…
+			ENDIF
+		ENDIF
+	ELSE
+		IF GETBIT(TALENT:(MTAR:0):음란계, 소질_음란_임신하고싶어함)　|| GETBIT(TALENT:(MTAR:0):음란계, 소질_음란_노콘섹스중독)
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 생 쪽이 절대 기분이 좋은데라고 중얼거리면서, %LOCALS:0%의 페니스에 붙여진 콘돔을 쳐다보%TARGET_STR("았다", "아 왔다")%…
+		ELSE
+			SIF TALENT:(MTAR:0):육아중
+				PRINT 아직 육아중의
+			IF TALENT:(MTAR:0):임신
+				PRINTFORML 배의 아이의 일도 생각해, %조사처리(ANAME(MTAR:0),"는")% 피임을 긍정적으로 생각%TARGET_STR("했다", "해 왔다")%…
+			ELSE
+				PRINTFORML 임신을 피하기 (위해)때문에이니까 라고 %조사처리(ANAME(MTAR:0),"는")% 피임을 긍정적으로 생각%TARGET_STR("했다", "해 왔다")%…
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+;-------------------------------------------------
+;계속 커맨드인가 어떤가를 설정
+;-------------------------------------------------
+@COM_IS_EQUIP75
+;계속 커맨드 한편 필터링 불가
+RETURN 2
+
+;-------------------------------------------------
+;계속 상태의 처리
+;-------------------------------------------------
+@COM_EQUIP75(ARG:0)
+;특별히 이루어
+
+;-------------------------------------------------
+;계속중의 표시
+;-------------------------------------------------
+@EQUIP_MESSAGE75(ARG:0)
+RESULTS = %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"가")% 콘돔을 장착중
+
+;-------------------------------------------------
+;계속중의 지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE_EQUIP75(ARG:0)
+
+;-------------------------------------------------
+;계속을 해제했을 때의 지문
+;-------------------------------------------------
+@COM_TEXT_RELEASE_EQUIP75(ARG:0)
+PRINTFORMW %EQUIP_PLAYER_ANAME(ARG:0)%의 콘돔을 제외했다
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN75
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_75()
+RETURN POWER(2, 성적기호_도구를사용하고싶다)
+
+@COM_PREFERENCE_TARGET_75()
+RETURN POWER(2, 성적기호_도구를사용되고싶다)
+

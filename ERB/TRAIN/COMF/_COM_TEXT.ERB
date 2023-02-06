@@ -1,0 +1,599 @@
+﻿;지문에 관한 처리
+
+;---------------------------------------------------------
+;커맨드 실행전에 표시되는 지문의 호출
+;주로 행동 내용이나 상황등을 기술한다
+;---------------------------------------------------------
+@COM_TEXT_BEFORE
+;지문이 비표시라면 돌아온다
+;SIF FLAG:0 == 0
+;	RETURN
+
+;구상 표시
+CALL KOJO_COM_BEFORE
+
+;구상측의 반환값이 1이라면 지문은 컷 된다
+IF !RESULT
+	TRYCALLFORM COM_TEXT_BEFORE{SELECTCOM}
+ENDIF
+
+;---------------------------------------------------------
+;커맨드 실행 직후에 표시되는 지문의 호출
+;주로 행동의 결과를 기술한다
+;사정이나 절정에 관련한 메세지도 여기서 표시
+;뭔가 메세지를 표시하면 1을 돌려준다
+;---------------------------------------------------------
+@COM_TEXT_AFTER
+;지문이 비표시라면 돌아온다
+;SIF FLAG:0 == 0
+;	RETURN
+
+RESULT = 0
+TRYCALLFORM COM_TEXT_AFTER{SELECTCOM}
+IF RESULT
+	;커맨드 전용의 지문이 정의되고 있으면 돌아온다
+	RETURN 0
+ENDIF
+
+LOCAL:10 = 0
+
+;지금 턴에 절정 한 캐릭터의 인원수를 세어, 이름과 최저 강도를 기록
+LOCAL:5 = 0
+LOCAL:6 = 0
+LOCAL:7 = 999
+LOCALS:1 = 
+LOCALS:2 = 
+FOR LOCAL:0, 0, CHARANUM
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0)
+		;이번ＣＶＡＢＭ의 절정 회수(NOWEX)의 합계를 취득
+		LOCAL:2 = SUM_NOWEX(LOCAL:0, 0, 0)
+
+		IF LOCAL:2 > 0
+			IF LOCAL:2 < LOCAL:7
+				LOCAL:7 = LOCAL:2
+			ENDIF
+
+			IF LOCAL:0 == MASTER
+				LOCAL:6 = 1
+			ELSE
+				IF LOCAL:5 == 1
+					LOCALS:2 = 와 %ANAME(LOCAL:0)%
+				ELSE
+					LOCALS:1 = %ANAME(LOCAL:0)%
+				ENDIF
+				LOCAL:5 ++
+			ENDIF
+		ENDIF
+	ENDIF
+NEXT
+
+;한사람 이상 절정 했을 경우
+IF LOCAL:5 >= 1
+	IF LOCAL:5 >= 3
+		LOCALS:1 = %LOCALS:1%들
+	ELSE
+		LOCALS:1 = %LOCALS:1%%LOCALS:2%
+	ENDIF
+	;주인공이 동시에 절정 했을 경우
+	IF LOCAL:6
+		LOCALS:0 = %조사처리(ANAME(MASTER),"와")%
+		LOCALS:3 = 동시에
+	ELSE
+		LOCALS:0 = 
+		LOCALS:3 = 
+	ENDIF
+
+	IF LOCAL:7 >= 8
+		LOCAL:10 = 1
+		PRINTFORML %LOCALS:0% %조사처리(LOCALS:1,"는")% 강렬한 절정감에 몇 번이나 등을 젖혀지게 해 발사해진 물고기같이 몸을 뛰게 했다…
+	ELSEIF LOCAL:7 >= 3
+		LOCAL:10 = 1
+		PRINTFORML %LOCALS:0% %조사처리(LOCALS:1,"는")% %LOCALS:3% 격렬하게 절정 해, 입으로부터 군침을 늘어뜨려 삐걱삐걱 경련했다…
+	ELSEIF LOCAL:7 >= 1
+		LOCAL:10 = 1
+		PRINTFORML %LOCALS:0% %조사처리(LOCALS:1,"는")% %LOCALS:3% 절정에 이르러 움찔움찔 몸을 진동시켰다…
+	ENDIF
+
+;주인공만이 절정 했을 경우
+ELSEIF LOCAL:6
+	;이번ＣＶＡＢＭ의 절정 회수(NOWEX)의 합계를 취득
+	LOCAL:2 = SUM_NOWEX(MASTER, 0, 0)
+
+	IF LOCAL:2 >= 8
+		LOCAL:10 = 1
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 강렬한 절정감에 몇 번이나 등을 젖혀지게 해 발사해진 물고기같이 몸을 뛰게 했다…
+	ELSEIF LOCAL:2 >= 3
+		LOCAL:10 = 1
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 격렬하게 절정 해, 입으로부터 군침을 늘어뜨려 삐걱삐걱 경련했다…
+	ELSEIF LOCAL:2 >= 1
+		LOCAL:10 = 1
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 절정에 이르러 움찔움찔 몸을 진동시켰다…
+	ENDIF
+ENDIF
+
+FOR LOCAL:0, 0, CHARANUM
+	;번호 LOCAL:0의 캐릭터가 사정했을 경우
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0) && NOWEX:(LOCAL:0):사정 > 0
+		LOCAL:10 = 1
+
+		;사정 대상의 인원수를 세어, 필요한 문자열을 작성
+		LOCAL:2 = 0
+		LOCAL:3 = 2
+		LOCAL:4 = -1
+		LOCALS:0 = 
+		FOR LOCAL:1, 400, 420
+			IF TCVAR:(LOCAL:0):(LOCAL:1) >= 0
+				LOCAL:4 = TCVAR:(LOCAL:0):(LOCAL:1)
+				IF LOCAL:2 == 0
+					LOCALS:0 = %ANAME(TCVAR:(LOCAL:0):(LOCAL:1))%
+				ELSE
+					LOCALS:0 = %조사처리(LOCALS:0,"와")% %ANAME(TCVAR:(LOCAL:0):(LOCAL:1))%
+				ENDIF
+				LOCAL:2 ++
+				;대상의 정애Lv를 판정(주인공이 포함되어 있는 or역조교라면-1에 고정)
+				IF TCVAR:(LOCAL:0):(LOCAL:1) == MASTER || FLAG:조교모드 == 4
+					LOCAL:3 = -1
+				ELSEIF LOCAL:3 >= 1 && ABL:(TCVAR:(LOCAL:0):(LOCAL:1)):정애 < 2
+					LOCAL:3 = 0
+				ELSEIF LOCAL:3 >= 2 && ABL:(TCVAR:(LOCAL:0):(LOCAL:1)):정애 < 5
+					LOCAL:3 = 1
+				ENDIF
+			ENDIF
+		NEXT
+		SIF SOURCE:(LOCAL:0):쾌Ｐ == 0 && NOWEX:(LOCAL:0):Ｖ절정 + NOWEX:(LOCAL:0):Ａ절정 > 0
+			PRINTFORM 페니스에 접해지지 않았는데 사정했다
+		;콘돔 장착중
+		IF IS_EQUIP_PLAYER(LOCAL:0, 75)
+			PRINTFORML %ANAME(LOCAL:0)%의 정액이, 콘돔으로 발해져 갔다……
+		;사정 대상이 미설정
+		ELSEIF LOCAL:2 <= 0
+			;포로 조교 or 포로 역조교
+			IF GROUPMATCH(FLAG:조교모드, 2, 4, 6, 7)
+				PRINTFORML %ANAME(LOCAL:0)%의 정액이 마루를 더럽혀 갔다…
+			ELSE
+				PRINTFORML %ANAME(LOCAL:0)%의 정액이 %GET_GROUND_NAME(TFLAG:54)%를 더럽혀 갔다…
+			ENDIF
+		ELSE
+			;사정 대상이 4명 이상
+			IF LOCAL:2 >= 4
+				LOCALS:1 = %ANAME(TCVAR:(LOCAL:0):400)%들
+			;사정 대상이 3명 이하
+			ELSE
+				LOCALS:1 = %LOCALS:0%
+			ENDIF
+			PRINTFORM %ANAME(LOCAL:0)%의 정액이 %LOCALS:1%
+
+			SELECTCASE TCVAR:(LOCAL:0):420
+				CASE 1
+					PRINTL 의 질내로 쏟아졌다…
+					;사정한 캐릭터가 짐승 변화중
+					IF TALENT:(LOCAL):동물귀 || TALENT:(LOCAL):꼬리
+						IF LOCAL:0 == MASTER
+							PRINTFORML 짐승의 본능이 가져오는 질내사정의 기쁨이, %ANAME(LOCAL:0)%의 정수리를 달콤하게 저리게 했다…
+						;호감도 또는 종속도가 1500이상
+						ELSEIF CFLAG:(LOCAL:0):호감도 >= 1500 || CFLAG:(LOCAL:0):종속도 >= 1500 || CFLAG:(LOCAL:4):지배도 >= 1500
+							PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 짐승의 본능에 흐르게 되는 대로, 질내사정의 기쁨에 얼굴을 느슨해지게 하고 있다…
+						ELSE
+							PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 짐승의 본능에 거역하지 못하고, 질내사정의 기쁨에 쳐 떨고 있다…
+						ENDIF
+					ENDIF
+					;사정된 캐릭터가 짐승 변화중
+					IF LOCAL:4 >= 0 && (TALENT:(LOCAL:4):동물귀 || TALENT:(LOCAL:4):꼬리)
+						IF LOCAL:4 == MASTER
+							PRINTFORML 짐승의 본능이 가져오는 질내사정의 기쁨이, %ANAME(LOCAL:4)%의 정수리를 달콤하게 저리게 했다…
+						;호감도 또는 종속도가 1500이상
+						ELSEIF CFLAG:(LOCAL:4):호감도 >= 1500 || CFLAG:(LOCAL:4):종속도 >= 1500 || CFLAG:(LOCAL:4):지배도 >= 1500
+							PRINTFORML %조사처리(ANAME(LOCAL:4),"는")% 짐승의 본능에 흐르게 되는 대로, 질내사정의 기쁨에 얼굴을 느슨해지게 하고 있다…
+						ELSE
+							PRINTFORML %조사처리(ANAME(LOCAL:4),"는")% 짐승의 본능에 거역하지 못하고, 질내사정의 기쁨에 쳐 떨고 있다…
+						ENDIF
+					ENDIF
+					;사정된 캐릭터가 임신중
+					IF LOCAL:4 >= 0 && TALENT:(LOCAL:4):임신
+						PRINTFORML 이미 아이를 품고 있는 %ANAME(LOCAL:4)%의 질내를, %ANAME(LOCAL:0)%의 정액이 채워 간다…
+					ENDIF
+					IF LOCAL:4 >= 0 && (HAS_SAME_FATHER(LOCAL:0, LOCAL:4) || HAS_SAME_MOTHER(LOCAL:0, LOCAL:4))
+						PRINTFORML %ANAME(LOCAL:4)%의 질내를, 혈연 관계에 있는 %ANAME(LOCAL:0)%의 정액이 채워 간다……
+					ELSEIF LOCAL:4 >= 0 && IS_FATHER(LOCAL:4, LOCAL:0)
+						PRINTFORML %ANAME(LOCAL:4)%의 질내를, 부친인 %ANAME(LOCAL:0)%의 정액이 채워 간다……
+					ELSEIF LOCAL:4 >= 0 && IS_MOTHER(LOCAL:0, LOCAL:4)
+						PRINTFORML %ANAME(LOCAL:4)%의 질내를, 아이인 %ANAME(LOCAL:0)%의 정액이 채워 간다……
+					ENDIF
+					
+					IF LOCAL:4 >= 0 && GETBIT(TALENT:(LOCAL:4):음란계, 소질_음란_바람기버릇)
+						IF LOCAL:0 == MASTER
+							PRINTFORML 완전히 바람기버릇이 몸에 붙은 %조사처리(ANAME(LOCAL:4),"는")%, %조사처리(ANAME(LOCAL:0),"로")%부터의 질내사정에서는 좀 더 불타지 않는 것 같다……
+						ELSE
+							PRINTFORML 완전히 바람기버릇이 몸에 붙은 %조사처리(ANAME(LOCAL:4),"는")%, %조사처리(ANAME(LOCAL:0),"로")%부터의 질내사정에 불타오르고 있다……
+						ENDIF
+					ENDIF
+
+					;포로 조교의 메인 타겟
+					IF FLAG:조교모드 == 2 && FINDELEMENT(PRISONER_TARGET, LOCAL:4) != -1 && !((TCVAR:(LOCAL:4):52) || (TCVAR:(LOCAL:4):53 == 1))
+						IF IS_ANIMAL(LOCAL:0)
+							IF GETBIT(TALENT:(LOCAL:4):음란계, 소질_음란_암캐)
+								SELECTCASE TALENT:(LOCAL:0):동물
+									CASE 동물_개
+										PRINTFORML 완전히 짐승과의 교미를 마음에 든 %조사처리(ANAME(LOCAL:4),"는")% 개의 정자가 따라질 때에 허리를 구불거리게 할 수 있는 엉덩이를 흔들어, 한 그릇 더를 조르고 있다
+									CASE 동물_돼지
+										PRINTFORML 완전히 가축과의 교미를 마음에 든 %조사처리(ANAME(LOCAL:4),"는")% 돼지의 정자가 따라질 때에 허리를 구불거리게 할 수 있는 엉덩이를 흔들어, 한 그릇 더를 조르고 있다
+									CASE 동물_말
+										PRINTFORML 완전히 종마와의 교미를 마음에 든 %조사처리(ANAME(LOCAL:4),"는")% 말의 정자가 따라질 때에 허리를 구불거리게 할 수 있는 엉덩이를 흔들어, 한 그릇 더를 조르고 있다
+								ENDSELECT
+							ELSE
+								SELECTCASE TALENT:(LOCAL:0):동물
+									CASE 동물_개
+										PRINTFORML 번식력 왕성한 정자가 개의 흉포한 페니스로부터 자궁에 쏟아지는 열을 느껴 %조사처리(ANAME(LOCAL:4),"는")% 짐승과 같은 비명을 올렸다
+									CASE 동물_돼지
+										PRINTFORML 돼지의 나선 모양의 페니스로부터 가축의 정자가 자궁에 쏟아지는 열을 느껴 %조사처리(ANAME(LOCAL:4),"는")% 짐승과 같은 비명을 올렸다
+									CASE 동물_말
+										PRINTFORML 말의 거대한 페니스로부터 자궁을 압박할 정도의 정자를 쏟아져 %조사처리(ANAME(LOCAL:4),"는")% 짐승 같은 비명을 올렸다
+								ENDSELECT
+							ENDIF
+						ELSE
+							IF RAND:3 == 0
+								IF TALENT:(LOCAL:4):예속 && (LOCAL:0 == MASTER)
+									PRINTFORML %ANAME(LOCAL:0)%의 노예로서 조교가 두루 미친 %조사처리(ANAME(LOCAL:4),"는")% 질내사정을 받아들여, 인사를 해 왔다
+								ELSEIF TALENT:(LOCAL:4):복종 && (LOCAL:0 == MASTER)
+									PRINTFORML %ANAME(LOCAL:0)%의 노예로서 조교된 %조사처리(ANAME(LOCAL:4),"는")% 흔들림소리이지만, 인사를 하는 일은 잊지 않았다
+								ELSEIF TALENT:(LOCAL:4):정실 && (LOCAL:0 == MASTER)
+									PRINTFORML 반려인 %ANAME(LOCAL:0)%에 포로로서 범해져 질내사정되는 것을 %조사처리(ANAME(LOCAL:4),"는")% 익숙해지는 것이 할 수 없다
+								ELSEIF TALENT:(LOCAL:4):친애 && (LOCAL:0 == MASTER)
+									PRINTFORML %조사처리(ANAME(LOCAL:0),"를")% 사랑하고 있는데 포로로서 범해져 질내사정되는 것을 %조사처리(ANAME(LOCAL:4),"는")% 눈물을 머금고 있다
+								ELSEIF TALENT:(LOCAL:4):연모 && (LOCAL:0 == MASTER)
+									PRINTFORML %ANAME(LOCAL:0)%에 반하고 있는데 포로로서 범해져 질내사정되는 것을 %조사처리(ANAME(LOCAL:4),"는")% 눈물을 머금고 있다
+								ELSEIF TALENT:(LOCAL:4):친구 && (LOCAL:0 == MASTER)
+									PRINTFORML 친구라고 생각하고 있었던 %ANAME(LOCAL:0)%에 잡혀, 범해져 질내사정 되는 것을 %조사처리(ANAME(LOCAL:4),"는")% 지금이다 익숙해지지 않는다
+								ELSEIF TALENT:(LOCAL:4):연인 && (LOCAL:0 == MASTER)
+									PRINTFORML 생각을 털어 놓은 %ANAME(LOCAL:0)%에 포로로서 범해져 질내사정되는 것을 %조사처리(ANAME(LOCAL:4),"는")% 견딜 수 없다
+								ELSEIF TALENT:(LOCAL:4):합의 && (LOCAL:0 == MASTER)
+									PRINTFORML 이전에 몸을 허락한 %ANAME(LOCAL:0)%에 포로로서 범해져 질내사정되는 것을 %조사처리(ANAME(LOCAL:4),"는")% 과거의 선택을 후회하고 있다
+								ELSEIF TALENT:(LOCAL:4):아이인질
+									PRINTFORML 아이를 인질에게 빼앗긴 %ANAME(LOCAL:4)%에 질내사정을 거절할 수 있는 여지 따위 없다
+								ELSEIF TALENT:(LOCAL:4):임신
+									PRINTFORML 포로인 %조사처리(ANAME(LOCAL:4),"는")% 임신이어도 가차 없이 질내사정 되어 아이를 기르고 있는 자궁에 한층 더 정자를 따라지고 있다
+								ELSEIF TALENT:(LOCAL:4):키스미경험
+									PRINTFORML %조사처리(ANAME(LOCAL:4),"는")% 키스조차 했던 적이 없는데 포로로서 질내사정을 강요당하는 현실을 받아들이지 못할 같다
+								ELSEIF TALENT:(LOCAL:4):남성혐오 && ((TALENT:(LOCAL:0):성별 == 0) || (TALENT:(LOCAL:0):성별 >= 3))
+									PRINTFORML 남에 범해지는 것을 완고하게 저항하고 있었던 %조사처리(ANAME(LOCAL:4),"이지만")%, 포로의 몸에서는 질내사정을 막을 방법 따위 없다
+								ELSEIF TALENT:(LOCAL:4):인기
+									PRINTFORML 외에서의 인기 따위 뇌 중(안)에서는 무슨 도움도 되지 않으면, %조사처리(ANAME(LOCAL:4),"는")% 질내사정의 뜨거운 감촉을 느끼면서 깨달았다
+								ELSEIF FIND_PASSIVE_SKILL(LOCAL:4, "노력가")
+									PRINTFORML 노력으로는 어쩔 도리가 없는 것이 있는 것이라고, %조사처리(ANAME(LOCAL:4),"는")% 질내사정의 뜨거운 감촉을 느끼면서 깨달았다
+								ENDIF
+							ELSEIF RAND:2 == 0
+								IF !(IS_LOVER(LOCAL:4) || IS_SLAVE(LOCAL:4) || IS_SLAVED_BY(LOCAL:4)) || (IS_LOVER(LOCAL:4) && !(LOCAL:0 == MASTER))
+									PRINTFORML %조사처리(ANAME(LOCAL:4),"는")% 필사적으로 거절하려고 했지만, 포로에게 질내사정을 피할 권리 따위 없다
+								ENDIF
+							ELSE
+								IF GETBIT(TALENT:(LOCAL:4):음란계, 소질_음란_음란)
+									PRINTFORML %조사처리(ANAME(LOCAL:4),"는")% 포로인 것에도 불구하고, 그 음분 다과등 질내사정의 쾌감에 만취하고 있다
+								ELSEIF TALENT:(LOCAL:4):쾌감에솔직
+									PRINTFORML 자궁에 정자를 마구 퍼부을 수 있는 쾌감에 %조사처리(ANAME(LOCAL:4),"는")% 신음소리를 억제할려고도 하지 않는다
+								ELSEIF TALENT:(LOCAL:4):쾌감을부정
+									PRINTFORML 자궁을 정자가 유린하는 쾌감을 부정하도록(듯이)%조사처리(ANAME(LOCAL:4),"는")% 신음소리를 억제하고 있다
+								ELSEIF TALENT:(LOCAL:4):프라이드높음
+									IF LOCAL:4 >= 0 && IS_OVULATION(LOCAL:4)
+										PRINTFORML 긍지 높은 %조사처리(ANAME(LOCAL:4),"가")% 스스로 위험일인 것을 밝혀 용서를빈다라고 왔지만, 포로에게 질내사정을 피할 권리 따위 없다
+									ELSE
+										PRINTFORML 비유 사로잡힌 몸이어도 추태를 드러내지 않으리라고, %조사처리(ANAME(LOCAL:4),"는")% 질내사정 되어도 노력해 평정을 유지하려고 했다
+									ENDIF
+								ENDIF
+							ENDIF
+						ENDIF
+					ENDIF
+					SIF LOCAL:4 >= 0 && GETBIT(TALENT:(LOCAL:0):음란계, 소질_음란_진한정액)
+						PRINTFORML %ANAME(LOCAL:0)%의 특농 또한 대량의 정액에, %조사처리(ANAME(LOCAL:4),"는")% 몹시 놀라고 있다…
+					SIF LOCAL:4 >= 0 && GETBIT(TALENT:(LOCAL:4):음란계, 소질_음란_임신하고싶어함)
+						PRINTFORML %조사처리(ANAME(LOCAL:4),"는")% 아이를 품는 것의 쾌락에 만취하고 있다…
+					SIF LOCAL:4 >= 0 && GETBIT(TALENT:(LOCAL:4):음란계, 소질_음란_노콘섹스중독)
+						PRINTFORML %조사처리(ANAME(LOCAL:4),"는")% 생이 아니면 맛볼 수 없는 쾌감에 만취하고 있다…
+					SIF LOCAL:4 >= 0 && GETBIT(TALENT:(LOCAL:4):음란계, 소질_음란_양질모태)
+						PRINTFORML 모판에 다시 만들 수 있었던 %ANAME(LOCAL:4)%의 자궁이, 질내사정에 의해 강렬하게 쑤시고 있다…
+					SIF LOCAL:4 >= 0 && TCVAR:(LOCAL:4):60
+						PRINTFORML 미약의 효과 이유인가, %조사처리(ANAME(LOCAL:4),"는")% 녹은 소리를 높이면서 질내사정의 기쁨에 허리를 구불거리게 할 수 있다…
+					SIF LOCAL:4 >= 0 && TCVAR:(LOCAL:4):67
+						PRINTFORML 마약의 힘으로 트립한 %조사처리(ANAME(LOCAL:4),"는")%, 질내사정의 기쁨에 녹은 소리를 질러 허리를 구불거리게 할 수 있다…
+					SIF LOCAL:4 >= 0 && TCVAR:(LOCAL:4):65
+						PRINTFORML 약의 효과로 임신하기 쉬워지고 있는 %ANAME(LOCAL:4)%의 자궁에서는, 대량의 정자가 난자에 모이고 있다
+					SIF LOCAL:4 >= 0 && TFLAG:69
+						PRINTFORML 도원향이 감도는 중, 얇고 안개 보고가 산 %ANAME(LOCAL:4)%의 머리와 신체에 질내사정의 기쁨이 뛰어 돌아다닌다…
+					SIF LOCAL:4 >= 0 && IS_OVULATION(LOCAL:4)
+						PRINTFORML 위험일인 %ANAME(LOCAL:4)%의 자궁에, 무수한 정자가 쏟아졌다…
+				CASE 2
+					PRINTL 의 장내에 쏟아졌다…
+					IF LOCAL:3 == 2
+						PRINTFORML %LOCALS:1%의 항내는, 쳐박을 수 있는 정액을 다 탐내려고 음탕하게 수축을 반복하고 있다
+					ENDIF
+					IF GETBIT(TALENT:(LOCAL:4):음란계, 소질_음란_항문광)
+						PRINTFORML 완전하게 성기화한 음항을 달려올라 유린해 나가는 뜨거운 감촉에, %조사처리(LOCALS:1,"는")% 배덕적인 충족감으로 채워졌다…
+					ENDIF
+					IF GETBIT(TALENT:(LOCAL:4):음란계, 소질_음란_노콘섹스중독)
+						PRINTFORML %조사처리(ANAME(LOCAL:4),"는")%, 생이 아니면 맛볼 수 없는 장내사정의 쾌감에 만취하고 있다…
+					ENDIF
+					IF LOCAL:4 >= 0 && TCVAR:(LOCAL:4):60
+						PRINTFORML 미약의 효과 이유인가, %조사처리(ANAME(LOCAL:4),"는")% 녹은 소리를 높이면서 항내사정의 기쁨에 허리를 구불거리게 할 수 있다…
+					ENDIF
+					IF LOCAL:4 >= 0 && TCVAR:(LOCAL:4):67
+						PRINTFORML 마약의 힘으로 트립한 %조사처리(ANAME(LOCAL:4),"는")%, 항내사정의 기쁨에 녹은 소리를 질러 허리를 구불거리게 할 수 있다…
+					ENDIF
+					IF LOCAL:4 >= 0 && TCVAR:(LOCAL:4):65
+						PRINTFORML 약의 효과로 임신하기 쉬워지고 있는 %ANAME(LOCAL:4)%의 자궁이, 항내사정에 반응해 흠칫흠칫 떨고 있다…
+					ENDIF
+					IF LOCAL:4 >= 0 && TFLAG:69
+						PRINTFORML 도원향이 감도는 중, 얇고 안개 보고가 산 %ANAME(LOCAL:4)%의 머리와 신체에 항내사정의 기쁨이 뛰어 돌아다닌다…
+					ENDIF
+				CASE 3
+					PRINTL 의 손안에 내뿜었다…
+					IF LOCAL:3 == 2
+						PRINTFORML %조사처리(LOCALS:1,"는")% 황홀로 한 표정으로 손을 뒤따른 정액을 빨고 취하고 있다…
+					ENDIF
+				CASE 4
+					PRINTL 의 입의 안에 내뿜었다…
+					IF TALENT:(LOCAL:4):프라이드높음
+						IF TALENT:(LOCAL:4):연모 && (LOCAL:0 == MASTER)
+							PRINTFORML %조사처리(LOCALS:1,"는")% 황홀과 페니스를 문 채로, 자부심으로 가득 찬 눈동자로 응시해 왔다
+						ELSEIF TALENT:(LOCAL:4):복종 && (LOCAL:0 == MASTER)
+							PRINTFORML %조사처리(LOCALS:1,"는")% 당신을 굴복 시킨 페니스를 노려보면서도, 결코 뜨거운 시선을 떼어 놓으려고는 하지 않는다
+						ELSE
+							PRINTFORML %조사처리(LOCALS:1,"는")% 페니스를 문 채로 눈을 치켜 뜨고 노려봐 왔다
+						ENDIF
+					ENDIF
+					IF LOCAL:3 == 2
+						IF LOCAL:2 >= 2
+							PRINTFORML %조사처리(LOCALS:1,"는")% 토해내진 정액을 싸우도록(듯이)해 빨고 취해 갔다…
+						ELSE
+							PRINTFORML %조사처리(LOCALS:1,"는")% 토해내진 정액을 한 방울 남김없이 빨아 올려, 목을 울려 삼켰다…
+						ENDIF
+					ELSEIF LOCAL:3 == 1
+						IF LOCAL:2 >= 2
+							PRINTFORML %조사처리(LOCALS:1,"는")% 토해내진 정액을 협력해 빨고 취해 갔다…
+						ELSE
+							PRINTFORML %조사처리(LOCALS:1,"는")% 토해내진 정액을 삼켰다…
+						ENDIF
+					ELSEIF LOCAL:3 == 0 && LOCAL:2 == 1
+						PRINTFORML %조사처리(LOCALS:1,"는")% 정액을 삼키지 못하고, 토해내 버렸다…
+					ENDIF
+				CASE 5
+					PRINTL 의 가슴을 희게 염색해 냈다…
+					IF LOCAL:3 == 2
+						PRINTFORML %조사처리(ANAME(LOCAL:4),"는")% 가슴에 걸린 정액을 손가락 (로) 건져, 맛있을 것 같게 빨고 취하고 있다…
+					ENDIF
+				CASE 6
+					PRINTL 의 다리를 더럽혔다…
+					IF LOCAL:3 == 2
+						PRINTFORML %조사처리(ANAME(LOCAL:4),"는")% 다리에 걸린 정액을 꿀쩍꿀쩍 기분 좋은 것같이 칠하고 있다…
+					ENDIF
+				CASE 7
+					PRINTL 의 꼬리를 더럽혀 갔다…
+				CASE 8
+					PRINTL 의 얼굴에 닥쳤다…
+					IF TALENT:(LOCAL:4):프라이드높음
+						IF CFLAG:(LOCAL:4):2 >= 1500 || CFLAG:(LOCAL:4):4 >= 1500
+							PRINTFORML %LOCALS:1%의 얼굴에 사정하기에의 굴욕은, 이미 충족감으로 변한다
+						ELSE
+							PRINTFORML %조사처리(LOCALS:1,"는")% 얼굴에 정액을 걸 수 있어 약간 눈을 날카롭게 하고 있다
+						ENDIF
+					ELSEIF TALENT:(LOCAL:4):프라이드낮음
+						PRINTFORML %조사처리(LOCALS:1,"는")% 눈을 감아, 정액을 얼굴에 받는 것을 받아들이고 있다
+					ENDIF
+					IF LOCAL:3 == 2
+						PRINTFORML %조사처리(LOCALS:1,"는")% 얼굴을 뒤따른 정액을 손가락 (로) 건져, 맛있을 것 같게 빨고 취하고 있다…
+					ENDIF
+				CASE 9
+					PRINTL 의 머리카락에 찰싹하고 달라붙었다…
+				CASE 10
+					PRINTL 의 겨드랑이를 희게 염색해 냈다…
+				CASE 11
+					IF TALENT:(LOCAL:4):예쁜엉덩이
+						PRINTL 의 예쁜 분홍 엉덩이를 희게 염색해 냈다…
+					ELSEIF GET_HIPSIZE(LOCAL:4) >= 1
+						PRINTL 의 살집이 좋은 훌륭한 엉덩이를 희게 염색해 냈다…
+					ELSE
+						PRINTL 의 엉덩이를 희게 염색해 냈다…
+					ENDIF
+					IF LOCAL:3 == 2
+						PRINTFORML %조사처리(LOCALS:1,"는")% 엉덩이에 정액이 걸릴 때에, 그 쌍구를 부들부들 진동시키고 있다…
+					ENDIF
+				CASE 12
+					PRINTL 가 가지는 오나홀중에 흘러 들어가져 갔다…
+				CASE 13
+					PRINTL 가 조종하는 촉수에 빨아내져 갔다…
+				CASEELSE
+					PRINTL 에 내리고 걸려 갔다…
+			ENDSELECT
+		ENDIF
+
+		IF TCVAR:(LOCAL:0):51
+			IF TCVAR:(LOCAL:0):52
+				PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 한계를 넘은 사정에, 의식을 잃은 채로 작게 신음했다
+			ELSE
+				IF LOCAL:0 == MASTER
+					PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 한계를 넘은 사정에 무심코 신음했다
+				ELSE
+					PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 한계를 넘은 사정에 괴로운 듯이 신음했다
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+
+	;번호 LOCAL:0의 캐릭터가 분유 했을 경우
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0) && NOWEX:(LOCAL:0):분유 > 0
+		;촉수착유중
+		IF (SELECTCOM == 207 && IS_MTAR(LOCAL:0)) || IS_EQUIP_TARGET(LOCAL:0, 207)
+			IF NOWEX:(LOCAL:0):분유 >= 2
+				PRINTFORML %ANAME(LOCAL:0)%의 모유가, 유두에 달라붙는 촉수안에 대량으로 내뿜었다…
+			ELSE
+				PRINTFORML %ANAME(LOCAL:0)%의 모유가, 유두에 달라붙는 촉수안에 내뿜었다…
+			ENDIF
+		ELSE
+			IF NOWEX:(LOCAL:0):분유 >= 2
+				PRINTFORML %ANAME(LOCAL:0)%의 유두로부터 대량의 모유가 불기 시작했다…
+			ELSE
+				PRINTFORML %ANAME(LOCAL:0)%의 유두로부터 모유가 불기 시작했다…
+			ENDIF
+		ENDIF
+	ENDIF
+
+	;번호 LOCAL:0의 캐릭터가 분수 했을 경우
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0) && NOWEX:(LOCAL:0):분수 > 0
+		;안면승마중이라면 타겟을 취득
+		IF GROUPMATCH(SELECTCOM, 101, 102, 105) && IS_MPLY(LOCAL:0)
+			LOCAL:7 = MTAR:0
+		ELSE
+			LOCAL:7 = SEARCH_EQUIP(101, LOCAL:0, -1)
+			IF LOCAL:7 < 0
+				LOCAL:7 = SEARCH_EQUIP(102, LOCAL:0, -1)
+				IF LOCAL:7 < 0
+					LOCAL:7 = SEARCH_EQUIP(105, LOCAL:0, -1)
+				ENDIF
+			ENDIF
+			IF LOCAL:7 >= 0
+				LOCAL:7 = MEQUIP_TARGET:(LOCAL:5):0
+			ENDIF
+		ENDIF
+
+		LOCAL:5 = HAS_PENIS(LOCAL:0) && NOWEX:(LOCAL:0):Ｃ절정 >= 1
+		LOCAL:6 = HAS_VAGINA(LOCAL:0)
+		IF LOCAL:5
+			PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 페니스로부터 조수를 뿜어 움찔움찔 몸을 진동시켰다…
+		ELSE
+			IF LOCAL:7 >= 0
+				PRINTFORML %ANAME(LOCAL:0)%의 질로부터 대량의 조수가 불기 시작해, %ANAME(LOCAL:7)%의 얼굴에 내리고 걸렸다…
+			ELSE
+				PRINTFORML %ANAME(LOCAL:0)%의 질사, 라고 조수가 불기 시작했다…
+			ENDIF
+		ENDIF
+	ENDIF
+
+	;번호 LOCAL:0의 캐릭터가 오줌 흘리기 했을 경우
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0) && TCVAR:(LOCAL:0):0
+		IF HAS_PENIS(LOCAL:0)
+			LOCALS:0 = 페니스
+		ELSE
+			LOCALS:0 = 사타구니
+		ENDIF
+;201508 21 여기의 LOCAL:7은（상의 표기를 참조하는 한에서는)
+		LOCAL:7 = -1
+		IF !HAS_PENIS(LOCAL:0)
+			;안면승마중이라면 타겟을 취득
+			IF GROUPMATCH(SELECTCOM, 101, 102, 105) && IS_MPLY(LOCAL:0)
+				LOCAL:7 = MTAR:0
+			ELSE
+				LOCAL:7 = SEARCH_EQUIP(101, LOCAL:0, -1)
+				IF LOCAL:7 < 0
+					LOCAL:7 = SEARCH_EQUIP(102, LOCAL:0, -1)
+					IF LOCAL:7 < 0
+						LOCAL:7 = SEARCH_EQUIP(105, LOCAL:0, -1)
+					ENDIF
+				ENDIF
+				IF LOCAL:7 >= 0
+					LOCAL:7 = MEQUIP_TARGET:(LOCAL:5):0
+				ENDIF
+			ENDIF
+		ENDIF
+
+		SELECTCASE TCVAR:(LOCAL:0):0
+			;소변욕이 있는 상태로 절정 강도의 합계가 4이상
+			CASE 1
+				;대량
+				IF TCVAR:(LOCAL:0):1 >= 2
+					IF NOWEX:(LOCAL:0):사정 >= 1
+						PRINTFORML 사정을 끝낸 %ANAME(LOCAL:0)%의 %조사처리(LOCALS:0,"로")%부터 죠로죠로와 대량의 오줌이 흘러넘치기 시작했다…
+					ELSEIF LOCAL:7 >= 0
+						PRINTFORML 절정에 떨리는 %조사처리(ANAME(LOCAL:0),"는")%%ANAME(LOCAL:7)%의 얼굴 위에 죠로죠로와 대량의 오줌을 흘려 버렸다…
+					ELSE
+						PRINTFORML 절정에 떨리는 %ANAME(LOCAL:0)%의 %조사처리(LOCALS:0,"로")%부터 죠로죠로와 대량의 오줌이 흘러넘치기 시작했다…
+					ENDIF
+				;통상
+				ELSE
+					IF NOWEX:(LOCAL:0):사정 >= 1
+						PRINTFORML 사정을 끝낸 %ANAME(LOCAL:0)%의 %조사처리(LOCALS:0,"로")%부터 졸졸 오줌이 새어나왔다…
+					ELSEIF LOCAL:7 >= 0
+						PRINTFORML 절정에 떨리는 %조사처리(ANAME(LOCAL:0),"는")%%ANAME(LOCAL:7)%의 얼굴 위에 졸졸 오줌을 흘려 버렸다…
+					ELSE
+						PRINTFORML 절정에 떨리는 %ANAME(LOCAL:0)%의 %조사처리(LOCALS:0,"로")%부터 졸졸 오줌이 새어나왔다…
+					ENDIF
+				ENDIF
+
+			;소변욕이 높은 상태로 절정
+			CASE 2
+				IF NOWEX:(LOCAL:0):사정 >= 1
+					PRINTFORML 사정을 끝낸 %ANAME(LOCAL:0)%의 %조사처리(LOCALS:0,"로")%부터 죠로죠로와 대량의 오줌이 흘러넘치기 시작했다…
+				ELSEIF LOCAL:7 >= 0
+					PRINTFORML 절정에 이르른 %조사처리(ANAME(LOCAL:0),"는")%%ANAME(LOCAL:7)%의 얼굴 위에 죠로죠로와 대량의 오줌을 흘려 버렸다…
+				ELSE
+					PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 절정과 동시에 %조사처리(LOCALS:0,"로")%부터 죠로죠로와 대량의 오줌을 흘려 버렸다…
+				ENDIF
+
+			;소변욕의 한계
+			CASE 3
+				IF LOCAL:7 >= 0
+					PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 소변욕을 참지 못하고, %ANAME(LOCAL:7)%의 얼굴 위에 죠로죠로와 대량의 오줌을 흘려 버렸다…
+				ELSE
+					PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 소변욕을 참지 못하고 %조사처리(LOCALS:0,"로")%부터 죠로죠로와 대량의 오줌을 흘려 버렸다…
+				ENDIF
+
+			;공포에 의한 실금
+			CASE 4
+				PRINTL 
+				PRINTFORM %ANAME(LOCAL:0), 8%:
+				SETCOLOR 칼라_주의
+				IF TCVAR:(LOCAL:0):1 >= 2
+					PRINTL 대량 실금
+				ELSE
+					PRINTL 실금
+				ENDIF
+				RESETCOLOR
+				PRINTL 
+				;대량
+				IF TCVAR:(LOCAL:0):1 >= 2
+					PRINTFORML 공포에 떨리는 %ANAME(LOCAL:0)%의 %조사처리(LOCALS:0,"로")%부터 죠로죠로와 대량의 오줌이 새기 시작했다…
+				;통상
+				ELSE
+					PRINTFORML 공포에 떨리는 %ANAME(LOCAL:0)%의 %조사처리(LOCALS:0,"로")%부터 졸졸 오줌이 새기 시작했다…
+				ENDIF
+		ENDSELECT
+	ENDIF
+NEXT
+
+FOR LOCAL:0, 0, CHARANUM
+	;소변욕이 높은 경우
+	IF IS_PARTICIPATE_TRAIN(LOCAL:0) && TCVAR:(LOCAL:0):54 >= 3000
+		PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 소변욕인 나머지 가랑이를 머뭇머뭇 시키고 있다…
+	ENDIF
+NEXT
+
+FOR LOCAL:0, 0, CHARANUM
+	SIF IS_PARTICIPATE_TRAIN(LOCAL:0) && TCVAR:(LOCAL:0):최면중 > 0
+		PRINTFORML 최면에 걸린 %조사처리(ANAME(LOCAL:0),"는")% 공허한 눈동자를 띄우고 있다…
+NEXT
+
+RETURN LOCAL:10
+
+;---------------------------------------------------------
+;커맨드 실행 직전에 표시되는 지문의 호출
+;주로 캐릭터의 반응 따위를 기술한다
+;---------------------------------------------------------
+@COM_TEXT_LAST
+;지문이 비표시라면 돌아온다
+;SIF FLAG:0 == 0
+;	RETURN 0
+
+TRYCCALLFORM COM_TEXT_LAST{SELECTCOM}
+	PRINTL 
+CATCH
+	;커맨드 개별의 반응이 정의되어 있지 않으면 TEQUIP의 지문을 호출한다
+	;CALL COM_TEXT_LAST_EQUIP
+ENDCATCH
+
+;---------------------------------------------------------
+;커맨드 실행전에 표시되는 장착물이나 계속 상태에 관련되는 지문의 호출
+;---------------------------------------------------------
+@COM_TEXT_BEFORE_EQUIP
+FOR LOCAL:0, 0, MAX_MEQUIP
+	;지문 컷 플래그가 서 있다면 표시하지 않는다
+	IF MEQUIP:(LOCAL:0) >= 0 && !MEQUIP_CUT:(LOCAL:0)
+		TRYCALLFORM COM_TEXT_BEFORE_EQUIP{MEQUIP:(LOCAL:0)}(LOCAL:0)
+	ENDIF
+NEXT

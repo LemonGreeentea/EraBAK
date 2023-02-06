@@ -1,0 +1,518 @@
+﻿;키스
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME20
+IF MTAR_NUM >= 2 || MPLY_NUM >= 2
+	LOCALS:0 = Ｗ키스
+ELSE
+	LOCALS:0 = 키스
+ENDIF
+
+RESULTS:0 = %LOCALS:0%한다
+RESULTS:1 = %LOCALS:0%당한다
+RESULTS:2 = %LOCALS:0%시킨다
+RESULTS:3 = %LOCALS:0%된다
+RESULTS:4 = %LOCALS:0%시킨다
+RESULTS:5 = %LOCALS:0%과시하고
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE20
+;공통 부분
+CALL COM_ABLE_COMMON(20)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 2명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 2
+	RETURN 0
+;타겟은 최대로 2명까지
+SIF MTAR_NUM <= 0 || MTAR_NUM > 2
+	RETURN 0
+;2-2는 불가
+SIF MPLY_NUM == 2 && MTAR_NUM == 2
+	RETURN 0
+
+LOCAL:2 = 0
+;전플레이어에 대해 판정
+FOR LOCAL:0, 0, MPLY_NUM
+	;플레이어가 행동불능이라면 불가
+	SIF !IS_PLAYABLE(MPLY:(LOCAL:0))
+		RETURN 0
+	;삽입중은 플레이어가 한사람의 경우만 허가
+	SIF IS_INSERT_SINGLE(MPLY:(LOCAL:0), "전") && MPLY_NUM >= 2
+		RETURN 0
+	;타겟의 입이 막히고 있다면 불가
+	SIF IS_M_HOLD(MPLY:(LOCAL:0))
+		RETURN 0
+	;플레이어가 파이즈리중이라면 불가
+	SIF IS_EQUIP_PLAYER(MPLY:(LOCAL:0), 12, 104)
+		RETURN 0
+	;재갈 장착중이라면 불가
+	SIF IS_EQUIP_TARGET(MPLY:(LOCAL:0), 86)
+		RETURN 0
+	;플레이어가 구속중이라면 불가
+	SIF IS_BIND(MPLY:(LOCAL:0))
+		RETURN 0
+	;플레이어가 바닥에 엎드리며 있다면 불가
+	SIF IS_EQUIP_PLAYER(MPLY:(LOCAL:0), 110)
+		RETURN 0
+	;전 타겟으로 붙어 판정
+	FOR LOCAL:1, 0, MTAR_NUM
+		;플레이어와 타겟이 서로 조개맞대기중이라면 불가
+		SIF SEARCH_EQUIP_IC(21, MPLY:(LOCAL:0), MTAR:(LOCAL:1)) >= 0
+			RETURN 0
+		;플레이어와 타겟이 서로 쌍두바이브로 결합중이라면 불가
+		SIF SEARCH_EQUIP_IC(22, MPLY:(LOCAL:0), MTAR:(LOCAL:1)) >= 0
+			RETURN 0
+		;플레이어로부터 타겟／타겟으로부터 플레이어에 엉덩이코키중이라면 불가
+		SIF SEARCH_EQUIP_IC(15, MPLY:(LOCAL:0), MTAR:(LOCAL:1)) >= 0
+			RETURN 0
+		;플레이어로부터 타겟／타겟으로부터 플레이어에 전기안마중이라면 불가
+		SIF SEARCH_EQUIP_IC(103, MPLY:(LOCAL:0), MTAR:(LOCAL:1)) >= 0
+			RETURN 0
+	NEXT
+NEXT
+;전 타겟으로 붙어 판정
+FOR LOCAL:0, 0, MTAR_NUM
+	;삽입중은 타겟이 한사람의 경우만 허가
+	SIF IS_INSERT_SINGLE(MTAR:(LOCAL:0), "전") && MTAR_NUM >= 2
+		RETURN 0
+	;타겟이 바닥에 엎드리며 있다면 불가
+	SIF IS_EQUIP_PLAYER(MTAR:(LOCAL:0), 110)
+		RETURN 0
+	;타겟의 입이 막히고 있다면 불가
+	SIF IS_M_HOLD(MTAR:(LOCAL:0))
+		RETURN 0
+	;행동불능의 판정
+	SIF !IS_PLAYABLE(MTAR:(LOCAL:0))
+		LOCAL:2 ++
+NEXT
+;2인 이상의 타겟이 행동불능의 경우는 불가
+SIF LOCAL:2 >= 2
+	RETURN 0
+;1인이 행동불능의 경우는 1-1이외 불가
+SIF LOCAL:2 && (MPLY_NUM >= 2 || MTAR_NUM >= 2)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM20
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;역방향으로부터의 MEQUIP를 해제
+FOR LOCAL:0, 0, MPLY_NUM
+	FOR LOCAL:1, 0, MTAR_NUM
+		CALL RELEASE_EQUIP_EX(20, MTAR:(LOCAL:1), MPLY:(LOCAL:0))
+	NEXT
+NEXT
+
+;●인원수 보정의 설정
+LOCAL:10 = 100
+
+SELECTCASE MPLY_NUM
+	CASE 2
+		TIMES LOCAL:10, 0.75
+ENDSELECT
+
+SELECTCASE MTAR_NUM
+	CASE 2
+		TIMES LOCAL:10, 0.75
+ENDSELECT
+
+;●전플레이어에 대해 처리
+FOR LOCAL:0, 0, MPLY_NUM
+	LOCAL:2 = MPLY:(LOCAL:0)
+
+	DOWNBASE:(LOCAL:2):체력 += 60
+
+	EXP:(LOCAL:2):성기술경험치 += MTAR_NUM / 2 + 1
+	EXP:(LOCAL:2):키스경험 += 1
+
+	SOURCE:(LOCAL:2):봉사 = SERVE_HOUSHI(LOCAL:2, 100)
+	SOURCE:(LOCAL:2):접촉 = 50
+	SOURCE:(LOCAL:2):성행동 = 90
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:2, 50, 30)
+
+	;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+	TCVAR:(LOCAL:2):4 = 1
+	IF MTAR_NUM == 1
+		;페니스에의 키스
+		CALL KISS_COMMON(LOCAL:2, @"%ANAME(MTAR:0)%의 입술", GET_SITUATION_BY_TRAIN_MODE())
+	ELSE
+		CALL KISS_COMMON(LOCAL:2, @"%ANAME(MTAR:0)%들의 입술", (GET_SITUATION_BY_TRAIN_MODE() == "화간" ? "난교" # "윤간"))
+	ENDIF	
+	;전 타겟으로 주는 쾌감계 소스를 계산
+	FOR LOCAL:1, 0, MTAR_NUM
+		LOCAL:3 = MTAR:(LOCAL:1)
+		SOURCE:(LOCAL:3):쾌Ｍ += SENSE_HOUSHI(LOCAL:2, LOCAL:3, 1000) * LOCAL:10 / 100
+
+		;사정 개소와 대상을 세트
+		CALL STACK_SPERM(LOCAL:3, LOCAL:2, 0)
+	NEXT
+NEXT
+
+;●전 타겟으로 붙어 처리
+FOR LOCAL:0, 0, MTAR_NUM
+	LOCAL:2 = MTAR:(LOCAL:0)
+
+	DOWNBASE:(LOCAL:2):체력 += 60
+
+	EXP:(LOCAL:2):성기술경험치 += MPLY_NUM / 2 + 1
+	EXP:(LOCAL:2):키스경험 += 1
+
+	SOURCE:(LOCAL:2):봉사 = SERVE_HOUSHI(LOCAL:2, 100)
+	SOURCE:(LOCAL:2):접촉 = 50
+	SOURCE:(LOCAL:2):성행동 = 90
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:2, 50, 30)
+
+	;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+	TCVAR:(LOCAL:2):4 = 1
+	
+	CALL KISS_COMMON(LOCAL:2, @"%ANAME(MPLY:0)%의 입술", GET_SITUATION_BY_TRAIN_MODE())
+	
+	;전플레이어에게 주는 쾌감계 소스를 계산
+	FOR LOCAL:1, 0, MPLY_NUM
+		LOCAL:3 = MPLY:(LOCAL:1)
+		SOURCE:(LOCAL:3):쾌Ｍ += SENSE_HOUSHI(LOCAL:2, LOCAL:3, 1000) * LOCAL:10 / 100
+
+		;사정 개소와 대상을 세트
+		CALL STACK_SPERM(LOCAL:3, LOCAL:2, 0)
+	NEXT
+NEXT
+
+;노예의 입⇔조교자의 입의 더러움이 이동
+;STAIN:(LOCAL:1):0 |= STAIN:MASTER:0
+;STAIN:MASTER:0 |= STAIN:(LOCAL:1):0
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = -2
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 3
+
+RETURN 1
+
+;-------------------------------------------------
+;계속 커맨드인가 어떤가를 설정
+;-------------------------------------------------
+@COM_IS_EQUIP20
+RETURN 1
+
+;-------------------------------------------------
+;계속 상태의 처리
+;-------------------------------------------------
+@COM_EQUIP20(ARG:0)
+;●인원수 보정의 설정
+LOCAL:10 = 100
+
+SELECTCASE MEQUIP_PLAYER_NUM:(ARG:0)
+	CASE 2
+		TIMES LOCAL:10, 0.75
+ENDSELECT
+
+SELECTCASE MEQUIP_TARGET_NUM:(ARG:0)
+	CASE 2
+		TIMES LOCAL:10, 0.75
+ENDSELECT
+
+;●전플레이어에 대해 판정
+FOR LOCAL:0, 0, MEQUIP_PLAYER_NUM:(ARG:0)
+	LOCAL:2 = MEQUIP_PLAYER:(ARG:0):(LOCAL:0)
+
+	DOWNBASE:(LOCAL:2):체력 += 10
+
+	EXP:(LOCAL:2):성기술경험치 += MAX(MEQUIP_TARGET_NUM:(ARG:0) / 2 + 1, 1)
+	EXP:(LOCAL:2):키스경험 += 1
+
+	SOURCE:(LOCAL:2):봉사 += SERVE_HOUSHI(LOCAL:2, 40)
+	SOURCE:(LOCAL:2):접촉 += 25
+	SOURCE:(LOCAL:2):성행동 += 30
+
+	;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+	TCVAR:(LOCAL:2):4 = 1
+
+	;도착도 변화 기준치
+	TCVAR:(LOCAL:2):50 -= 2
+
+	;전 타겟으로 주는 쾌감계 소스를 계산
+	FOR LOCAL:1, 0, MEQUIP_TARGET_NUM:(ARG:0)
+		LOCAL:3 = MEQUIP_TARGET:(ARG:0):(LOCAL:1)
+		SOURCE:(LOCAL:3):쾌Ｍ += SENSE_HOUSHI(LOCAL:2, LOCAL:3, 600) * LOCAL:10 / 100
+
+		;사정 개소와 대상을 세트
+		CALL STACK_SPERM(LOCAL:3, LOCAL:2, 0, 0)
+	NEXT
+NEXT
+
+;●전 타겟으로 붙어 판정
+FOR LOCAL:0, 0, MEQUIP_TARGET_NUM:(ARG:0)
+	LOCAL:2 = MEQUIP_TARGET:(ARG:0):(LOCAL:0)
+
+	DOWNBASE:(LOCAL:2):체력 += 10
+
+	EXP:(LOCAL:2):성기술경험치 += MAX(MEQUIP_PLAYER_NUM:(ARG:0) / 2 + 1, 1)
+	EXP:(LOCAL:2):키스경험 += 1
+
+	SOURCE:(LOCAL:2):봉사 += SERVE_HOUSHI(LOCAL:2, 40)
+	SOURCE:(LOCAL:2):접촉 += 25
+	SOURCE:(LOCAL:2):성행동 += 30
+
+	;봉사 경험치를 얻을 수 있는 커맨드의 플래그
+	TCVAR:(LOCAL:2):4 = 1
+
+	;도착도 변화 기준치
+	TCVAR:(LOCAL:2):50 -= 2
+
+	;전플레이어에게 주는 쾌감계 소스를 계산
+	FOR LOCAL:1, 0, MEQUIP_PLAYER_NUM:(ARG:0)
+		LOCAL:3 = MEQUIP_PLAYER:(ARG:0):(LOCAL:1)
+		SOURCE:(LOCAL:3):쾌Ｍ += SENSE_HOUSHI(LOCAL:2, LOCAL:3, 600) * LOCAL:10 / 100
+
+		;사정 개소와 대상을 세트
+		CALL STACK_SPERM(LOCAL:3, LOCAL:2, 0, 0)
+	NEXT
+NEXT
+
+;-------------------------------------------------
+;계속중의 표시
+;-------------------------------------------------
+@EQUIP_MESSAGE20(ARG:0)
+RESULTS = %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"가")% %조사처리(EQUIP_TARGET_ANAME(ARG:0),"와")% 키스중
+
+;-------------------------------------------------
+;계속중의 지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE_EQUIP20(ARG:0)
+PRINTFORML %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"가")% %조사처리(EQUIP_TARGET_ANAME(ARG:0),"와")% 혀를 얽히게 할 수 있어 키스를 하고 있다…
+
+;-------------------------------------------------
+;계속을 해제했을 때의 지문
+;-------------------------------------------------
+@COM_TEXT_RELEASE_EQUIP20(ARG:0)
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER20(ARG:0)
+CALL COM_ORDER_COMMON20(ARG:0)
+RETURN 1
+
+@COM_ORDER_TARGET20(ARG:0)
+CALL COM_ORDER_COMMON20(ARG:0)
+RETURN 1
+
+@COM_ORDER_COMMON20(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 60
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"Ｍ감 Lv{ABL:(ARG:0):Ｍ감}", ABL:(ARG:0):Ｍ감 * 2)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 4)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 2, 20))
+
+IF TCVAR:(ARG:0):60
+	CALL COM_ORDER_ELEMENT(ARG:0, "미약", 6)
+ENDIF
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -4)
+ENDIF
+IF TALENT:(ARG:0):악취둔감
+	CALL COM_ORDER_ELEMENT(ARG:0, "악취둔감", 1)
+ENDIF
+IF TALENT:(ARG:0):악취민감
+	CALL COM_ORDER_ELEMENT(ARG:0, "악취민감", -1)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 6)
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -1)
+ENDIF
+
+IF IS_MPLY(ARG:0)
+	IF TALENT:(ARG:0):남성혐오
+		FOR LOCAL:0, 0, MTAR_NUM
+			IF IS_MALE(MTAR:(LOCAL:0))
+				CALL COM_ORDER_ELEMENT(ARG:0, "남성혐오", -7)
+				BREAK
+			ENDIF
+		NEXT
+	ENDIF
+	IF TALENT:(ARG:0):여성혐오
+		FOR LOCAL:0, 0, MTAR_NUM
+			IF IS_FEMALE(MTAR:(LOCAL:0))
+				CALL COM_ORDER_ELEMENT(ARG:0, "여성혐오", -7)
+				BREAK
+			ENDIF
+		NEXT
+	ENDIF
+ELSE
+	IF TALENT:(ARG:0):남성혐오
+		FOR LOCAL:0, 0, MPLY_NUM
+			IF IS_MALE(MPLY:(LOCAL:0))
+				CALL COM_ORDER_ELEMENT(ARG:0, "남성혐오", -7)
+				BREAK
+			ENDIF
+		NEXT
+	ENDIF
+	IF TALENT:(ARG:0):여성혐오
+		FOR LOCAL:0, 0, MPLY_NUM
+			IF IS_FEMALE(MPLY:(LOCAL:0))
+				CALL COM_ORDER_ELEMENT(ARG:0, "여성혐오", -7)
+				BREAK
+			ENDIF
+		NEXT
+	ENDIF
+ENDIF
+
+IF TALENT:(ARG:0):키스미경험
+	IF TALENT:(ARG:0):선을넘지않음
+		CALL COM_ORDER_ELEMENT(ARG:0, "키스미경험", -45)
+	ELSE
+		CALL COM_ORDER_ELEMENT(ARG:0, "키스미경험", -30)
+	ENDIF
+ENDIF
+
+;더러움의 판정
+;IF ! TALENT:(ARG:0):불결무시
+;	LOCAL:0 = 0
+	;애액의 더러움
+;	SIF STAIN:PLAYER:2 & 1
+;		LOCAL:0 += 1
+	;정액의 더러움
+;	SIF STAIN:PLAYER:2 & 4
+;		LOCAL:0 += 3
+	;애널의 더러움
+;	SIF STAIN:PLAYER:2 & 8
+;		LOCAL:0 += 7
+;	SIF STAIN:PLAYER:2 & 16
+;		LOCAL:0 += 15
+
+;	SIF TALENT:(ARG:0):악취둔감
+;		LOCAL:0/= 3
+;	SIF TALENT:(ARG:0):악취민감
+;		LOCAL:0 *= 2
+
+	;더러움의 영향이 약간 작다
+;	LOCAL:0/= 2
+
+	;서로 더러워져
+;	IF LOCAL:0 > 0
+;		CALL COM_ORDER_ELEMENT(ARG:0, "서로 더러워져", -LOCAL:0)
+;	ENDIF
+;ENDIF
+
+;합의
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -10)
+ENDIF
+
+;호감도
+LOCAL:0 = 0
+IF CFLAG:(ARG:0):2 < 500
+	IF CFLAG:(ARG:0):2 < 100
+		LOCAL:0 = -30
+	ELSEIF CFLAG:(ARG:0):2 < 300
+		LOCAL:0 = -10
+	ELSE
+		LOCAL:0 = -5
+	ENDIF
+
+	CALL COM_ORDER_ELEMENT(ARG:0, @"호감도 부족", LOCAL:0)
+ELSE
+	LOCAL:0 = CFLAG:(ARG:0):2 / 80
+	CALL COM_ORDER_ELEMENT(ARG:0, @"호감도", LOCAL:0)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE20
+;타겟이 2명
+IF MTAR_NUM == 2
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%、%ANAME(MTAR:1)%의 두 명을 껴안아, 교대로 혀를 얽히게 되어지면서 타액을 교환%TARGET_STR("했다", "해 왔다")%…
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORML %조사처리(ANAME(MTAR:0),"와")% %조사처리(ANAME(MTAR:1),"는")%, %ANAME(MPLY:0)%에게 키스를 하도록(듯이) 요구했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% (듣)묻는 대로 %조사처리(ANAME(MTAR:0),"와")% %ANAME(MTAR:1)%에 입맞추어, 교대로 혀를 얽히게 되어지면서 타액을 교환했다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %ANAME(MPLY:0)%에게, %ANAME(MTAR:0)%、%ANAME(MTAR:1)%의 두 명과 키스 하도록(듯이) 명령했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% (듣)묻는 대로 %조사처리(ANAME(MTAR:0),"와")% %ANAME(MTAR:1)%에 입맞추어, 교대로 혀를 얽히게 되어지면서 타액을 교환했다…
+	ENDSELECT
+
+;타겟이 1명
+ELSE
+	;플레이어가 2명
+	IF MPLY_NUM == 2
+		LOCALS:0 = %조사처리(ANAME(MPLY:0),"와")% %ANAME(MPLY:1)%
+		LOCALS:1 = 두 명
+	;플레이어가 1명
+	ELSE
+		LOCALS:0 = %ANAME(MPLY:0)%
+		LOCALS:1 = %ANAME(MPLY:0)%
+	ENDIF
+
+	SELECTCASE GET_COM_INITIATIVE()
+		;플레이어에 주도권
+		CASE 0
+			PRINTFORMW %조사처리(LOCALS:0,"는")% %ANAME(MTAR:0)%의 구강을 구석구석까지 핥아대, 끈적 혀를 서로 걸면서 타액을 교환%TARGET_STR("했다", "해 왔다")%…
+			IF MTAR:0 != MASTER && MPLY:0 == MASTER && IS_LOVER(MTAR:0)
+				PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 넋을 잃은 표정을 띄우면서, 스스로도 적극적으로 혀를 걸어 %조사처리(LOCALS:1,"를")% 기쁘게 했다…
+			ENDIF
+		;타겟으로 주도권
+		CASE 1
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %LOCALS:0%에게 키스를 하도록(듯이) 요구했다
+			PRINTFORMW %조사처리(LOCALS:0,"는")% (듣)묻는 대로 %ANAME(MTAR:0)%에 입맞추어, 구강을 핥아대면서 타액을 교환했다…
+		;제삼자에게 주도권
+		CASEELSE
+			PRINTFORML %조사처리(ANAME(TFLAG:45),"는")% %LOCALS:0%에 %조사처리(ANAME(MTAR:0),"와")% 키스 하도록(듯이) 명령했다
+			PRINTFORMW %조사처리(LOCALS:0,"는")% (듣)묻는 대로 %ANAME(MTAR:0)%에 입맞추어, 구강을 핥아대면서 타액을 교환했다…
+			IF MTAR:0 != MASTER && MPLY:0 == MASTER && IS_LOVER(MTAR:0)
+				PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 넋을 잃은 표정을 띄우면서, 스스로도 적극적으로 혀를 걸어 %조사처리(LOCALS:1,"를")% 기쁘게 했다…
+			ENDIF
+	ENDSELECT
+ENDIF
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN20
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_20()
+RETURN POWER(2, 성적기호_봉사하고싶다)
+
+@COM_PREFERENCE_TARGET_20()
+RETURN POWER(2, 성적기호_봉사되고싶다)
+

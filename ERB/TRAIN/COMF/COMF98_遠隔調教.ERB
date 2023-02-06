@@ -1,0 +1,1125 @@
+﻿;원격조교
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME98
+LOCALS:0  = 원격조교
+RESULTS:0 = %LOCALS:0%한다
+RESULTS:1 = %LOCALS:0%당한다
+RESULTS:2 = %LOCALS:0%시킨다
+RESULTS:3 = %LOCALS:0%된다
+RESULTS:4 = %LOCALS:0%시킨다
+RESULTS:5 = %LOCALS:0%과시하고
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE98
+;공통 부분
+CALL COM_ABLE_COMMON(98)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 1명
+SIF MPLY_NUM != 1
+	RETURN 0
+;타겟도 1명
+SIF MTAR_NUM != 1
+	RETURN 0
+;플레이어가 행동불능이라면 불가
+SIF !IS_PLAYABLE(MPLY:0)
+	RETURN 0
+
+SIF ITEM:스키마 == 0
+	RETURN 0
+
+LOCAL:5 = 0
+LOCAL:6 = 0
+;모든 플레이어에 대해 판정
+FOR LOCAL:0, 0, MPLY_NUM
+	;안면승마 되고 있다면 불가
+	SIF IS_RIDDEN(MPLY:(LOCAL:0))
+		RETURN 0
+	;안면승마 하고 있다면 불가
+	SIF IS_RIDDEN(MPLY:(LOCAL:0))
+		RETURN 0
+	;키스중, 패합중이라면 불가
+	SIF IS_EQUIP(MPLY:(LOCAL:0), 20, 21)
+		RETURN 0
+	;대딸, 다리 코키, 스마타, 파이즈리, 오나홀대딸중이라면 불가
+	SIF IS_EQUIP_PLAYER(MPLY:(LOCAL:0), 10, 12, 14, 13, 17)
+		RETURN 0
+	;삽입중이라면 불가
+	SIF IS_INSERT_SINGLE(MPLY:(LOCAL:0), "전")
+		RETURN 0
+	;구속되고 있다면 불가
+	SIF IS_BIND(MPLY:(LOCAL:0))
+		RETURN 0
+NEXT
+;모든 타겟으로 붙어 판정
+FOR LOCAL:0, 0, MTAR_NUM
+	;녀만
+	SIF !IS_FEMALE(MTAR:(LOCAL:0))
+		RETURN 0
+	;안면승마 되고 있다면 불가
+	SIF IS_RIDDEN(MTAR:(LOCAL:0))
+		RETURN 0
+NEXT
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM98
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+
+;●전플레이어에 대해 처리
+FOR LOCAL:0, 0, MPLY_NUM
+	LOCAL:2 = MPLY:(LOCAL:0)
+
+	DOWNBASE:(LOCAL:2):체력 += 50
+
+	SOURCE:(LOCAL:2):기학 = 50
+	SOURCE:(LOCAL:2):노출 = 30
+	SOURCE:(LOCAL:2):일탈 = 20
+	SOURCE:(LOCAL:2):접촉 = 30
+
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:2, 50, 200)
+NEXT
+
+;●전 타겟으로 붙어 처리
+FOR LOCAL:0, 0, MTAR_NUM
+	LOCAL:2 = MTAR:(LOCAL:0)
+
+	DOWNBASE:(LOCAL:2):체력 += 200
+
+	SOURCE:(LOCAL:2):노출 = 1200
+	SOURCE:(LOCAL:2):일탈 = 300
+	SOURCE:(LOCAL:2):불안 = 300
+	SOURCE:(LOCAL:2):성행동 = 240
+	SOURCE:(LOCAL:2):쾌Ｖ = SENSE_HOUSHI(MPLY:0, MTAR:0, 1500)
+	SOURCE:(LOCAL:2):쾌Ａ = SENSE_HOUSHI(MPLY:0, MTAR:0, 1500)
+
+	EXP:(LOCAL:2):정애경험치 += 1
+	EXP:(LOCAL:2):노출경험치 += 3
+	
+	CALL RECORD_INJECTION(LOCAL:2, -1, 2)
+	;주도권에 응한 우월·굴종의 소스 추가
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:2, 160, 80)
+NEXT
+
+
+;주도도 변화 기준치
+TFLAG:49 = 3
+
+;도착도 변화 기준치
+TFLAG:50 = 2
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 4
+
+RETURN 1
+
+;-------------------------------------------------
+;계속 커맨드인가 어떤가를 설정
+;-------------------------------------------------
+@COM_IS_EQUIP98
+RETURN 0
+
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER98(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 98
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 4)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 1, 10))
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -2)
+ENDIF
+IF TALENT:(ARG:0):악취둔감
+	CALL COM_ORDER_ELEMENT(ARG:0, "악취둔감", 1)
+ENDIF
+IF TALENT:(ARG:0):악취민감
+	CALL COM_ORDER_ELEMENT(ARG:0, "악취민감", -4)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 6)
+ENDIF
+
+
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE98
+#DIMS 장소
+#DIMS 내용
+#DIMS 상대
+#DIMS 시츄
+;#DIMS 의복
+LOCALS:0 = %ANAME(MPLY:0)%
+LOCALS:1 = %ANAME(MTAR:0)%
+
+;-----------선택지 표시-----------
+
+;PRINTFORML %LOCALS:1%에 옷을 입혀 배웅합니까?
+;PRINTFORML [0] 옷을 입힌다
+;PRINTFORML [1] 옷을 입히지 않는다
+;$INPUT_LOOP
+;INPUT
+;IF RESULT == 0
+;	PRINTFORMW 옷을 입히기로 했습니다
+;	의복 =착의
+;ELSEIF RESULT == 1
+;	PRINTFORMW 옷을 입히지 않기로 했습니다
+;	의복 = 전라
+;ELSE
+;	GOTO INPUT_LOOP
+;ENDIF
+;
+
+IF MPLY:0 == MASTER
+	PRINTFORML
+	PRINTFORML %조사처리(LOCALS:1,"를")% 어디에 내보냅니까?
+	CALL ASK_MULTI("환락가", "slum", "공중변소", "삼림", "물가", "온천", "그만둔다")
+ELSE
+	RESULT = RAND(0, 6)
+ENDIF
+
+IF RESULT == 0
+	PRINTFORMW 인으로 뒤끓는 환락가에 배웅합니다
+	장소 = 환락가
+ELSEIF RESULT == 1
+	PRINTFORMW 치안이 나쁜 slum에 배웅합니다
+	장소 = slum
+ELSEIF RESULT == 2
+	PRINTFORMW 추레한 공중변소에 내보냅니다
+	장소 = 공중변소
+ELSEIF RESULT == 3
+	PRINTFORMW 조용한 삼림에 배웅합니다
+	장소 = 삼림
+ELSEIF RESULT == 4
+	장소 = 물가
+	PRINTFORMW 유영지로서 인기의 물가에 배웅합니다
+ELSEIF RESULT == 5
+	장소 = 온천
+	PRINTFORMW 숨김가적 스팟의 온천에 배웅합니다
+ELSEIF RESULT == 6
+	PRINTFORMW 그만두기로 했다
+	RETURN 0
+ENDIF
+
+PRINTFORML
+CALL SINGLE_DRAWLINE
+PRINTFORML
+시츄 = 0
+;-----------패턴 선출-----------
+SELECTCASE 장소
+	CASE "환락가"
+		SELECTCASE RAND:120
+			CASE IS < 10
+				상대 = 똘마니
+			CASE IS < 20
+				상대 = 야쿠자
+			CASE IS < 40
+				상대 = 노신사
+			CASE IS < 60
+				상대 = 치한
+			CASE IS < 80
+				상대 = 아이
+			CASE IS < 100
+				상대 = 사춘기소년
+			CASE IS < 110
+				상대 = 키모오타
+			CASEELSE
+				상대 = 추악한남자
+		ENDSELECT
+	CASE "slum"
+		SELECTCASE RAND:120
+			CASE IS < 20
+				상대 = 
+			CASE IS < 40
+				상대 = 폭한
+			CASE IS < 60
+				상대 = 부랑자
+			CASE IS < 80
+				상대 = 변질자
+			CASE IS < 100
+				상대 = 약의판매원
+			CASEELSE
+				상대 = 약물중독자
+		ENDSELECT
+	CASE "공중변소"
+		SELECTCASE RAND:100
+			CASE IS < 100
+				상대 = 낯선남자
+		ENDSELECT
+	CASE "삼림"
+		SELECTCASE RAND:100
+			CASE IS < 20
+				상대 = 도둑
+			CASE IS < 40
+				상대 = 들요괴
+			CASE IS < 60
+				상대 = 아이
+			CASE IS < 80
+				상대 = 개
+			CASEELSE
+				상대 = 원숭이
+		ENDSELECT
+	CASE "물가"
+		SELECTCASE RAND:60
+			CASE IS < 20
+				상대 = 바람둥이
+			CASE IS < 40
+				상대 = 치한
+			CASE IS < 50
+				상대 = 기름기가돈중년
+			CASEELSE
+				상대 = 벗겨진중년
+		ENDSELECT
+	CASE "온천"
+		SELECTCASE RAND:60
+			CASE IS < 20
+				상대 = 남성손님
+			CASE IS < 40
+				상대 = 유부남
+			CASEELSE
+				상대 = 마사지스승
+		ENDSELECT
+ENDSELECT
+
+;-----------텍스트 표시-----------
+
+SELECTCASE 장소
+	CASE "환락가"
+		PRINTFORMW %조사처리(LOCALS:0,"는")% %조사처리(LOCALS:1,"를")% 환락가에 배웅했다……
+		PRINTFORMW %LOCALS:1%의 아름다움은, 혼잡중에서도 눈에 띈 것 같다
+		PRINTFORML
+		SELECTCASE 상대
+			CASE "똘마니","야쿠자"
+				SELECTCASE RAND:2
+					;호텔
+					CASE 0
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%에 말을 걸려진 것 같다
+						PRINTFORMW 어깨에 손을 써져 %LOCALS:1% 이야기해 무너뜨려 목표에 숙소에 데리고 들어가졌다……
+						PRINTFORML 
+						SELECTCASE RAND:4
+							CASE 0
+								PRINTFORMW %조사처리(상대,"는")% 조속히 %조사처리(LOCALS:1,"를")% 침대에 쓰러트리고, 격렬하게 사귀고 있다
+								PRINTFORMW 그 훌륭한 것에 의한 용감한 삽입질은, %조사처리(LOCALS:1,"를")% 암컷으로 만들어 내 간다……
+							CASE 1
+								PRINTFORMW %조사처리(상대,"는")% %조사처리(LOCALS:1,"를")% 끈적한 허리 사용으로 꾸짖고 있다
+								PRINTFORMW 그 숙련의 테크닉은, %LOCALS:1%의 본능을 벌어지게 해 달콤한 소리를 지르게 한다……
+							CASE 2
+								PRINTFORMW 보통의 행위가 끝난 후, %조사처리(LOCALS:1,"는")% %상대%의 것을 입으로 맑게 해 갔다
+								PRINTFORMW 맑은 끝나는 무렵에는, %상대%의 것은 완전히 훌륭한 모습을 되찾고 있었다
+								PRINTFORMW 흥분한 %조사처리(상대,"는")% %조사처리(LOCALS:1,"를")% 쓰러트리고, 제 2 시합을 시작했다……
+							CASE 3
+								PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%에 덮어씌워져 격렬하게 밀어올려지고 있다
+								PRINTFORMW 그 야성적인 피스톤에, %LOCALS:1%의 자궁은 자꾸자꾸 예의범절을 가르쳐져 간다……
+						ENDSELECT
+						PRINTFORML
+						SELECTCASE RAND:4
+							CASE 0
+								PRINTFORMW %조사처리(LOCALS:1,"는")% %조사처리(상대,"와")% 연락처를 교환했다
+							CASE 1
+								PRINTFORMW %조사처리(LOCALS:1,"는")% 샤워를 해 돌아갔다
+							CASE 2
+								PRINTFORMW %조사처리(LOCALS:1,"는")% %조사처리(상대,"와")% 또 만날 약속을 주고 받았다
+							CASE 3
+								PRINTFORMW %조사처리(상대,"는")% 침대에 쓰러진 %조사처리(LOCALS:1,"를")% 방치해 돌아갔다
+						ENDSELECT
+					;뒷골목
+					CASE 1
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%에 말을 걸려진 것 같다
+						PRINTFORMW 팔을 끌려%조사처리(LOCALS:1,"는")% 억지로 뒷골목에 데리고 들어가졌다……
+						PRINTFORML
+						SELECTCASE RAND:4
+							CASE 0
+								PRINTFORMW %조사처리(상대,"는")% %조사처리(LOCALS:1,"를")%, 배면립 정도의 자세로 격렬하게 범하고 있다
+								PRINTFORMW 두 명의 결합부로부터는, 백탁과 사랑의 꿀이 섞인 국물이 방울져 떨어져, 지면을 적셔 간다……
+							CASE 1
+								PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%의 전에 무릎 꿇어, 하나의 물건을 격렬하게 빨아 세우고 있다
+								PRINTFORMW %조사처리(상대,"가")% 사정하면, %조사처리(LOCALS:1,"는")% 소리를 내 백탁을 삼켜 갔다
+								PRINTFORMW 그 후, 봉사의 포상에, %조사처리(상대,"는")% 몇 번이나 %LOCALS:1%에 씨뿌리기를 실시한 것 같다
+							CASE 2
+								PRINTFORMW %조사처리(상대,"는")% %LOCALS:1%의 입을 막아, 격렬하게 범하고 있다
+								PRINTFORMW 그 손가락의 틈새로부터 흘러넘치는 것은, 비명은 아니고 달콤한 교성이다……
+							CASE 3
+								PRINTFORMW %조사처리(LOCALS:1,"를")% 심하게 범한 후, %조사처리(상대,"는")% 이 장소에서 방뇨하는 듯%LOCALS:1%에 명했다
+								PRINTFORMW %조사처리(LOCALS:1,"는")% 크게 다리를 열어, %조사처리(상대,"로")% 보이도록, 암컷의 냄새를 발하는 황금수를 발했다……
+						ENDSELECT
+						PRINTFORML
+						SELECTCASE RAND:4
+							CASE 0
+								PRINTFORMW %조사처리(상대,"는")% 가랑이로부터 백탁을 흘려 보내는 %조사처리(LOCALS:1,"를")% 촬영해 돌아갔다
+							CASE 1
+								PRINTFORMW %조사처리(LOCALS:1,"는")% 뒷골목의 쓰레기의 산에 던져 버려졌다
+							CASE 2
+								PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%에 연인같이 거느려지면서, 뒷골목으로부터 휘청휘청 나왔다
+							CASE 3
+								PRINTFORMW %조사처리(상대,"는")% 뒷골목의 쓰레기의 산에 쓰러진 %조사처리(LOCALS:1,"를")% 방치해 돌아갔다
+						ENDSELECT
+						시츄 = 강간
+				ENDSELECT
+			CASE "노신사"
+				PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%에 말을 걸려진 것 같다
+				PRINTFORMW 교묘한 화술에 묶여 %LOCALS:1% 이야기해 무너뜨려 목표에 숙소에 데리고 들어가졌다……
+				PRINTFORML 
+				SELECTCASE RAND:4
+						CASE 0
+							PRINTFORMW %조사처리(상대,"는")% %LOCALS:1%의 목을 조르면서, 격렬하게 밀어올리고 있다
+							PRINTFORMW 산소 결핍에 의한 쾌락은, %조사처리(LOCALS:1,"를")% 새로운 영역으로 데리고 간다……
+						CASE 1
+							PRINTFORMW %조사처리(상대,"는")% %조사처리(LOCALS:1,"를")% 밧줄로 단단히 묶어, 차분히 괴롭히고 있다
+							PRINTFORMW 그 노회인 테크닉은, %LOCALS:1%의 마조히즘을 눈을 뜨게 해 간다……
+						CASE 2
+							PRINTFORMW %조사처리(상대,"는")% %LOCALS:1%에 엉덩이 구멍을 빨게 하고 있다
+							PRINTFORMW 맑은 끝나는 무렵에는, %상대%의 것은 완전히 훌륭한 모습을 되찾고 있었다
+							PRINTFORMW 흥분한 %조사처리(상대,"는")% %조사처리(LOCALS:1,"를")% 쓰러트리고, 범하기 시작했다……
+						CASE 3
+							PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%에 단단히 묶어져 차분히 초조해 해지고 있다
+							PRINTFORMW 고조됨을 억제할 수 없게 된 %조사처리(LOCALS:1,"는")%, 드디어 스스로 쾌락을 졸랐다……
+					ENDSELECT
+					PRINTFORML
+					SELECTCASE RAND:4
+						CASE 0
+							PRINTFORMW %조사처리(LOCALS:1,"는")% %조사처리(상대,"와")% 연락처를 교환했다
+						CASE 1
+							PRINTFORMW %조사처리(LOCALS:1,"는")% 샤워를 해 돌아갔다
+						CASE 2
+							PRINTFORMW %조사처리(LOCALS:1,"는")% %조사처리(상대,"와")% 또 만날 약속을 주고 받았다
+						CASE 3
+							PRINTFORMW %조사처리(상대,"는")% 침대에 쓰러진 %조사처리(LOCALS:1,"를")% 방치해 돌아갔다
+					ENDSELECT
+			CASE "치한"
+				PRINTFORMW 혼잡 중(안)에서, %조사처리(LOCALS:1,"는")% %상대%에 습격당한 것 같다
+				PRINTFORMW 동작도 변변히 잡히지 않는 혼잡 중(안)에서, %조사처리(LOCALS:1,"는")% 좋은 것 같게 희롱해지고 있다……
+				PRINTFORML
+				SELECTCASE RAND:4
+					CASE 0
+						PRINTFORMW 혼잡 중(안)에서, %조사처리(LOCALS:1,"는")% 비부에 육봉을 쑤셔 넣어져 버렸다
+						PRINTFORMW 그리고 그대로, 저항도 할 수 없는 채 백탁을 따라져 버렸다……
+					CASE 1
+						PRINTFORMW %조사처리(LOCALS:1,"가")% 육봉을 뽑아 내면, 백탁이 걸죽 흘러 떨어졌다
+						PRINTFORMW 많은 인간의 한가운데에서, %조사처리(LOCALS:1,"는")% %상대%에 씨뿌리기 되어 버렸다……
+					CASE 2
+						PRINTFORMW %상대%에 충분히 질내사정 된 후, %조사처리(LOCALS:1,"는")% 속옷을 빼앗겼다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 비밀의 틈으로부터 자식을 흘리면서, 걸어 돌아갔다……
+					CASE 3
+						PRINTFORMW %조사처리(상대,"는")% %LOCALS:1%의 신체를 만지작거려, 관능을 다짜고짜로 높여 간다
+						PRINTFORMW 넣었으면 좋을 것이다?   와 귓전으로 속삭여져 %조사처리(LOCALS:1,"는")% 주위의 시선에도 아랑곳 없게 삽입을 졸랐다……
+				ENDSELECT
+				시츄 = 강간
+			CASE "아이"
+				PRINTFORMW %조사처리(LOCALS:1,"는")% 미아의 %조사처리(상대,"와")% 우연히 만났다
+				PRINTFORMW %조사처리(LOCALS:0,"는")% %LOCALS:1%에, %조사처리(상대,"를")% 유혹시켰다……
+				PRINTFORML
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %조사처리(상대,"를")% 호텔에 데리고 들어간 것 같다
+						PRINTFORMW %조사처리(상대,"를")% 상냥하게 리드하면서, %조사처리(LOCALS:1,"는")% 당신의 질내에서 사정시켰다……
+					CASE 1
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %조사처리(상대,"를")% 호텔에 데리고 들어간 것 같다
+						PRINTFORMW %상대%에 미지의 쾌락을 철저히 가르치면서, %LOCALS:1%자신도 절정에 이르렀다……
+					CASE 2
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %조사처리(상대,"를")% 뒷골목에 데리고 들어간 것 같다
+						PRINTFORMW 부끄러워하는 %조사처리(상대,"를")% 뒷전으로, %조사처리(LOCALS:1,"는")% 룰루랄라해 행위를 끝냈다……
+				ENDSELECT
+				시츄 = 화간
+			CASE "사춘기소년"
+				PRINTFORMW %조사처리(LOCALS:1,"는")% 구멍이 있으면 뭐든지 좋은 것 같은 %상대%에 말을 걸려졌다
+				PRINTFORMW %조사처리(LOCALS:0,"는")% %LOCALS:1%에, %상대%의 유치한 유혹에 넘어가, 숙소에 동반하도록(듯이) 명했다……
+				PRINTFORML
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORMW %조사처리(상대,"는")% 가슴에 강한 관심을 보여, %LOCALS:1%의 가슴을 만지작거려, 군요 모습, 뺨 비비기했다
+						PRINTFORMW %조사처리(상대,"는")% 충혈된 눈으로 %LOCALS:1%의 속옷을 벗게 해 생으로 난폭하게 자지를 쑤셔 넣었다
+						PRINTFORMW 임신의 가능성 따위 돌아보지 않고 %LOCALS:1%의 질내에 마음껏 사정하면, %조사처리(상대,"는")% 도중 중단이 되어 그 자리에 무너졌다……
+					CASE 1
+						PRINTFORMW %조사처리(상대,"는")% 숨을 거칠게 해 %LOCALS:1%의 옷을 벗게 하려고 했지만, 능숙하게 가지 않았다……
+						PRINTFORMW 스스로의 감정을 억눌러, %조사처리(LOCALS:1,"는")% 진행되어 착의를 풀어, 발밑에 한 장씩 떨어뜨려 갔다
+						PRINTFORMW 탈의를 직접 목격한 %조사처리(상대,"는")% %LOCALS:1%에 달려들어, 펄떡펄떡 격분한 육봉을 밀어넣었다……
+					CASE 2
+						PRINTFORMW %조사처리(상대,"는")% 젊음을 무기로 힘껏%조사처리(LOCALS:1,"를")% 계속 찌르고 있었다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 아픔이 강했지만, %LOCALS:0%의 명령에 따라, 느끼고 있는 체를 계속한다
+						PRINTFORMW 낮은 신음소리와 함께 정액이 쏟아지면, %조사처리(LOCALS:1,"는")% 비명을 눌러 질을 꽉 졸라 마지막 한 방울까지 짜냈다……
+				ENDSELECT
+				PRINTFORML
+				SELECTCASE RAND:4
+					CASE 0
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %조사처리(상대,"와")% 연락처를 교환했다
+					CASE 1
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 샤워를 해 돌아갔다
+					CASE 2
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %조사처리(상대,"와")% 또 만날 약속을 주고 받았다
+					CASE 3
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %조사처리(상대,"와")% 농후한 입맞춤을 주고 받아, 스스로의 속옷을 선물로 건네주어 헤어졌다
+				ENDSELECT
+				시츄 = 화간
+			CASE "키모오타","추악한남자"
+				PRINTFORMW %조사처리(LOCALS:1,"는")% 여성과 인연을 가질 수 없는 것 같은 %조사처리(상대,"가")% 보인 것 같다
+				PRINTFORMW %조사처리(LOCALS:1,"는")% 강한 혐오감을 안으면서도, %LOCALS:0%의 명령 대로 %조사처리(상대,"를")% 유혹했다……
+				PRINTFORML
+				SELECTCASE RAND:4
+					CASE 0	
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%에 가까워지면, 신고 있는 스커트를 걸어 속옷을 노출시켰다
+						PRINTFORMW 놀라는 %상대%에 대해, 수치에 얼굴을 붉히는 %조사처리(LOCALS:1,"는")% 「놀면 좋겠다」라고 떨리는 소리로 말을 계속한다
+						PRINTFORMW %조사처리(상대,"는")% 망설여, 주위를 둘러보면, 표정을 한층 추악하게 비뚤어지게 해 %LOCALS:1%의 수를 잡아 숙소에 향했다……
+					CASE 1
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%에 말을 걸어, 조용히 가슴을 노출시켰다
+						PRINTFORMW 눈물고인 눈으로 홍 밀려드는 %조사처리(LOCALS:1,"는")% 오싹 하는 %상대%의 팔을 잡아, 스스로의 가슴에 %상대%의 손을 강압했다
+						PRINTFORMW 이 가슴의 두근두근을 멈추었으면 좋은……그렇게 전하면, %조사처리(상대,"는")% 끄덕끄덕 수긍해, %LOCALS:1%의 어깨를 안아 숙소에 들어갔다……
+					CASE 2
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%에 한가하면 함께 놀지 않을까 말을 걸었다
+						PRINTFORMW 돌연의 사건에 곤혹하는 %상대%의 팔에 껴안아, %조사처리(LOCALS:1,"는")% 귓전으로 「외로움을 감출 수 있으면 좋겠다」라고 한숨 가득 속삭였다
+						PRINTFORMW %조사처리(상대,"는")% %조사처리(LOCALS:1,"를")% 빤히 확정해, 힐쭉 웃으면 %LOCALS:1%의 허리에 손을 써 숙소로 걷기 시작했다……
+					CASE 3
+						PRINTFORMW %조사처리(LOCALS:1,"가")% 가까워지면, 반대로 %조사처리(상대,"로")%부터 「나와 놀지 않아?」라고 말을 걸려졌다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 울 것 같게 되는 것을 견디면서 작게 수긍해, %조사처리(상대,"와")% 함께 숙소에 들어갔다……
+				ENDSELECT
+				SELECTCASE RAND:4
+					CASE 0
+						PRINTFORMW %조사처리(상대,"는")% %LOCALS:1%의 질내에 몇 번째가 되는지 모르는 사정을 했다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 스스로의 체내에서 육창이 맥박치는 것을 느껴 눈앞의 %조사처리(상대,"와")% 1개가 되어 있는 것을 실감 당하고 있다
+						PRINTFORMW %조사처리(상대,"는")% 자지를 뽑을 것도 없고, 누체, 질척, 라고 싫은 것 같은 소리를 내면서 다시 허리를 흔들기 시작했다……
+					CASE 1
+						PRINTFORMW %조사처리(상대,"는")% %LOCALS:1%에 사납게 허리를 쳐박으면서, 열렬하게 입술을 들이마시고 있었다
+						PRINTFORMW 서로의 혀의 뒤를 서로 빨아, 민달팽이같이 서로의 혀를 걸어 맞추어, 타액을 교환해 입안에서 질척질척 혼합한다
+						PRINTFORMW 이윽고, 진한 펠라티오중, %조사처리(상대,"는")% 비릿한 한숨과 함께%LOCALS:1% 안에 정액을 토해내 갔다……
+					CASE 2
+						PRINTFORMW %조사처리(상대,"는")% 기승위로 허리를 흔드는 %조사처리(LOCALS:1,"와")%의 결합부를 소지의 카메라로 몇 번이나 촬영하고 있었다
+						PRINTFORMW 인내의 한계를 맞이한 %조사처리(상대,"는")%, 거리낌 없고 마음껏 정액을 %LOCALS:1%의 질내에 털어 놓았다
+						PRINTFORMW 질내사정 된 증거라고 할듯이, %조사처리(상대,"는")% 감정을 억누른 표정의 %조사처리(LOCALS:1,"와")% 희게 더러워진 결합부를 필름에 거두었다……
+					CASE 3
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%의 취미로 애니메이션 캐릭터의 코스프레를 하게 하고 있다
+						PRINTFORMW %조사처리(상대,"는")% %LOCALS:1%의 질내를 왔다 갔다하면서, 애니메이션 캐릭터의 이름을 몇 번이나 부르고 있다
+						PRINTFORMW 「자신과의 자식을 낳아 줘」귓전으로 그렇게 속삭여진 %조사처리(LOCALS:1,"는")% 피부가 소름이 끼치는 것을 느끼면서 %상대%의 정액을 충분히 쏟아졌다……
+				ENDSELECT
+				PRINTFORML
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORMW 돌아온 %조사처리(LOCALS:1,"는")%, 너무 상세를 말하고 싶어하지 않았다……
+					CASE 1
+						PRINTFORMW 체내에 백탁을 남긴 채로, %조사처리(LOCALS:1,"는")% 굳이 왕래가 많은 길을 지나 돌아가졌다……
+					CASE 2
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 질내로부터 흘러나오는 정액을 닦아내는 일도 용서되지 않는 채 혼잡 중(안)에서 해방되었다……
+				ENDSELECT
+				시츄 = 화간
+		ENDSELECT
+	CASE "slum"
+		PRINTFORMW %조사처리(LOCALS:0,"는")% %조사처리(LOCALS:1,"를")% 위험한 slum에 배웅했다……
+		PRINTFORMW %LOCALS:1%의 아름다움은, 그늘에 잠복하는 이상한 듯한 무리의 눈을 끈 것 같다
+		PRINTFORML
+		SELECTCASE 상대
+			CASE "폭한"
+				SELECTCASE RAND:2
+					CASE 0
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 복수의 %상대%에 덤벼 들어졌다
+						PRINTFORMW 뒷골목에 도망친 %조사처리(LOCALS:1,"이지만")%, 막다른 골목에 추적되어져 버렸다……
+						PRINTFORML
+						SELECTCASE RAND:2
+							CASE 0
+								PRINTFORMW %상대%들은 %조사처리(LOCALS:1,"를")% 강간하고 있다
+								PRINTFORMW 양구멍을 뚫어져 절정 하는 %조사처리(LOCALS:1,"를")% 비웃음 있으면서, %조사처리(상대,"는")% 몇 번이나 백탁을 쏟았다
+							CASE 1
+								PRINTFORMW %상대%들은 %조사처리(LOCALS:1,"를")% 윤간하고 있다
+								PRINTFORMW 질 구멍을 오로지 후벼파는 한편, 목 안을 귀두로 빠득빠득 찌르고 있다……
+						ENDSELECT
+						PRINTFORML
+						SELECTCASE RAND:3
+							CASE 0
+								PRINTFORMW 모든 구멍으로부터 백탁을 흘려 보내는 %조사처리(LOCALS:1,"를")% 방치해, %조사처리(상대,"는")% 떠났다……
+							CASE 1
+								PRINTFORMW 쓰레기의 산에 %조사처리(LOCALS:1,"를")% 던져 버려, %상대%들은 떠났다……
+							CASE 2
+								PRINTFORMW 격렬한 능욕의 끝에 기절한 %LOCALS:1%에 침을 내뱉어, %조사처리(상대,"는")% 떠났다……
+						ENDSELECT
+						시츄 = 윤간
+					CASE 1
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 배후로부터 %상대%에 덤벼 들어져 정신을 잃어 버렸다
+						PRINTFORMW %조사처리(상대,"는")% %조사처리(LOCALS:1,"를")% 스스로의 보금자리에 데리고 들어가, 범하기 시작했다……
+						SELECTCASE RAND:3
+							CASE 0
+								PRINTFORMW %조사처리(상대,"는")% 기절하고 있는 %LOCALS:1%의 암컷구멍을 범하고 있다
+								PRINTFORMW %조사처리(LOCALS:1,"는")% 의식이 없는 채, 낯선 상대에게 씨뿌리기 되어 버렸다……
+							CASE 1
+								PRINTFORMW %조사처리(상대,"는")% 기절하고 있는 %LOCALS:1%의 목을 범하고 있다
+								PRINTFORMW 질식의 리스크도 상관치 않고 목 안에 정액을 발하면, 다음은 질 구멍, 엉덩이 구멍을 능욕하기 시작했다……
+							CASE 2
+								PRINTFORMW 능욕의 도중에 눈을 뜬 %조사처리(LOCALS:1,"였")%지만, 쓸데없었다
+								PRINTFORMW 밧줄로 굴레에 단단히 묶어진 %조사처리(LOCALS:1,"는")%, 그대로 %상대%에 범해질 수밖에 없었다……
+						ENDSELECT
+						PRINTFORML
+						SELECTCASE RAND:2
+							CASE 0
+								PRINTFORMW 만족한 %조사처리(상대,"는")%, 도로변에 %조사처리(LOCALS:1,"를")% 던져 버렸다……
+							CASE 1
+								PRINTFORMW 만족한 %조사처리(상대,"는")%, 백탁 투성이의 %조사처리(LOCALS:1,"를")% 뒷골목에 방치해 돌아갔다……
+						ENDSELECT
+						시츄 = 강간
+				ENDSELECT
+			CASE "부랑자"
+				SELECTCASE RAND:2
+					CASE 0
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%에 눈을 붙여진 것 같다
+						PRINTFORMW 방심한 %조사처리(LOCALS:1,"는")%, %상대%에 억지로 그늘에 데리고 들어가졌다……
+						SELECTCASE RAND:3
+							CASE 0
+								PRINTFORMW %조사처리(상대,"는")% 치구 투성이가 더러워진 페니스를 %LOCALS:1%의 비밀의 틈에 쑤셔 넣고 있다
+								PRINTFORMW 그리고, 추레한 백탁이 %LOCALS:1%의 질내에 한껏 쏟아졌다……
+							CASE 1
+								PRINTFORMW %조사처리(상대,"는")% 악취 발하는 추레한 페니스를 %LOCALS:1%의 입에 쑤셔 넣고 있다
+								PRINTFORMW 부드러운 입술의 감촉을 즐기면서, 치구를 깎아 내고 떨어뜨려 간다……
+							CASE 2
+								PRINTFORMW %조사처리(LOCALS:1,"를")% 깔아누른 %조사처리(상대,"는")%, %LOCALS:1%에 덮어씌워 강렬한 피스톤을 내지르고 있다
+								PRINTFORMW 자궁까지 관철하는 것 같은 삽입질에, %조사처리(LOCALS:1,"는")% 범해지고 있다는데 압도적인 쾌락을 느껴 버리고 있다……
+						ENDSELECT
+						PRINTFORML
+						SELECTCASE RAND:3
+							CASE 0
+								PRINTFORMW 모든 구멍으로부터 백탁을 흘려 보내는 %조사처리(LOCALS:1,"를")% 방치해, %조사처리(상대,"는")% 떠났다……
+							CASE 1
+								PRINTFORMW 쓰레기의 산에 %조사처리(LOCALS:1,"를")% 던져 버려, %상대%들은 떠났다……
+							CASE 2
+								PRINTFORMW 격렬한 능욕의 끝에 기절한 %LOCALS:1%에 침을 내뱉어, %조사처리(상대,"는")% 떠났다……
+						ENDSELECT
+						시츄 = 강간
+					CASE 1
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%의 집합소에 헤매어 버렸다
+						PRINTFORMW %조사처리(상대,"가")% %조사처리(LOCALS:1,"와")% 같은 「상등품」을 놓칠 리도 없고, %조사처리(LOCALS:1,"는")% 눈 깜짝할 순간에 모여졌다……
+						PRINTFORML
+						SELECTCASE RAND:3
+							CASE 0
+								PRINTFORMW %조사처리(LOCALS:1,"는")% 악취를 풍기는 페니스를 모든 구멍에 쑤셔 넣어지고 있다
+								PRINTFORMW 그 냄새에 오면서도, 성교의 쾌락에 %조사처리(LOCALS:1,"는")% 몇 번이나 절정 해, 자식을 따라졌다……
+							CASE 1
+								PRINTFORMW %조사처리(LOCALS:1,"는")% 육봉을 그 신체의 모든 곳에 강압되어지고 있다
+								PRINTFORMW 너무 농후한 수컷의 냄새가, %LOCALS:1%의 피부에 배어들어 간다……
+							CASE 2
+								PRINTFORMW 1시간이나 하면, %LOCALS:1%의 신체는 정액으로 더러워지지 않은 곳은 없을만큼 여겨져 버리고 있었다
+								PRINTFORMW 그런데도 여전히, 여자 가뭄의 %상대%들은 만족하는 일은 없고, 더욱 더%조사처리(LOCALS:1,"를")% 계속 범한다……
+						ENDSELECT
+						PRINTFORML
+						SELECTCASE RAND:3
+							CASE 0
+								PRINTFORMW 간신히 해방되었을 무렵에는, %조사처리(LOCALS:1,"는")% 모든 구멍으로부터 백탁을 흘려 보내고 있었다……
+							CASE 1
+								PRINTFORMW 간신히 해방되었을 무렵에는, %LOCALS:1%의 신체에는 %조사처리(상대,"와")% 같은 냄새가 배어들고 있었다……
+							CASE 2
+								PRINTFORMW 정기적으로 자신들의 성처리하러 온다고 할 약속과 교환에, %조사처리(LOCALS:1,"는")% 간신히 해방해 받았다……
+						ENDSELECT
+						시츄 = 윤간
+				ENDSELECT
+			CASE "변질자"
+				PRINTFORMW %조사처리(LOCALS:1,"는")% %조사처리(상대,"를")% 당한 것 같다
+				PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%의 노출플레이에 교제해진 것 같다……
+				PRINTFORML
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %조사처리(상대,"와")% 함께 뒷골목에서 노출플레이에 이른 것 같다
+						PRINTFORMW 노출의 쾌락에 고조된 두 명은, 흥분한 채로 청간에 이르렀다……
+					CASE 1
+						PRINTFORMW %상대%에 요구되어 %조사처리(LOCALS:1,"는")% 뒷골목에서 자위에 이르렀다
+						PRINTFORMW 흥분한 %상대%에 재촉당해 %LOCALS:1% 이야기해 무너뜨려 목표에 성교했다……
+					CASE 2
+						PRINTFORMW 신체를 밧줄로 묶어, 양구멍에 바이브를 묻은 모습으로, %조사처리(LOCALS:1,"는")% 그 정도중을 걸어 다녔다
+						PRINTFORMW 흥분한 %조사처리(상대,"는")%, 그 도중에 몇 번이나 %LOCALS:1%의 구멍을 사용했다……
+				ENDSELECT
+				PRINTFORML
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORMW 노출의 쾌감을 느낀 %조사처리(LOCALS:1,"는")%, 또 만날 약속을 얻어낸 것 같다
+					CASE 1
+						PRINTFORMW 노출의 쾌감의 상어 하지 않는 %조사처리(LOCALS:1,"는")%, 그 뒤도 한동안 자위에 빠지고 있었다
+					CASE 2
+						PRINTFORMW 자신이 하고 있는 것이 이상하다고 알고는 있어도, %조사처리(LOCALS:1,"는")% 행위에 빠져 버린 것 같다
+				ENDSELECT
+				시츄 = 화간
+			CASE "약의판매원"
+				PRINTFORMW %조사처리(LOCALS:1,"는")% %조사처리(상대,"를")% 당한 것 같다……
+				PRINTFORMW 피로가 잡히는 약을 처방해 받은 것 같다
+				PRINTFORML
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORMW 약을 즉시 사용해 본 %조사처리(LOCALS:1,"는")%, 완전하게 트립 해 버렸다
+						PRINTFORMW 야무지지 못한 암컷의 얼굴을 쬐어 아헤 표정하는 %조사처리(LOCALS:1,"를")%, %조사처리(상대,"는")% 저 좋은 대로 하고 있다……
+					CASE 1
+						PRINTFORMW 약을 사용한 %조사처리(LOCALS:1,"는")% 발정을 억제할 수 없게 되어, %상대%에 범해 주도록(듯이) 부탁했다
+						PRINTFORMW 생각한 바가 된 %조사처리(상대,"는")%, 여(어) 준 웃으면서 %조사처리(LOCALS:1,"를")% 몇 번이나 범해 갔다……
+					CASE 2
+						PRINTFORMW 약을 사용한 %조사처리(LOCALS:1,"는")%, 금새 깊이 잠들어 버렸다
+						PRINTFORMW 의식이 없는 %LOCALS:1%의 암컷구멍을, %조사처리(상대,"는")% 저 좋은 대로 범하기 시작했다……
+				ENDSELECT
+				CFLAG:(MTAR:0):약물의존 += RAND(10, 30)
+				시츄 = 강간
+			CASE "약물중독자"
+				PRINTFORMW %조사처리(LOCALS:1,"는")% 마음 속 싫어하고 있었지만, %LOCALS:0%에 명해지는 반울상으로 %상대%에 말을 걸었다
+				PRINTFORMW %조사처리(상대,"는")% 초점이 맞지 않는 눈으로 신음할 뿐이었으므로, %조사처리(LOCALS:1,"로")%부터 %조사처리(상대,"를")% 쓰러트렸다……
+				PRINTFORML 
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %상대% 위에서 허리를 흔들어, 그 정액을 자궁으로 직접 받았다
+						PRINTFORMW 사정이 멈출 때까지 차분히 허리를 계속 움직여, 페니스가 쇠약해지는 것을 허락하지 않았다
+						PRINTFORMW 것이 끝난 뒤도, 자궁에 정자가 친숙해 지도록, 한동안 연결된 채로 있었다……
+					CASE 1
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 접하고 싶지도 않은 %상대%의 남성기를, 그 전신으로 받아들이게 되어지고 있다
+						PRINTFORMW 팡팡 고기가 부딪치는 소리를 미치게 하면서, %조사처리(LOCALS:1,"는")% 필사적으로 허리를 상하시키고 있다
+						PRINTFORMW 문득, 얼굴을 올리면 복수의 인간이 %조사처리(LOCALS:1,"와")% %상대%의 교미를 히죽히죽 바라보고 있었다
+						PRINTFORMW 수치에 물드는 %조사처리(LOCALS:1,"는")%, 많은 사람에게 보여지면서 %상대%의 정자를 받아들여, 절정 했다……
+					CASE 2
+						PRINTFORMW %조사처리(LOCALS:1,"가")% %상대%의 남근에 걸치는 것과 동시에, %조사처리(상대,"는")% 필사의 저항을 시작해, %조사처리(LOCALS:1,"를")% 반대로 쓰러트렸다
+						PRINTFORMW %조사처리(상대,"는")% 흥분한 모습으로 %LOCALS:1%의 목을 마음껏 매어, 말로 할 수 없는 말을 외치고 있다
+						PRINTFORMW %조사처리(LOCALS:1,"가")% 죽음을 예감 한 순간, %조사처리(상대,"와")%의 결합부에 열이 퍼져, %조사처리(상대,"는")% 탈진해 쓰러졌다……
+				ENDSELECT
+				PRINTFORML
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 정말로 %상대%의 아이를 품어 버릴지도 모르면 상상해, 눈물고인 눈이 되어 있었다
+					CASE 1
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 도망가는 토끼같이 그 자리로부터 도망치기 시작했다
+					CASE 2
+						PRINTFORMW %조사처리(상대,"가")% %조사처리(LOCALS:1,"를")% 잡으려고 했으므로, %조사처리(LOCALS:1,"는")% 비명을 올려 달려갔다
+				ENDSELECT
+				시츄 = 화간
+		ENDSELECT
+	CASE "공중변소"
+		PRINTFORMW %조사처리(LOCALS:1,"는")% %장소%로 육변기가 되기 시작한 것 같다……
+		SIF GETBIT(TALENT:(MTAR:0):음란계, 소질_음란_정액변소)
+			PRINTFORMW 정액변소인 %조사처리(LOCALS:1,"는")%, 사용해 「받을 수 있다」기쁨에 몸을 진동시키고 있다……
+		PRINTFORML
+		SELECTCASE RAND:3
+			CASE 0
+				PRINTFORMW %상대%들은 변기에 얽매인 %LOCALS:1%들을, 저 좋은 대로 사용하고 있다
+				PRINTFORMW 몇 번째일지도 모르는 사정을 받아, %조사처리(LOCALS:1,"는")% 또 다시 절정 했다……
+			CASE 1
+				PRINTFORMW 앉힌 냄새가 감도는 변소에서, %조사처리(LOCALS:1,"는")% %상대%들에게 저 좋은 대로 사용되고 있다
+				PRINTFORMW 암컷구멍, 엉덩이 구멍, 유방, 입, 머리카락에 손에 다리와 모두 페니스의 처리에 사용되고 있다……
+			CASE 2
+				PRINTFORMW %상대%들에게 사용되는 %조사처리(LOCALS:1,"는")%, 눈을 늘어지고 내려, 기쁨을 느끼고 있다
+				PRINTFORMW 그 입에 몇 발째인가의 백탁이 따라지면, %조사처리(LOCALS:1,"는")% 소리를 내 그것을 훌쩍거렸다……
+		ENDSELECT
+		PRINTFORML
+		SELECTCASE RAND:3
+			CASE 0	
+				PRINTFORMW 「변소」을 끝낸 %조사처리(LOCALS:1,"는")%, 백탁을 흘려 보내는 암컷구멍을 질척질척 휘젓고 있다……
+			CASE 1
+				PRINTFORMW %조사처리(상대,"가")% 떠난 뒤도, %조사처리(LOCALS:1,"는")% 공허한 미소를 띄우면서 육봉을 조르고 있었다……
+			CASE 2
+				PRINTFORMW 전신 백탁 투성이가 된 %조사처리(LOCALS:1,"는")%, 이 이상 없고 음탕한 미소를 띄우고 있다……
+		ENDSELECT
+		시츄 = 윤간
+		EXP:(MTAR:0):윤간경험 += RAND(3, 5)
+	CASE "삼림"
+		PRINTFORMW %조사처리(LOCALS:0,"는")% %조사처리(LOCALS:1,"를")% 삼림에 내보냈다……
+		PRINTFORML
+		SELECTCASE 상대
+			CASE "도둑", "들요괴"
+				PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%들을 우연히 만난 것 같다
+				PRINTFORMW 도망치려고 한 %조사처리(LOCALS:1,"이지만")%, 수에는 당해 내지 않고, 잡혀 버렸다……
+				PRINTFORML
+				SELECTCASE RAND:4
+					CASE 0	
+						PRINTFORMW 덮어누를 수 있었던 %조사처리(LOCALS:1,"는")%, %상대%에 저 좋은 대로 범해지고 있다
+						PRINTFORMW 저항도 허무하고, 그 질에 천한 신분의 백탁이 따라져 버렸다……
+					CASE 1
+						PRINTFORMW 덮어누를 수 있었던 %조사처리(LOCALS:1,"는")%날뛴다가, %상대%들은 그 손다리를 억눌러, 깔아누른다
+						PRINTFORMW 쓸데없는 저항을 비웃음 있으면서, %상대%들은 %LOCALS:1%의 신체를 희게 더럽혀 간다……
+					CASE 2
+						PRINTFORMW %상대%들의 보금자리에 데리고 들어가진 %조사처리(LOCALS:1,"는")%, %상대%한사람 한사람의 상대를 하게 하고 있다
+						PRINTFORMW 격렬한 삽입질의 여행, %LOCALS:1%의 암컷구멍으로부터는 이미 몇 발과 발해지고 있는 정액와 흘러넘치기 시작하고 있다……
+					CASE 3
+						PRINTFORMW %상대%들은 %조사처리(LOCALS:1,"를")% 둘러싸, 앞 다투어 범하고 있다
+						PRINTFORMW %조사처리(LOCALS:1,"가")% 몽롱해져, 정신을 잃어도, 능욕은 끝나는 일은 없었다……
+				ENDSELECT
+				PRINTFORML
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORMW 성처리에 사용되고 너덜너덜하게 된 %조사처리(LOCALS:1,"는")%, 그 정도에 방치되었다……
+					CASE 1
+						PRINTFORMW 몇 번이나 범해지고 백탁 투성이의 %조사처리(LOCALS:1,"는")%, 그 정도의 수풀에 방치해졌다……
+					CASE 2
+						PRINTFORMW 정신을 잃었던 %LOCALS:1%에 침을 뱉어, %조사처리(상대,"는")% %조사처리(LOCALS:1,"를")% 그 정도에 버려 갔다……
+				ENDSELECT
+				시츄 = 윤간
+			CASE "아이"
+				PRINTFORMW %조사처리(LOCALS:1,"는")% 미아의 %조사처리(상대,"를")% 만났다
+				PRINTFORMW %조사처리(LOCALS:0,"는")% %LOCALS:1%에 명해 %조사처리(상대,"를")% 유혹시켰다……
+				PRINTFORML
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORMW 수풀의 그늘에서, %조사처리(LOCALS:1,"는")% %조사처리(상대,"와")% 성교에 이르고 있다
+						PRINTFORMW 스스로 허리를 흔들어 빼앗아, 미숙한 정액을 몇 번이나 짜냈다……
+					CASE 1
+						PRINTFORMW %조사처리(상대,"는")% 그 겉모습으로 상상도 할 수 없는 왕자지의 소유자였다
+						PRINTFORMW 암컷구멍을 빠득빠득 펴넓혀지면서, %조사처리(LOCALS:1,"는")% 좋아해 미쳐, 몇 번이나 절정에 이끌었다……
+					CASE 2
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%의 것을 입으로 몇 번이나 짜내고 있다
+						PRINTFORMW 젊은 정액의 맛을 심하게 만끽한 후에, 이번은 아래의 입으로 만끽했다……
+				ENDSELECT
+				PRINTFORML
+				PRINTFORMW 그 후, %조사처리(LOCALS:1,"는")% %조사처리(상대,"를")% 집까지 데려다 주었다
+				시츄 = 화간
+			CASE "개"
+				PRINTFORMW %조사처리(LOCALS:1,"는")% %조사처리(상대,"를")% 당했다
+				PRINTFORMW 머리라도 어루만져 줄까하고 접근한 %조사처리(LOCALS:1,"이지만")%, %조사처리(상대,"는")% 흥분해, 쓰러트렸다……
+				PRINTFORML
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORMW 쓰러트린 %조사처리(LOCALS:1,"를")% 엎드린 자세로시켜, %조사처리(상대,"는")% 뒤로부터 범하고 있다
+						PRINTFORMW 인의 그것과는 다른 형상을 한 페니스에, %조사처리(LOCALS:1,"는")% 몹시 놀라 허덕이고 있다……
+					CASE 1
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 뒤로부터 게걸스럽게 관철해지고 있다
+						PRINTFORMW 짐승에 범해지는 것을 굴욕을 기억하면서도, 야성적인 섹스에 신체는 굽혀 버리고 있다……
+					CASE 2
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%에 질내사정 되고 있다
+						PRINTFORMW 축생의 정액에 더럽혀지고 있다는데, 여자의 신체는 반응해, %조사처리(LOCALS:1,"는")% 야무지지 못하게 좋아해 버린다……
+				ENDSELECT
+				PRINTFORML
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORMW 질 구멍으로부터 백탁을 흘려 보내는 %조사처리(LOCALS:1,"를")% 뒷전으로, %조사처리(상대,"는")% 그 자리를 떠났다……
+					CASE 1
+						PRINTFORMW 만족한 %조사처리(상대,"가")% 고기구멍으로부터 페니스를 뽑아 내면, 정복의 증거가 걸죽 흘러 떨어졌다……
+					CASE 2
+						PRINTFORMW 만족한 %조사처리(상대,"는")%, 어안이 벙벙히 늘어진 %LOCALS:1%에 마킹 대신에 오줌을 걸어, 떠났다……
+				ENDSELECT
+				시츄 = 강간
+				EXP:(MTAR:0):수간경험 += RAND(3, 8)
+			CASE "원숭이"
+				PRINTFORMW %조사처리(LOCALS:1,"는")% 돌연 %상대%에 당겨 쓰러졌다
+				PRINTFORMW 야생의 강인한 근력에 맡겨%조사처리(상대,"는")% %조사처리(LOCALS:1,"를")% 멋대로하기 시작했다……
+				PRINTFORML 
+				SELECTCASE RAND:4
+					CASE 0
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%에 힘으로 누를 수 있던 채로 정상위로 페니스를 빼고 꽂기 되고 있다
+						PRINTFORMW %상대%의 생식기가 떨려, 흰 분류가 따라지는 것과 동시에 %조사처리(LOCALS:1,"는")% 절정 해 버렸다
+						PRINTFORMW 저지능인 생물에게 자기 마음대로요라고 있는 것을 어안이 벙벙히 한 채로, 2회전이 시작되었다……
+					CASE 1
+						PRINTFORMW %조사처리(상대,"는")% %LOCALS:1%에 덮어씌워, 허리를 굽실굽실 털고 있다
+						PRINTFORMW %조사처리(LOCALS:1,"가")% 힐끗 시선을 딴 곳에 하면, 거기에는 우연히인이 우연히 지나가고 있었다
+						PRINTFORMW 시선으로 도움을 요구하는 것도, 우연히 지나감의 사람은 경멸하는 것 같은 시선으로 멀어져 갔다……
+					CASE 2
+						PRINTFORMW %상대%의 육봉이 츄폰, 이라고 소리를 내 %LOCALS:1%의 질로부터 뽑아졌다
+						PRINTFORMW %상대%의 형태를 남긴 음부로부터는 걸죽 백탁이 늘어지고 있어 충분히 즐긴 흔적이 남아 있었다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %LOCALS:0%에 명해지는 대로, %상대%에 바닥에 엎드리며 「기분 좋게 해 주어 감사합니다」라고 사례를 말했다……
+					CASE 3
+						PRINTFORMW %조사처리(상대,"는")% 여음으로부터 정액을 흘려 보내는 %조사처리(LOCALS:1,"를")% 던지면, %LOCALS:1%의 의복을 모두 가져 어딘가에 떠났다
+						PRINTFORMW 남겨진 %조사처리(LOCALS:1,"는")% 손으로 가슴과 사타구니를 숨겨, 휘청휘청 출구에 향했다
+						PRINTFORMW 도중, 사람이 우연히 지나갈 때마다 발견되지 않을까 두근두근 하면서 숨을 죽이고 있었다……
+				ENDSELECT
+				PRINTFORML
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 눈물을 흘리며 %상대%후 가 어떠한 감각이었는지를 보고했다
+					CASE 1
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%에 굴한 사실을 뇌내에서 되새기고 있는이, 이윽고 사실을 받아들여, 훌쩍훌쩍 울었다
+					CASE 2
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %조사처리(상대,"와")%의 혼혈아가 생기면 어떻게 되어 버릴까와 불안을 숨기지 못할 모습이다
+				ENDSELECT
+				시츄 = 강간
+		ENDSELECT
+	CASE "물가"
+		PRINTFORMW %조사처리(LOCALS:0,"는")% %조사처리(LOCALS:1,"를")% 유영장으로서 인기의 물가에 내보냈다……
+		PRINTFORMW %LOCALS:1%의 아름다움은, 주위의 눈을 다짜고짜로 끌어당긴 것 같다……
+		PRINTFORML
+		SELECTCASE 상대
+			CASE "바람둥이"
+				PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%에 말을 걸려진 것 같다
+				SELECTCASE RAND:2
+					CASE 0
+						PRINTFORMW 어깨에 손을 써져 이루어 무너뜨려 목표에 바위 그늘에 데리고 들어가졌다……
+						PRINTFORML
+						SELECTCASE RAND:3
+							CASE 0
+								PRINTFORMW 바위에 손을 붙었던 %조사처리(LOCALS:1,"는")%, 뒤로부터 %상대%에 게걸스럽게 밀어올려지고 있다
+								PRINTFORMW 차가운 물에 반신 잠긴 중에서, 고기구멍에 뜨거운 끈기가 쏟아졌다……
+							CASE 1
+								PRINTFORMW %조사처리(상대,"는")% %LOCALS:1%의 입을 막아, 격렬하게 범하고 있다
+								PRINTFORMW 손가락의 틈새로부터는, 숨기지 못한다 달콤한 소리가 흘러 떨어지고 있다……
+							CASE 2
+								PRINTFORMW 바위에 앉은 %상대%의 전에 무릎 꿇어, %조사처리(LOCALS:1,"는")% 페니스에 달라 붙으며 있다
+								PRINTFORMW 완전히 딱딱해진 페니스로, %조사처리(상대,"는")% %조사처리(LOCALS:1,"를")% 범하기 시작했다……
+						ENDSELECT
+						PRINTFORML
+						SELECTCASE RAND:3
+							CASE 0
+								PRINTFORMW 연락처를 교환해, %조사처리(LOCALS:1,"는")% %조사처리(상대,"라")%고 알 수 있었다
+							CASE 1
+								PRINTFORMW %조사처리(상대,"가")% 페니스를 뽑아 내면, 백탁이 암컷구멍으로부터 수면으로 흘러 떨어졌다……
+							CASE 2
+								PRINTFORMW 차가운 물로 차가워져 버린 신체를, 두 명은 다시 교접해 따뜻하게 했다……
+						ENDSELECT
+						시츄 = 화간
+					CASE 1
+					;호텔
+						PRINTFORMW 어깨에 손을 써져 %LOCALS:1% 이야기해 무너뜨려 목표에 숙소에 데리고 들어가졌다……
+						PRINTFORML 
+						SELECTCASE RAND:4
+							CASE 0
+								PRINTFORMW %조사처리(상대,"는")% 조속히 %조사처리(LOCALS:1,"를")% 침대에 쓰러트리고, 격렬하게 사귀고 있다
+								PRINTFORMW 그 훌륭한 것에 의한 용감한 삽입질은, %조사처리(LOCALS:1,"를")% 암컷으로 만들어 내 간다……
+							CASE 1
+								PRINTFORMW %조사처리(상대,"는")% %조사처리(LOCALS:1,"를")% 끈적한 허리 사용으로 꾸짖고 있다
+								PRINTFORMW 젊은이 특유의 정열적인 테크닉은, %LOCALS:1%의 본능을 벌어지게 해 달콤한 소리를 지르게 한다……
+							CASE 2
+								PRINTFORMW 보통의 행위가 끝난 후, %조사처리(LOCALS:1,"는")% %상대%의 것을 입으로 맑게 해 갔다
+								PRINTFORMW 맑은 끝나는 무렵에는, %상대%의 것은 완전히 훌륭한 모습을 되찾고 있었다
+								PRINTFORMW 흥분한 %조사처리(상대,"는")% %조사처리(LOCALS:1,"를")% 쓰러트리고, 제 2 시합을 시작했다……
+							CASE 3
+								PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%에 덮어씌워져 격렬하게 밀어올려지고 있다
+								PRINTFORMW 그 야성적인 피스톤에, %LOCALS:1%의 자궁은 자꾸자꾸 예의범절을 가르쳐져 간다……
+						ENDSELECT
+						PRINTFORML
+						SELECTCASE RAND:4
+							CASE 0
+								PRINTFORMW %조사처리(LOCALS:1,"는")% %조사처리(상대,"와")% 연락처를 교환했다
+							CASE 1
+								PRINTFORMW %조사처리(LOCALS:1,"는")% 샤워를 해 돌아갔다
+							CASE 2
+								PRINTFORMW %조사처리(LOCALS:1,"는")% %조사처리(상대,"와")% 또 만날 약속을 주고 받았다
+							CASE 3
+								PRINTFORMW %조사처리(상대,"는")% 침대에 쓰러진 %조사처리(LOCALS:1,"를")% 방치해 돌아갔다
+						ENDSELECT
+				ENDSELECT
+				시츄 = 화간
+			CASE "치한"
+				PRINTFORMW 수영복 모습으로 헤엄치고 있으면, %조사처리(LOCALS:1,"는")% %상대%에 습격당한 것 같다
+				PRINTFORMW 동작도 변변히 잡히지 않는 수중에서, %조사처리(LOCALS:1,"는")% 좋은 것 같게 희롱해지고 있다……
+				PRINTFORML
+				SELECTCASE RAND:5
+					CASE 0
+						PRINTFORMW 수중에서, %조사처리(LOCALS:1,"는")% 비부에 육봉을 쑤셔 넣어져 버렸다
+						PRINTFORMW 주위에 눈치 채이지 않게 평정을 가장하는 %조사처리(LOCALS:1,"이지만")%, 수면 아래에서는 고기구멍을 페니스가 격렬하게 범하고 있다……
+					CASE 1
+						PRINTFORMW %조사처리(LOCALS:1,"가")% 육봉을 뽑아 내면, 백탁이 걸죽 수중에 흐르기 시작해 갔다
+						PRINTFORMW 많은 인간의 한가운데에서, %조사처리(LOCALS:1,"는")% %상대%에 씨뿌리기 되어 버렸다……
+					CASE 2
+						PRINTFORMW %상대%에 충분히 질내사정 된 후, %조사처리(LOCALS:1,"는")% 수영복을 빼앗겼다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %조사처리(LOCALS:0,"가")% 마중 나올 때까지, 물로부터 드시는 것이 할 수 없었다……
+					CASE 3
+						PRINTFORMW %조사처리(상대,"는")% %LOCALS:1%의 신체를 만지작거려, 관능을 다짜고짜로 높여 간다
+						PRINTFORMW 넣었으면 좋을 것이다?   와 귓전으로 속삭여져 %조사처리(LOCALS:1,"는")% 주위의 시선에도 아랑곳 없게 삽입을 졸랐다……
+					CASE 4
+						PRINTFORMW 돌연 %조사처리(상대,"가")% %LOCALS:1%의 수영복을 강탈해, 사납게 도망치기 시작했다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 당황해 뒤를 쫓으려고 하지만, 주위의 남성들이 %조사처리(LOCALS:1,"를")% 빤히 보고 있는 일을 알아차렸다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 2개의 가냘픈 팔로 신체를 숨겨, 수치에 얼굴을 붉히고 %조사처리(상대,"를")% 쫓았다
+						PRINTFORMW 간신히 따라잡은 %조사처리(LOCALS:1,"는")%, %상대%에 수영복과 교환에 신체가 요구되었다……
+				ENDSELECT
+				시츄 = 강간
+			CASE "기름기가돈중년","벗겨진중년"
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 완전 알몸으로 피부를 굽도록(듯이) 명령되었다
+						PRINTFORMW 부끄러워하는 %조사처리(LOCALS:1,"는")% 피부를 숨기는 것이 용서되지 않고, 그 나체를 무저항에 계속 쬐었다
+						PRINTFORMW 차츰, %조사처리(LOCALS:1,"는")% %상대%에 말을 걸 수 있어 딱잘라 거절할 수 없어에 숙소에 데리고 돌아가졌다……
+					CASE 1
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 물가에서 다른 수영복으로 갈아입도록(듯이) 명령 받았다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 스스로의 사지에 시선이 집중하는 것을 느껴 귀까지 새빨갛게 되면서 탈의를 시작했다
+						PRINTFORMW 갈아입음의 도중, 인내 할 수 없게 된 %조사처리(상대,"가")% %LOCALS:1%에 껴안아, 그대로 쓰러트렸다……
+					CASE 2
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 문을 전개로 한 채로 샤워를 하도록(듯이) 지시받았다
+						PRINTFORMW 수치에 몸을 비틀 때에 부드러운 신체가 흔들흔들 흔들려, 우연히 지나감의 수컷을 유혹한다
+						PRINTFORMW 이윽고, 본인의 뜻에 반하는 것 따위 관계없이, %조사처리(LOCALS:1,"는")% %상대%에 샤워내에서 습격당했다……
+				ENDSELECT
+				PRINTFORML
+				SELECTCASE RAND:4
+					CASE 0
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%의 굵은 페니스에 관철해져 말을 발하는 일도할 수 없다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%의 추악한 용모에 강한 혐오감을 기억하고 있었지만, 강하게 찔릴 때마다 시야가 점멸해, 딱딱하게 닫은 입으로부터 신음소리가 새었다
+						PRINTFORMW %조사처리(상대,"가")% 스퍼트를 걸치면, %LOCALS:1%의 신체는 그 뜻에 반해 자궁입구를 열어, 수정의 준비를 갖추었다……
+					CASE 1
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 방금전까지 스스로의 질내를 날뛰어 돌고 있던 육봉에 키스를 해, 빨고 맑게 해 갔다
+						PRINTFORMW 다시 %상대%의 페니스가 펄떡펄떡 우뚝 솟으면, %조사처리(LOCALS:1,"는")% 허리를 흔들면서 남성기에 음부를 칠해 삽입을 졸라댔다
+						PRINTFORMW %조사처리(상대,"는")% 안달하며, 힘차게 노장을 %LOCALS:1%의 질내에 꽂았다……
+					CASE 2
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 질내를 %상대%의 생식기에 빠득빠득 자극 받으며, 움찔움찔 경련하고 있었다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 이런 %조사처리(상대,"와")% 연결해지는 것 따위 마음 속 싫은 것이긴 했지만, 격렬한 열락의 한창에 있어서는 사고도 마음대로 되지 않는다
+						PRINTFORMW %조사처리(상대,"는")% 요도구멍을 자궁입구에위안할당 와 농후한 정액을 %LOCALS:1%의 가장 중요한 부분에 직접 주입했다……
+					CASE 3
+						PRINTFORMW %조사처리(상대,"는")% 몇 번째의 사정을 하면서, 더욱 더 허리를 계속 흔들고 있었다
+						PRINTFORMW %LOCALS:1%의 질내에는 정액이 충만해, 주름의 틈새에도 가득%상대%의 자식이 문질러 발라지고 있었다
+						PRINTFORMW %조사처리(상대,"와")% %조사처리(LOCALS:1,"가")% 접촉할 때마다 니체, 니체와 발정한 남녀가 연결되고 있는 소리가 울린다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 무의식 중에 스스로 상대에 맞추어 허리를 움직여, %상대%의 유전자를 받아들이기 위해서(때문에) 움직이고 있었다……
+				ENDSELECT
+				시츄 = 화간
+		ENDSELECT
+	CASE "온천"
+		PRINTFORMW %조사처리(LOCALS:0,"는")% %조사처리(LOCALS:1,"를")% 숨김가적 스팟의 온천에 내보냈다……
+		PRINTFORMW %LOCALS:1%의 아름다움은, 주위의 수컷을 매료하기에는 충분했던 것 같다……
+		PRINTFORML
+		SELECTCASE 상대
+			CASE "남성손님"
+				SELECTCASE RAND:4
+					CASE 0
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 타올 1매로 남탕에 들어가, 적당한 %상대%의 신체를 씻어 오도록(듯이) 명령되었다
+						PRINTFORMW %상대%들은 난입자에게 오싹 하고 있었지만, %조사처리(LOCALS:1,"가")% 1명의 등을 밀기 시작하면, 모두 앞쪽으로 기움 자세로 바라보기 시작했다
+						PRINTFORMW 등을 씻어 끝낸 %LOCALS:1%에 대해, %조사처리(LOCALS:0,"는")% 페니스를 질로 씻어 주도록(듯이) 추가 발주했다
+						PRINTFORMW 얼굴을 새빨갛게 해 %조사처리(LOCALS:1,"가")% 그 뜻을 전하면, %조사처리(상대,"는")% 끄덕끄덕 고개를 저어, %LOCALS:1%의 허리에 손을 썼다……
+					CASE 1
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 목욕타올만으로 남탕에 들어가, 무엇을 되어도 저항하지 않게 명령 받았다
+						PRINTFORMW 남탕의 손님들은 남탕에 들어 온 %조사처리(LOCALS:1,"를")% 빤히 바라봐, 사타구니를 북돋우고 있었다
+						PRINTFORMW 이윽고 손님의 1명이 %LOCALS:1%의 가슴에 손대었지만, %조사처리(LOCALS:1,"는")% 어디까지나 무저항으로 있었다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 목욕타올을 집어올려져도 저항하지 못하고, 직접적으로 가슴이나 엉덩이를 주물러져도 아무것도 할 수 없다
+						PRINTFORMW %조사처리(상대,"는")% 일어서면 %LOCALS:1%의 눈앞에 페니스를 내밀어, 봉사하도록(듯이) 명했다……
+					CASE 2
+						PRINTFORMW %조사처리(LOCALS:0,"가")% %조사처리(LOCALS:1,"와")% 함께 남탕에 잠기고 있으면, 당연히 강렬한 호기심 어린 눈으로 볼 수 있게 되었다
+						PRINTFORMW %조사처리(LOCALS:0,"는")% 적당한 손님의 1명에 말을 걸어, 「돈을 지불하면 %조사처리(LOCALS:1,"를")% 마음대로 해도 괜찮다」라고 전했다
+						PRINTFORMW %조사처리(상대,"는")% %LOCALS:1%의 지체를 봐 꿀꺽 침을 삼켜, 교섭은 성립했다……
+					CASE 3
+						PRINTFORMW %조사처리(LOCALS:0,"는")% %LOCALS:1%에 타올 1매로 손님과 응대하도록(듯이) 명했다
+						PRINTFORMW %조사처리(상대,"는")% %LOCALS:1%의 모습에 못 짓고여, %조사처리(LOCALS:0,"는")% %LOCALS:1%에 앞으로 구부림이 되도록(듯이) 한층 더 명했다
+						PRINTFORMW 여성 특유의 샤프한 라인이 타올 너머로 부조가 되어, %조사처리(상대,"는")% 얼굴을 돌렸다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 타올이 떨어지는 것도 신경쓰지 않고 %상대%의 손을 잡아, 「외로움을 감출 수 있으면 좋겠다」라고 부탁하면, %조사처리(상대,"는")% %조사처리(LOCALS:1,"를")% 쓰러트렸다……
+				ENDSELECT
+				PRINTFORML
+				SELECTCASE RAND:4
+					CASE 0
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 후배위로 %조사처리(상대,"와")% 짐승과 같이 사귀고 있다
+						PRINTFORMW 페니스가 빠지는 만큼 허리를 당겼는지라고 생각하면, 다음의 순간에는 푹안쪽 깊게까지 돌진해진다
+						PRINTFORMW 연속해 밀어닥치는 쾌락의 물결에, %조사처리(LOCALS:1,"는")% 자궁이 나오는 것을 느꼈다
+						PRINTFORMW %조사처리(LOCALS:1,"가")% 절정 하는 것과 동시에, %상대%의 요도구로부터 질척질척한 정액이 쏟아졌다……
+					CASE 1
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%의 남근을 할짝 할짝과 아이스 캔디같이 빨고 있었다
+						PRINTFORMW 구슬로부터 첨단까지, 성기 뒷부분을 혀로 훑어, 요도구멍을 혀끝에서 졸졸 후비면, %상대%의 허리가 흠칫 끌렸다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%의 장대를 계속 빨아, 육봉이 떨려, 한층 커진 곳에서 입을 떼어 놓았다
+						PRINTFORMW 숨을 거칠게 하는 %상대%에 가랑이를 열어, 삽입을 조르면, %조사처리(상대,"는")% 딱딱의 노장을 %LOCALS:1%에 찔러 넣었다……
+					CASE 2
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 기승위로 %조사처리(상대,"와")% 연결되고 있다
+						PRINTFORMW 이미 질내에 나온 정액과 %LOCALS:1%의 애액이, 피스톤마다 질척질척 질내에서 혼합되어져 간다
+						PRINTFORMW 성교 특유의 끈적거리는 소리를 미치게 해 %조사처리(LOCALS:1,"는")% %상대%의 육창을 스스로의 질을 가지고 계속 닦았다……
+					CASE 3
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 오늘 처음으로 만난 %조사처리(상대,"와")% 고무도 붙이지 않고 생으로 섹스를 하고 있다
+						PRINTFORMW %상대%의 움직임이 멈추면, 허리를 진동시켜 퓨웃 퓨웃과 기분 좋은 것같이 정액을 %LOCALS:1%의 질내에 토해내 간다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 경련이 일어난 웃는 얼굴을 띄우면서, 허리를 흔들어 2 회전을 요구했다……
+				ENDSELECT
+				시츄 = 화간
+			CASE "유부남"
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 왼손의 약지에 반지를 하고 있는 남성손님에게 소리를 하는 도중 당했다
+						PRINTFORMW 조금으로 좋으니까 자신과 즐겨 주지 않겠는가……
+						PRINTFORMW %조사처리(LOCALS:1,"가")% 그렇게 간절히 부탁하면, %조사처리(상대,"는")% 주위를 둘러봐, 아내가 돌아올 때까지, 라고 서론 해 %조사처리(LOCALS:1,"를")% 방에 데리고 들어갔다……
+					CASE 1
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 유카타의 전을 풀어헤친 채로, 적당한 방의 문을 노크 당했다
+						PRINTFORMW 나온 남자는 %LOCALS:1%의 모습에 놀라고 있었지만, %조사처리(LOCALS:1,"가")% 「화장실을 빌려 주면 좋겠다」라고 전하면, 얼굴을 찡그려 생각해 냈다
+						PRINTFORMW 분명하게 의심스러운 부탁이었지만, %조사처리(상대,"는")% 성욕에 져, 아내가 나오고 있는 동안에, 라고 %조사처리(LOCALS:1,"를")% 방에 불러들였다……
+					CASE 2
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 어린이 동반의 남성손님을 유혹해 오도록(듯이) 명령되었다
+						PRINTFORMW 놀고 있는 아이들을 지루한 것 같게 지켜보는 %조사처리(상대,"를")% 찾아낸 %조사처리(LOCALS:1,"는")%, 가슴을 무너질 만큼 강하게 %상대%에 강압하면서 말을 걸었다
+						PRINTFORMW %조사처리(상대,"는")% %조사처리(LOCALS:1,"를")% 확정해, 아이들에게 한동안 2명이 놀고 있도록(듯이) 전하면, %LOCALS:1%의 어깨에 손을 써 방에 데리고 돌아갔다……
+				ENDSELECT
+				PRINTFORML
+				SELECTCASE RAND:4
+					CASE 0
+						PRINTFORMW 방으로 들어가자, %조사처리(상대,"는")% %조사처리(LOCALS:1,"를")% 이불에 난폭하게 쓰러트렸다
+						PRINTFORMW %조사처리(LOCALS:1,"가")% 저항하지 않기 때문에, %조사처리(상대,"는")% %LOCALS:1%의 옷을 힘차게 벗겨내, 그 유육에 손가락을 침울해지게 했다
+						PRINTFORMW %상대%의 애무에 한숨을 흘려, %LOCALS:1%도 %상대%의 사타구니를 더듬으면, 순식간에 경도를 더해 갔다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %상대%의 사타구니에 얼굴을 묻어, 입으로 속옷을 벗게 하면, 페니스에 뺨 비비기했다……
+					CASE 1
+						PRINTFORMW %조사처리(상대,"는")% 상태를 보러 온 %상대%의 아이와 문의 틈새로부터 회화하고 있다
+						PRINTFORMW 물론, 문의 그늘에서는 %조사처리(LOCALS:1,"와")% %조사처리(상대,"가")% 허리를 서로 쳐박고 있는 한중간이며, %조사처리(LOCALS:1,"는")% 소리를 내지 않게 필사적으로 참고 있었다
+						PRINTFORMW 문이 닫히는 것과 동시에 %조사처리(상대,"는")% 삽입질의 속도를 급속히 높여, %LOCALS:1%의 질내에 한껏 배덕국물을 냈다……
+					CASE 2
+						PRINTFORMW 고무를 붙이도록(듯이) 몇 번이나 다짐해, %조사처리(LOCALS:1,"는")% 위로 향해 드러누웠다
+						PRINTFORMW %조사처리(상대,"는")% 승낙해, %LOCALS:1%에 덮어씌우면, 뜨거운 고기의 못을 그 질내에 천천히, 형태를 확실히 익히게 하도록(듯이) 삽입했다
+						PRINTFORMW 서서히 전후 운동의 속도가 올라 가 %조사처리(상대,"가")% %LOCALS:1%의 제일 깊은 곳으로 움직임을 멈추면, 서서히 열이 퍼졌다
+						PRINTFORMW 등줄기가 어는 것 같은 생각으로 %조사처리(LOCALS:1,"가")% 사타구니에 손을 하면, 흰 점액이 그 손바닥에 흠뻑부착했다
+						PRINTFORMW 변명하는 %조사처리(상대,"를")%, %조사처리(LOCALS:1,"는")% 「거짓말쟁이……」라고 눈에 굵은 눈물을 모으면서 비난 했다……
+					CASE 3
+						PRINTFORMW 한 바탕 정욕에 빠진 후, %조사처리(상대,"는")% 방목욕탕에서 몸에 붙은 냄새를 떨어뜨리고 있었다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% %LOCALS:0%에 명령받은대로, 마지막 마무리에 들어갔다
+						PRINTFORMW %상대%에 눈치채지지 않게 속옷을 이불아래에 숨기면, %조사처리(LOCALS:1,"는")% %상대%에 슬슬 돌아온다고 고해, 헤어졌다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 남겨진 증거가 어떠한 기능을 하는지 상상해, %조사처리(상대,"를")% 불쌍하게 생각했다……
+				ENDSELECT
+				시츄 = 화간
+			CASE "마사지스승"
+				PRINTFORMW %조사처리(LOCALS:1,"는")% 방에 마사지스승을 부르도록(듯이) 지시받았다
+				PRINTFORMW %조사처리(상대,"는")% 호색 그런 눈으로 %조사처리(LOCALS:1,"를")% 보고 있었지만, %조사처리(LOCALS:1,"는")% 눈치채지 못한 체했다
+				PRINTFORML 
+				SELECTCASE RAND:4
+					CASE 0
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 피부의 반응을 좋게하기 위해서라고 말해져, 눈가리개를 붙이게 할 수 있었다
+						PRINTFORMW %조사처리(상대,"는")% %LOCALS:1%의 지체를 주물러 풀면서, 자연스럽게 속옷을 비켜 놓아 갔다
+						PRINTFORMW 보이지 않은 것을 구실로, %조사처리(상대,"는")% %LOCALS:1%의 끈적끈적으로 한 균열이나 핑 서는 유두를 클로즈업으로 사진에 거두어 간다
+						PRINTFORMW 보통의 촬영이 완료하면, %조사처리(상대,"는")% 「조금 하드하게 해요～」라고 말해 페니스를 삽입해, 삽입 촬영을 시작했다……
+					CASE 1
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 가슴을 주물러지고 있어 분명하게 마사지의 범주를 넘고 있었다
+						PRINTFORMW 「린파가 여기에 있습니다」라고 %조사처리(상대,"가")% %LOCALS:1%의 유두를 집으면, 날카로운 소리를 높여 민감하게 반응해 버린다
+						PRINTFORMW 「그러면 상반신 코스는 이것으로 끝입니다만, 하반신 코스 어떻게 하십니까～?」
+						PRINTFORMW 초조해 해져 고양하고 있었던 %조사처리(LOCALS:1,"는")%, 뭔가 말하는 것도 아니게 입다물고 드러누워, 시간의 연장을 전했다……
+					CASE 2
+						PRINTFORMW %조사처리(상대,"는")% %LOCALS:1%의 전신을 주물러 풀어 가 %조사처리(LOCALS:1,"는")% 기분 좋음으로부터 때때로 짧게 허덕여 버린다
+						PRINTFORMW 「젖어 버리기 때문에 제외하네요～」라고 말하면서, %조사처리(상대,"는")% 익숙해진 손놀림으로 %LOCALS:1%의 속옷을 제거한다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 항의하려고 했지만, 「여러분 하고 계셔요～」라고 구슬릴 수 있으면, 강하게 말대답할 수 없었다
+						PRINTFORMW 「손가락은 닿지 않는 곳 푸네요～」라고 말하면, %조사처리(상대,"는")% %LOCALS:1%의 여음에 남성기를 강압했다……
+					CASE 3
+						PRINTFORMW 「다음은 도구 사용해 가네요～」라고 %조사처리(상대,"가")% 말하자마자, %LOCALS:1%의 비부에 마사지 그릇을 맞힐 수 있었다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 소리가 되지 않는 소리를 높여 신체를 몇 번이나 뛰게 해 조수를 뿜고 기뻐해 버리고 있다
+						PRINTFORMW 「소～해 다리 여네요～」  그렇게 말해 %조사처리(상대,"는")% %조사처리(LOCALS:1,"를")% 다리를 크게 벌림으로 한다
+						PRINTFORMW %조사처리(상대,"가")% %LOCALS:1%의 눈앞에서 육경을 꺼내도, %조사처리(LOCALS:1,"는")% 거절하지 못했다……
+				ENDSELECT
+				PRINTFORML
+				SELECTCASE RAND:4
+					CASE 0
+						PRINTFORMW 옥대의 내용을 완전하게 토해낸 %조사처리(상대,"는")% 남근을 앞질러, 어깨를 들썩이며 헐떡이는 %조사처리(LOCALS:1,"를")% 내려다 보았다
+						PRINTFORMW %조사처리(상대,"는")% 조용히 %LOCALS:1%의 쿠레바스에 손가락을 빼고 꽂기 하면, 그 손을 %LOCALS:1%의 눈앞에 가져왔다
+						PRINTFORMW 진한 남자국물과 %LOCALS:1%의 발정한 증거가 %상대%의 손가락의 사이에 흰 실을 당기고 있어 진한 관계를 이야기하고 있었다
+						PRINTFORMW %조사처리(상대,"가")% 그 손가락을 %LOCALS:1%의 입에 돌진하면, %조사처리(LOCALS:1,"는")% 아무것도 말하지 않고 예쁘게 빨고 취해 갔다……
+					CASE 1
+						PRINTFORMW %조사처리(상대,"가")% 페니스를 뽑아 내면, %LOCALS:1%의 음부는 아직 %상대%의 형태를 남기고 있었다
+						PRINTFORMW 백탁을 흘려 보내는 암컷구멍은 흠칫흠칫 꿈틀거리고 있어 수컷의 사랑을 아직 다 받을 수 있지 않았다고 주장하고 있었다
+						PRINTFORMW 조금 쉬어 회복한 %조사처리(상대,"는")%, 다시 %LOCALS:1%에 덮어씌워, 버릇없게 육봉을 넣었다
+						PRINTFORMW %LOCALS:1%의 머리는 한계라고 거절하고 있었지만, 신체는 남성기의 재침입에 기쁨, 삐걱삐걱 뛰게 할 뿐이었다……
+					CASE 2
+						PRINTFORMW %조사처리(상대,"는")% %LOCALS:1%의 부드러운 허리를 단단하게 잡아, 걸근걸근 허리를 거절해 질내를 탐내고 있다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 이미 몇 번이나 절정에 달하고 있어 머릿속은 분홍색의 안개로 가득했다
+						PRINTFORMW %조사처리(상대,"가")% %조사처리(LOCALS:1,"를")% 단단하게 껴안아, 생식기 끼리를 아플 정도로 붙이면, 페니스를 진동시켜 자식을 토해냈다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 무의식 중에 각도를 움직여, %상대%의 요도구와 자궁입구를 딱 밀착시켜, 스스로의 히지리 역에의 침입을 허락했다……
+					CASE 3
+						PRINTFORMW 팡팡 고기와 고기가 서로 부딪치는 소리가, 닫고 잊고 있던 창으로부터 밖으로 새어나오고 있다
+						PRINTFORMW 누쵸, 부쨕과 일정한 리듬으로 영향을 주는 끈적거리는 소리는, 분명하게 2명이 성교하고 있는 것을 나타내고 있었다
+						PRINTFORMW 2명의 서로 섞인 체취, 때때로 짧게 새는 2종류의 소리, 벗어 던질 수 있었던 2 인분의 착의……바깥 공기에 노출되는 모두가 교미의 흔적이었다
+						PRINTFORMW %조사처리(LOCALS:1,"는")% 창이 열려 있는 것 따위 잊었는지같이, 거리낌 없게 소리를 내 절정 했다……
+				ENDSELECT
+				시츄 = 화간
+		ENDSELECT
+ENDSELECT
+PRINTFORML
+CALL SINGLE_DRAWLINE
+CALL VIRGIN_COMMON(MTAR:0, @"%상대%", 시츄)
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN98
+RETURN 커맨드_우후후
+
+;--------------------
+;성 기호용 함수
+;--------------------
+@COM_PREFERENCE_PLAYER_98()
+RETURN POWER(2, 성적기호_학대하고싶다)
+
+@COM_PREFERENCE_TARGET_98()
+RETURN POWER(2, 성적기호_시달리고싶다) + POWER(2, 성적기호_윤간되고싶다)
+

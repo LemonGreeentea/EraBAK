@@ -1,0 +1,51 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_KARAOKE_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_KARAOKE_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_KARAOKE(대상)
+#DIM 대상
+
+PRINTFORML 술집에 들른 곳, 뭔가 소란스럽다
+PRINTFORML (들)물어 보면, 노래 자랑 대회가 열리고 있는 것이라고 한다
+PRINTFORML 상금도 나오는 것 같지만……
+PRINTFORML 
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "가창"))
+CALL ASK_YN("참가한다", "그만둔다")
+
+IF RESULT == 1
+	PRINTFORML (무늬)격이 아니다
+	PRINTFORML 그만두기로 했다
+	RETURN 1
+ENDIF
+
+PRINTFORML 이것도 일흥일 것이다
+PRINTFORML 참가해 보기로 했다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF LIMIT(ABL:대상:가창 * 2, 50, 90) > RAND:100
+	PRINTFORMW 우승 했다!
+	PRINTFORMW 상금을 받아, 싱글벙글한 얼굴로 귀로에 들었다
+	CALL ICPRINT("금<5000>을 손에 넣었다", "L", 칼라_주의)
+	CALL PRINT_ADD_EXP(대상, "가창경험치", RAND:10 + 5)
+ELSE
+	PRINTFORMW 져 버렸다……
+	PRINTFORMW 어깨를 떨어뜨려 귀로에 들었다
+ENDIF
+
+
+RETURN 1

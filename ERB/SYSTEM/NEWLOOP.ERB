@@ -1,0 +1,1388 @@
+﻿
+;-------------------------------------------------
+;ARG:0 = 1으로 주회 모드
+;-------------------------------------------------
+@NEWLOOP(ARG:0=0)
+
+;변수의 초기화
+CALL NEWLOOP_RESET_VARS
+
+;주회수가 1증가한다
+FLAG:주회수++
+
+;악이 돋보였기 때문에 하고 없음등으로 돌아왔을 때 용
+VARSET SP_COUNTRY_RANK
+
+;특수 캐릭터 모두 삭제
+CALL NEWLOOP_DELETE_ALL_SP_CHARA(ARG:0)
+
+;시나리오 선택으로부터 세력 선택까지
+CALL STARTUP_SCENARIO
+
+IF RESULT == -1
+	RETURN 0
+ELSEIF RESULT == 0
+	FLAG:주회수 --
+	RESTART
+ENDIF
+
+CALL EXTRA_SETTING
+
+;특수 세력의 설정
+CALL SP_COUNTRY_SETTING
+CALL SP_COUNTRY_START_INIT
+
+;초기 보너스
+IF !FLAG:관전모드 && FLAG:당신신규작성 && MASTER == NAME_TO_CHARA("당신")
+	CALL NEWLOOP_ANATA_BONUS
+	FLAG:당신신규작성 = 0
+ENDIF
+
+CALL LEVEL_SETTING
+
+;여러가지 끝나고 나서의 리셋트 처리
+CALL NEWLOOP_ADDITIONAL_RESET_VARS
+
+RETURN 1
+
+
+;-------------------------------------
+;시나리오측에서 특수 캐릭터를 생성하고 있어, 한편 일주눈, 「돌아온다」했을 때를 위해서(때문에), 특수 캐릭터를 모두 삭제한다
+;-------------------------------------
+@NEWLOOP_DELETE_ALL_SP_CHARA(ARG:0)
+LOCAL:2 = CHARANUM
+FOR LOCAL:0, 0, LOCAL:2
+	LOCAL:1 = LOCAL:2 - LOCAL:0 - 1
+	IF (IS_SP_CHARA(LOCAL:1) && MASTER != LOCAL:1) || TALENT:(LOCAL:1):커스텀캐릭터 == 2
+		CALL DELETE_CHARA(LOCAL:1)
+	ENDIF
+NEXT
+
+
+;-------------------------------------
+;새롭게 주회 할 때 용, 변수의 리셋트 처리
+;-------------------------------------
+@NEWLOOP_RESET_VARS
+;일자를 1일째에 되돌린다
+DAY = 1
+
+;촉수의방의 관리자를 초기화
+FLAG:촉수의방관리자 = 0
+
+;페이즈를 거점 페이즈로 한다
+TIME = 0
+
+;시나리오 전용 변수를 리셋트
+VARSET SCVAR, 0
+
+;데일리 이벤트 변수를 리셋트
+VARSET DVAR, 0
+VARSET DSTR, 
+;구상용 데일리 이벤트 변수를 리셋트
+FOR LOCAL, 0, VARSIZE("KDVAR")
+	CVARSET KDVAR, LOCAL, 0
+	CVARSET KDSTR, LOCAL, 
+NEXT
+
+;특수 세력 관계의 변수를 리셋트
+VARSET SP_COUNTRY_START
+VARSET SP_COUNTRY_RANK
+VARSET SP_COUNTRY_APPEARED
+VARSET SP_COUNTRY_BOSSNAME
+VARSET SP_COUNTRY_BOSSNAME_LAST_NAME
+VARSET SP_COUNTRY_BOSSNAME_FIRST_NAME
+VARSET SP_COUNTRY_INITIAL_RISE
+VARSET BANDIT_HAS_INITIAL_CITIES
+
+FOR LOCAL, 0, VARSIZE("SP_TRAIN_COUNT")
+	CVARSET SP_TRAIN_COUNT, LOCAL, 0
+NEXT
+
+;포로에 대해 삭제
+VARSET PRISONER_TARGET, -1
+
+;스카우트 회수를 리셋트
+VARSET SCOUT_COUNT, 0
+
+;특별훈련 회수를 리셋트
+VARSET SPECIAL_TRAIN_COUNT, 0
+
+;변수의 초기화
+TARGET = -1
+ASSI = -1
+
+;클리어 플래그를 해제
+FLAG:클리어플래그 = 0
+FLAG:클리어직후플래그 = 0
+FLAG:강제엔드플래그 = 0
+SHOP_TIME = 0
+
+;오락담당을 리셋트（오락담당이 랜덤 캐릭터나 출산 캐릭터로, 한편 그 캐릭터를 계승하지 않았을 때 때문에）
+CALL SET_COOK(-1)
+
+;관전 모드 플래그를 0
+FLAG:관전모드 = 0
+
+;SHOW_INFO의 초기 화면을 기본 정보로 한다
+FLAG:능력표시모드 = 0
+
+
+;SLG 관련의 변수를 클리어
+STATS_TIME = 0
+VARSET STATS_BOSS_ID_LIST, 0
+VARSET STATS_GDP, 0
+VARSET STATS_ARMY, 0
+VARSET CITY_ROUTE, 0
+VARSET CITY_TYPE, 0
+VARSET CITY_ECONOMY, 0
+VARSET CITY_SOLDIER, 0
+VARSET CITY_GUARD, 0
+VARSET CITY_OWNER, 0
+VARSET CITY_COMMANDER, 0
+VARSET COUNTRY_BOSS, 0
+VARSET COUNTRY_COLOR, 0
+VARSET COUNTRY_SOLDIER, 0
+VARSET COUNTRY_AI_TYPE, 0
+VARSET COUNTRY_NOTARGET_TERM, 0
+VARSET COUNTRY_IS_CLOSED, 0
+VARSET COUNTRY_EVENT_ID, 0
+VARSET AUTO_INVEST_PRICE, 0
+FOR LOCAL:0, 0, MAX_COUNTRY
+	FOR LOCAL:1, 0, 10
+		UNIT_SOLDIER:(LOCAL:0):(LOCAL:1) = 0
+		UNIT_POSITION:(LOCAL:0):(LOCAL:1) = 0
+		UNIT_TARGET:(LOCAL:0):(LOCAL:1) = 0
+		UNIT_COMMANDER:(LOCAL:0):(LOCAL:1) = 0
+	NEXT
+NEXT
+VARSET TREATY_A_TERM, 0
+VARSET TREATY_U_TERM, 0
+VARSET TREATY_U_TARGET, 0
+VARSET TREATY_C_TERM, 0
+VARSET DIPLOMACY_HATE, 0
+VARSET COUNTRY_NOTDIPLOMACY_TERM, 0
+FOR LOCAL:0, 0, MAX_TREATY_A
+	FOR LOCAL:1, 0, MAX_TREATY_COUNTRY
+		TREATY_A_COUNTRY:(LOCAL:0):(LOCAL:1) = 0
+	NEXT
+NEXT
+FOR LOCAL:0, 0, MAX_TREATY_U
+	FOR LOCAL:1, 0, MAX_TREATY_COUNTRY
+		TREATY_U_COUNTRY:(LOCAL:0):(LOCAL:1) = 0
+	NEXT
+NEXT
+FOR LOCAL:0, 0, MAX_TREATY_C
+	FOR LOCAL:1, 0, MAX_TREATY_COUNTRY
+		TREATY_C_COUNTRY:(LOCAL:0):(LOCAL:1) = 0
+	NEXT
+NEXT
+
+;랜덤계 시나리오등으로 PLACEMENT 호출 뒤로 「돌아온다」했을 때를 위해서(때문에), 캐릭터의 소속을 소거
+FOR LOCAL, 0, CHARANUM
+	CFLAG:LOCAL:소속 = 0
+	CFLAG:LOCAL:특수상태 = 0
+	CFLAG:LOCAL:포로처 = 0
+NEXT
+
+;시나리오 12 「악이 돋보였기 때문에 죽게 해」로 PLACEMENT 호출 뒤로 「돌아온다」했을 때를 위해서(때문에), 출현 플래그를 리셋트
+VARSET SP_COUNTRY_APPEARED, 0
+
+;맵 ID를 리셋트
+MAPID '= "DEFAULT"
+
+;각 세력의 국고를 0에（플레이어의 품은 그대로）
+VARSET MONEY, 0, 1
+
+
+;-------------------------------------------------
+;여러가지의 처리 후에 실시하는 변수 리셋트 처리
+;-------------------------------------------------
+@NEWLOOP_ADDITIONAL_RESET_VARS
+;개시시의 국고를 설정
+;시나리오에 응해
+FOR LOCAL:0, 1, MAX_COUNTRY
+	SIF !IS_COUNTRY(LOCAL:0)
+		CONTINUE
+	MONEY:(LOCAL:0) += GET_SUM_ECONOMY(LOCAL:0) * 100 / (100 * 100)
+NEXT
+
+FOR LOCAL, 0, CHARANUM
+	SIF TALENT:LOCAL:커스텀캐릭터 == 2
+		TALENT:LOCAL:커스텀캐릭터 = 1
+NEXT
+
+;노예시장의 상품 리스트를 갱신
+CALL SLAVEMARKET_PREPARE_GOODS
+;스카우트의 대상 리스트를 갱신
+CALL SCOUT_PREPARE_CANDIDATES
+;방랑중의 캐릭터가 「만나러간다」로 표시되도록(듯이) 리스트 작성
+CALL MEET_CHECK_CANDIDATES
+;특별훈련의 가격을 갱신
+CALL CALC_SPECIAL_TRAIN_PRICE
+;이 턴의 특별훈련 실시 회수를 리셋트
+SPECIAL_TRAIN_COUNT_THIS_TURN = 0
+
+;주인공의 소속 세력의 정책을 경제에
+SIF IS_COUNTRY(CFLAG:MASTER:소속)
+	COUNTRY_POLICY:(CFLAG:MASTER:소속) = 정책_경제
+
+
+;-------------------------------------------------
+;시나리오에 관련하는 스타트압 처리
+;-------------------------------------------------
+@STARTUP_SCENARIO
+;시나리오 선택
+CALL SELECT_SCENARIO
+
+SIF RESULT == 0
+	RETURN -1
+
+TRYCALLFORM SCENARIO_NAME_%SCENARIOID%
+LOCALS '= RESULTS
+PRINTFORML 시나리오 「%LOCALS%」%조사처리(LOCALS,"로")% 개시합니다
+
+;시나리오 맵 선택 처리
+TRYCALLFORM SCENARIO_MAPSELECT_%SCENARIOID%
+
+;맵 초기화
+CALL MAPSETUP(1)
+CALL MAP_INIT
+
+;시나리오 인트로
+TRYCALLFORM SCENARIO_INTRO_%SCENARIOID%
+
+PRINTFORML 이 시나리오로 놉니까?
+CALL ASK_YN()
+SIF RESULT == 1
+	RETURN 0
+
+;시나리오 초기 세력 배치
+TRYCCALLFORM SCENARIO_PLACEMENT_%SCENARIOID%
+CATCH
+	CALL SCENARIO_PLACEMENT_DEFAULT
+ENDCATCH
+
+;커스텀 캐릭터의 설정
+CALL SETUP_SPECIAL_CHARACTERS
+
+$SELECT_COUNTRY
+
+;세력 선택
+CALL SELECT_COUNTRY
+
+;돌아왔을 경우
+SIF RESULT == 0
+	RETURN 0
+
+
+;관전 모드의 경우, 전의 주에 캐릭터를 변경했을 때용으로, 「당신」라고 주인공을 바꿔 넣어 되돌리는 처리만은 필요
+IF FLAG:관전모드
+	CALL SWAP_CHARA(MASTER, NAME_TO_CHARA("당신"))
+ELSE
+	CALL SELECT_MASTER
+	;돌아왔을 경우
+	SIF RESULT == 0
+		GOTO SELECT_COUNTRY
+ENDIF
+
+;개양 스타트라면, 세력을 설정
+IF FLAG:OP선택세력 == -4
+	CALL START_WITH_NEW_COUNTRY
+	SIF RESULT == -1
+		RETURN 0
+ENDIF
+;그 외 세력 선택 후에 시나리오측에서 하고 싶은 것
+TRYCALLFORM SCENARIO_%SCENARIOID%_AFTERSELECT
+
+RETURN 1
+
+
+;-------------------------------------------------
+;시나리오 선택
+;-------------------------------------------------
+@SELECT_SCENARIO
+#DIM IN
+CALL CREATE_SCENARIO_INDEX
+PRINTL ★★시나리오를 선택해 주세요★★
+CALL SINGLE_DRAWLINE
+FOR LOCAL:0, 0, SCENARIO_NUMBER
+	SIF SCENARIO_SELECT:(LOCAL:0) == -1
+		BREAK
+		
+		LOCALS:0  '= ""
+		LOCALS:0  += "[●"
+		RESULTS:0 '= ""
+		TRYCALLFORM SCENARIO_NAME_%SCENARIO_ID:(LOCAL:0)%
+		LOCALS:0 = %LOCALS:0%%RESULTS:0, 43, LEFT%
+		LOCALS:0 += "]"
+		LOCALS:0 = {SCENARIO_SELECT:(LOCAL:0),3 , RIGHT}%LOCALS:0%
+		
+		PRINTBUTTON LOCALS:0, SCENARIO_SELECT:(LOCAL:0)
+		PRINTL
+NEXT
+
+IF FLAG:주회수 == 1
+	CALL SINGLE_DRAWLINE
+	PRINTBUTTON "99[돌아온다]", 99
+ENDIF
+
+$INPUT_LOOP
+INPUT
+IN = RESULT
+FOR LOCAL:0 , 0, SCENARIO_NUMBER
+	IF IN == 99 && FLAG:주회수 == 1
+		RETURN 0
+	ENDIF
+	IF IN == SCENARIO_SELECT:(LOCAL:0)
+		SCENARIOID '= SCENARIO_ID:LOCAL
+		RETURN 1
+	ENDIF
+NEXT
+CLEARLINE 1
+GOTO INPUT_LOOP
+
+;-------------------------------------------------
+;세력 선택
+;-------------------------------------------------
+@SELECT_COUNTRY
+#DIM FIRST_LINE
+#DIM 선택세력
+#DIM 보스
+
+CALL TMP_PREPARE_COUNTRY_STARS
+
+선택세력 = 0
+FIRST_LINE = LINECOUNT
+$SHOW_LOOP
+
+CALL SINGLE_DRAWLINE
+PRINT      맵 폰트 선택       
+PRINTBUTTON "[MS Gothic]", 990
+PRINTPLAIN  
+PRINTBUTTON "[굴림체]", 991
+PRINTPLAIN  
+PRINTBUTTON "[바탕체]", 992
+PRINTPLAIN  
+PRINTBUTTON "[돋움체]", 993
+PRINTPLAIN  
+PRINTBUTTON "[궁서체]", 994
+PRINTL
+PRINT ★★소속 세력 선택★★
+PRINTPLAIN   
+PRINTBUTTON "[세력정보]", 96
+PRINTPLAIN   
+PRINTBUTTON "[랜덤]", 97
+PRINTPLAIN   
+PRINTBUTTON "[관전]", 98
+PRINTPLAIN   
+PRINTBUTTON "[방랑]", 99
+IF GET_NEW_COUNTRY() != -1
+	PRINTPLAIN   
+	PRINTBUTTON "[특수]", 100
+	PRINTPLAIN   
+	PRINTBUTTON "[개양]", 101
+ENDIF
+PRINTPLAIN   
+PRINTBUTTON "999[돌아온다]", 999
+PRINTL 
+CALL SINGLE_DRAWLINE
+CALL SET_CITY_COLOR_COUNTRY
+CALL DRAWMAP
+CALL RESET_CITY_COLOR
+CALL SINGLE_DRAWLINE
+
+보스 = ID_TO_CHARA(COUNTRY_BOSS:선택세력)
+
+IF 보스 < 0
+	PRINTL 도시를 클릭 하는 것으로, 그 세력의 정보를 얻을 수 있습니다
+	PRINTL 
+ELSE
+	CALL ICPRINT(@"이 도시는<%NAME_FORMAL(보스)%>의 세력하에 있습니다", "L", COUNTRY_COLOR:선택세력)
+	;쇼우 표시
+	CALL SINGLE_DRAWLINE
+	PRINTFORM 평가:
+	CALL TMP_PRINT_COUNTRY_STARS(선택세력)
+	PRINTL
+	;소속 캐릭터 일람표시
+	CALL SINGLE_DRAWLINE
+	PRINTFORML 도시수: {GET_OWN_CITY(선택세력), 3, LEFT} 경제력: {GET_SUM_ECONOMY(선택세력) / 100, 7, LEFT} 방위력: {GET_SUM_GUARD(선택세력), 7, LEFT}
+	PRINTFORM 소속 캐릭터:
+
+	;보스만 특수 표시
+	CALL COLOR_PRINT(@"%ANAME(보스)%   ", COUNTRY_COLOR:선택세력)
+	LOCAL:1 = STRLENS(LOCALS:0)
+
+	FOR LOCAL, 0, CHARANUM
+		SIF LOCAL == 보스 || CFLAG:LOCAL:소속 != 선택세력
+			CONTINUE
+		PRINTFORM %ANAME(LOCAL)%   
+	NEXT
+	PRINTL
+
+	;그 세력이 플레이 가능한가 조사한다. 미정도리라면 전세력 플레이 가능으로 한다
+	TRYCCALLFORM IS_COUNTRY_PLAYABLE_%SCENARIOID%(선택세력)
+		IF !RESULT
+			CALL COLOR_PRINT(@"이 시나리오에서는, 그 세력으로 플레이 할 수 없습니다", 칼라_주의)
+		ELSE
+			PRINTBUTTON " 0[이 세력으로 개시]", 0
+			PRINTL
+		ENDIF
+	CATCH
+		PRINTBUTTON " 0[이 세력으로 개시]", 0
+		PRINTL
+	ENDCATCH
+ENDIF
+
+REDRAW 0
+
+$INPUT_LOOP
+INPUT
+
+IF RESULT == 0
+	IF 보스 >= 0
+		TRYCCALLFORM IS_COUNTRY_PLAYABLE_%SCENARIOID%(선택세력)
+			SIF RESULT
+				GOTO SELECTABLE
+			PRINTFORMW 이 시나리오에서는, 그 세력으로 플레이 할 수 없습니다
+		CATCH
+			$SELECTABLE
+			FLAG:OP선택세력 = 선택세력
+			PRINTFORMW %ANAME(보스)% 세력으로 개시합니다
+			RETURN 1
+		ENDCATCH
+	ENDIF
+ELSEIF RESULT == 96
+	CALL SHOW_COUNTRY_DATA
+	CLEARLINE LINECOUNT - FIRST_LINE
+	RESTART
+ELSEIF RESULT == 97
+	CALL FISHER_YATES_SHAFFLE(MAX_COUNTRY)
+	FOR LOCAL, 0, MAX_COUNTRY
+		선택세력 = SHAFFLE_ARRAY:LOCAL
+		SIF !IS_COUNTRY(선택세력)
+			CONTINUE
+		보스 = GET_COUNTRY_BOSS(선택세력)
+		TRYCCALLFORM IS_COUNTRY_PLAYABLE_%SCENARIOID%(선택세력)
+			SIF RESULT
+				GOTO SELECTABLE
+		CATCH
+			GOTO SELECTABLE
+		ENDCATCH
+	NEXT
+	THROW 그럴 리는 없다
+ELSEIF RESULT == 98
+	FLAG:OP선택세력 = -1
+	FLAG:관전모드 = 1
+	TIME = 1
+	PRINTFORMW 관전 모드로 개시합니다
+	RETURN 1
+ELSEIF RESULT == 99
+	FLAG:OP선택세력 = 0
+	TIME = 0
+	PRINTFORMW 방랑 상태로부터 개시합니다
+	RETURN 1
+ELSEIF RESULT == 100 && GET_NEW_COUNTRY() != -1
+	FLAG:OP선택세력 = -3
+	CALL SP_COUNTRY_START_SELECT()
+	IF RESULT == 0
+		FLAG:OP선택세력 = 0
+		RETURN 0
+	ENDIF
+	RETURN 1
+ELSEIF RESULT == 101 && GET_NEW_COUNTRY() != -1
+	FLAG:OP선택세력 = -4
+	PRINTFORMW 개양 해 개시합니다
+	RETURN 1
+ELSEIF RESULT == 990
+	맵_폰트 '= "MS Gothic"
+	CLEARLINE LINECOUNT - FIRST_LINE
+	RESTART
+ELSEIF RESULT == 991
+	맵_폰트 '= "굴림체"
+	CLEARLINE LINECOUNT - FIRST_LINE
+	RESTART
+ELSEIF RESULT == 992
+	맵_폰트 '= "바탕체"
+	CLEARLINE LINECOUNT - FIRST_LINE
+	RESTART
+ELSEIF RESULT == 993
+	맵_폰트 '= "돋움체"
+	CLEARLINE LINECOUNT - FIRST_LINE
+	RESTART
+ELSEIF RESULT == 994
+	맵_폰트 '= "궁서체"
+	CLEARLINE LINECOUNT - FIRST_LINE
+	RESTART
+ELSEIF RESULT == 999
+	RETURN 0
+;도시를 클릭
+ELSEIF RESULT >= 1000 && RESULT < 1000 + MAX_CITY
+	LOCAL:3 = RESULT - 1000
+	LOCAL:4 = CITY_OWNER:(LOCAL:3)
+	IF IS_COUNTRY(LOCAL:4)
+		선택세력 = LOCAL:4
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+	ELSEIF GET_RELAYNAME(LOCAL:3) != "무명" && LOCAL:4 == 0
+		선택세력 = 0
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+	ENDIF
+ENDIF
+CLEARLINE 1
+GOTO INPUT_LOOP
+
+;-------------------------------------------------
+;특수 세력의 선택
+;-------------------------------------------------
+@SP_COUNTRY_START_SELECT()
+#DIM FIRST_LINE
+PRINTFORMW 특수한 세력으로 개시합니다
+PRINTFORMW 어떤 것으로 개시합니까?
+
+FOR LOCAL, 0, MAX_SP_COUNTRY
+	SIF SP_COUNTRY_NAME:LOCAL != ""
+		PRINTFORML [{LOCAL}] %SP_COUNTRY_NAME:LOCAL%
+NEXT
+CALL SINGLE_DRAWLINE
+PRINTFORML [999] 돌아온다
+
+$INPUT_LOOP2
+INPUT
+
+LOCAL = RESULT
+
+SIF LOCAL == 999
+	RETURN 0
+
+SIF SP_COUNTRY_NAME:LOCAL == ""
+	GOTO INPUT_LOOP2
+
+PRINTFORML 어떤 처지에서 스타트 합니까?
+CALL ASK_MULTI("사관(조교를 받지 않는다)", "노예(최초부터 합의 떡)", "포로(무소속·포로로부터 스타트)", "군주")
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORMW 사관으로서 스타트 합니다
+	CASE 1
+		PRINTFORMW 노예로서 스타트 합니다
+	CASE 2
+		PRINTFORMW 포로로서 스타트 합니다
+	CASE 3
+		PRINTFORMW 군주로서 스타트 합니다
+ENDSELECT
+
+SP_COUNTRY_START:LOCAL = RESULT + 1
+
+;이 시점에서 설정하고 있지 않다（시나리오의 초기설정 시점에서 설정하고 있지 않다）라면 결정해 둔다
+IF SP_COUNTRY_RANK:LOCAL == 0
+	FIRST_LINE = LINECOUNT
+	$SHOW_LOOP
+	CALL SP_COUNTRY_START_SETTING(LOCAL)
+ENDIF
+
+RETURN 1
+
+
+;-------------------------------------------------
+;주인공 선택
+;-------------------------------------------------
+@SELECT_MASTER
+#DIM 구MASTERID
+#DIM 선택MASTERID
+#DIM 이어받아사용가능
+#DIM FIRST_LINE
+VARSET LOCAL
+LOADGLOBAL
+
+;쇼우 평가를 준비
+CALL TMP_PREPARE_CHARA_STARS()
+
+VARSET 구MASTERID
+VARSET 선택MASTERID
+
+IF FLAG:주회수 > 1
+	구MASTERID = GET_ID(MASTER)
+	;세력 군주가 아닌지, 군주에서도 자신이 거두는 세력으로 스타트 한다면 계승해 이용할 수 있다. 다만 특수 세력 소질이 있는 경우는 문답 무용으로 NG. 또, 주인공이 「당신」의 경우, 작성이 끝난 상태인 것
+	이어받아사용가능 = (CFLAG:MASTER:소속 == FLAG:OP선택세력 || GET_COUNTRY_BOSS(CFLAG:MASTER:소속) != MASTER) && TALENT:MASTER:특수세력소질 == 0 && (MASTER != NAME_TO_CHARA("당신") || FLAG:당신작성이끝난상태)
+ELSE
+	구MASTERID = 0
+	이어받아사용가능 = 1
+ENDIF
+
+FIRST_LINE = LINECOUNT
+$SHOW_LOOP
+
+CALL SINGLE_DRAWLINE
+PRINTL ★★주인공을 선택해 주세요★★
+
+SIF FLAG:OP선택세력 <= 0
+	PRINTL ※특수한 스타트를 선택하고 있으므로, 기존 캐릭터 일람에 군주 이외의 전캐릭터가 표시됩니다
+;2주째 이후에 선택 세력과 다른 세력의 군주의 경우, 지난주와 같은 선택을 시키면 곤란하기 때문에 선택 불가로 한다
+IF 구MASTERID > 0 && !이어받아사용가능
+	IF MASTER == NAME_TO_CHARA("당신") && !FLAG:당신작성이끝난상태
+		;아직 작성하지 않은 경우는 일부러 표시하지 않아 좋아
+	ELSEIF TALENT:MASTER:특수세력소질
+		CALL COLOR_PRINTL("전의 주회에 특수 세력 고유의 캐릭터를 이용했기 때문에, 「저번 주회와 같음」을 이용할 수 없습니다", 칼라_주의)
+	ELSE
+		CALL COLOR_PRINTL(@"※전회의 주인공 %조사처리(ANAME(MASTER),"가")% 다른세력의 군주를 하고 있기 때문에, 「저번 주회와 같음」을 이용할 수 없습니다", 칼라_주의)
+	ENDIF
+ENDIF
+CALL SINGLE_DRAWLINE
+
+;여기로부터 등록 캐릭터의 표시
+PRINTBUTTON "[당신을 신규 작성]", 0
+IF FIND_CHARADATA(TOSTR(-2))
+	PRINTBUTTON "[보존 끝난 데이터를 이용]", 97
+ELSEIF FLAG:당신작성이끝난상태 && MASTER != NAME_TO_CHARA("당신")
+	PRINTL
+	PRINTBUTTON @"[%조사처리(ANAME(NAME_TO_CHARA("당신")),"를")% 선택]", 2
+ENDIF
+IF FINDELEMENT(SP_COUNTRY_START, 특수세력스타트_군주) != -1
+	PRINTL
+	PRINTBUTTON "[특수 세력 고유의 군주를 이용]", 1
+	PRINTFORM ※다음의 주회시, 계속해 이용할 수 없습니다
+ENDIF
+;2주째 이후에 이어받음을 사용할 수 있다면
+IF 구MASTERID > 0 && 이어받아사용가능
+	PRINTL
+	PRINTBUTTON @"[저번 주회의 주인공 %조사처리(ANAME(MASTER),"로")% 플레이]", 98
+ENDIF
+
+PRINTL 
+CALL SINGLE_DRAWLINE
+IF FLAG:OP선택세력 > 0
+	PRINTBUTTON "[세력 소속의 캐릭터를 사용]", 99
+	PRINTL 
+	CALL SINGLE_DRAWLINE
+ELSE
+	PRINTBUTTON "[군주 이외의 캐릭터를 사용]", 99
+	PRINTL
+	CALL SINGLE_DRAWLINE
+ENDIF
+PRINTBUTTON "[돌아온다]", 9999
+PRINTL
+
+$INPUT_LOOP
+INPUT
+
+;신규 작성
+IF RESULT == 0
+	LOCAL:1 = NAME_TO_CHARA("당신")
+	CSTR:(LOCAL:1):0 = 
+	CSTR:(LOCAL:1):1 = 당신
+	CSTR:(LOCAL:1):98 = 
+	FOR LOCAL, 0, MAX_TAG
+		TAG:(LOCAL:1):LOCAL = -1
+	NEXT
+	CALL INIT_CHARA(LOCAL:1)
+	CALL MASTER_EDIT(LOCAL:1)
+	선택MASTERID = GET_ID(RESULT)
+	FLAG:당신신규작성 = 1
+ELSEIF RESULT == 97
+	LOCAL:1 = NAME_TO_CHARA("당신")
+	CALL LOAD_CUSTOM_DATA(-2)
+	LOCAL:2 = RESULT
+	;커스텀 캐릭터의 CSTR:99는 사라지고 있기 때문에 복원
+	CSTR:(LOCAL:2):99 = 당신
+	TALENT:(LOCAL:2):커스텀캐릭터 = 0
+	;구 「당신」라고 읽어들여 온 「당신」의 교체
+	SWAP CFLAG:(LOCAL:1):캐릭터ＩＤ, CFLAG:(LOCAL:2):캐릭터ＩＤ
+	선택MASTERID = GET_ID(LOCAL:2)
+	FLAG:당신신규작성 = 1
+	NO:(LOCAL:2) = NO:(LOCAL:1)
+	NO:(LOCAL:1) = __INT_MAX__
+	CALL SWAP_CHARA(LOCAL:1, LOCAL:2)
+	CALL DELETE_CHARA(LOCAL:2)
+;고유 군주 이용
+ELSEIF RESULT == 1 && FINDELEMENT(SP_COUNTRY_START, 특수세력스타트_군주) != -1
+	SP_COUNTRY_START_CHANGE_BOSS = 0
+	CALL SWAP_CHARA(MASTER, NAME_TO_CHARA("당신"))
+	RETURN 1
+ELSEIF RESULT == 2 && FLAG:당신작성이끝난상태 && MASTER != NAME_TO_CHARA("당신")
+	선택MASTERID = GET_ID(NAME_TO_CHARA("당신"))
+;저번 주회와 같음
+ELSEIF RESULT == 98 && 구MASTERID > 0
+	IF !이어받아사용가능
+		PRINTFORMW 전회의 주인공이, 선택한 세력 이외의 세력의 군주입니다. 「저번 주회와 같음」은 이용할 수 없습니다
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+	ENDIF
+	선택MASTERID = GET_ID(MASTER)
+ELSEIF RESULT == 9999
+	RETURN 0
+;기존의 캐릭터를 선택
+ELSEIF RESULT == 99
+	CALL SINGLE_DRAWLINE()
+	CALL SELECT_CHARA_LIST_ONLY_LOGIC_SLG("SELECT_MASTER", "NONE")
+	IF RESULT == -1
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+	ENDIF
+	선택MASTERID = GET_ID(RESULT)
+ELSE
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ENDIF
+
+
+CALL TMP_PREPARE_CHARA_STARS()
+
+CALL SINGLE_DRAWLINE
+CALL SHOW_INFO(ID_TO_CHARA(선택MASTERID))
+CALL SINGLE_DRAWLINE
+
+PRINTBUTTON " [이 캐릭터를 주인공으로 해 개시]", 0
+PRINTL 
+PRINTBUTTON " [돌아온다]", 9
+PRINTL 
+
+REDRAW 0
+
+$INPUT_LOOP2
+INPUT
+
+;
+SELECTCASE RESULT
+	;이 캐릭터를 주인공으로 한다
+	CASE 0
+		SIF FLAG:당신신규작성
+			FLAG:당신작성이끝난상태 = 1
+		REDRAW 1
+		;2주째 이후라면, MASTER와 「당신」를 바꿔 넣어 바탕으로 되돌린다
+		;MASTER가 「당신」이외라고, 줄이 질척질척이 되어 버리므로（ID의 구조가 있고 문제 없다고 생각하는데）
+		IF 구MASTERID > 0
+			CALL SWAP_CHARA(MASTER, NAME_TO_CHARA("당신"))
+			CALL NEWGAME_SWAP_RELATIONS(ID_TO_CHARA(구MASTERID))
+		ENDIF
+		;MASTER와 선택한 MASTER를 바꿔 넣는다
+		CALL SWAP_CHARA(MASTER, ID_TO_CHARA(선택MASTERID))
+
+		;주인공의 소속을 선택한 세력으로 한다
+		;기존 세력 이외의 스타트를 선택하고 있는 경우는 우선 0으로 해 둔다
+		CALL CHANGE_COUNTRY(MASTER, MAX(FLAG:OP선택세력, 0), 1)
+		;방랑할 가능성이 있으므로 눌러꺾는다
+		CFLAG:MASTER:특수상태 = 0
+
+		;체력 기력 정신력의 현재가를 최대치로 변경
+		FOR LOCAL:2, 0, VARSIZE("BASE")
+			BASE:MASTER:(LOCAL:2) = MAXBASE:MASTER:(LOCAL:2)
+		NEXT
+
+		;특수 세력 스타트로 한편 군주를 갈아끼우기라고 있었을 경우, 훨씬 훗날 처리가 필요하게 되므로 플래그를 세워 둔다
+		SIF FINDELEMENT(SP_COUNTRY_START, 특수세력스타트_군주) != -1
+			SP_COUNTRY_START_CHANGE_BOSS = 1
+
+		;주인공을 변경한, 혹은 「당신」를 신규에 작성했을 경우는 함락이 끝난 플래그 리셋트（보너스를 다시 받아들이도록(듯이)하기 위해(때문)）
+		IF 선택MASTERID != 구MASTERID || FLAG:당신신규작성
+			FLAG:함락인원수 = 0
+			CVARSET CFLAG, GETNUM(CFLAG, "함락완료"), 0
+			;이식 대책으로서 호감도등 신품인 상태가 아닌 캐릭터가 혼자라도 있으면, 보너스 수령수는 리셋트 하지 않는다
+			LOCAL:1 = 0
+			FOR LOCAL, 0, CHARANUM
+				IF !(ALLSAMES(0, CFLAG:LOCAL:호감도, CFLAG:LOCAL:종속도, CFLAG:LOCAL:의존도, CFLAG:LOCAL:지배도) || IS_LOVER(LOCAL) || IS_SLAVE(LOCAL) || IS_SLAVED_BY(LOCAL)) && GET_ID(LOCAL) != 구MASTERID
+					LOCAL:1 = 1
+					BREAK
+				ENDIF
+			NEXT
+			SIF !LOCAL:1
+				FLAG:함락보너스수령수 = 0
+		ENDIF
+
+		RETURN 1
+	;돌아온다
+	CASE 9
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+ENDSELECT
+CLEARLINE 1
+GOTO INPUT_LOOP2
+
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_SELECT_MASTER(대상)
+#DIM 대상
+;어딘가의 세력을 선택했을 경우는, 거기 소속의 캐릭터 이외는 연주한다.
+SIF FLAG:OP선택세력 > 0 && CFLAG:대상:소속 != FLAG:OP선택세력
+	RETURN 0
+;특수한 스타트를 선택했을 경우, 군주는 연주한다.
+SIF FLAG:OP선택세력 <= 0 && GET_COUNTRY_BOSS(CFLAG:대상:소속) == 대상
+	RETURN 0
+;「당신」를 아직 만들지 않으면 안 돼
+SIF !FLAG:당신작성이끝난상태 && 대상 == NAME_TO_CHARA("당신")
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;군주인 고정 캐릭터 사용시에, 타세력과의 관계를 MASTER로 옮겨 두는 함수
+;SWAP_CHARA와 병용 한다
+;ARG:0 =교환 대상
+;-------------------------------------------------
+@NEWGAME_SWAP_RELATIONS(ARG:0)
+#DIM REL_LIKE_COPY,1
+#DIM REL_HATE_COPY,1
+FOR LOCAL, 0, 1000
+	REL_LIKE_COPY = REL_LIKE:(ARG:0):LOCAL
+	REL_HATE_COPY = REL_HATE:(ARG:0):LOCAL
+	REL_LIKE:(ARG:0):LOCAL = REL_LIKE:MASTER:LOCAL
+	REL_HATE:(ARG:0):LOCAL = REL_HATE:MASTER:LOCAL
+	REL_LIKE:MASTER:LOCAL = REL_LIKE_COPY
+	REL_HATE:MASTER:LOCAL = REL_HATE_COPY
+NEXT
+FOR LOCAL, 0, CHARANUM
+	REL_LIKE_COPY = REL_LIKE:(LOCAL):MASTER
+	REL_HATE_COPY = REL_HATE:(LOCAL):MASTER
+	REL_LIKE:(LOCAL):MASTER = REL_LIKE:(LOCAL):(ARG:0)
+	REL_HATE:(LOCAL):MASTER = REL_HATE:(LOCAL):(ARG:0)
+	REL_LIKE:(LOCAL):(ARG:0) = REL_LIKE_COPY
+	REL_HATE:(LOCAL):(ARG:0) = REL_HATE_COPY
+NEXT
+
+
+;-------------------------------------------------
+;개양 스타트시 용, 세력의 설정
+;-------------------------------------------------
+@START_WITH_NEW_COUNTRY
+#DIM FIRST_LINE
+#DIM 세력
+#DIM 도시
+#DIM 대상
+#DIM 소거행
+#DIM 사관, 3000
+#DIM 랜덤가능
+랜덤가능 = 0
+FOR LOCAL, 1, CITY_NUM + 1
+	IF !IS_COUNTRY(CITY_OWNER:LOCAL)
+		랜덤가능 = 1
+		BREAK
+	ENDIF
+NEXT
+
+세력 = GET_NEW_COUNTRY()
+
+CALL SINGLE_DRAWLINE
+CALL SET_CITY_COLOR_COUNTRY
+CALL SET_CITY_COLOR_UNIT
+CALL DRAWMAP
+CALL RESET_CITY_COLOR
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTL 신세력시작 도시를 선택해 주세요
+PRINTL 세력이 소유하고 있는 도시는, 그 세력의 소유 도시수가 1의 경우는 선택할 수 없습니다
+CALL PRINTBUTTON_EX("[랜덤]", 1000, 랜덤가능)
+PRINTBUTTON "[돌아온다]", 0
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTL 
+
+
+$INPUT_LOOP_CITY
+INPUT
+
+IF RESULT == 0
+	RETURN -1
+ELSEIF RESULT == 1000 && 랜덤가능
+	WHILE 1
+		도시 = RAND(1, 1  + CITY_NUM + 1)
+		SIF !IS_COUNTRY(CITY_OWNER:도시)
+			BREAK
+	WEND
+	REDRAW 1
+	PRINTFORMW %GET_RELAYNAME(도시)%로 개양 합니다	
+ELSEIF RESULT >= 1001 && RESULT <= 1001 + CITY_NUM
+	도시 = RESULT - 1000
+	;지정된 도시가 존재해, 무소속인 경우
+	IF GET_RELAYNAME(도시) != "무명" && CITY_TYPE:(도시) == 0 && (CITY_OWNER:(도시) == 0 || GET_OWN_CITY(CITY_OWNER:(도시)) > 1)
+		REDRAW 1
+		PRINTFORMW %GET_RELAYNAME(도시)%로 개양 합니다
+	ELSE
+		CLEARLINE 1
+		GOTO INPUT_LOOP_CITY
+	ENDIF
+ELSE
+	CLEARLINE 1
+	GOTO INPUT_LOOP_CITY
+ENDIF
+
+CALL SINGLE_DRAWLINE
+PRINTL 자세력의 사관으로서 가세하는 캐릭터를 4명까지 선택할 수 있습니다
+PRINTL 덧붙여 군주는 선택할 수 없습니다
+CALL SINGLE_DRAWLINE
+CALL SELECT_CHARA_LIST_MULTI_ONLY_LOGIC_SLG(4, "START_WITH_NEW_COUNTRY", "NONE")
+
+FLAG:OP선택세력 = 세력
+CITY_OWNER:도시 = 세력
+COUNTRY_BOSS:세력 = GET_ID(MASTER)
+COUNTRY_COLOR:세력 = TALENT:MASTER:머리색 == 0 ? 0x404040 # TALENT:MASTER:머리색
+;경제 규모에 대한 최대병수의 반을 얻는다
+COUNTRY_SOLDIER:세력 = GET_SUM_ECONOMY(세력) / 20
+CITY_SOLDIER:도시 = 500
+CALL CHANGE_COUNTRY(MASTER, 세력, 1)
+FOR LOCAL, 0, SELECTED_CHARA_NUM
+	CALL CHANGE_COUNTRY(SELECTED_CHARA:LOCAL, 세력, 1)
+NEXT
+REDRAW 1
+RETURN
+
+;-------------------------------------------------
+;개양 스타트시 용, SELECT_CHARA_LIST_MULTI의 표시 논리
+;군주와 「당신」라고 주인공 이외의 고정 캐릭터
+;-------------------------------------------------
+@SELECT_CHARA_LIST_SHOW_LOGIC_START_WITH_NEW_COUNTRY(대상)
+#DIM 대상
+RETURN GET_COUNTRY_BOSS(CFLAG:대상:소속) != 대상 && !TALENT:대상:특수세력소질 && 대상 != NAME_TO_CHARA("당신") && 대상 != MASTER
+;-------------------------------------------------
+;「당신」를 신규에 작성했을 경우의 보너스
+;-------------------------------------------------
+@NEWLOOP_ANATA_BONUS
+#DIM FIRST_LINE
+#DIM 선택보너스
+FIRST_LINE = LINECOUNT
+CALL SINGLE_DRAWLINE
+CALL COLOR_PRINTL("당신 신규 작성 보너스!", 칼라_주의)
+PRINTFORML 「당신」를 신규에 작성해 주인공으로 했으므로, 보너스를 받을 수 있습니다
+PRINTFORML 어느 것으로 합니까? (모두 나중에 손에 들어 옵니다)
+{
+CALL ASK_MULTI(
+	"소질【폭주가】",                 "소질【하늘의사자】",           "소질【군주의그릇】", "소질【구심력】", "소질【요술지식】(와)과 요술 스테이터스 10",
+	"소질【기사】",                 "스킬【초성장력】【노력가】", "소질【절륜】",     "금 5만",       " 아이템【최면술】",
+	 "【쵸로인】【합의】3 인분", "간단 조교 세트",             "필요없다")
+}
+선택보너스 = RESULT
+SELECTCASE 선택보너스
+	CASE 0
+		PRINTFORML 술에 매우 강해지는 소질 「폭주가」로 합니까?
+		PRINTFORML (통상 취득에는 대량의 음주가 필요하기 때문에, 드는 돈과 수고는 보너스 그 중에서 제일입니다)
+	CASE 1
+		PRINTFORML 호감도를 얻기 쉬워지는 소질 「하늘의사자」로 합니까?
+		PRINTFORML (연모 시키는 루트에 들어오기 쉬워집니다)
+	CASE 2
+		PRINTFORML 종속도를 얻기 쉬워지는 소질 「군주의그릇」으로 합니까?
+		PRINTFORML (굴복 시키는 루트에 들어오기 쉬워집니다)
+	CASE 3
+		PRINTFORML 의존도를 얻기 쉬워지는 소질 「구심력」으로 합니까?
+		PRINTFORML (연모·종속 어느 쪽의 루트에서도 필요한 값인 것으로 편리합니다)
+	CASE 4
+		PRINTFORML 촉수를 취급할 수 있게 되는 소질 「요술지식」이라고, ＳＬＧ스테이터스 「요술」10살트로 합니까?
+		PRINTFORML (요술은 매우 단련하기 어렵기 때문에 10에서도 귀중합니다）
+	CASE 5
+		PRINTFORML  아이템 개발이 빨리 되어, 효과가 높아지는 소질 「기사」로 합니까?
+		PRINTFORML (많은 아이템은 개발→구입이라는 프로세스를 거치므로, 가져 두면 수수하게 편리합니다)
+	CASE 6
+		PRINTFORML ＳＬＧ스테이터스의 성장이 빨라져, 매턴 경험값이 들어오는 스킬 「초성장력」,
+		PRINTFORML 전투에 승리했을 때에 얻을 수 있는 경험치가 증가해, 매턴 경험값이 들어오는 스킬 「노력가」세트로 합니까?
+		PRINTFORML （육성이 눈에 보여 편해지므로, 어엿한 무장·지장이 되고 싶으면 꼭 갖고 싶은 스킬입니다）
+	CASE 7
+		PRINTFORML 조교에 의한 체력·기력의 감소가 매우 적게 되는 소질 「절륜」으로 합니까?
+		PRINTFORML （조교중에 주인공의 체력이 다하면 조교가 종료해 버립니다）
+		PRINTFORML （상당히 격렬한에 소비하므로, 있으면 꽤 편리합니다）
+	CASE 8
+		PRINTFORML 금은힘. 금 5만으로 합니까?
+		PRINTFORML （사관의 고용, 군사의 고용, 아이템 구입에 훈련……돈은 얼마 있어도 충분하지 않습니다)
+		PRINTFORML （이만큼 있으면, 개막으로부터 강력한 사관을 고용할 수도 있겠지요）
+	CASE 9
+		PRINTFORML 발동하는 것으로 커맨드 실행 판정에 보너스가 드는 「최면술」을 습득합니까?
+		PRINTFORML （구입까지의 전제 조건이 많아, 가장 취득의 귀찮은 아이템의 하나입니다）
+		PRINTFORML （연습이 필요합니다만, 충분히 단 깨면 대부분의 캐릭터에게 용이하게 자기 마음대로할 수 있게 됩니다）
+	CASE 10
+		PRINTFORML 가지고 있으면 아주 쉬워지는 은폐 소질 「쵸로인」이라고, 에로한 일을 하는 허가 「합의」를 3명까지 부여합니까?
+		PRINTFORML (덤으로, 공략에 필요한 파라미터인 호감도·의존도·복종도·지배도를+1000해 둡니다)
+		PRINTFORML (개막 에로한 일 하고 싶은 사람용)
+	CASE 11
+		PRINTFORML 조교 아이템의 채워 맞추어, 간단 조교 세트로 합니까?
+		PRINTFORML （로터, 바이브, 애널바이브, 클리/유두캡, 페니스밴드, 오나홀, 밧줄, 채찍, 눈을 가려, 로션 * 10, 절륜환 * 5, 비디오와 비디오 테잎 * 5）
+		PRINTFORML （ 아이템 개발에 걸리는 시간을 날릴 수 있습니다. 사용하는 상대가 없으면 의미 없지만 네! ）
+	CASE 12
+		PRINTFORML 진짜로……?
+		PRINTFORML (실은 나중에별의 보너스!   라든지 진짜가 아닙니다)
+		PRINTFORML (묶기 플레이용. 너는 것을 좋아하는 것인가?)
+ENDSELECT
+
+CALL ASK_YN
+
+IF RESULT == 1
+	CLEARLINE LINECOUNT - FIRST_LINE
+	RESTART
+ENDIF
+
+SELECTCASE 선택보너스
+	CASE 0
+		TALENT:MASTER:폭주가 = 1
+	CASE 1
+		TALENT:MASTER:하늘의사자 = 1
+	CASE 2
+		TALENT:MASTER:군주의그릇 = 1
+	CASE 3
+		TALENT:MASTER:구심력 = 1
+	CASE 4
+		TALENT:MASTER:요술지식 = 1
+		ABL:MASTER:요술 = 10
+	CASE 5
+		TALENT:MASTER:기사 = 1
+	CASE 6
+		CALL LEARN_SKILL_GENERAL_BY_NAME(MASTER, "초성장력")
+		CALL LEARN_SKILL_GENERAL_BY_NAME(MASTER, "노력가")
+	CASE 7
+		TALENT:MASTER:절륜 = 1
+	CASE 8
+		MONEY += 50000
+	CASE 9
+		ITEM:GETNUM(ITEM, "최면술") = 1
+	CASE 10
+		PRINTFORML 분명하게 3명 지정하고 있지 않아도 결정되어져 버리므로 조심해!
+		CALL SINGLE_DRAWLINE
+		CALL SELECT_CHARA_LIST_MULTI_ONLY_LOGIC_SLG(3, "NONE", "NONE")
+		FOR LOCAL, 0, SELECTED_CHARA_NUM
+			LOCAL:1 = SELECTED_CHARA:LOCAL 
+			TALENT:(LOCAL:1):쵸로인 = 1
+			TALENT:(LOCAL:1):합의 = 1
+			CFLAG:(LOCAL:1):호감도 += 1000
+			CFLAG:(LOCAL:1):종속도 += 1000
+			CFLAG:(LOCAL:1):의존도 += 1000
+			CFLAG:(LOCAL:1):지배도 += 1000
+		NEXT
+	CASE 11
+		ITEM:로터            = 1
+		ITEM:바이브              = 1
+		ITEM:애널바이브        = 1
+		ITEM:클리캡        = 1
+		ITEM:유두캡      = 1
+		ITEM:페니스밴드        = 1
+		ITEM:오나홀          = 1
+		ITEM:밧줄                  = 1
+		ITEM:채찍                  = 1
+		ITEM:눈가리개              = 1
+		ITEM:로션         += 10
+		ITEM:절륜환             += 5
+		ITEM:비디오카메라        = 1
+		ITEM:비디오테잎       += 5
+		ITEMSALES:로터       = 0
+		ITEMSALES:바이브         = 0
+		ITEMSALES:애널바이브   = 0
+		ITEMSALES:클리캡   = 0
+		ITEMSALES:유두캡 = 0
+		ITEMSALES:페니스밴드   = 0
+		ITEMSALES:오나홀     = 0
+		ITEMSALES:밧줄             = 0
+		ITEMSALES:채찍             = 0
+		ITEMSALES:눈가리개         = 0
+		ITEMSALES:비디오카메라   = 0
+	CASE 12
+		PRINTFORML 호기심이다
+ENDSELECT
+
+;-------------------------------------------------
+;랜덤 캐릭터와 성지식의 설정
+;-------------------------------------------------
+@EXTRA_SETTING
+#DIM FIRST_LINE
+#DIM 랜덤캐릭터
+#DIM 성지식최대
+#DIM 군주
+FIRST_LINE = LINECOUNT
+CALL SINGLE_DRAWLINE
+
+IF FLAG:OP랜덤캐릭터사용 == 0
+	PRINTFORM 랜덤 캐릭터:
+	CALL PRINT_SELECT_BUTTON("[사용한다]", 0, 랜덤캐릭터)
+	CALL PRINT_SELECT_BUTTON("[사용하지 않는다]", 1, !랜덤캐릭터)
+	PRINTL
+ENDIF
+
+IF !FLAG:관전모드
+	PRINTFORM 　　 성지식:
+	CALL PRINT_SELECT_BUTTON("[5로 한다]", 10, 성지식최대)
+	CALL PRINT_SELECT_BUTTON("[그대로]", 11, !성지식최대)
+	PRINTL
+ENDIF
+
+IF FLAG:OP선택세력 > 0 && COUNTRY_BOSS:(CFLAG:MASTER:소속) != GET_ID(MASTER) && !IS_SP_COUNTRY(CFLAG:MASTER:소속)
+	PRINTFORM 　　　 군주:
+	CALL PRINT_SELECT_BUTTON("[군주로 스타트]", 20, 군주)
+	CALL PRINT_SELECT_BUTTON("[그대로]", 21, !군주)
+	PRINTL
+ENDIF
+
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "[완료]", 100
+
+INPUT
+
+IF RESULT == 100
+	IF FLAG:OP랜덤캐릭터사용 == -1
+		FLAG:랜덤캐릭터사용 = 0
+	ELSEIF FLAG:OP랜덤캐릭터사용 == 1
+		FLAG:랜덤캐릭터사용 = 1
+	ELSEIF 랜덤캐릭터
+		FLAG:랜덤캐릭터사용 = 1
+	ELSEIF !랜덤캐릭터
+		FLAG:랜덤캐릭터사용 = 0
+	ENDIF
+	IF 성지식최대
+		ABL:MASTER:성지식 = 5
+	ENDIF
+	IF 군주
+		COUNTRY_BOSS:(CFLAG:MASTER:소속) = GET_ID(MASTER)
+	ENDIF
+	RETURN
+ELSEIF RESULT == 0 && FLAG:OP랜덤캐릭터사용 == 0
+	랜덤캐릭터 = 1
+ELSEIF RESULT == 1
+	랜덤캐릭터 = 0
+ELSEIF RESULT == 10
+	성지식최대 = 1
+ELSEIF RESULT == 11
+	성지식최대 = 0
+ELSEIF RESULT == 20 && FLAG:OP선택세력 > 0 && COUNTRY_BOSS:(CFLAG:MASTER:소속) != GET_ID(MASTER) && !IS_SP_COUNTRY(CFLAG:MASTER:소속)
+	군주 = 1
+ELSEIF RESULT == 21
+	군주 = 0
+ENDIF
+
+CLEARLINE LINECOUNT - FIRST_LINE
+RESTART
+
+;-------------------------------------------------
+;랜덤 캐릭터를 사용할지 어떨지 선택
+;-------------------------------------------------
+@SELECT_RCHARA
+IF FLAG:OP랜덤캐릭터사용 == -1
+	FLAG:랜덤캐릭터사용 = 0
+ELSEIF FLAG:OP랜덤캐릭터사용 == 1
+	FLAG:랜덤캐릭터사용 = 1
+ELSE
+	CALL SINGLE_DRAWLINE
+	PRINTFORML 이 시나리오에서는 랜덤 캐릭터（랜덤인 이름을 가지는 모브적인 캐릭터）있는 설정으로 할 수 있습니다
+	PRINTFORML 랜덤 캐릭터를 사용합니까?
+	CALL ASK_YN
+	IF RESULT == 0
+		FLAG:랜덤캐릭터사용 = 1
+	ELSE
+		FLAG:랜덤캐릭터사용 = 0
+	ENDIF
+ENDIF
+
+
+
+;-------------------------------------------------
+;커스텀 캐릭터등의 설정
+;-------------------------------------------------
+@SETUP_SPECIAL_CHARACTERS()
+#DIM 후보, 3000
+#DIM 후보수
+#DIM 배치처, 3000
+#DIM FIRST_LINE
+#DIM 페이지
+
+VARSET 후보,   -1
+VARSET 후보수, 0
+VARSET 배치처, -1
+VARSET 페이지
+
+FOR LOCAL, 0, CHARANUM
+	SIF IS_FIXED_CHARA(LOCAL) || IS_SP_COUNTRY_CHARA(LOCAL) || NAME_TO_CHARA("당신") == LOCAL || LOCAL == MASTER
+		CONTINUE
+	후보:후보수 = LOCAL
+	후보수 ++
+NEXT
+
+FOR LOCAL, 0, MAX_CUSTOM_CHARA
+	SIF !FIND_CHARADATA(TOSTR(LOCAL))
+		CONTINUE
+	CALL LOAD_CUSTOM_DATA(LOCAL)
+	TALENT:RESULT:커스텀캐릭터 = 2
+	후보:후보수 = RESULT
+	후보수 ++
+NEXT
+
+SIF 후보수 == 0
+	RETURN 0
+
+FIRST_LINE = LINECOUNT
+
+$SHOW_LOOP
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 계승한 캐릭터·커스텀 캐릭터의 출현 설정을 실시합니다
+CALL SINGLE_DRAWLINE
+
+FOR LOCAL, 페이지 * 20, MIN(페이지 * 20 + 20, 후보수)
+	PRINTFORM [{LOCAL}]%ANAME(후보:LOCAL)% - 
+	IF 배치처:LOCAL == -1
+		PRINTFORML 등장하지 않는다
+	ELSEIF 배치처:LOCAL == 0
+		PRINTFORML 방랑
+	ELSE
+		PRINTFORML %ANAME(GET_COUNTRY_BOSS(배치처:LOCAL))%
+	ENDIF
+NEXT
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "[이전페이지]", 10000
+PRINTFORM {페이지+1}/{후보수 / 20 + 1}
+PRINTBUTTON "[다음페이지]", 10001
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "[일괄]", 10003
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "[완료]", 10002
+
+INPUT
+
+IF RESULT == 10000
+	페이지 = ROUND_DECREMENT(페이지, 0, 후보수 / 20)
+ELSEIF RESULT == 10001
+	페이지 = ROUND_INCREMENT(페이지, 0, 후보수 / 20)
+ELSEIF RESULT == 10003
+	FOR LOCAL, 0, MAX_COUNTRY
+		SIF !IS_COUNTRY(LOCAL)
+			CONTINUE
+		PRINTFORML [{LOCAL}] %ANAME(GET_COUNTRY_BOSS(LOCAL))%
+	NEXT
+	PRINTBUTTON "[방랑]", 0
+	PRINTL
+	PRINTBUTTON "[등장하지 않는다]", -1
+	PRINTL
+	PRINTBUTTON "[중지]", 99
+	INPUT
+	IF RESULT == 99
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+	ELSEIF (INRANGE(RESULT, 1, MAX_COUNTRY - 1) && IS_COUNTRY(RESULT)) || GROUPMATCH(RESULT, 0, -1)
+		LOCAL:1 = RESULT
+		FOR LOCAL, 0, 후보수
+			배치처:LOCAL = LOCAL:1
+		NEXT
+	ENDIF
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT == 10002
+	FOR LOCAL, 후보수 - 1, -1,  -1
+		IF 배치처:LOCAL == -1
+			CALL DELETE_CHARA(후보:LOCAL)
+		ELSEIF 배치처:LOCAL == 0
+			CFLAG:(후보:LOCAL):소속 = 0
+			CFLAG:(후보:LOCAL):특수상태 = 특수상태_방랑
+		ELSE
+			CFLAG:(후보:LOCAL):소속 = 배치처:LOCAL
+			CFLAG:(후보:LOCAL):특수상태 = 0
+		ENDIF
+	NEXT
+	RETURN
+ENDIF
+
+IF INRANGE(RESULT, 0, 후보수)
+	LOCAL:1 = RESULT
+	FOR LOCAL, 0, MAX_COUNTRY
+		SIF !IS_COUNTRY(LOCAL)
+			CONTINUE
+		PRINTFORML [{LOCAL}] %ANAME(GET_COUNTRY_BOSS(LOCAL))%
+	NEXT
+	PRINTBUTTON "[방랑]", 0
+	PRINTL
+	PRINTBUTTON "[등장하지 않는다]", -1
+	PRINTL
+	INPUT
+	IF GROUPMATCH(RESULT, 0, -1)
+		배치처:(LOCAL:1) = RESULT
+	ELSEIF IS_COUNTRY(RESULT)
+		배치처:(LOCAL:1) = RESULT
+	ENDIF
+ENDIF
+
+CLEARLINE LINECOUNT - FIRST_LINE
+GOTO SHOW_LOOP
+
+@LEVEL_SETTING
+#DIM FIRST_LINE
+#DIM 난이도
+FIRST_LINE = LINECOUNT
+난이도 = CONFIG:314
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 게임의 난이도를 설정합니다(향후 설정에서 변경할 수 있습니다)
+PRINT 현재 난이도 : 
+SELECTCASE 난이도
+	CASE 0
+		SETCOLOR 칼라_초록
+		PRINTL [ EASY ]
+		RESETCOLOR
+	CASE 1
+		SETCOLOR 칼라_시안
+		PRINTL [ NOMAL ]
+		RESETCOLOR
+	CASE 2
+		SETCOLOR 칼라_오렌지
+		PRINTL [ HARD ]
+		RESETCOLOR
+	CASE 3
+		SETCOLOR 칼라_파빨강
+		PRINTL [ LUNATIC ]
+		RESETCOLOR
+	CASE 4
+		SETCOLOR 칼라_경고
+		PRINTL [ NIGHTMARE ]
+		RESETCOLOR
+ENDSELECT
+PRINTL
+SETCOLOR 칼라_초록
+PRINTBUTTON " [ EASY      ]", 0
+RESETCOLOR
+PRINTL （부담없이 즐기고 싶은 당신에게）
+SETCOLOR 칼라_시안
+PRINTBUTTON " [ NOMAL     ]", 1
+RESETCOLOR
+PRINTL （보통 난이도입니다）
+SETCOLOR 칼라_오렌지
+PRINTBUTTON " [ HARD      ]", 2
+RESETCOLOR
+PRINTL （전략이 필요합니다）
+SETCOLOR 칼라_파빨강
+PRINTBUTTON " [ LUNATIC   ]", 3
+RESETCOLOR
+PRINTL （주회 전제의 난이도입니다）
+SETCOLOR 칼라_경고
+PRINTBUTTON " [ NIGHTMARE ]", 4
+RESETCOLOR
+PRINTL （무리）
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "[완료]", 100
+
+INPUT
+
+IF INRANGE(RESULT, 0, 4)
+	난이도 = RESULT
+	SELECTCASE 난이도
+		CASE 0
+			CONFIG:314 = 0
+		CASE 1
+			CONFIG:314 = 1
+		CASE 2
+			CONFIG:314 = 2
+		CASE 3
+			CONFIG:314 = 3
+		CASE 4
+			CONFIG:314 = 4
+	ENDSELECT
+ELSEIF RESULT == 100
+	RETURN
+ENDIF
+
+CLEARLINE LINECOUNT - FIRST_LINE
+RESTART
+
+@FONT_SETECT
+PRINTL 맵 폰트 선택
+PRINTBUTTON " [ 굴림체 ]", 0
+PRINT   
+PRINTBUTTON " [ MS Gothic ]", 1
+PRINTL
+
+INPUT
+
+IF RESULT == 0
+	맵_폰트 '= "굴림체"
+ELSEIF RESULT == 1
+	맵_폰트 '= "MS Gothic"
+ENDIF
+
+RETURN

@@ -1,0 +1,90 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_DAIJOBU_DANGER_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_DAIJOBU_DANGER_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_DAIJOBU_DANGER(대상)
+#DIM 대상
+PRINTFORML 탐색중, 백의를 입은 이상한 인물과 만났다
+PRINTFORML \@ IS_MALE(대상) ? 그녀 # 그\@는 스스로를 의사와 자칭해, 실험에 교제해 주지 않을까 말해 왔다
+PRINTFORML 이상하지만, 왜일까 묘한 설득력이 있다
+PRINTFORMW 어떻게 하지?
+
+PRINTL
+CALL ASK_YN("받는다", "거절한다")
+IF RESULT == 1
+	PRINTFORML 아니, 역시 이런 이상한 실험에는 교제할 수 없다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 거절하면 빨리 떠났다
+	RETURN 1
+ENDIF
+
+PRINTFORML 재미있을 것 같다
+PRINTFORML 실험을 받는 일로 했다
+PRINTFORMW 박사는 뛰어 오르고 기뻐하면, %ANAME(대상)%의 팔을 당겨 가까이의 오두막으로 데리고 들어갔다
+PRINTFORML 
+PRINTFORML 어슴푸레한 방 안에서 %조사처리(ANAME(대상),"는")% 의자에 자리 헤드기어를 붙이고 있다
+PRINTFORML 아무것도 안보이게 되어 과연 불안하게 되지만, 벨트로 고정되고 있고 움직일 수 없었다
+PRINTFORML 박사가 뭔가의 스윗치를 넣으면 눈앞이 새하얗게 되어, %조사처리(ANAME(대상),"는")% 의식을 잃었다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF IS_FEMALE(대상)
+	PRINTFORML 
+	PRINTFORML %조사처리(ANAME(대상),"는")% 암캐같이 혀를 늘어뜨려, 의자에 앉는 박사에 걸쳐 허리를 흔들고 있다
+	PRINTFORML 페니스에 질벽을 비비어질 때마다 좋아해, 꽉꽉과 단단히 조인다
+	PRINTFORML 박사가 작게 신음소리를 내, %ANAME(대상)%의 헌신적인 태도를 칭찬한다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 황홀한 표정을 보여, 더욱 격렬하게 허리를 거절해 추잡하게 몸을 구불거리게 할 수 있다
+	PRINTFORML 이윽고 박사가 %ANAME(대상)%의 허리를 붙잡기 페니스를 깊숙히 침울해지게 해 포상의 질내사정을 예고한다
+	PRINTFORML 그 말에 %조사처리(ANAME(대상),"는")% 눈을 하트로 해, 그의 목에 껴안아 추잡하게 조르기의 말을 토한다
+	PRINTFORMW 자궁입구를 비틀어 열 수 있는 태내에 정액을 발해지면, %조사처리(ANAME(대상),"는")% 기쁨에 쳐 떨렸다
+	CALL FUCK(대상, "욕망, 봉사, 정애, 성교, Ｃ, Ｖ, Ｂ, Ｖ성교", "처녀상실, 질내사정", GET_SPERM_ID("의사"), @"박사의 \@RAND:2 ? 페니스 # 입술\@", "박사", "", "최면을 걸쳐지면서 조교")
+ELSE
+	PRINTFORML 
+	PRINTFORML 의자에 앉은 %조사처리(ANAME(대상),"는")% 걸치는 박사를 밀어올려, 종견과 같이 혀를 늘어뜨리면서 허리를 흔들고 있다
+	PRINTFORML 페니스가 질벽을 비빌 때마다 좋아해, 와 쿠퍼액이 튀어나온다
+	PRINTFORML 박사가 작게 허덕임%ANAME(대상)%의 헌신적인 태도를 칭찬한다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 황홀한 표정을 보여, 더욱 격렬하게 허리를 흔들어, 강하게 박사의 가슴에 달라붙는다
+	PRINTFORML 이윽고 박사가 %ANAME(대상)%의 허리에 다리를 얽히게 할 수 있는 페니스를 깊숙히 침울해지게 하면, 질내사정 하도록(듯이) 명령했다
+	PRINTFORML 그 말에 %조사처리(ANAME(대상),"는")% 눈을♥로 해, 그녀의 신체에 껴안으면, 미친 것처럼 허리를 격렬하게 밀어올린다
+	PRINTFORMW 자궁입구를 비틀어 열면, 화산의 분화같이 태내에 백탁을 토해냈다
+	CALL FUCK(대상, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "박사의 입술", "", "박사의 질", "최면을 걸쳐지면서 조교")
+ENDIF
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF RAND:3 == 0
+	PRINTFORML 실험은 성공한 것 같다!
+	PRINTFORML 신체에 힘이 넘치는 것을 느낀다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 박사에 예를 고해 떠났다
+	CALL PRINT_ADD_EXP(대상, "무투경험치", RAND:10 + 1, 1)
+	CALL PRINT_ADD_EXP(대상, "지략경험치", RAND:10 + 1, 1)
+	CALL PRINT_ADD_EXP(대상, "정치경험치", RAND:10 + 1, 1)
+ELSE
+	PRINTFORML 실험은 실패한 것 같다
+	PRINTFORML 체로부터 힘이 빠지는 것 같은 감각에 습격당했다
+	PRINTFORMW 박사는 빨리 떠나 갔다
+	SIF MAXBASE:대상:체력 - 100 < 1000
+		RETURN 1
+	MAXBASE:대상:체력 -= 100
+	CALL ICPRINT(@"체력 최대치가<100>내려,<{MAXBASE:대상:체력}>가 되었다", "W", 칼라_주의)
+ENDIF
+IF IS_FEMALE(대상)
+	PRINTFORML 대량으로 발해진 정액으로 희미하게 하복부가 부풀고 있던 일에, %조사처리(ANAME(대상),"는")% 깨닫지 않았다
+ELSE
+	PRINTFORML 대량으로 정액을 발한 것으로 희미하게 허리가 가벼워지고 있는 것을, %조사처리(ANAME(대상),"는")% 깨닫지 않았다
+ENDIF
+RETURN 1
+

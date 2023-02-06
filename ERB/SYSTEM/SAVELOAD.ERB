@@ -1,0 +1,586 @@
+﻿;-------------------------------------------------
+;데이터의 세이브
+;-------------------------------------------------
+@SAVE_GAME()
+#DIM FIRST_LINE
+#DIM CONST 최대페이지수 = 10
+#DIM CONST 세이브수 = 20
+#DIM 현재페이지수
+#DIM 로드가능, 200
+#DIMS 세이브명, 200
+#DIM 페이지복원이끝난상태
+
+IF !페이지복원이끝난상태
+	현재페이지수 = SAVELOAD_LASTPAGE
+	페이지복원이끝난상태 = 1
+ENDIF
+
+IF 현재페이지수 <= 0
+	현재페이지수 = 1
+ELSEIF 현재페이지수 > 최대페이지수
+	현재페이지수 = 최대페이지수
+ENDIF
+
+FOR LOCAL, 0, VARSIZE("로드가능")
+	CHKDATA LOCAL
+	;CHKDATA는 읽을 수 있는 데이터 때 0을 돌려준다  어떻게든 해 있어
+	로드가능:LOCAL = (RESULT == 0)
+	IF RESULT != 1
+		세이브명:LOCAL = %RESULTS%
+	ELSE
+		세이브명:LOCAL = ----
+	ENDIF
+NEXT
+
+FIRST_LINE = LINECOUNT
+
+$SHOW_LOOP
+
+CALL SINGLE_DRAWLINE
+FOR LOCAL, (현재페이지수 - 1) * 세이브수, 현재페이지수 * 세이브수
+	IF 로드가능:LOCAL
+		RESETCOLOR
+	ELSE
+		SETCOLOR 칼라_선택불가
+	ENDIF
+	PRINTFORML [{LOCAL, 3, LEFT}] %세이브명:LOCAL%
+NEXT
+RESETCOLOR
+
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "[이전페이지]", 9997
+PRINTFORM  Page{현재페이지수}/{최대페이지수} 
+PRINTBUTTON "[다음페이지]", 9998
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "[돌아온다]", 9999
+
+
+INPUT
+
+;세이브
+IF INRANGE(RESULT, 0, VARSIZE("로드가능") - 1)
+	LOCAL = RESULT
+	IF 로드가능:LOCAL
+		CALL COLOR_PRINTL(@"{LOCAL}차례에는 로드가능한 세이브 데이터가 있습니다  덧쓰기합니까?", 칼라_주의)
+		CALL ASK_YN
+		IF RESULT == 1
+			CLEARLINE LINECOUNT - FIRST_LINE
+			GOTO SHOW_LOOP
+		ENDIF
+	ENDIF
+	DUMPRAND
+	CALL CREATE_SAVEDATA_NAME_STR()
+	SAVEDATA LOCAL, RESULTS
+	PRINTFORML 세이브했습니다
+	RETURN 1
+ELSEIF RESULT == 9997
+	현재페이지수 = ROUND_DECREMENT(현재페이지수, 1, 최대페이지수)
+	SAVELOAD_LASTPAGE = 현재페이지수
+	SAVEGLOBAL
+ELSEIF RESULT == 9998
+	현재페이지수 = ROUND_INCREMENT(현재페이지수, 1, 최대페이지수)
+	SAVELOAD_LASTPAGE = 현재페이지수
+	SAVEGLOBAL
+ELSEIF RESULT == 9999
+	RETURN 0
+ENDIF
+
+CLEARLINE LINECOUNT - FIRST_LINE
+GOTO SHOW_LOOP
+
+;-------------------------------------------------
+;데이터의 로드
+;-------------------------------------------------
+@LOAD_GAME()
+#DIM FIRST_LINE
+#DIM CONST 최대페이지수 = 10
+#DIM CONST 세이브수 = 20
+#DIM 현재페이지수
+#DIM 로드가능, 200
+#DIMS 세이브명, 200
+#DIM 오토세이브로드가능, AUTOSAVE_DOMAIN_NUM
+#DIMS 오토세이브명, AUTOSAVE_DOMAIN_NUM
+#DIM 퀵세이브로드가능
+#DIMS 퀵세이브명
+#DIM 페이지복원이끝난상태
+LOADGLOBAL
+
+IF !페이지복원이끝난상태
+	현재페이지수 = SAVELOAD_LASTPAGE
+	페이지복원이끝난상태 = 1
+ENDIF
+
+IF 현재페이지수 <= 0
+	현재페이지수 = 1
+ELSEIF 현재페이지수 > 최대페이지수
+	현재페이지수 = 최대페이지수
+ENDIF
+
+FOR LOCAL, 0, VARSIZE("로드가능")
+	CHKDATA LOCAL
+	;CHKDATA는 읽을 수 있는 데이터 때 0을 돌려준다  어떻게든 해 있어
+	로드가능:LOCAL = (RESULT == 0)
+	IF RESULT != 1
+		세이브명:LOCAL = %RESULTS%
+	ELSE
+		세이브명:LOCAL = ----
+	ENDIF
+NEXT
+
+FOR LOCAL, 0, AUTOSAVE_DOMAIN_NUM
+	CHKDATA 1000 + LOCAL
+	오토세이브로드가능:LOCAL = (RESULT == 0)
+	IF RESULT != 1
+		오토세이브명:LOCAL = %RESULTS%
+	ELSE
+		오토세이브명:LOCAL = ----
+	ENDIF
+NEXT
+
+CHKDATA 9999
+퀵세이브로드가능 = (RESULT == 0)
+IF RESULT != 1
+	퀵세이브명 = %RESULTS%
+ELSE
+	퀵세이브명 = ----
+ENDIF
+
+FIRST_LINE = LINECOUNT
+
+$SHOW_LOOP
+
+CALL SINGLE_DRAWLINE
+FOR LOCAL, (현재페이지수 - 1) * 세이브수, 현재페이지수 * 세이브수
+	IF 로드가능:LOCAL
+		RESETCOLOR
+	ELSE
+		SETCOLOR 칼라_선택불가
+	ENDIF
+	CALL PRINTBUTTON_EXL(@"[{LOCAL, 3, LEFT}] %세이브명:LOCAL%", LOCAL, 로드가능:LOCAL)
+NEXT
+RESETCOLOR
+
+CALL COLOR_LINE
+LOCAL = ROUND_DECREMENT(AUTOSAVE_DOMAIN, 0, AUTOSAVE_DOMAIN_NUM - 1)
+LOCAL:1 = LOCAL
+DO
+	IF 오토세이브로드가능:LOCAL
+		RESETCOLOR
+	ELSE
+		SETCOLOR 칼라_선택불가
+	ENDIF
+	PRINTFORM [{1000 + LOCAL}] %오토세이브명:LOCAL%
+	IF LOCAL == ROUND_DECREMENT(AUTOSAVE_DOMAIN, 0, AUTOSAVE_DOMAIN_NUM - 1)
+		CALL COLOR_PRINTL("  최신", 칼라_주의)
+	ELSE
+		PRINTL
+	ENDIF
+	RESETCOLOR
+	LOCAL = ROUND_DECREMENT(LOCAL, 0, AUTOSAVE_DOMAIN_NUM - 1)
+LOOP LOCAL != LOCAL:1
+
+CALL COLOR_LINE
+SIF !퀵세이브로드가능
+	SETCOLOR 칼라_선택불가
+CALL PRINTBUTTON_EXL(@"[9999] %퀵세이브명%", 9999, 퀵세이브로드가능)
+RESETCOLOR
+
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "[이전페이지]", 10000
+PRINTFORM  Page{현재페이지수}/{최대페이지수} 
+PRINTBUTTON "[다음페이지]", 10001
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "[돌아온다]", 10002
+
+INPUT
+
+;로드
+IF INRANGE(RESULT, 0, VARSIZE("로드가능") - 1)
+	LOCAL = RESULT
+	IF !로드가능:LOCAL
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+	ENDIF
+	LOADDATA LOCAL
+ELSEIF INRANGE(RESULT, 1000, 1000 + AUTOSAVE_DOMAIN_NUM - 1)
+	LOCAL = RESULT
+	IF !오토세이브로드가능:(LOCAL - 1000)
+		CLEARLINE LINECOUNT - FIRST_LINE
+		GOTO SHOW_LOOP
+	ENDIF
+	LOADDATA LOCAL
+ELSEIF RESULT == 9999 && 퀵세이브로드가능
+	LOADDATA 9999
+ELSEIF RESULT == 10000
+	현재페이지수 = ROUND_DECREMENT(현재페이지수, 1, 최대페이지수)
+	SAVELOAD_LASTPAGE = 현재페이지수
+	SAVEGLOBAL
+ELSEIF RESULT == 10001
+	현재페이지수 = ROUND_INCREMENT(현재페이지수, 1, 최대페이지수)
+	SAVELOAD_LASTPAGE = 현재페이지수
+	SAVEGLOBAL
+ELSEIF RESULT == 10002
+	RETURN 0
+ENDIF
+
+CLEARLINE LINECOUNT - FIRST_LINE
+GOTO SHOW_LOOP
+
+;-------------------------------------------------
+;세이브 데이터용의 문자열 준비
+;-------------------------------------------------
+@CREATE_SAVEDATA_NAME_STR()
+#DIMS 데이터명
+
+데이터명 = %GETTIMES()%
+
+IF FLAG:클리어직후플래그
+	데이터명 = %데이터명% 이어받음
+ENDIF
+
+데이터명 = %데이터명% 시나리오%SCENARIOID%
+
+IF TIME == 0
+	데이터명 = %데이터명% 거잔행동:{CALC_SHOP_TIME() - SHOP_TIME}
+ELSE
+	데이터명 = %데이터명% 전
+ENDIF
+
+
+데이터명 = %데이터명% {DAY}기
+IF FLAG:관전모드
+	데이터명 = %데이터명% %"관전", MAX_CHARANAME_LENGTH / 2, LEFT%
+ELSEIF CFLAG:MASTER:소속
+	데이터명 = %데이터명% %SNAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속)) + "세력", MAX_CHARANAME_LENGTH / 2, LEFT%
+ELSE
+	데이터명 = %데이터명% %"방랑중", MAX_CHARANAME_LENGTH / 2, LEFT%
+ENDIF
+
+데이터명 = %데이터명% %SNAME(MASTER), MAX_CHARANAME_LENGTH / 2, LEFT%
+
+IF TIME == 0
+	TRYCCALLFORM SHOP_LIFE_NAME{FLAG:마지막에실행한커맨드}
+		데이터명 = %데이터명% 최종:%RESULTS%
+	CATCH
+	ENDCATCH
+ENDIF
+RESULTS = %데이터명%
+
+;-------------------------------------------------
+;오토 세이브시의 처리
+;-------------------------------------------------
+@SYSTEM_AUTOSAVE
+DUMPRAND
+CALL CREATE_SAVEDATA_NAME_STR()
+SAVEDATA 1000 + AUTOSAVE_DOMAIN, "오토 " + RESULTS
+AUTOSAVE_DOMAIN = ROUND_INCREMENT(AUTOSAVE_DOMAIN, 0, AUTOSAVE_DOMAIN_NUM - 1)
+SAVEGLOBAL
+
+;-------------------------------------------------
+;퀵 세이브시의 처리
+;-------------------------------------------------
+@QUICK_SAVE
+DUMPRAND
+CALL CREATE_SAVEDATA_NAME_STR
+SAVEDATA 9999, "퀵 " + RESULTS
+SAVEGLOBAL
+
+@QUICK_LOAD
+LOADDATA 9999
+
+;-------------------------------------------------
+;로드시의 처리(※복수 정의 가능)
+;-------------------------------------------------
+@EVENTLOAD
+;세이브 데이터의 업데이트
+CALL UPDATE
+
+;맵을 준비
+CALL MAPSETUP
+
+;로드시의 초기화 처리
+CALL INIT_COMMON
+
+IF FLAG:클리어직후플래그
+	FLAG:클리어직후플래그 = 0
+	CALL PASS_SETTING
+	CALL NEWLOOP(1)
+ENDIF
+
+
+;-------------------------------------------------
+;클리어 데이터를 로드했을 때의 이어받아 처리
+;-------------------------------------------------
+@PASS_SETTING
+#DIM LCOUNT, 2
+#DIM FIRST_LINE
+#DIM MONEY보존
+#DIM ITEMSALES보존, VARSIZE("ITEMSALES")
+#DIM ITEM보존, VARSIZE("ITEM")
+VARSET LOCAL, 0
+
+;출산후의 캐릭터가 있는 경우, 상태를 리셋트
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):육아기간 >= 1
+		;출산후의 각종 초기화 처리
+		CALL RESET_MOTHER_STATE(LOCAL:0, 0)
+	ENDIF
+NEXT
+
+;캐릭터의 정보를 일부 리셋트
+FOR LOCAL:0, 0, CHARANUM
+	CFLAG:(LOCAL:0):소속 = 0
+	CFLAG:(LOCAL:0):포로처 = 0
+	CFLAG:(LOCAL:0):포로의취급 = 0
+	CFLAG:(LOCAL:0):특수상태 = 0
+	CFLAG:(LOCAL:0):연금중 = 0
+	CFLAG:(LOCAL:0):외교요구성공플래그 = 0
+	CFLAG:(LOCAL:0):외교조교카운터 = 0
+	SIF !GETBIT(TALENT:(LOCAL:0):음란계, 소질_음란_약물중독)
+		CFLAG:(LOCAL:0):약물의존 = 0
+	TALENT:(LOCAL:0):공허 = 0
+	TALENT:(LOCAL:0):붕괴 = 0
+	PALAM:(LOCAL:0):로주 = 0
+	PALAM:(LOCAL:0):로외 = 0
+	PALAM:(LOCAL:0):액주 = 0
+	PALAM:(LOCAL:0):액외 = 0
+	PALAM:(LOCAL:0):포주 = 0
+	PALAM:(LOCAL:0):포외 = 0
+	CFLAG:(LOCAL:0):붕괴 = 0
+	TALENT:(LOCAL:0):데일리계 = 0
+	BASE:(LOCAL:0):정신력 = MAXBASE:(LOCAL:0):정신력
+NEXT
+
+;캐릭터 사이의 호감도·적대도의 클리어
+FOR LOCAL:0, 0, CHARANUM
+	FOR LOCAL:1, 0, VARSIZE("REL_LIKE")
+		REL_LIKE:(LOCAL:0):(LOCAL:1) = 0
+		REL_HATE:(LOCAL:0):(LOCAL:1) = 0
+	NEXT
+NEXT
+
+;특수 캐릭터의 삭제  다만 주인공이라면 삭제하지 않는다（이어받아 뒤로 문제가 되므로）
+FOR LOCAL:0, CHARANUM - 1, -1, -1
+	IF IS_SP_CHARA(LOCAL) && LOCAL != MASTER
+		CALL DELETE_CHARA(LOCAL:0)
+	ENDIF
+NEXT
+
+
+CALL SINGLE_DRAWLINE
+PRINTL 이어받아 용데이터를 로드했습니다
+PRINTL 새롭게 환상향에 폭풍우를 야기할 수가 있습니다
+
+CALL CONFIG_SAVE_EXIST_CHARA()
+
+CALL PASS_RANDOM_CHARA
+
+CALL PASS_CHARA_CHARASELECT()
+FOR LOCAL, 0, CHARANUM
+	SIF LOCAL != NAME_TO_CHARA("당신")
+	CALL PASS_CHARA(LOCAL)
+NEXT
+CALL SINGLE_DRAWLINE
+PRINTFORMW 캐릭터의 인계 처리가 종료했습니다
+
+PRINTL  아이템/자금 이어받음의 설정을 실시합니다
+PRINTL  아이템/자금을 계승합니까?
+PRINTL 자금은 1/10, 최대에서도 1000000이 됩니다
+
+;보존해 둔다
+MONEY보존 = MONEY
+ARRAYCOPY "ITEMSALES", "ITEMSALES보존"
+ARRAYCOPY "ITEM", "ITEM보존"
+
+CALL ASK_YN()
+
+IF RESULT == 1
+	;초기화
+	MONEY = 0
+	VARSET ITEMSALES, 1, 0, 200
+	VARSET ITEMSALES, 0, 200, 300
+	VARSET ITEM, 0
+	REDRAW 1
+ENDIF
+
+MONEY = MIN(MONEY / 10, 1000000)
+
+ITEMSALES:태평요술서 = 1
+ITEM:태평요술서 = 0
+
+IF ID_TO_CHARA(FLAG:마음에든다지정캐릭터) != -1
+	PRINTFORML 캐릭터의 마음에든다 지정을 초기화합니까?
+	CALL ASK_YN
+	SIF RESULT == 0
+		FLAG:마음에든다지정캐릭터 = 0
+ENDIF
+
+
+CALL SINGLE_DRAWLINE
+
+;-------------------------------------------------
+;랜덤·아이 캐릭터의 이어받아 설정
+;LOCAL 지옥의 Retarded 코드였으므로 리파크타.
+;-------------------------------------------------
+@PASS_RANDOM_CHARA
+#DIM 인원수
+#DIM 대상
+#DIM 선택캐릭터ID, 10
+;랜덤 캐릭터의 인원수를 카운트
+인원수 = 0
+FOR LOCAL:0, 0, CHARANUM
+	SIF (IS_RANDOM_CHARA(LOCAL) || IS_CHILD(LOCAL)) && LOCAL:0 != MASTER
+		인원수 ++
+NEXT
+
+SIF 인원수 <= 0
+	RETURN
+
+;랜덤 캐릭터가 존재하는 경우
+CALL SINGLE_DRAWLINE
+PRINTFORML 랜덤 캐릭터, 아이, 및 커스텀 캐릭터를 10명까지 계승할 수가 있습니다
+PRINTFORML 계승하는 캐릭터를 선택해 주세요
+CALL SINGLE_DRAWLINE
+CALL SELECT_CHARA_LIST_MULTI_ONLY_LOGIC_SLG(VARSIZE("선택캐릭터ID"), "PASS_RANDOM_CHARA", "NONE")
+
+VARSET 선택캐릭터ID
+
+;선택 캐릭터의 리스트를 ID로 변경, 선택된 캐릭터의 수를 카운트
+FOR LOCAL, 0, SELECTED_CHARA_NUM
+	선택캐릭터ID:LOCAL = GET_ID(SELECTED_CHARA:LOCAL)
+NEXT
+
+;선택되어 있지 않은 랜덤 캐릭터의 삭제
+인원수 = CHARANUM
+
+FOR LOCAL:0, 0, 인원수
+	대상 = 인원수 - LOCAL:0 - 1
+	SIF IS_FIXED_CHARA(대상) || 대상 == MASTER
+		CONTINUE
+	IF FINDELEMENT(선택캐릭터ID, GET_ID(대상)) >= 0
+		CFLAG:대상:인계캐릭터 = 1
+		CONTINUE
+	ENDIF
+	CALL DELETE_CHARA(대상)
+NEXT
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_PASS_RANDOM_CHARA(대상)
+#DIM 대상
+RETURN IS_CHILD(대상) || IS_RANDOM_CHARA(대상) || TALENT:대상:커스텀캐릭터
+
+
+
+;-------------------------------------------------
+;desc  :SLG 이외의 콘피그의 세이브
+;param :번호:콘피그 배열의 인덱스
+;-------------------------------------------------
+@CONFIG_SAVE_EXCEPT_SLG(번호)
+#DIM 번호
+FOR LOCAL:0, 0, 1000
+	LOCAL:2 = LOCAL:0 / 50
+	LOCAL:3 = LOCAL:0 % 50
+	LOCAL:4 = LOCAL:0 / 5
+
+	;ＳＬＧ파트에 관한 설정(CONFIG:300으로부터 CONFIG:319)을 제외
+	SIF !(300 <= LOCAL:0 && LOCAL:0 <= 319)
+		G_CONFIG:번호:(LOCAL:0) = CONFIG:(LOCAL:0)
+
+	G_FILTER:번호:(LOCAL:0) = COM_FILTER:(LOCAL:0)
+NEXT
+
+FOR LOCAL:0, 0, VARSIZE("DAILY_DISABLE")
+	G_DAILY_DISABLE:번호:(LOCAL:0) = DAILY_DISABLE:(LOCAL:0)
+	G_DAILY_DISABLE_NAME:번호:(LOCAL:0) = %DAILY_DISABLE_NAME:(LOCAL:0)%
+NEXT
+
+FOR LOCAL:0, 0, VARSIZE("KOJO_DAILY_DISABLE", 0)
+	FOR LOCAL:1, 0, VARSIZE("KOJO_DAILY_DISABLE", 1)
+		G_KOJO_DAILY_DISABLE:번호:(LOCAL:0):(LOCAL:1)          = KOJO_DAILY_DISABLE:(LOCAL:0):(LOCAL:1)
+		G_KOJO_DAILY_DISABLE_NAME:번호:(LOCAL:0):(LOCAL:1)    '= KOJO_DAILY_DISABLE_NAME:(LOCAL:0):(LOCAL:1)
+	NEXT
+NEXT
+
+G_DAILY_EVENT_COUNT:번호 = DAILY_EVENT_COUNT
+G_KOJO_DAILY_EVENT_ODDS:번호 = KOJO_DAILY_EVENT_ODDS
+G_KOJO_DAILY_EVENT_COUNT:번호 = KOJO_DAILY_EVENT_COUNT
+G_DAILY_EVENT_ODDS:번호 = DAILY_EVENT_ODDS
+
+;글로벌 변수를 보존
+SAVEGLOBAL
+RETURN
+
+
+
+;-------------------------------------------------
+;desc  :SLG 관련의 콘피그의 세이브
+;param :번호:콘피그 배열의 인덱스
+;-------------------------------------------------
+@CONFIG_SAVE_SLG(번호)
+#DIM 번호
+	VARSET G_FILTER, 0
+
+FOR LOCAL:0, 300, 320
+	G_CONFIG:번호:(LOCAL:0) = CONFIG:(LOCAL:0)
+NEXT
+
+;글로벌 변수를 보존
+SAVEGLOBAL
+RETURN
+
+;-------------------------------------------------
+;desc  :SLG 관련 이외의 콘피그의 로드
+;param :번호:콘피그 배열의 인덱스
+;-------------------------------------------------
+@CONFIG_LOAD_EXCEPT_SLG(번호)
+#DIM 번호
+FOR LOCAL:0, 0, 1000
+	LOCAL:2 = LOCAL:0 / 50
+	LOCAL:3 = LOCAL:0 % 50
+	LOCAL:4 = LOCAL:0 / 5
+
+	;ＳＬＧ파트에 관한 설정(CONFIG:300으로부터 CONFIG:319)을 제외
+	SIF !(300 <= LOCAL:0 && LOCAL:0 <= 319)
+		CONFIG:(LOCAL:0) = G_CONFIG:번호:(LOCAL:0)
+
+	COM_FILTER:(LOCAL:0) = G_FILTER:번호:(LOCAL:0)
+NEXT
+
+FOR LOCAL:0, 0, VARSIZE("DAILY_DISABLE")
+	DAILY_DISABLE:(LOCAL:0) = G_DAILY_DISABLE:번호:(LOCAL:0)
+	DAILY_DISABLE_NAME:LOCAL = %G_DAILY_DISABLE_NAME:번호:(LOCAL:0)%
+NEXT
+
+FOR LOCAL:0, 0, VARSIZE("KOJO_DAILY_DISABLE", 0)
+	FOR LOCAL:1, 0, VARSIZE("KOJO_DAILY_DISABLE", 1)
+		KOJO_DAILY_DISABLE:(LOCAL:0):(LOCAL:1)           = G_KOJO_DAILY_DISABLE:번호:(LOCAL:0):(LOCAL:1)
+		KOJO_DAILY_DISABLE_NAME:(LOCAL:0):(LOCAL:1)     '= G_KOJO_DAILY_DISABLE_NAME:번호:(LOCAL:0):(LOCAL:1)
+	NEXT
+NEXT
+
+DAILY_EVENT_COUNT =      G_DAILY_EVENT_COUNT:번호
+KOJO_DAILY_EVENT_ODDS =  G_KOJO_DAILY_EVENT_ODDS:번호
+KOJO_DAILY_EVENT_COUNT = G_KOJO_DAILY_EVENT_COUNT:번호
+DAILY_EVENT_ODDS =       G_DAILY_EVENT_ODDS:번호
+
+;낡은 버젼→새로운 버젼으로 콘피그를 읽었을 경우, 새로운 버젼으로 데일리가 추가되고 있으면, DISABLE_NAME가 덧쓰기되어 해당 데일리의 할당이 바람에 날아가기 (위해)때문에 죽는다
+;인 것으로 일단 재생성해 줄 필요가 있다
+VARSET DAILY_EVENT_NUM
+VARSET KOJO_DAILY_EVENT_NUM
+CALL CREATE_DAILY_MAP
+CALL CREATE_KOJO_DAILY_MAP
+
+
+RETURN
+
+;-------------------------------------------------
+;desc  :SLG 관련의 콘피그의 로드
+;param :번호:콘피그 배열의 인덱스
+;-------------------------------------------------
+@CONFIG_LOAD_SLG(번호)
+#DIM 번호
+FOR LOCAL, 300, 320
+	CONFIG:(LOCAL:0) = G_CONFIG:번호:(LOCAL:0)
+
+NEXT

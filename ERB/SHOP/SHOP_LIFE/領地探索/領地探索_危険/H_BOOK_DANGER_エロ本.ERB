@@ -1,0 +1,60 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_H_BOOK_DANGER_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_H_BOOK_DANGER_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_H_BOOK_DANGER(대상)
+#DIM 대상
+
+PRINTFORML 황혼 물러나, 강변에서 오래된 책을 주웠다
+PRINTFORML 어떤기분도 없이 읽어 보면, 에로책이었다
+PRINTFORMW 여성이 목걸이를 입어, 개처럼 범해지고 있다
+
+IF IS_MALE(대상)
+	PRINTFORML 좋은 줍기의 것을 했다고 기꺼이 가지고 돌아갔다
+	PRINTFORML 자기 방에서 차분히 읽어들였다
+	CALL FUCK(대상, "성기술")
+	RETURN 1
+ENDIF
+
+PRINTFORML 무심코 못박음이 되어 탐독하고는 있으면, 배후로부터 말을 걸 수 있어
+PRINTFORML 당황해 대체하면, 남자가 히죽히죽 웃으면서 지나 있다
+PRINTFORML 남은 %ANAME(대상)%에 강요해, 그 책과 같은 일을 하지 않을까 권해 왔다
+
+CALL ASK_YN("유혹에 넘어간다", "도망친다")
+
+IF RESULT == 1
+	PRINTFORML 그런 일 할 수 있을 리가 없다
+	PRINTFORML 빨리 도망치고 떠났다
+	RETURN 1
+ENDIF
+
+PRINTFORML 그 책과 같은……사진의 여성의 치태에, 무심코 꿀꺽 군침이 돈다
+PRINTFORML 기대를 느낀 %조사처리(ANAME(대상),"는")%, 남자의 말에 천천히 수긍했다
+PRINTFORMW %조사처리(ANAME(대상),"는")% 남자에게 손을 잡아 당겨져 그의 보금자리에 데리고 가졌다
+PRINTFORML
+PRINTFORML 심야의 공원에 두 명은 있었다
+PRINTFORMW 목걸이를 껴 애널비즈포함의 꼬리를 붙여진 %조사처리(ANAME(대상),"는")%, 네발로 엎드림으로 남자에게 리드를 끌리고 있다
+PRINTFORMW 완전히 암캐(이) 된 %조사처리(ANAME(대상),"는")%, 남자에게 명해지는 대로 스스로의 %STR_BODY("음순:욕정", 대상)%를 나누어 열어, 복종의 포즈로 삽입을 조른다
+PRINTFORMW 남이 페니스를 꺼내면, 귀염성인 입술로 가볍게 봉사해, 삽입의 준비를 갖추었다
+PRINTFORMW 만족한 남자가 %조사처리(ANAME(대상),"를")% 억눌러, 뒤로부터 단숨에 페니스를 찌르면, %조사처리(ANAME(대상),"는")% 뒤로 젖히면서 기쁨의 소리를 지른다
+PRINTFORMW %조사처리(ANAME(대상),"는")% 몸도 마음도 그에게 굴복 해, 그 뒤도 「주인님」에게 몇 번이나 예의범절을 가르쳐 받았다……
+CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, Ａ, 키스, 펠라티오, 노출, 노출, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("지나가는 남자"), @"지나가는 남자의 \@RAND:2 ? 페니스 # 입술\@", "지나가는 남자", "", "야외에서의 조교")
+PRINTFORML 
+PRINTFORML 밤새 암캐 조교를 받은 %조사처리(ANAME(대상),"는")%,
+PRINTFORMW 그에게 또 오도록(듯이) 명령되어 눈을♥로 해 군침을 늘어뜨리면서 끄덕끄덕 수긍했다
+
+RETURN 1

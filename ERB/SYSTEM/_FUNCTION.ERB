@@ -1,0 +1,4011 @@
+﻿;기본적인 함수를 정리한다
+
+;-------------------------------------------------
+;캐릭터 가입시의 공통 설정
+;-------------------------------------------------
+@INIT_NEWCHARA(ARG:0)
+;캐릭터 ID를 설정(1으로부터 시작된다)
+FLAG:998 ++
+CFLAG:(ARG:0):캐릭터ＩＤ = FLAG:998
+
+;주도도·도착도의 초기설정
+CALL INIT_TENDENCY(ARG:0)
+
+FOR LOCAL, 0, VARSIZE("SEXUAL_EXPERIENCE_SITUATION")
+	SEXUAL_EXPERIENCE_SITUATION:(ARG:0):LOCAL =
+	SEXUAL_LAST_EXPERIENCE_SITUATION:(ARG:0):LOCAL =
+NEXT
+
+;키스 미경험이 아니면 키스경험을 불명으로서 기록
+IF !TALENT:(ARG:0):키스미경험
+	SEXUAL_EXPERIENCE:(ARG:0):첫체험_키스 = 불명
+	SEXUAL_LAST_EXPERIENCE:(ARG:0):첫체험_키스 = 불명
+ELSE
+	SEXUAL_EXPERIENCE:(ARG:0):첫체험_키스 = ----
+	SEXUAL_LAST_EXPERIENCE:(ARG:0):첫체험_키스 = ----
+ENDIF
+
+IF HAS_VAGINA(ARG:0) && !TALENT:(ARG:0):처녀
+	SEXUAL_EXPERIENCE:(ARG:0):첫체험_처녀 = 불명
+	SEXUAL_LAST_EXPERIENCE:(ARG:0):첫체험_처녀 = 불명
+ELSE
+	TALENT:(ARG:0):처녀 = 1
+	SEXUAL_EXPERIENCE:(ARG:0):첫체험_처녀 = ----
+	SEXUAL_LAST_EXPERIENCE:(ARG:0):첫체험_처녀 = ----
+ENDIF
+
+IF HAS_PENIS(ARG:0) && !TALENT:(ARG:0):동정
+	SEXUAL_EXPERIENCE:(ARG:0):첫체험_동정 = 불명
+	SEXUAL_LAST_EXPERIENCE:(ARG:0):첫체험_동정 = 불명
+ELSE
+	TALENT:(ARG:0):동정 = 1
+	SEXUAL_EXPERIENCE:(ARG:0):첫체험_동정 = ----
+	SEXUAL_LAST_EXPERIENCE:(ARG:0):첫체험_동정 = ----
+ENDIF
+
+IF !TALENT:(ARG:0):애널처녀
+	SEXUAL_EXPERIENCE:(ARG:0):첫체험_애널처녀 = 불명
+	SEXUAL_LAST_EXPERIENCE:(ARG:0):첫체험_애널처녀 = 불명
+ELSE
+	TALENT:(ARG:0):애널처녀 = 1
+	SEXUAL_EXPERIENCE:(ARG:0):첫체험_애널처녀 = ----
+	SEXUAL_LAST_EXPERIENCE:(ARG:0):첫체험_애널처녀 = ----
+ENDIF
+
+TALENT:(ARG:0):위험일 = RAND:5
+
+CALL SET_BODYSIZE(ARG:0)
+
+CALL TAG_INIT(ARG:0, NO:(ARG:0))
+
+CALL SKILL_INIT(ARG:0)
+
+CALL CLOTH_INIT(ARG:0)
+
+;범용 캐릭터라면 구상 패턴을 설정
+IF IS_CHILD(ARG:0) || IS_RANDOM_CHARA(ARG:0)
+	CALL SET_KOJO_PATTERN(ARG:0)
+ENDIF
+
+;-------------------------------------------------
+;캐릭터 ARG:0을 삭제하는 함수
+;-------------------------------------------------
+@DELETE_CHARA(ARG:0)
+;고정 캐릭터의 경우
+IF IS_FIXED_CHARA(ARG:0)
+	;삭제는 금지. 에러 메세지를 출력
+	THROW 고정 캐릭터를 삭제할 수 없습니다(캐릭터 번호={ARG:0})
+
+;랜덤 캐릭터(범용)의 경우
+ELSEIF IS_RANDOM_CHARA(ARG:0)
+	;캐릭터 ARG:0보다 뒤의 NO를 가지는 캐릭터의 NO를 채운다
+	FOR LOCAL:0, 0, CHARANUM
+		IF NO:(LOCAL:0) > NO:(ARG:0) && IS_RANDOM_CHARA(LOCAL:0)
+			NO:(LOCAL:0) --
+		ENDIF
+	NEXT
+	;랜덤 캐릭터의 NO할당용 변수를 하나 되돌린다
+	FLAG:범용무장카운트 --
+
+;랜덤 캐릭터(아이)의 경우
+ELSEIF IS_CHILD(ARG:0)
+	;캐릭터 ARG:0보다 뒤의 NO를 가지는 캐릭터의 NO를 채운다
+	FOR LOCAL:0, 0, CHARANUM
+		IF NO:(LOCAL:0) > NO:(ARG:0) && IS_CHILD(LOCAL:0)
+			NO:(LOCAL:0) --
+		ENDIF
+	NEXT
+	;아이의 NO할당용 변수를 하나 되돌린다
+	FLAG:아이카운트 --
+
+;이벤트 캐릭터의 경우
+ELSE
+	;고유의 처리는 불요
+ENDIF
+IF GET_COOK() == ARG:0
+	CALL SET_COOK(-1)
+ENDIF
+
+
+;삭제되는 캐릭터가 육아 되고 있는 아이였던 경우, 그 부모의 육아 상태를 삭제한다
+IF CFLAG:(ARG:0):행동불능상태 == 행동불능_아이
+	FOR LOCAL:0, 0, CHARANUM
+		SIF ID_TO_CHARA(CFLAG:(LOCAL:0):육아대상) == ARG:0
+			CALL RESET_MOTHER_STATE(LOCAL:0, 0)
+	NEXT
+ENDIF
+
+;삭제되는 캐릭터를 첫체험으로 한다
+
+;캐릭터의 삭제
+DELCHARA ARG:0
+
+;REL_LIKE, REL_HATE의 수정
+FOR LOCAL:0, 0, CHARANUM
+	FOR LOCAL:1, ARG:0, CHARANUM
+		REL_LIKE:(LOCAL:0):(LOCAL:1) = REL_LIKE:(LOCAL:0):(LOCAL:1 + 1)
+		REL_HATE:(LOCAL:0):(LOCAL:1) = REL_HATE:(LOCAL:0):(LOCAL:1 + 1)
+	NEXT
+	REL_LIKE:(LOCAL:0):CHARANUM = 0
+	REL_HATE:(LOCAL:0):CHARANUM = 0
+NEXT
+
+
+;-------------------------------------------------
+;캐릭터 ARG:0으로 ARG:1의 캐릭터 번호를 바꿔 넣는 함수(필요한 변수도 추종시킨다)
+;-------------------------------------------------
+@SWAP_CHARA(ARG:0, ARG:1)
+SWAPCHARA ARG:0, ARG:1
+
+;REL_LIKE, REL_HATE의 수정
+FOR LOCAL:0, 0, CHARANUM
+	SWAP REL_LIKE:(LOCAL:0):(ARG:0), REL_LIKE:(LOCAL:0):(ARG:1)
+	SWAP REL_HATE:(LOCAL:0):(ARG:0), REL_HATE:(LOCAL:0):(ARG:1)
+NEXT
+
+;-------------------------------------------------
+;캐릭터를 NO 순서에 정렬하는 함수(필요한 변수도 추종시킨다)
+;-------------------------------------------------
+@SORT_CHARA_NO
+FOR LOCAL:0, 1, CHARANUM
+	FOR LOCAL:1, LOCAL:0, 0, -1
+		IF NO:(LOCAL:1 - 1) > NO:(LOCAL:1)
+			CALL SWAP_CHARA(LOCAL:1 - 1, LOCAL:1)
+		ELSE
+			BREAK
+		ENDIF
+	NEXT
+NEXT
+
+;-------------------------------------------------
+;캐릭터 ARG:0을 초기 상태에 되돌리는 함수(초기치가 기록되어 있지 않은 경우, 재생성을 시도한다)
+;고정 캐릭터에게 사용했을 경우, 다음에 ADDITIONAL_CHARA_SETTING 함수를 호출하는 것
+;-------------------------------------------------
+@INIT_CHARA(ARG:0)
+
+;쿨 타임은 소거해 둔다
+COOLTIME:(ARG:0):0 = 0
+
+;CSV가 존재하지 않는 경우
+IF !EXISTCSV(NO:(ARG:0))
+	;초기화하지 않는다(할 수 없다)
+	RETURN
+ENDIF
+
+
+;초기화하지 않는 CFLAG를 퇴피
+LOCAL:9 = 0
+IF CFLAG:(ARG:0):행동불능상태 == 행동불능_아이
+	LOCAL:9 = 1
+ENDIF
+LOCAL:11 = CFLAG:(ARG:0):모친
+LOCAL:12 = CFLAG:(ARG:0):부친
+LOCAL:13 = CFLAG:(ARG:0):아이의성장도
+LOCAL:14 = CFLAG:(ARG:0):캐릭터ＩＤ
+LOCAL:15 = CFLAG:(ARG:0):범용구상패턴
+LOCAL:16 = CFLAG:(ARG:0):51
+LOCAL:17 = CFLAG:(ARG:0):52
+LOCAL:18 = CFLAG:(ARG:0):53
+LOCAL:19 = CFLAG:(ARG:0):54
+LOCAL:20 = CFLAG:(ARG:0):함락완료
+;CFLAG, MARK, PALAM를 모두 0에
+FOR LOCAL:0, 0, VARSIZE("CFLAG")
+	CFLAG:(ARG:0):(LOCAL:0) = 0
+NEXT
+FOR LOCAL:0, 0, VARSIZE("MARK")
+	MARK:(ARG:0):(LOCAL:0) = 0
+NEXT
+FOR LOCAL:0, 0, VARSIZE("PALAM")
+	PALAM:(ARG:0):(LOCAL:0) = 0
+NEXT
+
+;REL_LIKE, REL_HATE를 초기화
+FOR LOCAL:0, 0, CHARANUM
+	REL_LIKE:(ARG:0):(LOCAL:0) = 0
+	REL_HATE:(ARG:0):(LOCAL:0) = 0
+	REL_LIKE:(LOCAL:0):(ARG:0) = 0
+	REL_HATE:(LOCAL:0):(ARG:0) = 0
+NEXT
+
+;초기화하지 않는 CFLAG를 재설정
+IF LOCAL:9
+	CFLAG:(ARG:0):행동불능상태 = 행동불능_아이
+ENDIF
+CFLAG:(ARG:0):모친 = LOCAL:11
+CFLAG:(ARG:0):부친 = LOCAL:12
+CFLAG:(ARG:0):아이의성장도 = LOCAL:13
+CFLAG:(ARG:0):캐릭터ＩＤ = LOCAL:14
+CFLAG:(ARG:0):범용구상패턴 = LOCAL:15
+CFLAG:(ARG:0):51 = LOCAL:16
+CFLAG:(ARG:0):52 = LOCAL:17
+CFLAG:(ARG:0):53 = LOCAL:18
+CFLAG:(ARG:0):54 = LOCAL:19
+CFLAG:(ARG:0):함락완료 = LOCAL:20
+;모두ＣＳＶ로부터 다시 읽는 사양으로 변경.
+;초기치가 기록되고 있는 경우
+;IF LOCAL:5
+;	;MAXBASE, TALENT, ABL, EXP를 초기치에 되돌린다
+;	FOR LOCAL:0, 0, VARSIZE("BASE")
+;		MAXBASE:(ARG:0):(LOCAL:0) = INI_MAXBASE:(ARG:0):(LOCAL:0)
+;		BASE:(ARG:0):(LOCAL:0) = MAXBASE:(ARG:0):(LOCAL:0)
+;	NEXT
+;	FOR LOCAL:0, 0, VARSIZE("TALENT")
+;		TALENT:(ARG:0):(LOCAL:0) = INI_TALENT:(ARG:0):(LOCAL:0)
+;	NEXT
+;	FOR LOCAL:0, 0, VARSIZE("ABL")
+;		ABL:(ARG:0):(LOCAL:0) = INI_ABL:(ARG:0):(LOCAL:0)
+;	NEXT
+;	FOR LOCAL:0, 0, VARSIZE("EXP")
+;		EXP:(ARG:0):(LOCAL:0) = INI_EXP:(ARG:0):(LOCAL:0)
+;	NEXT
+;
+;초기치가 기록되어 있지 않은 경우
+;ELSE
+
+;위험일을 퇴피시킨다
+LOCAL:1 = TALENT:(ARG:0):위험일
+
+;MAXBASE, TALENT, ABL, EXP를 CSV 파일로부터 읽어들인다
+FOR LOCAL:0, 0, VARSIZE("BASE")
+	MAXBASE:(ARG:0):(LOCAL:0) = CSVBASE(NO:(ARG:0), LOCAL:0)
+	BASE:(ARG:0):(LOCAL:0) = MAXBASE:(ARG:0):(LOCAL:0)
+NEXT
+FOR LOCAL:0, 0, VARSIZE("TALENT")
+	TALENT:(ARG:0):(LOCAL:0) = CSVTALENT(NO:(ARG:0), LOCAL:0)
+NEXT
+FOR LOCAL:0, 0, VARSIZE("ABL")
+	ABL:(ARG:0):(LOCAL:0) = CSVABL(NO:(ARG:0), LOCAL:0)
+NEXT
+FOR LOCAL:0, 0, VARSIZE("EXP")
+	EXP:(ARG:0):(LOCAL:0) = CSVEXP(NO:(ARG:0), LOCAL:0)
+NEXT
+
+;되돌린다
+TALENT:(ARG:0):위험일 = LOCAL:1
+
+
+;주도도·도착도의 초기설정
+CALL INIT_TENDENCY(ARG:0)
+
+;초기치 기록 플래그를 세운다
+;CFLAG:(ARG:0):5 = 1
+
+;초기화에 필요한 변수를 기록
+;FOR LOCAL:0, 0, VARSIZE("BASE")
+;	INI_MAXBASE:(ARG:0):(LOCAL:0) = MAXBASE:(ARG:0):(LOCAL:0)
+;NEXT
+;FOR LOCAL:0, 0, VARSIZE("TALENT")
+;	INI_TALENT:(ARG:0):(LOCAL:0) = TALENT:(ARG:0):(LOCAL:0)
+;NEXT
+;FOR LOCAL:0, 0, VARSIZE("ABL")
+;	INI_ABL:(ARG:0):(LOCAL:0) = ABL:(ARG:0):(LOCAL:0)
+;NEXT
+;FOR LOCAL:0, 0, VARSIZE("EXP")
+;	INI_EXP:(ARG:0):(LOCAL:0) = EXP:(ARG:0):(LOCAL:0)
+;NEXT
+
+;ENDIF
+;문신을 소거
+;TALENT나 CFLAG가 아니기 때문에, 이렇게 해 별도 소거하지 않으면 다음에 난처함
+FOR LOCAL:0, 0, VARSIZE("TATTOO")
+	TATTOO:(ARG:0):(LOCAL:0) = 
+NEXT
+
+FOR LOCAL:0, 0, VARSIZE("SEXUAL_EXPERIENCE_SITUATION")
+	SEXUAL_EXPERIENCE_SITUATION:(ARG:0):LOCAL = 
+	SEXUAL_LAST_EXPERIENCE_SITUATION:(ARG:0):LOCAL =
+NEXT
+
+IF TALENT:(ARG:0):키스미경험
+	CALL VIRGINIZE(ARG:0, 첫체험_키스)
+ELSE
+	SEXUAL_EXPERIENCE:(ARG:0):첫체험_키스 = 불명
+	SEXUAL_EXPERIENCE_SITUATION:(ARG:0):첫체험_키스 =
+	SEXUAL_LAST_EXPERIENCE:(ARG:0):첫체험_키스 = 불명
+	SEXUAL_LAST_EXPERIENCE_SITUATION:(ARG:0):첫체험_키스 =
+ENDIF
+
+IF TALENT:(ARG:0):동정
+	CALL VIRGINIZE(ARG:0, 첫체험_동정)
+ELSE
+	SEXUAL_EXPERIENCE:(ARG:0):첫체험_동정 = 불명
+	SEXUAL_EXPERIENCE_SITUATION:(ARG:0):첫체험_동정 =
+	SEXUAL_LAST_EXPERIENCE:(ARG:0):첫체험_동정 = 불명
+	SEXUAL_LAST_EXPERIENCE_SITUATION:(ARG:0):첫체험_동정 =
+ENDIF
+
+IF TALENT:(ARG:0):처녀
+	CALL VIRGINIZE(ARG:0, 첫체험_처녀)
+ELSE
+	SEXUAL_EXPERIENCE:(ARG:0):첫체험_처녀 = 불명
+	SEXUAL_EXPERIENCE_SITUATION:(ARG:0):첫체험_처녀 =
+	SEXUAL_LAST_EXPERIENCE:(ARG:0):첫체험_처녀 = 불명
+	SEXUAL_LAST_EXPERIENCE_SITUATION:(ARG:0):첫체험_처녀 =
+ENDIF
+
+IF TALENT:(ARG:0):애널처녀
+	CALL VIRGINIZE(ARG:0, 첫체험_애널처녀)
+ELSE
+	SEXUAL_EXPERIENCE:(ARG:0):첫체험_애널처녀 = 불명
+	SEXUAL_EXPERIENCE_SITUATION:(ARG:0):첫체험_애널처녀 =
+	SEXUAL_LAST_EXPERIENCE:(ARG:0):첫체험_애널처녀 = 불명
+	SEXUAL_LAST_EXPERIENCE_SITUATION:(ARG:0):첫체험_애널처녀 =
+ENDIF
+
+FOR LOCAL, 0, VARSIZE("COM_EXP")
+	COM_EXP:(ARG:0):LOCAL = 0
+NEXT
+
+FOR LOCAL, 0, VARSIZE("SP_TRAIN_COUNT")
+	SP_TRAIN_COUNT:(ARG:0):LOCAL = 0
+NEXT
+
+FOR LOCAL, 0, PREGNANT_RECORD_MAX
+	PREGNANT_RECORD_FATHER:(ARG:0):LOCAL = 0
+	PREGNANT_RECORD_TIMES:(ARG:0):LOCAL = 0
+NEXT
+
+FOR LOCAL, 0, WOMB_RECORD_MAX
+	WOMB_SEMEN_ID:(ARG:0):LOCAL = 0
+	WOMB_SEMEN_TIME:(ARG:0):LOCAL = 0
+	WOMB_SEMEN_COUNT:(ARG:0):LOCAL = 0
+	WOMB_SEMEN_AMOUNT:(ARG:0):LOCAL = 0
+NEXT
+SEXUAL_PREFERENCE:(ARG:0):0 = 0
+SEXUAL_PREFERENCE_EXP:(ARG:0):0 = 0
+
+CALL SET_BODYSIZE(ARG:0)
+CALL SKILL_INIT(ARG:0)
+CALL CLOTH_INIT(ARG:0)
+;-------------------------------------------------
+;TALENT의 초기치를 현재의 값으로 설정하는 함수
+;-------------------------------------------------
+;@SET_INI_TALENT(ARG:0, ARGS:1)
+;LOCAL:0 = GETNUM(TALENT, ARGS:1)
+;INI_TALENT:(ARG:0):(LOCAL:0) = TALENT:(ARG:0):(LOCAL:0)
+
+;-------------------------------------------------
+;ABL의 초기치를 현재의 값으로 설정하는 함수
+;-------------------------------------------------
+;@SET_INI_ABL(ARG:0, ARGS:1)
+;LOCAL:0 = GETNUM(ABL, ARGS:1)
+;INI_ABL:(ARG:0):(LOCAL:0) = ABL:(ARG:0):(LOCAL:0)
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터에 대해, NAME（명）를 돌려주는 함수
+;인수를 생략 하면 에러가 된다
+;ARG:1을 건네주는 것으로 복수 표시에 대응
+;-------------------------------------------------
+@ANAME(ARG:0 = -999, ARG:1 = 1)
+#FUNCTIONS
+IF ARG:0 == -999
+	THROW 함수@ANAME에 인수가 설정되어 있지 않습니다
+ENDIF
+IF CSTR:(ARG:0):98 != ""
+	RETURNF @"%CSTR:(ARG:0):98%\@ARG:1 > 1 ? 들 # \@"
+ENDIF
+RETURNF @"%NAME:(ARG:0)%\@ARG:1 > 1 ? 들 # \@"
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터에 대해, NAME（명）를 돌려주는 함수 다만 긴 경우는 TOHALF를 걸친다  그런데도 길다（TOHALF가 걸리지 않는 문자）라면 SUBSTRING
+;인수를 생략 하면 에러가 된다
+;-------------------------------------------------
+@SNAME(ARG:0 = -999)
+#FUNCTIONS
+IF ARG:0 == -999
+	THROW 함수@ANAME에 인수가 설정되어 있지 않습니다
+ENDIF
+IF STRLENS(ANAME(ARG:0)) >= MAX_CHARANAME_LENGTH / 2
+	RETURNF SUBSTRING(ANAME(ARG:0), 0, MAX_CHARANAME_LENGTH / 2)
+ENDIF
+;IF STRLENS(ANAME(ARG:0)) >= MAX_CHARANAME_LENGTH / 2
+;	IF STRLENS(TOHALF(ANAME(ARG:0))) <= MAX_CHARANAME_LENGTH / 2
+;		RETURNF TOHALF(ANAME(ARG:0))
+;	ELSEIF STRLENS(SUBSTRING(TOHALF(ANAME(ARG:0)), 0, MAX_CHARANAME_LENGTH / 2)) <= MAX_CHARANAME_LENGTH / 2
+;		RETURNF SUBSTRING(TOHALF(ANAME(ARG:0)), 0, MAX_CHARANAME_LENGTH / 2)
+;	ELSE
+;		RETURNF SUBSTRING(TOHALF(ANAME(ARG:0)), 0, MAX_CHARANAME_LENGTH / 2 - 1)
+;	ENDIF
+;ENDIF
+RETURNF ANAME(ARG:0)
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터에 대해, 「성명」의 형태의 문자열을 돌려주는 함수
+;인수를 생략 하면 에러가 된다
+;-------------------------------------------------
+;@NAME_DOUBLE(ARG:0 = -999)
+;NAME_FORMAL의 자비표시화로, NAME_FORMAL와 거동이 완전히 같게 되었기 때문에, 삭제
+
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터에 대해, 「성+명」의 형태의 문자열을 돌려주는 함수
+;(연희으로는 글자도 표시하는 사양이었지만, K에 글자는 없기에 삭제）
+;성명자가 설정되어 있지 않으면 NAME 또는 CALLNAME를 돌려준다
+;-------------------------------------------------
+@NAME_FORMAL(ARG:0)
+#FUNCTIONS
+
+;CSTR0가 없다（당신이나 동적 생성 캐릭터）라면 NAME를 표시
+IF CSTR:(ARG:0):0 == ""
+	RETURNF NAME:(ARG:0)
+ENDIF
+
+;CSTR:0으로 CSTR:1이 동일（릴리화이트 같은 성씨 없음）라면, CSTR0를 돌려준다
+IF CSTR:(ARG:0):0 == CSTR:(ARG:0):1
+	RETURNF CSTR:(ARG:0):0
+ENDIF
+
+IF TALENT:(ARG:0):성명역전
+	LOCALS:0 = %CSTR:(ARG:0):1%
+	LOCALS:0 += " " + CSTR:(ARG:0):0
+ELSE
+	LOCALS:0 = %CSTR:(ARG:0):0% 
+	LOCALS:0 += " " + CSTR:(ARG:0):1
+ENDIF
+
+RETURNF LOCALS:0
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터에 대해, 삼인칭 대명사를 돌려주는 함수
+;인수를 생략 하면 에러가 된다
+;-------------------------------------------------
+@PRONOUN(ARG:0 = -999)
+#FUNCTIONS
+IF ARG:0 == -999
+	THROW 함수@ANAME에 인수가 설정되어 있지 않습니다
+ENDIF
+RETURNF (IS_FEMALE(ARG:0) ? "그녀" # "그")
+
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 ID를 취득하는 함수
+;-------------------------------------------------
+@GET_ID(ARG:0)
+#FUNCTION
+IF ARG:0 < 0 || ARG:0 >= CHARANUM
+	RETURNF 0
+ENDIF
+RETURNF CFLAG:(ARG:0):캐릭터ＩＤ
+
+;-------------------------------------------------
+;CSV 등록 번호를 바탕으로 캐릭터 번호를 돌려주는 함수
+;-------------------------------------------------
+@NO_TO_CHARA(ARG:0)
+#FUNCTION
+FOR LOCAL:0, 0, CHARANUM
+	IF NO:(LOCAL:0) == ARG:0
+		RETURNF LOCAL:0
+	ENDIF
+NEXT
+RETURNF -1
+
+;-------------------------------------------------
+;ID를 바탕으로 캐릭터 번호를 돌려주는 함수
+;-------------------------------------------------
+@ID_TO_CHARA(ARG:0)
+#FUNCTION
+IF ARG:0 >= 1
+	FOR LOCAL:0, 0, CHARANUM
+		IF GET_ID(LOCAL:0) == ARG:0
+			RETURNF LOCAL:0
+		ENDIF
+	NEXT
+ENDIF
+RETURNF -1
+
+;-------------------------------------------------
+;이름(CSTR:99)을 바탕으로 캐릭터 번호를 돌려주는 함수
+;-------------------------------------------------
+@NAME_TO_CHARA(ARGS:0)
+#FUNCTION
+FOR LOCAL:0, 0, CHARANUM
+	IF CSTR:(LOCAL:0):99 == ARGS:0
+		RETURNF LOCAL:0
+	ENDIF
+NEXT
+RETURNF -1
+
+;============================================================================== 
+;◆등록 번호가 특수한 CSV 번호(캐릭터 번호)를 가지는 캐릭터라면 1을 돌려주는 함수(Kh)
+;============================================================================== 
+@SPCSV(ARG:0)
+	#FUNCTION
+	IF ARG:0 == NAME_TO_CHARA("당신") || ARG:0 == NAME_TO_CHARA("리요구다코") || ARG:0 == NAME_TO_CHARA("남자마스터") || ARG:0 == NAME_TO_CHARA("여자마스터")
+		RETURNF 1
+	ENDIF
+	RETURNF 0
+
+;============================================================================== 
+;◆등록 번호가 특수하고 동료 사이드의 CSV 번호(캐릭터 번호)를 가지는 캐릭터라면 1을 돌려주는 함수(Kh)
+;============================================================================== 
+@FRIENDCSV(ARG:0)
+	#FUNCTION
+	IF ARG:0 == NAME_TO_CHARA("당신") || ARG:0 == NAME_TO_CHARA("남자마스터") || ARG:0 == NAME_TO_CHARA("여자마스터")
+		RETURNF 1
+	ENDIF
+	RETURNF 0
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터가 타겟인가 어떤가를 돌려주는 함수
+;-------------------------------------------------
+@IS_MTAR(ARG:0)
+#FUNCTION
+FOR LOCAL:0, 0, MTAR_NUM
+	IF MTAR:(LOCAL:0) == ARG:0
+		RETURNF 1
+	ENDIF
+NEXT
+RETURNF 0
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터를 타겟으로 추가하는 함수
+;이미 타겟이 되고 있는 캐릭터를 지정해도 에러가 되지 않는다
+;-------------------------------------------------
+@ADD_MTAR(ARG:0)
+IF ARG:0 < 0 || ARG:0 >= CHARANUM || IS_MTAR(ARG:0)
+	RETURN 0
+ENDIF
+
+;캐릭터 번호의 젊은 순서에 정렬한다
+MTAR_NUM ++
+LOCAL:1 = MTAR_NUM - 1
+FOR LOCAL:0, 0, MTAR_NUM
+	IF ARG:0 < MTAR:(LOCAL:0)
+		FOR LOCAL:1, 1, MTAR_NUM - LOCAL:0
+			MTAR:(MTAR_NUM - LOCAL:1) = MTAR:(MTAR_NUM - LOCAL:1 - 1)
+		NEXT
+		LOCAL:1 = LOCAL:0
+		BREAK
+	ENDIF
+NEXT
+MTAR:(LOCAL:1) = ARG:0
+ARRAYSORT MTAR, FORWARD, 0, MTAR_NUM
+RETURN 1
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터를 타겟으로부터 삭제하는 함수
+;타겟이 아닌 캐릭터를 지정해도 에러가 되지 않는다
+;-------------------------------------------------
+@DEL_MTAR(ARG:0)
+IF ARG:0 < 0 || ARG:0 >= CHARANUM
+	RETURN 0
+ENDIF
+
+FOR LOCAL:0, 0, MTAR_NUM
+	IF MTAR:(LOCAL:0) == ARG:0
+		FOR LOCAL:1, LOCAL:0, MTAR_NUM - 1
+			MTAR:(LOCAL:1) = MTAR:(LOCAL:1 + 1)
+		NEXT
+		MTAR:(MTAR_NUM - 1) = -1
+		MTAR_NUM --
+		ARRAYSORT MTAR, FORWARD, 0, MTAR_NUM
+		RETURN 1
+	ENDIF
+NEXT
+RETURN 0
+
+;-------------------------------------------------
+;모든 타겟을 해제하는 함수
+;-------------------------------------------------
+@CLEAR_MTAR
+VARSET MTAR, -1
+MTAR_NUM = 0
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터가 플레이어인가 어떤가를 돌려주는 함수
+;-------------------------------------------------
+@IS_MPLY(ARG:0)
+#FUNCTION
+FOR LOCAL:0, 0, MPLY_NUM
+	IF MPLY:(LOCAL:0) == ARG:0
+		RETURNF 1
+	ENDIF
+NEXT
+RETURNF 0
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터를 플레이어에 추가하는 함수
+;이미 플레이어가 되고 있는 캐릭터를 지정해도 에러가 되지 않는다
+;-------------------------------------------------
+@ADD_MPLY(ARG:0)
+IF ARG:0 < 0 || ARG:0 >= CHARANUM || IS_MPLY(ARG:0)
+	RETURN 0
+ENDIF
+
+;캐릭터 번호의 젊은 순서에 정렬한다
+MPLY_NUM ++
+LOCAL:1 = MPLY_NUM - 1
+FOR LOCAL:0, 0, MPLY_NUM
+	IF ARG:0 < MPLY:(LOCAL:0)
+		FOR LOCAL:1, 1, MPLY_NUM - LOCAL:0
+			MPLY:(MPLY_NUM - LOCAL:1) = MPLY:(MPLY_NUM - LOCAL:1 - 1)
+		NEXT
+		LOCAL:1 = LOCAL:0
+		BREAK
+	ENDIF
+NEXT
+MPLY:(LOCAL:1) = ARG:0
+ARRAYSORT MPLY, FORWARD, 0, MPLY_NUM
+RETURN 1
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터를 플레이어로부터 삭제하는 함수
+;플레이어가 아닌 캐릭터를 지정해도 에러가 되지 않는다
+;-------------------------------------------------
+@DEL_MPLY(ARG:0)
+IF ARG:0 < 0 || ARG:0 >= CHARANUM
+	RETURN 0
+ENDIF
+
+FOR LOCAL:0, 0, MPLY_NUM
+	IF MPLY:(LOCAL:0) == ARG:0
+		FOR LOCAL:1, LOCAL:0, MPLY_NUM - 1
+			MPLY:(LOCAL:1) = MPLY:(LOCAL:1 + 1)
+		NEXT
+		MPLY:(MPLY_NUM - 1) = -1
+		MPLY_NUM --
+		ARRAYSORT MPLY, FORWARD, 0, MPLY_NUM
+		RETURN 1
+	ENDIF
+NEXT
+RETURN 0
+
+;-------------------------------------------------
+;모든 플레이어를 해제하는 함수
+;-------------------------------------------------
+@CLEAR_MPLY
+VARSET MPLY, -1
+MPLY_NUM = 0
+
+;-------------------------------------------------
+;그 캐릭터가 조교에 참가하고 있을까 조사하는 함수
+;-------------------------------------------------
+@IS_PARTICIPATE_TRAIN(대상)
+#FUNCTION
+#DIM 대상
+IF 대상 != MASTER
+	RETURNF CFLAG:대상:조교참가플래그
+ELSE
+	IF FLAG:조교모드 == 조교_위안
+		RETURNF CFLAG:대상:조교참가플래그
+	ELSE
+		RETURNF 1
+	ENDIF
+ENDIF
+
+
+
+;-------------------------------------------------
+;지정 개수의 반각 스페이스를 문자열으로서 돌려주는 함수
+;-------------------------------------------------
+@TOSTR_SPACE(ARG:0)
+#FUNCTIONS
+LOCALS:0 = 
+FOR LOCAL:0, 0, ARG:0
+	LOCALS:0 += " "
+NEXT
+RETURNF LOCALS:0
+
+;-------------------------------------------------
+;문자열 ARGS:0을 ARG:1회반복한 문자열을 돌려주는 함수
+;-------------------------------------------------
+@TOSTR_REPEAT(ARGS:0, ARG:1)
+#FUNCTIONS
+LOCALS:0 = 
+FOR LOCAL:0, 0, ARG:1
+	LOCALS:0 += ARGS:0
+NEXT
+RETURNF LOCALS:0
+
+;-------------------------------------------------
+;ARG:0의 자리수를 돌려주는 함수
+;-------------------------------------------------
+@GET_DIGIT(ARG:0)
+#FUNCTION
+LOCAL:1 = ABS(ARG:0)
+LOCAL:2 = 0
+FOR LOCAL:0, 0, 100
+	IF LOCAL:1 < 1000
+		BREAK
+	ENDIF
+	LOCAL:1 /= 10000
+	LOCAL:2 += 4
+NEXT
+IF LOCAL:1 >= 100
+	LOCAL:2 += 3
+ELSEIF LOCAL:1 >= 10
+	LOCAL:2 += 2
+ELSEIF LOCAL:1 > 0
+	LOCAL:2 += 1
+ENDIF
+RETURNF MAX(1, LOCAL:2)
+
+;-------------------------------------------------
+;규정아야 자수(전각 ARG:2자)의 폭으로 센터링 한 버튼을 작성하는 함수
+;ARG:3에 0을 설정하면 버튼이 무효(회색), ARG:4에 1을 설정하면 버튼이 무효(물색), 우선도는 ARG:3＞ARG:4
+;-------------------------------------------------
+@PRINTBUTTON_CENTER(ARGS:0, ARG:1, ARG:2, ARG:3 = 1, ARG:4 = 0)
+LOCAL:0 = ARG:2 - STRLENS(ARGS:0) / 2
+
+PRINTPLAINFORM %TOSTR_SPACE(LOCAL:0)%
+IF !ARG:3
+	SETCOLOR 칼라_선택불가
+	PRINTPLAINFORM %ARGS:0%
+	RESETCOLOR
+ELSEIF ARG:4
+	SETCOLOR 칼라_선택중
+	PRINTPLAINFORM %ARGS:0%
+	RESETCOLOR
+ELSE
+	PRINTBUTTON @"%ARGS:0%", ARG:1
+ENDIF
+PRINTPLAINFORM %TOSTR_SPACE(LOCAL:0)%
+
+;-------------------------------------------------
+;항번 붙여 메뉴 버튼 생성하는 함수 0~99까지 대응
+;내부적으로는 PRINTBUTTON_CENTER를 호출한다. 항번에 대응하는 SHOP_AVAIL를, PRINTBUTTON_CENTER의 ARG:3으로서 건네준다
+;ARG:1은 PRINTBUTTON_CENTER의 ARG:2, ARG:2는 ARG:4에 대응
+;-------------------------------------------------
+@PRINTBUTTON_SHOP(ARG:0, ARGS:0, ARG:1, ARG:2 = 0)
+SIF ARG:0 < 0 || 99 < ARG:0
+	THROW PRINTBUTTON_SHOP로 생성할 수 있는 항번은 99까지입니다.
+IF 0 <= ARG:0 && ARG:0 < 10
+	LOCALS:0 = %" " + TOSTR(ARG:0)%%ARGS:0%
+ELSE
+	LOCALS:0 = %TOSTR(ARG:0)%%ARGS:0%
+ENDIF
+CALL PRINTBUTTON_CENTER(LOCALS:0, ARG:0, ARG:1, SHOP_AVAIL:(ARG:0), ARG:2)
+
+;-------------------------------------------------
+;특수한 기능을 가지는 버튼을 작성하는 함수
+;ARG:2에 0을 설정하면 버튼이 무효(회색), ARG:3에 1을 설정하면 버튼이 무효(물색), 우선도는 ARG:3＞ARG:4
+;-------------------------------------------------
+@PRINTBUTTON_EX(ARGS:0, ARG:1, ARG:2 = 1, ARG:3 = 0)
+IF !ARG:2
+	SETCOLOR 0x606060
+	PRINTPLAINFORM %ARGS:0%
+	RESETCOLOR
+ELSEIF ARG:3
+	SETCOLOR 0x00FFFF
+	PRINTPLAINFORM %ARGS:0%
+	RESETCOLOR
+ELSE
+	PRINTBUTTON @"%ARGS:0%", ARG:1
+ENDIF
+
+;-------------------------------------------------
+;특수한 기능을 가지는 버튼을 작성하는 함수 마지막에 개행을 실시한다
+;ARG:2에 0을 설정하면 버튼이 무효(회색), ARG:3에 1을 설정하면 버튼이 무효(물색), 우선도는 ARG:3＞ARG:4
+;-------------------------------------------------
+@PRINTBUTTON_EXL(ARGS:0, ARG:1, ARG:2 = 1, ARG:3 = 0)
+CALL PRINTBUTTON_EX(ARGS:0, ARG:1, ARG:2, ARG:3)
+PRINTL 
+
+;-------------------------------------------------
+;파라미터량 ARG:0에 대한 파라미터의 Lv를 돌려주는 함수
+;※편입의 GETPALAMLV와는 별개
+;-------------------------------------------------
+@GET_PALAMLV(ARG:0)
+#FUNCTION
+LOCAL:1 = 25
+FOR LOCAL:0, 1, 26
+	IF ARG:0 < PALAMLV:(LOCAL:0)
+		LOCAL:1 = LOCAL:0 - 1
+		BREAK
+	ENDIF
+NEXT
+RETURNF LOCAL:1
+
+;-------------------------------------------------
+;정수 ARG:0아래로부터 ARG:첫 번째에 소수점을 쳐, 그 값을 문자열으로서 돌려주는 함수
+;-------------------------------------------------
+@DECIMAL_STRING(ARG:0, ARG:1)
+#FUNCTIONS
+IF ARG:1 <= 0
+	THROW "@DECIMAL_STRING의 두번째의 인수에 0 이하의 값이 지정되었습니다({ARG:1})"
+ENDIF
+
+LOCAL:4 = ARG:0
+
+LOCAL:2 = POWER(10, ARG:1)
+LOCAL:3 = LOCAL:4 / LOCAL:2
+LOCAL:4 = LOCAL:4 - LOCAL:3 * LOCAL:2
+LOCALS:0 = {LOCAL:3}.
+
+FOR LOCAL:0, ARG:1 - 1, 0, -1
+	LOCAL:2 = POWER(10, LOCAL:0)
+	LOCAL:3 = LOCAL:4 / LOCAL:2
+	LOCAL:4 = LOCAL:4 - LOCAL:3 * LOCAL:2
+	LOCALS:0 = %LOCALS:0%{LOCAL:3}
+NEXT
+LOCALS:0 = %LOCALS:0%{LOCAL:4}
+RETURNF LOCALS:0
+
+;-------------------------------------------------
+;주어진 숫자의 부호를 문자열으로서 돌려준다
+;-------------------------------------------------
+@TOSTR_SIGN(ARG:0)
+#FUNCTIONS
+IF ARG:0 >= 0
+	RETURNF "+"
+ENDIF
+RETURNF "-"
+
+;-------------------------------------------------
+;ARG:0(좌변)으로 ARG:1(우변)을 비교해, 부등호를 문자열으로서 돌려준다
+;-------------------------------------------------
+@TOSTR_COMPARE(ARG:0, ARG:1)
+#FUNCTIONS
+IF ARG:0 > ARG:1
+	RETURNF ">"
+ELSEIF ARG:0 < ARG:1
+	RETURNF "<"
+ENDIF
+RETURNF "="
+
+;-------------------------------------------------
+;수치 ARG:0을 KMGT 단위의 근사치로 고쳐, 그 문자열을 돌려주는 함수
+;ARG:1에 최대아야 자수를 넣는다
+;-------------------------------------------------
+@TOSTR_KMGT(ARG:0, ARG:1)
+#FUNCTIONS
+;ARG:1에 5 미만의 수는 지정 할 수 없다
+ARG:1 = MAX(5, ARG:1)
+
+LOCAL:2 = GET_DIGIT(ARG:0)
+IF LOCAL:2 <= ARG:1
+	RETURNF @"{ARG:0}"
+ENDIF
+
+LOCAL:1 = ARG:0
+FOR LOCAL:0, 0, 5
+	LOCAL:2 -= 3
+	LOCAL:1 /= 1000
+	IF LOCAL:2 <= ARG:1 - 1
+		SELECTCASE LOCAL:0
+			CASE 0
+				LOCALS:0 = k
+			CASE 1
+				LOCALS:0 = M
+			CASE 2
+				LOCALS:0 = G
+			CASE 3
+				LOCALS:0 = T
+			CASEELSE
+				;2^63 ≒ 920경 = 9200P = 9.2E
+				;Emuera의 64 비트 정수에서도 페타까지로 충분히
+				LOCALS:0 = P
+		ENDSELECT
+		BREAK
+	ENDIF
+NEXT
+RETURNF @"{LOCAL:1}%LOCALS:0%"
+
+;-----------------------------------------------
+;체력 기력을 0～최대치의 범위에 거두는 함수
+;-----------------------------------------------
+@LIFE_LIMIT
+FOR LOCAL:0, 0, CHARANUM
+	BASE:(LOCAL:0):체력 = LIMIT(BASE:(LOCAL:0):체력, 0, MAXBASE:(LOCAL:0):체력)
+	BASE:(LOCAL:0):기력 = LIMIT(BASE:(LOCAL:0):기력, 0, MAXBASE:(LOCAL:0):기력)
+NEXT
+
+;-------------------------------------------------------------------------------
+;칼라바의 표시 함수(PANCTION로부터 이동)
+;인수는 BAR와 거의 함께 + ARGS로 묘사문자의 변경이 가능(지정하지 않는 경우는 BAR와 같은 사양)
+;ARG:3은 바의 색(0 xFFFFFF 형식에서 지정), ARG:4는 바의 키 경치(0 xFFFFFF 형식에서 지정)
+;-------------------------------------------------------------------------------
+@PRINT_COLORBAR(ARG, ARG:1, ARG:2, ARGS = "*", ARGS:1 = ".", ARG:3, ARG:4)
+#LOCALSIZE 5
+VARSET LOCAL
+LOCAL:1 = ARG * ARG:2 / ARG:1
+LOCAL:2 = GETCOLOR()
+FOR LOCAL, 1, ARG:2 + 1
+	IF LOCAL:1 >= LOCAL
+		IF !LOCAL:3
+			SETCOLOR ARG:3
+			LOCAL:3 = 1
+		ENDIF
+		PRINTFORM %ARGS%
+	ELSE
+		IF !LOCAL:4
+			SETCOLOR ARG:4
+			LOCAL:4 = 1
+		ENDIF
+		PRINTFORM %ARGS:1%
+	ENDIF
+NEXT
+SETCOLOR LOCAL:2
+
+;-------------------------------------------------
+;각도(ARG:0)о에 대응하는 COS의 1000배의 값을 돌려주는 함수
+;-------------------------------------------------
+@CALC_COS(ARG:0)
+#FUNCTION
+LOCAL:0  = 184320
+LOCAL:1  = 108810
+LOCAL:2  =  57492
+LOCAL:3  =  29184
+LOCAL:4  =  14649
+LOCAL:5  =   7331
+LOCAL:6  =   3667
+LOCAL:7  =   1833
+LOCAL:8  =    917
+LOCAL:9  =    458
+LOCAL:10 =    229
+LOCAL:11 =    115
+LOCAL:20 =   6745
+
+LOCAL:29 = ABS(180 - ABS(ARG:0) % 360)
+LOCAL:30 = ABS(90 - LOCAL:29) * (1 << 12)
+LOCAL:31 = LOCAL:0
+LOCAL:25 = 1 << 12
+LOCAL:26 = 1 << 12
+LOCAL:27 = 1 << 11
+FOR LOCAL:21, 1, 12
+	IF LOCAL:31 >= LOCAL:30
+		LOCAL:31 -= LOCAL:(LOCAL:21)
+		LOCAL:23 = LOCAL:25 + ((LOCAL:27 * LOCAL:26) >> 12)
+		LOCAL:24 = LOCAL:26 - ((LOCAL:27 * LOCAL:25) >> 12)
+	ELSE
+		LOCAL:31 += LOCAL:(LOCAL:21)
+		LOCAL:23 = LOCAL:25 - ((LOCAL:27 * LOCAL:26) >> 12)
+		LOCAL:24 = LOCAL:26 + ((LOCAL:27 * LOCAL:25) >> 12)
+	ENDIF
+	LOCAL:25 = LOCAL:23
+	LOCAL:26 = LOCAL:24
+	LOCAL:27 >>= 1
+NEXT
+IF LOCAL:29 >= 90
+	LOCAL:28 = 1
+ELSE
+	LOCAL:28 = -1
+ENDIF
+RETURNF (LOCAL:24 * 1000 + (LOCAL:20 >> 1)) / LOCAL:20 * LOCAL:28
+
+;-------------------------------------------------
+;각도(ARG:0)о에 대응하는 SIN의 1000배의 값을 돌려주는 함수
+;-------------------------------------------------
+@CALC_SIN(ARG:0)
+#FUNCTION
+RETURNF CALC_COS(ARG:0 - 90)
+
+;-------------------------------------------------
+;RGB 칼라로부터 색상(0～359)을 취득하는 함수
+;-------------------------------------------------
+@RGB_TO_H(ARG:0)
+#FUNCTION
+LOCAL:0 = (ARG:0 >> 16) & 0xFF
+LOCAL:1 = (ARG:0 >> 8) & 0xFF
+LOCAL:2 = ARG:0 & 0xFF
+LOCAL:3 = MAX(LOCAL:0, LOCAL:1, LOCAL:2)
+LOCAL:4 = MIN(LOCAL:0, LOCAL:1, LOCAL:2)
+LOCAL:5 = LOCAL:3 - LOCAL:4
+
+IF LOCAL:5 <= 0
+	LOCAL:6 = 0
+ELSEIF LOCAL:0 == LOCAL:3
+	LOCAL:6 = 60 * (LOCAL:1 - LOCAL:2) / LOCAL:5
+ELSEIF LOCAL:1 == LOCAL:3
+	LOCAL:6 = 60 * (LOCAL:2 - LOCAL:0) / LOCAL:5 + 120
+ELSE
+	LOCAL:6 = 60 * (LOCAL:0 - LOCAL:1) / LOCAL:5 + 240
+ENDIF
+IF LOCAL:6 < 0
+	LOCAL:6 += 360
+ENDIF
+RETURNF LOCAL:6
+
+;-------------------------------------------------
+;RGB 칼라로부터 채도(0～100)를 취득하는 함수
+;-------------------------------------------------
+@RGB_TO_S(ARG:0)
+#FUNCTION
+LOCAL:0 = (ARG:0 >> 16) & 0xFF
+LOCAL:1 = (ARG:0 >> 8) & 0xFF
+LOCAL:2 = ARG:0 & 0xFF
+LOCAL:3 = MAX(LOCAL:0, LOCAL:1, LOCAL:2)
+LOCAL:4 = LOCAL:3 - MIN(LOCAL:0, LOCAL:1, LOCAL:2)
+IF LOCAL:3 <= 0
+	RETURNF 0
+ENDIF
+RETURNF LOCAL:4 * 100 / LOCAL:3
+
+;-------------------------------------------------
+;RGB 칼라로부터 명도(0～100)를 취득하는 함수
+;-------------------------------------------------
+@RGB_TO_V(ARG:0)
+#FUNCTION
+LOCAL:0 = (ARG:0 >> 16) & 0xFF
+LOCAL:1 = (ARG:0 >> 8) & 0xFF
+LOCAL:2 = ARG:0 & 0xFF
+RETURNF MAX(LOCAL:0, LOCAL:1, LOCAL:2) * 100 / 255
+
+;-------------------------------------------------
+;HSV 칼라를 RGB 칼라로 변환하는 함수
+;ARG:0=색상(0～359)
+;ARG:1=채도(0～100)
+;ARG:2=명도(0～100)
+;-------------------------------------------------
+@HSV_TO_RGB(ARG:0, ARG:1, ARG:2)
+#FUNCTION
+IF ARG:0 >= 0 && ARG:0 <= 359 && ARG:1 >= 0 && ARG:1 <= 100 && ARG:2 >= 0 && ARG:2 <= 100
+	IF ARG:1 == 0
+		LOCAL:5 = ARG:2 * 255 / 100
+		RETURNF (LOCAL:5 << 16) + (LOCAL:5 << 8) + LOCAL:5
+	ELSE
+		LOCAL:0 = ARG:0 / 60
+		LOCAL:1 = ARG:0 % 60
+		LOCAL:2 = ARG:2 * (6000 - 60 * ARG:1) * 255 / 600000
+		LOCAL:3 = ARG:2 * (6000 - LOCAL:1 * ARG:1) * 255 / 600000
+		LOCAL:4 = ARG:2 * (6000 - (60 - LOCAL:1) * ARG:1) * 255 / 600000
+		LOCAL:5 = ARG:2 * 255 / 100
+		SELECTCASE LOCAL:0
+			CASE 0
+				RETURNF (LOCAL:5 << 16) + (LOCAL:4 << 8) + LOCAL:2
+			CASE 1
+				RETURNF (LOCAL:3 << 16) + (LOCAL:5 << 8) + LOCAL:2
+			CASE 2
+				RETURNF (LOCAL:2 << 16) + (LOCAL:5 << 8) + LOCAL:4
+			CASE 3
+				RETURNF (LOCAL:2 << 16) + (LOCAL:3 << 8) + LOCAL:5
+			CASE 4
+				RETURNF (LOCAL:4 << 16) + (LOCAL:2 << 8) + LOCAL:5
+			CASE 5
+				RETURNF (LOCAL:5 << 16) + (LOCAL:2 << 8) + LOCAL:3
+		ENDSELECT
+	ENDIF
+ENDIF
+RETURNF 0x000000
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 절정 회수(EX)의 합계를 돌려주는 함수
+;ARG:1은 사정, ARG:2는 분유를 셀지 어떨지의 플래그
+;-------------------------------------------------
+@SUM_EX(ARG:0, ARG:1 = 1, ARG:2 = 1)
+#FUNCTION
+LOCAL:1 = 0
+LOCAL:1 += EX:(ARG:0):Ｃ절정
+LOCAL:1 += EX:(ARG:0):Ｖ절정
+LOCAL:1 += EX:(ARG:0):Ａ절정
+LOCAL:1 += EX:(ARG:0):Ｂ절정
+LOCAL:1 += EX:(ARG:0):Ｍ절정
+IF ARG:1
+	LOCAL:1 += EX:(ARG:0):사정
+ENDIF
+IF ARG:2
+	LOCAL:1 += EX:(ARG:0):분유
+ENDIF
+RETURNF LOCAL:1
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 이번 절정 회수(NOWEX)의 합계를 돌려주는 함수
+;ARG:1은 사정, ARG:2는 분유를 셀지 어떨지의 플래그
+;-------------------------------------------------
+@SUM_NOWEX(ARG:0, ARG:1 = 1, ARG:2 = 1)
+#FUNCTION
+LOCAL:1 = 0
+LOCAL:1 += NOWEX:(ARG:0):Ｃ절정
+LOCAL:1 += NOWEX:(ARG:0):Ｖ절정
+LOCAL:1 += NOWEX:(ARG:0):Ａ절정
+LOCAL:1 += NOWEX:(ARG:0):Ｂ절정
+LOCAL:1 += NOWEX:(ARG:0):Ｍ절정
+IF ARG:1
+	LOCAL:1 += NOWEX:(ARG:0):사정
+ENDIF
+IF ARG:2
+	LOCAL:1 += NOWEX:(ARG:0):분유
+ENDIF
+RETURNF LOCAL:1
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 쾌감계 CUP의 합계치를 돌려주는 함수(ＣＶＡＢＭ＋사정)
+;-------------------------------------------------
+@CUP_SENSE(ARG:0)
+#FUNCTION
+RETURNF CUP:(ARG:0):쾌Ｃ + CUP:(ARG:0):쾌Ｖ + CUP:(ARG:0):쾌Ａ + CUP:(ARG:0):쾌Ｂ + CUP:(ARG:0):쾌Ｍ + CUP:(ARG:0):사정
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터에 관해서, 현재의 기분의 명칭을 돌려주는 함수
+;-------------------------------------------------
+@TOSTR_EMOTION(ARG:0)
+#FUNCTIONS
+;각 감정 파라미터 가운데, 가장 큰 값을 가지는 것을 LOCAL:0에 대입
+LOCAL:1 = PALAM:(ARG:0):로주 + PALAM:(ARG:0):로외
+LOCAL:2 = PALAM:(ARG:0):액주 + PALAM:(ARG:0):액외
+LOCAL:3 = PALAM:(ARG:0):포주 + PALAM:(ARG:0):포외
+LOCAL:0 = MAX(LOCAL:1, LOCAL:2, LOCAL:3)
+
+IF TCVAR:(ARG:0):최면중 > 0
+	RETURNF "최면"
+ELSEIF TALENT:(ARG:0):붕괴
+	RETURNF "붕괴"
+ELSEIF TALENT:(ARG:0):공허
+	RETURNF "공허"
+ELSEIF LOCAL:0 < 100
+	IF LOCAL:0 < -5000
+		RETURNF "행복"
+	ELSEIF LOCAL:0 < -500
+		RETURNF "기쁨"
+	ELSEIF LOCAL:0 < -100
+		RETURNF "양호"
+	ELSE
+		RETURNF "평안"
+	ENDIF
+ELSEIF LOCAL:0 == LOCAL:1
+	IF LOCAL:0 >= 5000
+		RETURNF "원한"
+	ELSEIF LOCAL:0 >= 500
+		RETURNF "분노"
+	ELSE
+		RETURNF "분개"
+	ENDIF
+ELSEIF LOCAL:0 == LOCAL:2
+	IF LOCAL:0 >= 5000
+		RETURNF "암울"
+	ELSEIF LOCAL:0 >= 500
+		RETURNF "슬픔"
+	ELSE
+		RETURNF "우울"
+	ENDIF
+ELSE
+	IF LOCAL:0 >= 5000
+		RETURNF "광기"
+	ELSEIF LOCAL:0 >= 500
+		RETURNF "공포"
+	ELSE
+		RETURNF "겁냄"
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터에 관해서, 현재의 기분의 묘화색을 돌려주는 함수
+;-------------------------------------------------
+@GETCOLOR_EMOTION(ARG:0)
+#FUNCTION
+;각 감정 파라미터 가운데, 가장 큰 값을 가지는 것을 LOCAL:0에 대입
+LOCAL:1 = PALAM:(ARG:0):로주 + PALAM:(ARG:0):로외
+LOCAL:2 = PALAM:(ARG:0):액주 + PALAM:(ARG:0):액외
+LOCAL:3 = PALAM:(ARG:0):포주 + PALAM:(ARG:0):포외
+LOCAL:0 = MAX(LOCAL:1, LOCAL:2, LOCAL:3)
+IF TCVAR:(ARG:0):최면중 > 0
+	RETURNF 칼라_핑크
+ELSEIF TALENT:(ARG:0):붕괴
+	RETURNF 0xC0C0C0
+ELSEIF TALENT:(ARG:0):공허
+	RETURNF 0x808080
+ELSEIF LOCAL:0 < 100
+	IF LOCAL:0 < -5000
+		RETURNF 칼라_주의
+	ELSEIF LOCAL:0 < -500
+		RETURNF 0x80FF00
+	ELSEIF LOCAL:0 < -100
+		RETURNF 0x00FF00
+	ELSE
+		RETURNF 0xC0C0C0
+	ENDIF
+ELSEIF LOCAL:0 == LOCAL:1
+	IF LOCAL:0 >= 5000
+		RETURNF 0x800040
+	ELSEIF LOCAL:0 >= 500
+		RETURNF 칼라_경고
+	ELSE
+		RETURNF 0xFF8000
+	ENDIF
+ELSEIF LOCAL:0 == LOCAL:2
+	IF LOCAL:0 >= 5000
+		RETURNF 0x0000C0
+	ELSEIF LOCAL:0 >= 500
+		RETURNF 0x0000FF
+	ELSE
+		RETURNF 0x0040FF
+	ENDIF
+ELSE
+	IF LOCAL:0 >= 5000
+		RETURNF 0x00FFFF
+	ELSEIF LOCAL:0 >= 500
+		RETURNF 0x008080
+	ELSE
+		RETURNF 0x008000
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터에게 장대가 있을지 어떨지를 돌려주는 함수
+;-------------------------------------------------
+@HAS_PENIS(ARG:0)
+#FUNCTION
+RETURNF TALENT:(ARG:0):성별 != 1
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터에게Ｖ가 있을지 어떨지를 돌려주는 함수
+;-------------------------------------------------
+@HAS_VAGINA(ARG:0)
+#FUNCTION
+RETURNF GROUPMATCH(TALENT:(ARG:0):성별, 1, 2, 3, 5)
+
+@VIRGIN(ARG:0)
+#FUNCTION
+RETURNF TALENT:(ARG:0):처녀
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터가 베이스로서 남자 취급이라면 1을 돌려주는 함수
+;-------------------------------------------------
+@IS_MALE(ARG:0)
+#FUNCTION
+RETURNF GROUPMATCH(TALENT:(ARG:0):성별, 0, 3, 4, 5)
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터가 베이스로서 여자 취급이라면 1을 돌려주는 함수
+;-------------------------------------------------
+@IS_FEMALE(ARG:0)
+#FUNCTION
+RETURNF !IS_MALE(ARG:0)
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터와 ARG:1번의 캐릭터가 동성인가 어떤가를 돌려주는 함수
+;-------------------------------------------------
+@IS_SAMESEX(ARG:0, ARG:1)
+#FUNCTION
+RETURNF IS_MALE(ARG:0) == IS_MALE(ARG:1)
+
+;-------------------------------------------------
+;◆ARG:0번의 캐릭터와 ARG:1번의 캐릭터가 남성끼리인가 어떤가를 돌려주는 함수（Kh추가）
+;-------------------------------------------------
+@IS_SAMESEX_M(ARG:0, ARG:1)
+	#FUNCTION
+	IF IS_MALE(ARG:0) && IS_MALE(ARG:1)
+		RETURNF 1
+	ENDIF
+	RETURNF 0
+
+;-------------------------------------------------
+;◆ARG:0번의 캐릭터와 ARG:1번의 캐릭터가 여성끼리인가 어떤가를 돌려주는 함수（Kh추가）
+;-------------------------------------------------
+@IS_SAMESEX_F(ARG:0, ARG:1)
+	#FUNCTION
+	IF IS_FEMALE(ARG:0) && IS_FEMALE(ARG:1)
+		RETURNF 1
+	ENDIF
+	RETURNF 0
+
+;-------------------------------------------------
+;◆ARG:0번의 캐릭터가 천함락소질을 갖고 있다면 1을 돌려주는 함수（Kh추가）
+;-------------------------------------------------
+@IS_MASTER(ARG:0)
+	#FUNCTION
+	IF TALENT:(ARG:0):연모 || TALENT:(ARG:0):주인 || TALENT:(ARG:0):복종 || TALENT:(ARG:0):친구
+		RETURNF 1
+	ELSE
+		RETURNF 0
+	ENDIF
+
+;-------------------------------------------------
+;◆ARG:0번의 캐릭터가 심함락소질을 갖고 있다면 1을 돌려주는 함수（Kh추가）
+;-------------------------------------------------
+@IS_MASTER_UP(ARG:0)
+	#FUNCTION
+	IF TALENT:(ARG:0):친애 || TALENT:(ARG:0):소유자 || TALENT:(ARG:0):예속
+		RETURNF 1
+	ELSE
+		RETURNF 0
+	ENDIF
+
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터가 동물계인가 어떤가를 돌려주는 함수
+;-------------------------------------------------
+@IS_ANIMAL(ARG:0)
+#FUNCTION
+RETURNF TALENT:(ARG:0):동물
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터가 동물계인가 어떤가를 돌려주는 함수
+;-------------------------------------------------
+@IS_QUADORUPED_ANIMAL(ARG:0)
+#FUNCTION
+RETURNF GROUPMATCH(TALENT:(ARG:0):동물, 동물_개, 동물_돼지, 동물_말)
+
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터가 고정 캐릭터（랜덤 캐릭터, 아이, 특수 캐릭터)라면 1을 돌려주는 함수
+;-------------------------------------------------
+@IS_FIXED_CHARA(ARG:0)
+#FUNCTION
+RETURNF NO:(ARG:0) < MAX_FIXED_CHARA
+
+@IS_RANDOM_CHARA(ARG:0)
+#FUNCTION
+RETURNF INRANGE(NO:(ARG:0), MIN_NO_RANDOM_CHARA, MIN_NO_RANDOM_CHARA + MAX_RANDOM_CHARA - 1)
+
+@IS_CHILD(ARG:0)
+#FUNCTION
+RETURNF INRANGE(NO:(ARG:0), MIN_NO_CHILD, MIN_NO_CHILD + MAX_CHILD - 1)
+
+@IS_SP_CHARA(ARG:0)
+#FUNCTION
+RETURNF NO:(ARG:0) >= MIN_NO_SP_CHARA && !TALENT:(ARG:0):커스텀캐릭터
+
+;-------------------------------------------------
+;아이·랜덤 캐릭터를 추가할 수 있을까를 돌려준다
+;-------------------------------------------------
+@CAN_ADD_RANDOM_CHARA()
+#FUNCTION
+RETURNF FLAG:범용무장카운트 < MAX_RANDOM_CHARA
+
+@CAN_ADD_CHILD()
+#FUNCTION
+RETURNF FLAG:아이카운트 < MAX_CHILD
+
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터가 연모계를 갖고 있다면 1을 돌려주는 함수
+;-------------------------------------------------
+@IS_LOVER(ARG:0)
+#FUNCTION
+IF TALENT:(ARG:0):연모 || TALENT:(ARG:0):친애 || TALENT:(ARG:0):연인
+	RETURNF 1
+ELSE
+	RETURNF 0
+ENDIF
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터가 복종계를 갖고 있을까 낙인이라면 1을 돌려주는 함수
+;-------------------------------------------------
+@IS_SLAVE(ARG:0)
+#FUNCTION
+IF TALENT:(ARG:0):복종 || TALENT:(ARG:0):예속 || TALENT:(ARG:0):낙인
+	RETURNF 1
+ELSE
+	RETURNF 0
+ENDIF
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터가 복종계를 갖고 있을까 낙인이라면 1을 돌려주는 함수
+;-------------------------------------------------
+@IS_SLAVED_BY(ARG:0)
+#FUNCTION
+IF TALENT:(ARG:0):주인 || TALENT:(ARG:0):소유자
+	RETURNF 1
+ELSE
+	RETURNF 0
+ENDIF
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터가 거유나 폭유라면 1을 돌려주는 함수
+;-------------------------------------------------
+@IS_BOIN(ARG:0)
+#FUNCTION
+IF GET_BUSTSIZE(ARG:0) > 0
+	RETURNF 1
+ELSE
+	RETURNF 0
+ENDIF
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 지정 부위로 지정의 더러움이 있을지 어떨지를 돌려준다
+;ARGS:1 =부위 명칭, ARGS:2～6 =더러운 명칭
+;-------------------------------------------------
+@GET_STAIN(ARG:0, ARGS:1, ARGS:2, ARGS:3 = "", ARGS:4 = "", ARGS:5 = "", ARGS:6 = "")
+#FUNCTION
+IF ARGS:1 == "입"
+	LOCAL:0 = 0
+ELSEIF ARGS:1 == "손"
+	LOCAL:0 = 1
+ELSEIF ARGS:1 == "Ｐ"
+	LOCAL:0 = 2
+ELSEIF ARGS:1 == "Ｖ"
+	LOCAL:0 = 3
+ELSEIF ARGS:1 == "Ａ"
+	LOCAL:0 = 4
+ELSEIF ARGS:1 == "Ｂ"
+	LOCAL:0 = 5
+ELSE
+	THROW "@GET_STAIN로 지정된 부위 명칭%ARGS:1%는 해석 할 수 없습니다"
+ENDIF
+
+LOCAL:3 = 0
+FOR LOCAL:2, 2, 7
+	IF LOCAL:2 > 2 && ARGS:(LOCAL:2) != ""
+		BREAK
+	ELSEIF ARGS:(LOCAL:2) == "Ｖ"
+		LOCAL:1 = 0
+	ELSEIF ARGS:(LOCAL:2) == "Ｐ"
+		LOCAL:1 = 1
+	ELSEIF ARGS:(LOCAL:2) == "정"
+		LOCAL:1 = 2
+	ELSEIF ARGS:(LOCAL:2) == "Ａ"
+		LOCAL:1 = 3
+	ELSEIF ARGS:(LOCAL:2) == "유"
+		LOCAL:1 = 4
+	ELSE
+		THROW "@GET_STAIN로 지정된 더러운 명칭%ARGS:(LOCAL:2)%는 해석 할 수 없습니다"
+	ENDIF
+	LOCAL:3 |= (STAIN:(ARG:0):(LOCAL:0) & (1 << LOCAL:1))
+NEXT
+
+RETURNF LOCAL:3 != 0
+
+;-------------------------------------------------
+;성별의 값ARG:0을 문자열으로서 돌려준다
+;-------------------------------------------------
+@TOSTR_SEX(ARG:0)
+#FUNCTIONS
+SELECTCASE ARG:0
+	CASE 0
+		RETURNF "남성"
+	CASE 1
+		RETURNF "여성"
+	CASE 2
+		RETURNF "여성(후타)"
+	CASE 3
+		RETURNF "남성(후타)"
+	CASE 4
+		RETURNF "오토코노코"
+	CASE 5
+		RETURNF "오토코노코(후타)"
+ENDSELECT
+RETURNF "불명"
+
+
+;-------------------------------------------------
+;가슴크기의 수치를 문자열으로 고친다
+;-2:절벽～2:폭유
+;-------------------------------------------------
+@TOSTR_BUSTSIZE(ARG:0)
+#FUNCTIONS
+ARG:0 = MAX(-2, MIN(2, ARG:0))
+SELECTCASE ARG:0
+	CASE -2
+		RETURNF "절벽"
+	CASE -1
+		RETURNF "미유"
+	CASE 1
+		RETURNF "거유"
+	CASE 2
+		RETURNF "폭유"
+ENDSELECT
+RETURNF "평유"
+
+;-------------------------------------------------
+;캐릭터 ARG:0의 가슴크기를 수치로 변환한다
+;-2:절벽～2:폭유
+;-------------------------------------------------
+@GET_BUSTSIZE(ARG:0)
+#FUNCTION
+SIF IS_MALE(ARG:0)
+	RETURNF -2
+RETURNF TALENT:(ARG:0):가슴크기
+
+;-------------------------------------------------
+;캐릭터 ARG:0의 가슴크기를 ARG:1으로 한다
+;-2:절벽～2:폭유
+;-------------------------------------------------
+@SET_BUSTSIZE(ARG:0, ARG:1)
+SIF IS_MALE(ARG:0)
+	RETURN
+SIF !INRANGE(ARG:1, -2, 2)
+	RETURN 
+TALENT:(ARG:0):가슴크기 = ARG:1
+CALL SET_BODYSIZE(ARG:0, POWER(2, 사이즈_가슴) + POWER(2, 사이즈_체중))
+
+RETURN
+
+
+;-------------------------------------------------
+;페니스사이즈의 수치를 문자열으로 고친다
+;-2:절벽～2:폭유
+;-------------------------------------------------
+@TOSTR_PENISSIZE(ARG:0)
+#FUNCTIONS
+ARG:0 = MAX(-2, MIN(2, ARG:0))
+SELECTCASE ARG:0
+	CASE -2
+		RETURNF "극소자지"
+	CASE -1
+		RETURNF "작은자지"
+	CASE 1
+		RETURNF "왕자지"
+	CASE 2
+		RETURNF "말자지"
+ENDSELECT
+RETURNF "보통자지"
+
+;-------------------------------------------------
+;캐릭터 ARG:0의 페니스사이즈를 수치로 변환한다
+;-2:절벽～2:폭유
+;-------------------------------------------------
+@GET_PENISSIZE(ARG:0)
+#FUNCTION
+SIF !HAS_PENIS(ARG:0)
+	RETURNF -2
+RETURNF TALENT:(ARG:0):페니스사이즈
+
+;-------------------------------------------------
+;캐릭터 ARG:0의 가슴크기를 ARG:1으로 한다
+;-2:절벽～2:폭유
+;-------------------------------------------------
+@SET_PENISSIZE(ARG:0, ARG:1)
+SIF !HAS_PENIS(ARG:0)
+	RETURN
+SIF !INRANGE(ARG:1, -2, 2)
+	RETURN 
+TALENT:(ARG:0):페니스사이즈 = ARG:1
+CALL SET_BODYSIZE(ARG:0, POWER(2, 사이즈_페니스))
+RETURN
+
+;-------------------------------------------------
+;엉덩이크기의 수치를 문자열으로 고친다
+;-2:절벽～2:폭유
+;-------------------------------------------------
+@TOSTR_HIPSIZE(ARG:0)
+#FUNCTIONS
+ARG:0 = MAX(-2, MIN(2, ARG:0))
+SELECTCASE ARG:0
+	CASE -2
+		RETURNF "아이엉덩이"
+	CASE -1
+		RETURNF "작은엉덩이"
+	CASE 1
+		RETURNF "큰엉덩이"
+	CASE 2
+		RETURNF "왕엉덩이"
+ENDSELECT
+RETURNF "보통엉덩이"
+
+;-------------------------------------------------
+;캐릭터 ARG:0의 엉덩이크기를 수치로 변환한다
+;-2:절벽～2:폭유
+;-------------------------------------------------
+@GET_HIPSIZE(ARG:0)
+#FUNCTION
+RETURNF TALENT:(ARG:0):엉덩이크기
+
+;-------------------------------------------------
+;캐릭터 ARG:0의 엉덩이크기를 ARG:1으로 한다
+;-2:절벽～2:폭유
+;-------------------------------------------------
+@SET_HIPSIZE(ARG:0, ARG:1)
+SIF !INRANGE(ARG:1, -2, 2)
+	RETURN 
+TALENT:(ARG:0):엉덩이크기 = ARG:1
+CALL SET_BODYSIZE(ARG:0, POWER(2, 사이즈_엉덩이) + POWER(2, 사이즈_체중))
+RETURN
+
+;-------------------------------------------------
+;페니스사이즈의 수치를 문자열으로 고친다
+;-2:절벽～2:폭유
+;-------------------------------------------------
+@TOSTR_BODYSIZE(ARG:0)
+#FUNCTIONS
+ARG:0 = MAX(-2, MIN(3, ARG:0))
+SELECTCASE ARG:0
+	CASE -2
+		RETURNF "아이"
+	CASE -1
+		RETURNF "작은체형"
+	CASE 1
+		RETURNF "장신"
+	CASE 2
+		RETURNF "큰 몸집"
+	CASE 3
+		RETURNF "거대"
+ENDSELECT
+RETURNF "보통"
+
+;-------------------------------------------------
+;페니스사이즈의 수치를 문자열으로 고친다
+;-2:절벽～2:폭유
+;-------------------------------------------------
+@TOSTR_BODYTYPE(ARG:0)
+#FUNCTIONS
+ARG:0 = MAX(-3, MIN(3, ARG:0))
+SELECTCASE ARG:0
+	CASE -3
+		RETURNF "빼빼마른"
+	CASE -2
+		RETURNF "호리호리한"
+	CASE -1
+		RETURNF "슬렌더"
+	CASE 1
+		RETURNF "글래머"
+	CASE 2
+		RETURNF "풍만"
+	CASE 3
+		RETURNF "비만"
+ENDSELECT
+RETURNF "보통"
+;-------------------------------------------------
+;능력의 성장형을 문자열으로 고친다
+;-------------------------------------------------
+@TOSTR_GROWTYPE(ARG:0)
+#FUNCTIONS
+SELECTCASE ARG:0
+	CASE 0
+		RETURNF "만능"
+	CASE 1
+		RETURNF "지장"
+	CASE 2
+		RETURNF "학사"
+	CASE 3
+		RETURNF "양도"
+	CASE 4
+		RETURNF "무관"
+	CASE 5
+		RETURNF "군사"
+	CASE 6
+		RETURNF "문관"
+	CASE 7
+		RETURNF "예능"
+	CASE 8
+		RETURNF "요리"
+	CASE 9
+		RETURNF "천재"
+ENDSELECT
+RETURNF "불명"
+
+;별 버젼
+@TOSTR_GROWTYPE_B(ARG:0)
+#FUNCTIONS
+SELECTCASE ARG:0
+	CASE 0
+		RETURNF "무투·방위·지략·정치"
+	CASE 1
+		RETURNF "무투·방위·지략"
+	CASE 2
+		RETURNF "지략·정치"
+	CASE 3
+		RETURNF "무투·방위·정치"
+	CASE 4
+		RETURNF "무투·방위"
+	CASE 5
+		RETURNF "지략"
+	CASE 6
+		RETURNF "정치"
+	CASE 7
+		RETURNF "가창"
+	CASE 8
+		RETURNF "요리"
+	CASE 9
+		RETURNF "모든 능력"
+ENDSELECT
+RETURNF ""
+
+;-------------------------------------------------
+;성격 타입을 문자열으로 고친다
+;-------------------------------------------------
+@TOSTR_CHARATYPE(ARG:0)
+#FUNCTIONS
+SELECTCASE ARG:0
+	CASE 1
+		RETURNF "냉정/청렴"
+	CASE 2
+		RETURNF "호기/청렴"
+	CASE 3
+		RETURNF "냉정/이기"
+	CASE 4
+		RETURNF "호기/이기"
+ENDSELECT
+RETURNF "----/----"
+
+;-------------------------------------------------
+;머리길이의 값ARG:0에 대응하는 문자열을 돌려준다
+;-------------------------------------------------
+@TOSTR_HAIR_LENGTH(ARG:0)
+#FUNCTIONS
+SELECTCASE ARG:0
+	CASE 0
+		RETURNF "불명"
+	CASE 1
+		RETURNF "대머리"
+	CASE 2
+		RETURNF "베리쇼트"
+	CASE 3
+		RETURNF "쇼트"
+	CASE 4
+		RETURNF "미들"
+	CASE 5
+		RETURNF "롱"
+	CASE 6
+		RETURNF "베리롱"
+ENDSELECT
+
+RETURNF "불명"
+
+
+@CHOOSE_HAIR_LENGTH()
+#DIM FIRST_LINE
+FIRST_LINE = LINECOUNT
+PRINTL 머리길이를 입력해 주세요
+PRINTL [0] 불명
+PRINTL [1] 대머리
+PRINTL [2] 베리쇼트
+PRINTL [3] 쇼트
+PRINTL [4] 미들
+PRINTL [5] 롱
+PRINTL [6] 베리롱
+INPUT
+IF !INRANGE(RESULT, 0, 7)
+	CLEARLINE LINECOUNT - FIRST_LINE
+	RESTART
+ENDIF
+RETURN RESULT, 0, 7
+
+
+;-------------------------------------------------
+;머리색을 그라데이션으로 표시하는 함수 ARG:0=머리색(16 진수 표기)
+;표시하는 문자열의 길이는 반각 10문자
+;-------------------------------------------------
+@PRINT_HAIR_COLOR(ARG:0)
+IF ARG:0 == 0
+	PRINT 불명      
+	RETURN
+ENDIF
+
+LOCAL:10 = RGB_TO_H(ARG:0)
+LOCAL:11 = RGB_TO_S(ARG:0)
+LOCAL:12 = RGB_TO_V(ARG:0) - 8
+IF LOCAL:11 < 12
+	LOCAL:11 *= 2
+ELSE
+	LOCAL:11 += 12
+ENDIF
+FOR LOCAL:0, 0, 10
+	SETCOLOR HSV_TO_RGB(LOCAL:10, LIMIT(LOCAL:11, 0, 100), LIMIT(LOCAL:12, 0, 100))
+	PRINTFORM %UNICODE(0x2587)%
+	IF LOCAL:11 >= 24
+		LOCAL:11 += 2
+	ELSEIF LOCAL:11 >= 12
+		LOCAL:11 += 1
+	ENDIF
+	LOCAL:12 -= 3
+NEXT
+RESETCOLOR
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 성장형에 의한 보정 배율을 돌려주는 ARGS:1=능력 명칭
+;-------------------------------------------------
+@GROWTYPE_RATE(ARG:0, ARGS:1)
+#FUNCTION
+LOCAL:0 = TALENT:(ARG:0):성장형
+IF ARGS:1 == "무투"
+	SELECTCASE LOCAL:0
+		CASE 0
+			RETURNF 100
+		CASE 1
+			RETURNF 110
+		CASE 2
+			RETURNF 80
+		CASE 3
+			RETURNF 110
+		CASE 4
+			RETURNF 120
+		CASE 5
+			RETURNF 80
+		CASE 6
+			RETURNF 80
+		CASE 7
+			RETURNF 90
+		CASE 8
+			RETURNF 90
+		CASE 9
+			RETURNF 130
+	ENDSELECT
+ELSEIF ARGS:1 == "방위"
+	SELECTCASE LOCAL:0
+		CASE 0
+			RETURNF 100
+		CASE 1
+			RETURNF 110
+		CASE 2
+			RETURNF 80
+		CASE 3
+			RETURNF 110
+		CASE 4
+			RETURNF 120
+		CASE 5
+			RETURNF 90
+		CASE 6
+			RETURNF 80
+		CASE 7
+			RETURNF 90
+		CASE 8
+			RETURNF 90
+		CASE 9
+			RETURNF 130
+	ENDSELECT
+ELSEIF ARGS:1 == "지략"
+	SELECTCASE LOCAL:0
+		CASE 0
+			RETURNF 100
+		CASE 1
+			RETURNF 110
+		CASE 2
+			RETURNF 120
+		CASE 3
+			RETURNF 70
+		CASE 4
+			RETURNF 80
+		CASE 5
+			RETURNF 140
+		CASE 6
+			RETURNF 100
+		CASE 7
+			RETURNF 90
+		CASE 8
+			RETURNF 90
+		CASE 9
+			RETURNF 130
+	ENDSELECT
+ELSEIF ARGS:1 == "정치"
+	SELECTCASE LOCAL:0
+		CASE 0
+			RETURNF 100
+		CASE 1
+			RETURNF 70
+		CASE 2
+			RETURNF 120
+		CASE 3
+			RETURNF 110
+		CASE 4
+			RETURNF 80
+		CASE 5
+			RETURNF 90
+		CASE 6
+			RETURNF 140
+		CASE 7
+			RETURNF 90
+		CASE 8
+			RETURNF 90
+		CASE 9
+			RETURNF 130
+	ENDSELECT
+ELSEIF ARGS:1 == "가창"
+	SELECTCASE LOCAL:0
+		CASE 7
+			RETURNF 150
+		CASE 9
+			RETURNF 130
+		CASEELSE
+			RETURNF 90
+	ENDSELECT
+ELSEIF ARGS:1 == "요리"
+	SELECTCASE LOCAL:0
+		CASE 8
+			RETURNF 150
+		CASE 9
+			RETURNF 100
+		CASEELSE
+			RETURNF 90
+	ENDSELECT
+ENDIF
+RETURNF 100
+
+;-------------------------------------------------
+;키스의 공통 처리
+;대상이 상대에게 키스
+;메세지를 표시한다면 ARG:2에 1을, 비표시라면 0을 설정한다
+;◆◆키스경험은 자동에서는 들어가지 않기 때문에 주의◆◆
+;-------------------------------------------------
+@KISS_COMMON(대상, 상대, 시츄문자열 = "", ARG:2 = 1)
+#DIM 대상
+#DIMS 상대
+#DIMS 시츄문자열
+
+SIF TFLAG:54 == 8
+	시츄문자열 = 공중의면전에서 %시츄문자열%
+SIF TFLAG:70 == 1
+	시츄문자열 = 촬영중에 %시츄문자열%
+SIF TCVAR:대상:최면중 > 1
+	시츄문자열 = 최면을걸쳐지면서 %시츄문자열%
+
+SEXUAL_LAST_EXPERIENCE:대상:첫체험_키스 = %상대%
+SEXUAL_LAST_EXPERIENCE_SITUATION:대상:첫체험_키스 = %시츄문자열%
+
+SIF !TALENT:대상:키스미경험
+	RETURN 0
+
+IF ARG:2
+	SETCOLOR 칼라_주의
+	PRINTFORM %조사처리(ANAME(대상),"는")% 
+	SIF 시츄문자열 != ""
+		PRINTFORM %조사처리(시츄문자열,"로")% 
+	PRINTFORMW <키스 미경험>을 잃었다…
+	RESETCOLOR
+ENDIF
+
+SEXUAL_EXPERIENCE:대상:첫체험_키스 = %상대%
+SEXUAL_EXPERIENCE_SITUATION:대상:첫체험_키스 = %시츄문자열%
+
+TALENT:대상:키스미경험 = 0
+
+
+;-------------------------------------------------
+;동정상실의 공통 처리
+;대상이 상대（문자열）로 동정상실
+;ARG:2는 메세지 표시 플래그
+;-------------------------------------------------
+@DOUTEI_COMMON(대상, 상대, 시츄문자열 = "", ARG:2 = 1)
+#DIM 대상
+#DIMS 상대
+#DIMS 시츄문자열
+
+SIF !HAS_PENIS(대상)
+	RETURN 0
+
+SIF TFLAG:54 == 8
+	시츄문자열 = 공중의면전에서 %시츄문자열%
+SIF TFLAG:70 == 1
+	시츄문자열 = 촬영중에 %시츄문자열%
+SIF TCVAR:대상:최면중 > 1
+	시츄문자열 = 최면을걸쳐지면서 %시츄문자열%
+
+SEXUAL_LAST_EXPERIENCE:대상:첫체험_동정 = %상대%
+SEXUAL_LAST_EXPERIENCE_SITUATION:대상:첫체험_동정 = %시츄문자열%
+
+SIF !TALENT:대상:동정
+	RETURN 0
+
+IF ARG:2
+	SETCOLOR 칼라_주의
+	PRINTFORM %조사처리(ANAME(대상),"는")% 
+	SIF 시츄문자열 != ""
+		PRINTFORM %조사처리(시츄문자열,"로")% 
+	PRINTFORMW <동정>을 잃었다…
+	RESETCOLOR
+ENDIF
+
+SEXUAL_EXPERIENCE:대상:첫체험_동정 = %상대%
+SEXUAL_EXPERIENCE_SITUATION:대상:첫체험_동정 = %시츄문자열%
+
+TALENT:대상:동정 = 0
+
+;-------------------------------------------------
+;처녀상실의 공통 처리
+;대상이 상대로 처녀상실
+;시츄를 지정하면 문자열이 부여된다
+;ARG:2는 메세지를 표시하는 플래그 1으로 표시
+;-------------------------------------------------
+@VIRGIN_COMMON(대상, 상대, 시츄문자열 = "", ARG:2 = 1)
+#DIM 대상
+#DIMS 상대
+#DIMS 시츄문자열
+
+SIF !HAS_VAGINA(대상)
+	RETURN 0
+
+SIF TFLAG:54 == 8
+	시츄문자열 = 공중의면전에서 %시츄문자열%
+SIF TFLAG:70 == 1
+	시츄문자열 = 촬영중에 %시츄문자열%
+SIF TCVAR:대상:최면중 > 1
+	시츄문자열 = 최면을걸쳐지면서 %시츄문자열%
+
+
+SEXUAL_LAST_EXPERIENCE:대상:첫체험_처녀 = %상대%
+SEXUAL_LAST_EXPERIENCE_SITUATION:대상:첫체험_처녀 = %시츄문자열%
+
+SIF !TALENT:대상:처녀
+	RETURN 0
+
+IF ARG:2
+	SETCOLOR 칼라_주의
+	PRINTFORM %조사처리(ANAME(대상),"는")% 
+	SIF 시츄문자열 != ""
+		PRINTFORM %조사처리(시츄문자열,"로")% 
+	PRINTFORMW <처녀>를 잃었다…
+	RESETCOLOR
+ENDIF
+
+SEXUAL_EXPERIENCE:대상:첫체험_처녀 = %상대%
+SEXUAL_EXPERIENCE_SITUATION:대상:첫체험_처녀 = %시츄문자열%
+
+TALENT:대상:처녀 = 0
+
+;-------------------------------------------------
+;애널처녀상실의 공통 처리
+;대상이 상대로 처녀상실
+;시츄를 지정하면 문자열이 부여된다
+;ARG:2는 메세지를 표시하는 플래그 1으로 표시
+;-------------------------------------------------
+@VIRGIN_COMMON_A(대상, 상대, 시츄문자열 = "", ARG:2 = 1)
+#DIM 대상
+#DIMS 상대
+#DIMS 시츄문자열
+
+SIF TFLAG:54 == 8
+	시츄문자열 = 공중의면전에서 %시츄문자열%
+SIF TFLAG:70 == 1
+	시츄문자열 = 촬영중에 %시츄문자열%
+SIF TCVAR:대상:최면중 > 1
+	시츄문자열 = 최면을걸쳐지면서 %시츄문자열%
+
+
+SEXUAL_LAST_EXPERIENCE:대상:첫체험_애널처녀 = %상대%
+SEXUAL_LAST_EXPERIENCE_SITUATION:대상:첫체험_애널처녀 = %시츄문자열%
+
+SIF !TALENT:대상:애널처녀
+	RETURN 0
+
+IF ARG:2
+	SETCOLOR 칼라_주의
+	PRINTFORM %조사처리(ANAME(대상),"는")% 
+	SIF 시츄문자열 != ""
+		PRINTFORM %조사처리(시츄문자열,"로")% 
+	PRINTFORMW <애널처녀>를 잃었다…
+	RESETCOLOR
+ENDIF
+
+SEXUAL_EXPERIENCE:대상:첫체험_애널처녀 = %상대%
+SEXUAL_EXPERIENCE_SITUATION:대상:첫체험_애널처녀 = %시츄문자열%
+
+
+TALENT:대상:애널처녀 = 0
+
+;-------------------------------------------------
+;첫체험을 재생시키는 처리
+;-------------------------------------------------
+@VIRGINIZE(대상, 첫체험)
+#DIM 대상
+#DIM 첫체험
+#DIM 변경소질
+SELECTCASE 첫체험
+	CASE 첫체험_처녀
+		변경소질 = GETNUM(TALENT, "처녀")
+	CASE 첫체험_동정
+		변경소질 = GETNUM(TALENT, "동정")
+	CASE 첫체험_애널처녀
+		변경소질 = GETNUM(TALENT, "애널처녀")
+	CASE 첫체험_키스
+		변경소질 = GETNUM(TALENT, "키스미경험")
+ENDSELECT
+
+SEXUAL_EXPERIENCE:대상:첫체험 = ----
+SEXUAL_EXPERIENCE_SITUATION:대상:첫체험 '= ""
+SEXUAL_LAST_EXPERIENCE:대상:첫체험 = ----
+SEXUAL_LAST_EXPERIENCE_SITUATION:대상:첫체험 '= ""
+TALENT:대상:변경소질 = 1
+
+;-------------------------------------------------
+;desc  :대상의 처녀를 상실시킨다.
+;param :대상:대상 캐릭터 번호
+;param :첫체험:대상 캐릭터 번호
+;param :상대:FIRST_EXPERIENCE 및 LAST_EXPERIENCE에 기록하는 문자열
+;-------------------------------------------------
+@VIRGINIZE_LOST(대상, 첫체험, 상대 = "불명")
+#DIM 대상
+#DIM 첫체험
+#DIM 변경소질
+#DIMS 상대
+SELECTCASE 첫체험
+	CASE 첫체험_처녀
+		변경소질 = GETNUM(TALENT, "처녀")
+	CASE 첫체험_동정
+		변경소질 = GETNUM(TALENT, "동정")
+	CASE 첫체험_애널처녀
+		변경소질 = GETNUM(TALENT, "애널처녀")
+	CASE 첫체험_키스
+		변경소질 = GETNUM(TALENT, "키스미경험")
+ENDSELECT
+
+SEXUAL_EXPERIENCE:대상:첫체험 '= 상대
+SEXUAL_EXPERIENCE_SITUATION:대상:첫체험 '= ""
+SEXUAL_LAST_EXPERIENCE:대상:첫체험 '= 상대
+SEXUAL_LAST_EXPERIENCE_SITUATION:대상:첫체험 '= ""
+TALENT:대상:변경소질 = 0
+
+
+;-------------------------------------------------
+;조교 모드의 값으로부터 시추에이션을 취득해 온다
+;-------------------------------------------------
+@GET_SITUATION_BY_TRAIN_MODE()
+#FUNCTIONS
+SELECTCASE FLAG:조교모드
+	CASE 조교_만난다, 조교_침실, 조교_포로회화, 조교_육아
+		RETURNF "화간"
+	CASE 조교_포로조교, 조교_역조교특수, 조교_역조교통상, 조교_위안
+		RETURNF "조교"
+ENDSELECT
+
+
+
+;-------------------------------------------------
+;ID(ARG:0)의 값으로부터 명칭을 취득하는 부의 값의 특수 명칭에 대응
+;-------------------------------------------------
+@ID_TO_SP_NAME(ARG:0)
+#FUNCTIONS
+
+LOCAL:0 = ID_TO_CHARA(ARG:0)
+IF LOCAL:0 >= 0
+	RETURNF ANAME(LOCAL:0)
+ENDIF
+RETURNF GET_SPERM_NAME(ARG:0)
+
+;-------------------------------------------------
+;ARG:0의 낙인을 제외한 함락소질을 모두 소거하는 함수 ARG:1은 메세지를 표시할지 어떨지의 플래그
+;ARG:2에 1을 지정하면, 질역 관계의 소질을 대상외로 한다
+;-------------------------------------------------
+@LOSE_RELATION_TALENT(ARG:0, ARG:1 = 1, ARG:2 = 0)
+IF ARG:1
+	LOCALS:0 = 
+	SIF TALENT:(ARG:0):연모
+		LOCALS:0 = %LOCALS:0%<연모>
+	SIF TALENT:(ARG:0):친애
+		LOCALS:0 = %LOCALS:0%<친애>
+	SIF TALENT:(ARG:0):복종
+		LOCALS:0 = %LOCALS:0%<복종>
+	SIF TALENT:(ARG:0):예속
+		LOCALS:0 = %LOCALS:0%<예속>
+	SIF TALENT:(ARG:0):친구
+		LOCALS:0 = %LOCALS:0%<친구>
+	SIF TALENT:(ARG:0):연인
+		LOCALS:0 = %LOCALS:0%<연인>
+	SIF TALENT:(ARG:0):주인
+		LOCALS:0 = %LOCALS:0%<주인>
+	SIF TALENT:(ARG:0):소유자
+		LOCALS:0 = %LOCALS:0%<소유자>
+	IF LOCALS:0 != ""
+		SETCOLOR 칼라_주의
+		PRINTFORML %조사처리(ANAME(ARG:0),"는")% %조사처리(LOCALS:0,"를")% 잃었다…
+		RESETCOLOR
+	ENDIF
+	EXP:(ARG:0):ＮＴＲ경험 ++
+ENDIF
+
+;CFLAG계를 0에. 호후고브등 마이너스가 되어 버리고 있는 경우는 그 쪽을 우선.
+CFLAG:(ARG:0):호감도 = MIN(CFLAG:(ARG:0):호감도, 0)
+CFLAG:(ARG:0):종속도 = MIN(CFLAG:(ARG:0):종속도, 0)
+CFLAG:(ARG:0):의존도 = MIN(CFLAG:(ARG:0):의존도, 0)
+CFLAG:(ARG:0):지배도 = MIN(CFLAG:(ARG:0):지배도, 0)
+
+TALENT:(ARG:0):연모 = 0
+TALENT:(ARG:0):친애 = 0
+TALENT:(ARG:0):복종 = 0
+TALENT:(ARG:0):예속 = 0
+TALENT:(ARG:0):친구 = 0
+TALENT:(ARG:0):주인 = 0
+TALENT:(ARG:0):소유자 = 0
+TALENT:(ARG:0):연인 = 0
+
+
+CALL TALENT_CHECK(ARG:0)
+
+;-------------------------------------------------
+;경험치를 가산해, 그 취지를 표시하는 함수(ARG:0=캐릭터 번호, ARGS:1=EXPNAME, ARG:2=가산하는 경험량 ARG:3누가 획득했는지 표시)
+;-------------------------------------------------
+@PRINT_ADD_EXP(ARG:0, ARGS:1, ARG:2, ARG:3 = 0)
+IF ARG:2 >= 1
+	LOCAL:0 = GETNUM(EXP, ARGS:1)
+	IF ARG:3
+		PRINTFORML %ANAME(ARG:0)%의 %ARGS:1%＋{ARG:2}
+	ELSE
+		PRINTFORML %ARGS:1%＋{ARG:2}
+	ENDIF
+	EXP:(ARG:0):(LOCAL:0) += ARG:2
+ENDIF
+
+;-------------------------
+;지정된 값중에서 등 확률로 랜덤인 값을 골라내 돌려주는 함수
+;※다만 0은 지정 할 수 없기에 주의
+;-------------------------
+@RANDOM_ARRAY(ARG:0, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5, ARG:6, ARG:7, ARG:8, ARG:9)
+#FUNCTION
+LOCAL:1 = 0
+FOR LOCAL:0, 0, 10
+	IF ARG:(LOCAL:0) != 0
+		LOCAL:1 ++
+	ENDIF
+NEXT
+IF LOCAL:1 == 0
+	RETURNF 0
+ENDIF
+RETURNF ARG:(RAND:(LOCAL:1))
+
+;-------------------------
+;선택식의 버튼을 묘화 하는 함수
+;ARGS:0=표시하는 문자열, ARG:1=버튼의 번호, ARG:2=선택되고 있는지 아닌지
+;-------------------------
+@PRINT_SELECT_BUTTON(ARGS:0, ARG:1, ARG:2)
+IF ARG:2
+	SETCOLOR 칼라_선택중
+	PRINTPLAINFORM %ARGS:0%
+	RESETCOLOR
+ELSE
+	PRINTBUTTON ARGS:0, ARG:1
+ENDIF
+
+;-------------------------
+;타글식의 버튼을 묘화 하는 함수
+;ARGS:0=표시하는 문자열, ARG:1=버튼의 번호, ARG:2=선택되고 있는지 아닌지
+;-------------------------
+@PRINT_TOGGLE_BUTTON(ARGS:0, ARG:1, ARG:2)
+IF ARG:2
+	SETCOLOR 0x00FFFF
+ENDIF
+PRINTBUTTON ARGS:0, ARG:1
+RESETCOLOR
+
+
+;-------------------------------------------------
+;네／아니오의 선택지를 표시해 입력 결과를 돌려주는 함수
+;인수 0=긍정 선택지의 문자열, 1=부정 선택지의 문자열
+;반환값 0=네, 1=아니오
+;-------------------------------------------------
+@ASK_YN(ARGS:0 = "  네  ", ARGS:1 = "아니오")
+CURRENTREDRAW
+LOCAL:0 = RESULT
+REDRAW 0
+PRINTBUTTON @" 0[%ARGS:0%]", 0
+PRINTL 
+PRINTBUTTON @" 1[%ARGS:1%]", 1
+PRINTL 
+$INPUT_LOOP
+INPUT
+IF RESULT != 0 && RESULT != 1
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+REDRAW LOCAL:0
+RETURN RESULT
+
+;-------------------------------------------------
+;선택지를 표시해 입력 결과를 돌려주는 함수
+;인수에 대사를 지정. 최대 5개까지
+;반환값은 선택한 선택지의 번호
+;-------------------------------------------------
+@ASK_MULTI(ARGS:0, ARGS:1, ARGS:2, ARGS:3, ARGS:4, ARGS:5, ARGS:6, ARGS:7, ARGS:8, ARGS:9, ARGS:10, ARGS:11, ARGS:12, ARGS:13, ARGS:14, ARGS:15, ARGS:16, ARGS:17, ARGS:18, ARGS:19, ARGS:20, ARGS:21, ARGS:22, ARGS:23, ARGS:24, ARGS:25, ARGS:26, ARGS:27, ARGS:28, ARGS:29, ARGS:30)
+
+CURRENTREDRAW
+LOCAL:0 = RESULT
+REDRAW 0
+FOR LOCAL:0, 0, 31
+	IF ARGS:(LOCAL:0) != ""
+		PRINTBUTTON @"{LOCAL:0, 2, RIGHT}[%ARGS:(LOCAL:0)%]", LOCAL:0
+		PRINTL 
+	ENDIF
+NEXT
+$INPUT_LOOP
+INPUT
+IF RESULT < 0 || RESULT > 30 || ARGS:RESULT == ""
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+REDRAW LOCAL:0
+RETURN RESULT
+
+;-------------------------------------------------
+;선택지를 표시해 입력 결과를 돌려주는 함수 조건을 채우지 않는 선택지를 회색 표시로 해 무효로 하는 것이 가능
+;인수에 대사와 조건(0으로 무효, 비 0으로 유효)을 지정. 최대 5개까지
+;반환값은 선택한 선택지의 번호
+;-------------------------------------------------
+@ASK_MULTI_JUDGE(ARGS:0, ARG:0, ARGS:1, ARG:1, ARGS:2, ARG:2, ARGS:3, ARG:3, ARGS:4, ARG:4, ARGS:5, ARG:5, ARGS:6, ARG:6, ARGS:7, ARG:7, ARGS:8, ARG:8, ARGS:9, ARG:9, ARGS:10, ARG:10, ARGS:11, ARG:11, ARGS:12, ARG:12, ARGS:13, ARG:13, ARGS:14, ARG:14, ARGS:15, ARG:15, ARGS:16, ARG:16, ARGS:17, ARG:17, ARGS:18, ARG:18, ARGS:19, ARG:19, ARGS:20, ARG:20, ARGS:21, ARG:21, ARGS:22, ARG:22, ARGS:23, ARG:23, ARGS:24, ARG:24, ARGS:25, ARG:25, ARGS:26, ARG:26, ARGS:27, ARG:27, ARGS:28, ARG:28, ARGS:29, ARG:29, ARGS:30, ARG:30)
+CURRENTREDRAW
+
+LOCAL:0 = RESULT
+REDRAW 0
+FOR LOCAL:0, 0, 31
+	IF ARGS:(LOCAL:0) != ""
+		IF ARG:(LOCAL:0)
+			PRINTBUTTON @"{LOCAL:0, 2, RIGHT}[%ARGS:(LOCAL:0)%]", LOCAL:0
+		ELSE
+			SETCOLOR 0x606060
+			PRINTPLAINFORM {LOCAL:0, 2, RIGHT}[%ARGS:(LOCAL:0)%]
+			RESETCOLOR
+		ENDIF
+		PRINTL 
+	ENDIF
+NEXT
+$INPUT_LOOP
+INPUT
+IF RESULT < 0 || RESULT > 30 || ARGS:RESULT == "" || !ARG:RESULT
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+REDRAW LOCAL:0
+RETURN RESULT
+
+;-------------------------------------------------
+;색을 변경해 PRINTFORM 하는 함수
+;ARGS:0  PRINTFORM 시키고 싶은 문자열
+;ARG:1  색 0~0xFFFFFF
+;ARGS:1  옵션 L나 W
+;-------------------------------------------------
+@COLORPRINT(ARGS:0, ARG:0, ARGS:1 = "")
+SIF ARG:0 < 0 || ARG:0 > 0xFFFFFF
+	THROW "@COLORPRINT의 색지정에 0~FFFFFF의 범위외의 수치를 던질 수 있었습니다"
+GETCOLOR
+LOCAL:0 = RESULT
+
+SETCOLOR ARG:0
+PRINTFORM %ARGS:0%
+SETCOLOR LOCAL:0
+IF ARGS:1 == "L"
+	PRINTFORML
+ELSEIF ARGS:1 == "W"
+	PRINTFORMW
+ENDIF
+
+;-------------------------------------------------
+;묻은 쇼트 핸드 부분(<>로 묶는다)만 색을 바꾸어 PRINTFORM 하는 함수
+;ORIGSTR 쇼트 핸드를 묻은 문자열
+;OPTION 옵션 L나 W를 지정하면 PRINTFORML PRINTFORMW가 된다
+;COL 색.
+;예:
+;<AAA>BBB<CCC>로 COL:0으로 COL:1을 지정했다  →  AAA는 COL:0, CCC는 COL:1으로 지정한 색으로 표시된다
+;<AAA>BBB<CCC>로 COL:0만 지정했다  →  AAA도 CCC도 COL:0으로 지정한 색으로 표시된다
+;-------------------------------------------------
+@ICPRINT(ORIGSTR, OPTION, COL:0 = 0, COL:1 = 0, COL:2 = 0, COL:3 = 0, COL:4 = 0)
+#DIMS ORIGSTR
+#DIMS SEPSTR, 20
+#DIMS OPTION
+#DIM SEPNUM
+#DIM SHORTHANDFLAG, 20
+#DIM POINTER
+#DIM SHORTHANDAREA, 2
+#DIM COL, 5
+#DIM ORIGCOL
+#DIM ORIGRES
+#DIM NOWCOL
+#DIMS ORIGRESS
+VARSET SEPSTR
+VARSET SEPNUM
+VARSET NOWCOL
+VARSET POINTER
+;RESULT 퇴피
+ORIGRES = RESULT
+ORIGRESS = %RESULTS%
+FOR LOCAL, 0, VARSIZE("COL")
+	SIF COL:LOCAL < 0 || COL:LOCAL > 0xFFFFFF
+		THROW "@ICPRINT의 색지정에 0~FFFFFF의 범위외의 수치를 던질 수 있었습니다"
+NEXT
+
+;퇴피
+GETCOLOR
+ORIGCOL = RESULT
+
+;분할
+WHILE 1
+	STRFIND ORIGSTR, "<", POINTER
+	;이제 쇼트 핸드가 없으면, 그 이후의 문자열을 격납해 다음에
+	IF RESULT == -1
+		SUBSTRING ORIGSTR, POINTER, -1
+		IF RESULTS != ""
+			SEPSTR:SEPNUM = %RESULTS%
+			SEPNUM ++
+		ENDIF
+		BREAK
+	;쇼트 핸드를 발견
+	ELSE
+		SHORTHANDAREA:0 = RESULT
+		STRFIND ORIGSTR, ">", SHORTHANDAREA:0
+		SIF RESULT == -1
+			THROW "@ICPRINT의 쇼트 핸드가 닫혀지고 있지 않습니다""
+		SHORTHANDAREA:1 = RESULT
+		SUBSTRING ORIGSTR, POINTER, SHORTHANDAREA:0 - POINTER
+		SEPSTR:SEPNUM = %RESULTS%
+		SEPNUM ++
+		SUBSTRING ORIGSTR, SHORTHANDAREA:0 + 1, SHORTHANDAREA:1 - SHORTHANDAREA:0 - 1
+		SEPSTR:SEPNUM = %RESULTS%
+		SHORTHANDFLAG:SEPNUM = 1
+		SEPNUM ++
+		POINTER = SHORTHANDAREA:1 + 1
+	ENDIF
+WEND
+FOR LOCAL, 0, SEPNUM
+	IF SHORTHANDFLAG:LOCAL && COL:NOWCOL != 0
+		CALL COLOR_PRINT(@"%SEPSTR:LOCAL%", COL:NOWCOL)
+		SIF NOWCOL < VARSIZE("COL") - 1 && COL:(NOWCOL + 1) != 0
+			NOWCOL ++
+	ELSE
+		PRINTFORM %SEPSTR:LOCAL%
+	ENDIF
+NEXT
+IF OPTION == "L"
+	PRINTFORML
+ELSEIF OPTION == "W"
+	PRINTFORMW
+ENDIF
+
+;-------------------------------------------------
+;/그리고 단락지은 문자열을 건네주면, 그 중에서 등 확률로 하나 돌려준다
+;CONDITION에는 뭔가의 조건식을 입력한다. 조건에 응해 반환 후보의 문자열을 확장하고 싶은 경우에 사용한다. 이 근처는 IFRAND와 닮은 것 같은 감각.
+;반환 후보가 없으면 빈 문자열을 돌려준다.
+;-------------------------------------------------
+@SPLIT_RAND(ORIGSTR:0, CONDITION:0, ORIGSTR:1 = "", CONDITION:1 = 0, ORIGSTR:2 = "", CONDITION:2 = 0, ORIGSTR:3 = "", CONDITION:3 = 0, ORIGSTR:4 = "", CONDITION:4 = 0)
+#FUNCTIONS
+#DIMS ORIGSTR, 5
+#DIM CONDITION, 5
+#DIMS SEPSTR, 1000
+#DIM SEPNUM
+#DIMS RETCANDIDATE, 1000
+#DIM RETNUM
+#DIM RESULT_ORIG
+
+;RESULT를 오염하는 명령을 사용하기 위해(때문에) 퇴피
+RESULT_ORIG = RESULT
+
+VARSET SEPSTR
+VARSET SEPNUM
+VARSET RETCANDIDATE
+VARSET RETNUM
+
+FOR LOCAL, 0, VARSIZE("ORIGSTR")
+	;조건을 채우지 않으면 안 돼
+	SIF !CONDITION:LOCAL
+		CONTINUE
+	;분할
+	SPLIT ORIGSTR:LOCAL, "/" , SEPSTR
+	SEPNUM = RESULT
+
+	;분할한 녀석을 반환 후보에 보존
+	FOR LOCAL:1, 0, SEPNUM
+		RETCANDIDATE:RETNUM = %SEPSTR:(LOCAL:1)%
+		RETNUM ++
+	NEXT
+NEXT
+
+SIF RETNUM == 0
+	THROW RAND_SPLIT의 반환 후보가 한 개도 없습니다
+
+;RESULT 오염 대책
+RESULT = RESULT_ORIG
+
+RETURNF RETCANDIDATE:(RAND:RETNUM)
+
+
+;-------------------------------------------------
+;ARG:0의 성별로 응해 칼라를 세트 한다
+;-------------------------------------------------
+@SETCOLORBYSEX(ARG:0)
+SELECTCASE TALENT:(ARG:0):성별
+	CASE 1
+		SETCOLOR 칼라_녀
+	CASE 0
+		SETCOLOR 칼라_남
+	CASE 2
+		SETCOLOR 칼라_여성후타
+	CASE 3
+		SETCOLOR 칼라_남성후타
+	CASE 4
+		SETCOLOR 칼라_오토코노코
+	CASE 5
+		SETCOLOR 칼라_오토코노코후타
+	CASEELSE
+		SETCOLOR 칼라_성별불명
+ENDSELECT
+
+;-------------------------------------------------
+;시추에이션에 응한 수의 대쉬를 반복해 표시한다
+;ARG:0 시추에이션
+;ARG:1진으로 개행 있어
+;-------------------------------------------------
+@REPEAT_DASH(ARG:0, ARG:1 = 1)
+	LOCAL:0 = 0
+	SELECTCASE ARG:0
+		CASE 0
+			;통상의 숍등
+			LOCAL:0 = 93
+	ENDSELECT
+
+	IF ARG:1
+		PRINTFORML %TOSTR_REPEAT("-", LOCAL:0)%
+	ELSE
+		PRINTFORM %TOSTR_REPEAT("-", LOCAL:0)%
+	ENDIF
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 버튼＋정보를 심플하게 표시하는 함수
+;ARG:1에 1을 설정하면 선택님 버튼이 되는([]→{})  이 때 ARG:2에 1을 설정하면 물색 표시가 된다
+;버튼의 선택 번호는 NO + ARG:3이 되는 ARG:5에 1을 선택했을 경우, 버튼 텍스트에 번호를 비표시
+;ARG:4는@CHECK_SELECTABLE의 돌아가 값에 대응
+;-------------------------------------------------
+@PRINT_PARTNER_DATA(ARG:0, ARG:1 = 0, ARG:2 = 0, ARG:3 = 100, ARG:4 = 1, ARG:5 = 0)
+PRINT 
+CALL PRINT_RESTMARK(ARG:0)
+
+IF ARG:1
+	LOCALS:0 = \{
+	LOCALS:1 = \}
+ELSE
+	LOCALS:0 = [
+	LOCALS:1 = ]
+ENDIF
+
+SIF ARG:1 && ARG:2
+		SETCOLOR 칼라_선택중
+IF ARG:5
+	IF ARG:4 == 1
+		CALL PRINTBUTTON_CENTER(@"%LOCALS:0%%ANAME(ARG:0), 16, LEFT%%LOCALS:1%", NO:(ARG:0) + ARG:3, 0)
+	ELSEIF ARG:4 == 2
+		CALL PRINTBUTTON_CENTER(@"%LOCALS:0%%ANAME(ARG:0), 16, LEFT%%LOCALS:1%", NO:(ARG:0) + ARG:3, 0, 0)
+	ENDIF
+ELSEIF ARG:4 == 1
+	CALL PRINTBUTTON_CENTER(@"{NO:(ARG:0) + ARG:3, 5, RIGHT}%LOCALS:0%%ANAME(ARG:0), 16, LEFT%%LOCALS:1%", NO:(ARG:0) + ARG:3, 0)
+ELSEIF ARG:4 == 2
+	CALL PRINTBUTTON_CENTER(@"{NO:(ARG:0) + ARG:3, 5, RIGHT}%LOCALS:0%%ANAME(ARG:0), 16, LEFT%%LOCALS:1%", NO:(ARG:0) + ARG:3, 0, 0)
+ENDIF
+
+RESETCOLOR
+
+SIF ARG:4 <= 0
+	RETURN 0
+
+CALL IS_KOJO(NO:(ARG:0))
+IF RESULT
+	PRINT *
+ELSE
+	PRINT  
+ENDIF
+
+CALL PRINT_SEX(ARG:0, 1, 0, 2)
+
+;IF ARG:0 == MASTER
+;	PRINT   
+;ELSEIF NO:(ARG:0) < 201
+;	SETCOLOR 0xDAF13C
+;	PRINT 고
+;ELSEIF NO:(ARG:0) < 401
+;	SETCOLOR 0x41f1f1
+;	PRINT 범
+;ELSEIF NO:(ARG:0) < 1000
+;	SETCOLOR 0x88ee22
+;	PRINT 자
+;ELSE
+;	SETCOLOR 0xe27c44
+;	PRINT 특
+;ENDIF
+;RESETCOLOR
+
+IF ARG:0 == MASTER
+	PRINT   
+ELSEIF CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속
+	SETCOLOR 0x97f8e8
+	PRINT 자
+ELSEIF CFLAG:(ARG:0):소속 != 0
+	SETCOLOR 0x28cc28
+	PRINT 외
+ELSEIF CFLAG:(ARG:0):특수상태 == 특수상태_방랑
+	SETCOLOR 0x874b4e
+	PRINT 랑
+ELSE
+	SETCOLOR 0x808080
+	PRINT 무
+ENDIF
+RESETCOLOR
+PRINT  
+
+CALL TMP_PRINT_CHARA_STARS_NUM(ARG:0)
+PRINT  
+	
+IF ARG:0 == MASTER
+	PRINT   
+ELSEIF CFLAG:(ARG:0):포로처
+	IF CFLAG:(ARG:0):포로처 == CFLAG:MASTER:소속
+		IF CFLAG:(ARG:0):연금중 == 0
+			SETCOLOR 0x4434E5
+			PRINT 감
+		ELSE
+			SETCOLOR 0xA39ED7
+			PRINT 연
+		ENDIF
+	ELSE
+		SETCOLOR 0xdf0000
+		PRINT 수
+	ENDIF
+ELSEIF CFLAG:(ARG:0):외교조교카운터
+	IF CFLAG:(ARG:0):외교요구성공플래그 == 2
+		SETCOLOR 칼라_녀
+		PRINT 포로
+	ELSE
+		SETCOLOR 0x489200
+		PRINT 협
+	ENDIF
+ELSEIF CFLAG:(ARG:0):안면
+	SETCOLOR 0xD0D0D0
+	PRINT 회
+ELSE
+	SETCOLOR 0x404040
+	PRINT 회
+ENDIF
+RESETCOLOR
+PRINT  
+IF TALENT:(ARG:0):붕괴
+	SETCOLOR 칼라_경고
+	PRINT 붕
+ELSEIF TALENT:(ARG:0):공허
+	SETCOLOR 칼라_경고
+	PRINT 공허
+ELSEIF ID_TO_CHARA(FLAG:마음에든다지정캐릭터) == ARG:0
+	SETCOLOR 칼라_주의
+	PRINT 추
+ELSEIF TALENT:(ARG:0):특수세력함락계
+	SETCOLOR 칼라_경고
+	PRINT 타
+ELSEIF TALENT:(ARG:0):친애
+	SETCOLOR 0xF5CE13
+	PRINT 사랑
+ELSEIF TALENT:(ARG:0):연모
+	SETCOLOR 0xFF4080
+	PRINT 모
+ELSEIF TALENT:(ARG:0):친구
+	SETCOLOR 0xFF8000
+	PRINT 친구
+ELSEIF TALENT:(ARG:0):예속
+	SETCOLOR 0x00FFFF
+	PRINT 례
+ELSEIF TALENT:(ARG:0):복종
+	SETCOLOR 0x00D0D0
+	PRINT 옷
+ELSEIF TALENT:(ARG:0):소유자
+	SETCOLOR 0xc40055
+	PRINT 소
+ELSEIF TALENT:(ARG:0):주인
+	SETCOLOR 0xc40055
+	PRINT 주
+ELSE
+	PRINT   
+ENDIF
+RESETCOLOR
+
+IF TALENT:(ARG:0):정실
+	SETCOLOR 0xF5CE13
+	PRINT 아내
+ELSEIF TALENT:(ARG:0):연인
+	SETCOLOR 0xFF80C0
+	PRINT 연
+ELSEIF TALENT:(ARG:0):낙인
+	SETCOLOR 0x00FF80
+	PRINT 표
+ELSE
+	PRINT   
+ENDIF
+RESETCOLOR
+PRINT  
+
+IF CFLAG:(ARG:0):행동불능상태 == 행동불능_아이
+	SETCOLOR 칼라_초록
+	PRINTPLAIN 유
+ELSEIF CFLAG:(ARG:0):행동불능상태 == 행동불능_임월
+	SETCOLOR 칼라_임신
+	PRINTPLAIN 림
+ELSEIF TALENT:(ARG:0):임신
+	SETCOLOR 칼라_임신
+	PRINTPLAIN 임
+ELSEIF CFLAG:(ARG:0):피임약남은턴
+	SETCOLOR 칼라_임신
+	PRINTPLAIN 피
+ELSEIF IS_OVULATION(ARG:0)
+	SETCOLOR 칼라_핑크
+	PRINTPLAIN 위
+ELSEIF CFLAG:(ARG:0):행동불능상태 == 행동불능_육아
+	SETCOLOR 0xFFC0C0
+	PRINTPLAIN 육
+ELSEIF CFLAG:(ARG:0):행동불능상태 == 3
+	SETCOLOR 칼라_경고
+	PRINTPLAIN 상처
+ELSEIF COOLTIME:(ARG:0):0
+	SETCOLOR 칼라_경고
+	PRINTFORM %TOFULL(TOSTR(COOLTIME:(ARG:0):0))%
+ELSE
+	PRINTPLAIN   
+ENDIF
+RESETCOLOR
+
+;-------------------------------------------------
+;ARG:0번의 캐릭터의 버튼＋ARG:1번에 대한 호감도 정보를 심플하게 표시하는 함수
+;ARG:2에 1을 설정하면 선택님 버튼이 되는([]→{})  이 때 ARG:3에 1을 설정하면 물색 표시가 된다
+;버튼의 선택 번호는 NO + ARG:4가 된다
+;ARG:5는@CHECK_SELECTABLE의 돌아가 값에 대응
+;-------------------------------------------------
+@PRINT_KOUKANDO_DATA(ARG:0, ARG:1, ARG:2 = 0, ARG:3 = 0, ARG:4 = 100, ARG:5 = 1)
+IF ARG:2
+	LOCALS:0 = \{
+	LOCALS:1 = \}
+ELSE
+	LOCALS:0 = [
+	LOCALS:1 = ]
+ENDIF
+
+SIF ARG:2 && ARG:3
+		SETCOLOR 칼라_선택중
+
+IF ARG:5 == 1
+	CALL PRINTBUTTON_CENTER(@"{NO:(ARG:0) + ARG:4, 5, RIGHT}%LOCALS:0%%ANAME(ARG:0), 16, LEFT%%LOCALS:1%", NO:(ARG:0) + ARG:4, 0)
+ELSEIF ARG:5 == 2
+	CALL PRINTBUTTON_CENTER(@"{NO:(ARG:0) + ARG:4, 5, RIGHT}%LOCALS:0%%ANAME(ARG:0), 16, LEFT%%LOCALS:1%", NO:(ARG:0) + ARG:4, 0, 0)
+ENDIF
+
+RESETCOLOR
+
+SIF ARG:5 <= 0
+	RETURN 0
+
+CALL IS_KOJO(NO:(ARG:0))
+IF RESULT
+	PRINT *
+ELSE
+	PRINT  
+ENDIF
+
+IF ARG:1 == -1
+	PRINTFORM 호/혐      
+ELSE
+;	PRINTFORM 호:
+;	PRINTFORM {REL_LIKE:(ARG:0):(ARG:1), 4, RIGHT}
+;	RESETCOLOR
+;	PRINTFORM/혐:
+;	PRINTFORM {REL_HATE:(ARG:0):(ARG:1), 4, RIGHT}
+;	RESETCOLOR
+	LOCAL:0 = REL_LIKE:(ARG:0):(ARG:1)
+	LOCAL:1 = REL_HATE:(ARG:0):(ARG:1)
+	PRINTFORM 호
+	IF LOCAL:0 <= 750
+		CALL PRINT_COLORBAR(LOCAL:0, 750, 6, UNICODE(0x2585), UNICODE(0x2585), 0x800040)
+	ELSE
+		CALL PRINT_COLORBAR(LOCAL:0 - 750, 750, 6, UNICODE(0x2585), UNICODE(0x2585), 칼라_녀, 0x800040)
+	ENDIF
+	PRINTFORM /싫어
+	IF LOCAL:1 <= 750
+		CALL PRINT_COLORBAR(LOCAL:1, 750, 6, UNICODE(0x2585), UNICODE(0x2585), 0x400080)
+	ELSE
+		CALL PRINT_COLORBAR(LOCAL:1 - 750, 750, 6, UNICODE(0x2585), UNICODE(0x2585), 칼라_남, 0x400080)
+	ENDIF
+ENDIF
+;-------------------------------------------------
+;제마크를 표시
+;-------------------------------------------------
+@PRINT_RESTMARK(ARG:0)
+LOCAL = GETCOLOR()
+IF ARG:0 == MASTER
+	PRINT   
+	RETURN
+ELSEIF CFLAG:(ARG:0):행동완료
+	SETCOLOR 0xD0D0D0
+ELSE
+	SETCOLOR 0x404040
+ENDIF
+PRINT 제
+SETCOLOR LOCAL
+
+
+;emuera의 사양인것 같은 것
+;64이상의 비트 쉬프트는 제일 오퍼랜드를 그대로 돌려준다
+;왼쪽 쉬프트는 논리
+;오른쪽 쉬프트는 산술
+
+@GETMULTIBITFROM(ARG:0, ARG:1, ARG:2)
+#FUNCTION
+;필요없는 부분을 깎는다
+ARG:0 = ARG:0 << ( 64-(ARG:1+ARG:2) )
+
+;좌단 비트를 기억
+LOCAL:1 = GETBIT(ARG:0, 63)
+
+;좌단 비트를 0에
+ARG:0 &= ~(1p63)
+
+;오른쪽 쉬프트
+ARG:0 = ARG:0 >> (64 - ARG:2)
+
+;좌단 비트를 되돌린다
+ARG:0 |= LOCAL:1 << (ARG:2 - 1)
+
+RETURNF ARG:0
+
+@F64TO16(ARG:0)
+#FUNCTION
+SIF ARG:0 >= 0
+	RETURNF ARG:0
+RETURNF GETMULTIBITFROM(~(ABS(ARG:0)), 0, 16) + 1
+
+@F16TO64(ARG:0)
+#FUNCTION
+SIF !GETBIT(ARG:0,15)
+	RETURNF ARG:0
+ARG:0 = GETMULTIBITFROM(~(ARG:0 - 1),0 , 16)
+SIF ARG:0 == 0
+	RETURNF -(1 << 16)
+RETURNF -(ARG:0)
+
+@F64TO8(ARG:0)
+#FUNCTION
+SIF ARG:0 >= 0
+	RETURNF ARG:0
+RETURNF GETMULTIBITFROM(~(ABS(ARG:0)), 0, 8) + 1
+
+@F8TO64(ARG:0)
+#FUNCTION
+SIF !GETBIT(ARG:0,7)
+	RETURNF ARG:0
+ARG:0 = GETMULTIBITFROM(~(ARG:0 - 1),0 , 8)
+SIF ARG:0 == 0
+	RETURNF -(1 << 8)
+RETURNF -(ARG:0)
+
+@ERROR(ARGS)
+#FUNCTION
+SETCOLOR 칼라_경고
+PRINTL
+PRINTFORML 에러:%ARGS%
+ASSERT 0
+RETURNF 0
+
+;캐릭터를 CSV로부터 추가할 때에 필요한 처리를 집계한 것
+;돌아가 값에 캐릭터의 번호를 돌려준다  ID를 갖고 싶었으면 GET_ID 하는 것
+@ADD_CHARA_FROM_CSV(CSVNO)
+#DIM CSVNO
+;캐릭터를 CSV로부터 읽어내고 나서 초기설정을 한다
+ADDCHARA CSVNO
+;초기설정
+CALL INIT_NEWCHARA(CHARANUM - 1)
+RETURN CHARANUM - 1
+
+;특수 캐릭터용의 빈자리 NO를 취득하는 함수
+@GET_EMPTY_NO()
+#FUNCTION
+;범위의 최저값을 입금시킨다
+LOCAL:1 = MIN_NO_SP_CHARA
+FOR LOCAL:0, 0, CHARANUM
+	;범위내에서 보다 큰 숫자를 찾아내면 그 숫자부터 1큰 숫자를 넣는다
+	;조건식을 알기 쉽게 하기 위해서 굳이 불필요한 조건을 추가한다
+	SIF NO:(LOCAL:0) >= LOCAL:1
+		LOCAL:1 = NO:(LOCAL:0) + 1
+NEXT
+RETURNF LOCAL:1
+
+;특수 캐릭터의 모형이 되는 캐릭터를 생성하는 함수
+;
+@ADD_VOID_CHARA()
+ADDVOIDCHARA
+NO:(CHARANUM - 1) = GET_EMPTY_NO()
+CALL INIT_NEWCHARA(CHARANUM - 1)
+RETURN CHARANUM - 1
+
+;-------------------------------------------------
+;캐릭터 능력을 알파벳으로 나타낼 때의 색을 취득
+;--------------------------------------------------
+@GET_RANK_COLOR(랭크)
+#FUNCTION
+#DIMS 랭크
+SELECTCASE 랭크
+	CASE "S"
+		RETURNF 칼라_파보라
+	CASE "A"
+		RETURNF 칼라_핑크
+	CASE "B"
+		RETURNF 칼라_빨강
+	CASE "C"
+		RETURNF 칼라_오렌지
+	CASE "D"
+		RETURNF 칼라_노랑
+	CASE "E"
+		RETURNF 칼라_초록
+	CASE "F"
+		RETURNF 칼라_시안
+	CASE "G"
+		RETURNF 칼라_회색
+	CASE "-"
+		RETURNF 칼라_회색
+ENDSELECT
+
+
+
+;-------------------------------------------------
+;캐릭터 능력을 알파벳으로 나타낸다
+;TW의 저것을 파크리, 다시 말해 참고에 하도록 해 받았습니다
+;저쪽과 달라, 호감도등에는 비대응
+;-------------------------------------------------
+@PRINT_ALPHABET_RANK(분류, 치)
+#DIM 분류
+#DIM 치
+#DIMS 랭크
+랭크 = %ALPHABET_RANK(분류, 치)%
+SETCOLOR GET_RANK_COLOR(랭크)
+PRINTFORM %랭크%
+RESETCOLOR
+
+;-------------------------------------------------
+;캐릭터 능력에 대응하는 랭크 문자열을 돌려준다.
+;-------------------------------------------------
+@ALPHABET_RANK(분류, 치)
+#FUNCTIONS
+#DIM 분류
+#DIM 치
+#DIMS 랭크
+SELECTCASE 분류
+	CASE 랭크_ＳＬＧ
+		FOR LOCAL, 랭크_S, 랭크_무 + 1
+			SIF 치 >= 랭크역치:랭크_ＳＬＧ:LOCAL
+				RETURNF 랭크문자열:LOCAL
+		NEXT
+	CASE 랭크_부대
+		FOR LOCAL, 랭크_S, 랭크_무
+			SIF 치 >= 랭크역치:랭크_부대:LOCAL
+				RETURNF 랭크문자열:LOCAL
+		NEXT
+	CASE 랭크_그외
+		FOR LOCAL, 랭크_S, 랭크_무
+			SIF 치 >= 랭크역치:랭크_그외:LOCAL
+				RETURNF 랭크문자열:LOCAL
+		NEXT
+	CASE 랭크_성지식
+		FOR LOCAL, 랭크_S, 랭크_무
+			SIF 치 >= 랭크역치:랭크_성지식:LOCAL
+				RETURNF 랭크문자열:LOCAL
+		NEXT
+ENDSELECT
+RETURNF 랭크
+
+;----------------------------------------------------------
+;@COLOR(ARGS)
+;----------------------------------------------------------
+;@COLOR, ARGS
+;#FUNCTION
+;SELECTCASE TOUPPER(ARGS)
+;	CASE "선택 불가"
+;		RETURNF 0x606060
+;	CASE "선택중"
+;		RETURNF 0xee7800
+;	CASE "주의", "YELLOW", "노랑"
+;		RETURNF 0xFFFF00
+;	CASE "경고", "토벌", "RED", "세키"
+;		RETURNF 0xFF0000
+;	CASE "남자"
+;		RETURNF 0x8000FF
+;	CASE "여자"
+;		RETURNF 0xFF0080
+;	CASE "남성(후타)"
+;		RETURNF 0xFF00BF
+;	CASE "여성(후타)"
+;		RETURNF 0xB000FF
+;	CASE "오토코노코", "엷은 파랑색"
+;		RETURNF 0x40C0FF
+;	CASE "오토코노코(후타)"
+;		RETURNF 0xFF80FF
+;	CASE "성별 불명"
+;		RETURNF 0x808080
+;	CASE "DARKRED"
+;		RETURNF 0x990000
+;	CASE "P-RED", "PASTEL-RED", "파 세키"
+;		RETURNF 0xC07070
+;	CASE "P-BLUE", "PASTEL-BLUE", "파 파랑"
+;		RETURNF 0x7070C0
+;	CASE "P-GREEN", "PASTEL-GREEN", "파 초록"
+;		RETURNF 0x70C070
+;	CASE "MEDSPRINGGREEN"
+;		RETURNF 0x00FA9A
+;	CASE "BLUE", "파랑"
+;		RETURNF 0x0000FF
+;	CASE "황록"
+;		RETURNF 0x00FF80
+;	CASE "암록"
+;		RETURNF 0x206020
+;	CASE "P-PURPLE", "PASTEL-PURPLE", "파보라"
+;		RETURNF 0xC070C0
+;	CASE "P-YELLOW", "PASTEL-YELLOW", "파 노랑"
+;		RETURNF 0x505020
+;	CASE "P-BGREEN", "P-BLUEGREEN", "PASTEL-BLUEGREEN", "파 청록색"
+;		RETURNF 0x205050
+;	CASE "WHITE", "흰색"
+;		RETURNF 0xC0C0C0
+;	CASE "BLACK", "흑"
+;		RETURNF 0x000000
+;	CASE "GRAY", "회색"
+;		RETURNF 0x404040
+;	CASE "LIGHT-GRAY", "명회색"
+;		RETURNF 0x777777
+;	CASE "PINK", "복숭아", "핑크"
+;		RETURNF 0xFA58F4
+;	CASE "DARK-PINK", "흑도"
+;		RETURNF 0x990099
+;	CASE "ORANGE", "첸"
+;		RETURNF 0xFFA500
+;	CASE "CREAM"
+;		RETURNF 0xFFFFCC
+;	CASE "영구 동맹", "CYAN", "시안", "물색", "AQUA"
+;		RETURNF 0x00FFFF
+;	CASE "동맹", "GREEN", "초록"
+;		RETURNF 0x00FF00
+;	CASE "연합", "오렌지"
+;		RETURNF 0xFF8000
+;	CASE "정전"
+;		RETURNF 0xFF00FF
+;	CASE "적"
+;		RETURNF 0xA0A0A0
+;	CASE "소질 발동"
+;		RETURNF 0xff6666
+;	CASE "스킬 발동"
+;		RETURNF 0xADFF2F
+;	CASE "임신"
+;		RETURNF 0xFFC0C0
+;	CASE "주석"
+;		RETURNF 0x8090A0
+;	CASEELSE
+;		THROW @COLOR로 지정되어 있지 않은 색이 지정되었습니다.
+;ENDSELECT
+
+;---------------------------
+;FLAG:오락담당을 조작하기 위한 함수
+;---------------------------
+@SET_COOK(ARG:0)
+FLAG:오락담당 = GET_ID(ARG:0)
+
+@GET_COOK
+#FUNCTION
+RETURNF ID_TO_CHARA(FLAG:오락담당)
+
+;---------------------------
+;외래인이나 홉고블린의 조교 텍스트를 표시할까를 돌려주는 함수
+;---------------------------
+@SP_COUNTRY_IS_TRAINED(ARG:0)
+#FUNCTION
+
+SIF CONFIG:80 == 0
+	RETURNF 0
+
+SIF CONFIG:80 == 1 && !IS_FEMALE(ARG:0)
+	RETURNF 0
+
+SIF CONFIG:82 == 1 && (!IS_SP_COUNTRY(CFLAG:(ARG:0):포로처) || CFLAG:(ARG:0):소속 == CFLAG:(ARG:0):포로처)
+	RETURNF 0
+
+SIF CONFIG:82 == 2 && (!IS_SP_COUNTRY(CFLAG:(ARG:0):소속) || CFLAG:(ARG:0):포로처)
+	RETURNF 0
+
+RETURNF CONFIG:80 == 2 || (CONFIG:80 == 1 && IS_FEMALE(ARG:0))
+
+;---------------------------
+;0～ARG:0까지중에서 숫자를 1개 선택하는 함수
+;다만, ARG:1-9의 숫자는 선택하지 않는다
+;---------------------------
+@RAND_POCKET(ARG:0 = 100, ARG:1 = -1, ARG:2 = -1, ARG:3 = -1, ARG:4 = -1, ARG:5 = -1, ARG:6 = -1, ARG:7 = -1, ARG:8 = -1, ARG:9 = -1)
+#FUNCTION
+
+DO
+	LOCAL:0 = RAND:(ARG:0)
+		SIF MATCH(ARG, LOCAL:0 , 1, 10)
+			CONTINUE
+	RETURNF LOCAL:0
+LOOP 1
+
+
+;---------------------------
+;주어진 값에 대해, 조임 상태를 문자열으로 돌려주는 함수
+;---------------------------
+@TOSTR_TIGHTNESS(ARG:0)
+#FUNCTIONS
+SELECTCASE ARG:0
+	CASE IS >= 조임_꽉닫힘
+		RETURNF "꽉닫힘"
+	CASE IS >= 조임_꽉조임
+		RETURNF "꽉조임"
+	CASE IS >= 조임_빡빡함
+		RETURNF "빡빡함"
+	CASE IS >= 조임_명기
+		RETURNF "명기"
+	CASE IS >= 조임_보통
+		RETURNF "보통"
+	CASE IS >= 조임_느슨한
+		RETURNF "느슨한"
+	CASE IS >= 조임_느슨느슨
+		RETURNF "느슨느슨"
+	CASE IS >= 조임_뻐끔뻐끔
+		RETURNF "뻐끔뻐끔"
+	CASE IS >= 조임_헐렁헐렁
+		RETURNF "헐렁헐렁"
+	CASEELSE
+		RETURNF "붕괴"
+ENDSELECT
+
+;---------------------------
+;ARG:0의 캐릭터의 조임이 개선하는 처리
+;---------------------------
+@TIGHTNESS_GROW(대상)
+#DIM 대상
+#DIM Ｖ회복량
+#DIM Ａ회복량
+#DIM Ｖ초기치
+#DIM Ａ초기치
+#DIM Ｖ최대회복량
+#DIM Ａ최대회복량
+
+IF EXISTCSV(NO:대상)
+	Ｖ초기치 = CSVTALENT(NO:대상, GETNUM(TALENT, "Ｖ조임"))
+	Ａ초기치 = CSVTALENT(NO:대상, GETNUM(TALENT, "Ａ조임"))
+ELSE
+	;비고정 캐릭터의 조임 초기치는 소질로부터 잠정적으로 검출
+	;기본 650 처녀+100소인체형+100아이체형+200유아+100현재가와 평균을 취해 최저 150 최고 950
+	Ｖ초기치 = 650 + TALENT:대상:처녀 * 100 + (TALENT:대상:체격 == 체격_작은체형) * 100 + (TALENT:대상:체격 == 체격_아이) * 200 + TALENT:대상:유아 * 100
+	Ｖ초기치 = LIMIT((Ｖ초기치 + TALENT:대상:Ｖ조임) / 2, 150, 950)
+	Ａ초기치 = 650 + TALENT:대상:애널처녀 * 100 + (TALENT:대상:체격 == 체격_작은체형) * 100 + (TALENT:대상:체격 == 체격_아이) * 200 + TALENT:대상:유아 * 100
+	Ａ초기치 = LIMIT((Ａ초기치 + TALENT:대상:Ａ조임) / 2, 150, 950)
+ENDIF
+
+;확장 경험으로 최대 회복량을 깎을 수 있다（0으로 200  10으로 190  250으로 150  1000으로 100  4000으로 0  의 우치나카앙분포 랜덤(다만 최저 1)）
+Ｖ최대회복량 = MAX(200 - SQRT(10 * EXP:대상:Ｖ확장경험), 1)
+Ｖ최대회복량 = MAX(((RAND:Ｖ최대회복량) + (RAND:Ｖ최대회복량) + (RAND:Ｖ최대회복량)) / 3, 1)
+Ａ최대회복량 = MAX(200 - SQRT(10 * EXP:대상:Ａ확장경험), 1)
+Ａ최대회복량 = MAX(((RAND:Ａ최대회복량) + (RAND:Ａ최대회복량) + (RAND:Ａ최대회복량)) / 3, 1)
+
+IF HAS_VAGINA(대상)
+	;원래는
+	; = 2 * (조임_최고치 - TALENT:대상:Ｖ조임)/10 * (Ｖ초기치/1000)/MAX((TALENT:대상:Ｖ조임 - 400)/100, 1)/MAX((TALENT:대상:Ｖ조임 6 - Ｖ초기치 + 100)/100, 1)
+	;와 같은 식입니다만, 소수점 이하를 잘라 버릴 수 있어 계산이 미치기 (위해)때문에 정리되고 있습니다
+	;기본
+	Ｖ회복량 = 조임_최고치 - TALENT:대상:Ｖ조임
+	;초기치가 낮을 정도(수록) 완만하게
+	Ｖ회복량 = 2 * Ｖ회복량 * Ｖ초기치
+	;조임 보통 이상이 되는 (정도)만큼, 초기치보다 현재가가 큰 만큼 상승치에 제한
+	Ｖ회복량 = Ｖ회복량 / (MAX((TALENT:대상:Ｖ조임 - 400),100) * MAX((TALENT:대상:Ｖ조임 - Ｖ초기치 + 100),100))
+	;범위에 거둔다
+	Ｖ회복량 = LIMIT(Ｖ회복량, 1, Ｖ최대회복량)
+ELSE
+	Ｖ회복량 = 0
+ENDIF
+
+;기본
+Ａ회복량 = 조임_최고치 - TALENT:대상:Ａ조임
+;초기치가 낮을 정도(수록) 완만하게
+Ａ회복량 = 2 * Ａ회복량 * Ａ초기치
+;조임 보통 이상이 되는 (정도)만큼, 초기치보다 현재가가 큰 만큼 상승치에 제한
+Ａ회복량 = Ａ회복량 / (MAX((TALENT:대상:Ａ조임 - 400),100) * MAX((TALENT:대상:Ａ조임 - Ａ초기치 + 200),100))
+;범위에 거둔다
+Ａ회복량 = LIMIT(Ａ회복량, 1, Ａ최대회복량)
+
+TALENT:대상:Ｖ조임 = LIMIT(TALENT:대상:Ｖ조임 + Ｖ회복량, 조임_최저치, 조임_최고치)
+TALENT:대상:Ａ조임 = LIMIT(TALENT:대상:Ａ조임 + Ａ회복량, 조임_최저치, 조임_최고치)
+
+;---------------------------
+;대상의 질의 조임이 악화되는 처리
+;---------------------------
+@TIGHTNESS_DECREASE_V(대상, 기준치)
+#DIM 대상
+#DIM 기준치
+#DIM 감소량
+#DIMS 변화전
+#DIMS 변화후
+
+SIF !HAS_VAGINA(대상)
+	RETURN -1
+
+변화전 = %TOSTR_TIGHTNESS(TALENT:대상:Ｖ조임)%
+
+감소량 = 기준치
+
+;확장 경험의 수가 그대로 감소량이 증가한다％가 된다  증가하는 것은 901～1000％의 10까지
+;( 100마다 1증가할 가능성이 생긴다  예를 들어 130이라면 1증가하는 것은 확정으로, 30％의 확률로 이제(이미/벌써/더는/정말) 1증가한다)
+FOR LOCAL:0, 0, 10
+	SIF EXP:대상:Ｖ확장경험 > RAND(LOCAL:0 * 100, (LOCAL:0 + 1) * 100)
+		감소량 ++
+NEXT
+
+TALENT:대상:Ｖ조임 -= 감소량
+
+변화후 = %TOSTR_TIGHTNESS(TALENT:대상:Ｖ조임)%
+SIF 변화전 != 변화후
+	CALL COLOR_PRINTL(@"%ANAME(대상)%의 질의 조임이 %변화후%이(가) 되었다", 칼라_주의)
+
+;---------------------------
+;대상의 애널의 조임이 악화되는 처리
+;---------------------------
+@TIGHTNESS_DECREASE_A(대상, 기준치)
+#DIM 대상
+#DIM 기준치
+#DIM 감소량
+#DIMS 변화전
+#DIMS 변화후
+
+변화전 = %TOSTR_TIGHTNESS(TALENT:대상:Ａ조임)%
+
+감소량 = 기준치
+
+FOR LOCAL:0, 0, 10
+	SIF EXP:대상:Ａ확장경험 > RAND(LOCAL:0 * 100, (LOCAL:0 + 1) * 100)
+		감소량 ++
+NEXT
+
+TALENT:대상:Ａ조임 -= 감소량
+
+변화후 = %TOSTR_TIGHTNESS(TALENT:대상:Ａ조임)%
+SIF 변화전 != 변화후
+	CALL COLOR_PRINTL(@"%ANAME(대상)%의 애널의 조임이 %변화후%이(가) 되었다", 칼라_주의)
+
+;---------------------------
+;주어진 문자열에 대한 Default의 조임 상태를 취득하는 함수
+;「이 캐릭터의 조임 상태를 명기로 하고 싶다……」라고 할 때 호출해 조임 상태에 직접적으로 쳐박는다든가 그러한 사용법을 한다
+;---------------------------
+@GET_DEFAULT_TIGHTNESS(문자열)
+#FUNCTION
+#DIMS 문자열
+
+SELECTCASE 문자열
+	CASE "꽉닫힘"
+		RETURNF 950
+	CASE "꽉조임"
+		RETURNF 850
+	CASE "빡빡함"
+		RETURNF 750
+	CASE "명기"
+		RETURNF 650
+	CASE "보통"
+		RETURNF 550
+	CASE "느슨한"
+		RETURNF 450
+	CASE "느슨느슨"
+		RETURNF 350
+	CASE "뻐끔뻐끔"
+		RETURNF 250
+	CASE "헐렁헐렁"
+		RETURNF 150
+	CASE "붕괴"
+		RETURNF 50
+ENDSELECT
+THROW GET_DEFAULT_TIGHTNESS에 묘한 문자열을 던질 수 있었습니다
+
+;---------------------------
+;랜덤인 Default 조임 상태를 취득하는 함수
+;---------------------------
+@GET_RANDOM_TIGHTNESS
+#FUNCTION
+SELECTCASE RAND:100
+	CASE 0 TO 4
+		RETURNF GET_DEFAULT_TIGHTNESS("붕괴")
+	CASE 5 TO 9
+		RETURNF GET_DEFAULT_TIGHTNESS("헐렁헐렁")
+	CASE 10 TO 14
+		RETURNF GET_DEFAULT_TIGHTNESS("뻐끔뻐끔")
+	CASE 15 TO 24
+		RETURNF GET_DEFAULT_TIGHTNESS("느슨느슨")
+	CASE 25 TO 34
+		RETURNF GET_DEFAULT_TIGHTNESS("느슨한")
+	CASE 35 TO 59
+		RETURNF GET_DEFAULT_TIGHTNESS("보통")
+	CASE 60 TO 79
+		RETURNF GET_DEFAULT_TIGHTNESS("명기")
+	CASE 80 TO 89
+		RETURNF GET_DEFAULT_TIGHTNESS("빡빡함")
+	CASE 90 TO 94
+		RETURNF GET_DEFAULT_TIGHTNESS("꽉조임")
+	CASEELSE
+		RETURNF GET_DEFAULT_TIGHTNESS("꽉닫힘")
+ENDSELECT
+
+;-------------------------------------------------
+;데일리 이벤트 개시시의 범용 연출.
+;-------------------------------------------------	
+@DAILY_START(EVENTNAME)
+#DIMS EVENTNAME
+CALL SINGLE_DRAWLINE
+CALL COLOR_PRINTL(@"-데일리 이벤트 『%EVENTNAME%』발생-", 칼라_주의)
+FORCEWAIT
+CALL SINGLE_DRAWLINE
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORML ·
+
+;-------------------------------------------------
+;데일리 이벤트 개시시의 범용 연출.
+;-------------------------------------------------	
+@DAILY_START_DERIVATION(EVENTNAME)
+#DIMS EVENTNAME
+CALL SINGLE_DRAWLINE
+CALL COLOR_PRINTL(@"-파생 데일리 이벤트 『%EVENTNAME%』발생-", 칼라_주의)
+FORCEWAIT
+CALL SINGLE_DRAWLINE
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORML ·
+
+;============================================================================== 
+;◆몇년째인지를 돌려준다
+;============================================================================== 
+@DISPLAY_YEAR(ARG:0)
+	#FUNCTION
+	IF ! ARG:0
+		ARG:0 = DAY
+	ENDIF
+	LOCAL:0 = (ARG:0 + 12) / 12
+	RETURNF LOCAL:0
+
+;============================================================================== 
+;◆금기가 몇월인지를 돌려준다
+;============================================================================== 
+@DISPLAY_MONTH(ARG:0)
+	#FUNCTION
+	IF ! ARG:0
+		ARG:0 = DAY
+	ENDIF
+	LOCAL:0 = (ARG:0 + 12) % 12
+	RETURNF LOCAL:0
+
+;============================================================================== 
+;◆몇월인지를 돌려준다
+;============================================================================== 
+@DISPLAY_MONTH_OLD(ARG:0)
+	#FUNCTIONS
+	IF ! ARG:0
+		ARG:0 = DAY
+	ENDIF
+	LOCAL:0 = (ARG:0 + 12) % 12
+	SELECTCASE LOCAL:0
+		CASE 0
+			LOCALS:0 = 12월
+		CASE 1
+			LOCALS:0 = 1월
+		CASE 2
+			LOCALS:0 = 2월
+		CASE 3
+			LOCALS:0 = 3월
+		CASE 4
+			LOCALS:0 = 4월
+		CASE 5
+			LOCALS:0 = 5월
+		CASE 6
+			LOCALS:0 = 6월
+		CASE 7
+			LOCALS:0 = 7월
+		CASE 8
+			LOCALS:0 = 8월
+		CASE 9
+			LOCALS:0 = 9월
+		CASE 10
+			LOCALS:0 = 10월
+		CASE 11
+			LOCALS:0 = 11월
+	ENDSELECT
+	RETURNF LOCALS:0
+
+;============================================================================== 
+;◆계절을 돌려준다
+;============================================================================== 
+@DISPLAY_SEASON(ARG:0)
+	#FUNCTIONS
+	IF ! ARG:0
+		ARG:0 = DAY
+	ENDIF
+	LOCAL:0 = (ARG:0 + 12) % 12
+	IF LOCAL:0 == 3 || LOCAL:0 == 4 || LOCAL:0 == 5
+		LOCALS:0 = 봄
+	ELSEIF LOCAL:0 == 6 || LOCAL:0 == 7 || LOCAL:0 == 8
+		LOCALS:0 = 여름
+	ELSEIF LOCAL:0 == 9 || LOCAL:0 == 10 || LOCAL:0 == 11
+		LOCALS:0 = 가을
+	ELSE
+		LOCALS:0 = 겨울
+	ENDIF
+	RETURNF LOCALS:0
+
+;-------------------------------------------------
+;카타카나 판정 함수
+;명명 처리용으로 문자열이 카타카나인가 어떤가를 판정한다（1이라면 카타카나）
+;아마 반각 카나라든지는 대응 할 수 없다
+;ARGS 판정 대상
+;ARG  판정 위치（생략가능）, 1문자눈이 0, 2문자눈이 1（UNICODE식）
+;-------------------------------------------------
+;@CHECK_KATAKANA(ARGS, ARG)
+;#FUNCTION
+;RETURNF INRANGE(ENCODETOUNI(ARGS, ARG), 0x30A1, 0x30FA)
+
+;-------------------------------------------------
+;지정 범위내에서 수치를 인크리먼트 시키는 함수
+;-------------------------------------------------
+@ROUND_INCREMENT(OPERAND, MINVAL, MAXVAL)
+#FUNCTION
+#DIM OPERAND
+#DIM MINVAL
+#DIM MAXVAL
+OPERAND ++
+SIF OPERAND > MAXVAL
+	OPERAND = MINVAL
+
+RETURNF OPERAND
+
+;-------------------------------------------------
+;지정 범위내에서 수치를 인크리먼트 시키는 함수
+;-------------------------------------------------
+@ROUND_DECREMENT(OPERAND, MINVAL, MAXVAL)
+#FUNCTION
+#DIM OPERAND
+#DIM MINVAL
+#DIM MAXVAL
+OPERAND --
+SIF OPERAND < MINVAL
+	OPERAND = MAXVAL
+
+RETURNF OPERAND
+
+;-------------------------------------------------
+;지정 범위 이하가 되지 않게 ARG:0으로부터 ARG:1을 빼는 함수
+;-------------------------------------------------
+@MIN_DECREASE(MINUEND, SUBTRAHEND, MINVAL)
+#FUNCTION
+#DIM MINUEND
+#DIM SUBTRAHEND
+#DIM MINVAL
+
+MINUEND = MAX(MINUEND - SUBTRAHEND, MINVAL)
+
+RETURNF MINUEND
+;-------------------------------------------------
+;대상의 소속을 변경시켜, 필요한 변수 조작을 실시하는 함수
+;소속을 0으로 하면 방랑한다. 그 때, 사망 플래그를 지정했을 경우는 사망 취급이 된다
+;-------------------------------------------------
+@CHANGE_COUNTRY(대상, 세력번호, 포로처클리어플래그 = 0, 사망플래그 = 0)
+#DIM 대상
+#DIM 세력번호
+#DIM 사망플래그
+#DIM 포로처클리어플래그
+
+CALL FORCE_FREE(대상)
+
+SIF IS_COUNTRY(CFLAG:대상:소속)
+	CFLAG:대상:이전의군주 = COUNTRY_BOSS:(CFLAG:대상:소속)
+
+CFLAG:대상:소속 = 세력번호
+
+IF 포로처클리어플래그
+	CFLAG:대상:포로처 = 0
+	CFLAG:대상:연금중 = 0
+ENDIF
+
+IF 대상 != MASTER
+	;무소속 이외에 된, 없고 현재 포로처가 존재하고 있다면 특수상태를 꺾는다
+	IF 세력번호 != 0 || CFLAG:대상:포로처
+		CFLAG:대상:특수상태 = 0
+	;무소속이며, 포로처가 없으면 특수상태를 세운다
+	ELSE
+		CFLAG:대상:특수상태 = 사망플래그 + 1
+	ENDIF
+ENDIF
+
+;노예시장, 스카우트 후보로부터 삭제
+SIF FINDELEMENT(SLAVEMARKET_GOODS, GET_ID(대상)) != -1
+	SLAVEMARKET_GOODS:FINDELEMENT(SLAVEMARKET_GOODS, GET_ID(대상)) = 0
+SIF FINDELEMENT(SCOUT_CANDIDATES, GET_ID(대상)) != -1
+	SCOUT_CANDIDATES:FINDELEMENT(SCOUT_CANDIDATES, GET_ID(대상)) = 0
+
+
+;-------------------------------------------------
+;대상의 포로처를 변경시켜, 필요한 변수 조작을 실시하는 함수
+;포로처 0을 지정하는 것은 해방하는 것을 의미한다.
+;소속 나시의 경우, 해방시에 사망 플래그를 세우고 있으면 사망, 세우지 않았다고 방랑한다.
+;-------------------------------------------------
+@CAPTURE(대상, 세력번호, 사망플래그 = 0)
+#DIM 대상
+#DIM 세력번호
+#DIM 사망플래그
+
+;연금중은 나중에 수동으로 지정해
+CFLAG:대상:연금중 = 0
+
+;포로처가 변경되면 카운터를 리셋트
+SIF CFLAG:대상:포로처 != 세력번호
+	CFLAG:대상:해방카운터 = 0
+
+CFLAG:대상:포로처 = 세력번호
+
+;소속 없음의 경우, 특수상태를 변경
+IF 대상 != MASTER && CFLAG:대상:소속 == 0
+	IF 세력번호 != 0
+		CFLAG:대상:특수상태 = 0
+	ELSE
+		CFLAG:대상:특수상태 = 사망플래그 + 1
+	ENDIF
+ENDIF
+
+CALL FORCE_FREE(대상)
+
+;-------------------------------------------------
+;ABL에 대응하는 경험치를 돌려주는 함수
+;-------------------------------------------------
+@GET_EXP(ARG:0)
+#FUNCTION
+SELECTCASE ARG:0
+	CASE GETNUM(ABL, "무투")
+		RETURNF GETNUM(EXP, "무투경험치")
+	CASE GETNUM(ABL, "방위")
+		RETURNF GETNUM(EXP, "방위경험치")
+	CASE GETNUM(ABL, "지략")
+		RETURNF GETNUM(EXP, "지략경험치")
+	CASE GETNUM(ABL, "정치")
+		RETURNF GETNUM(EXP, "정치경험치")
+	CASE GETNUM(ABL, "요리")
+		RETURNF GETNUM(EXP, "요리경험치")
+	CASE GETNUM(ABL, "가창")
+		RETURNF GETNUM(EXP, "가창경험치")
+	CASE GETNUM(ABL, "요술")
+		RETURNF GETNUM(EXP, "요술경험치")
+	CASE GETNUM(ABL, "Ｃ감")
+		RETURNF GETNUM(EXP, "Ｃ감경험치")
+	CASE GETNUM(ABL, "Ｂ감")
+		RETURNF GETNUM(EXP, "Ｂ감경험치")
+	CASE GETNUM(ABL, "Ｖ감")
+		RETURNF GETNUM(EXP, "Ｖ감경험치")
+	CASE GETNUM(ABL, "Ａ감")
+		RETURNF GETNUM(EXP, "Ａ감경험치")
+	CASE GETNUM(ABL, "Ｍ감")
+		RETURNF GETNUM(EXP, "Ｍ감경험치")
+	CASE GETNUM(ABL, "봉사")
+		RETURNF GETNUM(EXP, "봉사경험치")
+	CASE GETNUM(ABL, "욕망")
+		RETURNF GETNUM(EXP, "욕망경험치")
+	CASE GETNUM(ABL, "성교")
+		RETURNF GETNUM(EXP, "성교경험치")
+	CASE GETNUM(ABL, "레즈")
+		RETURNF GETNUM(EXP, "레즈경험치")
+	CASE GETNUM(ABL, "ＢＬ")
+		RETURNF GETNUM(EXP, "ＢＬ경험치")
+	CASE GETNUM(ABL, "노출")
+		RETURNF GETNUM(EXP, "노출경험치")
+	CASE GETNUM(ABL, "자위")
+		RETURNF GETNUM(EXP, "자위경험치")
+	CASE GETNUM(ABL, "정애")
+		RETURNF GETNUM(EXP, "정애경험치")
+	CASE GETNUM(ABL, "사정")
+		RETURNF GETNUM(EXP, "사정경험치")
+	CASE GETNUM(ABL, "분유")
+		RETURNF GETNUM(EXP, "분유경험치")
+	CASE GETNUM(ABL, "배설")
+		RETURNF GETNUM(EXP, "배설경험치")
+	CASE GETNUM(ABL, "촉수")
+		RETURNF GETNUM(EXP, "촉수경험치")
+	CASE GETNUM(ABL, "출산")
+		RETURNF GETNUM(EXP, "출산경험치")
+	CASE GETNUM(ABL, "주량")
+		RETURNF GETNUM(EXP, "주량경험치")
+	CASE GETNUM(ABL, "성기술")
+		RETURNF GETNUM(EXP, "성기술경험치")
+	CASE GETNUM(ABL, "성지식")
+		RETURNF GETNUM(EXP, "성지식경험치")
+	CASE GETNUM(ABL, "최면")
+		RETURNF GETNUM(EXP, "최면경험치")
+	CASE GETNUM(ABL, "새드")
+		RETURNF GETNUM(EXP, "기학경험치")
+	CASE GETNUM(ABL, "마조")
+		RETURNF GETNUM(EXP, "피학경험치")
+ENDSELECT
+
+;-------------------------------------------------
+;급료를 계산하는 함수
+;-------------------------------------------------
+@CALC_SALARY()
+#FUNCTION
+#DIM 금액
+금액 = GET_SUM_ECONOMY(CFLAG:MASTER:소속)
+금액 *= (ABL:MASTER:무투 + ABL:MASTER:방위 + ABL:MASTER:지략 + ABL:MASTER:정치 + ABL:MASTER:요리 + ABL:MASTER:가창 + ABL:MASTER:요술 * 3 + 150)
+금액 /= 30000
+금액 -= MIN(GET_OWN_CITY(CFLAG:MASTER:소속) - 5, 1) * 100
+SIF TALENT:MASTER:행운
+	금액 = 금액 * 120 / 100
+RETURNF 금액
+
+;-------------------------------------------------
+;말미에 빈행 하나만을 남긴 상태로 하는 함수
+;-------------------------------------------------
+@SINGLE_EMPTY_LINE()
+WHILE 1
+	IF HTML_GETPRINTEDSTR(0) != "<p align='left'><nobr> </nobr></p>"
+		PRINTL
+		BREAK
+	ELSEIF HTML_GETPRINTEDSTR(1) == "<p align='left'><nobr> </nobr></p>"
+		CLEARLINE 1
+	ELSE
+		BREAK
+	ENDIF
+WEND
+;-------------------------------------------------
+;말미에 빈행을 남기지 않는 함수
+;-------------------------------------------------
+@KILL_EMPTY_LINE()
+CALL SINGLE_EMPTY_LINE
+CLEARLINE 1
+
+;-------------------------------------------------
+;중복 시키지 않고 CALL SINGLE_DRAWLINE 하는 함수
+;-------------------------------------------------
+@SINGLE_DRAWLINE(LINE = "-", COLOR = -1)
+#DIM COLOR
+#DIM COLOR_TMP
+#DIMS LINE
+#DIMS TMP
+
+COLOR_TMP = GETCOLOR()
+SIF COLOR != -1
+	SETCOLOR COLOR
+
+TMP '= HTML_GETPRINTEDSTR(0)
+;STRFIND는 정규 표현에 대응하고 있지 않아서 이런 일을 하는 처지가 된다
+;실제의 정규 표현 처리에 걸치기까지 한 번 이스케이프를 먹는 것 같은 것으로 슬래시는 이중으로 건네줄 필요가 있다.
+IF FINDELEMENT(TMP, "([^ ])\\1{15}", 0, 1, 0) == 0
+	RETURN
+ELSE
+	DRAWLINEFORM %LINE%
+ENDIF
+
+SIF COLOR != -1
+	SETCOLOR COLOR_TMP
+
+;-------------------------------------------------
+;간단하고 쉬운 능력표시를 실시한다
+;-------------------------------------------------
+@SHOW_SIMPLE_INFO(대상)
+#DIM 대상
+CALL SINGLE_DRAWLINE
+PRINTFORML %NAME_FORMAL(대상)%
+PRINTL
+CALL TMP_PRINT_CHARA_STARS_NUM(대상)
+PRINT   무:
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:대상:무투)
+PRINTFORM {ABL:대상:무투, 3, LEFT}
+PRINT  방:
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:대상:방위)
+PRINTFORM {ABL:대상:방위, 3, LEFT}
+PRINT  지:
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:대상:지략)
+PRINTFORM {ABL:대상:지략, 3, LEFT}
+PRINT  정:
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:대상:정치)
+PRINTFORM {ABL:대상:정치, 3, LEFT}
+PRINT  요:
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:대상:요술)
+PRINTFORM {ABL:대상:요술, 3, LEFT}
+PRINT  료:
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:대상:요리)
+PRINTFORM {ABL:대상:요리, 3, LEFT}
+PRINT  가창:
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:대상:가창)
+PRINTFORM {ABL:대상:가창, 3, LEFT}
+PRINTL
+CALL SINGLE_DRAWLINE
+
+@IS_OVULATION(대상)
+#FUNCTION
+#DIM 대상
+#DIM 하1자리수
+SIF !HAS_VAGINA(대상)
+	RETURNF 0
+SIF TALENT:대상:임신
+	RETURNF 0
+
+하1자리수 = DAY % 10
+
+RETURNF 하1자리수 == TALENT:대상:위험일 || 하1자리수 - 5 == TALENT:대상:위험일 || GETBIT(TALENT:대상:음란계, 소질_음란_양질모태)
+
+
+;-------------------------------------------------
+;desc  :캐릭터를 랜덤에 선출하는 함수
+;param :선택 함수명:캐릭터를 선출하는 조건이 되는 함수의 이름 SELECT_CHARA_RANDOM_LOGIC_●●(ARG:0)의 것●●의 부분
+;-------------------------------------------------
+@SELECT_CHARA_RANDOM(선택함수명, 바이어스함수명 = "")
+#DIMS 선택함수명
+#DIMS 바이어스함수명
+
+#DIM 대상
+#DIM 후보, 3000
+#DIM 후보난수 , 3000
+#DIM 후보수
+
+VARSET 후보, -1
+VARSET 후보수
+;가드절
+TRYCCALLFORM SELECT_CHARA_RANDOM_LOGIC_%선택함수명%(MASTER)
+CATCH
+	THROW 지정된 함수 SELECT_CHARA_RANDOM_LOGIC_%선택함수명%가 존재하지 않습니다
+ENDCATCH
+
+FOR LOCAL, 0, CHARANUM
+	CALLFORM SELECT_CHARA_RANDOM_LOGIC_%선택함수명%(LOCAL)
+	IF RESULT == 1
+		후보:후보수 = LOCAL
+		후보수 ++
+	ENDIF
+NEXT
+
+SIF 후보수 == 0
+	RETURN -1
+
+SIF 바이어스함수명 == ""
+	RETURN 후보:(RAND:후보수)
+
+VARSET 후보난수, __INT_MIN__
+
+TRYCCALLFORM SELECT_CHARA_RANDOM_BIAS_%바이어스함수명%(MASTER)
+CATCH
+	THROW 지정된 함수 SELECT_CHARA_RANDOM_BIAS_%바이어스함수명%가 존재하지 않습니다
+ENDCATCH
+
+FOR LOCAL, 0, 후보수
+	LOCAL:1 = 후보:후보수
+	CALLFORM SELECT_CHARA_RANDOM_BIAS_%바이어스함수명%(LOCAL:1)
+	후보난수:LOCAL = RAND(0, MIN(ABS(RESULT), 1) * 10000)
+NEXT
+
+대상 = 후보:FINDELEMENT(후보난수, MAXARRAY(후보난수), 0, 후보수)
+
+RETURN 대상
+
+;-------------------------------------------------
+;desc  :캐릭터를 랜덤에 선출하는 함수
+;param :선택 함수명:캐릭터를 선출하는 조건이 되는 함수의 이름 SELECT_CHARA_RANDOM_LOGIC_●●(ARG:0)의 것●●의 부분
+;-------------------------------------------------
+@SELECT_CHARA_RANDOM_MULTI(최대선택수, 선택함수명, 바이어스함수명 = "")
+#DIMS 선택함수명
+#DIMS 바이어스함수명
+#DIM 대상
+#DIM 후보, 3000
+#DIM 후보난수, 3000
+#DIM 최대선택수
+#DIM 후보수
+
+VARSET 후보, -1
+VARSET 후보난수, __INT_MIN__
+VARSET 후보수
+VARSET SELECTED_CHARA, -1
+VARSET SELECTED_CHARA_NUM
+
+DUMPRAND
+
+;가드절
+TRYCCALLFORM SELECT_CHARA_RANDOM_LOGIC_%선택함수명%(MASTER)
+CATCH
+	THROW 지정된 함수 SELECT_CHARA_RANDOM_LOGIC_%선택함수명%가 존재하지 않습니다
+ENDCATCH
+
+IF 바이어스함수명 != ""
+	TRYCCALLFORM SELECT_CHARA_RANDOM_BIAS_%바이어스함수명%(MASTER)
+	CATCH
+		THROW 지정된 함수 SELECT_CHARA_RANDOM_BIAS_%바이어스함수명%가 존재하지 않습니다
+	ENDCATCH
+ENDIF
+
+FOR LOCAL, 0, CHARANUM
+	CALLFORM SELECT_CHARA_RANDOM_LOGIC_%선택함수명%(LOCAL)
+	IF RESULT == 1
+		후보:후보수 = LOCAL
+		IF 바이어스함수명 == ""
+			후보난수:후보수 = RAND:__INT_MAX__
+		ELSE
+			CALLFORM SELECT_CHARA_RANDOM_BIAS_%바이어스함수명%(LOCAL)
+			후보난수:후보수 = RAND(0, MIN(ABS(RESULT), 1) * 10000)
+		ENDIF
+		후보수 ++
+	ENDIF
+NEXT
+
+SELECTED_CHARA_NUM = MIN(후보수, 최대선택수)
+
+FOR LOCAL, 0, SELECTED_CHARA_NUM
+	LOCAL:1 = FINDELEMENT(후보난수, MAXARRAY(후보난수, 0, 후보수))
+	SELECTED_CHARA:LOCAL = 후보:(LOCAL:1)
+	후보난수:(LOCAL:1) = __INT_MIN__
+NEXT
+
+INITRAND
+
+SIF 후보수 == 0
+	RETURN 0
+
+RETURN SELECTED_CHARA_NUM
+
+;-------------------------------------------------
+;EVENTSTART_CALLEE에 추가한다
+;-------------------------------------------------
+@ADD_EVENTTRAIN_CALLEE(함수명)
+#DIMS 함수명
+SIF EVENTTRAIN_CALLEE_NUM == VARSIZE("EVENTTRAIN_CALLEE")
+	THROW EVENTTRAIN_CALLEE가 넘쳤습니다
+EVENTTRAIN_CALLEE:EVENTTRAIN_CALLEE_NUM '= 함수명
+EVENTTRAIN_CALLEE_NUM ++
+
+
+;-------------------------------------------------
+;EVENTEND_CALLEE에 추가한다
+;-------------------------------------------------
+@ADD_EVENTEND_CALLEE(함수명)
+#DIMS 함수명
+SIF EVENTEND_CALLEE_NUM == VARSIZE("EVENTEND_CALLEE")
+	THROW EVENTEND_CALLEE가 넘쳤습니다
+EVENTEND_CALLEE:EVENTEND_CALLEE_NUM '= 함수명
+EVENTEND_CALLEE_NUM ++
+
+;-------------------------------------------------
+;조교 후의 캐릭터 사이 인상치 개선 처리
+;-------------------------------------------------
+@TRAIN_CALL(입구)
+#DIM 입구
+#DIMS CALLEE_COPY, VARSIZE("EVENTEND_CALLEE")
+#DIM CALLEE_NUM_COPY
+
+IF 입구 == 0
+	ARRAYCOPY "EVENTTRAIN_CALLEE", "CALLEE_COPY"
+	CALLEE_NUM_COPY = EVENTTRAIN_CALLEE_NUM
+	EVENTTRAIN_CALLEE_NUM = 0
+ELSE
+	ARRAYCOPY "EVENTEND_CALLEE", "CALLEE_COPY"
+	CALLEE_NUM_COPY = EVENTEND_CALLEE_NUM
+	EVENTEND_CALLEE_NUM = 0
+ENDIF
+
+FOR LOCAL, 0, CALLEE_NUM_COPY
+	IF 입구 == 0
+		TRYCCALLFORM EVENTTRAIN_%CALLEE_COPY:LOCAL%
+		CATCH
+			CALL COLOR_PRINTW(@"EVENTTRAIN_CALLEE에 격납되고 호출이 시도된 함수 EVENTTRAIN_%CALLEE_COPY:LOCAL%가 존재하지 않습니다", 칼라_경고)
+		ENDCATCH
+	ELSE
+		TRYCCALLFORM EVENTEND_%CALLEE_COPY:LOCAL%
+		CATCH
+			CALL COLOR_PRINTW(@"EVENTEND_CALLEE에 격납되고 호출이 시도된 함수 EVENTEND_%CALLEE_COPY:LOCAL%가 존재하지 않습니다", 칼라_경고)
+		ENDCATCH
+	ENDIF
+NEXT
+
+@IS_APPEAR(ARG:0)
+#FUNCTION
+RETURNF ARG:0 == MASTER || CFLAG:(ARG:0):소속 || CFLAG:(ARG:0):특수상태 || CFLAG:(ARG:0):포로처
+
+;-------------------------------------------------
+;캐릭터의 세력 칼라의 취득
+;-------------------------------------------------
+@CHARA_COUNTRY_COLOR(대상)
+#FUNCTION
+#DIM 대상
+
+IF TALENT:대상:머리색 > 0
+	LOCAL = (TALENT:대상:머리색 >> 16 & 0xFF)
+	LOCAL:1 = (TALENT:대상:머리색 >> 8  & 0xFF)
+	LOCAL:2 = (TALENT:대상:머리색 & 0xFF)
+ELSE
+	LOCAL = RAND:256
+	LOCAL:1 = RAND:256
+	LOCAL:2 = RAND:256
+ENDIF
+
+IF LOCAL > 200
+	LOCAL = LIMIT(LOCAL - RAND(0, 50), 0, 255)
+ELSEIF LOCAL < 100
+	LOCAL = LIMIT(LOCAL + RAND(0, 50), 0, 255)
+ELSE
+	LOCAL = LIMIT(LOCAL + RAND(-25, 25), 0, 255)
+ENDIF
+
+IF LOCAL:1 > 200
+	LOCAL:1 = LIMIT(LOCAL:1 - RAND(0, 50), 0, 255)
+ELSEIF LOCAL:1 < 100
+	LOCAL:1 = LIMIT(LOCAL:1 + RAND(0, 50), 0, 255)
+ELSE
+	LOCAL:1 = LIMIT(LOCAL:1 + RAND(-25, 25), 0, 255)
+ENDIF
+
+IF LOCAL:2 > 200
+	LOCAL:2 = LIMIT(LOCAL:2 - RAND(0, 50), 0, 255)
+ELSEIF LOCAL:2 < 100
+	LOCAL:2 = LIMIT(LOCAL:2 + RAND(0, 50), 0, 255)
+ELSE
+	LOCAL:2 = LIMIT(LOCAL:2 + RAND(-25, 25), 0, 255)
+ENDIF
+
+IF LOCAL < 100 && LOCAL:1 < 100 && LOCAL:2 < 100
+	LOCAL:(RAND:3) += RAND(80, 100)
+ELSEIF LOCAL > 170 && LOCAL:2 > 170 && LOCAL:3 > 170
+	LOCAL:(RAND:3) -= RAND(80, 100)
+ENDIF
+
+LOCAL:4 = (LOCAL << 16) + (LOCAL:1 << 8) + (LOCAL:2)
+
+FOR LOCAL, 0, MAX_COUNTRY
+	SIF !IS_COUNTRY(LOCAL)
+		CONTINUE
+	SIF LOCAL:4 == COUNTRY_COLOR:LOCAL
+		LOCAL:4 *= LIMIT(RAND(80, 120) / 100, 0x000000, 0xFFFFFF)
+NEXT
+
+RETURNF LOCAL:4
+
+
+;============================================================================== 
+;◆기후를 결정해 변수 WEATHER/WEATHERNUM에 보존한다
+;============================================================================== 
+@WEATHER(ARG:0)
+	IF ! ARG:0
+		ARG:0 = DAY
+	ENDIF
+	LOCAL:0 = (ARG:0 + 12) % 12
+	IF LOCAL:0 == 9 || LOCAL:0 == 10 || LOCAL:0 == 11
+		LOCAL:0 = RAND:3
+		IF LOCAL:0 == 0
+			;WEATHER는 장래적으로 삭제 예정 DISPLAY_WEATHER 사용 추천
+			WEATHER = 맑음
+			WEATHERNUM = 기후_맑음
+		ELSEIF LOCAL:0 == 1
+			WEATHER = 구름
+			WEATHERNUM = 기후_구름
+		ELSE
+			WEATHER = 강설
+			WEATHERNUM = 기후_강설
+		ENDIF
+	ELSE
+		LOCAL:0 = RAND:3
+		IF LOCAL:0 == 0
+			WEATHER = 맑음
+			WEATHERNUM = 기후_맑음
+		ELSEIF LOCAL:0 == 1
+			WEATHER = 구름
+			WEATHERNUM = 기후_구름
+		ELSE
+			WEATHER = 강우
+			WEATHERNUM = 기후_강우
+		ENDIF
+	ENDIF
+	RETURN
+
+;============================================================================== 
+;◆기후를 돌려준다
+;============================================================================== 
+@DISPLAY_WEATHER(ARG:0)
+	#FUNCTIONS
+	IF ! ARG:0
+		ARG:0 = WEATHERNUM
+	ENDIF
+	SELECTCASE ARG:0
+		CASE 기후_맑음
+			LOCALS:0 = 맑음
+		CASE 기후_구름
+			LOCALS:0 = 구름
+		CASE 기후_강우
+			LOCALS:0 = 강우
+		CASE 기후_강설
+			LOCALS:0 = 강설
+		CASEELSE
+			LOCALS:0 = 맑음
+	ENDSELECT
+	RETURNF LOCALS:0
+
+;============================================================================== 
+;◆숫자에 캐릭터 라인형으로 변환해 3자리수 마다 칸마를 붙이는 식 안의 함수 PRINTFORM %NO_FORMAT(MONEY)%
+;============================================================================== 
+@NO_FORMAT(ARG:0)
+	#FUNCTIONS
+	IF ARG:0 <= 100
+		LOCALS:0 = %TOSTR(ARG:0)%
+	ELSE
+		LOCALS:0 = %TOSTR(ARG:0, "#,###")%
+	ENDIF
+	RETURNF LOCALS:0
+
+;======================================================
+;  아이템을 최대치까지 가지고 있을까
+;======================================================
+@CHECK_ITEMMAX, ARG
+TRYCCALLFORM 최대소지수_{ARG+2000}
+	SIF RESULT == ITEM:ARG
+		RETURN 1
+	RETURN 0
+CATCH
+	SIF 99 == ITEM:ARG
+		RETURN 1
+	RETURN 0
+ENDCATCH
+
+;======================================================
+;  아이템 입수
+;======================================================
+@GET_ITEM, ARG, ARG:1
+ITEM:ARG += ARG:1
+TRYCCALLFORM 최대소지수_{ARG+2000}
+	SIF ITEM:ARG > RESULT
+		ITEM:ARG = RESULT
+CATCH
+	SIF ITEM:ARG > 99
+		ITEM:ARG = 99
+ENDCATCH
+
+@GET_ITEMS, ARGS, ARG:1
+ITEM:ARGS += ARG:1
+TRYCCALLFORM 최대소지수_{GETNUM(ITEM, ARGS)+2000}
+	SIF ITEM:ARGS > RESULT
+		ITEM:ARGS = RESULT
+CATCH
+	SIF ITEM:ARGS > 99
+		ITEM:ARGS = 99
+ENDCATCH

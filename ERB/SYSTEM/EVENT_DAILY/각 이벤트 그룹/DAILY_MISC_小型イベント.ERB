@@ -1,0 +1,143 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_DAILY_MISC_RATE()
+RETURN 100
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_DAILY_MISC_DECISION()
+RETURN 1
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_DAILY_MISC_GENRE()
+RETURN 데일리_장르_그외
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_DAILY_MISC()
+#DIM 대상
+
+SELECTCASE RAND:100
+;능력의 상승
+CASE 0 TO 21
+	CALL DAILY_EVENT_RAND_CHARASELECT(0)
+	IF RESULT >= 0
+		대상 = RESULT
+		SELECTCASE RAND:100
+			CASE 0 TO 69
+				LOCAL:1 = 1
+			CASE 70 TO 89
+				LOCAL:1 = 2
+			CASE 90 TO 99
+				LOCAL:1 = 3
+		ENDSELECT
+		SELECTCASE RAND:4
+			CASE 0
+				LOCALS = 무투
+				ABL:대상:무투 += LOCAL:1
+				LOCAL:2 = GETNUM(ABL, "무투")
+			CASE 1
+				LOCALS = 방위
+				ABL:대상:방위 += LOCAL:1
+				LOCAL:2 = GETNUM(ABL, "방위")
+			CASE 2
+				LOCALS = 지략
+				ABL:대상:지략 += LOCAL:1
+				LOCAL:2 = GETNUM(ABL, "지략")
+			CASE 3
+				LOCALS = 정치
+				ABL:대상:정치 += LOCAL:1
+				LOCAL:2 = GETNUM(ABL, "정치")
+		ENDSELECT
+		PRINTFORML %조사처리(ANAME(대상),"는")% 비밀의 특훈에 힘쓰고 있다……
+		CALL COLOR_PRINTL(@"%ANAME(대상)%의 %조사처리(LOCALS,"가")%{LOCAL:1}올라, {ABL:대상:(LOCAL:2)}가 되었다!", 칼라_오렌지)
+	ENDIF
+
+;호경기
+CASE 22 TO 38
+	CALL DAILY_EVENT_RAND_CITYSELECT(0)
+	대상 = RESULT
+	IF 대상 > 0
+		PRINTFORML %CITY_NAME:대상%는 호경기인 같다……
+		SETCOLOR 칼라_오렌지
+		CALL MODIFY_CITY_ECONOMY(대상, RAND(10000, 30000))
+		RESETCOLOR
+		ENDIF
+
+;병 수가 증가한다
+CASE 39 TO 55
+	LOCALS = %ANAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))%
+	LOCAL:1 = GET_OWN_CITY(CFLAG:MASTER:소속)
+	LOCAL:2 = RAND(LOCAL:1 * 300, LOCAL:1 * 300 + 500)
+	COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += LOCAL:2
+	PRINTFORML %LOCALS%의 덕망에, 의용군이 결성되었다……
+	SETCOLOR 칼라_오렌지
+	PRINTFORML 병 수가 {LOCAL:2} 증가해, {COUNTRY_SOLDIER:(CFLAG:MASTER:소속)}가 되었다!
+	RESETCOLOR
+
+;농땡이마왕을 취득하는지, 삭제한다
+CASE 56 TO 77
+	CALL DAILY_EVENT_RAND_CHARASELECT(0)
+	대상 = RESULT
+	IF 대상 >= 0
+		IF TALENT:대상:농땡이마왕
+			PRINTFORML 최근의 %조사처리(ANAME(대상),"는")% 어쩐지 의지로 가득 차 넘치고 있다……
+			SETCOLOR 칼라_오렌지
+			PRINTFORML %조사처리(ANAME(대상),"는")%【농땡이마왕】를 극복했다!
+			RESETCOLOR
+			TALENT:대상:농땡이마왕 = 0
+		ELSE
+			PRINTFORML 최근의 %조사처리(ANAME(대상),"는")% 어쩐지 의지가 보여지지 않는다……
+			SETCOLOR 칼라_경고
+			PRINTFORML %조사처리(ANAME(대상),"는")%【농땡이마왕】(이)가 되어 버렸다!
+			RESETCOLOR
+			TALENT:대상:농땡이마왕 = 1
+		ENDIF
+	ENDIF
+
+;상처를 입는지, 상처로부터 복귀
+CASE 78 TO 82
+	CALL DAILY_EVENT_RAND_CHARASELECT(0)
+	대상 = RESULT
+	IF 대상 >= 0
+		IF COOLTIME:대상:0
+			PRINTFORML %ANAME(대상)%의 상처는 예상 외로 빨리 나은 것 같다
+			SETCOLOR 칼라_오렌지
+			PRINTFORML %조사처리(ANAME(대상),"는")% 쿨 타임부터 복귀했다!
+			RESETCOLOR
+			COOLTIME:대상:0 = 0
+		ELSE
+			LOCAL:1 = RAND:3 + 1
+			PRINTFORML %조사처리(ANAME(대상),"는")% 훈련중에 상처를 입어 버린 것 같다
+			CALL SET_COOLTIME(대상, LOCAL:1)
+		ENDIF
+	ENDIF
+
+;국가의 병력이 증가한다
+CASE 83 TO 99
+	CALL DAILY_EVENT_RAND_COUNTRYSELECT()
+	대상 = RESULT
+	IF 대상 >= 0 && IS_COUNTRY(대상)
+		LOCAL:1 = RAND(MIN(DAY * 100, 5000), MIN(DAY * 200, 10000))
+		COUNTRY_SOLDIER:(대상) += LOCAL:1
+		PRINTFORML %ANAME(GET_COUNTRY_BOSS(대상))%는 징병을 실시했다!
+		CALL COLOR_PRINTL(@"병 수가 {LOCAL:1} 증가했다", 칼라_주의)
+	ENDIF
+;그 외=이상종료(ABEND)
+CASEELSE
+	RETURN 0
+ENDSELECT
+		
+RETURN 1

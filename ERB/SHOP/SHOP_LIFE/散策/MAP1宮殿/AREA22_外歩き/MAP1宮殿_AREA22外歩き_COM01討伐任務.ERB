@@ -1,0 +1,850 @@
+﻿;-------------------------------------------------
+; 「토벌 임무」의 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA22_COM1_EXIST
+RETURN 1
+
+;-------------------------------------------------
+; 「토벌 임무」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA22_COM1_NAME
+RESULTS:0 '= "토벌 임무"
+RETURN 1
+
+;-------------------------------------------------
+; 「토벌 임무」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA22_COM1_CHECK(ARG:0)
+RETURN 1
+
+;-------------------------------------------------
+; 「토벌 임무」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA22_COM1_CHECKCHARA(ARG:0)
+
+SIF MASTER == ARG:0
+	RETURN 0
+SIF !IS_MASTER(ARG:0)
+	RETURN 0
+SIF CFLAG:(ARG:0):행동완료
+	RETURN 0
+SIF CFLAG:(ARG:0):포로처
+	RETURN 0
+SIF CFLAG:MASTER:소속 != CFLAG:(ARG:0):소속
+	RETURN 0
+SIF CFLAG:(ARG:0):행동불능상태 == 행동불능_임월
+	RETURN 0
+SIF COOLTIME:(ARG:0):0
+	RETURN 0
+SIF IS_ANIMAL(ARG:0)
+	RETURN 0
+
+RETURN 1
+
+;-------------------------------------------------
+; 「토벌 임무」의 메인 처리
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA22_COM1_MAIN
+#DIM L_COUNTER
+#DIM 대상
+#DIM FP
+
+;리셋트
+CALL COM_AUTO_RANDOMIZED_WEIGHTED_START
+
+;후보 추가
+FOR L_COUNTER, 0, CHARANUM
+	CALL SHOP_LIFE67_MAP1_AREA22_COM1_CHECKCHARA(L_COUNTER)
+	SIF !RESULT
+		CONTINUE
+	CALL COM_AUTO_RANDOMIZED_WEIGHTED_VALUE(L_COUNTER, 10)
+NEXT
+
+;결과 취득
+대상 = COM_AUTO_RANDOMIZED_WEIGHTED_RESULT()
+
+CALL SHOP_LIFE67_MAP1_AREA22_COM1_TEXT_1(대상)
+$INPUT_LOOP
+
+RESETCOLOR
+CALL COLOR_LINE
+PRINTFORM   소지 FP:
+SETCOLOR COLOR("오렌지")
+PRINTFORM  %NO_FORMAT(GAMBLE_MONEY)%
+RESETCOLOR
+PRINTL 
+CALL COLOR_LINE
+PRINTFORM   [ 100]상인을 찾는다
+PRINT 　　
+PRINTFORM  [ 101]토벌지에 향한다
+PRINTL 
+
+CALL COLOR_LINE
+PRINT   [   0]돌아온다
+
+INPUT 0
+
+IF RESULT == 0
+RETURN 1
+
+ELSEIF RESULT == 100
+	CALL GAMBLE_GYOUSYOU
+
+ELSEIF RESULT == 101
+	CALL GAMBLE_UDEKURABE(MASTER, 대상)
+
+ELSEIF RESULT != 0 && RESULT != 100 && RESULT != 101
+	LOCAL:1 = RESULT
+	;내쫓아져 플래그（RETURN 2）가 서 있을 때는 그대로 내쫓아진다
+	IF RESULT == 2 
+		PRINTL
+		CALL COLOR_LINE
+		PRINTFORMW  눈 깜짝할 사이에 시간이 지나 버렸다
+		SHOP_TIME ++
+		BEGIN TURNEND
+		RETURN 1
+	ENDIF
+ENDIF
+
+CALL COLOR_LINE
+PRINTFORMW  눈 깜짝할 사이에 시간이 지나 버렸다
+CFLAG:대상:행동완료 = 1
+
+;묘사를 클리어 하지 않는다
+LINES_SHOP = LINECOUNT
+
+SHOP_TIME ++
+BEGIN TURNEND
+RETURN 1
+
+GOTO INPUT_LOOP
+;-------------------------------------------------
+; 묘사 1
+;	구상주를 자유롭게 바꿀 수 있도록(듯이)
+;	@KOJO_EVENT_DEFAULT(ARG)로 옮기는 것이 좋을지도
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA22_COM1_TEXT_1(대상)
+#DIM 대상
+
+PRINTFORML  %조사처리(ANAME(MASTER),"가")% 토벌 임무하러 나가려고 하면, %조사처리(ANAME(대상),"가")% 말을 걸어 왔다
+PRINTFORMW  아무래도 따라 와 주는 것 같다
+
+;============================================================================== 
+;■토벌☆
+;============================================================================== 
+@GAMBLE_UDEKURABE(ARG:0, ARG:1)
+#DIM 캐릭터등록번호, 2
+#DIM 체력치, 2
+#DIM 타격, 2
+#DIM 방비, 2
+#DIM 영리함, 2
+#DIM 노래, 2
+#DIM 그림자인형등장회수
+#DIM 드래곤등장회수
+#DIMS 승패
+#DIMS 적
+#DIM 적LV
+#DIM 크리티컬판정
+#DIM 연승
+#DIM 풀FP
+#DIM 대상
+#DIM COOL_TIME
+;초기화
+그림자인형등장회수 = 0
+연승 = 0
+;============================================================================== 
+;◆각종 파라미터의 대입
+;체력…이것이 0이 되면 게임을 진행 할 수 없게 된다
+;타격…타살치환  공격력 이것이 상대보다 이기고 있었을 경우 승리가 된다
+;방위…방위 치환  그대로 체력의 감소가 줄어든다
+;지략…지략 치환  상대의 책략을 알 수 있어 공격력이 감소한다든가?
+;가창…크리티컬 판정  크리티컬은에서도 상승한다
+;천·심함락 소유는 크리티컬이나 크리티컬이 나오기 쉽다
+캐릭터등록번호:0 = ARG:0
+캐릭터등록번호:1 = ARG:1
+체력치:0 = MAXBASE:(ARG:0):체력
+체력치:1 = MAXBASE:(ARG:1):체력
+타격:0 = ABL:(ARG:0):무투
+타격:1 = ABL:(ARG:1):무투
+방비:0 = ABL:(ARG:0):방위
+방비:1 = ABL:(ARG:1):방위
+영리함:0 = ABL:(ARG:0):지략
+영리함:1 = ABL:(ARG:1):지략
+노래:0 = ABL:(ARG:0):가창
+노래:1 = ABL:(ARG:1):가창
+;============================================================================== 
+$ENTRY
+CALL TITLE_CATEGORY_GENERAL("토벌지")
+PRINTL 
+	SETCOLOR COLOR("실버")
+	PRINTL 
+	PRINTL   준비된 지도에 의하면, 이 앞에 이번 목적지가 있는 것 같다
+	PRINTL   목적지로 향하고 있으면, 당신들을 깨달은 병사가 말을 걸어 왔다
+	CALL COLOR_LINE
+	SETCOLOR COLOR("Default")
+PRINTFORML   「임무 수고 하셨습니다!」
+PRINTFORML   「여기에서는 토벌에 참가하실 수 있는 분의, 참가 접수를 실시하고 있습니다」
+PRINTFORML   「토벌의 룰은 통상과는 다른 룰이므로, 좋으면 한 번 확인되는 것을 추천하겠습니다」
+PRINTFORML   「토벌의 룰에 대해서는 【설명】을 봐 주세요」
+PRINTFORML   「그러면, 참가 기다리고 있습니다!」
+CALL COLOR_LINE
+CALL ASK_MULTI ("참가한다","설명을 본다","상품 일람","돌아온다")
+	;◆설명
+	IF RESULT == 1
+			PRINTFORML   ◇◇토벌에 대해◇◇
+			PRINTFORML   토벌은 1대 1의 연전에서 싸워, 연승수에 응해 보상을 얻을 수 있습니다
+			PRINTFORML   10연승하면 FP:10, 10연승하면 더욱 FP:20이 보내집니다
+			PRINTFORML   연승수가 많아지면 【상품】도 보내집니다
+			PRINTL
+			WAIT
+			PRINTFORML   ◇◇승리 조건◇◇
+			PRINTFORML   상대의 Lv보다 높은 【책략】을 취할 수가 있으면 승리가 됩니다
+			PRINTFORML   【책략】은 3종 있어 1전 마다 선택합니다
+			PRINTL
+			PRINTFORML   정면돌파로 싸운다（【무투】의 능력으로 판정）,
+			PRINTFORML   상대의 모습을 엿봐 싸운다（【지략】의 능력으로 판정）
+			CALL COLOR_PRINTL("  공격의 틈을 봐 싸운다（【방위】의 능력으로 판정, ", GETDEFCOLOR(), "절대 이기겠지만 간신히 이기면 데미지가 2배", 칼라_빨강)
+			PRINTL
+			WAIT
+			PRINTFORML   ◇◇연전◇◇
+			PRINTFORML   토벌 참가자는 【체력】을 소비하면서 연전하는 일이 됩니다
+			PRINTFORML   승리시의 체력 감소치는 토벌 참가자의 능력치와 상대의 Lv 차이에 의해 변동합니다
+			PRINTFORML   레벨차이가 크면 회복하는 경우도 있습니다
+			PRINTFORML   패배시에는 상대의 Lv와 동치의 체력이 감소합니다
+			PRINTFORML   토벌 참가자의 【체력】이 0이 되면 전투 불능이 되어 강제적으로 종료합니다
+			CALL COLOR_PRINTL("  그것까지의 연전에서 얻을 수 있었던 ", GETDEFCOLOR(), "FP의 수는 반", 칼라_빨강, "이 됩니다", GETDEFCOLOR())
+			CALL COLOR_PRINTL("  또,", GETDEFCOLOR(), "토벌 참가자에게 쿨 타임이 부여됩니다", 칼라_빨강, "", GETDEFCOLOR())
+			PRINTFORML   체력은 다음의 대전 조짐 나타나기 때문에, 체력에는 충분히 조심해 연전에 도전해 주세요
+			PRINTFORML   
+			PRINTFORML   졌을 경우는 재전 할까 패배 이벤트를 볼까 선택할 수가 있습니다
+			PRINTFORML   재전을 선택했을 경우, 연승수는 리셋트 됩니다만 토벌을 계속하는 것이 가능합니다
+			PRINTFORML   패배 이벤트를 선택했을 경우, 연승수는 리셋트 되어 토벌을 계속하는 것이 할 수 없게 됩니다
+			CALL COLOR_PRINTL("  한층 더 ", GETDEFCOLOR(), "토벌 참가자에게 쿨 타임이 부여되기 ", 칼라_빨강, "때문에 주의해 주세요", GETDEFCOLOR())
+			PRINTL
+			WAIT
+			PRINTFORML   ◇◇주의◇◇
+			PRINTFORML   연승중에 리타이어 하면 보상을 전액 받을 수가 있습니다만,
+			PRINTFORML   4연승 이하로 리타이어 했을 경우는 FP는 얻을 수 없으니 주의해 주세요
+			PRINTL
+			WAIT
+			PRINTFORML   ◇◇50연승 공략 힌트◇◇
+			PRINTFORML   드물게 크리티컬이 발생합니다.
+			PRINTFORML   크리티컬의 발동은 【가창】과 【체력】에 영향을 받습니다
+			PRINTFORML   
+			PRINTFORML   체력은 5승 마다 조금 회복합니다
+			PRINTFORML   또 친한 상대가 있으면 회복량으로 상승해 유리하게 게임을 진행시킬 수가 있겠지요
+			PRINTL
+			WAIT
+			GOTO ENTRY
+	ELSEIF RESULT == 2
+			PRINTFORML   ◇◇상품 일람◇◇
+			PRINTL
+			PRINTFORML     5연승……【FP:30】
+			PRINTFORML    10연승……【FP:50】
+			PRINTFORML    15연승……【FP:150】
+			PRINTFORML    20연승……【FP:200】 
+			PRINTFORML    25연승……【포도주】
+			PRINTFORML    30연승……【FP:300】【대역인형】
+			PRINTFORML    40연승……【FP:500】
+			PRINTFORML    50연승……【미약】
+			PRINTFORML    60연승……【FP:550】
+			PRINTFORML    70연승……【FP:600】
+			PRINTFORML    80연승……【FP:650】
+			PRINTFORML    90연승……【FP:700】 【대역인형】
+			PRINTFORML   100연승……【양조술】
+			PRINTFORML   110연승……【FP:750】
+			PRINTFORML   120연승……【FP:800】
+			PRINTFORML   130연승……【FP:850】
+			PRINTFORML   140연승……【FP:900】
+			PRINTFORML   150연승……【배란유발제】
+			PRINTFORML   160연승……【FP:950】【대역인형】
+			PRINTFORML   170연승……【FP:1000】
+			PRINTFORML   180연승……【FP:1050】
+			PRINTFORML   190연승……【FP:1100】
+			PRINTFORML   200연승……【절륜환】
+			WAIT
+			GOTO ENTRY
+	ELSEIF RESULT == 3
+		PRINTFORMW  이번은 그만두기로 했다
+		RETURN
+	ENDIF
+;◆표시
+IF 캐릭터등록번호:0 != 캐릭터등록번호:1
+	PRINTFORML   「어떤 분이 참가합니까?」
+	PRINTL
+	PRINTFORML   토벌 참가자를 선택해 주세요
+	PRINTFORM   본인
+	CALL VIT(캐릭터등록번호:0,체력치:0)
+;	PRINTL
+	PRINTFORM   수행
+	CALL VIT(캐릭터등록번호:1,체력치:1)
+	PRINTL
+	
+	CALL ASK_YN("스스로 참가","동료에게 부탁한다")
+	IF RESULT == 0
+		토벌참가자= 0
+	ELSE
+		토벌참가자= 1
+	ENDIF
+ELSE
+	토벌참가자 = 0
+ENDIF
+	PRINTFORML  「알겠습니다. %ANAME(캐릭터등록번호:(토벌참가자))%씨를 등록하겠습니다」
+	PRINTL
+
+;◆등장적의 결정
+	$BATTLE
+CALL TITLE_CATEGORY_GENERAL("토벌지")
+PRINTL 
+	IF 연승 < 30
+		RESULT = RAND:21
+	ELSEIF 연승 < 50
+		RESULT = RAND:14
+	ELSEIF 연승 < 100
+		RESULT = RAND:12
+	ELSE
+		RESULT = RAND:10
+	ENDIF
+	SELECTCASE RESULT
+		CASE 0
+			적 = 그림자인형
+			그림자인형등장회수 += 1
+			적LV = 60 +그림자인형등장회수*10
+			적NO = 0
+		CASE 1
+			적 = 드래곤
+			드래곤등장회수 += 1
+			적LV = 80 +드래곤등장회수*10
+			적NO = 1
+		CASE 2
+			적 = 빙의령
+			적LV = 130
+			적NO = 2
+		CASE 3
+			적 = 오로치
+			적LV = 125
+			적NO = 3
+		CASE 4
+			적 = 대형촉수
+			적LV = 120
+			적NO = 4
+		CASE 5
+			적 = 마저
+			적LV = 110
+			적NO = 5
+		CASE 6
+			적 = 대귀신
+			적LV = 100
+			적NO = 6
+		CASE 7
+			적 = 나무요괴
+			적LV = 90
+			적NO = 7
+		CASE 8
+			적 = 지옥마
+			적LV = 80
+			적NO = 8
+		CASE 9
+			적 = 이계의 악마
+			적LV = 75
+			적NO = 9
+		CASE 10
+			적 = 눈알요괴
+			적LV = 70
+			적NO = 10
+		CASE 11
+			적 = 키메라
+			적LV = 65
+			적NO = 11
+		CASE 12
+			적 = 정령무리
+			적LV = 60
+			적NO = 12
+		CASE 13
+			적 = 뱀요괴
+			적LV = 55
+			적NO = 13
+		CASE 14
+			적 = 기계병
+			적LV = 50
+			적NO = 14
+		CASE 15
+			적 = 웨어울프
+			적LV = 45
+			적NO = 15
+		CASE 16
+			적 = 와이번
+			적LV = 40
+			적NO = 16
+		CASE 17
+			적 = 호문클로스
+			적LV = 35
+			적NO = 17
+		CASE 18
+			적 = 해적
+			적LV = 30
+			적NO = 18
+		CASE 19
+			적 = 좀비
+			적LV = 20
+			적NO = 19
+		CASE 20
+			적 = 손요괴
+			적LV = 10
+			적NO = 20
+	ENDSELECT
+	;◆화면 표시
+	PRINTL 
+	CALL VIT(캐릭터등록번호:(토벌참가자),체력치:토벌참가자)
+	PRINTL
+	PRINTFORM   이번 적은 %적% (LV {적LV})%조사만처리(적,"다")%.
+	SETCOLOR COLOR("옐로")
+	PRINTFORML   \@ 연승 == 0 ?# {연승} 연승중\@	
+	SETCOLOR COLOR("Default")
+	;◆커맨드
+	PRINTFORML   어느 작전에서 갈까?
+			PRINTL 
+			CALL ASK_MULTI("정면돌파로 싸운다","상대의 모습을 엿봐 싸운다","공격의 틈을 봐 싸운다","후퇴한다")
+			IF 전투상태 =="정상"
+				IF RAND:50 <= 노래:토벌참가자
+				크리티컬판정 =1
+				ENDIF
+			ELSEIF 전투상태 =="경상"
+				IF RAND:25 <= 노래:토벌참가자
+				크리티컬판정 =1
+				ENDIF
+			ELSEIF 전투상태 =="중경상"
+				IF RAND:20 <= 노래:토벌참가자
+				크리티컬판정 =1
+				ENDIF
+			ELSEIF 전투상태 =="중상"
+				IF RAND:10 <= 노래:토벌참가자
+				크리티컬판정 =1
+				ENDIF
+			ENDIF
+
+			;◇커맨드마다의 분기
+			IF RESULT == 3
+				연승 = 0
+				PRINTW   이번은 보류하기로 했다
+				;청산
+				GAMBLE_MONEY += GAMBLE_POOL
+				SETCOLOR COLOR("오렌지")
+				PRINTFORMW    합계 【FP:{GAMBLE_POOL}】를 얻었다
+				SETCOLOR COLOR("Default")
+				;풀 FP를 초기화
+				GAMBLE_POOL = 0
+				RETURN 2
+			ELSEIF RESULT == 0
+				SIF 연승 == 0
+				PRINTFORML   %조사처리(ANAME(ARG:(토벌참가자)),"는")% 정면돌파로 싸우기로 했다
+				IF 타격:토벌참가자 *((10+5*크리티컬판정)/10) < 적LV
+					승패 = 졌다
+					체력치:토벌참가자 -= 적LV
+				ELSE
+					승패 = 이겼다
+					체력치:토벌참가자 -= 적LV*2 - (방비:토벌참가자* (10+5*크리티컬판정)/10)
+				ENDIF
+			ELSEIF RESULT == 1
+				PRINTFORML   %조사처리(ANAME(ARG:(토벌참가자)),"는")% 상대의 상태를 보면서 싸우기로 했다
+				IF 영리함:토벌참가자 *((10+5*크리티컬판정)/10) < 적LV
+					승패 = 졌다
+					체력치:토벌참가자 -= 적LV
+				ELSE
+					승패 = 이겼다
+					체력치:토벌참가자 -= 적LV*2 - 방비:토벌참가자 *((10+5*크리티컬판정)/10)
+				ENDIF
+			ELSEIF RESULT == 2
+				PRINTFORML   %조사처리(ANAME(ARG:(토벌참가자)),"는")% 상대의 틈을 노려 싸우기로 했다
+				IF 방비:토벌참가자 *((10+5*크리티컬판정)/10) < 적LV
+					승패 = 간신히 이겼다
+					체력치:토벌참가자 -= 적LV*2
+				ELSE
+					승패 = 이겼다
+					체력치:토벌참가자 -= 적LV*2 - 방비:토벌참가자 *((10+5*크리티컬판정)/10)
+				ENDIF
+			ENDIF
+			;◆결과 표시
+				IF 크리티컬판정
+					SETCOLOR COLOR("옐로")
+					PRINTFORML   %조사처리(ANAME(캐릭터등록번호:(토벌참가자)),"는")% \@ SPCSV(캐릭터등록번호:(토벌참가자)) ? 회심의 일격# 크리티컬 \@을 내질렀다
+					WAIT
+					SETCOLOR COLOR("Default")
+				ENDIF
+				PRINTFORMW   %조사처리(ANAME(캐릭터등록번호:(토벌참가자)),"는")% %적%에 %승패%
+				CALL COLOR_LINE
+			;◇닥터 스톱
+			IF 체력치:토벌참가자 <= 1
+				PRINTFORML   %조사처리(ANAME(캐릭터등록번호:(토벌참가자)),"는")% 체력의 한계다
+				PRINTFORMW   참가를 멈춰 두기로 했다
+				PRINTFORML
+				;청산
+				GAMBLE_MONEY += GAMBLE_POOL/2
+				SETCOLOR COLOR("오렌지")
+				PRINTFORMW    합계 【FP:{GAMBLE_POOL/2}】를 얻었다
+				SETCOLOR COLOR("Default")
+				COOL_TIME = RAND(1, CONFIG:200 ? 5 # 3)
+				CALL ADD_COOLTIME(캐릭터등록번호:(토벌참가자), COOL_TIME)
+				RESETCOLOR
+				;풀 FP를 초기화
+				GAMBLE_POOL = 0
+				RETURN 2
+			ENDIF
+			;◇졌을 때의 처리
+			STRFIND 승패,"졌다"
+			IF  !RESULT
+				;청산
+				GAMBLE_MONEY += GAMBLE_POOL/2
+				SETCOLOR COLOR("오렌지")
+				PRINTFORMW    합계 【FP:{GAMBLE_POOL/2}】를 얻었다
+				SETCOLOR COLOR("Default")
+				;풀 FP를 초기화
+				GAMBLE_POOL = 0
+				연승 = 0
+				;패배 이벤트
+				IF IS_FEMALE(캐릭터등록번호:(토벌참가자))
+					PRINTFORML   패배 이벤트를 봅니까?
+					PRINTL
+					CALL ASK_YN("이벤트를 본다" , "그만둔다")
+					IF RESULT == 0
+						CALL TOUBATU_HAIBOKU(캐릭터등록번호:(토벌참가자), 적NO)
+						COOL_TIME = RAND(2, CONFIG:200 ? 5 # 3)
+						CALL ADD_COOLTIME(캐릭터등록번호:(토벌참가자), COOL_TIME)
+						RESETCOLOR
+						연승 = 0
+						RETURN 2
+					ELSE
+						PRINTFORML   이번은 그만두기로 했다
+						PRINTFORML
+					ENDIF
+				ENDIF
+				CALL VIT(캐릭터등록번호:(토벌참가자),체력치:(토벌참가자))
+				PRINTFORML   한 번 더 승부합니까
+				PRINTL
+				CALL ASK_YN("계속한다" , "그만둔다")
+				IF RESULT == 0
+					PRINTFORML   계속하기로 했다
+					PRINTFORML
+					GOTO BATTLE
+				ELSE
+				PRINTFORML   이번은 그만두기로 했다
+				PRINTFORML
+				연승 = 0
+				RETURN 2
+				ENDIF
+			ELSE
+			;◇이겼을 때의 처리
+			연승 += 1
+			;연승 처리
+			CALL RENSYO_SEISAN(캐릭터등록번호:(토벌참가자),연승)
+			;5턴 마다 회복
+			CALL KAIHUKU(캐릭터등록번호:(토벌참가자),체력치:(토벌참가자),연승)
+			체력치:(토벌참가자) = RESULT
+			GOTO BATTLE
+			ENDIF
+;============================================================================== 
+;◆체력 표시
+;============================================================================== 
+@VIT(ARG:0,ARG:1)
+#DIM 현재의체력
+#DIM 캐릭터등록번호
+;ARG:0 캐릭터 등록 번호  ARG:1 현재의 체력
+캐릭터등록번호 = ARG:0
+현재의체력 = ARG:1
+전투상태 = ""
+	PRINTFORM    %@"%ANAME(ARG:0)%", 12, LEFT% 무투 {ABL:캐릭터등록번호:무투} 지략 {ABL:캐릭터등록번호:지략}  방위 {ABL:캐릭터등록번호:방위}  체력 
+CALL PRINT_SHORT_VIT(캐릭터등록번호,현재의체력)
+PRINTFORML  {현재의체력}/{MAXBASE:(ARG:0):체력}
+RETURN
+
+
+;◇단축판의 체력 정보의 표시
+@PRINT_SHORT_VIT(ARG:0, ARG:1)
+	IF MAXBASE:(ARG:0):체력 > 0
+;		LOCAL:0 = BASE:(ARG:0):체력 * 100/MAXBASE:(ARG:0):체력
+		LOCAL:0 = ARG:1* 100 / MAXBASE:(ARG:0):체력
+
+	ELSE
+		LOCAL:0 = 100
+	ENDIF
+
+	;CALL PRINT_SLIDER(-1000, MAXBASE:(LOCAL:0):체력, BASE:(LOCAL:0):체력, 44, 0 x4128cc, 0 xcb1267)
+
+	IF LOCAL:0 < 0
+		LOCAL:1 = COLOR("회색")
+	ELSEIF LOCAL:0 <= 50
+		LOCAL:1 = COLOR("레드")
+	ELSEIF LOCAL:0 <= 60
+		LOCAL:1 = COLOR("옐로")
+	ELSEIF LOCAL:0 <= 80
+		LOCAL:1 = COLOR("오렌지")
+	ELSEIF LOCAL:0 <= 100
+		LOCAL:1 = COLOR("Default")
+	ELSE
+		LOCAL:1 = COLOR("핑크")
+	ENDIF
+
+	CALL PRINT_COLORBAR(ARG:1, MAXBASE:(ARG:0):체력, 25, UNICODE(0x2585), UNICODE(0x2585), LOCAL:1, 0x404040)
+	PRINT  
+
+	SETCOLOR LOCAL:1
+
+	IF LOCAL:0 < 0
+		SETCOLOR COLOR("회색")
+		PRINTFORM  전투 불능
+	ELSEIF LOCAL:0 <= 50
+		SETCOLOR COLOR("레드")
+		PRINTFORM  중상
+	ELSEIF LOCAL:0 <= 60
+		SETCOLOR COLOR("옐로")
+		PRINTFORM  중경상
+	ELSEIF LOCAL:0 <= 80
+		SETCOLOR COLOR("오렌지")
+		PRINTFORM  경상
+	ELSEIF LOCAL:0 <= 100
+		SETCOLOR COLOR("Default")
+		PRINTFORM  평상
+	ELSE
+		SETCOLOR COLOR("핑크")
+		PRINTFORM  절호조
+	ENDIF
+
+	RESETCOLOR
+	PRINT  
+;============================================================================== 
+;◆연승 승리
+;============================================================================== 
+@RENSYO_SEISAN(ARG:0,ARG:1)
+#DIM 대상
+#DIM 연승수
+#DIM LCOUNT
+대상 = ARG:0
+연승수 = ARG:1
+
+;연승수로 상품이 없는 회수라면 RETURN
+IF 연승수 == 5
+	CALL RENSYO_MASSAGE(대상,연승수)
+			PRINTFORML
+			PRINTFORML         5연승……【FP:30】
+			PRINTFORML        10연승……【FP:50】
+			PRINTFORML        15연승……【FP:150】
+			PRINTFORML        20연승……【FP:200】 
+			PRINTFORML        25연승……【포도주】
+			PRINTFORML        30연승……【FP:300】【대역인형】
+			PRINTFORML        40연승……【FP:500】
+			PRINTFORML        50연승……【미약】
+			PRINTFORML        60연승……【FP:550】
+			PRINTFORML        70연승……【FP:600】
+			PRINTFORML        80연승……【FP:650】
+			PRINTFORML        90연승……【FP:700】 【대역인형】
+			PRINTFORML       100연승……【양조술】
+			PRINTFORML       110연승……【FP:750】
+			PRINTFORML       120연승……【FP:800】
+			PRINTFORML       130연승……【FP:850】
+			PRINTFORML       140연승……【FP:900】
+			PRINTFORML       150연승……【배란유발제】
+			PRINTFORML       160연승……【FP:950】【대역인형】
+			PRINTFORML       170연승……【FP:1000】
+			PRINTFORML       180연승……【FP:1050】
+			PRINTFORML       190연승……【FP:1100】
+			PRINTFORML       200연승……【절륜환】
+			PRINTL
+	CALL COLOR_PRINT("  【FP:30】를 손에 넣었다", 칼라_오렌지)
+	WAIT
+	GAMBLE_POOL += 30
+ELSEIF 연승수 == 10
+	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【FP:50】를 손에 넣었다", 칼라_오렌지)
+	WAIT
+	GAMBLE_POOL += 50
+ELSEIF 연승수 == 15
+ 	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【FP:150】를 손에 넣었다", 칼라_오렌지)
+	WAIT
+	GAMBLE_POOL += 150
+ELSEIF 연승수 == 20
+	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【FP:200】를 손에 넣었다", 칼라_오렌지)
+	WAIT
+	GAMBLE_POOL += 200
+ELSEIF 연승수 == 25
+ 	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【포도주】를 손에 넣었다", 칼라_오렌지)
+WAIT
+	ITEM:포도주 += 1
+ELSEIF 연승수 == 30
+ 	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【FP:300】과 【대역인형】을 손에 넣었다", 칼라_오렌지)
+WAIT
+	GAMBLE_POOL += 300
+	ITEM:대역인형 += 1
+ELSEIF 연승수 == 40
+ 	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【FP:500】를 손에 넣었다", 칼라_오렌지)
+	WAIT
+	GAMBLE_POOL += 500
+ELSEIF  연승수 == 50
+	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【미약】을 손에 넣었다", 칼라_오렌지)
+	WAIT
+		ITEM:미약 += 1
+		PRINTFORM   50승 축하합니다
+		REPEAT ITEM:미약
+			PRINTFORM  !
+		REND
+	PRINTW
+	IF !ITEM:절륜환 && RAND:10 >9
+	CALL COLOR_PRINTL("  부상으로 【절륜환】을 손에 넣었다", 칼라_오렌지)
+	ITEM:절륜환 = 1
+	ENDIF
+ELSEIF 연승수 == 60
+	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【FP:550】를 손에 넣었다", 칼라_오렌지)
+	WAIT
+	GAMBLE_POOL += 550
+ELSEIF 연승수 == 70
+ 	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【FP:600】를 손에 넣었다", 칼라_오렌지)
+	WAIT
+	GAMBLE_POOL += 600
+ELSEIF 연승수 == 80
+	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【FP:650】를 손에 넣었다", 칼라_오렌지)
+	WAIT
+	GAMBLE_POOL += 650
+ELSEIF 연승수 == 90
+ 	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【FP:700】과 【대역인형】을 손에 넣었다", 칼라_오렌지)
+WAIT
+	GAMBLE_POOL += 700
+	ITEM:대역인형 += 1
+ELSEIF 연승수 == 100
+	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【양조술】을 손에 넣었다", 칼라_오렌지)
+	WAIT
+		ITEM:양조술 += 1
+		PRINTFORM   100승 축하합니다
+		REPEAT ITEM:양조술
+			PRINTFORM  !
+		REND
+	PRINTW
+	IF !ITEM:과실주 && RAND:10 >9
+	CALL COLOR_PRINTL("  부상으로 【과실주】를 손에 넣었다", 칼라_오렌지)
+	ITEM:과실주 = 1
+	ENDIF
+ELSEIF 연승수 == 110
+ 	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【FP:750】를 손에 넣었다", 칼라_오렌지)
+	WAIT
+	GAMBLE_POOL += 750
+ELSEIF 연승수 == 120
+	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【FP:800】를 손에 넣었다", 칼라_오렌지)
+	WAIT
+	GAMBLE_POOL += 800
+ELSEIF 연승수 == 130
+ 	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【FP:850】를 손에 넣었다", 칼라_오렌지)
+	WAIT
+	GAMBLE_POOL += 850
+ELSEIF 연승수 == 140
+	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【FP:900】를 손에 넣었다", 칼라_오렌지)
+	WAIT
+	GAMBLE_POOL += 900
+ELSEIF 연승수 == 150
+ 	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【배란유발제】를 손에 넣었다", 칼라_오렌지)
+WAIT
+	ITEM:배란유발제 += 1
+ELSEIF 연승수 == 160
+ 	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【FP:950】과 【대역인형】을 손에 넣었다", 칼라_오렌지)
+WAIT
+	GAMBLE_POOL += 950
+	ITEM:대역인형 += 1
+ELSEIF 연승수 == 170
+ 	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【FP:1000】를 손에 넣었다", 칼라_오렌지)
+	WAIT
+	GAMBLE_POOL += 1000
+ELSEIF 연승수 == 180
+	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【FP:1050】를 손에 넣었다", 칼라_오렌지)
+	WAIT
+	GAMBLE_POOL += 1050
+ELSEIF 연승수 == 190
+ 	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【FP:1100】를 손에 넣었다", 칼라_오렌지)
+	WAIT
+	GAMBLE_POOL += 1100
+ELSEIF 연승수 == 200
+	CALL RENSYO_MASSAGE(대상,연승수)
+	CALL COLOR_PRINTL("  【절륜환】을 손에 넣었다", 칼라_오렌지)
+	WAIT
+		ITEM:절륜환 += 1
+		PRINTFORM   200승 축하합니다
+		REPEAT ITEM:절륜환
+			PRINTFORM  !
+		REND
+	PRINTW
+	IF !ITEM:도원향 && RAND:10 >9
+	CALL COLOR_PRINTL("  부상으로 【도원향】을 손에 넣었다", 칼라_오렌지)
+	ITEM:도원향 = 1
+	ENDIF
+CALL COLOR_LINE
+ENDIF
+;◇연승시 코멘트
+@RENSYO_MASSAGE(ARG:0,ARG:1)
+	PRINTFORML   {ARG:1} 연승 축하합니다!
+	PRINTFORML   {ARG:1} 연승한 %ANAME(ARG:0)%님에게 상품이 수여됩니다
+
+;============================================================================== 
+;◆회복
+;============================================================================== 
+@KAIHUKU(ARG:0,ARG:1, ARG:2)
+#DIM 대상
+#DIM 연승
+#DIM 현재의체력
+#DIM 회복플래그
+;CALL KAIHUKU(대상, 현재의 체력, 연승)
+;ARG:0연승
+;ARG:1 현재의 체력
+대상 = ARG:0
+현재의체력 = ARG:1
+연승 = ARG:2
+;5전에 한 번 회복한다
+회복플래그 = 연승 % 5
+IF !회복플래그 ==0
+	RETURN 현재의체력
+ENDIF
+			SIF TALENT:대상:친애
+				현재의체력 += 300
+
+			SIF TALENT:(대상):연모 || TALENT:(대상):친구 ;|| TALENT:(대상):의형제
+				현재의체력 += 200
+
+			SIF TALENT:(대상):연인
+				현재의체력 += 100
+
+			SIF TALENT:대상:예속
+				현재의체력 += 300
+
+			SIF TALENT:(대상):복종
+				현재의체력 += 200
+
+			SIF TALENT:(대상):낙인
+				현재의체력 += 50
+
+			SIF TALENT:(대상):소유자
+				현재의체력 += 300
+
+			SIF TALENT:(대상):주인
+				현재의체력 += 200
+
+;			SIF TALENT:(대상):각인
+;				현재의체력 += 50
+			현재의체력 += 50
+			PRINTFORMW    %ANAME(대상)%의 체력이 {현재의체력 - (ARG:1)} 회복했다
+RETURN 현재의체력
+

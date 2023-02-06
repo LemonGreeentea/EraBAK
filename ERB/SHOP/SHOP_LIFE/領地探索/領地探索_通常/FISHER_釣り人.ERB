@@ -1,0 +1,62 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_FISHER_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_FISHER_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_FISHER(대상)
+#DIM 대상
+PRINTFORML 강가에 걷고 있으면 낚시꾼을 보기 시작했다
+PRINTFORML 함께 해 보지 않을까 권해졌다
+PRINTFORML 
+CALL ASK_YN("해 본다", "그만둔다")
+
+IF RESULT == 1
+	PRINTFORML 그런 시간은 없다
+	PRINTFORML 거절했다
+	RETURN 1
+ENDIF
+
+PRINTFORML 모처럼인 것으로 해 보자
+PRINTFORML 그에게 도구를 빌려 잡담을 하면서 낚시를 시작했다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF IS_MALE(대상)
+	PRINTFORMW 즐거운 시간을 보낼 수 있었다
+	RETURN 1
+ENDIF
+
+PRINTFORMW 낚시를 하고 있는 동안에, 왠지 좋은 분위기가 되었다
+PRINTFORML 
+CALL ASK_YN("권한다", "그만둔다")
+
+IF RESULT == 1
+	PRINTFORML 과연 절조가 없다
+	PRINTFORML 그만두었다
+	RETURN 1
+ENDIF
+
+PRINTFORMW 요염하게 교태를 부려, 그로 하고 눈사태 걸린다
+PRINTFORMW 남은 흥분한 것 같아, %조사처리(ANAME(대상),"를")% 가까이의 수풀에 데리고 들어갔다
+PRINTFORML 
+PRINTFORMW 남은 사납게 허리를 흔들고 있다
+PRINTFORMW 젊고 씩씩한 섹스에, %ANAME(대상)%도 견딜 수 없다는 소리를 질러 좋아한다
+PRINTFORMW 이윽고 그가 질내에서 정액을 발하면, 완전히 열중하고 있었던 %조사처리(ANAME(대상),"는")%, 뽑아 내진 페니스에 입으로 봉사했다……
+CALL FUCK(대상, "욕망, 정애, 봉사, 성기술, 성교, Ｖ, Ｂ, Ｃ, Ｖ성교, 펠라티오, 키스", "키스상실, 처녀상실, 질내사정", GET_SPERM_ID("지나가는 남자"), "지나가는 남자의 입술", "지나가는 남자", "", "화간")
+PRINTFORML 
+PRINTFORMW 남과 입맞춤을 해 헤어졌다
+
+RETURN 1

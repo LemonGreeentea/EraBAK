@@ -1,0 +1,49 @@
+﻿;-------------------------------------------------
+;조교 함수 존재 판정
+;-------------------------------------------------
+@BANDIT_DOES_TRAIN()
+
+;-------------------------------------------------
+;조교 함락시 메세지
+;-------------------------------------------------
+@BANDIT_FALLEN_MSG(대상)
+#DIM 대상
+IF !GETBIT(TALENT:대상:특수세력함락계, 특수세력_도둑)
+	PRINTFORMW ……오랜 세월에 걸치는 조교 생활에 의해, %ANAME(대상)%의 마음은 접혀 버린 것 같다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 도둑의 노예가 되어, 돌아누웠다
+	IF TALENT:(대상):프라이드높음
+		PRINTL
+		PRINTFORMW 비굴한 표정을 띄우는 %ANAME(대상)%에, 이미 한 때의 모습은 남지 않았다
+		PRINTFORMW 도둑들에게 강요받은 굴욕적인 행동의 갖가지는, %ANAME(대상)%의 프라이드를 완전하게 쳐 부숴 버린 것 같다……
+		CALL TALENT_LOSE_PRIDE(대상, 1, 1)
+	ENDIF
+ELSE
+	PRINTFORMW ……도둑의 조교를 받아, %조사처리(ANAME(대상),"는")% 그들의 노예에 지나지 않는 당신의 신분을 생각해 냈다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 도둑의 노예에게 복직했다
+ENDIF
+
+;-------------------------------------------------
+;조교 함락시에 피어싱 하거나 하는 경우의 처리
+;-------------------------------------------------
+@BANDIT_FALLEN_LEAVE_MARK(대상)
+#DIM 대상
+SELECTCASE RAND:10
+	CASE IS < 4
+		CALL SET_PIERCE_RANDOM(대상, 0)
+		SIF RESULT != -1
+			CALL COLOR_PRINTW(@"%ANAME(대상)%의 %GET_PIERCE_NAME(RESULT)%에, 복종의 증거의 피어스가 장착되었다……", 칼라_핑크)
+	CASE IS < 7
+		CALL SET_TATTOO_RANDOM(대상, STR_FOR_TATTOO(-1), 0)
+		SIF RESULT != -1
+			CALL COLOR_PRINTW(@"%ANAME(대상)%의 %GET_TATTOO_NAME(RESULT)%에, 「%TATTOO:대상:RESULT%」%조사만처리(TATTOO:대상:RESULT,"라")%고 문신이 새겨졌다……", 칼라_핑크)
+	CASEELSE
+		IF GET_INMOU(대상) >= 음모_표준
+		CALL COLOR_PRINTW(@"복종이 증거로 삼아, %ANAME(대상)%의 음모는 하트형에 정돈되었다……", 칼라_핑크)
+		TALENT:대상:음모목표치 = 음모_하트형
+		TALENT:대상:음모현재치 = 음모_하트형
+	ELSE
+		CALL COLOR_PRINTW(@"복종이 증거로 삼아, %ANAME(대상)%의 음모는 영구 제모되었다……", 칼라_핑크)
+		TALENT:대상:음모목표치 = 음모_백보지
+		TALENT:대상:음모현재치 = 음모_백보지
+	ENDIF
+ENDSELECT

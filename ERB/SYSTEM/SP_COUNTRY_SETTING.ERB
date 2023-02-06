@@ -1,0 +1,295 @@
+﻿@SP_COUNTRY_SETTING(강제출현 = 0, 출현설정 = 1)
+#DIM 강제출현
+#DIM 출현설정
+#DIM FIRST_LINE
+#DIM 세력정수
+#DIM 선택지
+
+SIF 강제출현
+	VARSET SP_COUNTRY_RANK, 1
+
+CALL SINGLE_DRAWLINE
+PRINTL 특수 세력의 등장 및 강함을 설정합니다
+PRINTL 「출현」설정을 「최초부터」로 하는 것은 추천하지 않습니다（난이도적으로）
+CALL SINGLE_DRAWLINE
+
+FIRST_LINE = LINECOUNT
+
+$SHOW_LOOP
+
+FOR LOCAL, 0, MAX_SP_COUNTRY
+	SIF GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:LOCAL) == -1
+		CALL PRINT_EACH_SP_COUNTRY_SETTING(LOCAL, 강제출현, 출현설정)
+NEXT
+
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "[완료]", 9999
+
+INPUT
+
+SELECTCASE RESULT
+	CASE 0 TO 999
+		세력정수 = RESULT / 10
+		선택지 = RESULT % 10
+		SIF !INRANGE(세력정수, 0, MAX_SP_COUNTRY - 1) || 세력정수 == 특수세력_더미 || !INRANGE(선택지, 0, 5)
+			GOTO SKIPPED
+		SP_COUNTRY_RANK:세력정수 = 선택지
+	CASE 1000 TO 1999
+		RESULT = RESULT - 1000
+		세력정수 = RESULT / 10
+		선택지 = RESULT % 10
+		SIF !INRANGE(세력정수, 0, MAX_SP_COUNTRY - 1) || 세력정수 == 특수세력_더미 || !INRANGE(선택지, 0, 3)
+			GOTO SKIPPED
+		SP_COUNTRY_BOSSNAME:세력정수 = 선택지
+		IF 선택지 == 3
+			PRINTL 성을 입력해 주세요
+			PRINTL ( 『치르노』와 같은 성없음 캐릭터로 하고 싶은 경우, 입력하지 않는다)
+			INPUTS
+			SP_COUNTRY_BOSSNAME_LAST_NAME:세력정수  = %RESULTS%
+			PRINTL 이름을 입력해 주세요
+			$NAME_INPUT_LOOP
+			INPUTS
+			IF RESULTS == ""
+				PRINTL 이름은 입력 필수입니다
+				PRINTL 재입력해 주세요
+				GOTO NAME_INPUT_LOOP
+			ENDIF
+			SP_COUNTRY_BOSSNAME_FIRST_NAME:세력정수 = %RESULTS%
+		ENDIF
+	CASE 2000 TO 2999
+		RESULT = RESULT - 2000
+		세력정수 = RESULT / 10
+		선택지 = RESULT % 10
+		SIF !INRANGE(세력정수, 0, MAX_SP_COUNTRY - 1) || 세력정수 == 특수세력_더미 || !INRANGE(선택지, 0, 1) || !출현설정
+			GOTO SKIPPED
+		SP_COUNTRY_INITIAL_RISE:세력정수 = 선택지
+	CASE 3000, 3001
+		SIF !출현설정
+			GOTO SKIPPED
+		세력정수 = 특수세력_도둑
+		선택지 = RESULT - 3000
+		BANDIT_HAS_INITIAL_CITIES = 선택지
+	CASE 9999
+		FOR LOCAL, 0, MAX_SP_COUNTRY
+			SIF LOCAL != 특수세력_도둑 && GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:LOCAL) == -1 && SP_COUNTRY_RANK:LOCAL > 0 && SP_COUNTRY_INITIAL_RISE:LOCAL
+				TRYCALLFORM %SP_COUNTRY_NAME_ENG:LOCAL%_RISE()
+			IF LOCAL == 특수세력_도둑 && GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑) == -1 && SP_COUNTRY_INITIAL_RISE:LOCAL
+				CALL BANDIT_INIT(1)
+				SIF BANDIT_HAS_INITIAL_CITIES
+					CALL BANDIT_RISE()
+			ENDIF
+		NEXT
+		RETURN
+ENDSELECT
+
+$SKIPPED
+
+CLEARLINE LINECOUNT - FIRST_LINE
+GOTO SHOW_LOOP
+
+;-------------------------------------------------------
+;특수 세력 스타트용의 설정
+;-------------------------------------------------------
+@SP_COUNTRY_START_SETTING(정수)
+#DIM 정수
+#DIM 세력정수
+#DIM 선택지
+#DIM FIRST_LINE
+FIRST_LINE = LINECOUNT
+CALL PRINT_EACH_SP_COUNTRY_SETTING(정수, 1, 0)
+PRINTBUTTON "[완료]", 9999
+
+INPUT
+
+SELECTCASE RESULT
+	CASE 0 TO 999
+		세력정수 = RESULT / 10
+		선택지 = RESULT % 10
+		SIF 세력정수 != 정수 || !INRANGE(선택지, 0, 5)
+			GOTO SKIPPED
+		SP_COUNTRY_RANK:세력정수 = 선택지
+	CASE 1000 TO 1999
+		RESULT = RESULT - 1000
+		세력정수 = RESULT / 10
+		선택지 = RESULT % 10
+		SIF 세력정수 != 정수 || !INRANGE(선택지, 0, 3)
+			GOTO SKIPPED
+		SP_COUNTRY_BOSSNAME:세력정수 = 선택지
+		IF 선택지 == 3
+			PRINTL 성을 입력해 주세요
+			PRINTL ( 『치르노』와 같은 성없음 캐릭터로 하고 싶은 경우, 입력하지 않는다)
+			INPUTS
+			SP_COUNTRY_BOSSNAME_LAST_NAME:세력정수  = %RESULTS%
+			PRINTL 이름을 입력해 주세요（필수）
+			$NAME_INPUT_LOOP
+			INPUTS
+			IF RESULTS == ""
+				PRINTL 이름은 입력 필수입니다
+				PRINTL 재입력해 주세요
+				GOTO NAME_INPUT_LOOP
+			ENDIF
+			SP_COUNTRY_BOSSNAME_FIRST_NAME:세력정수 = %RESULTS%
+		ENDIF
+	CASE 9999
+		CALL SP_COUNTRY_START_SETTING_SELECT_CITY()
+		TRYCALLFORM %SP_COUNTRY_NAME_ENG:정수%_RISE(RESULT)
+		RETURN RESULT
+ENDSELECT
+
+$SKIPPED
+
+CLEARLINE LINECOUNT - FIRST_LINE
+RESTART
+
+;-------------------------------------------------
+;개양 스타트시 용, 세력의 설정
+;-------------------------------------------------
+@SP_COUNTRY_START_SETTING_SELECT_CITY
+#DIM FIRST_LINE
+#DIM 세력
+#DIM 도시
+#DIM 대상
+#DIM 소거행
+세력 = GET_NEW_COUNTRY()
+
+CALL SINGLE_DRAWLINE
+CALL SET_CITY_COLOR_COUNTRY
+CALL SET_CITY_COLOR_UNIT
+CALL DRAWMAP
+CALL RESET_CITY_COLOR
+CALL SINGLE_DRAWLINE
+PRINTL 최초로 빼앗는 도시를 지정해 주세요（그 주변이 빼앗깁니다）
+PRINTL 세력이 소유하고 있는 도시는, 그 세력이 2 도시 이상 소유하고 있지 않으면 선택할 수 없습니다
+CALL SINGLE_DRAWLINE
+PRINTL 
+
+
+$INPUT_LOOP_CITY
+INPUT
+
+IF RESULT >= 1001 && RESULT <= 1001 + CITY_NUM
+	LOCAL:5 = RESULT - 1000
+	;지정된 도시가 존재해, 무소속인 경우
+	IF GET_RELAYNAME(LOCAL:5) != "무명" && CITY_TYPE:(LOCAL:5) == 0 && (IS_COUNTRY(CITY_OWNER:(LOCAL:5)) || GET_OWN_CITY(CITY_OWNER:(LOCAL:5)) > 1)
+		REDRAW 1
+		PRINTFORMW %GET_RELAYNAME(LOCAL:5)%로 개시합니다
+		RETURN LOCAL:5
+	ELSE
+		CLEARLINE 1
+		GOTO INPUT_LOOP_CITY
+	ENDIF
+ELSE
+	CLEARLINE 1
+	GOTO INPUT_LOOP_CITY
+ENDIF
+
+
+;-------------------------------------------------------
+;특수 세력 스타트시의 및 INIT
+;-------------------------------------------------------
+@SP_COUNTRY_START_INIT
+FOR LOCAL, 0, MAX_SP_COUNTRY
+	SIF SP_COUNTRY_START:LOCAL == 0
+		CONTINUE
+	LOCAL:1 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:LOCAL)
+	SELECTCASE SP_COUNTRY_START:LOCAL
+		CASE 특수세력스타트_사관
+			CALL CHANGE_COUNTRY(MASTER, LOCAL:1, 1)
+		CASE 특수세력스타트_노예
+			CALL CHANGE_COUNTRY(MASTER, LOCAL:1, 1)
+			FOR LOCAL:2, 1, CHARANUM
+				IF TALENT:(LOCAL:2):특수세력소질 == LOCAL
+					TALENT:(LOCAL:2):합의 = 1
+					CFLAG:(LOCAL:2):호감도 = 800
+					CFLAG:(LOCAL:2):의존도 = 300
+					CFLAG:(LOCAL:2):안면 = 1
+				ENDIF
+			NEXT
+		CASE 특수세력스타트_포로
+			CALL CAPTURE(MASTER, LOCAL:1)
+		CASE 특수세력스타트_군주
+			;군주를 변경했다
+			IF SP_COUNTRY_START_CHANGE_BOSS
+				CFLAG:(GET_COUNTRY_BOSS(LOCAL:1)):소속 = 0
+				CFLAG:(GET_COUNTRY_BOSS(LOCAL:1)):특수상태 = 0
+				COUNTRY_BOSS:(LOCAL:1) = GET_ID(MASTER)
+			;군주를 변경하지 않았다
+			ELSE
+				;주인공을 군주로 옮겨놓는다
+				;이 시점에서 MASTER는 「당신」(이)가 되어 있다
+				CALL SWAP_CHARA(MASTER, GET_COUNTRY_BOSS(LOCAL:1))
+			ENDIF
+			CALL CHANGE_COUNTRY(MASTER, LOCAL:1, 1)
+			FOR LOCAL:2, 1, CHARANUM
+				IF TALENT:(LOCAL:2):특수세력소질 == LOCAL
+					TALENT:(LOCAL:2):복종 = 1
+					TALENT:(LOCAL:2):합의 = 1
+					CFLAG:(LOCAL:2):종속도 = 1500
+					CFLAG:(LOCAL:2):의존도 = 300
+					CFLAG:(LOCAL:2):안면 = 1
+				ENDIF
+			NEXT
+	ENDSELECT
+	BREAK
+NEXT
+
+;-------------------------------------------------------
+;개개의 세력의 설정 버튼을 출력
+;-------------------------------------------------------
+@PRINT_EACH_SP_COUNTRY_SETTING(정수, 강제출현 = 0, 출현설정 = 1)
+#DIM 정수
+#DIM 강제출현
+#DIM 출현설정
+
+;더미 세력은 금지
+SIF 정수 == 특수세력_더미
+	RETURN
+
+;정수 범위외를 건네받으면 죽으므로 방어
+SIF !INRANGE(정수, 0, MAX_SP_COUNTRY - 1)
+	RETURN
+
+;이미 존재하는 경우 날린다(시나리오 파일로 RISE 한 뒤의 NEWLOOP측에서의 설정을 상정）
+SIF GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:정수) != -1
+	RETURN 
+
+SIF 강제출현 && SP_COUNTRY_RANK:정수 == 0
+	SP_COUNTRY_RANK:정수 = 1
+
+PRINTFORM %SP_COUNTRY_NAME:정수, 16, LEFT%
+PRINTL
+
+PRINTFORM 강함:
+;강함 버튼의 표시
+FOR LOCAL, 0, 6
+	SIF 강제출현 && LOCAL == 0
+		CONTINUE
+	CALL PRINTBUTTON_EX(@"[{LOCAL}]", 정수 * 10 + LOCAL, 1, SP_COUNTRY_RANK:정수 == LOCAL)
+NEXT
+
+PRINTL
+
+PRINTFORM 이름:
+CALL PRINTBUTTON_EX("[세력명]",   정수 * 10 + 1000, SP_COUNTRY_RANK:정수, SP_COUNTRY_BOSSNAME:정수 == 0)
+CALL PRINTBUTTON_EX("[고유명]",   정수 * 10 + 1001, SP_COUNTRY_RANK:정수, SP_COUNTRY_BOSSNAME:정수 == 1)
+CALL PRINTBUTTON_EX("[랜덤]", 정수 * 10 + 1002, SP_COUNTRY_RANK:정수, SP_COUNTRY_BOSSNAME:정수 == 2)
+CALL PRINTBUTTON_EX("[손입력]",   정수 * 10 + 1003, SP_COUNTRY_RANK:정수, SP_COUNTRY_BOSSNAME:정수 == 3)
+
+PRINTL
+
+SIF !출현설정
+	RETURN
+
+PRINTFORM 출현:
+CALL PRINTBUTTON_EX("[최초부터]", 정수 * 10 + 2001, SP_COUNTRY_INITIAL_RISE:정수 || (SP_COUNTRY_RANK:정수 && GET_COUNTRY_NUM() + MATCH(SP_COUNTRY_INITIAL_RISE, 1) < MAX_COUNTRY - 1), SP_COUNTRY_INITIAL_RISE:정수 == 1)
+CALL PRINTBUTTON_EX("[도중에서]", 정수 * 10 + 2000, SP_COUNTRY_RANK:정수, SP_COUNTRY_INITIAL_RISE:정수 == 0)
+PRINTL
+
+IF 정수 == 특수세력_도둑
+	PRINTFORM 출현시에 영토를
+	CALL PRINTBUTTON_EX("[빼앗는다]" , 3001, SP_COUNTRY_RANK:정수,     BANDIT_HAS_INITIAL_CITIES == 1)
+	CALL PRINTBUTTON_EX("[빼앗지 않는다]" , 3000, SP_COUNTRY_RANK:정수, BANDIT_HAS_INITIAL_CITIES == 0)
+	PRINTL
+ENDIF
+
+PRINTL

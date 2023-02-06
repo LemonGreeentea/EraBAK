@@ -1,0 +1,1518 @@
+﻿;-------------------------------------------------
+;침공 부대(ARG:0 세력, ARG:1 부대) vs 침공 부대(ARG:2 세력, ARG:3 부대)의 전투
+;-------------------------------------------------
+@BATTLE_UNIT_TO_UNIT(ARG:0, ARG:1, ARG:2, ARG:3)
+#DIM FIRST_LINE
+#DIM 공격측괴멸
+LOCAL:5 = UNIT_POSITION:(ARG:0):(ARG:1)
+BATTLE_NAME:0 = %ANAME(GET_COUNTRY_BOSS(ARG:0))%
+BATTLE_NAME:1 = %ANAME(GET_COUNTRY_BOSS(ARG:2))%
+
+PRINTFORML ◆◆◆◆◆◆조우전◆◆◆◆◆◆
+CALL PRINT_VS(GET_COUNTRY_BOSS(ARG:0), GET_COUNTRY_BOSS(ARG:2))
+SETCOLOR 칼라_주석
+SIF GET_COUNTRY_BOSS(CITY_OWNER:(LOCAL:5)) != -1
+	PRINTFORM %ANAME(GET_COUNTRY_BOSS(CITY_OWNER:(LOCAL:5)))%의 영지인 
+PRINTFORML %GET_RELAYNAME(LOCAL:5)%에 대해,
+PRINTFORML %BATTLE_NAME:0%와 %BATTLE_NAME:1%의 전투가 발생했습니다
+
+RESETCOLOR
+
+FIRST_LINE = LINECOUNT
+
+;부대 능력을 표시
+CALL COLOR_PRINTL("----------서로의 역량----------", 칼라_선택불가)
+CALL PRINT_UNIT_INFO(ARG:0, ARG:1, 0, 0)
+PRINTL
+CALL PRINT_UNIT_INFO(ARG:2, ARG:3, 0, 0)
+PRINTL
+;다른 한쪽이 주인공 세력이라면 구상 표시
+IF ARG:0 == CFLAG:MASTER:소속 || ARG:2 == CFLAG:MASTER:소속
+	FOR LOCAL:0, 0, 3
+		LOCAL:1 = GET_UNIT_COMMANDER(ARG:0, ARG:1, LOCAL:0)
+		IF LOCAL:1 >= 0
+			CALL KOJO_EVENT(LOCAL:1, 300)
+		ENDIF
+	NEXT
+	FOR LOCAL:0, 0, 3
+		LOCAL:1 = GET_UNIT_COMMANDER(ARG:2, ARG:3, LOCAL:0)
+		IF LOCAL:1 >= 0
+			CALL KOJO_EVENT(LOCAL:1, 300)
+		ENDIF
+	NEXT
+ENDIF
+
+;■전투의 계산
+CALL BATTLE_CALC(ARG:0, ARG:1, ARG:2, ARG:3)
+
+SIF GROUPMATCH(0, BATTLE_SOL:0, BATTLE_SOL:1)
+	GOTO BATTLE_CANCEL
+
+;■데미지의 적용
+CALL COLOR_PRINTL("---------보정 후의 역량---------", 칼라_선택불가)
+CALL PRINT_UNIT_INFO_COMBAT(ARG:0, ARG:1, 0, 0, 0)
+PRINTL
+CALL PRINT_UNIT_INFO_COMBAT(ARG:2, ARG:3, 1, 0, 0)
+PRINTL
+CALL COLOR_PRINTL("------------격돌! ------------", 칼라_선택불가)
+CALL DECREASE_SOLDIER(ARG:0, ARG:1, BATTLE_DMG:0, 1)
+CALL DECREASE_SOLDIER(ARG:2, ARG:3, BATTLE_DMG:1, 1)
+
+$BATTLE_CANCEL
+CALL COLOR_PRINTL("----------전투후 처리----------", 칼라_선택불가)
+
+SIF (CONFIG:300 == 1 && ARG:0 != CFLAG:MASTER:소속 && ARG:2 != CFLAG:MASTER:소속 && IS_COUNTRY(CFLAG:MASTER:소속)) || CONFIG:300 == 2
+	CLEARLINE LINECOUNT - FIRST_LINE
+
+;호감도·적대치의 변동
+LOCAL:1 = COUNTRY_AI_TYPE:(ARG:0)
+LOCAL:2 = COUNTRY_AI_TYPE:(ARG:2)
+
+IF ARG:2 != CFLAG:MASTER:소속
+	CALL CHANGE_RELATION_C_TO_C(ARG:0, ARG:2, (-3 * AI_RELATION:(LOCAL:1):(LOCAL:2) / 100), (10 * 100 / AI_RELATION:(LOCAL:1):(LOCAL:2)))
+ELSE
+	CALL CHANGE_RELATION_C_TO_C(ARG:0, ARG:2, (-3 * AI_RELATION:(LOCAL:1):0 / 100), (10 * 100 / AI_RELATION:(LOCAL:1):0))
+ENDIF
+
+IF ARG:0 != CFLAG:MASTER:소속
+	CALL CHANGE_RELATION_C_TO_C(ARG:2, ARG:0, (-3 * AI_RELATION:(LOCAL:2):(LOCAL:1) / 100), (10 * 100 / AI_RELATION:(LOCAL:2):(LOCAL:1)))
+ELSE
+	CALL CHANGE_RELATION_C_TO_C(ARG:2, ARG:0, (-3 * AI_RELATION:(LOCAL:2):0 / 100), (10 * 100 / AI_RELATION:(LOCAL:2):0))
+ENDIF
+
+UNIT_FBATTLE:(ARG:0):(ARG:1) = 1
+UNIT_FBATTLE:(ARG:2):(ARG:3) = 1
+
+공격측괴멸 = 0
+
+;공격측 부대의 병수가 0
+IF UNIT_SOLDIER:(ARG:0):(ARG:1) <= 0
+	공격측괴멸 = 1
+	IF ARG:0 == CFLAG:MASTER:소속
+		LOCALS:2 = %GET_UNIT_COMMANDER_NAME(ARG:0, ARG:1)%
+		IF LOCALS:2 == ""
+			LOCALS:2 = 우리 군의
+		ELSE
+			LOCALS:2 = <%LOCALS:2%>
+		ENDIF
+		CALL COLOR_PRINTW(@"%LOCALS:2%부대가 패주했습니다……", 칼라_경고)
+	ELSE
+		PRINTFORML %BATTLE_NAME:0%군은 패주했습니다
+	ENDIF
+	IF ARG:2 != CFLAG:MASTER:소속
+		CALL CHANGE_RELATION_C_TO_C(ARG:0, ARG:2, (-10 * AI_RELATION:(LOCAL:1):(LOCAL:2) / 100), (50 * 100 / AI_RELATION:(LOCAL:1):(LOCAL:2)))
+	ELSE
+		CALL CHANGE_RELATION_C_TO_C(ARG:0, ARG:2, (-10 * AI_RELATION:(LOCAL:1):0 / 100), (50 * 100 / AI_RELATION:(LOCAL:1):0))
+	ENDIF
+
+	SIF IS_COUNTRY(ARG:0) && FINDELEMENT(TREATY_U_TARGET, ARG:0) != -1
+		CALL SLG_COMBAT_BEAT_TREATY_TARGET(ARG:2, ARG:0)
+
+	;장의 포획
+	CALL UNIT_BREAK(1, ARG:2, ARG:3, ARG:0, ARG:1)
+	;괴멸 한 부대의 뒤처리
+	CALL CLEAR_UNIT(ARG:0, ARG:1)
+ENDIF
+
+;방어측 부대의 병수가 0
+IF UNIT_SOLDIER:(ARG:2):(ARG:3) <= 0
+	IF ARG:2 == CFLAG:MASTER:소속
+		LOCALS:2 = %GET_UNIT_COMMANDER_NAME(ARG:2, ARG:3)%
+		IF LOCALS:2 == ""
+			LOCALS:2 = 우리 군의
+		ELSE
+			LOCALS:2 = <%LOCALS:2%>
+		ENDIF
+		CALL COLOR_PRINTW(@"%LOCALS:2%부대가 패주했습니다……", 칼라_경고)
+	ELSE
+		PRINTFORML %BATTLE_NAME:1%군은 패주했습니다
+	ENDIF
+	IF ARG:0 != CFLAG:MASTER:소속
+		CALL CHANGE_RELATION_C_TO_C(ARG:2, ARG:0, (-10 * AI_RELATION:(LOCAL:2):(LOCAL:1) / 100), (50 * 100 / AI_RELATION:(LOCAL:2):(LOCAL:1)))
+	ELSE
+		CALL CHANGE_RELATION_C_TO_C(ARG:2, ARG:0, (-10 * AI_RELATION:(LOCAL:2):0 / 100), (50 * 100 / AI_RELATION:(LOCAL:2):0))
+	ENDIF
+
+	SIF IS_COUNTRY(ARG:2) && FINDELEMENT(TREATY_U_TARGET, ARG:2) != -1
+		CALL SLG_COMBAT_BEAT_TREATY_TARGET(ARG:0, ARG:2)
+
+	;장의 포획
+	SIF !공격측괴멸
+		CALL UNIT_BREAK(0, ARG:0, ARG:1, ARG:2, ARG:3)
+
+	;괴멸 한 부대의 뒤처리
+	CALL CLEAR_UNIT(ARG:2, ARG:3)
+ENDIF
+
+;전투를 한 곳이 중계점은 아니면 그 도시에 공격 카운트＋1
+;마을의 근처에서 빵야빵야 하고 있으, 면요
+SIF !CITY_TYPE:(LOCAL:5)
+	CITY_TIRED_COUNT:(LOCAL:5) ++
+
+;전투 모브를 전부 삭제
+LOCAL:2 = CHARANUM
+FOR LOCAL:0, 0, LOCAL:2
+	LOCAL:1 = LOCAL:2 - LOCAL:0 - 1
+	SIF TALENT:(LOCAL:1):전투모브
+		CALL DELETE_CHARA(LOCAL:1)
+NEXT
+
+WAIT
+
+;-------------------------------------------------
+;침공 부대(ARG:0 세력, ARG:1 부대) vs 방위 부대(도시 ARG:2)의 전투
+;-------------------------------------------------
+@BATTLE_UNIT_TO_CITY(ARG:0, ARG:1, ARG:2)
+#DIM FIRST_LINE
+#DIM 도시탈취
+LOCAL:9 = 0
+
+LOCAL:6 = CITY_OWNER:(ARG:2)
+BATTLE_NAME:0 = %ANAME(GET_COUNTRY_BOSS(ARG:0))%
+LOCAL:5 = GET_COUNTRY_BOSS(CITY_OWNER:(ARG:2))
+BATTLE_NAME:1 = %LOCAL:5 != -1 ? NAME:(LOCAL:5) # "무소속"%
+
+PRINTFORML ◆◆◆◆◆◆침공전◆◆◆◆◆◆
+CALL PRINT_VS(GET_COUNTRY_BOSS(ARG:0), GET_COUNTRY_BOSS(CITY_OWNER:(ARG:2)))
+SETCOLOR 칼라_주석
+SIF GET_COUNTRY_BOSS(CITY_OWNER:(ARG:2)) != -1
+	PRINTFORM %ANAME(GET_COUNTRY_BOSS(CITY_OWNER:(ARG:2)))%의 영지인 
+PRINTFORML %조사처리(GET_CITYNAME(ARG:2),"가")%, 
+PRINTFORML %BATTLE_NAME:0%에 침공되었습니다
+RESETCOLOR
+
+FIRST_LINE = LINECOUNT
+
+;그 도시가 그 세력에 있어 마지막 1 도시라면, 전병력을 기울인다
+IF LOCAL:5 >= 0 && GET_OWN_CITY(CITY_OWNER:(ARG:2)) == 1
+	PRINTFORML %BATTLE_NAME:1%는 마지막 영지의 방위에 전병력을 따랐다!
+	CALL TMP_CREATE_IS_FREE_MAP
+	PRINTFORM 변동전:
+	CALL PRINT_CITY_INFO(ARG:2, 0)
+	PRINTL
+	CALL SET_CITY_COMMANDER_BEST(ARG:2, 1, 1)
+	CALL INCREASE_SOLDIER(ARG:2, -1, COUNTRY_SOLDIER:(CITY_OWNER:(ARG:2)))
+	COUNTRY_SOLDIER:(CITY_OWNER:(ARG:2)) = 0
+	PRINTFORM 변동 후:
+	CALL PRINT_CITY_INFO(ARG:2, 0)
+	PRINTL
+ENDIF
+
+;부대 능력을 표시
+CALL COLOR_PRINTL("----------서로의 역량----------", 칼라_선택불가)
+CALL PRINT_UNIT_INFO(ARG:0, ARG:1, 0, 0)
+PRINTL
+CALL PRINT_CITY_INFO(ARG:2, 0)
+PRINTL
+;다른 한쪽이 주인공 세력이라면 구상 표시
+IF ARG:0 == CFLAG:MASTER:소속 || CITY_OWNER:(ARG:2) == CFLAG:MASTER:소속
+	FOR LOCAL:0, 0, 3
+		LOCAL:1 = GET_UNIT_COMMANDER(ARG:0, ARG:1, LOCAL:0)
+		IF LOCAL:1 >= 0
+			CALL KOJO_EVENT(LOCAL:1, 301)
+		ENDIF
+	NEXT
+	FOR LOCAL:0, 0, 2
+		LOCAL:1 = GET_CITY_COMMANDER(ARG:2, LOCAL:0)
+		IF LOCAL:1 >= 0
+			CALL KOJO_EVENT(LOCAL:1, 302)
+		ENDIF
+	NEXT
+ENDIF
+
+;■전투의 계산
+CALL BATTLE_CALC(ARG:0, ARG:1, ARG:2, -1)
+
+SIF GROUPMATCH(0, BATTLE_SOL:0, BATTLE_SOL:1)
+	GOTO BATTLE_CANCEL
+
+;■데미지의 적용
+CALL COLOR_PRINTL("---------보정 후의 역량---------", 칼라_선택불가)
+CALL PRINT_UNIT_INFO_COMBAT(ARG:0, ARG:1, 0, 0, 0)
+PRINTL
+CALL PRINT_CITY_INFO_COMBAT(ARG:2, 1, 0)
+PRINTL
+CALL COLOR_PRINTL("------------격돌! ------------", 칼라_선택불가)
+
+CALL DECREASE_SOLDIER(ARG:0, ARG:1, BATTLE_DMG:0, 1)
+CALL DECREASE_SOLDIER(ARG:2, -1,    BATTLE_DMG:1, 1)
+
+$BATTLE_CANCEL
+CALL COLOR_PRINTL("----------전투후 처리----------", 칼라_선택불가)
+
+SIF (CONFIG:300 == 1 && (ARG:0 != CFLAG:MASTER:소속 && LOCAL:6 != CFLAG:MASTER:소속) && IS_COUNTRY(CFLAG:MASTER:소속)) || CONFIG:300 == 2
+	CLEARLINE LINECOUNT - FIRST_LINE
+
+
+UNIT_FBATTLE:(ARG:0):(ARG:1) = 1
+CITY_IS_ATTACKED:(ARG:2) = 1
+
+도시탈취 = 0
+
+;도시의 병수가 0
+IF CITY_SOLDIER:(ARG:2) <= 0
+	도시탈취 = 1
+	CITY_TIRED_COUNT:(ARG:2) = 0
+	CITY_IS_ATTACKED:(ARG:2) = 0
+
+	;도시 점령에 의한 약탈
+	;LOCAL 10:그 도시에 비축되고 있던 재산
+	;무소속의 도시는 경제 규모의 30%를 비축하고 있으면 간주한다
+	IF LOCAL:6 > 0
+		LOCAL:10 = MONEY:(LOCAL:6) * CITY_ECONOMY:(ARG:2) / GET_SUM_ECONOMY(LOCAL:6)
+		MONEY:(LOCAL:6) -= LOCAL:10
+		MONEY:(ARG:0) += LOCAL:10 * 90 / 100
+	ELSE
+		LOCAL:10 = CITY_ECONOMY:(ARG:2) * 30 / (100 * 10)
+		MONEY:(ARG:0) += LOCAL:10 * 90 / 100
+	ENDIF
+	;DEBUGPRINTFORML {DAY, 3}【약탈】\@LOCAL:6? %ANAME(GET_COUNTRY_BOSS(LOCAL:6))% # 무소속\@＞%ANAME(GET_COUNTRY_BOSS(ARG:0))%:{LOCAL:10}
+	IF IS_COUNTRY(CITY_OWNER:(ARG:2)) && CITY_OWNER:(ARG:2) == CFLAG:MASTER:소속 && !FLAG:관전모드
+		CALL COLOR_PRINTL(@"%BATTLE_NAME:0%군에 %조사처리(GET_CITYNAME(ARG:2),"를")% 빼앗겼습니다!", 칼라_경고)
+	ELSEIF ARG:0 == CFLAG:MASTER:소속
+		CALL COLOR_PRINTL(@"%조사처리(GET_CITYNAME(ARG:2),"를")% 점령했습니다!", 칼라_주의)
+	ELSE
+		PRINTFORML %BATTLE_NAME:0%군이 %조사처리(GET_CITYNAME(ARG:2),"를")% 점령했습니다
+	ENDIF
+
+	SIF IS_COUNTRY(CITY_OWNER:(ARG:2)) && FINDELEMENT(TREATY_U_TARGET, CITY_OWNER:(ARG:2)) != -1
+		CALL SLG_COMBAT_BEAT_TREATY_TARGET(ARG:0, CITY_OWNER:(ARG:2))
+
+
+	;부대 괴멸시의 사관의 포획
+	CALL UNIT_BREAK(0, ARG:0, ARG:1, ARG:2, -1)
+
+	CITY_OWNER:(ARG:2) = ARG:0
+	CITY_COMMANDER:(ARG:2) = 0
+
+
+	;도시의 경제변동
+	IF CITY_ECONOMY_LIMIT:(ARG:2) > 800
+		CITY_ECONOMY_LIMIT:(ARG:2) = MAX(CITY_ECONOMY_LIMIT:(ARG:2) * 93 / 100, 800)
+	ENDIF
+	CITY_ECONOMY:(ARG:2) = MIN(CITY_ECONOMY:(ARG:2), CITY_ECONOMY_LIMIT:(ARG:2))
+	IF CITY_ECONOMY:(ARG:2) > 500
+		CITY_ECONOMY:(ARG:2) = MAX(CITY_ECONOMY:(ARG:2) * 80 / 100, 500)
+	ENDIF
+
+	;도시 점령 플래그세트
+	UNIT_CAPTURE_CITY:(ARG:0):(ARG:1) = 1
+
+	;호감도·적대치의 변동
+	LOCAL:1 = COUNTRY_AI_TYPE:(ARG:0)
+	LOCAL:2 = COUNTRY_AI_TYPE:(LOCAL:6)
+
+	IF ARG:0 != CFLAG:MASTER:소속
+		CALL CHANGE_RELATION_C_TO_C(LOCAL:6, ARG:0, (-10 * AI_RELATION:(LOCAL:2):(LOCAL:1) / 100), (100 * 100 / AI_RELATION:(LOCAL:2):(LOCAL:1)))
+	ELSE
+		CALL CHANGE_RELATION_C_TO_C(LOCAL:6, ARG:0, (-10 * AI_RELATION:(LOCAL:2):0 / 100), (100 * 100 / AI_RELATION:(LOCAL:2):0))
+	ENDIF
+
+	;세력의 멸망 판정
+	IF IS_COUNTRY(LOCAL:6) && GET_OWN_CITY(LOCAL:6) <= 0
+		IF COUNTRY_EVENT_ID:(LOCAL:6) == SP_COUNTRY_ID:(특수세력_도둑)
+			IF CFLAG:MASTER:소속 == LOCAL:6
+				SETCOLOR 칼라_경고
+				PRINTFORMW %조사처리(ANAME(MASTER),"가")% 시중들고 있었던 %BATTLE_NAME:1%들은, 도시를 모두 잃었습니다…
+				PRINTFORMW 그 너저분으로, 잡고 있던 포로들이 모두 도망쳐 가 버렸습니다
+				PRINTFORMW 입니다만, %BATTLE_NAME:1%들은 멸망 했을 것이 아닙니다
+				PRINTFORMW 어디에라도 솟아 오르는 것이 %BATTLE_NAME:1%, 또 봉기 하면 좋습니다…
+				RESETCOLOR
+			ELSE
+				SETCOLOR 칼라_주의
+				PRINTFORMW %BATTLE_NAME:1%가 빼앗은 도시는 모두 만회해졌습니다!
+				PRINTFORMW 그 너저분으로, 잡고 있던 포로들이 모두 해방되었습니다
+				PRINTFORMW 하지만, %BATTLE_NAME:1%들은 멸망 했을 것이 아닙니다
+				PRINTFORMW 어디에라도 솟아 오르는 것이 %BATTLE_NAME:1%, 근절 하게 하는 것은 불가능합니다
+				RESETCOLOR
+			ENDIF
+			SETCOLOR 칼라_시안
+			PRINTFORMW %BATTLE_NAME:1%를 철수 하게한 %ANAME(GET_COUNTRY_BOSS(ARG:0))%는, 다른 세력으로부터 깊게 감사받고 있습니다…
+			RESETCOLOR
+			FOR LOCAL:0, 0, CHARANUM
+				SIF CFLAG:LOCAL:포로처 == LOCAL:6
+					CALL CAPTURE(LOCAL, 0)
+			NEXT
+			FOR LOCAL:0, 0, MAX_COUNTRY
+				SIF IS_COUNTRY(LOCAL) && LOCAL != ARG:0 && LOCAL != LOCAL:6
+					CALL CHANGE_RELATION_C_TO_C(LOCAL, ARG:0, 300, -300)
+			NEXT
+			;외교 금지 플래그를 세운다
+			COUNTRY_IS_CLOSED:(LOCAL:6) = 1
+		ELSE
+			IF CFLAG:MASTER:소속 == LOCAL:6
+				SETCOLOR 칼라_경고
+				PRINTFORMW %조사처리(ANAME(MASTER),"가")% 시중들고 있었던 %BATTLE_NAME:1% 세력은 멸망 해 버렸습니다…
+				RESETCOLOR
+			ELSE
+				SETCOLOR 칼라_경고
+				PRINTFORMW %BATTLE_NAME:1% 세력은 멸망 했습니다
+				RESETCOLOR
+			ENDIF
+			SIF !IS_SP_COUNTRY(LOCAL:6)
+				DIPLOMACY_HATE:(ARG:0) += 3
+
+			;패장의 처리
+			CALL LOSERS_ACTION(LOCAL:6, ARG:0)
+
+			IF ARG:0 == CFLAG:MASTER:소속
+				LOCAL:9 = 1
+			ENDIF
+
+			;뒤처리
+			CALL DESTROY_COUNTRY(LOCAL:6)
+		ENDIF
+	ENDIF
+ENDIF
+
+;침공 부대의 병수가 0
+IF UNIT_SOLDIER:(ARG:0):(ARG:1) <= 0
+	IF ARG:0 == CFLAG:MASTER:소속
+		LOCALS:2 = %GET_UNIT_COMMANDER_NAME(ARG:0, ARG:1)%
+		IF LOCALS:2 == ""
+			LOCALS:2 = 우리 군의
+		ELSE
+			LOCALS:2 = <%LOCALS:2%>
+		ENDIF
+		CALL COLOR_PRINTL(@"%LOCALS:2%부대가 패주했습니다……", 칼라_경고)
+	ELSE
+		PRINTFORML %BATTLE_NAME:0%군은 패주했습니다
+	ENDIF
+
+	;이 패턴만, 쓰러트린 측이 IS_COUNTRY일까의 체크도 실시한다(도시측이 무소속일 가능성도 있으므로)
+	SIF IS_COUNTRY(ARG:0) && IS_COUNTRY(CITY_OWNER:(ARG:2)) && FINDELEMENT(TREATY_U_TARGET, ARG:0) != -1
+		CALL SLG_COMBAT_BEAT_TREATY_TARGET(CITY_OWNER:(ARG:2), ARG:0)
+
+	;도시 소유 세력이 있었을 경우만
+	IF LOCAL:5 >= 0 && !도시탈취
+		;부대 괴멸시의 사관의 포획
+		CALL UNIT_BREAK(1, ARG:2, -1, ARG:0, ARG:1)
+	ENDIF
+
+	;괴멸 한 부대의 뒤처리
+	CALL CLEAR_UNIT(ARG:0, ARG:1)
+
+ELSE
+	;호감도·적대치의 변동
+	LOCAL:1 = COUNTRY_AI_TYPE:(ARG:0)
+	LOCAL:2 = COUNTRY_AI_TYPE:(LOCAL:6)
+
+	IF ARG:0 != CFLAG:MASTER:소속
+		CALL CHANGE_RELATION_C_TO_C(LOCAL:6, ARG:0, (-5 * AI_RELATION:(LOCAL:2):(LOCAL:1) / 100), (50 * 100 / AI_RELATION:(LOCAL:2):(LOCAL:1)))
+	ELSE
+		CALL CHANGE_RELATION_C_TO_C(LOCAL:6, ARG:0, (-5 * AI_RELATION:(LOCAL:2):0 / 100), (50 * 100 / AI_RELATION:(LOCAL:2):0))
+	ENDIF
+ENDIF
+
+;전투 모브를 전부 삭제
+LOCAL:2 = CHARANUM
+FOR LOCAL:0, 0, LOCAL:2
+	LOCAL:1 = LOCAL:2 - LOCAL:0 - 1
+	SIF TALENT:(LOCAL:1):전투모브
+		CALL DELETE_CHARA(LOCAL:1)
+NEXT
+
+WAIT
+
+;-------------------------------------------------
+;전투의 공통 계산
+;인수 0:공격측 세력 1:공격측 부대 2:대상세력 3:대상 부대 ※ARG:3이 0 미만의 경우, 방위 부대로 간주해, ARG:2를 도시 번호로서 사용
+;-------------------------------------------------
+@BATTLE_CALC(ARG:0, ARG:1, ARG:2, ARG:3)
+
+;전투 관련의 변수의 초기화
+VARSET BATTLE_RATE_DMG, 0
+VARSET BATTLE_RATE_ATC, 0
+VARSET BATTLE_RATE_GRD, 0
+VARSET BATTLE_RATE_GRD_B, 0
+VARSET BATTLE_FORCE_SCHEME, -1
+VARSET BATTLE_SKILL_SEALED, 0
+VARSET BATTLE_SUMMONED_CHARA, 0
+
+CALL GET_COMMANDER_ALL(ARG:0, ARG:1)
+CALL SET_BATTLE_MIRROR_VAL(0, RESULT:0, RESULT:1, RESULT:2)
+CALL GET_COMMANDER_ALL(ARG:2, ARG:3)
+CALL SET_BATTLE_MIRROR_VAL(1, RESULT:0, RESULT:1, RESULT:2)
+
+CALL COLOR_PRINTL("---------스킬·계략---------", 칼라_선택불가)
+
+;전투력 계산에 앞서 발동하는 특수 계략의 처리
+CALL BATTLE_SP_SKILL(0, ARG:0, ARG:1, ARG:2, ARG:3)
+CALL BATTLE_SP_SKILL(1, ARG:2, ARG:3, ARG:0, ARG:1)
+
+;앞서 준비
+CALL BATTLE_PREPARE_VARS(ARG:0, ARG:1, ARG:2, ARG:3)
+
+IF BATTLE_SOL:0 == 0 || BATTLE_SOL:1 == 0
+	BATTLE_DMG:0 = 0
+	BATTLE_DMG:1 = 0
+	RETURN
+ENDIF
+
+;기본치에 영향을 주는 소질 발동 처리는 여기에
+CALL BATTLE_BASE_SKILL(0, ARG:0, ARG:1, ARG:2, ARG:3)
+CALL BATTLE_BASE_SKILL(1, ARG:2, ARG:3, ARG:0, ARG:1)
+
+;코어 계산
+CALL BATTLE_CALC_CORE(ARG:0, ARG:1, ARG:2, ARG:3)
+
+
+;-------------------------------------------------
+;전투 계산용 변수의 준비 부분
+;SP_SKILL등에서 부를 수 있도록(듯이)
+;인수 0:공격측 세력 1:공격측 부대 2:대상세력 3:대상 부대 ※ARG:3이 0 미만의 경우, 방위 부대로 간주해, ARG:2를 도시 번호로서 사용
+;-------------------------------------------------
+@BATTLE_PREPARE_VARS(ARG:0, ARG:1, ARG:2, ARG:3)
+LOCAL:5 = 1
+BATTLE_SOL:0 = UNIT_SOLDIER:(ARG:0):(ARG:1)
+CALL BATTLE_PREPARE_VARS_EACH(0, 0)
+
+
+IF ARG:3 >= 0
+	BATTLE_SOL:1 = GET_SOLDIER(ARG:2, ARG:3)
+	CALL BATTLE_PREPARE_VARS_EACH(1, 0)
+
+ELSE
+	BATTLE_SOL:1 = GET_SOLDIER(ARG:2, ARG:3)
+	CALL BATTLE_PREPARE_VARS_EACH(1, ARG:2)
+ENDIF
+
+;-------------------------------------------------
+;전투 계산용 변수의 준비 부분
+;SP_SKILL등에서 부를 수 있도록(듯이)
+;인수 0:공격측 세력 1:공격측 부대 2:대상세력 3:대상 부대 ※ARG:3이 0 미만의 경우, 방위 부대로 간주해, ARG:2를 도시 번호로서 사용
+;-------------------------------------------------
+@BATTLE_PREPARE_VARS_EACH(SIDE, CITY)
+#DIM SIDE
+#DIM CITY
+IF CITY
+	BATTLE_ATK:SIDE = ATTACK_LEVEL(SIDE, CITY)
+	BATTLE_DEF:SIDE = DEFENSE_LEVEL(SIDE, CITY)
+	BATTLE_INT:SIDE = INTELLIGENCE_LEVEL(SIDE, CITY)
+	BATTLE_MAG:SIDE = MAGIC_LEVEL(SIDE, CITY)
+	BATTLE_F_UNIT:SIDE = 0
+ELSE
+	BATTLE_ATK:SIDE = ATTACK_LEVEL(SIDE, 0)
+	BATTLE_DEF:SIDE = DEFENSE_LEVEL(SIDE, 0)
+	BATTLE_INT:SIDE = INTELLIGENCE_LEVEL(SIDE, 0)
+	BATTLE_MAG:SIDE = MAGIC_LEVEL(SIDE, 0)
+	BATTLE_F_UNIT:SIDE = 1
+ENDIF
+
+;-------------------------------------------------
+;전투 계산의 코어 부분
+;SP_SKILL등에서 부를 수 있도록(듯이)
+;인수 0:공격측 세력 1:공격측 부대 2:대상세력 3:대상 부대 ※ARG:3이 0 미만의 경우, 방위 부대로 간주해, ARG:2를 도시 번호로서 사용
+;-------------------------------------------------
+@BATTLE_CALC_CORE(ARG:0, ARG:1, ARG:2, ARG:3, ARG:4 = 1)
+#DIM 최종피데미지, 2
+#DIM 공격움직임, 2
+#DIM 방어움직임, 2
+#DIM 병수움직임, 2
+#DIM 공방차이기초피데미지, 2
+#DIM 병수비기초피데미지, 2
+#DIM 비율피데미지, 2
+#DIM 병수비
+#DIM 피데미지비, 2
+#DIM 과잉피데미지
+
+FOR LOCAL, 0, 2
+	IF BATTLE_SOL:LOCAL == 0
+		BATTLE_ATK:LOCAL = 0
+		BATTLE_DEF:LOCAL = 0
+		BATTLE_INT:LOCAL = 0
+		BATTLE_MAG:LOCAL = 0
+	ENDIF
+NEXT
+
+IF ARG:4
+	CALL BATTLE_SOLDIER_RATE_CORRECTION(ARG:0, ARG:1, ARG:2, ARG:3)
+	CALL BATTLE_DIFFICULTY_CORRECTION(ARG:0, ARG:1, ARG:2, ARG:3)
+	CALL BATTLE_TIREDNESS_CORRECTION(ARG:0, ARG:1, ARG:2, ARG:3)
+	CALL BATTLE_COMMANDER_POWER_CORRECTION(ARG:0, ARG:1, ARG:2, ARG:3)
+
+	;PRINTFORML 공격 0={BATTLE_ATK:0, 8}   방어 0={BATTLE_DEF:0, 8}
+	;PRINTFORMW 공격 1={BATTLE_ATK:1, 8}   방어 1={BATTLE_DEF:1, 8}
+
+	;PRINTFORML 공격 0={BATTLE_ATK:0, 8}   방어 0={BATTLE_DEF:0, 8}
+	;PRINTFORMW 공격 1={BATTLE_ATK:1, 8}   방어 1={BATTLE_DEF:1, 8}
+
+	CALL BATTLE_SCHEME(ARG:0, ARG:1, ARG:2, ARG:3)
+ENDIF
+
+;요술 파워에 의한 비율 데미지의 추가
+SIF BATTLE_MAG:0 > 0
+	BATTLE_RATE_DMG:0 += MAX(BATTLE_MAG:0 / 2000, 1)
+SIF BATTLE_MAG:1 > 0
+	BATTLE_RATE_DMG:1 += MAX(BATTLE_MAG:1 / 2000, 1)
+
+;PRINTFORML BATTLE_RATE_DMG:0 {BATTLE_RATE_DMG:0}
+;PRINTFORML BATTLE_RATE_DMG:1 {BATTLE_RATE_DMG:1}
+
+;비율 데미지의 산출
+비율피데미지:0 = MIN(BATTLE_SOL:0 * BATTLE_RATE_DMG:1 / 100, BATTLE_SOL:1)
+비율피데미지:1 = MIN(BATTLE_SOL:1 * BATTLE_RATE_DMG:0 / 100, BATTLE_SOL:0)
+
+;PRINTFORML 비율피안 돼:0 {비율피데미지:0}
+;PRINTFORML 비율피안 돼:1 {비율피데미지:1}
+
+;기초 안 돼
+;(공격력 - 방어력)/100
+병수움직임:0 = MAX(BATTLE_SOL:0 * RAND(800, 1200) / 1000, 1)
+병수움직임:1 = MAX(BATTLE_SOL:1 * RAND(800, 1200) / 1000, 1)
+공격움직임:0 = MAX(BATTLE_ATK:0 * RAND(800, 1200) / 1000, 1)
+공격움직임:1 = MAX(BATTLE_ATK:1 * RAND(800, 1200) / 1000, 1)
+방어움직임:0 = MAX(BATTLE_DEF:0 * RAND(800, 1200) / 1000, 1)
+방어움직임:1 = MAX(BATTLE_DEF:1 * RAND(800, 1200) / 1000, 1)
+
+병수비기초피데미지:0 = MAX((병수움직임:1 * 50 / 병수움직임:0), 10)
+병수비기초피데미지:1 = MAX((병수움직임:0 * 50 / 병수움직임:1), 10)
+공방차이기초피데미지:0 = MAX((공격움직임:1 - 방어움직임:0) / 100, 10)
+공방차이기초피데미지:1 = MAX((공격움직임:0 - 방어움직임:1) / 100, 10)
+
+;PRINTFORML 병 수기초:0 {병 수비기초피데미지:0}
+;PRINTFORML 병 수기초:1 {병 수비기초피데미지:1}
+;PRINTFORML 공방 기초:0 {공방차이 기초피데미지:0}
+;PRINTFORML 공방 기초:1 {공방차이 기초피데미지:1}
+
+최종피데미지:0 = (병수비기초피데미지:0 + 공방차이기초피데미지:0) * RAND(8000, 12000) / 1000
+최종피데미지:1 = (병수비기초피데미지:1 + 공방차이기초피데미지:1) * RAND(8000, 12000) / 1000
+
+;PRINTFORML 난수 적용:0 {최종피데미지:0}
+;PRINTFORML 난수 적용:1 {최종피데미지:1}
+
+;데미지의 비가 1.00이상 2.00 이하, 한편 병수비가 2.00 이하의 경우의 경우, 반비례로 데미지를 4배까지 늘린다.
+;일까하고 말해 즉사되어도 곤란하므로 원병력의 반까지 제한한다.
+;「병수·능력이 닮은 부대가 서로 장장 때린다」의를 방지한다.
+;병 수비로 조건을 걸치고 있는 것은, 「능력적으로 뒤떨어지지만 병수로 압도하는 부대」와 「병수로 뒤떨어지지만 능력으로 압도하는 부대」가 부딪쳤을 경우에, 후자의 군사가 부자연스럽게 깎을 수 있는 것을 막기 위해.
+피데미지비 = MAX(최종피데미지:0 * 100 / 최종피데미지:1, 최종피데미지:1 * 100 / 최종피데미지:0)
+병수비 = MAX(BATTLE_SOL:0 * 100 / BATTLE_SOL:1, BATTLE_SOL:1 * 100 / BATTLE_SOL:0)
+IF 피데미지비 < 200 && 병수비 < 200
+	;PRINTFORML 피안 돼비 {피데미지비}
+	;작은 편이 나와 있었을 경우는 큰 (분)편에게 변환
+	SIF 피데미지비 < 100
+		피데미지비 = 200 - 피데미지비
+	최종피데미지:0 = MIN(최종피데미지:0 * (40000 / 피데미지비) / 100, BATTLE_SOL:0 / 2)
+	최종피데미지:1 = MIN(최종피데미지:1 * (40000 / 피데미지비) / 100, BATTLE_SOL:1 / 2)
+	;PRINTFORML 비율 적용:0 {최종피데미지:0}
+	;PRINTFORML 비율 적용:1 {최종피데미지:1}
+ENDIF
+
+;여피해 배율과 피해 경감율의 적용
+최종피데미지:0 = 최종피데미지:0 * (BATTLE_RATE_ATC:1 + 100) / 100
+최종피데미지:0 = 최종피데미지:0 * (100 - BATTLE_RATE_GRD:0) / 100
+최종피데미지:1 = 최종피데미지:1 * (BATTLE_RATE_ATC:0 + 100) / 100
+최종피데미지:1 = 최종피데미지:1 * (100 - BATTLE_RATE_GRD:1) / 100
+
+;PRINTFORML 피해 적용:0 {최종피데미지:0}
+;PRINTFORML 피해 적용:1 {최종피데미지:1}
+최종피데미지:0 += 비율피데미지:0
+최종피데미지:1 += 비율피데미지:1
+
+최종피데미지:0 = 최종피데미지:0 * (100 - BATTLE_RATE_GRD_B:0) / 100
+최종피데미지:1 = 최종피데미지:1 * (100 - BATTLE_RATE_GRD_B:1) / 100
+
+;PRINTFORML 비율 적용:0 {최종피데미지:0}
+;PRINTFORML 비율 적용:1 {최종피데미지:1}
+;★
+;PRINTFORMW 비율 데미지 0:{BATTLE_RATE_DMG:0}  데미지{LOCAL:12}  요술 평가 {BATTLE_MAG:0}  방어 평가 {BATTLE_DEF:0}
+;PRINTFORMW 비율 데미지 1:{BATTLE_RATE_DMG:1}  데미지{LOCAL:13}  요술 평가 {BATTLE_MAG:1}  방어 평가 {BATTLE_DEF:1}
+
+;어느 쪽인가의병수가 0 미만이 되었을 경우, 과잉 데미지가 원의 병수에 차지하는 비율의 것 1/3만 상대의 피해를 경감. 다만 30%까지（상한으로 걸리기에는 굉장한 오버킬 하고 있는 필요가 있지만……）
+IF BATTLE_SOL:0 < 최종피데미지:0
+	과잉피데미지 = 최종피데미지:0 - BATTLE_SOL:0
+	최종피데미지:0 = BATTLE_SOL:0
+	최종피데미지:1 = 최종피데미지:1 - MIN((최종피데미지:1 * (과잉피데미지 * 10000 / BATTLE_SOL:0)) / 30000, 최종피데미지:1 * 3 / 10)
+ENDIF
+IF BATTLE_SOL:1 < 최종피데미지:1
+	과잉피데미지 = 최종피데미지:1 - BATTLE_SOL:1
+	최종피데미지:1 = BATTLE_SOL:1
+	최종피데미지:0 = 최종피데미지:0 - MIN((최종피데미지:0 * (과잉피데미지 * 10000 / BATTLE_SOL:1)) / 30000, 최종피데미지:0 * 3 / 10)
+ENDIF
+
+;PRINTFORML 경감 적용:0 {최종피데미지:0}
+;PRINTFORML 경감 적용:1 {최종피데미지:1}
+
+CALL BATTLE_ADD_TIREDNESS(ARG:0, ARG:1, ARG:2, ARG:3)
+
+BATTLE_DMG:0 = 최종피데미지:0
+BATTLE_DMG:1 = 최종피데미지:1
+
+
+;-------------------------------------------------
+;전력비계산
+;병 수가 많은 (분)편의 공격/방어가, 병수비 * 5000 - 5000만 증가한다
+;한층 더 비율 데미지를(병수비 - 1)/20만 준다
+;-------------------------------------------------
+@BATTLE_SOLDIER_RATE_CORRECTION(ARG:0, ARG:1, ARG:2, ARG:3)
+#DIM 병수비,2
+
+병수비:0 = BATTLE_SOL:0 * 100 / MAX(BATTLE_SOL:1, 1)
+병수비:1 = BATTLE_SOL:1 * 100 / MAX(BATTLE_SOL:0, 1)
+
+LOCAL = FINDELEMENT(병수비, MAXARRAY(병수비))
+
+;LOCAL:1 = MIN((병수비:LOCAL - 100)/10, 20)
+LOCAL:2 = MIN(병수비:LOCAL * 50 - 5000, 30000)
+LOCAL:3 = MIN((병수비:LOCAL - 100) / 20, 10)
+;PRINTFORML 병 수차에 의해 %BATTLE_NAME:LOCAL%군강화 강화{LOCAL:2} + 비율 데미지{LOCAL:3}％
+
+;BATTLE_ATK:LOCAL = BATTLE_ATK:LOCAL * (100 + LOCAL:1)/100
+;BATTLE_DEF:LOCAL = BATTLE_DEF:LOCAL * (100 + LOCAL:1)/100
+BATTLE_ATK:LOCAL += LOCAL:2
+BATTLE_DEF:LOCAL += LOCAL:2
+;1. 4배의 경우 4가 들어간다. 최대는 3배 때의 20
+BATTLE_RATE_DMG:LOCAL += LOCAL:3
+
+
+
+;IF 병 수비:0 > 병 수비:1
+;	BATTLE_ATK:0 = BATTLE_ATK:0 * SQRT(병수비:0 * 100)/100
+;	BATTLE_DEF:0 = BATTLE_DEF:0 * SQRT(병수비:0 * 100)/100
+;	;단지 x배라면 약한 부대가 보답받지 못하기 때문에 고정치도 더해 둔다
+;	;0. 1배 상대보다 많은 번에 500증가한다
+;	BATTLE_ATK:0 += 5000 * (병수비:0 * 10 - 1000)/1000
+;	BATTLE_DEF:0 += 5000 * (병수비:0 * 10 - 1000)/1000
+;	;1. 4배의 경우 4가 들어간다. 최대는 3배 때의 20
+;	BATTLE_RATE_DMG:0 += MIN(병수비:0/10 - 10, 20)
+;ELSE
+;	BATTLE_ATK:1 = BATTLE_ATK:1 * SQRT(병수비:1 * 100)/100
+;	BATTLE_DEF:1 = BATTLE_DEF:1 * SQRT(병수비:1 * 100)/100
+;	BATTLE_ATK:1 += 5000 * (병수비:1 * 10 - 1000)/1000
+;	BATTLE_DEF:1 += 5000 * (병수비:1 * 10 - 1000)/1000
+;	BATTLE_RATE_DMG:1 += MIN(병수비:1/10 - 10, 20)
+;ENDIF
+
+;-------------------------------------------------
+;적군 보정
+;주인공의 소속하는 세력이 적대 세력과 싸울 때, 적측에 보정을 걸친다.
+;-------------------------------------------------
+@BATTLE_DIFFICULTY_CORRECTION(ARG:0, ARG:1, ARG:2, ARG:3)
+#DIM 보정배율
+
+보정배율 = GET_DIFFICULTY_CORRECTION()
+
+;모두 주인공이 소속하지 않는 세력이면 보정은 계산하지 않는다
+SIF NOSAMES(CFLAG:MASTER:소속, ARG:0, ARG:3 < 0 ? CITY_OWNER:(ARG:2) # ARG:2)
+	보정배율 = 100
+
+;보정 계산
+IF ARG:3 < 0 ? CITY_OWNER:(ARG:2) == CFLAG:MASTER:소속 # ARG:2 == CFLAG:MASTER:소속
+	BATTLE_ATK:0 = BATTLE_ATK:0 * 보정배율 / 100
+	BATTLE_DEF:0 = BATTLE_DEF:0 * 보정배율 / 100
+	BATTLE_INT:0 = BATTLE_INT:0 * 보정배율 / 100
+	BATTLE_MAG:0 = BATTLE_MAG:0 * 보정배율 / 100
+	;오버플로우 해 부호가 반전하는 문제 대책
+	;어쩔 수 없기에 음수라면 정수의 최대치 쳐박습니다
+	SIF BATTLE_ATK:0 < 0
+		BATTLE_ATK:0 = __INT_MAX__
+	SIF BATTLE_DEF:0 < 0
+		BATTLE_DEF:0 = __INT_MAX__
+	SIF BATTLE_INT:0 < 0
+		BATTLE_INT:0 = __INT_MAX__
+	SIF BATTLE_MAG:0 < 0
+		BATTLE_MAG:0 = __INT_MAX__
+ELSEIF ARG:0 == CFLAG:MASTER:소속
+	BATTLE_ATK:1 = BATTLE_ATK:1 * 보정배율 / 100
+	BATTLE_DEF:1 = BATTLE_DEF:1 * 보정배율 / 100
+	BATTLE_INT:1 = BATTLE_INT:1 * 보정배율 / 100
+	BATTLE_MAG:1 = BATTLE_MAG:1 * 보정배율 / 100
+	;오버플로우 해 부호가 반전하는 문제 대책
+	;어쩔 수 없기에 음수라면 정수의 최대치 쳐박습니다
+	SIF BATTLE_ATK:1 < 0
+		BATTLE_ATK:1 = __INT_MAX__
+	SIF BATTLE_DEF:1 < 0
+		BATTLE_DEF:1 = __INT_MAX__
+	SIF BATTLE_INT:1 < 0
+		BATTLE_INT:1 = __INT_MAX__
+	SIF BATTLE_MAG:1 < 0
+		BATTLE_MAG:1 = __INT_MAX__
+ENDIF
+
+;-------------------------------------------------
+;난이도에 의한 보정을 취득
+;-------------------------------------------------
+@GET_DIFFICULTY_CORRECTION()
+#FUNCTION
+SELECTCASE CONFIG:314
+;EASY 용서되는 것은 초등학생까지
+CASE 0
+	RETURNF 70
+;NORMAL 변경 없음
+CASE 1
+	RETURNF 100
+;HARD 호감도로 어떻게든 할 수 있는 일도 없다
+CASE 2
+	RETURNF 120
+;LUNATIC 단련하지 않으면 무리
+CASE 3
+	RETURNF 160
+;EXTRA 아마 무리인 것이 아닐까
+CASE 4
+	RETURNF 200
+CASEELSE
+	RETURNF 100
+ENDSELECT
+
+
+;-------------------------------------------------
+;피로도에 의한 패널티
+;-------------------------------------------------
+@BATTLE_TIREDNESS_CORRECTION(ARG:0, ARG:1, ARG:2, ARG:3)
+
+IF UNIT_TIRED_COUNT:(ARG:0):(ARG:1) > 0
+	BATTLE_ATK:0 = BATTLE_ATK:0 * MAX(100 - UNIT_TIRED_COUNT:(ARG:0):(ARG:1), 0) / 100
+	BATTLE_DEF:0 = BATTLE_DEF:0 * MAX(100 - UNIT_TIRED_COUNT:(ARG:0):(ARG:1), 0) / 100
+	BATTLE_INT:0 = BATTLE_INT:0 * MAX(100 - UNIT_TIRED_COUNT:(ARG:0):(ARG:1), 0) / 100
+	BATTLE_MAG:0 = BATTLE_MAG:0 * MAX(100 - UNIT_TIRED_COUNT:(ARG:0):(ARG:1), 0) / 100
+	;PRINTFORML 피로 보정:%BATTLE_NAME:0 + "군", MAX_CHARANAME_LENGTH, LEFT% 약체{UNIT_TIRED_COUNT:(ARG:0):(ARG:1), 2}％
+ENDIF
+
+IF ARG:3 >= 0 && UNIT_TIRED_COUNT:(ARG:2):(ARG:3) > 0
+	BATTLE_ATK:1 = BATTLE_ATK:1 * MAX(100 - UNIT_TIRED_COUNT:(ARG:2):(ARG:3), 0) / 100
+	BATTLE_DEF:1 = BATTLE_DEF:1 * MAX(100 - UNIT_TIRED_COUNT:(ARG:2):(ARG:3), 0) / 100
+	BATTLE_INT:1 = BATTLE_INT:1 * MAX(100 - UNIT_TIRED_COUNT:(ARG:2):(ARG:3), 0) / 100
+	BATTLE_MAG:1 = BATTLE_MAG:1 * MAX(100 - UNIT_TIRED_COUNT:(ARG:2):(ARG:3), 0) / 100
+	;PRINTFORML 피로 보정:%BATTLE_NAME:1 + "군", MAX_CHARANAME_LENGTH, LEFT% 약체{UNIT_TIRED_COUNT:(ARG:2):(ARG:3), 2}％
+ELSEIF ARG:3 < 0 && CITY_TIRED_COUNT:(ARG:2)
+	BATTLE_ATK:1 = BATTLE_ATK:1 * MAX(100 - CITY_TIRED_COUNT:(ARG:2), 0) / 100
+	BATTLE_DEF:1 = BATTLE_DEF:1 * MAX(100 - CITY_TIRED_COUNT:(ARG:2), 0) / 100
+	BATTLE_INT:1 = BATTLE_INT:1 * MAX(100 - CITY_TIRED_COUNT:(ARG:2), 0) / 100
+	BATTLE_MAG:1 = BATTLE_MAG:1 * MAX(100 - CITY_TIRED_COUNT:(ARG:2), 0) / 100
+	;PRINTFORML 피로 보정:%BATTLE_NAME:1 + "군", MAX_CHARANAME_LENGTH, LEFT% 약체{CITY_TIRED_COUNT:(ARG:2), 2}％
+ENDIF
+
+;-------------------------------------------------
+;사관의 능력차이에 의한 보정
+;-------------------------------------------------
+@BATTLE_COMMANDER_POWER_CORRECTION(ARG:0, ARG:1, ARG:2, ARG:3)
+#DIM 무투최대,2
+#DIM 방위최대,2
+#DIM 지략최대,2
+#DIM 무투비, 2
+#DIM 방위비, 2
+#DIM 지략비, 2
+IF BATTLE_COMMANDER_NUM:0 > 0
+	무투최대:0 = MAX(BATTLE_무투파워:0:0, BATTLE_무투파워:0:1, BATTLE_무투파워:0:2, 1)
+	방위최대:0 = MAX(BATTLE_방위파워:0:0, BATTLE_방위파워:0:1, BATTLE_방위파워:0:2, 1)
+	지략최대:0 = MAX(BATTLE_지략파워:0:0, BATTLE_지략파워:0:1, BATTLE_지략파워:0:2, 1)
+ELSE
+	무투최대:0 = ABL_POWER(10, -1)
+	방위최대:0 = ABL_POWER(10, -1)
+	지략최대:0 = ABL_POWER(10, -1)
+ENDIF
+
+IF BATTLE_COMMANDER_NUM:1 > 0
+	무투최대:1 = MAX(BATTLE_무투파워:1:0, BATTLE_무투파워:1:1, BATTLE_무투파워:1:2, 1)
+	방위최대:1 = MAX(BATTLE_방위파워:1:0, BATTLE_방위파워:1:1, BATTLE_방위파워:1:2, 1)
+	지략최대:1 = MAX(BATTLE_지략파워:1:0, BATTLE_지략파워:1:1, BATTLE_지략파워:1:2, 1)
+ELSE
+	무투최대:1 = ABL_POWER(10, -1)
+	방위최대:1 = ABL_POWER(10, -1)
+	지략최대:1 = ABL_POWER(10, -1)
+ENDIF
+
+;비는 원래의 값의 100배로 한다（소수점 2 자리수시까지 보유 한다）
+무투비:0 = 무투최대:0 * 100 / 무투최대:1
+무투비:1 = 무투최대:1 * 100 / 무투최대:0
+방위비:0 = 방위최대:0 * 100 / 방위최대:1
+방위비:1 = 방위최대:1 * 100 / 방위최대:0
+지략비:0 = 지략최대:0 * 100 / 지략최대:1
+지략비:1 = 지략최대:1 * 100 / 지략최대:0
+
+;보정은 비 0.1마다 5%
+LOCAL = FINDELEMENT(무투비, MAXARRAY(무투비))
+LOCAL:1 = MIN((무투비:LOCAL - 100) / 2, 50)
+BATTLE_ATK:LOCAL = BATTLE_ATK:LOCAL * (100 + LOCAL:1) / 100
+;PRINTFORML 무투보정:%BATTLE_NAME:LOCAL + "군", MAX_CHARANAME_LENGTH, LEFT% 공격 강화{LOCAL:1, 2}％
+LOCAL = FINDELEMENT(방위비, MAXARRAY(방위비))
+LOCAL:1 = MIN((방위비:LOCAL - 100) / 2, 50)
+BATTLE_DEF:LOCAL = BATTLE_DEF:LOCAL * (100 + LOCAL:1) / 100
+;PRINTFORML 방위 보정:%BATTLE_NAME:LOCAL + "군", MAX_CHARANAME_LENGTH, LEFT% 방어 강화{LOCAL:1, 2}％
+
+LOCAL = FINDELEMENT(지략비, MAXARRAY(지략비))
+LOCAL:1 = MIN((지략비:LOCAL - 100) / 2, 50)
+BATTLE_INT:LOCAL = BATTLE_INT:LOCAL * (100 + LOCAL:1) / 100
+;PRINTFORML 지략 보정:%BATTLE_NAME:LOCAL + "군", MAX_CHARANAME_LENGTH, LEFT% 지략 강화{LOCAL:1, 2}％
+
+;-------------------------------------------------
+;계략이 발동하는지를 판정한다
+;-------------------------------------------------
+@BATTLE_SCHEME(ARG:0, ARG:1, ARG:2, ARG:3)
+#DIM SCHEME_BASE
+#DIM 발동자
+#DIM 공격측지략
+#DIM 방어측지략
+
+;방어측은 도시였던 경우 썩둑 1.5배가 되어 3명 있는 것과 억지로 간주한다
+공격측지략 = BATTLE_INT:0
+방어측지략 = BATTLE_INT:1
+SIF ARG:3 < 0
+	TIMES 방어측지략, 1.5
+
+;기준치는 능력 20의 무장의 수로부터 산출하는 도시전에 있어서는 4명 있는 것으로서 발생하기 어렵고
+SCHEME_BASE = ABL_POWER(20, -1) * (ARG:3 < 0 ? 4 # 3)
+
+;BATTLE_FORCE_SCHEME에 의한 강제 책략
+IF BATTLE_FORCE_SCHEME == 0
+	CALL TRY_SCHEME(0, 1, ARG:0, ARG:1, ARG:2, ARG:3)
+	RETURN
+ELSEIF BATTLE_FORCE_SCHEME == 1
+	CALL TRY_SCHEME(1, 0, ARG:2, ARG:3, ARG:0, ARG:1)
+	RETURN
+ENDIF
+
+;양군의 차이가 큰 만큼 발생하기 쉬워진다
+IF MAX(공격측지략, 방어측지략) - MIN(공격측지략, 방어측지략) >= RAND:SCHEME_BASE
+	발동자 = 공격측지략 > 방어측지략 ? 0 # 1
+	;계략의 발동
+	CALL TRY_SCHEME(발동자, !발동자, ARG:0, ARG:1, ARG:2, ARG:3)
+ENDIF
+
+;-------------------------------------------------
+;피로도의 산출 처리
+;상대측의 무장수+1가 가산치가 된다（수장은 두 명분 ）
+;LOCAL 36:무장 카운터 37:공격측의 무장수 38:방어측의 무장수
+;덧붙여 이 값은 콘피그로 미사용의 설정에서도 내부적으로 보유 시킨다
+;-------------------------------------------------
+@BATTLE_ADD_TIREDNESS(ARG:0, ARG:1, ARG:2, ARG:3)
+#DIM 공격측피로도
+#DIM 방어측피로도
+
+;최악이어도 1
+공격측피로도 = 1
+방어측피로도 = 1
+
+FOR LOCAL , 0 , 3
+	SIF GET_UNIT_COMMANDER(ARG:0 , ARG:1 , LOCAL) > 0
+		방어측피로도 ++
+NEXT
+
+FOR LOCAL, 0, ARG:3 >= 0 ? 3 # 2
+	SIF ARG:3 >= 0 && GET_UNIT_COMMANDER(ARG:2 , ARG:3 , LOCAL) > 0
+		공격측피로도 += 1
+	SIF ARG:3 < 0 && GET_CITY_COMMANDER(ARG:2 , LOCAL) > 0
+		공격측피로도 += 2
+
+NEXT
+UNIT_TIRED_COUNT:(ARG:0):(ARG:1) += 공격측피로도
+IF ARG:3 >= 0
+	UNIT_TIRED_COUNT:(ARG:2):(ARG:3) += 방어측피로도 
+ELSE
+	CITY_TIRED_COUNT:(ARG:2) += 방어측피로도
+ENDIF
+
+
+;-------------------------------------------------
+;우선해 발동하는 특수 계략의 처리
+;인수 0～1에는 계산용 변수의 배열 번호(0 or 1)를 취하는 ARG:0=계략 발동측 ARG:1=대상측
+;인수 2:발동측 세력 3:발동측 부대 4:대상세력 5:대상 부대
+;※ARG:3, ARG:5가 0 미만의 경우는 방위 부대로 간주해, 각각 ARG:2, ARG:4를 도시 번호로서 사용
+;-------------------------------------------------
+@BATTLE_SP_SKILL(발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동측
+#DIM 대상측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상세력
+#DIM 대상부대
+#DIM 발동측캐릭터, 3
+#DIM 대상측캐릭터, 3
+#DIM 발동캐릭터
+#DIM 대상캐릭터
+#DIM 발동캐릭터소질
+#DIM 셔플보존, MAX_UNIT_COMMANDER
+
+대상측 = !발동측
+
+SIF BATTLE_COMMANDER_NUM:발동측 == 0
+	RETURN 
+
+CALL FISHER_YATES_SHAFFLE(BATTLE_COMMANDER_NUM:발동측)
+
+FOR LOCAL:0, 0, BATTLE_COMMANDER_NUM:발동측
+	셔플보존:LOCAL = SHAFFLE_ARRAY:LOCAL
+NEXT
+
+
+FOR LOCAL:0, 0, BATTLE_COMMANDER_NUM:발동측
+	발동캐릭터 = BATTLE_COMMANDER:(발동측):(셔플보존:LOCAL)
+	SIF 발동캐릭터 < 0 || BATTLE_SKILL_SEALED:(발동측):(셔플보존:LOCAL) || BATTLE_SUMMONED_CHARA:(발동측):(셔플보존:LOCAL)
+		CONTINUE
+	CALL SKILL_COMBAT_INVOKE(발동캐릭터, 셔플보존:LOCAL, 스킬_장르_SP, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+NEXT
+
+
+;-------------------------------------------------
+;우선해 발동하는 특수 계략의 처리
+;인수 0～1에는 계산용 변수의 배열 번호(0 or 1)를 취하는 ARG:0=계략 발동측 ARG:1=대상측
+;※부대가 0 미만의 경우 방위 부대로 간주해, 세력을 도시 번호로서 사용
+;-------------------------------------------------
+@BATTLE_BASE_SKILL(발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 세력
+#DIM 부대
+#DIM 발동측
+#DIM 대상측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상세력
+#DIM 대상부대
+#DIM 발동측캐릭터, 3
+#DIM 대상측캐릭터, 3
+#DIM 발동캐릭터
+#DIM 대상캐릭터
+#DIM 발동캐릭터소질
+#DIM 셔플보존, MAX_UNIT_COMMANDER
+VARSET 발동측캐릭터, -1
+VARSET 대상측캐릭터, -1
+
+대상측 = !발동측
+
+SIF BATTLE_COMMANDER_NUM:발동측 == 0
+	RETURN 
+
+CALL FISHER_YATES_SHAFFLE(BATTLE_COMMANDER_NUM:발동측)
+
+FOR LOCAL:0, 0, BATTLE_COMMANDER_NUM:발동측
+	셔플보존:LOCAL = SHAFFLE_ARRAY:LOCAL
+NEXT
+
+FOR LOCAL:0, 0, BATTLE_COMMANDER_NUM:발동측
+	발동캐릭터 = BATTLE_COMMANDER:(발동측):(셔플보존:LOCAL)
+	SIF 발동캐릭터 < 0 || BATTLE_SKILL_SEALED:(발동측):(셔플보존:LOCAL) || BATTLE_SUMMONED_CHARA:(발동측):(셔플보존:LOCAL)
+		CONTINUE
+	CALL SKILL_COMBAT_INVOKE(발동캐릭터, 셔플보존:LOCAL, 스킬_장르_BASE, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+NEXT
+
+;-------------------------------------------------
+;계략의 발동
+;인수 0～1에는 계산용 변수의 배열 번호(0 or 1)를 취하는 ARG:0=계략 발동측 ARG:1=대상측
+;인수 2:발동측 세력 3:발동측 부대 4:대상세력 5:대상 부대
+;-------------------------------------------------
+@TRY_SCHEME(발동측, 대상측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동측
+#DIM 대상측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상세력
+#DIM 대상부대
+#DIM 통찰캐릭터
+
+
+PRINTFORML %BATTLE_NAME:(발동측)%군의 계략 발동!
+
+
+;발동 세력 세력 부대의《관계》판정(무력)
+IF RAND:MAX(BATTLE_ATK:(대상측), 1) + BATTLE_ATK:(대상측) >= RAND:MAX(BATTLE_INT:(발동측) * 3, 1) + BATTLE_INT:(발동측)
+	PRINTFORM 《관계》
+	PRINTDATAL
+		DATAFORM %BATTLE_NAME:(대상측)%군은 힘으로 %BATTLE_NAME:(발동측)%군의 계략을 꺾어누르고 무효화했다
+		DATAFORM %BATTLE_NAME:(대상측)%군은 %BATTLE_NAME:(발동측)%군의 계략을 압도적인 힘으로 무효화했다
+		DATAFORM %BATTLE_NAME:(발동측)%군의 계략은 %BATTLE_NAME:(대상측)%군이 가지는 힘의 전에서는 무의미했다
+	ENDDATA
+	BATTLE_RATE_DMG:대상측 += 5
+	BATTLE_RATE_ATC:대상측 += 30
+	BATTLE_RATE_GRD:대상측 += 30
+	IF 발동세력 == CFLAG:MASTER:소속 || 대상세력 == CFLAG:MASTER:소속
+		CALL WHOES_SCHEME(대상측, 대상세력, 대상부대, GETNUM(ABL, "무투"))
+		IF RESULT >= 0
+			;구상의 표시
+			CALL KOJO_EVENT(RESULT, 312)
+		ENDIF
+	ENDIF
+ELSE
+	;통찰의 발동 판정
+	FOR LOCAL, 0, BATTLE_COMMANDER_NUM:대상측
+		통찰캐릭터 = BATTLE_COMMANDER:대상측:LOCAL
+		SIF 통찰캐릭터 < 0 || BATTLE_SKILL_SEALED:대상측:(LOCAL:0) || BATTLE_SUMMONED_CHARA:(발동측):(LOCAL:0)
+			CONTINUE
+		IF FIND_PASSIVE_SKILL(통찰캐릭터, "통찰") && 30 > RAND:100
+			PRINTFORM 《통찰》
+			PRINTFORML %ANAME(통찰캐릭터)%는 적부대의 계략을 간파했다
+			BATTLE_RATE_DMG:대상측 += 10
+			BATTLE_RATE_ATC:대상측 += 25
+			BATTLE_RATE_GRD:대상측 += 20
+			RETURN
+		ENDIF
+	NEXT
+	;다니면 계략의 선택
+	CALL SELECT_SCHEME(발동측, 대상측)
+	IF 발동세력 == CFLAG:MASTER:소속 || 대상세력 == CFLAG:MASTER:소속
+		CALL WHOES_SCHEME(발동측, 발동세력, 발동부대, GETNUM(ABL, "지략"))
+		IF RESULT >= 0
+			;구상의 표시
+			CALL KOJO_EVENT(RESULT, 310)
+		ENDIF
+	ENDIF
+ENDIF
+
+
+;-------------------------------------------------
+;어느 캐릭터가 계략을 발동시켰는지 결정하는 함수(구상 표시의 대상을 결정한다)
+;인수 0에는 계산용 변수의 배열 번호(0 or 1)를 취하는 ARG:0=계략 발동측
+;인수 1:발동측 세력(or도시) 2:발동측 부대 3:관련 능력
+;-------------------------------------------------
+@WHOES_SCHEME(ARG:0, ARG:1, ARG:2, ARG:3)
+VARSET LOCAL, 0
+FOR LOCAL:0, 0, 3
+	IF BATTLE_F_UNIT:(ARG:0)
+		LOCAL:2 = GET_UNIT_COMMANDER(ARG:1, ARG:2, LOCAL:0)
+	ELSE
+		IF LOCAL:0 >= 2
+			BREAK
+		ELSE
+			LOCAL:2 = GET_CITY_COMMANDER(ARG:1, LOCAL:0)
+		ENDIF
+	ENDIF
+
+	IF LOCAL:2 >= 0
+		LOCAL:(LOCAL:0 + 10) = LOCAL:2
+		LOCAL:(LOCAL:0 + 20) = ABL_POWER(ABL:(LOCAL:2):(ARG:3), LOCAL:2)
+	ELSE
+		LOCAL:(LOCAL:0 + 10) = -1
+	ENDIF
+NEXT
+
+LOCAL:6 = MAX(LOCAL:20, LOCAL:21, LOCAL:22)
+LOCAL:7 = 0
+
+IF LOCAL:6 <= 0
+	RETURN -1
+ENDIF
+
+FOR LOCAL:0, 0, 3
+	LOCAL:(LOCAL:0 + 20) = MAX(LOCAL:(LOCAL:0 + 20) * 8 / LOCAL:6 - 4, 0)
+	LOCAL:7 += LOCAL:(LOCAL:0 + 20)
+NEXT
+
+LOCAL:8 = RAND:(LOCAL:7)
+
+FOR LOCAL:0, 0, 3
+	LOCAL:8 -= LOCAL:(LOCAL:0 + 20)
+	IF LOCAL:8 < 0
+		RETURN LOCAL:(LOCAL:0 + 10)
+	ENDIF
+NEXT
+RETURN -1
+
+;-------------------------------------------------
+;지략 파워에 응한 계략의 선택
+;인수에는 계산용 변수의 배열 번호(0 or 1)를 취하는 ARG:0=계략 발동측 ARG:1=대상측
+;-------------------------------------------------
+@SELECT_SCHEME(ARG:0, ARG:1)
+#DIM TINT
+TINT = BATTLE_INT:(ARG:0) - BATTLE_INT:(ARG:1)
+
+{
+SELECTCASE IFRAND("0, 1", 1, "2", TINT >= ABL_POWER(50, -1), "3", TINT >= ABL_POWER(70, -1), "4", TINT >= ABL_POWER(75, -1), "5", TINT >= ABL_POWER(85, -1),
+ "6", TINT >= ABL_POWER(90, -1), "7", TINT >= ABL_POWER(100, -1), "8, 9", TINT >= ABL_POWER(110, -1))
+}
+	CASE 0
+		PRINTFORML %BATTLE_NAME:(ARG:0)%군은 %BATTLE_NAME:(ARG:1)%군을 도발해, 성으로부터 토벌해 내게 했다
+		BATTLE_RATE_DMG:(ARG:0) += 0
+		BATTLE_RATE_ATC:(ARG:0) += 60
+		BATTLE_RATE_GRD:(ARG:0) += 0
+	CASE 1
+		PRINTFORML %BATTLE_NAME:(ARG:0)%군은 %BATTLE_NAME:(ARG:1)%군의 선봉 부대를 꾀어내 고립시켜, 우위에 전투를 진행시켰다
+		BATTLE_RATE_DMG:(ARG:0) += 0
+		BATTLE_RATE_ATC:(ARG:0) += 50
+		BATTLE_RATE_GRD:(ARG:0) += 25
+	CASE 2
+		PRINTFORML %BATTLE_NAME:(ARG:0)%군은 %BATTLE_NAME:(ARG:1)%군이 내민 부대를 포위해 각개 격파 했다
+		BATTLE_RATE_DMG:(ARG:0) += 0
+		BATTLE_RATE_ATC:(ARG:0) += 60
+		BATTLE_RATE_GRD:(ARG:0) += 30
+	CASE 3
+		PRINTFORML %BATTLE_NAME:(ARG:0)%군은 %BATTLE_NAME:(ARG:1)%군에 야습을 걸어 전과를 올렸다
+		BATTLE_RATE_DMG:(ARG:0) += 0
+		BATTLE_RATE_ATC:(ARG:0) += 70
+		BATTLE_RATE_GRD:(ARG:0) += 30
+	CASE 4
+		PRINTFORML %BATTLE_NAME:(ARG:0)%군은 %BATTLE_NAME:(ARG:1)%군의 부대를 분단 해 지휘 계통을 혼란시켰다
+		BATTLE_RATE_DMG:(ARG:0) += 2
+		BATTLE_RATE_ATC:(ARG:0) += 80
+		BATTLE_RATE_GRD:(ARG:0) += 40
+	CASE 5
+		PRINTFORML %BATTLE_NAME:(ARG:0)%군은 내통자를 이용해 %BATTLE_NAME:(ARG:1)%군을 교란했다
+		BATTLE_RATE_DMG:(ARG:0) += 4
+		BATTLE_RATE_ATC:(ARG:0) += 80
+		BATTLE_RATE_GRD:(ARG:0) += 50
+	CASE 6
+		PRINTFORML %BATTLE_NAME:(ARG:0)%군은 %BATTLE_NAME:(ARG:1)%군을 유리한 지형으로 끌어들여 대타격을 주었다
+		BATTLE_RATE_DMG:(ARG:0) += 12
+		BATTLE_RATE_ATC:(ARG:0) += 70
+		BATTLE_RATE_GRD:(ARG:0) += 70
+	CASE 7
+		PRINTFORML %BATTLE_NAME:(ARG:0)%군은 병기를 이용해 %BATTLE_NAME:(ARG:1)%군에 대공세를 걸었습니다
+		BATTLE_RATE_DMG:(ARG:0) += 5
+		BATTLE_RATE_ATC:(ARG:0) += 120
+		BATTLE_RATE_GRD:(ARG:0) += 60
+	CASE 8
+		PRINTFORML %BATTLE_NAME:(ARG:0)%군은 주도한 책모에 의해 %BATTLE_NAME:(ARG:1)%군을 동지사이의 싸움시키는 것을 성공했다
+		BATTLE_RATE_DMG:(ARG:0) += 20
+		BATTLE_RATE_ATC:(ARG:0) += 60
+		BATTLE_RATE_GRD:(ARG:0) += 80
+	CASE 9
+		PRINTFORML %BATTLE_NAME:(ARG:0)%군은 %BATTLE_NAME:(ARG:1)%군의 치졸한 책을 반대로 이용했다
+		BATTLE_RATE_DMG:(ARG:0) += 20
+		BATTLE_RATE_ATC:(ARG:0) += 80
+		BATTLE_RATE_GRD:(ARG:0) += 80
+ENDSELECT
+
+;-------------------------------------------------
+;부대 괴멸시의 일련의 처리
+;-------------------------------------------------
+@UNIT_BREAK(승리측, 승리세력, 승리부대, 패배세력, 패배부대)
+
+#DIM 승리측
+#DIM 패배측
+#DIM 승리세력
+#DIM 승리부대
+#DIM 패배세력
+#DIM 패배부대
+
+;승리측·패배측의 세력 번호
+#DIM COUNTRY_W
+#DIM COUNTRY_L
+
+패배측 = !승리측
+
+COUNTRY_W = (승리부대 >= 0 ? 승리세력 # CITY_OWNER:(승리세력))
+COUNTRY_L = (패배부대 >= 0 ? 패배세력 # CITY_OWNER:(패배세력))
+
+;소환 캐릭터는 관련되지 않는다
+FOR LOCAL, 0, BATTLE_COMMANDER_NUM:승리측
+	SIF BATTLE_SUMMONED_CHARA:승리측:LOCAL
+		BATTLE_COMMANDER:승리측:LOCAL = -1
+NEXT
+
+;소환 캐릭터는 관련되지 않는다
+FOR LOCAL, 0, BATTLE_COMMANDER_NUM:패배측
+	SIF BATTLE_SUMMONED_CHARA:패배측:LOCAL
+		BATTLE_COMMANDER:패배측:LOCAL = -1
+NEXT
+
+CALL UNIT_BREAK_DIE(승리측, 승리세력, 승리부대, 패배세력, 패배부대, COUNTRY_W, COUNTRY_L)
+CALL UNIT_BREAK_CAPTURE(승리측, 승리세력, 승리부대, 패배세력, 패배부대, COUNTRY_W, COUNTRY_L)
+CALL UNIT_BREAK_GROW(승리측, 승리세력, 승리부대, 패배세력, 패배부대, COUNTRY_W, COUNTRY_L)
+;-------------------------------------------------
+;부대 괴멸시의 사관의 사망
+;ARG:0=승리한 세력 ARG:1=승리한 부대의 번호 ARG:2=패배한 세력 패배 부대=패배한 부대의 번호
+;※ARG:1, 패배 부대가 부 때는 ARG:0, ARG:2를 도시 번호로 간주한다
+;-------------------------------------------------
+@UNIT_BREAK_DIE(승리측, 승리세력, 승리부대, 패배세력, 패배부대, COUNTRY_W, COUNTRY_L)
+
+#DIM 승리측
+#DIM 패배측
+#DIM 승리세력
+#DIM 승리부대
+#DIM 패배세력
+#DIM 패배부대
+
+;전사율
+#DIM DEATH_RATE
+
+;승리측·패배측의 세력 번호
+#DIM COUNTRY_W
+#DIM COUNTRY_L
+
+패배측 = !승리측
+
+;전사 설정이 무효인들 되돌린다
+SIF CONFIG:305 <= 0
+	RETURN 
+
+;설정에 응한 전사율을 설정(DEATH_RATE/1000)
+IF CONFIG:305 == 3
+	DEATH_RATE = 250
+ELSEIF CONFIG:305 == 2
+	DEATH_RATE = 100
+ELSE
+	DEATH_RATE = 20
+ENDIF
+FOR LOCAL:0, BATTLE_COMMANDER_NUM:패배측 - 1, -1, -1
+	LOCAL:4 = BATTLE_COMMANDER:패배측:LOCAL
+	;전사 판정. 덧붙여 스킬로 불린 캐릭터와 군주 및 이벤트 캐릭터(NO가 2000이상)는 전사하지 않는다
+	SIF LOCAL:4 < 0 || LOCAL:4 == GET_COUNTRY_BOSS(COUNTRY_L) || IS_SP_CHARA(LOCAL:4) || DEATH_RATE <= RAND:1000
+		CONTINUE
+	;고정 캐릭터 죽지 않는 설정이라면 고정 캐릭터는 하지 않는 있고
+	SIF CONFIG:309 == 1 && IS_FIXED_CHARA(LOCAL:4)
+		CONTINUE
+	IF LOCAL:4 == MASTER
+		SETCOLOR 칼라_경고
+		PRINTFORML %조사처리(ANAME(LOCAL:4),"는")% 전사했습니다…
+		RESETCOLOR
+		;전사 엔드 플래그
+		FLAG:전사엔드플래그 = 1
+	ELSE
+		;전사 구상
+		CALL KOJO_EVENT(LOCAL:4, 337)
+
+		IF COUNTRY_W == CFLAG:MASTER:소속
+			SETCOLOR 칼라_경고
+			PRINTFORML %ANAME(LOCAL:4)%를 죽였습니다!
+			RESETCOLOR
+		ELSEIF COUNTRY_L == CFLAG:MASTER:소속
+			SETCOLOR 칼라_경고
+			PRINTFORMW %조사처리(ANAME(LOCAL:4),"는")% 전사했습니다…
+			RESETCOLOR
+		ELSE
+			SETCOLOR 칼라_경고
+			PRINTFORML %조사처리(ANAME(LOCAL:4),"는")% 전사한 것 같습니다
+			RESETCOLOR
+		ENDIF
+	ENDIF
+	;BATTLE_COMMANDER를 조작해 두지 않으면 CAPTURE계 스킬로 죽은 캐릭터가 대상이 될 수 있다
+	CALL BATTLE_COMMANDER_WITHDRAWAL(패배측, LOCAL)
+	CALL CHANGE_COUNTRY(LOCAL:4, 0, 1, 1)
+NEXT
+
+
+;-------------------------------------------------
+;부대 괴멸시의 사관의 포획
+;ARG:0=승리한 세력 ARG:1=승리한 부대의 번호 ARG:2=패배한 세력 패배 부대=패배한 부대의 번호
+;※ARG:1, 패배 부대가 부 때는 ARG:0, ARG:2를 도시 번호로 간주한다
+;-------------------------------------------------
+@UNIT_BREAK_CAPTURE(승리측, 승리세력, 승리부대, 패배세력, 패배부대, COUNTRY_W, COUNTRY_L)
+
+#DIM 승리측
+#DIM 패배측
+#DIM 승리세력
+#DIM 승리부대
+#DIM 패배세력
+#DIM 패배부대
+
+;승리측·패배측의 세력 번호
+#DIM COUNTRY_W
+#DIM COUNTRY_L
+
+#DIM 능력합계, 2
+
+
+패배측 = !승리측
+
+
+VARSET CAPTURE_RATE, 0
+VARSET 능력합계, 0
+
+FOR LOCAL, 0, BATTLE_COMMANDER_NUM:승리측
+	SIF BATTLE_COMMANDER:승리측:LOCAL < 0
+		CONTINUE
+	능력합계:승리측 += BATTLE_무투:승리측:LOCAL
+	능력합계:승리측 += BATTLE_지략:승리측:LOCAL
+NEXT
+
+FOR LOCAL, 0, BATTLE_COMMANDER_NUM:패배측
+	SIF BATTLE_COMMANDER:패배측:LOCAL < 0
+		CONTINUE
+	능력합계:패배측 += BATTLE_무투:패배측:LOCAL
+	능력합계:패배측 += BATTLE_지략:패배측:LOCAL
+NEXT
+
+FOR LOCAL:0, 0, BATTLE_COMMANDER_NUM:패배측
+	LOCAL:4 = BATTLE_COMMANDER:패배측:LOCAL
+	SIF !CAN_CAPTURE(LOCAL:4)
+		CONTINUE
+	CAPTURE_RATE:LOCAL += (300 - BATTLE_무투:패배측:LOCAL * 2 + BATTLE_지략:패배측:LOCAL) * 10 / 3 / 3
+	CAPTURE_RATE:LOCAL += LIMIT(능력합계:승리측 - 능력합계:패배측, -200, 200)
+	CAPTURE_RATE:LOCAL += (BATTLE_COMMANDER_NUM:승리측 - BATTLE_COMMANDER_NUM:패배측) * 50
+	SELECTCASE CONFIG:306
+		CASE 1
+			;낮다
+			TIMES CAPTURE_RATE:LOCAL, 0.5
+			;CAPTURE_RATE:LOCAL = MAX(CAPTURE_RATE:LOCAL, 5, 50)
+		CASEELSE
+			;소의 값
+			;CAPTURE_RATE:LOCAL = LIMIT(CAPTURE_RATE:LOCAL, 10, 80)
+	ENDSELECT
+	;상대가 특수 세력으로, 그 세력에 떨어지고 있는 경우, 드체크소 잡히기 쉬워진다
+	SIF IS_SP_COUNTRY(COUNTRY_W) && GETBIT(TALENT:(LOCAL:4):특수세력함락계, SP_COUNTRY_TO_CONST(COUNTRY_W))
+		CAPTURE_RATE:LOCAL = 800
+NEXT
+
+;승리측·패배측 스킬 사용
+;다만 콘피그로 100％도망·100％포박으로 하고 있는 경우는 스킵
+SIF GROUPMATCH(CONFIG:306, 2, 3)
+	GOTO CAPTURE_SKILL_USED
+
+FOR LOCAL:0, 0, BATTLE_COMMANDER_NUM:승리측
+	LOCAL:1 = BATTLE_COMMANDER:승리측:LOCAL
+	SIF LOCAL:1 < 0 || BATTLE_SKILL_SEALED:승리측:(LOCAL:0) || BATTLE_SUMMONED_CHARA:승리측:(LOCAL:0)
+		CONTINUE
+	CALL SKILL_COMBAT_INVOKE(LOCAL:1, LOCAL, 스킬_장르_CAPTURE, 승리측, 승리세력, 승리부대, 패배세력, 패배부대)
+NEXT
+
+FOR LOCAL:0, 0, BATTLE_COMMANDER_NUM:패배측
+	LOCAL:1 = BATTLE_COMMANDER:패배측:LOCAL
+	SIF	!CAN_CAPTURE(LOCAL:1)
+		CONTINUE
+	CALL SKILL_COMBAT_INVOKE(LOCAL:1, LOCAL, 스킬_장르_ESCAPE, 패배측, 패배세력, 패배부대, 승리세력, 승리부대)
+NEXT
+
+$CAPTURE_SKILL_USED
+
+FOR LOCAL, 0, BATTLE_COMMANDER_NUM:패배측
+	;포박 판정
+	LOCAL:4 = BATTLE_COMMANDER:패배측:LOCAL
+	SIF LOCAL:4 < 0
+		CONTINUE
+	IF CAN_CAPTURE(LOCAL:4) && RAND:1000 < CAPTURE_RATE:LOCAL 
+		IF IS_SP_COUNTRY(COUNTRY_W) && GETBIT(TALENT:(LOCAL:4):특수세력함락계, SP_COUNTRY_TO_CONST(COUNTRY_W))
+			CALL COLOR_PRINTW(@"%조사처리(ANAME(LOCAL:4),"는")% 스스로 잡혔습니다", 칼라_경고)
+		ELSEIF COUNTRY_L == CFLAG:MASTER:소속
+			CALL COLOR_PRINTW(@"%조사처리(ANAME(LOCAL:4),"는")% 잡혔습니다…", 칼라_경고)
+		ELSEIF COUNTRY_W == CFLAG:MASTER:소속
+			CALL COLOR_PRINTW(@"%ANAME(LOCAL:4)%를 잡았습니다!", 칼라_주의)
+		ELSE
+			PRINTFORML %조사처리(ANAME(LOCAL:4),"는")% 잡힌 모양입니다
+		ENDIF
+		;포로의취급을 결정
+		CALL TREAT_PRISONER(LOCAL:4, COUNTRY_L, COUNTRY_W)
+		;해방했다면 자세력에 돌아와 받는다
+		IF RESULT == 1
+			CFLAG:(LOCAL:4):특수상태 = 0
+		;처형했다면 무소속에
+		ELSEIF RESULT == 3
+			CALL CHANGE_COUNTRY(LOCAL:4, 0, 0, 1)
+		ENDIF
+	;도주했을 경우
+	ELSE
+		IF COUNTRY_L == CFLAG:MASTER:소속
+			PRINTFORML %조사처리(ANAME(LOCAL:4),"는")% 어떻게든 도망갔습니다
+		ELSEIF COUNTRY_W == CFLAG:MASTER:소속
+			PRINTFORML %조사처리(ANAME(LOCAL:4),"는")% 도주한 것 같습니다…
+		ELSE
+			PRINTFORML %조사처리(ANAME(LOCAL:4),"는")% 도주한 모양입니다
+		ENDIF
+		;25%의 확률로 부상
+		SIF RAND:4
+			CONTINUE
+		CALL SET_COOLTIME(LOCAL:4, RAND:3 + 2)
+		;봉래인은 1/3의 확률로 상처를 무효화
+		IF HAS_TAG(LOCAL:4, 태그_봉래인) && !RAND:3
+			COOLTIME:(LOCAL:4):0 = 0
+			SETCOLOR 칼라_소질발동
+			PRINTFORML 봉래인인 %ANAME(LOCAL:4)%의 상처는, 눈 깜짝할 순간에 막혔다
+			PRINTFORML 쿨 타임이 무효화되었다
+			RESETCOLOR
+			CONTINUE
+		ENDIF
+		RESETCOLOR
+		LOCAL:5 = 0
+		FOR LOCAL:1, 0, BATTLE_COMMANDER_NUM:패배측
+			LOCAL:2 = BATTLE_COMMANDER:패배측:(LOCAL:1)
+			SIF LOCAL:2 < 0
+				CONTINUE
+			SIF !FIND_PASSIVE_SKILL(LOCAL:2, "치료")
+				CONTINUE
+			;치료 소유가 같은 부대에 있으면 확률로, 본인의 경우는 확정으로, 부상을 경감한다
+			IF COOLTIME:(LOCAL:4):0 > 1 && (LOCAL:2 == LOCAL:4 || RAND:100 < 15)
+				COOLTIME:(LOCAL:4):0 = MAX(COOLTIME:(LOCAL:4):0 - 2, 1)
+				SETCOLOR 칼라_스킬발동
+				PRINTFORML %ANAME(LOCAL:2)%의 치료로, %ANAME(LOCAL:4)%의 상처가 가벼워졌다
+				PRINTFORML 전치{COOLTIME:(LOCAL:4):0}턴이 되었다!
+				RESETCOLOR
+			ENDIF
+		NEXT
+	ENDIF
+NEXT
+
+
+;-------------------------------------------------
+;부대 괴멸시의 승리측 무장의 성장 처리
+;ARG:0=승리한 세력 ARG:1=승리한 부대의 번호 ARG:2=패배한 세력 패배 부대=패배한 부대의 번호
+;※ARG:1, 패배 부대가 부 때는 ARG:0, ARG:2를 도시 번호로 간주한다
+;-------------------------------------------------
+@UNIT_BREAK_GROW(승리측, 승리세력, 승리부대, 패배세력, 패배부대, COUNTRY_W, COUNTRY_L)
+
+#DIM 승리측
+#DIM 패배측
+#DIM 승리세력
+#DIM 승리부대
+#DIM 패배세력
+#DIM 패배부대
+
+;승리측·패배측의 세력 번호
+#DIM COUNTRY_W
+#DIM COUNTRY_L
+
+VARSET GROW_ABL
+VARSET GROW_AMOUNT
+
+패배측 = !승리측
+
+FOR LOCAL,0, BATTLE_COMMANDER_NUM:승리측
+	LOCAL:1 = BATTLE_COMMANDER:승리측:LOCAL
+	SIF LOCAL:1 < 0
+		CONTINUE
+	;상승 능력의 산출
+	SELECTCASE IFRAND("0TO99", 1, "100TO109", TALENT:(LOCAL:1):요술지식)
+		CASE IS < 25
+			GROW_ABL:LOCAL = GETNUM(ABL, "무투")
+		CASE IS < 50
+			GROW_ABL:LOCAL = GETNUM(ABL, "방위")
+		CASE IS < 70
+			GROW_ABL:LOCAL = GETNUM(ABL, "지략")
+		CASE IS < 80
+			GROW_ABL:LOCAL = GETNUM(ABL, "정치")
+		CASE IS < 90
+			GROW_ABL:LOCAL = GETNUM(ABL, "가창")
+		CASE IS < 100
+			GROW_ABL:LOCAL = GETNUM(ABL, "요리")
+		CASEELSE
+			GROW_ABL:LOCAL = GETNUM(ABL, "요술")
+	ENDSELECT
+
+	LOCAL:2 = ABLUP_NEED_EXP_SLG(ABL:(LOCAL:1):(GROW_ABL:LOCAL))
+	SELECTCASE ABL:(LOCAL:1):(GROW_ABL:LOCAL)
+		CASE IS >= 랭크역치:랭크_ＳＬＧ:랭크_A
+			GROW_AMOUNT:LOCAL = 0
+		CASE IS >= 랭크역치:랭크_ＳＬＧ:랭크_B
+			GROW_AMOUNT:LOCAL = RAND(0, LOCAL:2 / 2)
+		CASE IS >= 랭크역치:랭크_ＳＬＧ:랭크_C
+			GROW_AMOUNT:LOCAL = RAND(0, LOCAL:2)
+		CASE IS >= 랭크역치:랭크_ＳＬＧ:랭크_F
+			GROW_AMOUNT:LOCAL = RAND(0, LOCAL:2 * 2)
+		CASEELSE
+			GROW_AMOUNT:LOCAL = RAND(LOCAL:2, LOCAL:2 * 3)
+	ENDSELECT
+	;요술의 경우는 필요경험치가 3 능력의 20배인 것으로, 20배로
+	SIF GROW_ABL:LOCAL == GETNUM(ABL, "요술")
+		GROW_AMOUNT:LOCAL *= 20
+
+	SIF FIND_PASSIVE_SKILL(LOCAL:1, "노력가")
+		GROW_AMOUNT:LOCAL += RAND(0, LOCAL:2)
+	IF TALENT:(LOCAL:1):습득빠름
+		SELECTCASE RAND:100
+			CASE IS < 20
+				GROW_AMOUNT:LOCAL += RAND(0, LOCAL:2 / 2)
+			CASE IS < 30
+				GROW_AMOUNT:LOCAL += RAND(LOCAL:2 / 2 , LOCAL:2)
+		ENDSELECT
+	ENDIF
+NEXT
+
+FOR LOCAL, 0, BATTLE_COMMANDER_NUM:승리측
+	SIF GROW_AMOUNT:LOCAL <= 0
+		CONTINUE
+	SIF BATTLE_COMMANDER:승리측:LOCAL < 0
+		CONTINUE
+	;본래의 필요경험치의 100배가 들어가 있으므로, 100으로 나누어 둔다
+	GROW_AMOUNT:LOCAL /= 100
+	CALL PRINT_ADD_EXP(BATTLE_COMMANDER:승리측:LOCAL, EXPNAME:(GET_EXP(GROW_ABL:LOCAL)), GROW_AMOUNT:LOCAL)
+	SIF GROW_AMOUNT:LOCAL > 0
+		CLEARLINE 1
+	CALL TRAIN_AUTO_ABLUP(BATTLE_COMMANDER:승리측:LOCAL)
+NEXT
+
+;-------------------------------------------------
+;도시 ARG:0의 방위배율을 계산
+;-------------------------------------------------
+@CITY_GUARD_RATE(ARG:0)
+#FUNCTION
+LOCAL:0 = CITY_GUARD:(ARG:0) * (CITY_ECONOMY:(ARG:0) / 50 + 10000) / 100
+
+SIF IS_COUNTRY(CITY_OWNER:(ARG:0)) && COUNTRY_POLICY:(CITY_OWNER:(ARG:0)) == 정책_방위
+		TIMES LOCAL:0, 1.50
+
+RETURNF LOCAL:0 / 100

@@ -1,0 +1,228 @@
+﻿;--------------------------------------
+;턴 엔드시의 외래병의 처리
+;--------------------------------------
+@TURNEND_CULTIST
+#DIM 광신도
+
+광신도 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_광신도)
+
+;8턴에 1회, 의식
+CALL CULTIST_RITUAL(DAY % 8 == 0)
+
+;--------------------------------------
+;멸망시의 처리
+;--------------------------------------
+@CULTIST_DESTROY_MSG
+CALL SINGLE_DRAWLINE
+SETCOLOR 칼라_주의
+PRINTFORML
+PRINTFORML
+PRINTFORML
+PRINTFORMW 멸망을 깨달은 광신도들의 교주는, 스스로의 육체를 버리고 가 영혼을 다음의 스테이지로 내디딘 것 같습니다
+PRINTFORMW 광신도들도 뒤를 쫓았기 때문에, 그들은 해산했습니다!
+PRINTFORML
+PRINTFORML
+PRINTFORML
+RESETCOLOR
+CALL SINGLE_DRAWLINE
+
+;--------------------------------------
+;외래 세력의 초기화 처리
+;--------------------------------------
+@CULTIST_INIT(ARG:0)
+#DIM LCOUNT
+VARSET LOCAL
+
+SIF GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_광신도) != -1
+	RETURN 0
+
+SIF SP_COUNTRY_RANK:특수세력_광신도 == 0
+	RETURN 0
+
+SIF GET_NEW_COUNTRY() == -1
+	RETURN 0
+
+CALL CREATE_SP_COUNTRY(특수세력_광신도)
+
+RETURN RESULT
+
+;-----------------------------------
+;외래 세력에 잡혔을 때의 이벤트
+;-----------------------------------
+@MASTER_CAPTURED_CULTIST(ARG:0)
+PRINTFORMW 잡힌 %조사처리(ANAME(MASTER),"는")% 광신도들에게 둘러싸졌다
+IF GETBIT(TALENT:MASTER:특수세력함락계, 특수세력_광신도)
+	PRINTFORML 군은 우리 동료가 아닌지, 어째서 이단자들에 참가하고 있던 것이다
+	PRINTFORMW 자, 또 신을 시중들지 아니겠는가
+	PRINTFORMW 광신도들은 당연히, %조사처리(ANAME(MASTER),"를")% 동료에 가세하려고 해 오지만……
+	CALL ASK_YN("받아들인다", "거부한다")
+	IF RESULT == 0
+		PRINTFORMW 물론, 신에 거역하자 등이라고 생각할 리도 없다
+		PRINTFORMW %ANAME(MASTER)%의 신체는 쑤셔, 스스로 그들에 참가하는 것을 동의 했다
+		PRINTFORMW 그들의 준비한 법의를 몸에 걸치면, 깊은 기쁨이 %조사처리(ANAME(MASTER),"를")% 싼다
+		PRINTFORMW 속세의 더러워진 공기를 들이마시지 않게 맞출 수 있었던 복면을 써, %조사처리(ANAME(MASTER),"는")% 다시 그들의 일원이 되었다……
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 다시, 광신도들에 참가했습니다
+		RESETCOLOR
+	ELSE
+		PRINTFORMW 사상을 강압하지 마. %조사처리(ANAME(MASTER),"는")% 주장했다
+		PRINTFORMW 광신도들에게는 그 태도를 이해 할 수 없는 것 같았다
+		PRINTFORMW 이단자에게 잊혀져 오염되었는지, 우리의 올바른 교의를 철저히 가르쳐 주지 않으면 안 된다
+		PRINTFORMW 끓어 끊는 광신도들은, %조사처리(ANAME(MASTER),"를")% 붙잡아 형벌 도구로 묶어, 감옥으로 던져 넣었다……
+	ENDIF
+ELSE
+	PRINTFORML 이단자는 본래, 감옥에 던져 넣어, 우리의 교의를 발끝으로부터 머리의 꼭대기까지 박아 넣는 일이 되어 있다
+	PRINTFORMW 이지만 너는 볼 만한 곳이 있을 듯 하다고 중얼거렸다
+	PRINTFORMW 스스로 교의를 받아들인다는 것이라면, 이단자로 있던 죄를 용서해, 감옥행은 면제하면이지만……
+	PRINTFORMW 받아들입니까?
+	CALL ASK_YN("받아들인다", "거부한다")
+	IF RESULT == 0
+		PRINTFORMW 투옥되는 것보다는 좋을 것이다. %조사처리(ANAME(MASTER),"가")% 수긍하면, 광신도들은 만족스럽게 수긍했다
+		PRINTFORMW 에서는 법의를 몸에 걸치라고 말해져 %조사처리(ANAME(MASTER),"는")% 점잖게 따른다
+		PRINTFORMW 속세의 더러워진 공기를 들이마시지 않게 맞출 수 있었던 복면을 써, %조사처리(ANAME(MASTER),"는")% 그들의 일원이 되었다……
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 다시, 광신도들에 참가했습니다
+		RESETCOLOR
+	ELSE
+		PRINTFORMW 너희들 따위에 손을 빌려 줄까. %조사처리(ANAME(MASTER),"는")% 의연히 해 단언한다	
+		PRINTFORMW 그 업을 감옥에서 맑게 하는 것이 좋으면 그들은 그대로 %조사처리(ANAME(MASTER),"를")% 투옥했다……
+	ENDIF
+ENDIF
+IF RESULT == 0
+	SETBIT TALENT:MASTER:특수세력함락계, 특수세력_광신도
+	CFLAG:MASTER:소속 = ARG:0
+	CALL PLAYER_FALLEN_TO_SP_COUNTRY(ARG:0)
+	RETURN 0
+ELSE
+	CALL CAPTURE(MASTER, ARG:0)
+	RETURN 2
+ENDIF
+
+;--------------------------------------
+;엔딩
+;--------------------------------------
+@CULTIST_ENDING
+PRINTFORML 광신도들은 포교에 성공했다
+PRINTFORMW 방법은 어떻든, 그들은 그 사상을 환상향의 구석구석에까지 침투시킨 것이다
+PRINTFORML 오늘도 그들의 의식은 행해지고 있다
+PRINTFORML 여기저기에서 남자와 여자가 사귀어, 사람이 아닌 것이 불려 가서는, 제물의 소녀에게 신성한 종을 옮겨 심어 간다
+PRINTFORML 이것이, 그들이 바라고 있던 낙원이었다……
+IF CFLAG:MASTER:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_광신도) && IS_FEMALE(MASTER)
+	PRINTFORMW 
+	PRINTFORMW 신자들중에, %ANAME(MASTER)%의 모습도 있었다
+	PRINTFORMW 모범적인 신자라는 일로 이름을 달려, 지금은 간부에게까지 끝까지 오르고 있다
+	PRINTFORMW ……그리고, 여자 신자로서 최고의 명예, 신과의 교제의 영예를 받기에 이르렀다
+	PRINTFORMW 특수한 배란유발제를 먹었던 %조사처리(ANAME(MASTER),"는")%, 신의 아이를 품는 기쁨에 아랫배를 쑤시게 하고 있다
+	PRINTFORML 의식보다 불려 간 거대한 고깃덩이--그들의 「신」이, %ANAME(MASTER)%에 덮어씌워, 고기구멍에 그로테스크한 것을 쑤셔 넣는다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")%, 견딜 수 없다고 한 소리를 질러 몇 번이나 발해지는 정액을 고기구멍으로 받아 들여 간다 
+	PRINTFORMW 신자들은 신성한 「의식」을 앞에 공손하게 엎드려, 신의 아이의 탄생을 축하하고 있다……
+ENDIF
+PRINTFORML 
+PRINTFORMW 아무도 불행 따위는 아니다. 이미 환상향에, 그들의 가르쳐를 거역하는 사람 따위 없는 것이니까……
+
+;--------------------------------------
+;정기 이벤트
+;--------------------------------------
+@CULTIST_RITUAL(조건)
+#DIM 광신도
+#DIM 조건
+#DIM 후보, 3000
+#DIM 후보수
+#DIM 대상, 3
+#DIM 대상수
+#DIM 메세지
+VARSET 후보, -1
+VARSET 후보수
+VARSET 대상, -1
+VARSET 대상수
+
+광신도 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_광신도))
+
+;광신도 세력이 존재해, 조건을 채우고 있다
+SIF 광신도 == -1 || !조건
+	RETURN -1
+
+후보수 = 0
+FOR LOCAL, 0, CHARANUM
+	SIF IS_SP_CHARA(LOCAL)
+		CONTINUE
+	SIF LOCAL == MASTER
+		CONTINUE
+	SIF !IS_FEMALE(LOCAL)
+		CONTINUE
+	SIF LOCAL == GET_COUNTRY_BOSS(CFLAG:LOCAL:소속)
+		CONTINUE
+	SIF CFLAG:LOCAL:소속 != 광신도
+		CONTINUE
+	SIF CFLAG:LOCAL:포로처
+		CONTINUE
+	SIF TALENT:LOCAL:유아
+		CONTINUE
+	후보:후보수 = LOCAL
+	후보수 ++
+NEXT
+
+SIF 후보수 <= 0
+	RETURN -1
+
+CALL FISHER_YATES_SHAFFLE(후보수)
+
+FOR LOCAL, 0, 후보수
+	대상:대상수 = 후보:(SHAFFLE_ARRAY:LOCAL)
+	대상수 ++
+	SIF 대상수 == VARSIZE("대상")
+		BREAK
+NEXT
+
+LOCALS = 
+
+FOR LOCAL, 0, 대상수
+	SIF LOCAL > 0
+		LOCALS = %LOCALS%、
+	LOCALS = %LOCALS%%ANAME(대상:LOCAL)%
+NEXT
+
+SIF 대상수 > 1
+	LOCALS = %LOCALS%등
+
+CALL SINGLE_DRAWLINE
+SETCOLOR 칼라_핑크
+PRINTFORML 광신도들의 본부에서, 이상한 듯한 집회가 거행되고 있다
+PRINTFORMW 어슴푸레한 방에 화톳불과 향기가 피워져 다수의 남녀가 사귀고 있다
+PRINTFORML 정액을 자궁에 따라 아이를 이루는, 그들의 신성한 의식이다……
+PRINTFORMW ……그 중에, %LOCALS:0%의 모습도 있었다
+PRINTFORML 더 없는 행복의 표정을 띄우면서, 계속해서 남근을 받아들여, 정액을 받아 들이고 있다……
+PRINTFORML 구나 질, 양손에 유방, 엉덩이 구멍과 신체의 온갖 곳에서 육봉을 기쁘게 해 간다
+PRINTFORMW 그야말로가, 그들의 가르침의 실천이다
+PRINTFORML ……이윽고 %조사처리(ANAME(대상),"가")%, 의식의 대좌에 나아간다
+PRINTFORML 그 신체는 발끝으로부터 두정까지 남기지 않고 백탁에 더럽혀져 양구멍으로부터도 자식이 질척질척 흘러 떨어지고 있다
+PRINTFORMW 속세의 더러움을 정성스럽게 「맑게 했다」의다
+PRINTFORML %조사처리(ANAME(대상),"가")% 대좌에 그려진 마법진의 중앙에서 엎드려 눕는다
+PRINTFORMW 하면 교주를 시작으로 한 주위의 남자들은, 이상한 듯한 주문을 일심 불란에 주창하기 시작한다
+PRINTFORML ……얼마 지나지 않아, 그것은 나타났다
+PRINTFORMW 그들이 「신」이라고 부르는, 그로테스크한 고깃덩이다
+PRINTFORML 그것은 공물로서 바칠 수 있었던 %조사처리(ANAME(대상),"를")% 잡아 모든 구멍에 촉수를 쑤셔 넣어 간다
+PRINTFORML %조사처리(ANAME(대상),"는")% 공포 하기는 커녕, 오히려 환희를 폭발시켜, 성교의 쾌락에 빠져 간다
+PRINTFORMW 신의 자식을 접수자를 임신하는 영예를 얻은 것이니까, 무엇을 무서워하는 것이 있을것이다
+PRINTFORML 의식이 클라이막스에 가까워지는 것에 따라, 주위의 교제도 보다 격렬하게 되어 간다
+SIF 대상:1 >= 0
+	PRINTFORML %조사처리(ANAME(대상:1),"는")% 질 구멍에 2 개의 육봉을 쑤셔 넣어져 엉덩이 구멍을 장형으로 뚫어져 몇 번이나 절정 한다
+SIF 대상:2 >= 0
+	PRINTFORML %ANAME(대상:2)%네원 느슨해지지 않아 꾸물거려 반환의 자세로, 몇 사람의 정액을 계속해서 쏟아져 간다
+PRINTFORMW 누구라도 환희의 소리를 질러 무엇보다도 고귀한 교의를 체현 해 나간다……
+PRINTFORML 그러던 중 촉수가 떨려, %ANAME(대상)%에 자식을 쏟았다
+PRINTFORML 인간과는 비교가 되지 않는 대량의 사정에, %ANAME(대상)%의 구멍으로부터 백탁이 역류 한다
+PRINTFORMW 허용 한계를 넘은 쾌락을 받아, %조사처리(ANAME(대상),"는")% 신과의 사귀는 기쁨의 정점으로 달하고 있었다
+PRINTFORML 동시에, 주위의 교제도 끝을 맞이한다
+PRINTFORML 여자의 교성이 실내에 울려 퍼진다……
+PRINTFORML ……이윽고 만족한 「신」은 이계로 돌아가, %조사처리(ANAME(대상),"는")% 해방된다
+PRINTFORML 교주는 %ANAME(대상)%에 달려들면, 그 비부에 장형을 소용돌이째, 한층 더 튼튼한 정조대를 장착했다
+PRINTFORML 신의 귀중한 자식이 만일에도 흘러넘치지 않게, 마개를 하자고 한다
+PRINTFORMW 이 배로 신의 아이를 자라는 기쁨에, %조사처리(ANAME(대상),"는")% 눈물을 흘려 기뻐하고 있었다……
+RESETCOLOR
+
+CALL FUCK_SP(대상, "촉수, 욕망, 봉사, 성기술, 성교, 정애, Ｖ, Ａ, Ｖ성교, Ａ성교, 펠라티오", "처녀상실, 질내사정, Ａ처녀상실, 장내사정, 키스상실", 광신도, GET_SPERM_ID("촉수"), "촉수", "촉수", "촉수", "강간")
+
+FOR LOCAL, 0, 후보수
+	CALL FUCK_SP(후보:LOCAL, "욕망, 성기술, 봉사, 성교, 정애, Ｃ, Ｂ, Ｖ, Ａ, Ｍ, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 질내사정, 장내사정, 키스상실", 광신도, GET_SPERM_ID("광신도"), @"광신도의 \@ RAND:2 ? 입술 # 페니스 \@", "광신도", "", "윤간")
+NEXT

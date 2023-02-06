@@ -1,0 +1,348 @@
+﻿;맵 관계
+[SKIPSTART]
+DRAWMAP의 내용을 알기 쉽게 제시하기 위한 코멘트 블록
+;-------------------------------------------------
+;맵의 외관(더미 함수)
+;-------------------------------------------------
+
+PRINTL 　　　　　　　　　　　　┏무연총┓  ┌──────마법의숲　　　　　　　　　　　　　1
+PRINTL 　　　　　　　　　　　굴립옥　　┃┏┿━놀이터━버섯숲┓｜　　　　　　　　　　　　　2 3 4
+PRINTL 　　　　　　　　　　　　┗◇━재고도｜┏┛┏┛  ┗┓  ┃｜　　　　　　　　　　　　　50 5
+PRINTL 　　　　　　　　　　　　　　　┃  ┃｜┃인형관━마법점┃｜　　　　　　　　　　　　　6 7
+PRINTL 　　　　　　　　　　　　　┏━◇  ┗숲서부┗┓  ┏┛숲동부━┓　　　　　　　　　　　51 8 9
+PRINTL 　　　　　　　　　　　　산수해　　　│┗━━숲남부━━┛｜  ┃┏묘지　　　　　　　　10 11 12
+PRINTL 　　　　　　　　　　　　┏┛　　　　└────╂────┘  명련사　　　　　　　　　13
+PRINTL 　　　　　　　　　　　　┃　　　　　　　　　향림당━━◇━━┛  ┗━◇━┓　　　　　14 52 53
+PRINTL 　　　　　　　　┏◇━숲꽃밭━┓　　　┏━◇━┛　　　　　　　　┌───╂────┐54 15 55
+PRINTL 　　　　　　　　┃　　　　　　┃┏━운송곶　　　　　　　　　　　│  ┏벚꽃길━━┓｜16 17
+PRINTL 　　　　　　　관문전━━━━┓┃┃　　　┃　　　　　　　　┏━━┿신사앞  ┏━봄소경 18 19 20
+PRINTL 　　　　┌───╂────┐요정숲━━┓◇　　　　　　　장난길┓｜  ┃┗연회장  ┃｜21 56 22 23
+PRINTL 　　　　│┏━호수북━┓┏┿━┛　　　┃┃　　　　　　　┏┛  ┗┿수유목━┛　　┃│24 25
+PRINTL 　　　　│┃┏━╂━호수동｜　　　　　마을밭　　　　　　◇　　　｜  ┃┗━신사호┛｜26 27 57 28
+PRINTL 　　　┏┿호수서┗━┓┃┗┿┓　　　　　┃　　　　　　　┃　　　└─╂──오래된신사 29
+PRINTL 　　　┃｜┗━━━호수남━빙설가━━◇━┛　　　　　┏대초원━┓　　◇　　　　　　　30 31 58 32 59
+PRINTL 　　　┃└안개호──╂──┘┃　　　　　　　　　　　┃　　　　◇　　┃　　　　　　　60
+PRINTL 　　폐양관　　┏━━◇　　◇┛　　　　　　　　　　　┃　　　　┗━망거도　　　　　　33 61 62 34
+PRINTL 　　　┗━━방울꽃━━┓  ┃　　　　　　　　　　　　┃　　　　　　　┃　　　　　　　35
+PRINTL 　　　　　　　　　　태양밭┛　　　　　┏━━◇━포장마차━━━◇━━┛　　　　　　　36 63 37 64
+PRINTL 　　　　　　　　　　　┗━━◇━━수도┛　　　　　　　　　　　　　　　　　　　　　　65 38
+;개인용 메모
+;　　　　　　　　　　　　┏무 01총┓  ┌──────마법의숲　　　　　　　　　　　　　1
+;　　　　　　　　　　　굴 02 가게　　┃┏┿━유 03장━버섯 04숲┓｜　　　　　　　　　　　　　2 3 4
+;　　　　　　　　　　　　┗50━재 05도｜┏┛┏┛  ┗┓  ┃｜　　　　　　　　　　　　　50 5
+;　　　　　　　　　　　　　　　┃  ┃｜┃인 06관━마 07점┃｜　　　　　　　　　　　　　6 7
+;　　　　　　　　　　　　　┏━51  ┗숲 08부┗┓  ┏┛숲 09부━┓　　　　　　　　　　　51 8 9
+;　　　　　　　　　　　　산 10해　　　│┗━━숲 11부━━┛｜  ┃┏무덤 12　　　　　　　　10 11 12
+;　　　　　　　　　　　　┏┛　　　　└────╂────┘  생명 13절　　　　　　　　　13
+;　　　　　　　　　　　　┃　　　　　　　　　향기 14당━━52━━┛  ┗━53━┓　　　　　14 52 53
+;　　　　　　　　┏54━숲 15밭━┓　　　┏━55━┛　　　　　　　　┌───╂────┐54 15 55
+;　　　　　　　　┃　　　　　　┃┏━운 16 곶　　　　　　　　　　　│  ┏벚꽃 17곳━━┓｜16 17
+;　　　　　　　관 18전━━━━┓┃┃　　　┃　　　　　　　　┏━━┿신 19전  ┏━봄 20 지름 18 19 20
+;　　　　┌───╂────┐요 21숲━━┓56　　　　　　　악 22도┓｜  ┃┗연회 23장  ┃｜21 56 22 23
+;　　　　│┏━호수 24부━┓┏┿━┛　　　┃┃　　　　　　　┏┛  ┗┿수 25 나무━┛　　┃│24 25
+;　　　　│┃┏━╂━호수 26부｜　　　　　인 27밭　　　　　　57　　　｜  ┃┗━신 28 호수┛｜26 27 57 28
+;　　　┏┿호수 29부┗━┓┃┗┿┓　　　　　┃　　　　　　　┃　　　└─╂──오래된신사 29
+;　　　┃｜┗━━━호수 30부━얼음 31가━━58━┛　　　　　┏대 32원━┓　　59　　　　　　　30 31 58 32 59
+;　　　┃└안개 33 호수──╂──┘┃　　　　　　　　　　　┃　　　　60　　┃　　　　　　　60
+;　　폐 34관　　┏━━61　　62┛　　　　　　　　　　　┃　　　　┗━망 35도　　　　　　33 61 62 34
+;　　　┗━━령 36밭━━┓  ┃　　　　　　　　　　　　┃　　　　　　　┃　　　　　　　35
+;　　　　　　　　　　태 37밭┛　　　　　┏━━63━━뱀장어 38대━━━64━━┛　　　　　　　36 63 37 64
+;　　　　　　　　　　　┗━━65━━짐승 39┛　　　　　　　　　　　　　　　　　　　　　　65 38
+
+;┳┫┻╋
+[SKIPEND]
+
+;-------------------------------------------------
+;맵의 묘화 ARG:0에 1을 지정하면 군사 화면용의 버튼을 생성
+;-------------------------------------------------
+@DRAWMAP_FAIRY(ARG:0 = 0, ARG:1 = 0)
+
+CALL DRAWMAP_INIT(ARG:0, ARG:1 * 3)
+
+CALL DRAWMAP_LINE("　　　　　　　　　　　　┏무연총┓  ┌──────마법의숲　　　　　　　　　　　　　", 1)
+CALL DRAWMAP_LINE("　　　　　　　　　　　굴립옥　　┃┏┿━놀이터━버섯숲┓｜　　　　　　　　　　　　　", 2, 3, 4)
+CALL DRAWMAP_LINE("　　　　　　　　　　　　┗◇━재고도｜┏┛┏┛  ┗┓  ┃｜　　　　　　　　　　　　　", 50, 5)
+CALL DRAWMAP_LINE("　　　　　　　　　　　　　　　┃  ┃｜┃인형관━마법점┃｜　　　　　　　　　　　　　", 6, 7)
+CALL DRAWMAP_LINE("　　　　　　　　　　　　　┏━◇  ┗숲서부┗┓  ┏┛숲동부━┓　　　　　　　　　　　", 51, 8, 9)
+CALL DRAWMAP_LINE("　　　　　　　　　　　　산수해　　　│┗━━숲남부━━┛｜  ┃┏묘지　　　　　　　　", 10, 11, 12)
+CALL DRAWMAP_LINE("　　　　　　　　　　　　┏┛　　　　└────╂────┘  명련사　　　　　　　　　", 13)
+CALL DRAWMAP_LINE("　　　　　　　　　　　　┃　　　　　　　　　향림당━━◇━━┛  ┗━◇━┓　　　　　", 14, 52, 53)
+CALL DRAWMAP_LINE("　　　　　　　　┏◇━숲꽃밭━┓　　　┏━◇━┛　　　　　　　　┌───╂────┐", 54, 15, 55)
+CALL DRAWMAP_LINE("　　　　　　　　┃　　　　　　┃┏━운송곶　　　　　　　　　　　│  ┏벚꽃길━━┓｜", 16, 17)
+CALL DRAWMAP_LINE("　　　　　　　관문전━━━━┓┃┃　　　┃　　　　　　　　┏━━┿신사앞  ┏━봄소경", 18, 19, 20)
+CALL DRAWMAP_LINE("　　　　┌───╂────┐요정숲━━┓◇　　　　　　　장난길┓｜  ┃┗연회장  ┃｜", 21, 56, 22, 23)
+CALL DRAWMAP_LINE("　　　　│┏━호수북━┓┏┿━┛　　　┃┃　　　　　　　┏┛  ┗┿수유목━┛　　┃│", 24, 25)
+CALL DRAWMAP_LINE("　　　　│┃┏━╂━호수동｜　　　　　마을밭　　　　　　◇　　　｜  ┃┗━신사호┛｜", 26, 27, 57, 28)
+CALL DRAWMAP_LINE("　　　┏┿호수서┗━┓┃┗┿┓　　　　　┃　　　　　　　┃　　　└─╂──오래된신사", 29)
+CALL DRAWMAP_LINE("　　　┃｜┗━━━호수남━빙설가━━◇━┛　　　　　┏대초원━┓　　◇　　　　　　　", 30, 31, 58, 32, 59)
+CALL DRAWMAP_LINE("　　　┃└안개호──╂──┘┃　　　　　　　　　　　┃　　　　◇　　┃　　　　　　　", 60)
+CALL DRAWMAP_LINE("　　폐양관　　┏━━◇　　◇┛　　　　　　　　　　　┃　　　　┗━망거도　　　　　　", 33, 61, 62, 34)
+CALL DRAWMAP_LINE("　　　┗━━방울꽃━━┓  ┃　　　　　　　　　　　　┃　　　　　　　┃　　　　　　　", 35)
+CALL DRAWMAP_LINE("　　　　　　　　　　태양밭┛　　　　　┏━━◇━포장마차━━━◇━━┛　　　　　　　", 36, 63, 37, 64)
+CALL DRAWMAP_LINE("　　　　　　　　　　　┗━━◇━━수도┛　　　　　　　　　　　　　　　　　　　　　　", 65, 38)
+
+CALL DRAWMAP_END()
+
+;-------------------------------------------------
+;전도시수를 돌려주는 함수
+;-------------------------------------------------
+@SET_CITY_NUM_FAIRY()
+CITY_NUM = 38
+
+;-------------------------------------------------
+;단축 도시명을 설정
+;-------------------------------------------------
+@SET_SHORTCITYNAME_FAIRY()
+CITY_NAME_SHORT:1 = 무연총
+CITY_NAME_SHORT:2 = 굴립옥
+CITY_NAME_SHORT:3 = 놀이터
+CITY_NAME_SHORT:4 = 버섯숲
+CITY_NAME_SHORT:5 = 재고도
+CITY_NAME_SHORT:6 = 인형관
+CITY_NAME_SHORT:7 = 마법점
+CITY_NAME_SHORT:8 = 숲서부
+CITY_NAME_SHORT:9 = 숲동부
+CITY_NAME_SHORT:10 = 산수해
+CITY_NAME_SHORT:11 = 숲남부
+CITY_NAME_SHORT:12 = 묘지
+CITY_NAME_SHORT:13 = 명련사
+CITY_NAME_SHORT:14 = 향림당
+CITY_NAME_SHORT:15 = 숲꽃밭
+CITY_NAME_SHORT:16 = 운송곶
+CITY_NAME_SHORT:17 = 벚꽃길
+CITY_NAME_SHORT:18 = 관문전
+CITY_NAME_SHORT:19 = 신사앞
+CITY_NAME_SHORT:20 = 봄소경
+CITY_NAME_SHORT:21 = 요정숲
+CITY_NAME_SHORT:22 = 장난길
+CITY_NAME_SHORT:23 = 연회장
+CITY_NAME_SHORT:24 = 호수북
+CITY_NAME_SHORT:25 = 수유목
+CITY_NAME_SHORT:26 = 호수동
+CITY_NAME_SHORT:27 = 마을밭
+CITY_NAME_SHORT:28 = 신사호
+CITY_NAME_SHORT:29 = 호수서
+CITY_NAME_SHORT:30 = 호수남
+CITY_NAME_SHORT:31 = 빙설가
+CITY_NAME_SHORT:32 = 대초원
+CITY_NAME_SHORT:33 = 폐양관
+CITY_NAME_SHORT:34 = 망거도
+CITY_NAME_SHORT:35 = 방울꽃
+CITY_NAME_SHORT:36 = 태양밭
+CITY_NAME_SHORT:37 = 포장마차
+CITY_NAME_SHORT:38 = 수도
+
+FOR LOCAL:0, 0, MAX_CITY
+	SIF CITY_TYPE:(LOCAL:0) == 1
+		CITY_NAME_SHORT:(LOCAL:0) = ●
+NEXT
+
+;-------------------------------------------------
+;도시명을 설정하는 함수
+;-------------------------------------------------
+@SET_CITYNAME_FAIRY()
+VARSET CITY_NAME,"무명"
+CITY_NAME:1 = 무연총
+CITY_NAME:2 = 쥐의굴립오두막
+CITY_NAME:3 = 요정의놀이터
+CITY_NAME:4 = 버섯이많이나는숲
+CITY_NAME:5 = 재고의길
+CITY_NAME:6 = 인형저택
+CITY_NAME:7 = 마법사의집
+CITY_NAME:8 = 마법의숲의서쪽
+CITY_NAME:9 = 마법의숲의동쪽
+CITY_NAME:10 = 위험한산의수해
+CITY_NAME:11 = 마법의숲의남쪽
+CITY_NAME:12 = 절의묘지
+CITY_NAME:13 = 명련사
+CITY_NAME:14 = 향림당
+CITY_NAME:15 = 숲의꽃밭
+CITY_NAME:16 = 운송영감이자주낚시하러오는곶
+CITY_NAME:17 = 신사뒤의벚꽃이깨끗한장소
+CITY_NAME:18 = 홍마관의문전
+CITY_NAME:19 = 요괴신사
+CITY_NAME:20 = 봄의소불경
+CITY_NAME:21 = 요정이정착하는숲
+CITY_NAME:22 = 못된장난해보람이있는길
+CITY_NAME:23 = 자주연회하고있는장소
+CITY_NAME:24 = 안개의 호수인북측
+CITY_NAME:25 = 미즈나라의 나무
+CITY_NAME:26 = 안개의 호수의동쪽
+CITY_NAME:27 = 인간밭
+CITY_NAME:28 = 신사의뒷산에있는호수
+CITY_NAME:29 = 안개의 호수의서쪽
+CITY_NAME:30 = 안개의 호수의남쪽
+CITY_NAME:31 = 치르노의카마쿠라
+CITY_NAME:32 = 휑하니넓은초원
+CITY_NAME:33 = 매우시끄러운폐양관
+CITY_NAME:34 = 인간이 사라지는 길
+CITY_NAME:35 = 스씨밭
+CITY_NAME:36 = 해바라기밭
+CITY_NAME:37 = 칠성장어구이 포장마차
+CITY_NAME:38 = 수도
+CITY_NAME:50 = 꿈과로망과보물이떨어지고있는길
+CITY_NAME:51 = 숲을빠져나갔다고생각하면숲이있는길
+CITY_NAME:52 = 담력시험에가는데자주사용하는길
+CITY_NAME:53 = 도없는길을돌진하면절이나신사에겨우도착한다
+CITY_NAME:54 = 대짱소중히간직함의꽃밭에통하는길
+CITY_NAME:55 = 장화낚시하면향림당에
+CITY_NAME:56 = 운송할아범이통과하는길
+CITY_NAME:57 = 요정에꼬득여진인간이자주요괴에먹혀진다
+CITY_NAME:58 = 마을에못된장난하러갈때사용하는길
+CITY_NAME:59 = 맛있는 칠성장어가 먹고 싶어지면 통과하는 길
+CITY_NAME:60 = 옛날은사용되고있었는지도모르는길
+CITY_NAME:61 = 멋진방울꽃과음침한인형에게통하는길
+CITY_NAME:62 = 인상이무서우면상냥한것양극단으로나누어지는누나에게통하는길
+CITY_NAME:63 = 취하고있으면길을잘못한다
+CITY_NAME:64 = 노래를듣고있으면취하지않아도길을잘못한다
+CITY_NAME:65 = 언덕방면으로부터무녀를만나러가기위한길
+
+;-------------------------------------------------
+;도시 타입의 설정
+;-------------------------------------------------
+@SET_CITY_TYPE_FAIRY
+FOR LOCAL:0, 40, MAX_CITY
+	CITY_TYPE:(LOCAL:0) = 1
+NEXT
+
+;-------------------------------------------------
+;루트의 설정
+;-------------------------------------------------
+@SET_MAP_ROUTE_FAIRY
+CALL REGISTER_ROUTE(1, 2, 5)
+CALL REGISTER_ROUTE(2, 1, 50)
+CALL REGISTER_ROUTE(3, 4, 5, 6, 8)
+CALL REGISTER_ROUTE(4, 3, 7, 9)
+CALL REGISTER_ROUTE(50, 2, 5)
+CALL REGISTER_ROUTE(5, 1, 3, 8, 50, 51)
+CALL REGISTER_ROUTE(6, 3, 7, 11)
+CALL REGISTER_ROUTE(7, 4, 6, 11)
+CALL REGISTER_ROUTE(51, 5, 10)
+CALL REGISTER_ROUTE(8, 3, 5, 11)
+CALL REGISTER_ROUTE(9, 4, 11, 13)
+CALL REGISTER_ROUTE(10, 51, 15)
+CALL REGISTER_ROUTE(11, 6, 7, 8, 9, 14)
+CALL REGISTER_ROUTE(12, 13)
+CALL REGISTER_ROUTE(13, 9, 12, 52, 53)
+CALL REGISTER_ROUTE(14, 11, 52, 55)
+CALL REGISTER_ROUTE(52, 13, 14)
+CALL REGISTER_ROUTE(53, 13, 17)
+CALL REGISTER_ROUTE(54, 15, 18)
+CALL REGISTER_ROUTE(15, 10, 21, 54)
+CALL REGISTER_ROUTE(55, 14, 16)
+CALL REGISTER_ROUTE(16, 21, 55, 56)
+CALL REGISTER_ROUTE(17, 19, 20, 53)
+CALL REGISTER_ROUTE(18, 21, 24, 54)
+CALL REGISTER_ROUTE(19, 17, 22, 23, 25)
+CALL REGISTER_ROUTE(20, 17, 23, 28)
+CALL REGISTER_ROUTE(21, 15, 16, 18, 26, 27)
+CALL REGISTER_ROUTE(56, 16, 27)
+CALL REGISTER_ROUTE(22, 19, 25, 57)
+CALL REGISTER_ROUTE(23, 19, 20, 25)
+CALL REGISTER_ROUTE(24, 18, 26, 29, 30)
+CALL REGISTER_ROUTE(25, 19, 22, 23, 28, 59)
+CALL REGISTER_ROUTE(26, 21, 24, 29, 30, 31)
+CALL REGISTER_ROUTE(27, 21, 56, 58)
+CALL REGISTER_ROUTE(28, 20, 25)
+CALL REGISTER_ROUTE(29, 24, 26, 30, 33)
+CALL REGISTER_ROUTE(30, 24, 26, 29, 31, 61)
+CALL REGISTER_ROUTE(31, 26, 30, 58, 62)
+CALL REGISTER_ROUTE(58, 27, 31)
+CALL REGISTER_ROUTE(32, 37, 57, 60)
+CALL REGISTER_ROUTE(59, 25, 34)
+CALL REGISTER_ROUTE(60, 32, 34)
+CALL REGISTER_ROUTE(33, 29, 35)
+CALL REGISTER_ROUTE(61, 30, 35)
+CALL REGISTER_ROUTE(62, 31, 36)
+CALL REGISTER_ROUTE(34, 59, 60, 64)
+CALL REGISTER_ROUTE(35, 33, 36, 61)
+CALL REGISTER_ROUTE(36, 35, 62, 65)
+CALL REGISTER_ROUTE(63, 37, 38)
+CALL REGISTER_ROUTE(37, 32, 63, 64)
+CALL REGISTER_ROUTE(64, 34, 37)
+CALL REGISTER_ROUTE(65, 36, 38)
+CALL REGISTER_ROUTE(38, 63, 65)
+
+
+@MAP_INIT_FAIRY
+CITY_ECONOMY:GET_CITYNUMBER("무연총") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("쥐의굴립오두막") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("요정의놀이터") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("버섯이많이나는숲") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("재고의길") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("인형저택") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("마법사의집") = 25000
+CITY_ECONOMY:GET_CITYNUMBER("마법의숲의서쪽") = 25000
+CITY_ECONOMY:GET_CITYNUMBER("마법의숲의동쪽") = 25000
+CITY_ECONOMY:GET_CITYNUMBER("위험한산의수해") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("마법의숲의남쪽") = 25000
+CITY_ECONOMY:GET_CITYNUMBER("절의묘지") = 15000
+CITY_ECONOMY:GET_CITYNUMBER("명련사") = 15000
+CITY_ECONOMY:GET_CITYNUMBER("향림당") = 25000
+CITY_ECONOMY:GET_CITYNUMBER("숲의꽃밭") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("운송영감이자주낚시하러오는곶") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("신사뒤의벚꽃이깨끗한장소") = 25000
+CITY_ECONOMY:GET_CITYNUMBER("홍마관의문전") = 15000
+CITY_ECONOMY:GET_CITYNUMBER("요괴신사") = 15000
+CITY_ECONOMY:GET_CITYNUMBER("봄의소불경") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("요정이정착하는숲") = 40000
+CITY_ECONOMY:GET_CITYNUMBER("못된장난해보람이있는길") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("자주연회하고있는장소") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("안개의 호수인북측") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("미즈나라의 나무") = 40000
+CITY_ECONOMY:GET_CITYNUMBER("안개의 호수의동쪽") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("인간밭") = 40000
+CITY_ECONOMY:GET_CITYNUMBER("신사의뒷산에있는호수") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("안개의 호수의서쪽") = 25000
+CITY_ECONOMY:GET_CITYNUMBER("안개의 호수의남쪽") = 25000
+CITY_ECONOMY:GET_CITYNUMBER("치르노의카마쿠라") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("휑하니넓은초원") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("매우시끄러운폐양관") = 15000
+CITY_ECONOMY:GET_CITYNUMBER("인간이 사라지는 길") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("스씨밭") = 30000
+CITY_ECONOMY:GET_CITYNUMBER("해바라기밭") = 40000
+CITY_ECONOMY:GET_CITYNUMBER("칠성장어구이 포장마차") = 20000
+CITY_ECONOMY:GET_CITYNUMBER("수도") = 20000
+;경제 규모의 상한치의 설정
+FOR LOCAL:0, 1, 100
+	CITY_ECONOMY_LIMIT:(LOCAL:0) = MIN(CITY_ECONOMY:(LOCAL:0) * 2, 300000)
+NEXT
+
+CITY_GUARD:GET_CITYNUMBER("무연총") = 125
+CITY_GUARD:GET_CITYNUMBER("쥐의굴립오두막") = 150
+CITY_GUARD:GET_CITYNUMBER("요정의놀이터") = 125
+CITY_GUARD:GET_CITYNUMBER("버섯이많이나는숲") = 125
+CITY_GUARD:GET_CITYNUMBER("재고의길") = 125
+CITY_GUARD:GET_CITYNUMBER("인형저택") = 150
+CITY_GUARD:GET_CITYNUMBER("마법사의집") = 150
+CITY_GUARD:GET_CITYNUMBER("마법의숲의서쪽") = 125
+CITY_GUARD:GET_CITYNUMBER("마법의숲의동쪽") = 125
+CITY_GUARD:GET_CITYNUMBER("위험한산의수해") = 125
+CITY_GUARD:GET_CITYNUMBER("마법의숲의남쪽") = 125
+CITY_GUARD:GET_CITYNUMBER("절의묘지") = 150
+CITY_GUARD:GET_CITYNUMBER("명련사") = 150
+CITY_GUARD:GET_CITYNUMBER("향림당") = 150
+CITY_GUARD:GET_CITYNUMBER("숲의꽃밭") = 125
+CITY_GUARD:GET_CITYNUMBER("운송영감이자주낚시하러오는곶") = 125
+CITY_GUARD:GET_CITYNUMBER("신사뒤의벚꽃이깨끗한장소") = 125
+CITY_GUARD:GET_CITYNUMBER("홍마관의문전") = 150
+CITY_GUARD:GET_CITYNUMBER("요괴신사") = 150
+CITY_GUARD:GET_CITYNUMBER("봄의소불경") = 125
+CITY_GUARD:GET_CITYNUMBER("요정이정착하는숲") = 125
+CITY_GUARD:GET_CITYNUMBER("못된장난해보람이있는길") = 125
+CITY_GUARD:GET_CITYNUMBER("자주연회하고있는장소") = 125
+CITY_GUARD:GET_CITYNUMBER("안개의 호수인북측") = 125
+CITY_GUARD:GET_CITYNUMBER("미즈나라의 나무") = 150
+CITY_GUARD:GET_CITYNUMBER("안개의 호수의동쪽") = 125
+CITY_GUARD:GET_CITYNUMBER("인간밭") = 125
+CITY_GUARD:GET_CITYNUMBER("신사의뒷산에있는호수") = 125
+CITY_GUARD:GET_CITYNUMBER("안개의 호수의서쪽") = 125
+CITY_GUARD:GET_CITYNUMBER("안개의 호수의남쪽") = 125
+CITY_GUARD:GET_CITYNUMBER("치르노의카마쿠라") = 150
+CITY_GUARD:GET_CITYNUMBER("휑하니넓은초원") = 125
+CITY_GUARD:GET_CITYNUMBER("매우시끄러운폐양관") = 150
+CITY_GUARD:GET_CITYNUMBER("인간이 사라지는 길") = 125
+CITY_GUARD:GET_CITYNUMBER("스씨밭") = 125
+CITY_GUARD:GET_CITYNUMBER("해바라기밭") = 125
+CITY_GUARD:GET_CITYNUMBER("칠성장어구이 포장마차") = 150
+CITY_GUARD:GET_CITYNUMBER("수도") = 125

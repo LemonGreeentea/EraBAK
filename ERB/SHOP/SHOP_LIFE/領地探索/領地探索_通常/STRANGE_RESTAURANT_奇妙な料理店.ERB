@@ -1,0 +1,51 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_STRANGE_RESTAURANT_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_STRANGE_RESTAURANT_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------    
+@TERRITORY_EVENT_STRANGE_RESTAURANT(대상)
+#DIM 대상
+
+PRINTFORML 상점가를 걷고 있으면 신경이 쓰인다 음식점을 보기 시작했다
+PRINTFORML 일견 단순한 요리집으로 보이지만……
+PRINTFORML 
+CALL ASK_YN("들어가 본다", "그만둔다")
+
+IF RESULT == 1 
+	PRINTFORML 배도 고파지지 않았다
+	PRINTFORML 그만두었다
+	RETURN 1
+ENDIF
+
+PRINTFORML 막 배가 고프고 있던 곳이다
+PRINTFORMW 들어가 보기로 했다
+PRINTFORML 
+PRINTFORML 점안은 어슴푸레하고, 묘한 분위기였다
+PRINTFORML 점원도 어딘가 쌀쌀한 분위기를 조성하기 시작하고 있다
+PRINTFORMW 의심스러워 하면서 주문하면, 나온 요리는 매우 맛있었다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+IF RAND:3
+	PRINTFORML 충분히 먹어 만족했다
+ELSE
+	PRINTFORML 배를 부수어 버렸다
+	PRINTFORML 두 번 다시 간 것일까와 마음에 맹세했다
+	CALL ADD_COOLTIME(대상, 2)
+ENDIF
+
+RETURN 1

@@ -1,0 +1,11 @@
+﻿;전략 화면의 맵 표시 시에 메뉴를 표시하기 위해(때문에) 행수를 기록한다
+;todo:다른 처리를 조사해 그것들과 변수를 공통화하고 싶다
+#DIM DRAWMAP_LINECOUNT
+
+;맵을 표시할 경우에 좌측으로 표시하는 MENUBAR를 선택하는 변수
+#DIM DRAWMAP_MENUBARTYPE
+#DIM CONST DRAWMAP_MENUBARTYPE_SLGMENU = 1
+#DIM CONST DRAWMAP_MENUBARTYPE_DEBUGMENU = 2
+
+;맵을 표시할 때 도시명으로부터 자동으로 지도를 보완하는 변수
+#DIM DRAWMAP_AUTO_READ_CITYNAMES

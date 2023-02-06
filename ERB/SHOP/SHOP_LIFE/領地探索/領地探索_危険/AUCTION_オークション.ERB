@@ -1,0 +1,120 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_AUCTION_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_AUCTION_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_AUCTION(대상)
+#DIM 대상
+
+PRINTFORML 심야의 환락가를 걷고 있으면, 신경이 쓰인다 건물을 찾아냈다
+PRINTFORML 견나들 가게라고 말하는데, 옷차림이 좋은 손님이 차례차례로 들어간다
+PRINTFORML 어떻게도 이상하겠지만……
+PRINTFORML 
+CALL ASK_YN("조사한다", "방치한다")
+
+IF RESULT == 1
+	PRINTFORML 군자위우기에 접근하지 않고다
+	PRINTFORML 방치하기로 했다
+	RETURN 1
+ENDIF
+
+PRINTFORML 뭔가 흉계가 있을 듯 함
+PRINTFORMW %조사처리(ANAME(대상),"는")% 손님에게 잊혀져 잠입하기로 했다
+PRINTFORML 
+PRINTFORMW 건물의 지하에서, 뒤옥션이 열리고 있었다
+PRINTFORMW 출품되고 있는 것은 이른바 복잡한 사정의 물건이나, 비합법적 것
+PRINTFORMW 그 뿐만 아니라 노예까지 팔려 시작했다……
+
+IF IS_MALE(대상) || (HAS_PENIS(대상) && RAND:2)
+	PRINTFORML
+	CALL ASK_YN("참가한다", "떠난다")
+	IF RESULT == 1
+		PRINTFORML 이런 곳에 있어야 할 것은 아니다
+		PRINTFORML 조속히 떠났다
+		RETURN 1
+	ENDIF
+	PRINTFORMW %ANAME(대상)%도 참가하기로 했다
+	LOCAL = MIN(MONEY, 3000)
+	CALL ICPRINT("금<LOCAL>을 지불해, 소녀 노예를 손에 넣었다", "L", 칼라_주의)
+	PRINTFORMW 서비스로서 안쪽의 독실을 빌려 주어 받을 수 있었다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 희미하게 떨리는 소녀의 어깨를 안아, 방에 데리고 들어갔다
+	PRINTFORML 
+	PRINTFORMW 소녀는 어림을 남기면서도 색기가 있는 신체를 하고 있었다
+	PRINTFORMW 잘 예의범절을 가르쳐지고 있는 것 같아, %ANAME(대상)%에 온순해, 애무에도 민감하게 반응한다
+	PRINTFORMW 흠뻑 젖는 균열에 페니스를 쑤셔 넣으면, 그녀는 뒤로 젖히면서 사랑스러운 소리를 지른다
+	PRINTFORMW 야 꾸중이면서 매달려 오는 그녀를 한껏 귀여워해 주었다
+	CALL FUCK(대상, "성기술, 성교, Ｃ, Ｖ삽입", "동정상실, 키스상실", 0, "노예의 입술", "", "노예의 질", "조교")
+	RETURN 1
+ENDIF
+
+PRINTFORML 
+CALL ASK_MULTI("참가한다", "한층 더 잠입한다", "돌아간다")
+
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORMW %ANAME(대상)%도 참가하기로 했다
+		LOCAL = MIN(MONEY, 3000)
+		CALL ICPRINT("금<LOCAL>을 지불해, 청년 노예를 손에 넣었다", "L", 칼라_주의)
+		PRINTFORMW 서비스로서 안쪽의 독실을 빌려 주어 받을 수 있었다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 튼튼한 체격의 청년 노예를 방에 데리고 들어갔다
+		PRINTFORML 
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 소리를 내, 청년의 것에 달라 붙으며 있다
+		PRINTFORMW 그 손은 스스로의 %STR_BODY("질:욕정", 대상)%를 휘젓고 있었다
+		PRINTFORMW 점차 인내 할 수 없게 되어, %조사처리(ANAME(대상),"는")% 스스로 양다리를 열어, 노예에게 삽입을 명한다
+		PRINTFORMW 그에게 격렬하게 허리를 흔들게 해 기분이 풀릴 때까지 몇 번이나 사귀었다……
+		CALL FUCK(대상, "욕망, 봉사, 성기술, 성교, Ｖ, Ｍ, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("노예"), "노예의 페니스", "노예", "", "조교")
+	CASE 1
+		PRINTFORML 이런 비합법적 조직은 놓칠 수 없다
+		PRINTFORMW 잠입한 %조사처리(ANAME(대상),"였")%지만, 배후로부터 약품을 냄새 맡아져 잠에 떨어져 버렸다……
+		PRINTFORMW 소리없이 다가온 남자는 이상한 듯한 미소를 띄워, %조사처리(ANAME(대상),"를")% 가게의 안쪽에 데려 갔다……
+		PRINTFORMW 
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 옥션의 상품으로 되어 버렸다
+		PRINTFORML 전라에 벗겨지고 쇠사슬과 눈가리개를 된 %조사처리(ANAME(대상),"는")%, 스테이지 위에서 경매의 대상으로 해 구경거리로 되고 있다
+		PRINTFORML 시야를 빼앗기고 있어도, 무수한 호기의 시선을 향해지고 있는 것이 알 수 있어, %조사처리(ANAME(대상),"는")% 무심코 숨을 거칠게 한다
+		PRINTFORMW 갑자기 사회에 엉덩이를 비비어져 %조사처리(ANAME(대상),"는")% 달콤한 한숨을 흘려 버려, 손님의 환성이 오른다
+		PRINTFORML %ANAME(대상)%의 경매는 매우 분위기를 살렸다
+		PRINTFORML ·
+		PRINTFORML ·
+		PRINTFORMW ·
+		SELECTCASE RAND:3
+			CASE 0
+				PRINTFORMW %조사처리(ANAME(대상),"는")% 어떤 부호에게 사졌다
+				PRINTFORML 극상의 물건에 흥분한 그는, %조사처리(ANAME(대상),"를")% 받으면 전신을 맛을 보는 것처럼 끈적 애무해 온다
+				PRINTFORML 기분 나쁨에 어떻게든 도망치려고 하는 것도 그것도 상관하지 않고, 그의 저택에 가지고 돌아가지는 일이 되었다
+				PRINTFORMW 그 후%조사처리(ANAME(대상),"는")% 남자에게 심하게 범해지고 계속해, 점차 애완동물 해 그에게 길러지는 행복하게 몸도 마음도 물들어 갔다
+				CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 키스, 펠라티오, 노출, 긴박, 마조, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 질내사정, 키스상실, 장내사정, 구강사정", GET_SPERM_ID("부호"), @"부호의 \@RAND:2 ? 페니스 # 입술\@", "부호", "", "옥션으로 사진 조교")
+			CASE 1
+				PRINTFORMW %조사처리(ANAME(대상),"는")% 텐구에 사졌다
+				PRINTFORMW 그는 %조사처리(ANAME(대상),"를")% 요괴의산에 데리고 돌아가, 자신들의 위안부로서 취급하기로 했다
+				PRINTFORMW 그들의 근무나 연회의 사이, 불러내어져서는 희롱해져 봉사를 강요받는다
+				PRINTFORMW 처음은 싫어하고 있었던 %ANAME(대상)%도, 어느덧 스스로 진행되어 그들에게 봉사하게 되어 있었다……
+				CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 키스, 펠라티오, 노출, 긴박, 마조, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 질내사정, 키스상실, 장내사정, 구강사정", GET_SPERM_ID("텐구"), @"텐구의 \@RAND:2 ? 페니스 # 입술\@", "텐구", "", "옥션으로 사진 조교")
+			CASE 2
+				PRINTFORMW %조사처리(ANAME(대상),"는")% 호사가에게 사졌다
+				PRINTFORMW 그는 이 장소에서 자위를 하도록(듯이)%ANAME(대상)%에 요구했다
+				PRINTFORMW 여러 사람 둘러싸여 바라보는 아래, %조사처리(ANAME(대상),"는")% 스스로를 위로한다
+				PRINTFORMW 절정의 뒤, %조사처리(ANAME(대상),"는")% 옥션의 참가자 전원에게 제공되었다……
+				CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 키스, 펠라티오, 자위, 윤간 마조, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 질내사정, 키스상실, 장내사정, 구강사정", GET_SPERM_ID("부호"), @"부호의 \@RAND:2 ? 페니스 # 입술\@", "부호", "", "옥션으로 사진 윤간")
+		ENDSELECT
+		PRINTFORML 
+		PRINTFORML 한동안 노예로서 다루어지고 있었던 %조사처리(ANAME(대상),"는")%, 틈을 찔러 도망치기 시작했다
+		PRINTFORML 하지만 신체는 완전히 예의범절을 가르쳐져 버리고 있었다
+	CASE 2
+		PRINTFORML 이런 곳에 있어야 할 것은 아니다
+		PRINTFORML 조속히 떠났다
+ENDSELECT
+
+RETURN 1

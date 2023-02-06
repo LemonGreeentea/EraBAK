@@ -1,0 +1,88 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_LOST_CHILD_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_LOST_CHILD_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_LOST_CHILD(대상)
+#DIM 대상
+
+PRINTFORML 영내를 탐색중, 미아의 남자아이와 조우했다
+PRINTFORML 부모를 놓쳐 버린 것 같지만, 주위에 그럴 듯한 인물은 눈에 띄지 않는다
+
+PRINTL
+CALL ASK_MULTI("함께 부모를 찾는다", "병사에 맡긴다", "방치한다")
+
+IF RESULT == 2
+	PRINTFORML 귀찮음은 미안이다
+	PRINTFORML 방치하기로 했다
+	RETURN 1
+ENDIF
+
+IF RESULT == 1
+	PRINTFORML 병사에 맡기는 것이 좋을 것이다
+	PRINTFORML 가까이의 군사에게 그를 맡겨, 거점에 돌아갔다
+	RETURN 1
+ENDIF
+
+PRINTFORML 울 듯한 아이를 달래면서, 함께 부모를 찾았다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+IF RAND:2
+	PRINTFORML 무사하게 부모를 찾아냈다!
+	PRINTFORMW 웃는 얼굴로 손을 흔드는 아이와 헤어져, 좋은 기분으로 거점으로 돌아갔다
+	IF 대상 == MASTER && IS_COUNTRY(CFLAG:MASTER:소속)
+		CALL COLOR_PRINTL(@"이 이야기가 동료에게 퍼져, 호감도가 100올랐다", 칼라_주의)
+		FOR LOCAL, 0, CHARANUM
+			SIF LOCAL == MASTER
+				CONTINUE
+			SIF CFLAG:LOCAL:소속 == CFLAG:MASTER:소속
+				CFLAG:LOCAL:호감도 += 100
+		NEXT
+	ENDIF
+	RETURN 1
+ENDIF
+
+PRINTFORML 부모를 찾아낼 수 없었다……
+
+IF IS_MALE(대상)
+	PRINTFORML 더 이상은 어떻게도 할 수 없으면, 그를 병사로 맡겨 거점에 돌아갔다
+	RETURN 1
+ENDIF
+
+PRINTFORML ……소년은 실망한다고 생각하고 있었지만, 뭔가 머뭇머뭇 하고 있다……
+PRINTL
+CALL ASK_YN("유혹한다", "병사에 맡긴다")
+
+IF RESULT == 1
+	PRINTFORML 더 이상은 어떻게도 할 수 없으면, 그를 병사로 맡겨 거점에 돌아갔다
+	RETURN 1
+ENDIF
+
+PRINTFORML 「좋은 토코로에 데려 가 준다」라고 속삭인다
+PRINTFORMW 그리고 아이의 손을 잡아 당겨 가까이의 숙소로 데리고 들어갔다
+PRINTFORML 
+PRINTFORML 처음의 일에 당황하는 무구한 아이에게, %조사처리(ANAME(대상),"는")% 스스로의 신체를 드러내 유혹한다
+PRINTFORML 군침을 마시는 그에게 과시하도록(듯이) 몸을 구불거리게 할 수 있으면, 그는 참지 못하고 %ANAME(대상)%에 껴안아 왔다
+PRINTFORML %조사처리(ANAME(대상),"는")% 흥분하면서도 상냥하게 그를 리드해, 한껏 섹스를 철저히 가르친다
+PRINTFORMW 이윽고 기분 좋은 것 같은 한숨과 함께 소년이 사정하면, %조사처리(ANAME(대상),"는")% 부르릇 몸부림 하면서 절정 했다
+CALL FUCK(대상, "욕망, 봉사, 성교, 성기술, 키스, 펠라티오, Ｖ, Ｖ성교", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("아이"), @"아이의 \@RAND:2 ? 페니스 # 입술\@", "아이", "", "화간")
+PRINTFORML 
+PRINTFORML 아이를 마음껏 귀여워한 후, 부모 슬하에 데려다 주었다
+PRINTFORMW 헤어질 때, 손을 흔드는 그의 사타구니가 부풀고 있는 것이 보였다
+
+RETURN 1

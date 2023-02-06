@@ -1,0 +1,85 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_OTAKU_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_OTAKU_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_OTAKU(대상)
+#DIM 대상
+
+PRINTFORML 쇼핑을 하고 있으면 오타쿠풍의 남자라고 알게 되었다
+PRINTFORML 그의 덕분에 좋은 것을 싸게 살 수가 있었다
+IF IS_MALE(대상)
+	PRINTFORMW 쇼핑의 뒤, 그는 추천의 가게로 이끌어 왔다
+ELSE
+	PRINTFORMW 쇼핑의 뒤, 그는 말더듬이면서 차로 이끌어 왔다
+ENDIF
+PRINTFORML 어떻게 하지?
+PRINTL
+CALL ASK_YN("교제한다" ,"거절한다")
+IF RESULT == 1
+	PRINTFORML 나쁘지만 바쁘다
+	PRINTFORMW 거절하면 그는 빠른 걸음에 떠나 갔다
+	RETURN
+ENDIF
+IF IS_MALE(대상)
+	PRINTFORMW 추천의 가게라는 것에 흥미가 끓었으므로 교제했다
+	PRINTFORML ………
+	PRINTFORML 거기는 코스프레Ｈ의 가게였다
+	PRINTFORMW 자신 혼자서는 들어가는 용기가 없었던 것 같다
+	PRINTFORML 중을 들여다 보면, 꽤 사랑스러운 아가씨가 갖추어져 있었다
+	PRINTFORMW %ANAME(대상)%들은 각각 기호의 아가씨를 선택해 독실에 향했다
+	PRINTFORML 
+	SELECTCASE RAND:3
+		CASE 0
+			PRINTFORML 메이드복의 아가씨가 %ANAME(대상)%에 걸쳐 요염하게 허리를 흔들어 봉사하고 있다
+			PRINTFORML 그녀는 교묘하게 허리를 구불거리게 되어지면서 요염한 신음소리를 들려주고 즐겁게 해 준다
+			PRINTFORML 참지 못하고 밀어올리면, 흠칫 뒤로 젖혀 그 반동으로 꽉 질이 꼭 죄였다
+			PRINTFORMW 「주인님」이라고 사랑스럽게 조르는 아가씨에게 진 %조사처리(ANAME(대상),"는")%, 연장해 섹스에 몰두했다
+		CASE 1
+			PRINTFORML 차이나드레스의 아가씨가 %ANAME(대상)%에 걸쳐 요염하게 허리를 흔들어 춤추고 있다
+			PRINTFORML 그녀는 교묘하게 허리를 구불거리게 되어지면서 요염한 신음소리를 들려주고 즐겁게 해 준다
+			PRINTFORML 참지 못하고 밀어올리면, 흠칫 뒤로 젖혀 그 반동으로 꽉 질이 꼭 죄였다
+			PRINTFORMW 「서방님」라고 외치면서 흐트러지는 아가씨에게 진 %조사처리(ANAME(대상),"는")%, 연장해 섹스에 몰두했다
+		CASE 2
+			PRINTFORML 군복 모습의 아가씨가 %ANAME(대상)%에 걸쳐 요염하게 허리를 흔들어 하나의 물건을 자극해 온다
+			PRINTFORML 그녀는 교묘하게 허리를 구불거리게 되어지면서 요염한 신음소리를 들려주고 즐겁게 해 준다
+			PRINTFORML 참지 못하고 밀어올리면, 흠칫 뒤로 젖혀 그 반동으로 꽉 질이 꼭 죄였다
+			PRINTFORMW 「상관전」이라고 열정적이게 속삭여 오는 아가씨에게 진 %조사처리(ANAME(대상),"는")%, 연장해 섹스에 몰두했다
+	ENDSELECT
+	CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", "창녀의 소녀의 질", "매춘")
+	PRINTFORML
+	PRINTFORML 충분히 즐긴 후, 둘이서 가게를 나왔다
+	PRINTFORMW 의기 투합한 %ANAME(대상)%들은 또 함께 올 것을 약속해 헤어졌다 
+	RETURN
+ENDIF
+PRINTFORML 답례도 겸해 교제했다
+PRINTFORML 차의 한중간, 힐끔힐끔%조사처리(ANAME(대상),"를")% 보는 그의 시선을 느꼈다
+PRINTFORML 평상시라면 불쾌하게 생각하는 곳이지만 이상하게 기분은 나쁘지 않았다
+PRINTFORMW 분위기에 흐르게 된 %조사처리(ANAME(대상),"는")% 숙소에 이끌려도 강하게 거절하지 않았다
+PRINTFORML 
+PRINTFORML 그는 정말로 성욕의 권화와 같은 존재로, 밤새 격렬한 섹스에 맞대졌다
+PRINTFORML 처음의 여체에게 흥분해 버린 모습으로 콧김을 거칠게 해, 원숭이같이 허리를 흔들어 %조사처리(ANAME(대상),"를")% 범했다
+PRINTFORMW 그 끈적 한 베로츄와 강렬한 씨뿌리기 프레스에 의해 %조사처리(ANAME(대상),"는")% 점차 몸도 마음도 암컷 조교되어 간다
+PRINTFORML 그리고 그가 당연한님이질 내 하면, %조사처리(ANAME(대상),"는")% 참지 못하고 그에게 꾸욱 매달리면서 절정에 이르렀다
+PRINTFORML 하지만 성욕절륜인 그의 허리의 움직임은 사정중도 멈추지 않고, 씨뿌리기 되면서의 섹스에 반복해 절정 당한다
+PRINTFORMW %ANAME(대상)%들은 밤이 끝날 때까지 쉬는 일 없이 교원 계속 있어, 새벽녘에는 자궁이 그의 정액으로 출렁출렁이 되어 있었다……
+CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교, 노출", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("오타쿠"), @"오타쿠의 \@RAND:2 ? 페니스 # 입술\@", "오타쿠", "", "화간")
+PRINTFORML 
+PRINTFORML 일도 다 올랐을 무렵, 간신히 %조사처리(ANAME(대상),"는")% 그와 호텔을 나왔다
+PRINTFORMW 서운한 듯이 엉덩이를 주무르는 그와 상냥하게 키스를 주고 받은 후, 연락처를 전해 헤어졌다
+
+
+RETURN 1

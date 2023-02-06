@@ -1,0 +1,170 @@
+﻿;-------------------------------------------------
+; 「욕실에서 편히 쉰다」의 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA6_COM1_EXIST
+RETURN 1
+
+;-------------------------------------------------
+; 「욕실에서 편히 쉰다」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA6_COM1_NAME
+IF GET_COUNTRY_BOSS(CFLAG:MASTER:소속) == MASTER
+	RESULTS:0 '= "사관의 모습"
+ELSE
+	RESULTS:0 '= "욕실에서 편히 쉰다"
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+; 「욕실에서 편히 쉰다」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA6_COM1_CHECK
+RETURN 1
+
+;-------------------------------------------------
+; 「욕실에서 편히 쉰다」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA6_COM1_CHECKCHARA(ARG:0)
+
+SIF MASTER == ARG:0
+	RETURN 0
+SIF CFLAG:(ARG:0):행동완료
+	RETURN 0
+SIF CFLAG:(ARG:0):포로처
+	RETURN 0
+SIF CFLAG:MASTER:소속 != CFLAG:(ARG:0):소속
+	RETURN 0
+SIF GROUPMATCH(CFLAG:(ARG:0):행동불능상태, 행동불능_임월, 행동불능_상처, 행동불능_아이)
+	RETURN 0
+SIF COOLTIME:(ARG:0):0
+	RETURN 0
+SIF IS_ANIMAL(ARG:0)
+	RETURN 0
+;SIF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):낙인 && !TALENT:(ARG:0):죄인 || (CFLAG:(ARG:0):2 >= 500 && IS_SAMESEX(MASTER, ARG:0))
+SIF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):낙인 || (CFLAG:(ARG:0):2 >= 500 && IS_SAMESEX(MASTER, ARG:0))
+	RETURN 0
+
+RETURN 1
+
+;-------------------------------------------------
+; 「욕실에서 편히 쉰다」의 메인 처리
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA6_COM1_MAIN
+#DIM L_COUNTER
+#DIM 대상
+
+;리셋트
+CALL COM_AUTO_RANDOMIZED_WEIGHTED_START
+
+;후보 추가
+FOR L_COUNTER, 0, CHARANUM
+	CALL SHOP_LIFE67_MAP1_AREA6_COM1_CHECKCHARA(L_COUNTER)
+	SIF !RESULT
+		CONTINUE
+	CALL COM_AUTO_RANDOMIZED_WEIGHTED_VALUE(L_COUNTER, 10)
+NEXT
+
+;결과 취득
+대상 = COM_AUTO_RANDOMIZED_WEIGHTED_RESULT()
+
+;조교 초기설정
+CALL TRAIN_TARGET_SETTING(대상)
+
+FLAG:우후후플래그 = 0
+FLAG:12 = 8
+
+;조교 초기설정
+CALL TRAIN_TARGET_SETTING(대상)
+
+;행동 개시시의 공통 처리
+CALL START_TRAIN_COMMON
+
+CALL SHOP_LIFE67_MAP1_AREA6_COM1_TEXT_1(대상)
+WAIT
+;CALL LOVE_AT_FIRST_SIGHT(대상)
+;PRINTL 
+CALL SHOP_LIFE67_MAP1_AREA6_COM1_TEXT_2(대상)
+WAIT
+
+CFLAG:대상:안면 = 1
+
+;묘사를 클리어 하지 않는다
+LINES_SHOP = LINECOUNT
+
+RETURN 1
+
+;-------------------------------------------------
+; 묘사 1
+;	구상주를 자유롭게 바꿀 수 있도록(듯이)
+;	@KOJO_EVENT_DEFAULT(ARG)로 옮기는 것이 좋을지도
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA6_COM1_TEXT_1(대상)
+#DIM 대상
+
+IF GET_COUNTRY_BOSS(CFLAG:MASTER:소속) == MASTER
+	PRINTFORML  %조사처리(ANAME(MASTER),"가")% 목욕통으로 편히 쉬고 있으면 탈의실로부터 %조사처리(ANAME(대상),"가")% 말을 걸어 왔다
+	PRINTFORML  %조사처리(ANAME(MASTER),"가")% 타올을 감아 %조사처리(ANAME(대상),"를")% 맞아들이면
+	PRINTFORML  %조사처리(ANAME(대상),"는")% 자세력의 군주인 %ANAME(MASTER)%에 당황하면서도 목욕통에 들어 왔다
+ELSE
+	PRINTFORML  %조사처리(ANAME(MASTER),"가")% 목욕통으로 편히 쉬고 있으면 탈의실로부터 %조사처리(ANAME(대상),"가")% 말을 걸어 왔다
+	IF HAS_SAME_FATHER(MASTER, 대상) || HAS_SAME_MOTHER(MASTER, 대상)
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 형제 자매인 %조사처리(ANAME(MASTER),"와")% 함께 목욕탕을 즐기려고 생각한 것 같다
+	ELSEIF CFLAG:MASTER:부친 == GET_ID(대상)
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 부친으로서 우리 아이인 %조사처리(ANAME(MASTER),"와")% 목욕탕을 즐기려고 생각한 것 같다
+	ELSEIF CFLAG:MASTER:모친 == GET_ID(대상)
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 모친으로서 %조사처리(ANAME(MASTER),"와")% 함께 목욕탕에 잠기러 온 것 같다
+	ELSEIF CFLAG:대상:부친 == GET_ID(MASTER)
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 부친인 %조사처리(ANAME(MASTER),"와")% 함께 목욕탕에 들어가고 싶은 것 같다
+	ELSEIF CFLAG:대상:모친 == GET_ID(MASTER)
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 모친인 %조사처리(ANAME(MASTER),"와")% 함께 목욕탕에 들어가고 싶은 것 같다
+;	ELSEIF TALENT:대상:의형제
+;		PRINTFORML  %조사처리(ANAME(대상),"는")% 의형제인 %조사처리(ANAME(MASTER),"와")% 함께 목욕탕을 즐기려고 생각한 것 같다
+	ELSEIF TALENT:대상:연인
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 연인인 %조사처리(ANAME(MASTER),"와")% 함께 목욕탕에 들어가고 싶은 것 같다
+	ELSEIF TALENT:대상:낙인
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 낙인의 주인인 %ANAME(MASTER)%의 얼굴을 볼 수 없으면 침착하지 않았던 것 같다
+	ELSEIF GET_COUNTRY_FROM_BOSS_NAME(NAME:대상) == CFLAG:MASTER:소속
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 자세력의 사관인 %조사처리(ANAME(MASTER),"와")% 함께 목욕탕을 즐기려고 생각한 것 같다
+	ELSEIF TALENT:대상:연모
+		PRINTFORML  %조사처리(ANAME(대상),"는")% %조사처리(ANAME(MASTER),"와")% 함께 목욕탕을 즐기려고 생각한 것 같다
+	ELSEIF TALENT:대상:복종
+		PRINTFORML  %조사처리(ANAME(대상),"는")% %ANAME(MASTER)%의 등을 밀려고 온 것 같다
+	ELSEIF TALENT:대상:주인 ;|| TALENT:(대상):각인
+		PRINTFORML  %조사처리(ANAME(대상),"는")% %조사처리(ANAME(MASTER),"와")% 목욕탕에서 즐기려고 온 것 같다
+	ELSEIF TALENT:대상:친구
+		PRINTFORML  %조사처리(ANAME(대상),"는")% 친구의 %조사처리(ANAME(MASTER),"와")% 목욕탕을 즐기려고 생각한 것 같다
+	ELSEIF CFLAG:대상:안면 == 0
+		PRINTFORML  동일 세력인 %조사처리(ANAME(MASTER),"와")% 교류가 깊어지려고 온 것 같다
+	ELSE
+		PRINTFORML  %조사처리(ANAME(대상),"는")% %조사처리(ANAME(MASTER),"와")% 교류가 깊어지려고 온 것 같다
+	ENDIF
+	PRINTFORML  %조사처리(ANAME(MASTER),"는")% 타올을 감아 %조사처리(ANAME(대상),"를")% 맞아들였다
+ENDIF
+
+;-------------------------------------------------
+; 묘사 2
+;-------------------------------------------------
+@SHOP_LIFE67_MAP1_AREA6_COM1_TEXT_2(대상)
+#DIM 대상
+
+IF !IS_SAMESEX(MASTER, 대상)
+	PRINTFORM  %조사처리(ANAME(대상),"는")%
+	IF TALENT:(대상):무관심 || TALENT:(대상):감정결핍 || TALENT:(대상):해방
+		PRINTFORML 이성과 함께 목욕통에 잠기고 있는 일을 신경쓰지 않은 것 같다
+	ELSEIF TALENT:(대상):수줍음 || TALENT:(대상):얌전함 || TALENT:(대상):보수적 || TALENT:(대상):정조관념
+		PRINTFORML 이성과 함께 목욕통에 잠기고 있는 것을 당황하고 있는 모습이다……
+	ELSEIF TALENT:(대상):쾌감에솔직 || TALENT:(대상):호기심 || TALENT:(대상):정조관념없음
+		PRINTFORML 이성과 함께 목욕탕을 즐길 수 있는 것을 기쁜 듯하다……
+	ELSEIF TALENT:(대상):소악마
+		PRINTFORML 빙그레 미소를 띄우면, %ANAME(MASTER)%에 가까워져 왔다
+	ELSE
+		PRINTFORML 이성과 함께 목욕통에 잠기는 것을 약간 사양을 보이고 있다
+	ENDIF
+ELSE
+	PRINTFORML  %조사처리(ANAME(대상),"는")% 목욕통에 잠기는 기분이 좋을 것 같다
+ENDIF
+
+PRINTFORML  우연히 만난 %조사처리(ANAME(MASTER),"와")% %조사처리(ANAME(대상),"는")% 함께 입욕했다…
+
+RETURN 0
+

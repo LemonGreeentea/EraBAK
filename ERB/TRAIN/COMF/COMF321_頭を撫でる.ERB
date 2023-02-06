@@ -1,0 +1,270 @@
+﻿;두머리를쓰다듬는다
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME321
+RESULTS:0 = 머리를쓰다듬는다
+RESULTS:1 = 머리를쓰다듬게한다
+RESULTS:2 = 머리를 어루만져 받는다
+RESULTS:3 = 머리를 어루만질 수 있다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE321
+;공통 부분
+CALL COM_ABLE_COMMON(321)
+SIF RESULT == 0
+	RETURN 0
+;주인공 이외가 실행하는 경우, 호감도가 500이상 필요
+SIF MPLY:0 != MASTER && CFLAG:(MPLY:0):2 < 500
+	RETURN 0
+;상처라면 불가
+SIF CFLAG:(MTAR:0):행동불능상태 == 3
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM321
+;실행할 수 있을까의 판정
+CALL COM_ORDER_COMMON
+IF RESULT == 0
+	RETURN 0
+ENDIF
+
+IF MPLY:0 == MASTER
+	LOCAL:0 = 0
+	IF TALENT:(MTAR:0):유아 || TALENT:(MTAR:0):유치
+		LOCAL:0 = 5
+	ENDIF
+	;커맨드의 성공 여부를 TFLAG:18에 세트
+	CALL JUDGE_COM_RESULT(MTAR:0, 5 + LOCAL:0, 10 - LOCAL:0)
+	LOCAL:1 = MTAR:0
+ELSE
+	;커맨드의 성공 여부를 TFLAG:18에 세트
+	CALL JUDGE_COM_RESULT(MPLY:0, 5, 10)
+	LOCAL:1 = MPLY:0
+ENDIF
+
+;고정으로 들어가는 소스
+SOURCE:(MPLY:0):접촉 = 250
+SOURCE:(MTAR:0):접촉 = 250
+
+;친밀하게 응한 환락의 소스 추가
+SOURCE:(MPLY:0):환락 = -10
+SOURCE:(MTAR:0):환락 = -10
+CALL ADD_SOURCE_KANRAKU(MPLY:0, 100)
+CALL ADD_SOURCE_KANRAKU(MTAR:0, 100)
+SOURCE:(MPLY:0):환락 = MAX(SOURCE:(MPLY:0):환락, 0)
+SOURCE:(MTAR:0):환락 = MAX(SOURCE:(MTAR:0):환락, 0)
+
+;친밀하게 응한 애정의 소스 추가
+CALL ADD_SOURCE_AIZYOU(MPLY:0, 130)
+CALL ADD_SOURCE_AIZYOU(MTAR:0, 130)
+
+;주도권에 응한 소스의 추가
+CALL ADD_SOURCE_INITIATIVE_N(MPLY:0, 150, 150)
+CALL ADD_SOURCE_INITIATIVE_N(MTAR:0, 150, 150)
+
+IF !TALENT:(MTAR:0):유아 && !TALENT:(MTAR:0):유치 && !TALENT:(MTAR:0):프라이드낮음
+	IF TALENT:(MTAR:0):프라이드높음
+		SOURCE:(MTAR:0):반감 = 150
+		TIMES SOURCE:(MTAR:0):환락, 0.50
+	ELSE
+		SOURCE:(MTAR:0):반감 = 60
+		TIMES SOURCE:(MTAR:0):환락, 0.80
+	ENDIF
+ENDIF
+
+IF TALENT:(MPLY:0):모성
+	TIMES SOURCE:(MTAR:0):애정, 1.50
+ENDIF
+
+;실패
+IF TFLAG:18 == -1
+	TIMES SOURCE:(MPLY:0):환락, 0.20
+	TIMES SOURCE:(MPLY:0):애정, 0.20
+	TIMES SOURCE:(MTAR:0):환락, 0.20
+	TIMES SOURCE:(MTAR:0):애정, 0.20
+	TIMES SOURCE:(MTAR:0):반감, 2.00
+	SOURCE:(MPLY:0):불만 += 500
+	SOURCE:(MTAR:0):불만 += 500
+	TFLAG:37 -= 5
+;성공
+ELSEIF TFLAG:18 == 0
+
+;대성공
+ELSE
+	TIMES SOURCE:(MPLY:0):환락, 2.00
+	TIMES SOURCE:(MPLY:0):애정, 2.00
+	TIMES SOURCE:(MTAR:0):환락, 2.00
+	TIMES SOURCE:(MTAR:0):애정, 2.00
+	TIMES SOURCE:(MTAR:0):반감, 0.50
+	TFLAG:37 += 5
+ENDIF
+
+;주도도 변화 기준치
+TFLAG:49 = 3
+
+;도착도 변화 기준치
+TFLAG:50 = -1
+
+RETURN 1
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER321(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 30
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 3)
+
+;호감도
+IF CFLAG:(ARG:0):2 < 400
+	IF CFLAG:(ARG:0):2 < 50
+		LOCAL:0 = -40
+	ELSEIF CFLAG:(ARG:0):2 < 150
+		LOCAL:0 = -20
+	ELSEIF CFLAG:(ARG:0):2 < 300
+		LOCAL:0 = -10
+	ELSE
+		LOCAL:0 = -5
+	ENDIF
+	CALL COM_ORDER_ELEMENT(ARG:0, @"호감도 부족", LOCAL:0)
+ELSE
+	LOCAL:0 = CFLAG:(ARG:0):2 / 75
+	CALL COM_ORDER_ELEMENT(ARG:0, @"호감도", LOCAL:0)
+ENDIF
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -3)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 5)
+ENDIF
+IF TALENT:(ARG:0):모성
+	CALL COM_ORDER_ELEMENT(ARG:0, "모성", 6)
+ENDIF
+IF TFLAG:54
+	CALL COM_ORDER_ELEMENT(ARG:0, "데이트중", 4)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE321
+;키스중
+IF IS_EQUIP(MPLY:0, 342)
+	LOCALS:0 = 키스를 하면서
+	;지문 컷
+	LOCAL:0 = SEARCH_EQUIP_IC(342, MPLY:0, MTAR:0)
+	IF LOCAL:0 >= 0
+		MEQUIP_CUT:(LOCAL:0) = 1
+	ENDIF
+ELSE
+	LOCALS:0 = 
+ENDIF
+
+;플레이어가 주인공측
+IF MPLY:0 == MASTER
+	;주도권이 주인공측
+	IF IS_INITIATIVE(MASTER)
+		PRINTFORM %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %ANAME(MTAR:0)%
+		IF CFLAG:(MTAR:0):2 >= 800
+			PRINTFORMW 를 껴안아 상냥하게 머리를 어루만졌다
+		ELSE
+			PRINTFORMW 의 머리를 어루만졌다
+		ENDIF
+	;주도권이 상대측
+	ELSE
+		PRINTFORM %조사처리(ANAME(MTAR:0),"는")% %LOCALS:0% %ANAME(MPLY:0)%
+		IF CFLAG:(MTAR:0):2 >= 800
+			PRINTFORMW 에 몸을 맡겨, 머리를 어루만지도록(듯이) 요구했다
+		ELSE
+			PRINTFORMW 에, 머리를 어루만졌으면 좋겠다고 졸랐다
+		ENDIF
+	ENDIF
+
+	IF TFLAG:18 == 1
+		IF TALENT:(MTAR:0):유아 || TALENT:(MTAR:0):유치
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 눈을 가는, 마음 좋은 것같이 하고 있다…
+		ELSE
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 쑥스러운 듯이, 미소를 띄우고 있다…
+		ENDIF
+	ELSEIF TFLAG:18 == 0
+		IF TALENT:(MTAR:0):유아 || TALENT:(MTAR:0):유치
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 기쁜듯이 하고 있다…
+		ELSE
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 뺨을 홍 조수시켜, 부끄러운 듯이 하고 있다…
+		ENDIF
+	ELSEIF TFLAG:18 == -1
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 아이 취급해 되어 기분이 안좋은 것 같다…
+	ENDIF
+;플레이어가 상대측
+ELSE
+	;주도권이 주인공측
+	IF IS_INITIATIVE(MASTER)
+		PRINTFORM %조사처리(ANAME(MTAR:0),"는")% %LOCALS:0% %ANAME(MPLY:0)%에
+		IF CFLAG:(MPLY:0):2 >= 800
+			PRINTFORMW 껴안아, 응석부리면서 머리를 어루만져 받았다
+		ELSE
+			PRINTFORMW 두를 어루만져 받았다
+		ENDIF
+
+		IF TFLAG:18 == 1
+			IF TALENT:(MPLY:0):모성
+				PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 우리 아이를 소중히 할까같이, 어루만져 주었다…
+			ELSE
+				PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 웃는 얼굴로 상냥하게 어루만져 주었다…
+			ENDIF
+		ELSEIF TFLAG:18 == 0
+			IF TALENT:(MPLY:0):모성
+				PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 웃는 얼굴로 상냥하게, 다만 어루만져 주었다…
+			ELSE
+				PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 기가 막힌 것처럼 쓴웃음 지으면서도, 상냥하게 어루만져 주었다…
+			ENDIF
+		ELSEIF TFLAG:18 == -1
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 마음 속 기가 막힌 것 같은 표정으로 한숨을 쉬었다…
+		ENDIF
+	;주도권이 상대측
+	ELSE
+		PRINTFORM %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %ANAME(MTAR:0)%
+		IF CFLAG:(MPLY:0):2 >= 800
+			PRINTFORMW 를 껴안으면, 응석부리게 하도록(듯이) 상냥하게 머리를 어루만졌다
+		ELSE
+			PRINTFORMW 의 머리를 어루만져 왔다
+		ENDIF
+
+		IF TFLAG:18 == 1
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 매우 즐거운 듯 하다…
+		ELSEIF TFLAG:18 == 0
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 반응을 보고 즐기고 있다…
+		ELSEIF TFLAG:18 == -1
+			PRINTFORML 가, %조사처리(ANAME(MPLY:0),"는")% 곧바로 질려 버린 것 같다…
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;-------------------------------------------------
+@COM_TEXT_LAST321
+;일상 커맨드에 공통의 지문
+CALL COM_TEXT_LAST_LIFE
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN321
+RETURN 커맨드_일상

@@ -1,0 +1,422 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_ADULTFILM_RATE()
+RETURN (DVAR:AV촬영_진행도 > 0 ? 330 # 30)
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_ADULTFILM_DECISION()
+#DIM 대상
+
+대상 = 0
+
+SIF DAY < 10
+	RETURN 0
+SIF DVAR:AV촬영_진행도 == 10
+	RETURN 0
+FOR LOCAL, 0, CHARANUM
+	;포로가 아니고, 죽지 않고, AV여배우미소지자의 여자가 자국에 있을지 어떨지 판정
+	SIF !CFLAG:LOCAL:포로처 && CFLAG:LOCAL:특수상태 != 특수상태_사망 && !(GETBIT(TALENT:LOCAL:음란계, 소질_음란_ＡＶ여배우)) && IS_FEMALE(LOCAL)
+		대상 ++
+NEXT
+SIF 대상 < 1
+	RETURN 0
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_ADULTFILM_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_ADULTFILM
+#DIM 대상
+
+IF DVAR:AV촬영_진행도 > 0
+	대상 = ID_TO_CHARA(DVAR:AV촬영_대상ID)
+	IF 대상 == -1 || CFLAG:대상:특수상태 == 특수상태_사망
+		DVAR:AV촬영_대상ID = 0
+		DVAR:AV촬영_중독진행도 = 0
+		DVAR:AV촬영_진행도 = 0
+	ENDIF
+ENDIF
+
+IF DVAR:AV촬영_진행도 == 0
+	;%조사처리(ANAME(MASTER),"가")% 저속해지고 있는 경우
+	IF GETBIT(TALENT:MASTER:음란계, 소질_음란_ＡＶ여배우) && IS_FEMALE(MASTER) && DVAR:AV촬영_발생플래그 == 1
+		PRINTFORML 다시 AV촬영의 프로듀서가 왔다
+		PRINTFORMW 그는 %조사처리(ANAME(MASTER),"를")% 보면 히죽히죽 웃으면서 당연과 같이 엉덩이를 주물러 왔다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 기쁜듯이 신음소리를 올리고 움찔하면서도 저항하지 않아 받아들인다
+		PRINTFORML 「또 신세를 져요, 시청자는 항상 새로운 아이돌을 요구하고 있습니다」
+		PRINTFORMW 귓전으로 속삭여진 %조사처리(ANAME(MASTER),"는")% 부들 등줄기를 진동시켰다
+	;2회째 이후
+	ELSEIF DVAR:AV촬영_발생플래그 == 1
+		PRINTFORMW 다시 밀착 다큐멘터리의 촬영을 신청받았다
+		PRINTFORML 「이 기획은 맞아요! 그러면 군의 어필로도 되겠지요!」
+		PRINTFORMW 프로듀서를 자칭하는 남자는 웃는 얼굴로 그렇게 역설하지만…
+	;처음의 경우
+	ELSE 
+		PRINTFORML 어느 날 취재의 신청이 왔다
+		PRINTFORML 뭐든지 장교에게 밀착한 다큐멘터리를 찍고 싶은 것 같다
+		PRINTFORML 「이 기획은 맞아요! 그러면 군의 어필로도 되겠지요!」
+		PRINTFORMW 프로듀서를 자칭하는 남자는 웃는 얼굴로 그렇게 역설하지만…
+	ENDIF
+	PRINTFORML 어떻게 하지?
+	CALL ASK_YN("맡는다" ,"거절한다")
+	IF RESULT == 1
+		$OKOTOWARI
+		;%조사처리(ANAME(MASTER),"가")% 저속해지고 있는 경우
+		IF GETBIT(TALENT:MASTER:음란계, 소질_음란_ＡＶ여배우) && DVAR:AV촬영_발생플래그 == 1
+			PRINTFORML 하지만 지금은 전쟁에 바쁘고, 협력하는 것은 어렵다
+			PRINTFORML %조사처리(ANAME(MASTER),"가")% 미안한 것같이 거절하면, 그는 노골적으로 혀를 찼다
+			PRINTFORMW 그리고 울분이라는 듯이 %조사처리(ANAME(MASTER),"를")% 침실에 데리고 들어가면, 무책임하게 몇 번이나 씨뿌리기를 해 갔다
+			CALL FUCK(MASTER, "Ｃ, Ｖ, Ｂ, Ｍ, 성교, 정애, 봉사, 펠라티오, Ｖ성교", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("AV남배우"), @"남배우의 \@RAND:2 ? 페니스 # 입술\@", "AV남배우", "", "강간")
+		ELSE
+			PRINTFORML 군사 기밀을 흘려질지도 모른다
+			PRINTFORMW 역시 이번은 거절하게 해 받는 일로 했다
+			SIF DVAR:AV촬영_발생플래그 != 1
+				DVAR:AV촬영_발생플래그 = 1
+		ENDIF
+		RETURN
+	ELSEIF RESULT == 0
+		;%조사처리(ANAME(MASTER),"가")% 저속해지고 있는 경우
+		IF GETBIT(TALENT:MASTER:음란계, 소질_음란_ＡＶ여배우) && DVAR:AV촬영_발생플래그 == 1
+			PRINTFORMW 물론 맡게 해 받는 일로 했다
+			PRINTFORML 누구를 선택할까?
+		ELSE
+			PRINTFORML 그 웃는 얼굴에 다소 수상함을 느낀 것의 협력하는 일로 했다
+			PRINTFORML 「훌륭하다! 반드시 그렇게 말해 주실거라고 생각하고 있었어요!」
+			PRINTFORML 「그러면 취재를 시켜 받을 수 있는 (분)편을 소개해 주세요
+			PRINTFORMW 「여성의 (분)편으로 부탁드릴게요! 그 쪽이 시청자의 인기가 좋은 것이에요, 에에!」
+			PRINTFORML 누구를 선택할까?
+		ENDIF
+		CALL SINGLE_DRAWLINE
+		CALL SELECT_CHARA_LIST_ONLY_LOGIC_SEX("ADULTFILM", "ADULTFILM")
+		대상 = RESULT
+		IF RESULT < 0
+			GOTO OKOTOWARI
+		ELSEIF 대상 == MASTER
+			PRINTFORMW %ANAME(대상)%자신이 취재를 받는 일로 했다
+		ELSE
+			PRINTFORMW %ANAME(대상)%에 취재를 받게 하는 일로 했다
+		ENDIF
+		PRINTFORML 그는 %조사처리(ANAME(대상),"를")% 평가하는 것처럼 바라본 후 빙그레 웃었다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 조속히 남자에게 촉구받는 대로 취재로 향했다
+	ENDIF
+	PRINTFORML 
+	PRINTFORMW …긴장하고 있었지만, 별다름도 없는 보통 취재였다
+	PRINTFORML 그들은 군이나 사생활에 관한 질문을 몇개인가 한 후
+	PRINTFORML 일상의 업무나 훈련의 모습을 열심히 촬영해 갔다
+	PRINTFORML 취재중, 승무원과의 회화가 활기를 띠어 사이 좋게 될 수 있었다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 다음의 취재일의 확인을 해 그들과 헤어졌다
+	PRINTFORML 
+	FOR LOCAL, 1, MAX_COUNTRY
+		CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, 15, -15)
+	NEXT
+	CALL COLOR_PRINTW("그 날의 취재 내용이 방송되면 타국의 평가가 올랐다", 칼라_주의)
+	MONEY += 5000
+	CALL COLOR_PRINTW("출연료로 해서 금 5000을 받았다", 칼라_주의)
+	DVAR:AV촬영_진행도 ++
+	DVAR:AV촬영_대상ID = GET_ID(대상)
+	DVAR:AV촬영_발생플래그 = 1
+ELSEIF DVAR:AV촬영_진행도 == 1
+	PRINTFORMW 다시 밀착 취재가 왔다
+	PRINTFORML 이번도 전회같이 몇개의 질문을 된다
+	PRINTFORML 「그런데 이러한 곳에 있으면, 여성으로서는 다양하게 불편하지 않을까요?」
+	PRINTFORML 유창하게 대답 하고 있었던 %조사처리(ANAME(대상),"이지만")%, 돌연의 모색이 다른 질문에 일순간 당황했다
+	PRINTFORMW 「즉 남성으로부터의 시선이라든지, 혹은 그렇게, 생리 따위에 대한 이야기입니다」
+	PRINTFORML 직구의 질문에 %조사처리(ANAME(대상),"는")% 무심코 얼굴이 붉어지는 것을 느꼈다
+	CALL ASK_YN("냉정하게 대답한다" ,"화내 고함친다")
+	IF RESULT == 0
+		PRINTFORML 하지만 %조사처리(ANAME(대상),"는")% 노력해 냉정하게 대답했다
+		PRINTFORML 「그렇습니까, 과연…여성으로서의 고민도 역시 있는 것 같네요」
+		PRINTFORMW 어딘지 모르게 그의 말에 업신여김을 느끼면서도 %조사처리(ANAME(대상),"는")% 평정을 가장했다
+	ELSEIF RESULT == 1
+		PRINTFORML 성희롱 비슷한 질문에 %조사처리(ANAME(대상),"는")% 화내 그를 고함쳤다
+		PRINTFORML 「아니오, 오해하지 말아 주세요!」
+		PRINTFORML 「이것도 여성전용이 제대로 된 취재예요, 이봐요 여러분도 좀 더 여성의 임관이 증가하면 기쁠 것입니다?」
+		PRINTFORMW 「그 때문에도 이러한 생의 소리를 보내는 것이 중요합니다, 에에」
+		PRINTFORML 그는 가장된 웃음을 띄우면서 그렇게 설명한다
+		PRINTFORML …확실히 그의 말에도 일리 있을지도 모른다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 화낸 것을 사죄하면, 약간 말에 막히면서 그의 질문에 답했다
+	ENDIF
+	PRINTFORML …그 뒤도 몇개인가 "여성전용"의 질문이 계속되었다
+	PRINTFORML 중에는 꽤 아슬아슬하게 느끼는 것도 있었지만 한 번 맡은 앞, %조사처리(ANAME(대상),"는")% 모두 정직하게 대답했다
+	PRINTFORML …취재 후, 이번은 꽤 좋은 획이 잡혔다고 프로듀서로부터 절찬되었다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 복잡한 감정을 안으면서도 다음의 취재일의 확인을 해 그들과 헤어졌다
+	PRINTFORML 
+	COUNTRY_SOLDIER:(CFLAG:대상:소속) += 500 + 100 * (RAND:10 + RAND:10 + 6)
+	CALL COLOR_PRINTW("그 날의 취재 내용이 방송되면 지원병이 증가했다", 칼라_주의)
+	MONEY += 5000
+	CALL COLOR_PRINTW("출연료로 해서 금 5000을 받았다", 칼라_주의)
+	DVAR:AV촬영_진행도 ++
+ELSEIF DVAR:AV촬영_진행도 == 2
+	PRINTFORMW 다시 밀착 취재가 왔다
+	PRINTFORML 프로듀서는 변함없는 웃는 얼굴로 %ANAME(대상)%에 가까워져 온다
+	PRINTFORML 전회의 일로 경계하면서도 %조사처리(ANAME(대상),"는")% 일로서 변환 대응했다
+	PRINTFORMW …하지만 그 날의 취재는 특히 아무것도 없었다
+	PRINTFORML 전회의 일 따위 없었는지와 같은 보통 취재에 %조사처리(ANAME(대상),"는")% 약간 맥 빠짐이 된다
+	PRINTFORML 질의응답을 끝내, %조사처리(ANAME(대상),"가")% 일을 위해서(때문에) 갈아입으려고 방에 향하면 그들도 따라 왔다
+	PRINTFORML 「밀착 취재니까요, 장교를 보다 알기 위해서(때문에)도 방 안이나 군의 비품, 생활의 모습도 비추어 두지 않으면」
+	PRINTFORMW 「괜찮습니다 라고, 분명하게 편집하기 때문에, 프라이베이트에는 주의해요, 에에」
+	PRINTFORML %ANAME(대상)%의 항의에게도 그는 (듣)묻는 귀를 가지지 않고 당연과 같이 그렇게 대답한다
+	PRINTFORML 결국 뺀들뺀들한 그의 태도에 %조사처리(ANAME(대상),"가")% 접혀, 방 안에 들어가져 버렸다
+	PRINTFORML 촬영이라는 명목으로 방의 구석구석까지 놓쳐 버려, %조사처리(ANAME(대상),"는")% 수치로 현기증이 났다
+	PRINTFORMW 한층 더 추격과 같이 그들은 %ANAME(대상)%에 언제나 대로로 갈아입고를 하도록(듯이) 재촉 했다
+	PRINTFORML 그것은 과연 거절하려고 했지만, 발밑 밖에 비추지 않으면 외골수의 그들에게 다시 접혀 버렸다
+	PRINTFORML 결국%조사처리(ANAME(대상),"는")% 방의 구석에서 옷을 갈아 입는 처지가 되었다
+	PRINTFORML 그들의 시선을 등에 느끼면서 머뭇머뭇 갈아입는 %조사처리(ANAME(대상),"는")%, 카메라에 모두 찍히고 있는 것을도 눈치채지 못했다
+	PRINTFORMW …그 날의 취재는 평소보다 과격하게 밀착되어 다양하게 부끄러운 장면까지 놓쳐 버렸다
+	PRINTFORML 
+	COUNTRY_SOLDIER:(CFLAG:대상:소속) += 500 + 100 * (RAND:10 + RAND:10 + 6)
+	CALL COLOR_PRINTW("그 날의 취재 내용이 방송되면 지원병이 증가했다", 칼라_주의)
+	MONEY += 5000
+	CALL COLOR_PRINTW("출연료로 해서 금 5000을 받았다", 칼라_주의)
+	CALL PRINT_ADD_EXP(대상, "노출경험치", RAND:20 + 1, 1)
+	DVAR:AV촬영_진행도 ++
+ELSEIF DVAR:AV촬영_진행도 == 3
+	PRINTFORMW 다시 밀착 취재가 왔다
+	PRINTFORML 프로듀서는 변함없는 웃는 얼굴로 %ANAME(대상)%에 가까워져 온다
+	PRINTFORMW 하지만 지금까지을 생각해 낸 %조사처리(ANAME(대상),"는")% 이대로 계속해도 좋은 것인지와 불안하게 된다
+	PRINTFORML 어떻게 하지?
+	CALL ASK_YN("계속한다" ,"그만둔다")
+	IF RESULT == 1
+		PRINTFORML 더 이상 취재에는 협력 할 수 없다
+		PRINTFORML %조사처리(ANAME(대상),"가")% 그렇게 고하면 조금 전까지 웃는 얼굴이었던 프로듀서는 태도를 급변시켰다
+		PRINTFORMW 「계약 위반이다! 그 쪽이 그러한 생각이라면 지금까지 찍은 부끄러운 영상도 모두 유출시키겠어!」
+		PRINTFORML 그는 핏대를 세우면서 %ANAME(대상)%에 임박해 온다
+		CALL ASK_YN("계속한다" ,"그런데도 그만둔다")
+		IF RESULT == 1
+			PRINTFORML 역시 계속하는 것은 할 수 없다
+			PRINTFORML %ANAME(대상)%의 결의가 단단하다고 보자 그는 침을 뱉어 떠나 갔다
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 그들이 떠나는 것을 지켜보면 후유 한숨을 찔렀다
+			PRINTFORML 
+			FOR LOCAL, 1, MAX_COUNTRY
+				CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -50, 50)
+			NEXT
+			CALL COLOR_PRINTW(@"하지만 그 후 한동안 하면 %ANAME(대상)%의 단정치 못한 영상이 흐름이고, 타국의 평판은 크게 떨어지는 일이 되었다", 칼라_주의)
+			DVAR:AV촬영_중독진행도 = 0
+			DVAR:AV촬영_진행도 = 0
+			DVAR:AV촬영_대상ID = 0
+			RETURN
+		ELSEIF RESULT == 0
+			PRINTFORML 압도된 %조사처리(ANAME(대상),"가")% 계속한다고 하면 다시 그는 웃는 얼굴이 되었다
+			PRINTFORML 「야아, 역시 %조사처리(ANAME(대상),"는")% 이야기를 알 수 있는 사람이다! 좋았다 좋았다」
+			PRINTFORML 「자, 그러면 오늘도 촬영을 계속합시다」
+			PRINTFORMW 그리고 %조사처리(ANAME(대상),"가")% 뭔가를 말하는 사이도 없고, 억지로 자기 방으로 침입해져 버렸다
+		ENDIF
+	ELSEIF RESULT == 0
+		PRINTFORML 하지만 한 번 계약한 이상, 여기서 그만두는 일도할 수 없다…
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 뜻을 정해 오늘의 취재를 위해서(때문에) 그들을 방에 불러들였다
+	ENDIF
+	PRINTFORML 
+	PRINTFORMW 취재전, 그로부터 전회의 촬영이 대호평이었다고 절찬되었다
+	PRINTFORML 대량의 팬 레터를 보여진 %조사처리(ANAME(대상),"는")% 부끄러움을 느끼면서도 기분은 나쁘지 않았다
+	PRINTFORML 거기서 이번은 영지민의 요망에 응하기 위해서(때문에) 그라비아 촬영이 제안 되었다
+	PRINTFORML 캘린더나 포스터용의 사진을 찍어 나눠주면 좀 더 군의 인기도 오르면 치겨 세워진다
+	PRINTFORMW 그의 열심인 권유에 밀린 %조사처리(ANAME(대상),"는")% 어느덧 내켜하는 마음이 되어 제안을 승낙했다
+	PRINTFORML …그 날은 결국 취재 무시에서의 그라비아 촬영을 실시하는 일이 되었다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 카메라맨에 지시받는 대로 군복과 사복을 갈아입으면서 여러가지 포즈를 취한다
+	PRINTFORML 처음은 어색했던 표정도 점차 풀려 가 카메라에 향해 권하는 것 같은 웃는 얼굴을 보이고 있었다
+	PRINTFORMW 승무원들이 치겨 세워진 %조사처리(ANAME(대상),"는")% 무의식중에 노출과 촬영의 쾌감에 눈을 뜨고이고라고 있었다
+	PRINTFORML 
+	COUNTRY_SOLDIER:(CFLAG:대상:소속) += 500 + 100 * (RAND:10 + RAND:10 + 6)
+	CALL COLOR_PRINTW("그 날의 취재 내용이 방송되면 지원병이 증가했다", 칼라_주의)
+	MONEY += 5000
+	CALL COLOR_PRINTW("출연료로 해서 금 5000을 받았다", 칼라_주의)
+	CALL PRINT_ADD_EXP(대상, "노출경험치", RAND:20 + 1, 1)
+	DVAR:AV촬영_진행도 ++
+ELSEIF DVAR:AV촬영_진행도 == 4
+	PRINTFORMW 다시 밀착 취재가 왔다
+	PRINTFORML 프로듀서는 변함없는 웃는 얼굴로 %ANAME(대상)%에 가까워져 온다
+	PRINTFORMW 하지만 지금까지을 생각해 낸 %조사처리(ANAME(대상),"는")% 이대로 계속해도 좋은 것인지와 불안하게 된다
+	PRINTFORML 어떻게 하지?
+	CALL ASK_YN("계속한다" ,"그만둔다")
+	IF RESULT == 1
+		PRINTFORML 더 이상 취재에는 협력 할 수 없다
+		PRINTFORML %조사처리(ANAME(대상),"가")% 그렇게 고하면 조금 전까지 웃는 얼굴이었던 프로듀서는 태도를 급변시켰다
+		PRINTFORMW 「계약 위반이다! 그 쪽이 그러한 생각이라면 지금까지 찍은 부끄러운 영상도 모두 유출시키겠어!」
+		PRINTFORML 그는 핏대를 세우면서 %ANAME(대상)%에 임박해 온다
+		CALL ASK_YN("계속한다" ,"그런데도 그만둔다")
+		IF RESULT == 1
+			PRINTFORML 역시 계속하는 것은 할 수 없다
+			PRINTFORML %ANAME(대상)%의 결의가 단단하다고 보자 그는 침을 뱉어 떠나 갔다
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 그들이 떠나는 것을 지켜보면 후유 한숨을 찔렀다
+			PRINTFORML 
+			FOR LOCAL, 1, MAX_COUNTRY
+				CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -50, 50)
+			NEXT
+			CALL COLOR_PRINTW(@"하지만 그 후 한동안 하면 %ANAME(대상)%의 단정치 못한 영상이 흐름이고, 타국의 평판은 크게 떨어지는 일이 되었다", 칼라_주의)
+			DVAR:AV촬영_중독진행도 = 0
+			DVAR:AV촬영_진행도 = 0
+			DVAR:AV촬영_대상ID = 0
+			RETURN
+		ELSEIF RESULT == 0
+			PRINTFORML 압도된 %조사처리(ANAME(대상),"가")% 계속한다고 하면 다시 그는 웃는 얼굴이 되었다
+			PRINTFORML 「야아, 역시 %조사처리(ANAME(대상),"는")% 이야기를 알 수 있는 사람이다! 좋았다 좋았다」
+			PRINTFORML 「자, 그러면 오늘도 촬영을 계속합시다」
+			PRINTFORMW 그리고 %조사처리(ANAME(대상),"가")% 뭔가를 말하는 사이도 없고, 억지로 자기 방으로 침입해져 버렸다
+		ENDIF
+	ELSEIF RESULT == 0
+		PRINTFORML 하지만 한 번 계약한 이상, 여기서 그만두는 일도할 수 없다…
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 뜻을 정해 오늘의 취재를 위해서(때문에) 그들을 방에 불러들였다
+	ENDIF
+	PRINTFORML 
+	PRINTFORMW 전회의 그라비아도 대호평이었던 것 같다
+	PRINTFORML 주문이 쇄도하고 있어 다음번의 요망이 뒤를 끊지 않으면 격찬 된다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 역시 부끄러웠지만 그 만큼 요구되고 있는 사실에 기쁨을 숨길 수 없었다
+	PRINTFORMW 그리고 이번도 취재 무시로 촬영을 하는 일이 되었다
+	PRINTFORML 이번은 그들이 준비한 이상을 입은 촬영을 부탁받았다
+	PRINTFORML 끈과 같은 수영복이나 레오타드, 보일듯 말듯의 네글리제등…아슬아슬한 의상을 늘어놓을 수 있다
+	PRINTFORMW 과연 %ANAME(대상)%도 이것은 부끄럽고, 군의 어필로부터 멀어지고 있는 것처럼 생각되었다
+	PRINTFORML 어떻게 하지?
+	CALL ASK_YN("맡는다" ,"주저한다")
+	IF RESULT == 1
+		PRINTFORMW 주저하는 %ANAME(대상)%에 대해, 그들은 열심히 설득했다
+		PRINTFORML 「아니오, 지금은 이것 정도 보통이에요」
+		PRINTFORML 「%ANAME(대상)%에 확실히 어울리는 것을 적당히 준비해 온 것입니다」
+		PRINTFORML 「여기는 프로에 맡겨 주세요!%ANAME(대상)%의 매력을 확실히 프로듀스할테니까」
+		PRINTFORMW 교묘한 말에 말아넣어진 %조사처리(ANAME(대상),"는")% 결국 그의 말에 수긍하고 있었다
+	ELSEIF RESULT == 0
+		PRINTFORML 하지만 어디까지나 일이다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 그들의 열심인 권유에 응해 갈아입기 시작했다
+	ENDIF
+	PRINTFORML 
+	PRINTFORMW 촬영의 내용도 전회로부터 더욱 아슬아슬해지고 있었다
+	PRINTFORML 「좀 더 남자를 유혹하는 것 같은 표정으로」 「그래그래, 좋아요」
+	PRINTFORML 「부끄러워하지 않고! 그래! 카메라 시선으로!」 「아, 좋다! 최고야!」
+	PRINTFORML 「거기는 좀 더 다리를 열어, 전부 열어!」 「색기가 나오고 있다―」
+	PRINTFORMW 「다음은 여기로 갈아입어, 이 도구를 가지고 촬영합시다!」
+	PRINTFORML 완전하게 의심스러운 촬영이 되고 있었지만, %ANAME(대상)%도 분위기에 대어지고 있었다
+	PRINTFORML 심하게 치겨 세워지고 찍히는 쾌감에 눈을 뜬 %조사처리(ANAME(대상),"는")% 점차 스스로 포즈를 취하고 있었다
+	PRINTFORMW 뺨에는 세키 보고가 마주 앉음목으로부터는 달콤한 한숨이 누락 선정적인 분위기를 몸에 감기고 있었다
+	PRINTFORML …촬영을 끝낸 %조사처리(ANAME(대상),"는")% 달아오름이 참지 못하고, 촬영을 생각해 내 자위에 빠졌다
+	PRINTFORMW 방에 가르쳐지고 있던 카메라에도 눈치채지 못하고
+	PRINTFORML 
+	COUNTRY_SOLDIER:(CFLAG:대상:소속) += 500 + 100 * (RAND:10 + RAND:10 + 6)
+	CALL COLOR_PRINTW("그 날의 취재 내용이 방송되면 지원병이 증가했다", 칼라_주의)
+	CALL PRINT_ADD_EXP(대상, "노출경험치", RAND:20 + 1, 1)
+	DVAR:AV촬영_진행도 ++
+ELSEIF DVAR:AV촬영_진행도 == 5
+	PRINTFORMW 다시 밀착 취재가 왔다
+	PRINTFORML 프로듀서는 변함없는 웃는 얼굴로 %ANAME(대상)%에 가까워져 온다
+	PRINTFORMW 하지만 지금까지을 생각해 낸 %조사처리(ANAME(대상),"는")% 이대로 계속해도 좋은 것인지와 불안하게 된다
+	PRINTFORML 어떻게 하지?
+	CALL ASK_YN("계속한다" ,"그만둔다")
+	IF RESULT == 1
+		PRINTFORML 더 이상 취재에는 협력 할 수 없다
+		PRINTFORML %조사처리(ANAME(대상),"가")% 그렇게 고하면 조금 전까지 웃는 얼굴이었던 프로듀서는 태도를 급변시켰다
+		PRINTFORMW 「계약 위반이다! 그 쪽이 그러한 생각이라면 지금까지 찍은 부끄러운 영상도 모두 유출시키겠어!」
+		PRINTFORML 그는 핏대를 세우면서 %ANAME(대상)%에 임박해 온다
+		CALL ASK_YN("계속한다" ,"그런데도 그만둔다")
+		IF RESULT == 1
+			PRINTFORML 역시 계속하는 것은 할 수 없다
+			PRINTFORML %ANAME(대상)%의 결의가 단단하다고 보자 그는 침을 뱉어 떠나 갔다
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 그들이 떠나는 것을 지켜보면 후유 한숨을 찔렀다
+			PRINTFORML 
+			FOR LOCAL, 1, MAX_COUNTRY
+				CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -50, 50)
+			NEXT
+			CALL COLOR_PRINTW(@"하지만 그 후 한동안 하면 %ANAME(대상)%의 단정치 못한 영상이 흐름이고, 타국의 평판은 크게 떨어지는 일이 되었다", 칼라_주의)
+			DVAR:AV촬영_중독진행도 = 0
+			DVAR:AV촬영_진행도 = 0
+			DVAR:AV촬영_대상ID = 0
+			RETURN
+		ELSEIF RESULT == 0
+			PRINTFORML 압도된 %조사처리(ANAME(대상),"가")% 계속한다고 하면 다시 그는 웃는 얼굴이 되었다
+			PRINTFORML 「야아, 역시 %조사처리(ANAME(대상),"는")% 이야기를 알 수 있는 사람이다! 좋았다 좋았다」
+			PRINTFORML 「자, 그러면 오늘도 촬영을 계속합시다」
+			PRINTFORMW 그리고 %조사처리(ANAME(대상),"가")% 뭔가를 말하는 사이도 없고, 억지로 자기 방으로 침입해져 버렸다
+		ENDIF
+	ELSEIF RESULT == 0
+		PRINTFORML 하지만 한 번 계약한 이상, 여기서 그만두는 일도할 수 없다…
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 뜻을 정해 오늘의 취재를 위해서(때문에) 그들을 방에 불러들였다
+	ENDIF
+	PRINTFORML 
+	PRINTFORML 「이네님의 그라비아는 대적중이에요, 나의 눈에 이상은 없었다」
+	PRINTFORML 입을 열자마자, 프로듀서는 그렇게 고했다
+	PRINTFORMW 언제나 이상으로 싱글벙글 얼굴의 그는 허물없고 %ANAME(대상)%의 어깨에 손을 쓰고 있다
+	PRINTFORML 「%ANAME(대상)%의 매력이 전해져, 지원병도 증가하고 있는 것 같지 않습니까! 고맙겠습니다」
+	PRINTFORML 「다큐멘터리? 아아, 물론 잊고 있지 않아요, 물론」
+	PRINTFORML 「다만 이번 한 번만 더, 마지막에 그라비아 촬영을 합시다! 저기? 여기서 끝내는 것은 아까워요」
+	PRINTFORMW 그의 말에 %조사처리(ANAME(대상),"는")% 곤란한 바람을 가장하면서도 내심 간들거리면서 수긍한다
+	PRINTFORML 지금은 %조사처리(ANAME(대상),"는")% 완전히 찍혀 그것을 남자에게 보여지는 일의 포로가 되고 있었다
+	PRINTFORML 전회 같이 준비되고 대상으로 갈아입었던 %조사처리(ANAME(대상),"는")% 침대에 걸터앉도록(듯이) 촉구받았다
+	PRINTFORML 전회와 다른 것은, %ANAME(대상)%의 근처에 눈을 번득이게 한 씩씩한 남자가 앉아 있는 일이다
+	PRINTFORMW 당황하는 %ANAME(대상)%에 대해, 프로듀서는 어떤일도 없이 단순한 어시스턴트라고 고한다
+	PRINTFORML 「이런? 긴장되고 있습니까? 그러면 이쪽을 부디, 기분을 침착하게 해 주는 약이에요」
+	PRINTFORML 평상시와 다른 분위기에 긴장하고 있었던 %조사처리(ANAME(대상),"는")% 권유받은 약을 의심하는 일도 없게 말했다
+	PRINTFORMW 그 모습을 남자들이 히죽히죽하면서 바라보고 있던 일에도 눈치채지 못했다
+	PRINTFORML …약을 마셔, 곧바로 신체가 달아오르기 시작했다
+	PRINTFORML 두가 멍하니와 하기 시작해, 전신이 땀이 배어 온다
+	PRINTFORML 갑자기 배후로부터 손이 뻗어 와, %ANAME(대상)%의 가슴을 움켜잡음으로 했다
+	PRINTFORMW 순간, 저리는 것 같은 쾌감이 가슴으로부터 전신에 퍼져 모이지 않고 허덕여 버렸다
+	PRINTFORML 혼란하면서 되돌아 보면, 방금전의 남자가 바로 배후로부터 %ANAME(대상)%에 밀착하고 있었다
+	PRINTFORML 그는 계속해 가슴을 주무르면서, 이제(이미/벌써/더는/정말) 다른 한쪽의 손을 사타구니로 펴 온다
+	PRINTFORML 그의 손가락이 균열을 훑으면 쿠츗 소리가 나 %조사처리(ANAME(대상),"는")% 오슬오슬 등줄기를 진동시켰다
+	PRINTFORMW 완전히 붇고 있는 %조사처리(ANAME(대상),"는")% 저항도 하지 못하고 그로 되는 대로 보고 번민
+	PRINTFORML 그리고 눈치채면 카메라가 돌고 있어 %ANAME(대상)%의 단정치 못한 모습도 모두 찍히고 있었다
+	PRINTFORML 「그만두어…」라고 작게 중얼거리는 %조사처리(ANAME(대상),"이지만")% 그의 교묘한 손놀림에 저항하지 못하고 좋아해 버린다
+	PRINTFORML 그의 손가락은 더욱 더 격렬하게%조사처리(ANAME(대상),"를")% 공격해대어, 곧바로 신체는 한계에 이르러 절정 직전이 된다
+	PRINTFORML 그리고 유두와 음핵을 동시에 꼬집어지면, %조사처리(ANAME(대상),"는")% 크게 뒤로 젖히면서 절정에 이르렀다
+	PRINTFORMW 야무지지 못한 자안과 움찔움찔 떨리는 단정치 못한 모습을 구석구석까지 카메라에 담겨져 버렸다
+	PRINTFORML 
+	PRINTFORML %ANAME(대상)%의 모습을 본 프로듀서는 힐쭉 웃으면 남배우에게 지시를 내린다
+	PRINTFORML 절정의 여운으로 어안이 벙벙히 하는 %조사처리(ANAME(대상),"는")% 그에게 팔을 잡아지고 안아 올려져도 저항 할 수 없다
+	PRINTFORMW 그는 카메라에 자주(잘) 비치는 것처럼%조사처리(ANAME(대상),"를")% 안고 인상 양 다리를 벌리면 스스로에 걸치게 했다
+	PRINTFORML %ANAME(대상)%의 실룩거리는 균열에 우뚝 솟는 씩씩한 페니스가 주어진다
+	PRINTFORML 그 맥박치는 수컷의 상징을 느껴 %조사처리(ANAME(대상),"는")% 암컷의 본능이 무의식 중에 쑤셔 숨을 거칠게 하게 한다
+	PRINTFORMW 그리고 그는 %ANAME(대상)%의 허리를 잡으면 단숨에최안쪽까지 구멍냈다
+	IF TALENT:대상:처녀 == 1
+		PRINTFORML 투덜투덜 막이 다치는 감촉과 동시에 기분이 날 정도의 충격이 전해져, %조사처리(ANAME(대상),"는")% 절규했다
+		PRINTFORML 정수리까지 관철해진 것 같은 견디기 어려운 자극에 %조사처리(ANAME(대상),"는")% 크게 몸을 뒤로 젖히게 해 경련을 반복한다
+		PRINTFORMW 두가 새하얗게 되면서 움찔움찔 떨려, 참지 못하고 꾸욱 남자에게 매달렸다
+	ELSE
+		PRINTFORML 지나친 충격에 %조사처리(ANAME(대상),"는")% 일순간, 의식을 날리면서 돼지가 무너지는 것 같은 보기 흉한 교성을 올렸다
+		PRINTFORML 정수리까지 관그다니는 밀어올림에 일순간으로 신체는 굴복 해, 삐걱삐걱 경련해 조수를 닦는다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 머리가 새하얗게 되면서 움찔움찔 경련해, 야무지지 못한 아헤얼굴이 되고 있었다
+	ENDIF
+	PRINTFORML 그 보기 흉한 모습은 확실히 카메라에 담을 수 있어 주위의 남자들로부터 비웃음과 매도가 날았다
+	PRINTFORML 남배우는 떨리는 %ANAME(대상)%에 상관하지 않고 허리를 잡은 채로 오나홀과 같이 반복해 상하해 자지를 잡아당긴다
+	PRINTFORMW 즌! 즌! (와)과 일발 찌르기 될 때 마다 자궁에 영향을 주어, %조사처리(ANAME(대상),"는")% 망가진 인형과 같이 미친듯이 자지러지는 신음소리를 낸다
+	IF TALENT:대상:처녀 == 1
+		PRINTFORML 조금 전까지 처녀였다에도 불구하고, 신체는 벼이삭 자포자기하고 자르고 있고 압도적인 쾌락의 물결이 덮쳐 온다
+	ELSE
+		PRINTFORML 육체는 완전히 암컷으로서 함락 해, 자지로부터 주어지는 쾌감에 기뻐해 흔들림 질육을 단단히 조이고 거기에 응한다
+	ENDIF
+	PRINTFORML %조사처리(ANAME(대상),"는")% 가고 있을 뿐이 되면서 말씨가 돌지 않는 신음소리를 올려 아헤얼굴을 카메라에 쬔다
+	PRINTFORMW 피스톤은 서서히 가속해 나가, 거기에 맞추어 %ANAME(대상)%도 격렬하게 몸부림 신음소리를 미치게 한다
+	PRINTFORML 그리고 한층 더 깊은 찌르기와 함께 사정되면, %조사처리(ANAME(대상),"는")% 날카로운 교성을 올려 크게 절정 했다
+	PRINTFORML 퓻퓻 하고 태내에 따라지는 열을 민감하게 느끼면서 %조사처리(ANAME(대상),"는")% 부들부들떨려 절정얼굴을 쬔다
+	PRINTFORMW 귓전으로 촬영되고 있는 일을 속삭여진 %조사처리(ANAME(대상),"는")% 현상을 생각해 내, 흥분과 수치로 미소를 띄웠다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 그 뒤도 카메라의 앞에서 심하게 범해지고 몇 번이나 절정을 반복해 그 모습을 늘리는 일 없이 촬영되었다
+	PRINTFORML 
+	PRINTFORML …촬영 후, 제정신에게 돌아왔을 때에는 벌써 그들의 모습은 없었다
+	PRINTFORML 질척질척인 채 침대에 가로놓여 있었던 %ANAME(대상)%의 머리맡에는 비디오 테잎과 편지가 남아 있었다
+	PRINTFORML 그 편지를 읽었던 %조사처리(ANAME(대상),"는")% 최초부터 계획되고 있던 일을 깨달아 스스로의 야비함과 어리석음을 저주했다
+	PRINTFORMW 「비디오의 내용을 흩뿌려지고 싶지 않으면, 향후도 우리의 일의 심부름을 해 받는다」
+	PRINTFORML 이런 일을 누군가에게 상담할 수 있을 리도 없고, %조사처리(ANAME(대상),"는")% 그들의 말하는 대로 될 수밖에 없었다
+	PRINTFORML …하지만 동시에 기묘한 흥분도 솟구치고 있어 주저 하면서도 남겨진 비디오에 손을 뻗었다
+	PRINTFORML 거기에는 예상대로, 조금 전 촬영된 %ANAME(대상)%의 단정치 못한 강간 영상이 남아 있었다
+	PRINTFORMW 비디오안의 %조사처리(ANAME(대상),"는")% 언제나 거울로 보는 자신의 모습과는 도저히 잘 어울리지 않는 야비하게 좋아하는 여자의 얼굴을 하고 있었다
+	PRINTFORMW 그리고 눈치채지 않는 동안에 %조사처리(ANAME(대상),"는")% 영상에 못박음이 되고 있어 스스로를 손가락으로 위로하고 있었다
+	CALL FUCK(대상, "Ｃ, Ｖ, Ｂ, Ｍ, 성교, 정애, 펠라티오, Ｖ성교", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("AV남배우"), @"남배우의 \@RAND:2 ? 페니스 # 입술\@", "AV남배우", "", "촬영중의 강간")
+	PRINTFORML 
+	CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"는")% AV여배우가 되는 일을 강제당해 버렸다……", 칼라_주의)
+	DVAR:AV촬영_진행도  = 10
+ENDIF
+
+RETURN 1
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_ADULTFILM(대상)
+#DIM 대상
+RETURN CFLAG:대상:행동불능상태 != 행동불능_아이 && CFLAG:대상:소속 == CFLAG:MASTER:소속 && !IS_ANIMAL(대상) && !IS_MALE(대상) && ABL:대상:성지식 > 0 && !(GETBIT(TALENT:대상:음란계, 소질_음란_ＡＶ여배우))
+
+@SELECT_CHARA_LIST_SELECT_LOGIC_ADULTFILM(대상)
+#DIM 대상
+RETURN CFLAG:대상:포로처 == 0

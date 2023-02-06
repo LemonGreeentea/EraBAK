@@ -1,0 +1,400 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_FUND_RAISING_RATE()
+RETURN (30 + INRANGE(DVAR:모금_안은회수, 0, 10) * 7)
+
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_FUND_RAISING_DECISION()
+SIF DAY < 10
+	RETURN 0
+;자금이 50000이상의 경우
+SIF MONEY < 50000
+	RETURN 0
+RETURN 1
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_FUND_RAISING_GENRE()
+RETURN 데일리_장르_에로
+
+@EVENT_DAILY_FUND_RAISING()
+#DIM 모금액
+
+
+;모금액은 현재 자금의 대개 1할
+;안은 회수가 증가하면 모금액이 줄어든다（최저 5%）
+;최저액수를 10000으로 설정, 최대액을 DAY*1000으로 설정
+모금액 = MAX(MONEY * MIN(((10 + RAND:11 + RAND:11) - DVAR:모금_안은회수)/ 2, 5) / 100, 10000)
+SIF 모금액 > 1000 * DAY
+	모금액 = 1000 * DAY
+SIF DVAR:모금_안은회수 > 0
+	모금액 = 모금액 / DVAR:모금_안은회수
+;첫만남
+IF DVAR:모금_발생플래그 == 0
+	PRINTFORMW 일을 하고 있으면 부하가 손님을 고했다
+	PRINTFORMW 뭔가 시민 단체의 사람답겠지만
+	PRINTFORMW 꼭 일도 일단락하고 있는, 만나기로 했다
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW 「아무래도, 처음 뵙겠습니다. %ANAME(MASTER)%같네요, 오늘은 만남 해 받아 감사합니다」
+	PRINTFORMW 나타난 것은 어딘가 세련되어지지 않는, 하지만 사람에게 사랑받을 것 같은 웃는 얼굴이 인상적인 아가씨다
+	PRINTFORMW 아가씨를 소파에 앉게 해 요건을 (듣)묻기로 했다
+	PRINTFORML 「으음, 우리들은, 풍족하지 않은 아이들을 위해서(때문에) 활동하고 있는 단체의 사람입니다」
+	PRINTFORMW 「최근의 환상향의 혼란에 의해, 많은 아이들이 심한 꼴을 당하고 있습니다」
+	PRINTFORML 「그래서, 우리들의 단체도 열심히 활동하고 있습니다만……」
+	PRINTFORMW 「조금 활동 자금이 미덥지 않게 되어 와 있습니다. 원래, 여러분의 선의에 의해 성립되고 있는 활동이므로……」
+	PRINTFORMW 과연, 즉 활동 자금의 원조를 신청하러 온 것 같다
+;8회이상 안고 있는 경우,1/2의 확률로 다만 안기러 온다
+ELSEIF DVAR:모금_안은회수 >= 8 && RAND:2 == 0
+	PRINTFORML 예의 자선단체의 아가씨가 만나러 온 것 같다
+	PRINTFORMW 하지만 평상시와 모습이 다르다
+	PRINTFORML 「오래간만입니다, 주인님」
+	PRINTFORML 그녀는 당신의 얼굴을 보면 황홀한 표정을 보이고 아첨하는 것 같은 소리를 냈다
+	PRINTFORMW 다 달아올라 숨을 거칠게 하는 그 모습은, 마치 발정한 암캐의 같다
+	PRINTFORML 「읏, 미안해요…인내 할 수 없게 되고, 또, 자비를 갖고 싶어져 버려…」
+	PRINTFORML 그녀는 그렇게 말하면서 의복을 걷어올린다
+	PRINTFORMW 속옷은 신지 않고, 그대로의 비밀스런 장소는 벌써 애액을 방울져 떨어지게 하고 있었다
+	PRINTFORML 「부탁합니다…」
+	PRINTFORMW 평상시와는 다른 "부탁"에, 당신은 쓴웃음 지으면서도 그녀를 껴안았다
+	PRINTFORML 
+	SELECTCASE RAND:3
+		CASE 0
+			PRINTFORMW 완전히 당신 기호가 된 신체를 한껏 맛보았다
+		CASE 1
+			PRINTFORMW 당신의 하나의 물건에 딱 맞는 꿀단지를 질릴 때까지 즐겼다
+		CASE 2
+			PRINTFORMW 사랑스럽게 당신을 요구해 오는 그녀를 밤새 귀여워했다
+	ENDSELECT
+	PRINTFORML 
+	PRINTFORMW …이튿날 아침, 그녀는 전송하는 당신을 서운한 듯이 응시하면서 돌아갔다
+	RETURN -1
+;2회째 이후
+ELSEIF DVAR:모금_발생플래그 == 1
+	PRINTFORML 예의 자선단체의 아가씨가, 또 모금을 요구하러 온 것 같다
+	SELECTCASE DVAR:모금_안은회수
+	CASE IS < 2
+		PRINTFORMW 「저, 풍족하지 않은 아이들을 위해서(때문에)…또 부탁합니다」
+	CASE 2 TO 4
+		PRINTFORMW 「저, 풍족하지 않은 아이들을 위해서(때문에)…오늘도 부탁합니다」
+		PRINTFORMW 뭔가를 기대하고 있는지, 마음 탓인지얼굴이 붉다…
+	CASE 5 TO 7
+		PRINTFORMW 「저…아이들과…그것을 표면에 안기러 온, 상스러운 나를 위해서(때문에)…또 부탁합니다」
+		PRINTFORMW 홍 조수 시킨 뺨을 숨기는 일 없이, 하지만 부끄러운 것 같은 표정으로 조르기했다
+	CASE IS > 7
+		PRINTFORMW 「여기에 오는 것만으로…몸이 쑤셔 버리게 되었습니다」
+		PRINTFORMW 「부탁입니다, 추잡한 나를 위해서(때문에)……」
+		PRINTFORMW 욕망을 숨기는 일 없이 드러내는 모습은 창녀의 그것과는 다른 음미로운 것이었다
+	ENDSELECT
+	PRINTFORMW 
+ENDIF
+	PRINTFORM 그녀가 요구해 온 금액은
+	CALL COLOR_PRINT(@"{모금액}", 칼라_주의)
+	PRINTFORMW 정도인 것 같다
+	PRINTFORML 말할 필요도 없이 큰돈이다, 담보도 기대할 수 있을 정도의 것은 없을 것이다
+PRINTFORMW 자, 그럼, 어떻게 하지……
+CALL SINGLE_DRAWLINE
+IF DVAR:모금_안은회수 <= 4
+	CALL ASK_MULTI_JUDGE(@"금{모금액}를 원조한다", 1,"그만둔다", 1,"대신에 너를 안게 해라", HAS_PENIS(MASTER))
+ELSE
+	CALL ASK_MULTI_JUDGE(@"금{모금액}와 교환에 안는다", HAS_PENIS(MASTER),"그만둔다", 1)
+ENDIF
+;거절하는 패턴
+IF RESULT == 1
+	PRINTFORMW 「그렇습니까……. 매우 유감입니다……」
+	IF !RAND:5 && 4 < DVAR:모금_안은회수
+	;레어 케이스, 면회료의 지불
+		PRINTFORML 「그렇지만, 만나 받은 답례는 하지 않으면 안 됩니다」
+		PRINTFORML 그렇게 말하면서 %ANAME(MASTER)%의 발밑에 네발로 엎드림으로 다가가,
+		PRINTFORMW %ANAME(MASTER)%의 바지를 내리면, 사타구니에 달라붙었다……
+		PRINTFORML 「만나…읏, 있던 매우 짜는…답례이므로……야읏」
+		PRINTFORML 그렇게, 이것은 단순한 답례니까
+		PRINTFORML 그렇게 말하면서 %조사처리(ANAME(MASTER),"는")% 당신의 사타구니에 펴려고 하고 있던 아가씨의 손을 잡았다
+		PRINTFORMW 「앙, 미안 없음…답례 뿐인데 기분 좋아져…구, 추잡한 군침이 멈추지 않는 것을는…용서해 주세요」
+		PRINTFORML %조사처리(ANAME(MASTER),"가")% 만족 갈 때까지 아가씨의 면회의 답례가, 음등 물소리가 그치는 일은 없었다…
+		PRINTFORML …
+		PRINTFORMW ……
+		PRINTFORMW 「이번은 특별해요, 분명하게 원조도 해 주세요…읏」
+		PRINTFORMW 상쾌한 표정으로 아가씨는 돌아갔다
+	ELSE
+		PRINTFORMW 아가씨는 어깨를 떨어뜨려 돌아갔다
+	ENDIF
+;원조하는 패턴
+ELSEIF RESULT == 0
+	;돈이 부족한 패턴, 없다고 생각하지만 일단
+	IF MONEY <= 모금액
+		PRINTFORML 모금하려고 했지만 돈이 부족했다
+		PRINTFORMW 아가씨는 실망 하면서도 기분만이라도 감사합니다라고 고해, 떠나 갔다
+	ELSEIF DVAR:모금_안은회수 == 0
+		PRINTFORML 아이를 나와 버려서는 어쩔 수 없다
+		PRINTFORMW 기부해 주기로 하자
+		PRINTFORML 「감사합니다!%ANAME(MASTER)%님 덕분에 많은 아이들이 구해집니다!」
+		PRINTFORMW 아가씨는 팍 웃는 얼굴이 되어, %ANAME(MASTER)%의 손을 강하게 잡아 감사의 기분을 전해 왔다
+		PRINTFORML 
+		CALL COLOR_PRINT(@"{모금액}", 칼라_주의)
+		PRINTFORMW 의 돈을 모금했다
+		MONEY -= 모금액
+		CALL COLOR_PRINT(@"%ANAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))%의 평판이 조금 올랐습니다", 칼라_주의)
+		PRINTFORMW
+		FOR LOCAL, 0, MAX_COUNTRY
+			SIF IS_COUNTRY(LOCAL)
+				CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, 15, -15)
+		NEXT
+	ELSEIF DVAR:모금_안은회수 < 5
+		PRINTFORML 또 안아도 괜찮지만, 지금은 그런 기분은 아니다
+		PRINTFORMW 솔직하게 모금만 해 주기로 했다
+		PRINTFORML 「앗…아니요 네…가, 감사합니다……」
+		PRINTFORMW 그녀는 어딘가 맥 빠짐 한 것 같은, 혹은 약속이 연기된 것 같은 표정을 하고 있었다
+		PRINTFORML 
+		CALL COLOR_PRINT(@"{모금액}", 칼라_주의)
+		PRINTFORMW 의 돈을 모금했다
+		MONEY -= 모금액
+		CALL COLOR_PRINT(@"%ANAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))%의 평판이 조금 올랐습니다", 칼라_주의)
+		PRINTFORMW
+		FOR LOCAL, 0, MAX_COUNTRY
+			SIF IS_COUNTRY(LOCAL)
+				CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, 15, -15)
+		NEXT
+	ELSEIF DVAR:모금_안은회수 >= 5
+		IF RAND:20
+			PRINTFORML 「네…오늘도 한껏 예를 다하도록 해 받네요…♥」
+			PRINTFORML 안아 준다고 고하면 그녀는 황홀의 미소를 띄워 숨을 거칠게 했다
+			PRINTFORMW 침실로 안내하면, 기다릴 수 없는 것처럼%ANAME(MASTER)%에 껴안아 왔다……
+			PRINTFORML 
+			SELECTCASE RAND:10
+				CASE 0
+					PRINTFORML 「앗♥조, 좋다♥아아♥자지♥좋은 것♥아앙♥」
+					PRINTFORML 그녀는 %ANAME(MASTER)%에 걸쳐 머리카락을 흩뜨리면서 격렬하게 허리를 흔들어 좋아하고 있다
+					PRINTFORML 이전의 그녀로는 생각할 수 없는 그 음미로운 표정과 권하는 것 같은 행동이 %ANAME(MASTER)%의 흥분을 부추긴다
+					PRINTFORML 「좀 더♥좀 더♥아아♥적당히♥주인님♥♥아♥아아♥♥♥」
+					PRINTFORMW 추잡하게 춤추어 미치는 그녀에게 요구되는 대로, 밤새도록 한껏 귀여워해 주었다
+				CASE 1
+					PRINTFORML 「응♥응응♥어떻습니까♥앗…♥주인님♥♥아♥앙♥」
+					PRINTFORML 그녀는 %ANAME(MASTER)%에 껴안아, 허리의 움직임을 맞추면서 응석부리는 것 같은 소리로 속삭여 온다
+					PRINTFORML 대답 대신에 격렬하게 일발 찌르기 해 주면, 기쁨의 소리를 높여 크게 몸을 뒤로 젖히게 했다
+					PRINTFORML 「아히이♥♥♥아…♥갔다아♥가 버렸습니다아…♥아♥응응♥아하아♥♥」
+					PRINTFORMW 좀더 좀더와 열정적인 시선을 보내오는 그녀와 몇 번이나 몇 번이나 교접했다
+				CASE 2
+					PRINTFORML 「히이♥히잉♥거기♥아♥벗길 수 있는 쉿♥아아♥가는♥가 버리는♥♥히이♥♥」
+					PRINTFORML 허리를 잡아 격렬하게 찔러 주면, 그녀는 경련하면서 비명과 같은 신음소리를 올린다
+					PRINTFORML 일발 찌르기마다 질육이 페니스를 힘들게 단단히 조여 와, 보다 깊게 막상인 깨진다
+					PRINTFORML 「아♥앙♥야아, 자지♥커지고 있다아♥♥앙♥아♥와♥♥」
+					PRINTFORMW 질의 단단히 조여에 무심코 사정하면, 그녀는 신체를 활처럼 뒤로 젖히면서 절정 했다
+				CASE 3
+					PRINTFORML 「쥬푸♥쥿푸♥응♥응응♥쥬루루우♥♥…푸하아♥하아♥하아♥어떻습니까?」
+					PRINTFORML 페라를 끝낸 그녀는 %ANAME(MASTER)%의 페니스에 사랑스러운 듯이 뺨을 비비면서 올려봐 온다
+					PRINTFORML 능숙하다고 칭찬해 주면 그녀는 기쁜듯이 웃어, 포상을 요구해 엉덩이를 내밀었다
+					PRINTFORML 「봐 주세요♥이제 질척질척 입니다♥♥인내 할 수 없는 것♥♥」
+					PRINTFORMW 요구되는 대로 단번에 쑤셔 넣어 주면, 그녀는 환희의 소리를 높여 조수를 뿜었다
+				CASE 4
+					PRINTFORML 「아♥아♥안 돼애♥앗♥가고 있는♥지금 가고 있습니다♥♥가고 있기에 용서해에에에♥♥♥」
+					PRINTFORML 가고 있는 채가 된 그녀가 경련하면서 미친듯이 자지러지는 신음소리를 내며, 용서를 빌어 온다
+					PRINTFORML 하지만 그 필사적인 표정이 견딜 수 없고 사랑스럽고, %조사처리(ANAME(MASTER),"는")% 허리의 움직임을 한층 더 가속시킨다
+					PRINTFORML 「아히♥앗♥♥♥앗♥♥이히이♥가는♥가는♥또 이♥♥♥」
+					PRINTFORMW 그 뒤도 그녀는 오로지 절정을 반복해, 정신을 잃을 때까지 한껏 괴롭혀 주었다
+				CASE 5
+					PRINTFORML 「아♥응-♥앗♥아아♥자궁 쑤시는 것♥아♥주인님♥♥」
+					PRINTFORML 대면좌위로 격렬하게 교접하는 그녀가 %ANAME(MASTER)%에 향해 달콤한 한숨을 걸쳐 온다
+					PRINTFORML 그녀는 다리를 허리에 얽히게 할 수 있는 뿌옇게 된 눈동자로 %조사처리(ANAME(MASTER),"를")% 응시해 질내사정을 졸라대 온다
+					PRINTFORML 「저기♥응 응♥주세요♥아♥안타까운 것♥♥아♥푹 푹 내♥♥♥」
+					PRINTFORMW 그 사랑스러운 조르기를 거절할 생각도 없고, %조사처리(ANAME(MASTER),"는")% 몇 번이나 그녀의 태내에 정액을 발했다
+				CASE 6
+					PRINTFORML 「하아…♥하아…♥네에♥오늘도, 굉장했던 것입니다♥응…♥하아♥♥」
+					PRINTFORML %ANAME(MASTER)%의 팔에 안겨 숨을 거칠게 하면서 그녀가 넋을 잃은 표정으로 중얼거린다
+					PRINTFORML 조금 전까지의 그녀의 신음소리를 조롱하면, 몸부림 해 열이 가득찬 한숨을 쉬었다
+					PRINTFORML 「아읏…♥아이참♥이런 식으로 한 것은♥당신이니까♥응응♥♥♥」
+					PRINTFORMW 잠깐의 휴식의 뒤, 다음을 졸라대진 %조사처리(ANAME(MASTER),"는")% 2회전에 들어갈 수 있도록 그녀를 쓰러트렸다
+				CASE 7
+					PRINTFORML 「아아♥아♥야아♥유두뿐♥그렇게♥아아♥응♥하아앙♥♥」
+					PRINTFORML 밀어올리면서 가슴을 애무해 주면 그녀는 견딜 수 없다고 한 바람으로 몸을 구불거리게 할 수 있다
+					PRINTFORML 오돌오돌의 유두를 살짝 깨물기 하면, 그녀는 교성과 함께 질을 꽉 단단히 조여 왔다
+					PRINTFORML 「익♥♥♥하아♥그것 안 돼애♥새하얗게 되는 것♥아♥아아♥아앙♥」
+					PRINTFORMW 그 뒤도 유두 공격을 계속해, 사랑스럽게 자지러지며 흐트러지는 그녀의 모습을 마음껏 즐겼다
+				CASE 8
+					PRINTFORML 「사랑♥앗♥응♥응♥아아♥거기♥저의 있고의♥아♥♥아아♥좋아♥」
+					PRINTFORML 그녀를 엎드린 자세로 시켜, 허리를 움켜잡음으로 해 오로지 암 찔러 한다
+					PRINTFORML 일발 찌르기마다 그녀의 허덕임은 색기를 늘려, 큐우큐우 페니스를 단단히 조여 온다
+					PRINTFORML 「좀 더♥좀 더♥아히♥그거어♥♥동글동글은♥♥아앙♥앙♥♥♥」
+					PRINTFORMW %ANAME(MASTER)%도 그녀도 시간을 잊어, 마치 짐승과 같이 농후한 교미에 몰두해 갔다
+				CASE 9
+					PRINTFORML 「후우♥응♥아아♥야아♥거기 안 돼애♥바보가 되어 버리는♥♥아앙♥♥♥」
+					PRINTFORML 푹페니스를 쑤셔 넣어 그녀의 자궁입구를 귀두로 동글동글 자극해 준다
+					PRINTFORML 상당히 포르치오를 마음에 들었는지, 찌를 때에 신체를 뛰게 한 기쁨의 소리를 높인다
+					PRINTFORML 「들♥♥굉장해에♥아♥아♥아앙♥또 가 버립니다아아아아♥♥」
+					PRINTFORMW 말과는 정반대로 민감하게 반응하는 그녀의 신체를 %ANAME(MASTER)%기호에 물들여 갔다
+			ENDSELECT
+		ELSE
+			PRINTFORML 「언제나 감사합니다!%ANAME(MASTER)%님 덕분에 정말로 많은 아이들이 구해지고 있습니다!」
+			PRINTFORMW 아가씨는 팍 웃는 얼굴이 되어, %ANAME(MASTER)%의 손을 강하게 잡아 감사의 기분을 전해 왔다
+			PRINTFORMW 「그러므로, 가끔씩은…」
+			PRINTFORML 소녀의 미소는 창녀의 그것과 바뀌어, 잡고 있던 손을 살그머니 당신의 스커트안으로 이끈다
+			PRINTFORMW 「가끔씩은, 평상시 인 채의 나를 상미 하지 않습니까?」
+			PRINTFORMW 있어야 하는 것은 두의 속옷의 감촉은 거기에는 없고, 추잡한 물소리를 세우는 질퍽거림이 있었다…
+		ENDIF
+		PRINTFORML 
+		CALL COLOR_PRINT(@"{모금액}", 칼라_주의)
+		PRINTFORMW 의 돈을 모금했다
+		DVAR:모금_안은회수 ++
+		MONEY -= 모금액
+		;모금한 것이고 평판은 올려 둔다
+		CALL COLOR_PRINT(@"%ANAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))%의 평판이 조금 올랐습니다", 칼라_주의)
+		PRINTFORMW
+		FOR LOCAL, 0, MAX_COUNTRY
+			SIF IS_COUNTRY(LOCAL)
+				CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, 15, -15)
+		NEXT
+	ENDIF
+	DVAR:모금_발생플래그 = 1
+;신체를 요구하는 패턴
+ELSEIF RESULT == 2
+	SELECTCASE DVAR:모금_안은회수
+		CASE 0
+			PRINTFORMW 원조하는 대신에 너를 안게 해라
+			PRINTFORML 아가씨의 곁에 의해 귓전으로 그렇게 속삭이면, 그녀는 일순간 경직되어
+			PRINTFORMW 천천히 얼굴을 이쪽에 향하면, %ANAME(MASTER)%의 얼굴을 초롱초롱 들여다 봐 왔다
+			PRINTFORMW 안게 해라
+			PRINTFORMW 경직되고 있는 아가씨에게 한 번 더 그렇게 고한다
+			PRINTFORMW 그녀는 얼굴을 새빨갛게 해 입 틀어박히면서, 무슨 말을 하고 있는지 이쪽을 매도해 왔다
+			PRINTFORML 라면 이야기는 끝이라면 %조사처리(ANAME(MASTER),"가")% 방을 나오려고 첫 시작
+			PRINTFORMW 문에 손을 대면, 기다려 주세요배후로부터 불러 세울 수 있었다
+			PRINTFORMW 「………저, 정말로………원조해, 받을 수 있는……군요?」
+			PRINTFORMW 아가씨는 숙이면서, 더듬거리게 물어 봐 왔다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 문에 열쇠를 걸어, 그녀에게 다가가면
+			PRINTFORMW 허리를 안으면서  물론이다, 약속은 지킨다  와 상냥하게 말을 걸었다
+			PRINTFORMW 작은 동물과 같이 떨리는 그녀는 근처에 있는 %ANAME(MASTER)%에만 들리는 것 같은 가냘픈 소리로
+			PRINTFORMW 「……알았습니다」
+			PRINTFORMW 라고 중얼거렸다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀의 입술을 무리하게 빼앗으면
+			PRINTFORMW 떨리는 신체를 소파에 쓰러트렸다
+			PRINTFORMW …
+			PRINTFORMW …
+			PRINTFORMW ·
+			PRINTFORMW 자금원조와 교환에 아가씨의 신체를 즐겼다
+			SELECTCASE RAND:4
+				CASE 0
+				PRINTFORMW 그녀의 육체는 실로 민감해 많이 당신을 즐겁게 했다
+				CASE 1
+				PRINTFORMW 아직 어림을 남긴 발전도상의 육체를 차분히 귀여워해 주었다
+				CASE 2
+				PRINTFORMW 옷 위로부터로는 몰랐던 살집의 좋은 아가씨의 육체를 마음껏 맛보았다
+				CASE 3
+				PRINTFORMW 원래 소질이 있었는지, 조금 안아 주면 아가씨는 넋을 잃어 격렬하게 흐트러졌다
+			ENDSELECT
+			PRINTFORMW 
+			PRINTFORML 그 후, 약속대로의 돈을 원조해 주면
+			PRINTFORMW 아가씨는 도망치는 것처럼 떠났다
+			PRINTFORM
+		CASE 1
+			PRINTFORMW 「……읏」
+			PRINTFORML 안게 해라
+			PRINTFORMW 그렇게 전하면, 이전을 생각해 냈는지, 아가씨는 얼굴을 붉히고 숙여 버렸다
+			PRINTFORMW 돈으로 생각 했던 대로로 할 수 있다고 생각하지 말아 주세요……거절의 말은 단호히로 한 것은 아니었다
+			PRINTFORMW 군에게 주어진 선택지는 2개, 방을 나올까 옷을 벗을까다
+			PRINTFORMW 유무를 말하게 하지 않는 어조로 전하면, 아가씨는 입을 다물어 버렸다
+			PRINTFORMW 「……이 일은, 누구에게도 말하지 말아 주세요」
+			PRINTFORMW 물론, 약속하자
+			PRINTFORML %ANAME(MASTER)%의 수긍을 받아, 아가씨는 잠깐 주저한 후, %ANAME(MASTER)%에 그 피부를 쬐었다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀를 소파에 쓰러트리고, 그 피부를 즐겼다
+			SELECTCASE RAND:4
+				CASE 0
+				PRINTFORMW 그녀의 육체는 숫처녀라고는 생각되지 않을 정도(수록) 민감해 많이 당신을 즐겁게 했다
+				CASE 1
+				PRINTFORMW 아직 어림을 남긴 발전도상의 육체를 차분히 귀여워해 주었다
+				CASE 2
+				PRINTFORMW 옷 위로부터로는 몰랐던 살집의 좋은 아가씨의 육체를 마음껏 맛보았다
+				CASE 3
+				PRINTFORMW 원래 소질이 있었는지, 조금 안아 주면 아가씨는 넋을 잃어 격렬하게 흐트러졌다
+			ENDSELECT
+			PRINTFORMW 
+			PRINTFORML 그 후, 약속대로의 돈을 원조해 주면
+			PRINTFORMW 아가씨는 도망치는 것처럼 떠났다
+			PRINTFORM
+		CASE 2
+			PRINTFORMW 「……읏」
+			PRINTFORML 아가씨는 아무것도 말하지 않았다. 숙여, 아랫 입술을 악물고 있었다
+			PRINTFORML 나는 창녀는 아니라고 아우성치거나 이쪽의 발언을 공표하면 위협하거나는 해 오지 않았다
+			PRINTFORMW 좋은 경향이다. 이런 반응은, 준 쾌감에 다 저항할 수 있지 않게 되어 있는 것의 증거다
+			PRINTFORMW 떠오르는 미소를 눌러 참는 %ANAME(MASTER)%에, 아가씨는 말한다
+			PRINTFORMW 「이것은,……이것은 지원을 위해서(때문에), 입니다. 그 이상이라도, 이하도 아닙니다」
+			PRINTFORML 지원을 위해서(때문에). 괴로운 변명이다. 를 지적할 생각은 없다. 오히려 강력하게 긍정한다
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀를 안고 싶다. 그녀는, 돈이 필요
+			PRINTFORMW 이해가 일치하고 있는데, 일부러 휘저을 생각 따위 없었다
+			PRINTFORML 지원이 필요하면, 무엇을 해야 하는가는 알고 있겠지?
+			PRINTFORMW 전하면, 아가씨는 스스로 옷을 벗어, 그 피부를 쬐어 간다
+			PRINTFORMW 그녀가 주는 소리는, 반응은, 지금까지보다 분명한 것이 되어 있었다……
+		CASE 3
+			PRINTFORMW 「알았습니다……잘 부탁드립니다」
+			PRINTFORMW 아가씨의 대답은, 이쪽의 말을 예측하고 있었는지같이 빨랐다
+			PRINTFORML 그녀는 일어서, 당신의 피부를 쬐어 간다. 거기에, 일찍이 보이고 있던 주저함은 이미 없었다
+			PRINTFORML 한편, 수줍음은 남아 있는지, 그 뺨은 조금 홍 밀려들고 있었다
+			PRINTFORMW 그 수줍음을 최대한 꺼내 주고 싶으면 우두커니 서는 그녀의 신체를 한껏 시선으로 범한다
+			PRINTFORMW 「……읏하아……」
+			PRINTFORML 그녀의 호흡은 뜨겁고, 눈동자는 젖고 있었다. 비순은 이미 습기를 띠고 있다
+			PRINTFORML 그 발전도상의 육체는, 여자답고 훌륭하게, 기대에 쑤시고 있는 것 같았다
+			PRINTFORML 그 만큼 상태가 되면 괴롭지, 소녀는 행위를 조르는 일은 없었다
+			PRINTFORML 쾌락을 위해서(때문에)는 아니고, 어디까지나 지원을 얻기 위해서(때문에) 하고 있는 것이다―-스스로를 속이기 위한 변명이, 스스로를 묶는 형벌 도구가 되어 있다
+			PRINTFORMW 짓궂은 것이다―-%조사처리(ANAME(MASTER),"는")% 내심으로 웃지만, 그 근처에 자신으로부터 발을 디뎌 줄 생각은 없었다
+			PRINTFORML 저속해진다면, 자신으로부터 저속해져 받지 않으면, 재미있지 않다
+			PRINTFORMW 라고는 해도, 너무 애태움 지나는 것도 무엇일까. 「이번은」, 더 이상의 성과는 꺼낼 수 없는 것 같다
+			PRINTFORMW 그렇게 판단한 %조사처리(ANAME(MASTER),"는")%, 아가씨를 소파에 쓰러트렸다……
+		CASE 4
+			PRINTFORMW 「알았습니다……잘 부탁드립니다」
+			PRINTFORMW 아가씨의 대답은, 이쪽의 말을 예측하고 있었는지같이 빨랐다
+			PRINTFORML 그녀는 일어서, 당신의 피부를 쬐어 간다. 거기에, 일찍이 보이고 있던 주저함은 이미 없었다
+			PRINTFORML 한편, 수줍음은 남아 있는지, 그 뺨은 조금 홍 밀려들고 있었다
+			PRINTFORMW 그 수줍음을 최대한 꺼내 주고 싶으면 우두커니 서는 그녀의 신체를 한껏 시선으로 범한다
+			PRINTFORMW 「……읏하아……」
+			PRINTFORML 그녀의 호흡은 뜨겁고, 눈동자는 젖고 있었다. 비순은 이미 습기를 띠고 있다
+			PRINTFORML 그 발전도상의 육체는, 여자답고 훌륭하게, 기대에 쑤시고 있는 것 같았다
+			PRINTFORML 그 만큼 상태가 되면 괴롭지, 소녀는 행위를 조르는 일은 없었다
+			PRINTFORML 쾌락을 위해서(때문에)는 아니고, 어디까지나 지원을 얻기 위해서(때문에) 하고 있는 것이다―-스스로를 속이기 위한 변명이, 스스로를 묶는 형벌 도구가 되어 있다
+			PRINTFORMW 짓궂은 것이다―-%조사처리(ANAME(MASTER),"는")% 내심으로 웃지만, 그 근처에 자신으로부터 발을 디뎌 줄 생각은 없었다
+			PRINTFORMW 저속해진다면, 자신으로부터 저속해져 받지 않으면, 재미있지 않다
+			PRINTFORMW 「우우……!」
+			PRINTFORML 그녀의 신체는, 이미 %ANAME(MASTER)%에 길들여지고 있다
+			PRINTFORMW 보여지고 있다는 의식만으로, 완전히 발정할 수 있으려면
+			PRINTFORMW 뒤는 마음이 저속해지면 그것으로 마지막이다……그리고, 그것은 아마, 이번된다
+			PRINTFORML 수확의 기대에 가슴을 고조되게 하면서도, 그것을 소녀에게 눈치 채이는 일이 없게, %조사처리(ANAME(MASTER),"는")% 맡고 있었다
+			PRINTFORMW 가장, 소녀 쪽에, 그런 일을 깨달을 여유 따위 없는 것 같았지만
+			PRINTFORMW 이것은, 좀 더 강하게 눌러 주어도 문제 없을 것이다. 그렇게 생각한 %조사처리(ANAME(MASTER),"는")%, 조용히 일어섰다
+			PRINTFORML 또 밀어 쓰러트려진다―-그렇게 직감 했을 것이다, 소녀가 조금 준비한다. 그 눈동자의 반이 기대의 색에 물들고 있던 것을, 그녀는 알고 있었을 것인가
+			PRINTFORML 어쨌든, 그 기대는 배신당하게 된다. %조사처리(ANAME(MASTER),"는")% 그녀를 밀어 쓰러트리지 않았다
+			PRINTFORMW 그 뿐만 아니라 오히려, 그녀에게 등을 돌려, 방의 밖에 나가려고까지 해 보였다
+			PRINTFORMW 「저……무엇을」
+			PRINTFORML 좋은 것을 보여 받은, 지원금은 나중에 부하에게 보내게 한다
+			PRINTFORMW 의심하는 것 같은 소리에, 그렇게 돌려주었다
+			PRINTFORMW 「조, 조금 기다려 주세요」
+			PRINTFORML 소녀는 어이를 상실한 것 같았다. 그것도 그렇겠지, 이쪽의 태도는, 지금까지와는 정반대였다
+			PRINTFORMW 명백하게 이상하면 정상적인 사람이라면 곧 눈치챌 것이다. 하지만 그녀는 눈치채지 못했다. 성적 흥분에 침식해진 그녀에게, 정상적인 판단력이 있을 리도 없다
+			PRINTFORMW 「어째서입니까, 지금까지 당신은, 나와 그……일에 이르러 왔는데, 어째서 오늘에 한해서」
+			PRINTFORMW 그 「어째서」가, 단순한 지적 호기심으로부터 발해진 것은 아닌 것은, 분명한 일이었다
+			PRINTFORMW 어째서 하필이면, 지금까지로 가장 격렬한 성적 욕구에 습격당하고 있는 지금 이 때만, 아무것도 하지 않고 돌아가 버리는 것인가
+			PRINTFORMW 그녀가 말하려고 하고 있는 것은, 즉 그런 일이다
+			PRINTFORMW 단지 오늘은 그러한 기분이 아닌 것뿐이라면 짧게 돌려준다. 문을 열어, 나가려고 하는 %ANAME(MASTER)%의 등을, 소녀는 부축해 왔다
+			PRINTFORMW 「부탁입니다……나를, 안아 주시지 않겠습니까」
+			PRINTFORMW 이렇게도 시원스럽게 갈까. 솟구치는 웃음을 어떻게든 견딘다
+			PRINTFORMW 아직, 아직 기분은 빠지지 않는 것이다. 이제(이미/벌써/더는/정말) 한 번 밀기가 남아 있으니까
+			PRINTFORML 자신이 무슨 말을 하고 있는지 이해하고 있을까하고, 굳이 딱딱한 어조로 되묻는다
+			PRINTFORMW 오늘은 그런 일없이도 지원금을 내 준다. 금 빼고, 그런데도 더 안아 주라고 부탁하는 것은, 이유가 달라지겠어와
+			PRINTFORMW 「당신은, 심술궂은 사람입니다……」
+			PRINTFORML 자신이 지금 어떤 상태에 있는지, 알고 있어 주고 있을 것이라고, 완곡하게 비난 되고 있다
+			PRINTFORMW 그러나, 웃어 받아 넘겼다. 지금 것이 이성의 마지막 저항인 것이라고 생각하면, 사랑스러운 것이었다
+			PRINTFORMW 「한 번 더, 부탁합니다. 돈과는 관계없이, 나를, 안아 주세요」
+			PRINTFORML 적나라한 고백이었다. 하지만, 어조는 분명히 하고 있었다
+			PRINTFORMW 스스로의 안는 수줍음이라든가, 그러한 것과 결별했을 것이다
+			PRINTFORMW 물론이라면 %조사처리(ANAME(MASTER),"는")% 수긍해, 기대에 신체를 쑤시게 하는 아가씨를 소파에 쓰러트렸다……
+			PRINTFORMW 후련하게 터졌기 때문인가, 그녀는 지금까지보다 격렬하게 흐트러져 보였다……
+			CALL COLOR_PRINTW(@"소녀를 함락 시켰습니다", 칼라_주의)
+	ENDSELECT
+	CALL COLOR_PRINT(@"{모금액}", 칼라_주의)
+	PRINTFORMW 의 돈을 모금했다
+	MONEY -= 모금액
+	DVAR:모금_안은회수 ++
+	DVAR:모금_발생플래그 = 1
+ENDIF
+RETURN 1

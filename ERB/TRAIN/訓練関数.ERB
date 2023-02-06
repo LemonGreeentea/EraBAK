@@ -1,0 +1,165 @@
+﻿@COM_SLG_TRAIN_MAIN_PROCESS(능력, 육아플래그)
+#DIM 능력
+#DIM 육아플래그
+#DIM 난수기준치, 2
+#DIM 적정, 2
+;커맨드의 성공 여부를 TFLAG:18에 세트
+CALL JUDGE_COM_RESULT(MTAR:0, 5, 5)
+
+난수기준치:0 = MAX(100 - ABL:(MPLY:0):능력 / 3, 30)
+난수기준치:1 = MAX(100 - ABL:(MTAR:0):능력 / 3, 30)
+IF ABL:(MPLY:0):능력 > ABL:(MTAR:0):능력 + 10
+	난수기준치:0 -= 10
+	난수기준치:1 += 10
+ELSEIF ABL:(MTAR:0):능력 > ABL:(MPLY:0):능력 + 10
+	난수기준치:1 += 10
+	난수기준치:0 -= 10
+ENDIF
+
+SELECTCASE TFLAG:18
+	CASE -1
+		난수기준치:0 -= 10
+		난수기준치:1 -= 10
+	CASE 0
+	CASEELSE
+		난수기준치:0 += 10
+		난수기준치:1 += 10
+ENDSELECT
+
+적정:0 = GROWTYPE_RATE(MPLY:0, ABLNAME:능력)
+적정:1 = GROWTYPE_RATE(MTAR:0, ABLNAME:능력)
+
+난수기준치:0 += (적정:0 - 100) / 10
+난수기준치:1 += (적정:1 - 100) / 10
+
+IF ABL:(MPLY:0):능력 > 랭크역치:랭크_ＳＬＧ:랭크_B
+	TIMES 난수기준치:0, 0.75
+ELSEIF ABL:(MPLY:0):능력 < 랭크역치:랭크_ＳＬＧ:랭크_D
+	TIMES 난수기준치:0, 1.3
+ENDIF
+IF ABL:(MTAR:0):능력 > 랭크역치:랭크_ＳＬＧ:랭크_B
+	TIMES 난수기준치:1, 0.75
+ELSEIF ABL:(MTAR:0):능력 < 랭크역치:랭크_ＳＬＧ:랭크_D
+	TIMES 난수기준치:1, 1.3
+ENDIF
+
+SIF TALENT:(MPLY:0):농땡이마왕
+	TIMES 난수기준치:0, 0.8
+SIF TALENT:(MTAR:0):농땡이마왕
+	TIMES 난수기준치:1, 0.8
+
+
+IF 육아플래그 == 0
+	;적성이 없고 호감도·종속도가 낮으면 공포와 반감의 소스를 얻는다
+	IF 적정:1 < 100
+		SOURCE:(MTAR:0):환락 = 0
+		SOURCE:(MTAR:0):공포 = MAX(0, 100 - MAX(CFLAG:(MTAR:0):2, CFLAG:(MTAR:0):4) * 100 / 800)
+		SOURCE:(MTAR:0):불안 = MAX(0, 200 - MAX(CFLAG:(MTAR:0):2, CFLAG:(MTAR:0):4) * 200 / 500)
+	ENDIF
+
+	SOURCE:(MTAR:0):환락 = 20 * 적정 / 100
+
+	;친밀하게 응한 환락의 소스 추가
+	CALL ADD_SOURCE_KANRAKU(MTAR:0, 100 + (적정:1 - 100) /2)
+
+	;주도권에 응한 소스의 추가
+	CALL ADD_SOURCE_INITIATIVE_N(MPLY:0, 100, 100)
+	CALL ADD_SOURCE_INITIATIVE_N(MTAR:0, 100, 100)
+
+	;타겟이 농땡이마왕라면 효과 감소
+	IF TALENT:(MTAR:0):농땡이마왕
+		TIMES SOURCE:(MTAR:0):환락, 0.80
+		SOURCE:(MTAR:0):반감 = 70 - SOURCE:(MTAR:0):환락 / 3
+	ENDIF
+
+	;실패
+	IF TFLAG:18 == -1
+		TIMES SOURCE:(MTAR:0):환락, 0.20
+		TIMES SOURCE:(MTAR:0):불안, 1.50
+		SOURCE:(MTAR:0):불만 += 300
+	;	LOCAL:2 = 1
+	;성공
+	ELSEIF TFLAG:18 == 0
+	;	LOCAL:2 = 1
+	;대성공
+	ELSE
+		TIMES SOURCE:(MTAR:0):환락, 2.00
+		TIMES SOURCE:(MTAR:0):불안, 0.50
+	;	LOCAL:2 = 2
+	ENDIF
+	
+	;운동하는 것으로써, 조임이 개선한다!   가창이라든지 하복부에 힘은 있고!
+	;실패 0  성공 0～1  대성공 0～2
+	IF (능력 == GETNUM(ABL, "무투")) || (능력 == GETNUM(ABL, "방위")) || (능력 == GETNUM(ABL, "가창"))
+		SIF HAS_VAGINA(MPLY:0)
+			TALENT:(MPLY:0):Ｖ조임 = LIMIT(TALENT:(MPLY:0):Ｖ조임 + RAND:(TFLAG:18 + 2), 조임_최저치, 조임_최고치)
+		TALENT:(MPLY:0):Ａ조임 = LIMIT(TALENT:(MPLY:0):Ａ조임 + RAND:(TFLAG:18 + 3), 조임_최저치, 조임_최고치)
+		SIF HAS_VAGINA(MTAR:0)
+			TALENT:(MTAR:0):Ｖ조임 = LIMIT(TALENT:(MTAR:0):Ｖ조임 + RAND:(TFLAG:18 + 2), 조임_최저치, 조임_최고치)
+		TALENT:(MTAR:0):Ａ조임 = LIMIT(TALENT:(MTAR:0):Ａ조임 + RAND:(TFLAG:18 + 3), 조임_최저치, 조임_최고치)
+	ENDIF
+
+	;정신력의 강화
+	SIF MAXBASE:(MTAR:0):정신력 < 3000 || (MAXBASE:(MTAR:0):정신력 < 3500 && RAND:5 == 0)
+		MAXBASE:(MTAR:0):정신력 = MIN(MAXBASE:(MTAR:0):정신력 + 2, 3500)
+
+
+	;체력의 강화
+	IF MAXBASE:(MTAR:0):체력 < 1600
+		MAXBASE:(MTAR:0):체력 += 2
+	ELSEIF MAXBASE:(MTAR:0):체력 < 2000
+		MAXBASE:(MTAR:0):체력 += 1
+	ELSEIF MAXBASE:(MTAR:0):체력 < 3000 && RAND:5 == 0
+		MAXBASE:(MTAR:0):체력 += 1
+	ENDIF
+
+	;기력의 강화
+	IF MAXBASE:(MTAR:0):기력 < 1600
+		MAXBASE:(MTAR:0):기력 += 1
+	ELSEIF MAXBASE:(MTAR:0):기력 < 2000 && RAND:2 == 0
+		MAXBASE:(MTAR:0):기력 += 1
+	ELSEIF MAXBASE:(MTAR:0):기력 < 2500 && RAND:6 == 0
+		MAXBASE:(MTAR:0):기력 += 1
+	ENDIF
+	;주도도 변화 기준치
+	TFLAG:49 = 2
+
+	;도착도 변화 기준치
+	TFLAG:50 = -1
+ENDIF
+
+IF !TALENT:(MTAR:0):유아
+
+	LOCAL = (RAND:100 < 난수기준치:0)
+
+	IF LOCAL
+		SELECTCASE ABL:(MPLY:0):능력
+			CASE IS < 랭크역치:랭크_ＳＬＧ:랭크_C
+				LOCAL += RAND:3
+			CASE IS < 랭크역치:랭크_ＳＬＧ:랭크_B
+				LOCAL += RAND:2
+		ENDSELECT
+	ENDIF
+
+	EXP:(MPLY:0):GET_EXP(능력) += LOCAL
+
+	LOCAL = (RAND:100 < 난수기준치:1)
+
+	IF LOCAL
+		SELECTCASE ABL:(MTAR:0):능력
+			CASE IS < 랭크역치:랭크_ＳＬＧ:랭크_C
+				LOCAL += RAND:3
+			CASE IS < 랭크역치:랭크_ＳＬＧ:랭크_B
+				LOCAL += RAND:2
+		ENDSELECT
+	ENDIF
+
+	EXP:(MTAR:0):GET_EXP(능력) += LOCAL
+
+ELSE
+	FOR LOCAL, 0, 10
+		EXP:(MTAR:0):GET_EXP(능력) += (RAND:100 < 난수기준치:1)
+	NEXT
+ENDIF
+
+

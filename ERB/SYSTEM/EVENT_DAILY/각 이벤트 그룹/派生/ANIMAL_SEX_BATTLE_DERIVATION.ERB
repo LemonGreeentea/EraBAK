@@ -1,0 +1,224 @@
+﻿;---------------------
+;대응하는 데일리의 DISABLE를 돌려준다. 설정하지 않는 경우, 이벤트는 발생하지 않는다.
+;---------------------
+@EVENT_DAILY_DERIVATION_ANIMAL_SEX_BATTLE_3P_DISABLE()
+RETURN DAILY_GET_DISABLE_CONFIG("ANIMAL_SEX_BATTLE")
+
+
+;---------------------
+;발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;대응하는 데일리의 DISABLE 체크를 규약으로서 필수로 한다
+;---------------------
+@EVENT_DAILY_DERIVATION_ANIMAL_SEX_BATTLE_3P_DECISION()
+RETURN DVAR:종족사이항쟁_아가씨반하고플래그 == 3 && RAND:100 < 5
+
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_DERIVATION_ANIMAL_SEX_BATTLE_3P()
+#DIMS 요괴의종족, 2
+
+요괴의종족:0 = %종족사이항쟁_종류:(DVAR:종족사이항쟁_아가씨의종족)%
+요괴의종족:1 = %종족사이항쟁_종류:(DVAR:종족사이항쟁_아가씨2의종족)%
+
+PRINTFORML %요괴의종족:0%의 아가씨와 %요괴의종족:1%의 아가씨가 왔다
+PRINTFORMW 두 사람 모두%ANAME(MASTER)%의 얼굴을 보면 기쁜듯이 웃었다
+SELECTCASE RAND:5
+	CASE 0
+		PRINTFORML 「저, 신선한 야채를 가득 가져왔습니다」
+		PRINTFORMW 「나도 고기를 받아 온 것, 기대하고 있어♥」
+	CASE 1
+		PRINTFORML 「에헤헤, 참지 못하고 또 와 버렸던♥」
+		PRINTFORMW 「또 함께 터무니없게 해♥」
+	CASE 2
+		PRINTFORML 「으음, 여러 가지 플레이나 봉사를 공부해 왔던♥」
+		PRINTFORMW 「오늘 밤이야말로는 우리가 이겨 보이기 때문에♥」
+	CASE 3
+		PRINTFORML 「오, 오래간만입니다♥…저, 또 부탁하는♥」
+		PRINTFORMW 「일전에의 것이 너무 굉장해♥응♥♥…잊을 수 없는 것♥」
+	CASE 4
+		PRINTFORML 「그때 부터 자궁이 쑤셔 버려, 멈추지 않습니다♥」
+		PRINTFORMW 「우, 우리는 당신의 변태 펫♥귀여워해 주세요♥」
+ENDSELECT
+PRINTFORMW %조사처리(ANAME(MASTER),"는")% 응석부리는 것처럼 다가서 오는 2명을 달래면서 집에 불렀다
+PRINTFORML 
+PRINTFORML 
+SETCOLOR 칼라_핑크
+PRINTFORMW 「♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥」
+PRINTFORMW 밤새, 3명이 한껏 즐겼다
+RESETCOLOR
+CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", @"%요괴의종족%의 아가씨의 질", "화간")
+CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", @"%요괴의종족%의 아가씨의 질", "화간")
+CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", @"%요괴의종족%의 아가씨의 질", "화간")
+
+RETURN 1
+
+
+;---------------------
+;대응하는 데일리의 DISABLE를 돌려준다. 설정하지 않는 경우, 이벤트는 발생하지 않는다.
+;---------------------
+@EVENT_DAILY_DERIVATION_ANIMAL_SEX_BATTLE_SYURABA_DISABLE()
+RETURN DAILY_GET_DISABLE_CONFIG("ANIMAL_SEX_BATTLE")
+
+;---------------------
+;발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;대응하는 데일리의 DISABLE 체크를 규약으로서 필수로 한다
+;---------------------
+@EVENT_DAILY_DERIVATION_ANIMAL_SEX_BATTLE_SYURABA_DECISION()
+;아가씨 2명이 반해지고 있는 것
+RETURN DVAR:종족사이항쟁_아가씨반하고플래그 == 2 && RAND:16 == 0
+
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_DERIVATION_ANIMAL_SEX_BATTLE_SYURABA()
+#DIMS 요괴의종족, 2
+#DIM 선택
+
+요괴의종족:0 = %종족사이항쟁_종류:(DVAR:종족사이항쟁_아가씨의종족)%
+요괴의종족:1 = %종족사이항쟁_종류:(DVAR:종족사이항쟁_아가씨2의종족)%
+
+PRINTFORML 
+PRINTFORMW ………
+PRINTFORMW %요괴의종족:0%의 아가씨와 %요괴의종족:1%의 아가씨가 양측으로부터 %ANAME(MASTER)%의 팔에 껴안아 서로 노려보고 있다
+PRINTFORML 우연히 동시에 집에 온 두 명이 정면충돌이 되어, 수라장이 되어 버렸다
+PRINTFORML 두 사람 모두 「자신이 %조사처리(ANAME(MASTER),"를")% 기분 좋게 할 수 있다」라고 주장해 양보하지 않고, 상대를 위협하고 있다
+PRINTFORMW 굳이 입다물고 있다고 두 명은 결론을 요구하는 것처럼%조사처리(ANAME(MASTER),"를")% 올려봐 왔다
+PRINTFORML 어떻게 하지?
+CALL ASK_MULTI(@"%요괴의종족:0%의 아가씨를 선택한다" ,@"%요괴의종족:1%의 아가씨를 선택한다" ,"함께 귀여워한다")
+IF RESULT != 2
+	선택 = RESULT
+	PRINTFORMW %요괴의종족:선택%의 아가씨를 선택했다
+	PRINTFORML 그녀는 뛰어 올라 기쁨 껴안아 왔다
+	PRINTFORML 또 한사람은 쇼크를 받은 것처럼 고개 숙이면 터벅터벅 떠나 가 버렸다
+	PRINTFORMW 그 뒷모습에 나쁜 일을 했다고 생각하면서도 %요괴의종족:선택%의 아가씨에게 재촉해지고 이불에 향했다
+	PRINTFORML 
+	PRINTFORMW 그 날의 그녀는 언제나 이상으로 정열적으로, 졸라지는 대로 몇 번이나 교접했다
+	DVAR:(선택 == 0 ? 종족사이항쟁_아가씨2의종족 # 종족사이항쟁_아가씨의종족) = 0
+	DVAR:종족사이항쟁_아가씨반하고플래그 = 1
+	CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", @"%요괴의종족:선택%의 아가씨의 질", "화간")
+	CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", @"%요괴의종족:선택%의 아가씨의 질", "화간")
+ELSE
+	PRINTFORMW 두 명 함께 귀여워하기로 했다
+	PRINTFORMW 상정외의 대답에 당황하는 두 명을 달래, 세 명으로 침실에 향했다
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW 
+	SETCOLOR 칼라_핑크
+	PRINTFORMW 「♥♥♥♥♥♥」「♥♥♥♥♥♥」
+	PRINTFORMW 「♥♥♥♥♥♥」「♥♥♥♥♥♥」「♥♥♥♥♥♥」
+	PRINTFORMW 「♥♥♥♥♥♥」「♥♥♥♥♥♥」「♥♥♥♥♥♥」「♥♥♥♥♥♥」「♥♥♥♥♥♥」
+	RESETCOLOR
+	PRINTFORMW 그 날은 밤새%ANAME(MASTER)%의 집으로부터 아가씨들의 교성이 영향을 주었다
+	CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", @"%요괴의종족%의 아가씨의 질", "화간")
+	CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", @"%요괴의종족%의 아가씨의 질", "화간")
+	CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", @"%요괴의종족%의 아가씨의 질", "화간")
+	PRINTFORML 
+	PRINTFORMW …이튿날 아침
+	PRINTFORML 충분히 귀여워해 주었으므로 두 명은 완전히 사이가 좋게 된 것 같다
+	PRINTFORMW 발정해 버린 눈초리로 서운한 것 같은 그녀들에게 키스를 해 주어, 집에 돌아갔다
+	DVAR:종족사이항쟁_아가씨반하고플래그 = 3
+ENDIF
+
+RETURN 1
+
+
+;---------------------
+;대응하는 데일리의 DISABLE를 돌려준다. 설정하지 않는 경우, 이벤트는 발생하지 않는다.
+;---------------------
+@EVENT_DAILY_DERIVATION_ANIMAL_SEX_BATTLE_MAKELOVE_DISABLE()
+RETURN DAILY_GET_DISABLE_CONFIG("ANIMAL_SEX_BATTLE")
+
+;---------------------
+;발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;대응하는 데일리의 DISABLE 체크를 규약으로서 필수로 한다
+;---------------------
+@EVENT_DAILY_DERIVATION_ANIMAL_SEX_BATTLE_MAKELOVE_DECISION()
+RETURN GROUPMATCH(DVAR:종족사이항쟁_아가씨반하고플래그, 1, 2) && RAND:100 < 10
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_DERIVATION_ANIMAL_SEX_BATTLE_MAKELOVE()
+#DIMS 요괴의종족
+
+IF DVAR:종족사이항쟁_아가씨반하고플래그 == 2
+	요괴의종족 = %종족사이항쟁_종류:(RAND:2 ? DVAR:종족사이항쟁_아가씨의종족 # DVAR:종족사이항쟁_아가씨2의종족)%
+ELSE
+	요괴의종족 = %종족사이항쟁_종류:(DVAR:종족사이항쟁_아가씨2의종족 == 0 ? DVAR:종족사이항쟁_아가씨의종족 # DVAR:종족사이항쟁_아가씨2의종족)%
+ENDIF
+
+PRINTFORML 「에헤헤…또, 와 버렸던…♥」
+PRINTFORMW 이전 상대한 %요괴의종족%의 아가씨가 왔다
+PRINTFORML 어떻게 하지?
+CALL ASK_YN("불러들인다", "되돌려 보낸다")
+IF RESULT == 1
+	PRINTFORML 나쁘지만 여기에는 그런 생각은 없다
+	PRINTFORMW 물고 늘어지는 그녀를 차갑게 되돌려 보내면, 이윽고 터벅터벅 떠나 갔다
+	DVAR:(요괴의종족 == 종족사이항쟁_종류:(DVAR:종족사이항쟁_아가씨의종족)? 종족사이항쟁_아가씨의종족 # 종족사이항쟁_아가씨2의종족) = 0
+	DVAR:종족사이항쟁_아가씨반하고플래그 --
+	RETURN 1
+ENDIF
+
+PRINTFORMW 불러들이면, 그녀는 기쁜듯이 %ANAME(MASTER)%의 팔에 껴안아 왔다
+PRINTFORML 
+SELECTCASE RAND:10
+	CASE 0
+		PRINTFORML 그녀의 옷을 벗기면 이미 전신이 달아올라, 사타구니로부터는 애액이 배어 나오고 있었다
+		PRINTFORML 상냥하게 애무하면서 그 치태를 속삭이면 그녀는 부들 몸부림 해 달콤한 한숨을 흘린다
+		PRINTFORML 숨을 거칠게 하고 달라붙도록(듯이)해 자비를 요구해 오는 그녀를, %조사처리(ANAME(MASTER),"는")% 상냥하게 쓰러트렸다
+		PRINTFORMW …그녀의 다랑어자른 극상의 여체를 밤새도록 한껏 즐겁게 해 받았다
+	CASE 1
+		PRINTFORML 어슴푸레한 침실의 안, 요염한 암컷의 신음소리와 끊임없는 남녀의 진심 깨는 소리가 울린다
+		PRINTFORML %조사처리(ANAME(MASTER),"와")% 그녀는 시간을 잊어, 땀투성이가 되어 농후한 섹스를 반복하고 있다
+		PRINTFORML 완전히 다랑어자른 그녀는, 음미롭게 몸을 구불거리게 해 %ANAME(MASTER)%에 휘감겨 온다
+		PRINTFORMW 그 요염함에 %ANAME(MASTER)%의 고조됨도 가라앉지 않고, 짐승과 같이 육욕에 빠져 계속 사귀었다
+	CASE 2
+		PRINTFORML 몇번인가 사귄 후, %조사처리(ANAME(MASTER),"는")% 그녀와 함께 목욕탕에 잠기고 있다
+		PRINTFORML %ANAME(MASTER)%의 팔에 안기고 있는 그녀는 만열이라는 모습으로, 응석부리는 것처럼 다가서 온다
+		PRINTFORML 그 표정에 불끈불끈 해, 가볍게 가슴을 비비면 그녀는 작게 교성을 미치게 해 몸을 진동시켰다
+		PRINTFORMW 그녀도 또 인내 할 수 없게 되었는지 목욕통에 잠긴 채로, 교접을 재개했다
+	CASE 3
+		PRINTFORML 아가씨는 야무지지 못한 암컷의 얼굴을 쬐면서 기승위로 %ANAME(MASTER)%에 봉사를 하고 있다
+		PRINTFORML 사랑스럽게 허덕이면서 열중해 허리를 흔드는 모습은, %ANAME(MASTER)%의 눈을 즐겁게 해 준다
+		PRINTFORML 때때로 밀어올려 주면, 그녀는 기쁨의 소리와 함께 흠칫 뛰어 신체를 뒤로 젖히게 했다
+		PRINTFORMW 그녀의 극상의 봉사에 촉%조사처리(ANAME(MASTER),"는")%, 태내에 몇 번이나 정액을 발했다
+	CASE 4
+		PRINTFORML %조사처리(ANAME(MASTER),"와")% 아가씨는 농후하게 혀를 얽히게 되어지면서 격렬하게 교접하고 있다
+		PRINTFORML 자궁을 찌를 때에 질와 꼭 죄여, 넋을 잃을 것 같은 같은 쾌락이 전해진다
+		PRINTFORML 가고 있는 채의 그녀는 눈동자에♥를 띄우면서 몇 번이나 %ANAME(MASTER)%의 이름을 불러 온다
+		PRINTFORMW 그 사랑스러움 발기는 들어가는 일을 알지 못하고, %ANAME(MASTER)%본능대로 몇 번이나 씨뿌리기 했다
+	CASE 5
+		PRINTFORML 키스를 하면서 아가씨에게 껴안아 만지작거리면 사랑스러운 소리를 높여 몸을 진동시켰다
+		PRINTFORML 그녀는 %ANAME(MASTER)%의 애무에 맞추어 신체를 구불거리게 해, 소악마와 같은 선정적인 표정을 보인다
+		PRINTFORML 사랑스러움에 인내 할 수 없게 되어 쓰러트리자 그녀는 양손을 열어 %조사처리(ANAME(MASTER),"를")% 불러 왔다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 권해지는 대로 녹진녹진의 그녀의 신체를 구석구석까지 한껏 만끽했다
+	CASE 6
+		PRINTFORML 평상시와 다른 취향을 졸라진 %조사처리(ANAME(MASTER),"는")%, 애완동물 플레이로 이끌었다
+		PRINTFORML 목걸이와 눈가리개를 붙이게 한 그녀를 엎드린 자세로 해, 마치 개를 예의범절을 가르치는 것처럼 격렬하게 범한다
+		PRINTFORML 난폭하게 되어 흥분했는지, 그녀는 평소보다 민감하게 몸을 진동시키고 짐승과 같은 신음소리를 올린다
+		PRINTFORMW 암컷의 본능대로 자궁입구를 연 그녀의 태내에, 몇 번이나 씨뿌리기를 반복했다
+	CASE 7
+		PRINTFORML 데이트처에서 불끈불끈한 %조사처리(ANAME(MASTER),"는")%, 그녀를 인기척이 없는 골목에 데리고 들어갔다
+		PRINTFORML 그녀도 그다지는 아닌 것 같아, 비밀스런 장소에 손을 뻗으면 이미 완전히 젖고 있었다
+		PRINTFORML 엉덩이를 내미는 것처럼 명하면, 그녀는 숨을 거칠게 하면서 속옷을 벗어 벽에 손을 찔렀다
+		PRINTFORMW 야외에서 짐승과 같이 교접하는 상황에 흥분한 %ANAME(MASTER)%들의 교미는, 해가 질 때까지 계속되었다
+	CASE 8
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 아가씨에게 졸라져 벌써 수시간마구에 걸쳐 섹스하고 있다
+		PRINTFORML 포옹하면서 격렬하게 밀어올려 주면, 그녀는 히익히익 거리며 허덕여 매달려 온다
+		PRINTFORML 질육은 경련하고 있을 뿐으로, %ANAME(MASTER)%의 페니스에 마치 생물과 같이 휘감겨 사정을 재촉한다
+		PRINTFORMW 깊숙히 찌른 채로 몇 번째인가의 정액을 발하면, 그녀는 오늘 제일의 교성을 질렀다
+	CASE 9
+		PRINTFORML 그녀는 완전히 다녀 아내 기분의 같아, %조사처리(ANAME(MASTER),"를")% 위해서(때문에) 밥을 만들어 주었다
+		PRINTFORML 왜일까 알몸 에이프런으로 요리하는 그녀에게 불끈불끈 했지만, 굳이 훨씬 참는 일로 했다
+		PRINTFORML 요리는 매우 맛있고, 많이 먹고 있는 %조사처리(ANAME(MASTER),"를")% 봐 그녀는 기쁜듯이 하고 있었다
+		PRINTFORMW …식후, 베개를 안아 다가서 오는 그녀를 안아 올리고 마루에 옮겨, 밤새 섹스하고 쓰러트려 주었다
+ENDSELECT
+CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", @"%요괴의종족%의 아가씨의 질", "화간")
+
+RETURN 1

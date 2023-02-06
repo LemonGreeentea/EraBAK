@@ -1,0 +1,171 @@
+﻿;--------------------------------------
+;봉기 이벤트가 발생할까의 판정
+;--------------------------------------
+@BANDIT_RISE_RATE()
+#DIM 도둑
+도둑 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_도둑))
+
+;원래 출현시키지 않았으면 안 돼
+SIF !SP_COUNTRY_RANK:(특수세력_도둑)
+	RETURN 0
+
+;아직 존재하지 않는다（랭크는 설정했지만, 초기에 출현시키지 않았던 경우）때
+IF 도둑 == -1
+	IF DAY > SLG_PP:1 && (DAY - SLG_PP:1) * 15
+		CALL BANDIT_INIT(1)
+		SIF !RESULT && BANDIT_HAS_INITIAL_CITIES
+			CALL BANDIT_RISE
+		SIF !RESULT
+			RETURN 1
+	ENDIF
+	RETURN 0
+ENDIF
+
+SIF GET_OWN_CITY(도둑) > 0
+	RETURN 0
+
+SIF DAY < SLG_PP:1
+	RETURN 0
+
+SIF DAILY_GET_DISABLE_CONFIG("BANDIT_RISE")
+	RETURN 0
+
+IF RAND:1000 >= DVAR:도둑_봉기카운터 * 5 - MIN(DAY / 2, 50)
+	DVAR:도둑_봉기카운터 ++
+	RETURN 0
+ENDIF
+RETURN 1
+
+
+;--------------------------------------
+;도둑 봉기 이벤트
+;--------------------------------------
+@BANDIT_RISE(도시 = 0)
+#DIM 도둑
+#DIM 도시
+
+도둑 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_도둑))
+
+IF 도둑 == -1
+	CALL BANDIT_INIT()
+	도둑 = RESULT
+ENDIF
+
+SIF 도둑 == 0
+	RETURN 0
+
+CALL SP_COUNTRY_RISE(도둑, 도시)
+
+SIF !RESULT
+	RETURN 0
+
+FOR LOCAL, 0, MAX_UNIT
+	CALL CLEAR_UNIT(도둑, LOCAL, 1)
+NEXT
+COUNTRY_SOLDIER:도둑 += MAXARRAY(COUNTRY_SOLDIER) / 2
+COUNTRY_IS_CLOSED:도둑 = 0
+DVAR:도둑_봉기카운터 = 0
+
+RETURN 도둑
+
+;---------------------
+;봉기 이벤트용 도시 찬탈 함수
+;---------------------
+@BANDIT_RISE_TAKEOVER_CITY(세력, 초기도시)
+#DIM 세력
+#DIM 초기도시
+#DIM 찬탈수
+#DIM 접속처
+
+;처리가 특수한 것으로, RISE_MSG가 아니고 여기서 메세지 표시
+CALL SINGLE_DRAWLINE
+PRINTFORML
+SETCOLOR 칼라_경고
+PRINTFORMW 도둑이 봉기 했습니다!
+RESETCOLOR
+
+CALL BANDIT_RISE_ARREST(세력, CITY_OWNER:초기도시)
+CALL TAKEOVER_CITY_FROM_NO(세력, 초기도시)
+
+찬탈수 = 1
+
+;초기 도시를 중심으로, 접속되고 있는 도시를 빼앗는다
+;중계점이 있는 경우는 80%
+FOR LOCAL, 0, VARSIZE("CITY_ROUTE", 1)
+	
+	;접속처를 취득
+	접속처 = CITY_ROUTE:초기도시:(LOCAL:0)
+	SIF 접속처 == 0
+		BREAK
+	
+	SELECTCASE CITY_TYPE:접속처
+		;접속처가 도시
+		;OWNER의 소유 도시수를 조사해, 2이상이라면 빼앗는다
+		CASE 0
+			IF !IS_COUNTRY(CITY_OWNER:접속처)
+				CALL TAKEOVER_CITY_FROM_NO(세력, 접속처)
+				찬탈수 ++
+			ELSE
+				IF GET_OWN_CITY(CITY_OWNER:접속처) >= 2
+					CALL BANDIT_RISE_ARREST(세력, CITY_OWNER:접속처)
+					CALL TAKEOVER_CITY_FROM_NO(세력, 접속처)
+					찬탈수 ++
+				ENDIF
+			ENDIF
+		;접속처가 중계지
+		;한층 더 접속하고 있는 앞을 취득해, 같은 처리
+		CASE 1
+			SIF RAND:100 > 80
+				CONTINUE
+			FOR LOCAL:2, 0, VARSIZE("CITY_ROUTE", 1)
+				LOCAL:3  = CITY_ROUTE:접속처:(LOCAL:2)
+				SIF LOCAL:3 == 0
+					BREAK
+				IF LOCAL:3 != 초기도시
+					IF !IS_COUNTRY(CITY_OWNER:(LOCAL:3))
+						CALL TAKEOVER_CITY_FROM_NO(세력, LOCAL:3)
+						찬탈수 ++
+						BREAK
+					ELSE
+						IF GET_OWN_CITY(CITY_OWNER:(LOCAL:3)) >= 2
+							CALL BANDIT_RISE_ARREST(세력, CITY_OWNER:(LOCAL:3))
+							CALL TAKEOVER_CITY_FROM_NO(세력, LOCAL:3)
+							찬탈수 ++
+							BREAK
+						ENDIF
+					ENDIF
+				ENDIF
+			NEXT
+	ENDSELECT
+NEXT
+
+RETURN 찬탈수
+
+;-------------------------------
+;빼앗은 도시의 소속 무장을 날치기하는 처리（무소속 도시는 아니면 ）
+;-------------------------------
+@BANDIT_RISE_ARREST(세력, 대상)
+#DIM 세력
+#DIM 대상
+VARSET LOCAL
+
+SIF !IS_COUNTRY(대상)
+	RETURN -1
+
+FOR LOCAL, 0, CHARANUM
+	IF CFLAG:LOCAL:소속 == 대상 && !CFLAG:LOCAL:포로처 && IS_FEMALE(LOCAL) && GET_COUNTRY_BOSS(대상) != LOCAL && !IS_SP_CHARA(LOCAL) && !TALENT:LOCAL:특수세력소질 && !RAND:4
+		CALL COLOR_PRINTW(@"도둑은 %조사처리(ANAME(LOCAL),"를")%\@CONFIG:200 ? # 성노예로서\@납치했습니다", 칼라_경고)
+		CALL CAPTURE(LOCAL, 세력)
+		BREAK
+	ENDIF
+NEXT
+
+
+;---------------------
+;봉기 이벤트용 메세지 함수
+;더미
+;---------------------
+@BANDIT_RISE_MSG(세력, 대상)
+#DIM 세력
+#DIM 대상
+RETURN 1

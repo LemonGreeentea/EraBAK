@@ -1,0 +1,498 @@
+﻿;경험치에만 밤능력 상승
+
+;-------------------------------------------------
+;봉사
+;-------------------------------------------------
+@ABLUP_EXPNAME20
+RESULTS = 봉사경험치
+
+@CALC_ABLUP_EXP20(ARG:0)
+SELECTCASE ABL:(ARG:0):봉사
+	CASE 0
+		LOCAL:0 = 5
+	CASE 1
+		LOCAL:0 = 30
+	CASE 2
+		LOCAL:0 = 60
+	CASE 3
+		LOCAL:0 = 150
+	CASE 4
+		LOCAL:0 = 300
+	CASEELSE
+		LOCAL:0 = 500 + 250 * (ABL:(ARG:0):봉사 - 5)
+ENDSELECT
+
+;소질에 의한 보정
+IF TALENT:(ARG:0):중독하기쉽다
+	TIMES LOCAL:0, 0.80
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	TIMES LOCAL:0, 0.80
+ENDIF
+IF TALENT:(ARG:0):무관심
+	TIMES LOCAL:0, 1.20
+ENDIF
+IF TALENT:(ARG:0):감정결핍
+	TIMES LOCAL:0, 1.20
+ENDIF
+
+RETURN MAX(LOCAL:0, 1)
+
+;-------------------------------------------------
+;성교
+;-------------------------------------------------
+@ABLUP_EXPNAME21
+RESULTS = 성교경험치
+
+@CALC_ABLUP_EXP21(ARG:0)
+SELECTCASE ABL:(ARG:0):성교
+	CASE 0
+		LOCAL:0 = 5
+	CASE 1
+		LOCAL:0 = 15
+	CASE 2
+		LOCAL:0 = 40
+	CASE 3
+		LOCAL:0 = 80
+	CASE 4
+		LOCAL:0 = 160
+	CASEELSE
+		LOCAL:0 = 240 + 120 * (ABL:(ARG:0):성교 - 5)
+ENDSELECT
+
+;소질에 의한 보정
+IF TALENT:(ARG:0):중독하기쉽다
+	TIMES LOCAL:0, 0.80
+ENDIF
+
+RETURN MAX(LOCAL:0, 1)
+
+;-------------------------------------------------
+;레즈
+;-------------------------------------------------
+@ABLUP_EXPNAME22
+RESULTS = 레즈경험치
+
+@CALC_ABLUP_EXP22(ARG:0)
+SELECTCASE ABL:(ARG:0):레즈
+	CASE 0
+		LOCAL:0 = 50
+	CASE 1
+		LOCAL:0 = 100
+	CASE 2
+		LOCAL:0 = 200
+	CASE 3
+		LOCAL:0 = 350
+	CASE 4
+		LOCAL:0 = 550
+	CASEELSE
+		LOCAL:0 = 800 + 400 * (ABL:(ARG:0):레즈 - 5)
+ENDSELECT
+
+;소질에 의한 보정
+IF TALENT:(ARG:0):중독하기쉽다
+	TIMES LOCAL:0, 0.80
+ENDIF
+IF TALENT:(ARG:0):여성혐오
+	TIMES LOCAL:0, 2.00
+ENDIF
+IF TALENT:(ARG:0):바이
+	TIMES LOCAL:0, 0.50
+ENDIF
+
+RETURN MAX(LOCAL:0, 1)
+
+;-------------------------------------------------
+;ＢＬ
+;-------------------------------------------------
+@ABLUP_EXPNAME23
+RESULTS = ＢＬ경험치
+
+@CALC_ABLUP_EXP23(ARG:0)
+SELECTCASE ABL:(ARG:0):ＢＬ
+	CASE 0
+		LOCAL:0 = 50
+	CASE 1
+		LOCAL:0 = 100
+	CASE 2
+		LOCAL:0 = 200
+	CASE 3
+		LOCAL:0 = 350
+	CASE 4
+		LOCAL:0 = 550
+	CASEELSE
+		LOCAL:0 = 800 + 400 * (ABL:(ARG:0):ＢＬ - 5)
+ENDSELECT
+
+;소질에 의한 보정
+IF TALENT:(ARG:0):중독하기쉽다
+	TIMES LOCAL:0, 0.80
+ENDIF
+IF TALENT:(ARG:0):남성혐오
+	TIMES LOCAL:0, 2.00
+ENDIF
+IF TALENT:(ARG:0):바이
+	TIMES LOCAL:0, 0.50
+ENDIF
+
+RETURN MAX(LOCAL:0, 1)
+
+;-------------------------------------------------
+;노출
+;-------------------------------------------------
+@ABLUP_EXPNAME24
+RESULTS = 노출경험치
+
+@CALC_ABLUP_EXP24(ARG:0)
+SELECTCASE ABL:(ARG:0):노출
+	CASE 0
+		LOCAL:0 = 15
+	CASE 1
+		LOCAL:0 = 60
+	CASE 2
+		LOCAL:0 = 120
+	CASE 3
+		LOCAL:0 = 250
+	CASE 4
+		LOCAL:0 = 400
+	CASEELSE
+		LOCAL:0 = 600 + 300 * (ABL:(ARG:0):노출 - 5)
+ENDSELECT
+
+;소질에 의한 보정
+IF TALENT:(ARG:0):중독하기쉽다
+	TIMES LOCAL:0, 0.80
+ENDIF
+IF TALENT:(ARG:0):주목받기원함
+	TIMES LOCAL:0, 0.60
+ENDIF
+IF TALENT:(ARG:0):수줍음
+	TIMES LOCAL:0, 1.50
+ENDIF
+IF TALENT:(ARG:0):수치심옅음
+	TIMES LOCAL:0, 0.80
+ENDIF
+
+RETURN MAX(LOCAL:0, 1)
+
+;-------------------------------------------------
+;자위
+;-------------------------------------------------
+@ABLUP_EXPNAME25
+RESULTS = 자위경험치
+
+@CALC_ABLUP_EXP25(ARG:0)
+SELECTCASE ABL:(ARG:0):자위
+	CASE 0
+		LOCAL:0 = 10
+	CASE 1
+		LOCAL:0 = 20
+	CASE 2
+		LOCAL:0 = 40
+	CASE 3
+		LOCAL:0 = 80
+	CASE 4
+		LOCAL:0 = 150
+	CASEELSE
+		LOCAL:0 = 200 + 100 * (ABL:(ARG:0):자위 - 5)
+ENDSELECT
+
+;소질에 의한 보정
+IF TALENT:(ARG:0):중독하기쉽다
+	TIMES LOCAL:0, 0.80
+ENDIF
+IF TALENT:(ARG:0):자위하기쉬움
+	TIMES LOCAL:0, 0.60
+ENDIF
+IF TALENT:(ARG:0):자제심
+	TIMES LOCAL:0, 1.50
+ENDIF
+
+RETURN MAX(LOCAL:0, 1)
+
+;-------------------------------------------------
+;정애
+;-------------------------------------------------
+@ABLUP_EXPNAME26
+RESULTS = 정애경험치
+
+@CALC_ABLUP_EXP26(ARG:0)
+SELECTCASE ABL:(ARG:0):정애
+	CASE 0
+		LOCAL:0 = 10
+	CASE 1
+		LOCAL:0 = 30
+	CASE 2
+		LOCAL:0 = 60
+	CASE 3
+		LOCAL:0 = 120
+	CASE 4
+		LOCAL:0 = 250
+	CASEELSE
+		LOCAL:0 = 400 + 200 * (ABL:(ARG:0):정애 - 5)
+ENDSELECT
+
+;소질에 의한 보정
+IF TALENT:(ARG:0):중독하기쉽다
+	TIMES LOCAL:0, 0.80
+ENDIF
+IF TALENT:(ARG:0):악취민감
+	TIMES LOCAL:0, 1.50
+ENDIF
+IF TALENT:(ARG:0):악취둔감 || TALENT:(ARG:0):불결무시
+	TIMES LOCAL:0, 0.80
+ENDIF
+
+RETURN MAX(LOCAL:0, 1)
+
+;-------------------------------------------------
+;사정
+;-------------------------------------------------
+@ABLUP_EXPNAME27
+RESULTS = 사정경험치
+
+@CALC_ABLUP_EXP27(ARG:0)
+SELECTCASE ABL:(ARG:0):사정
+	CASE 0
+		LOCAL:0 = 15
+	CASE 1
+		LOCAL:0 = 30
+	CASE 2
+		LOCAL:0 = 60
+	CASE 3
+		LOCAL:0 = 120
+	CASE 4
+		LOCAL:0 = 250
+	CASEELSE
+		LOCAL:0 = 400 + 200 * (ABL:(ARG:0):사정 - 5)
+ENDSELECT
+
+;소질에 의한 보정
+IF TALENT:(ARG:0):중독하기쉽다
+	TIMES LOCAL:0, 0.80
+ENDIF
+
+RETURN MAX(LOCAL:0, 1)
+
+;-------------------------------------------------
+;분유
+;-------------------------------------------------
+@ABLUP_EXPNAME28
+RESULTS = 분유경험치
+
+@CALC_ABLUP_EXP28(ARG:0)
+SELECTCASE ABL:(ARG:0):분유
+	CASE 0
+		LOCAL:0 = 5
+	CASE 1
+		LOCAL:0 = 20
+	CASE 2
+		LOCAL:0 = 40
+	CASE 3
+		LOCAL:0 = 80
+	CASE 4
+		LOCAL:0 = 160
+	CASEELSE
+		LOCAL:0 = 320 + 160 * (ABL:(ARG:0):분유 - 5)
+ENDSELECT
+
+;소질에 의한 보정
+IF TALENT:(ARG:0):중독하기쉽다
+	TIMES LOCAL:0, 0.80
+ENDIF
+
+RETURN MAX(LOCAL:0, 1)
+
+;-------------------------------------------------
+;배설
+;-------------------------------------------------
+@ABLUP_EXPNAME29
+RESULTS = 배설경험치
+
+@CALC_ABLUP_EXP29(ARG:0)
+SELECTCASE ABL:(ARG:0):배설
+	CASE 0
+		LOCAL:0 = 5
+	CASE 1
+		LOCAL:0 = 20
+	CASE 2
+		LOCAL:0 = 20
+	CASE 3
+		LOCAL:0 = 40
+	CASE 4
+		LOCAL:0 = 60
+	CASEELSE
+		LOCAL:0 = 80 + 40 * (ABL:(ARG:0):배설 - 5)
+ENDSELECT
+
+;소질에 의한 보정
+IF TALENT:(ARG:0):중독하기쉽다
+	TIMES LOCAL:0, 0.80
+ENDIF
+IF TALENT:(ARG:0):수줍음
+	TIMES LOCAL:0, 1.50
+ENDIF
+IF TALENT:(ARG:0):수치심옅음
+	TIMES LOCAL:0, 0.80
+ENDIF
+
+RETURN MAX(LOCAL:0, 1)
+
+;-------------------------------------------------
+;촉수
+;-------------------------------------------------
+@ABLUP_EXPNAME30
+RESULTS = 촉수경험치
+
+@CALC_ABLUP_EXP30(ARG:0)
+SELECTCASE ABL:(ARG:0):촉수
+	CASE 0
+		LOCAL:0 = 10
+	CASE 1
+		LOCAL:0 = 30
+	CASE 2
+		LOCAL:0 = 60
+	CASE 3
+		LOCAL:0 = 120
+	CASE 4
+		LOCAL:0 = 250
+	CASEELSE
+		LOCAL:0 = 400 + 200 * (ABL:(ARG:0):촉수 - 5)
+ENDSELECT
+
+;소질에 의한 보정
+IF TALENT:(ARG:0):중독하기쉽다
+	TIMES LOCAL:0, 0.80
+ENDIF
+
+RETURN MAX(LOCAL:0, 1)
+
+;-------------------------------------------------
+;출산
+;-------------------------------------------------
+@ABLUP_EXPNAME31
+RESULTS = 출산경험치
+
+@CALC_ABLUP_EXP31(ARG:0)
+SELECTCASE ABL:(ARG:0):출산
+	CASE 0
+		LOCAL:0 = 1
+	CASE 1
+		LOCAL:0 = 1
+	CASE 2
+		LOCAL:0 = 1
+	CASE 3
+		LOCAL:0 = 2
+	CASE 4
+		LOCAL:0 = 2
+	CASEELSE
+		LOCAL:0 = 3
+ENDSELECT
+
+;소질에 의한 보정
+IF TALENT:(ARG:0):중독하기쉽다
+	TIMES LOCAL:0, 0.80
+ENDIF
+
+RETURN MAX(LOCAL:0, 1)
+
+;-------------------------------------------------
+;주량
+;-------------------------------------------------
+@ABLUP_EXPNAME32
+RESULTS = 주량경험치
+
+@CALC_ABLUP_EXP32(ARG:0)
+LOCAL = POWER(ABL:(ARG:0):주량 + 1, 2) * 100
+RETURN MAX(LOCAL, 1)
+
+
+;-------------------------------------------------
+;마조
+;-------------------------------------------------
+@ABLUP_EXPNAME33
+RESULTS = 피학경험치
+
+@CALC_ABLUP_EXP33(ARG:0)
+SELECTCASE ABL:(ARG:0):마조
+	CASE 0
+		LOCAL:0 = 5
+	CASE 1
+		LOCAL:0 = 20
+	CASE 2
+		LOCAL:0 = 40
+	CASE 3
+		LOCAL:0 = 80
+	CASE 4
+		LOCAL:0 = 160
+	CASEELSE
+		LOCAL:0 = 200 + 80 * (ABL:(ARG:0):마조 - 5)
+ENDSELECT
+
+;소질에 의한 보정
+IF TALENT:(ARG:0):Ｍ기질
+	TIMES LOCAL:0, 0.80
+ENDIF
+
+RETURN MAX(LOCAL:0, 1)
+
+;-------------------------------------------------
+;새드
+;-------------------------------------------------
+@ABLUP_EXPNAME34
+RESULTS = 기학경험치
+
+@CALC_ABLUP_EXP34(ARG:0)
+SELECTCASE ABL:(ARG:0):새드
+	CASE 0
+		LOCAL:0 = 5
+	CASE 1
+		LOCAL:0 = 20
+	CASE 2
+		LOCAL:0 = 40
+	CASE 3
+		LOCAL:0 = 80
+	CASE 4
+		LOCAL:0 = 160
+	CASEELSE
+		LOCAL:0 = 200 + 80 * (ABL:(ARG:0):새드 - 5)
+ENDSELECT
+
+;소질에 의한 보정
+IF TALENT:(ARG:0):Ｓ기질
+	TIMES LOCAL:0, 0.80
+ENDIF
+
+RETURN MAX(LOCAL:0, 1)
+
+;-------------------------------------------------
+;최면
+;-------------------------------------------------
+@ABLUP_EXPNAME35
+RESULTS = 최면경험치
+
+@CALC_ABLUP_EXP35(ARG:0)
+SELECTCASE ABL:(ARG:0):최면
+	CASE 0
+		LOCAL:0 = 5
+	CASE 1
+		LOCAL:0 = 20
+	CASE 2
+		LOCAL:0 = 40
+	CASE 3
+		LOCAL:0 = 80
+	CASE 4
+		LOCAL:0 = 140
+	CASEELSE
+		LOCAL:0 = 200 + 80 * (ABL:(ARG:0):최면 - 5)
+ENDSELECT
+
+;소질에 의한 보정
+SIF TALENT:(ARG:0):솔직함
+	TIMES LOCAL:0, 0.80
+
+SIF TALENT:(ARG:0):중독하기쉽다
+	TIMES LOCAL:0, 0.80
+
+
+RETURN MAX(LOCAL:0, 1)

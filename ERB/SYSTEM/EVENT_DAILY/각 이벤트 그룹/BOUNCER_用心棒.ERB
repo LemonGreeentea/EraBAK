@@ -1,0 +1,75 @@
+﻿;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@EVENT_DAILY_BOUNCER_RATE()
+RETURN 20
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@EVENT_DAILY_BOUNCER_DECISION()
+RETURN DAY >= 10
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@EVENT_DAILY_BOUNCER_GENRE()
+RETURN 데일리_장르_고용
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@EVENT_DAILY_BOUNCER()
+#DIM 대상
+#DIM 소질
+#DIM 요금
+
+CALL CREATE_RANDOM_CHARA()
+대상 = RESULT
+
+;생성에 실패하면 RETURN 0
+SIF RESULT == -1
+	RETURN 0
+
+ABL:대상:무투 = RAND(60, 85)
+ABL:대상:방위 = RAND(60, 85)
+ABL:대상:지략 = RAND(60, 80)
+ABL:대상:정치 = 280 - (ABL:대상:무투 + ABL:대상:지략 + ABL:대상:방위)
+ABL:대상:가창 = RAND(20, 40)
+ABL:대상:요리 = 60 - ABL:대상:가창
+
+요금 = RAND(20000, 30000)
+
+PRINTFORML %조사처리(ANAME(MASTER),"가")% 일을 하고 있으면, 수행원이 손님을 고했다
+PRINTFORMW 뭐든지, 팔에 자신이 있는 사람이 사관 하고 싶다고 해 온 것 같다
+PRINTFORML 우수한 인재라면 대환영이다……그것이 정말로 우수하면의 이야기이지만
+PRINTFORMW 어쨌든, %조사처리(ANAME(MASTER),"는")% 만나 보기로 해 보았다……
+PRINTFORML
+PRINTFORM 손님은 이름을
+CALL COLOR_PRINT(@"%ANAME(대상)%", 칼라_주의)
+PRINTFORMW 라고 했다
+PRINTFORML 가볍게 실력을 보여 받았지만, 과연, 꽤 할 수 있는 녀석과 같다
+PRINTFORMW 이것이라면, %ANAME(MASTER)%의 세력으로 맞이해도, 충분히 활약해 줄 것이다……
+PRINTFORM %조사처리(ANAME(대상),"는")%, 준비금으로 해서
+CALL COLOR_PRINT(@"{요금}", 칼라_주의)
+PRINTFORML 를 요구하고 있다
+PRINTFORMW 싸지 않은 액이지만, 실력이 있는 사람을 맞이할 수 있는 것에는 대신할 수 없는가……
+CALL SINGLE_DRAWLINE
+PRINTFORML 현재의 자금:{MONEY}
+CALL ASK_MULTI_JUDGE(@"금{요금}를 지불해 고용한다", MONEY >= 요금, "거절한다", 1)
+IF RESULT == 0
+	PRINTFORMW %조사처리(ANAME(대상),"를")% 맞아들이기로 했다……
+	CALL CHANGE_COUNTRY(대상, CFLAG:MASTER:소속, 1)
+	MONEY -= 요금
+ELSE
+	PRINTFORMW 돌아가 받기로 했다……
+	CALL DELETE_CHARA(대상)
+ENDIF
+RETURN 1

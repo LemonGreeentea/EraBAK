@@ -1,0 +1,80 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_MIKO_AND_YOUKAI_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_MIKO_AND_YOUKAI_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_MIKO_AND_YOUKAI(대상)
+#DIM 대상
+
+PRINTFORML 요괴 퇴치중의 무녀와 조우했다
+PRINTFORMW 하지만 들요괴는 만만치 않은 것 같다
+PRINTFORML 어떻게 하지?
+PRINTFORML 
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "무투"))
+CALL ASK_YN("돕는다" ,"도망친다")
+IF RESULT == 1
+	PRINTFORML 말려 들어가기 전에 도망쳤다
+	PRINTFORMW 배후로부터 그녀의 비명이 들린 것 같았다
+	RETURN 1
+ENDIF
+
+PRINTFORML 조력 하는 일로 했다
+PRINTFORMW %조사처리(ANAME(대상),"는")% 검을 뽑아 두 명의 사이에 달려들었다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF LIMIT(ABL:대상:무투, 40, 90) > RAND:100
+	PRINTFORML %ANAME(대상)%들의 공격 요괴는 참지 못하고 도망쳐 갔다
+	CALL PRINT_ADD_EXP(대상, "무투경험치", RAND:8 + 1, 1)
+	PRINTFORMW 무녀는 무사한 것 같지만 다치고 있는 것 같다
+	IF HAS_PENIS(대상)
+		PRINTFORML 어떻게 하지?
+		CALL ASK_YN("쓰러트린다" ,"어깨를 빌려 준다")
+		IF RESULT == 0
+			PRINTFORMW 너덜너덜의 무녀 소녀의 옷의 틈새로부터 들여다 보는 맨살이 묘한 색기를 조성하기 시작하고 있었다
+			PRINTFORML 전투후의 고조됨도 있어, %조사처리(ANAME(대상),"는")% 참지 못하고 그녀를 쓰러트렸다
+			PRINTFORML 날뛴다그녀를 억눌러 하나의 물건을 비밀스런 장소에위안할당 와 땀으로 뜸든 여자의 냄새가 감돌았다
+			PRINTFORML 그녀의 입을 막으면서 격렬하게 밀어올리면 부드러운 고기가 우글거려 휘감겨 온다
+			PRINTFORMW 참지 못하고 그녀의 안에 정액을 발하면, 그녀는 핑 양 다리를 펴면서 뒤로 젖혔다
+			CALL FUCK(대상, "성기술, 성교, Ｃ, Ｖ삽입", "동정상실, 키스상실", 0, "무녀의 입술", "", "무녀의 질", "강간")
+			PRINTFORML 
+			PRINTFORMW 충분히 즐긴 후 그녀를 방치해 떠났다
+			RETURN 1
+		ENDIF
+	ENDIF
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 그녀에게 어깨를 빌려 주어 마을까지 보냈다
+	RETURN 1
+ENDIF
+PRINTFORMW 져 버렸다…
+IF IS_MALE(대상)
+	PRINTFORML 요괴는 %조사처리(ANAME(대상),"를")% 무시해 무녀를 데리고 갔다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 어떻게든 마을까지 겨 돌아왔다
+	CALL ADD_COOLTIME(대상, 2)
+	RETURN 1
+ENDIF
+PRINTFORMW 요괴는 무녀와 %조사처리(ANAME(대상),"를")% 잡으면 어딘가에 질질 끌어 갔다
+PRINTFORML 
+PRINTFORMW 요괴의 보금자리에 데리고 들어가진 %ANAME(대상)%들은 성노예로서 봉사 당하고 있다
+PRINTFORML 그의 흉악한 하나의 물건을 필사적으로 빠는 %ANAME(대상)%들의 사타구니로부터는 대량의 정액이 걸죽 늘어지고 떨어진다
+PRINTFORML 심하게 난폭하게 범해지고 가게 되어 입장을 알아진 %ANAME(대상)%들은 이미 온순한 암컷과 완성되어 내리고 있었다
+PRINTFORML 숨이 막히는 것 같은 수컷의 페로몬이 코를 찔러, 싫은 냄새일텐데 신체는 뜨끔 쑤셔 버린다
+PRINTFORMW 봉사에 만족한 그는 낮고 신음소리%조사처리(ANAME(대상),"와")% 무녀를 늘어놓게 하면 다시 그 흉악한 하나의 물건을 쑤셔 넣어 왔다
+CALL FUCK(대상, "욕망, 성교, 봉사, 펠라티오, 키스, Ｖ, Ｖ성교", "처녀상실, 질내사정, 구강사정, 키스상실", GET_SPERM_ID("들요괴"), @"들요괴의 \@RAND:2 ? 페니스 # 입술\@", "들요괴", "", "패배한 끝의 보금자리에서의 조교")
+PRINTFORML 
+PRINTFORML 심하게 희롱해지고 계속된 %ANAME(대상)%들이었지만
+PRINTFORMW 그가 야리 지쳤을 무렵 맞아를 가늠해 어떻게든 탈출할 수 있었다
+
+RETURN 1

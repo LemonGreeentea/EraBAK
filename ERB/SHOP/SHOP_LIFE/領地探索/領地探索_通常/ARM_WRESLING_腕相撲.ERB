@@ -1,0 +1,52 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_ARM_WRESLING_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_ARM_WRESLING_DECISION(대상)
+#DIM 대상
+RETURN IS_COUNTRY(CFLAG:대상:소속)
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_ARM_WRESLING(대상)
+#DIM 대상
+
+PRINTFORML 영내에서 사람무리를 보았다
+PRINTFORML 력 자랑의 남자가 팔씨름의 도전자를 모집하고 있는 것 같다
+PRINTL
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "무투"))
+CALL ASK_YN("도전한다", "그만둔다")
+
+IF RESULT == 1
+	PRINTFORML 그러한 것은 무늬는 아니다
+	PRINTFORML 방치하기로 했다
+	RETURN 1
+ENDIF
+
+PRINTFORML 흥미를 끌린 %조사처리(ANAME(대상),"는")% 남자에게 도전하는 일로 했다
+PRINTFORML 남의 팔은 통나무같이 굵고, 이러한 장사를 할 뿐(만큼)은 있는 것 같다
+PRINTFORMW 남은 %조사처리(ANAME(대상),"가")% 승부를 가져 걸면, 코로 웃어 왔다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+
+IF LIMIT(ABL:대상:무투, 30, 100) > RAND:100
+	PRINTFORML %조사처리(ANAME(대상),"는")% 훌륭히 남자에게 승리했다!
+	PRINTFORMW 그는 맑게 패배를 인정해, 꼭 동료로 하면 좋겠다고 말해 왔다
+	COUNTRY_SOLDIER:(CFLAG:대상:소속) += 3000
+	CALL ICPRINT("남은 매우 잘 일해, 병사<3000>인분에 필적하는 전력이 되었다", "L", 칼라_주의)
+	RETURN 1
+ENDIF
+
+PRINTFORML 당해 버렸다…
+PRINTFORMW 남은 입정도로도 없으면 %조사처리(ANAME(대상),"를")% 비웃음
+
+RETURN 1

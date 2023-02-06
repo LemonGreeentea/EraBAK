@@ -1,0 +1,77 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_PICK_A_FLOWER_DANGER_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_PICK_A_FLOWER_DANGER_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_PICK_A_FLOWER_DANGER(대상)
+#DIM 대상
+PRINTFORML 길가에 예쁜 꽃이 피어 있다
+PRINTFORML 정신을 빼앗기는 광경이다, 모처럼이니까 이치린 타 가기로 했다
+
+PRINTL
+CALL ASK_MULTI("붉은 꽃", "푸른 꽃", "노란 꽃")
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 붉은 꽃을 꺾어, 향기를 냄새 맡았다
+		PRINTFORMW ……희미하게 신체가 달아오르는 것 같은 감각에 빠졌다
+		IF IS_MALE(대상) || (HAS_PENIS(대상) && RAND:2)
+			PRINTFORML 인내를 할 수 없게 된 %조사처리(ANAME(대상),"는")%, 근처를 우연히 지나가는 아가씨에게 덤벼 들었다
+			PRINTFORML 
+			PRINTFORML %ANAME(대상)%에 덮어누를 수 있어 소녀는 교성을 주고 있다
+			PRINTFORML 처음은 싫어하고 있던 그녀도, %ANAME(대상)%의 집요한 고문에 드디어 굴복 하고 있었다
+			PRINTFORML %조사처리(ANAME(대상),"가")% 견디지 않고 정액을 발하면, 소녀는 높은 소리를 질러 절정 했다……
+			CALL FUCK(대상, "Ｃ, 욕망, 성교, 성기술, 사정, 키스, Ｖ삽입" + (IS_FEMALE(대상) ? ", Ｂ, Ｖ, 레즈" # ""), "키스상실, 동정상실", 0, "마을 아가씨의 입술", "마을 아가씨의 질", "", "강간")
+		ELSE
+			PRINTFORML 인내를 할 수 없게 된 %조사처리(ANAME(대상),"는")%, 근처를 우연히 지나가는 남자에게 말을 걸었다
+			PRINTFORML 
+			PRINTFORML 청년은 예상외의 절륜으로, %조사처리(ANAME(대상),"는")% 눈 깜짝할 순간에 굴복 당했다
+			PRINTFORML 난폭한 허리 사용의 전에, %조사처리(ANAME(대상),"는")% 달콤한 소리를 질러 좋아할 뿐이다
+			PRINTFORML 이윽고 청년이 정액을 발하면, %조사처리(ANAME(대상),"는")% 높은 소리를 질러 절정 했다……
+			CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("지나가는 남자"), @"지나가는 남자의 \@RAND:2 ? 페니스 # 입술\@", "지나가는 남자", "", "화간")
+		ENDIF
+		PRINTFORML 
+		PRINTFORML ……도대체 자신은 어떻게 해 버렸을까
+		PRINTFORML 그 꽃에는 조심하려고 %조사처리(ANAME(대상),"는")% 결의했다
+	CASE 1
+		PRINTFORML 푸른 꽃을 꺾어, 향기를 냄새 맡았다
+		PRINTFORMW ……하면 돌연 졸음에 습격당해 저항하는 사이도 없게 그 자리에 붕괴되어 버렸다
+		IF IS_FEMALE(대상)
+			PRINTFORML 
+			PRINTFORML 하복부에 전해지는 열로 의식을 되찾으면, %조사처리(ANAME(대상),"는")% 불량배에게 범해지고 있었다
+			PRINTFORML 저항하려고 하지만, %조사처리(ANAME(대상),"는")% 신체가 저려 변변히 움직일 수 없었다
+			PRINTFORML 처음은 초조해 하고 있던 남자였지만, %조사처리(ANAME(대상),"를")% 저항 할 수 없으면 눈치채면, 히죽히죽 웃으면서 다시 페니스를 쑤셔 넣어 왔다
+			PRINTFORML 심하게 만지작거려지고 범해지고 있던 것 같은 %ANAME(대상)%의 %STR_BODY("신체")%는 매우 민감하게 되어 있어 삽입만으로 가볍고 절정 해 버린다
+			PRINTFORMW 고민의 표정으로 참고 있는 %ANAME(대상)%의 반응을 즐기도록(듯이), 남자는 %조사처리(ANAME(대상),"를")% 자기 마음대로 계속 범했다
+			CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ａ, Ｍ, 키스, 펠라티오, 긴박, 고통쾌락, 마조, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 질내사정, 키스상실, 장내사정, 구강사정",  GET_SPERM_ID("불량배"), @"불량배의 \@RAND:2 ? 페니스 # 입술\@", "불량배", "", "강간")
+			PRINTFORML 
+			PRINTFORMW %조사처리(ANAME(대상),"를")% 움직일 수 있게 되었을 무렵에는, 남자는 벌써 도망치기 시작하고 있었다
+			PRINTFORML %STR_BODY("질:처녀 확인:시간 경과", 대상)%로부터는, 대량의 정액이 걸죽 흘려 보내지고 있었다
+		ELSE
+			PRINTFORML …깨달으면 황혼이 되어 있었다
+			PRINTFORML 무거운 머리를 갈면서 몸을 조사했지만 이상은 없었다
+			PRINTFORMW 하지만 지갑이 스라고 끝내고 있었다
+			LOCAL = MIN(MONEY, 3000)
+			MONEY -= LOCAL
+			CALL ICPRINT(@"금{LOCAL}를 잃었다", "L", 칼라_주의)
+		ENDIF
+	CASE 2
+		PRINTFORML 노란 꽃을 꺾어, 향기를 냄새 맡았다
+		PRINTFORML 하면, 돌연 소변욕을 개최했다
+		PRINTFORML 그것은 참을 수 있는 것 같은 것은 아니고, %조사처리(ANAME(대상),"는")% 눈 깜짝할 순간에 흘림 해 버렸다
+		PRINTFORML ……한심한 모습을 누구에게도 보여지지 않게 조심하면서, %조사처리(ANAME(대상),"는")% 거점에 돌아갔다
+		CALL PRINT_ADD_EXP(대상, "배설경험치", RAND:5 + 1, 1)
+ENDSELECT
+RETURN 1

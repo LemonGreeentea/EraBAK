@@ -1,0 +1,30 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_FAIRY_MISCHIEF_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_FAIRY_MISCHIEF_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_FAIRY_MISCHIEF(대상)
+#DIM 대상
+
+PRINTFORML 영내를 산책하고 있으면, 돌연 발밑의 지면이 없어졌다!
+PRINTFORML 시야가 굴른과 돌아, 다음의 순간 지면에 누워 떨어졌다!
+PRINTFORML 상하는 신체를 문지르면서 일어난다. 아무래도 함정에 걸린 것 같다
+PRINTFORMW 도대체 누가와 분개하고 있으면, 머리 위로부터 웃음소리가 들렸다
+PRINTFORML 올려보면 요정들이 구멍에 떨어진 %조사처리(ANAME(대상),"를")% 봐 웃고 있었다
+PRINTFORML 화내 구멍으로부터 기어 나오는, 요정들은 캬-캬-말하면서 날아가 버려 버렸다
+PRINTFORMW %조사처리(ANAME(대상),"는")% 한숨을 쉬어, 진흙투성이가 된 옷을 지불하면서 거점으로 돌아갔다
+CALL ADD_COOLTIME(대상, 1)
+RETURN 1

@@ -1,0 +1,69 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_SLAP_LANDLOAD_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_SLAP_LANDLOAD_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_SLAP_LANDLOAD(대상)
+#DIM 대상
+
+PRINTFORML 최근 이 근처의 지주가 횡포로 곤란해 하고 있는 것 같다
+PRINTFORML 어떻게든 해 주고와 부탁받았다
+PRINTL
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "정치"))
+CALL ASK_YN("지주를 벌준다", "그만둔다")
+
+IF RESULT == 1
+	PRINTFORML 귀찮은 상대다, 자신에게는 어쩔 수 없다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 거점으로 돌아갔다
+	RETURN 1
+ENDIF
+
+PRINTFORML 발칙한 무리다, 용서해 둘 수 없다
+PRINTFORMW %조사처리(ANAME(대상),"는")% 지주를 벌주기 위한 책을 가다듬었다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF LIMIT(ABL:대상:정치, 30, 100) > RAND:100
+	PRINTFORML 했다!
+	PRINTFORML %조사처리(ANAME(대상),"는")% 훌륭히 지주를 벌주는 것을 성공했다!
+	PRINTFORMW 영지민에게 감사받아 거점에 돌아왔다
+	CALL PRINT_ADD_EXP(대상, "정치경험치", RAND:10 + 1, 1)
+	RETURN 1
+ENDIF
+
+IF IS_MALE(대상)
+	PRINTFORML 당했다!
+	PRINTFORMW 지주는 상상 이상으로 교활하고, %조사처리(ANAME(대상),"는")% 반대로 돈을 가로채져 버렸다
+	CALL COLOR_PRINTW(@"금<{MIN(MONEY, 5000)}>를 잃었다", 칼라_경고)
+	MONEY -= MIN(MONEY, 5000)
+	RETURN 1
+ENDIF
+
+PRINTFORML 당했다!
+PRINTFORMW 지주는 상상 이상으로 교활하고, %조사처리(ANAME(대상),"는")% 반대로 돈을 가로채진 위에 잡혀 버렸다
+PRINTFORML 
+PRINTFORML 잡힌 %조사처리(ANAME(대상),"는")% 지주로부터 벌이라고 칭해 조교되고 있다
+PRINTFORML 지주는 혐오감으로 떨리는 %ANAME(대상)%의 전신을 할짝할짝 핥아대, %STR_BODY("질", 대상)%나 %STR_BODY("가슴:단", 대상)%를 굵은 손가락으로 만지작거려 간다
+PRINTFORML 외관에 의하지 않는 교묘한 테크닉에, %조사처리(ANAME(대상),"는")% 점차 야무지지 못하게 혀를 늘어뜨려 안타까운 한숨을 흘려 버린다
+PRINTFORML 그리고 %STR_BODY("질:욕정", 대상)%에 페니스를 쑤셔 넣어지면, 달콤한 암컷의 소리를 높이고 기뻐해 버렸다
+PRINTFORMW 이미 혐오감은 압도적인 쾌락에 흐르게 되어 %조사처리(ANAME(대상),"는")% 남자의 성노예가 되어 끝나면서 한껏 범해져 버렸다
+CALL FUCK(대상, "욕망, 봉사, 성교, 정애, Ｖ, Ｂ, Ｃ, Ａ, 키스, 펠라티오, Ｖ성교, Ａ성교", "처녀상실, Ａ처녀상실, 키스상실, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("지주"), @"지주의 \@RAND:2 ? 페니스 # 입술\@", "지주", "", "조교")
+PRINTFORML 
+PRINTFORMW %조사처리(ANAME(대상),"는")% 심하게 범해진 후, 어떻게든 도망갔다
+CALL COLOR_PRINTW(@"금<{MIN(MONEY, 5000)}>를 잃었다", 칼라_경고)
+MONEY -= MIN(MONEY, 5000)
+
+RETURN 1

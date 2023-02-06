@@ -1,0 +1,46 @@
+﻿;능력 상승 Ａ감
+
+;-------------------------------------------------
+;능력 상승에 필요한 경험을 설정
+;-------------------------------------------------
+@ABLUP_EXPNAME2
+RESULTS = Ａ감경험치
+
+;-------------------------------------------------
+;능력 상승에 필요한 경험량을 돌려주는 함수
+;-------------------------------------------------
+@CALC_ABLUP_EXP2(ARG:0)
+SELECTCASE ABL:(ARG:0):Ａ감
+	CASE 0
+		LOCAL:0 = 8
+	CASE 1
+		LOCAL:0 = 25
+	CASE 2
+		LOCAL:0 = 50
+	CASE 3
+		LOCAL:0 = 150
+	CASE 4
+		LOCAL:0 = 300
+	CASEELSE
+		LOCAL:0 = 500 + 400 * (ABL:(ARG:0):Ａ감 - 5)
+ENDSELECT
+
+IF ARG:0 == MASTER
+	TIMES LOCAL:0, 2.00
+ENDIF
+
+;소질에 의한 보정
+IF TALENT:(ARG:0):Ａ둔감
+	TIMES LOCAL:0, 1.20
+ENDIF
+IF TALENT:(ARG:0):Ａ민감
+	TIMES LOCAL:0, 0.80
+ENDIF
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음란)
+	TIMES LOCAL:0, 0.80
+ENDIF
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_항문광)
+	TIMES LOCAL:0, 0.80
+ENDIF
+
+RETURN MAX(LOCAL:0, 1)

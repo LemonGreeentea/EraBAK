@@ -1,0 +1,77 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_ENCOUNT_YOUKAI_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_ENCOUNT_YOUKAI_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_ENCOUNT_YOUKAI(대상)
+#DIM 대상
+
+PRINTFORML 밤의 영내를 산책하고 있으면, 들요괴와 조우했다
+PRINTFORML 저 편도 이쪽을 알아차려, 지릿 준비하고 있다
+PRINTL
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "무투"))
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "지략"))
+CALL ASK_MULTI("위협한다", "우호적으로 접한다", "도망친다")
+
+SELECTCASE RESULT
+	CASE 0
+		IF LIMIT(ABL:대상:무투, 50, 100) > RAND:100
+			PRINTFORML 위협했다
+			PRINTFORML %ANAME(대상)%의 위압감에 요괴는 떨려, 쏜살같이 도망치기 시작했다
+		ELSE
+			PRINTFORML 위협했다……
+			PRINTFORML 가, 역효과였던 것 같다!
+			PRINTFORML 덤벼 들어 오는 요괴로부터 도망치기 시작했지만, 지갑을 잃어버려 버렸다
+			CALL COLOR_PRINTL("금 3000을 잃었다", 칼라_경고)
+			MONEY -= 3000
+		ENDIF
+
+	CASE 1
+		IF LIMIT(ABL:대상:지략, 70, 100) > RAND:100
+			PRINTFORML 우호적으로 접해 보았다
+			PRINTFORML %ANAME(대상)%의 태도에 요괴도 기분을 허락한 것 같다
+			PRINTFORML 우호적인 분위기인 채 무사하게 헤어졌다
+		ELSE
+			PRINTFORML 우호적으로 접해 보았다……
+			PRINTFORML 가, 요괴는 이해하지 않았다!
+			PRINTFORML 덤벼 들어 오는 요괴로부터 도망치기 시작했지만, 지갑을 잃어버려 버렸다
+			CALL COLOR_PRINTL("금 3000을 잃었다", 칼라_경고)
+			MONEY -= 3000
+		ENDIF
+	CASE 2
+	   	PRINTFORML %조사처리(ANAME(대상),"는")% 요괴와 거리를 취해 그 자리를 떠났다
+		IF RAND:2
+			RETURN 1
+		ENDIF
+		PRINTFORMW 하지만 패배하여 도망친 순간, 요괴가 덤벼 들어 왔다!
+		IF IS_MALE(대상)
+			PRINTFORMW ……어떻게든 도망갔지만, 지갑을 잃어버려 버렸다
+			MONEY -= 3000
+			CALL COLOR_PRINTL(@"금 3000을 잃었다", 칼라_경고)
+		ELSE
+			PRINTFORMW 후두부를 맞은 %조사처리(ANAME(대상),"는")% 졸도해 버렸다
+			PRINTFORML 
+			PRINTFORML 요괴의 보금자리에 가지고 돌아가진 %조사처리(ANAME(대상),"는")%, 덥쳐지면서 범해지고 있다
+			PRINTFORML 자궁을 망쳐지는 것 같은 격렬한 스트로크에 %조사처리(ANAME(대상),"는")% 눈물을 흘리면서 신음하고 있다
+			PRINTFORML 어떻게든 피하려고 발버둥 치는 것도, %STR_BODY("질")%를 깊숙히 페니스로 꼬치로 되고 있고 이길 수 없다
+			PRINTFORML 난폭하게 입술을 막히면서 작열의 정액을 태내에 발해지면, %조사처리(ANAME(대상),"는")% 흐려진 소리를 내면서 전신을 진동시켰다
+			PRINTFORMW 요괴의 압도적인 스태미너에 의해, 밤새 교미의 상대를 하게 하고 자궁이 채워질 정도의 정액을 발해졌다
+			CALL FUCK(대상, "욕망, 성교, 정애, Ｖ, Ａ, 고통쾌락, 마조, Ｖ성교, Ａ성교", "질내사정, 처녀상실, Ａ처녀상실, 장내사정", GET_SPERM_ID("들요괴"), @"들요괴의 \@RAND:2 ? 페니스 # 입술\@", "들요괴", "", "패배한 끝의 강간")
+			PRINTFORML 
+			PRINTFORML 심하게 범해진 후, 질척질척 더럽혀진 %조사처리(ANAME(대상),"는")% 길가에 버려졌다
+		ENDIF
+ENDSELECT
+RETURN 1

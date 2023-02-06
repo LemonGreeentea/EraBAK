@@ -1,0 +1,165 @@
+﻿;옷 가게에게 들어온다
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME350
+RESULTS:0 = 옷 가게로 이끈다
+RESULTS:1 = 옷 가게에게 교제한다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE350
+;공통 부분
+CALL COM_ABLE_COMMON(350)
+SIF RESULT == 0
+	RETURN 0
+;주인공이 플레이어 때 한정
+SIF MPLY:0 != MASTER
+	RETURN 0
+;성 주변 마을에서의 데이트 중한정
+SIF GET_PLACENAME(TFLAG:54) != "성 주변 마을"
+	RETURN 0
+;상처라면 불가
+SIF CFLAG:(MTAR:0):행동불능상태 == 3
+	RETURN 0
+;키스중은 불가
+SIF IS_EQUIP(MPLY:0, 342)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM350
+;실행 판정
+CALL COM_ORDER_COMMON
+IF RESULT == 0
+	RETURN 0
+ENDIF
+
+;성공 여부의 판정 없음
+TFLAG:18 = 0
+
+PRINTFORMW %조사처리(ANAME(MPLY:0),"와")% %조사처리(ANAME(MTAR:0),"는")% 옷 가게에게 들어왔다…
+
+$SELECT_LOOP
+
+CALL SINGLE_DRAWLINE
+PRINTFORML ●옷의 구입(소지금:{MONEY})
+PRINTL   [0] 차이나드레스    ( 5000)
+PRINTL   [1] 메이드복      (20000)
+PRINTL   [2] 세일러복    (20000)
+PRINTL   [3] 본디지    (20000)
+PRINTL   [4] 고딕드레스(40000)
+PRINTL   [5] 화이트 드레스(80000)
+PRINTL   [6] 기모노          (40000)
+CALL SINGLE_DRAWLINE
+PRINTL   [9] 볼 뿐
+
+REDRAW 0
+
+$INPUT_LOOP
+INPUT
+
+LOCAL:4 = RESULT
+
+SELECTCASE LOCAL:4
+	CASE 0
+		IF MONEY < 5000
+			PRINTW 돈이 충분하지 않습니다
+			CLEARLINE 2
+			GOTO INPUT_LOOP
+		ENDIF
+
+		MONEY -= 5000
+
+		;소질에 의한 보너스
+		LOCAL:5 = 100
+		LOCAL:5 += (TALENT:(MTAR:0):호기심 != 0) * 20
+		LOCAL:5 += (TALENT:(MTAR:0):얌전함 != 0) * 20
+		LOCAL:5 += (TALENT:(MTAR:0):유치 != 0) * 50
+		LOCAL:5 += (TALENT:(MTAR:0):프라이드높음 != 0) * -40
+		LOCAL:5 += (TALENT:(MTAR:0):무관심 != 0) * -30
+		LOCAL:5 += (TALENT:(MTAR:0):감정결핍 != 0) * -20
+		LOCAL:5 = LIMIT(LOCAL:5, 0, 200)
+
+		SOURCE:(MTAR:0):환락 = 150 * LOCAL:5 / 100
+		;친밀하게 응한 환락의 소스 추가
+		CALL ADD_SOURCE_KANRAKU(MTAR:0, 220 * LOCAL:5 / 100)
+		SOURCE:(MTAR:0):환락 = MAX(SOURCE:(MTAR:0):환락, 0)
+
+	CASEELSE
+		CLEARLINE 1
+		GOTO INPUT_LOOP
+ENDSELECT
+
+REDRAW 1
+
+TFLAG:17 = LOCAL:4
+
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = 0
+
+RETURN 1
+
+;-------------------------------------------------
+;고유의 실행 판정(플레이어측)
+;-------------------------------------------------
+@COM_ORDER_PLAYER350(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 30
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+;호감도
+IF CFLAG:(ARG:0):2 < 300
+	IF CFLAG:(ARG:0):2 < 50
+		LOCAL:0 = -12
+	ELSEIF CFLAG:(ARG:0):2 < 150
+		LOCAL:0 = -8
+	ELSE
+		LOCAL:0 = -4
+	ENDIF
+	CALL COM_ORDER_ELEMENT(ARG:0, @"호감도 부족", LOCAL:0)
+ELSE
+	LOCAL:0 = CFLAG:(ARG:0):2 / 75
+	CALL COM_ORDER_ELEMENT(ARG:0, @"호감도", LOCAL:0)
+ENDIF
+
+IF TALENT:(ARG:0):겁쟁이
+	CALL COM_ORDER_ELEMENT(ARG:0, "겁쟁이", -3)
+ENDIF
+IF TALENT:(ARG:0):얌전함
+	CALL COM_ORDER_ELEMENT(ARG:0, "얌전함", -2)
+ENDIF
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -3)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE350
+
+;-------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;-------------------------------------------------
+@COM_TEXT_LAST350
+;일상 커맨드에 공통의 지문
+CALL COM_TEXT_LAST_LIFE
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN350
+RETURN 커맨드_일상

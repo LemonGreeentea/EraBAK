@@ -1,0 +1,651 @@
+﻿;조교 종료시의 이벤트, 특히 소질 관련
+
+;-------------------------------------------------
+;연모등의 취득
+;-------------------------------------------------
+@TALENT_CHECK(ARG:0)
+
+SIF IS_ANIMAL(ARG:0) || TALENT:(ARG:0):위안모브
+	RETURN 0
+
+CALL TALENT_CHECK_LOSE_MIND(ARG:0)
+
+SIF !(TALENT:(ARG:0):공허 || TALENT:(ARG:0):붕괴)
+	CALL TALENT_CHECK_FALLEN(ARG:0)
+
+CALL GET_FALLEN_BONUS(ARG:0)
+
+CALL TALENT_CHECK_OTHERS(ARG:0)
+
+CALL TALENT_CHECK_EROS(ARG:0)
+
+SIF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음란)
+	CALL TALENT_CHECK_PART(ARG:0)
+
+;-------------------------------------------------
+;프라이드높음을 소유하는 캐릭터가 주인 했을 경우의 처리
+;ARG:1은 색변경을 실시하지 않는 플래그	ARG:2는 선두의 개행을 실시하지 않는 플래그
+;-------------------------------------------------
+@TALENT_LOSE_PRIDE(ARG:0, ARG:1, ARG:2)
+SIF !ARG:1
+	SETCOLOR 칼라_주의
+IF TALENT:(ARG:0):프라이드높음
+	SIF !ARG:2
+		PRINTL 
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<프라이드높음>을 잃었다
+	TALENT:(ARG:0):프라이드높음 = 0
+	IF TALENT:(ARG:0):고고함 || TALENT:(ARG:0):꿋꿋함 || !TALENT:(ARG:0):겁쟁이 || TALENT:(ARG:0):거만함 || TALENT:(ARG:0):츤데레 || TALENT:(ARG:0):반항적
+		PRINTL 
+		PRINTFORML 자존심을 잃었던 %조사처리(ANAME(ARG:0),"는")% 완전히 무기력이 된 것 같다……
+		ABL:(ARG:0):주도도Ｎ -= (ABL:(ARG:0):주도도Ｎ + 1000) / 5 * (TALENT:(ARG:0):꿋꿋함 + 1)
+		ABL:(ARG:0):주도도Ｕ -= (ABL:(ARG:0):주도도Ｕ + 1000) / 5 * (TALENT:(ARG:0):꿋꿋함 + 1)
+		ABL:(ARG:0):주도도Ｎ = LIMIT(ABL:(ARG:0):주도도Ｎ, -1000, 1000)
+		ABL:(ARG:0):주도도Ｕ = LIMIT(ABL:(ARG:0):주도도Ｕ, -1000, 1000)
+		IF TALENT:(ARG:0):고고함
+			PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<고고함>을 잃었다
+			TALENT:(ARG:0):고고함 = 0
+		ENDIF
+		IF TALENT:(ARG:0):꿋꿋함
+			PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<꿋꿋함>을 잃었다
+			TALENT:(ARG:0):꿋꿋함 = 0
+		ELSEIF !TALENT:(ARG:0):겁쟁이
+			PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<겁쟁이>를 얻었다
+			TALENT:(ARG:0):겁쟁이 = 1
+		ENDIF
+		;반발계의 소질로부터 하나만 잃는다
+		IF TALENT:(ARG:0):반항적
+			PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<반항적>을 잃었다
+			TALENT:(ARG:0):반항적 = 0
+		ELSEIF TALENT:(ARG:0):거만함
+			PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<거만함>을 잃었다
+			TALENT:(ARG:0):거만함 = 0
+		ELSEIF TALENT:(ARG:0):츤데레
+			PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<츤데레>를 잃었다
+			TALENT:(ARG:0):츤데레 = 0
+		ENDIF
+	ENDIF
+ENDIF
+SIF !ARG:1
+	RESETCOLOR
+
+;-------------------------------------------------
+;특수 세력에 의한 음란 취득시 따위의 정조관념 상실·정조관념없음 입수시의 처리
+;ARG:1은 색변경을 실시하지 않는 플래그
+;-------------------------------------------------
+@TALENT_LOSE_TEISOU(ARG:0, ARG:1)
+SIF !ARG:1
+	SETCOLOR 칼라_주의
+IF TALENT:(ARG:0):정조관념
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<정조관념>을 잃어,<정조관념없음>을 얻었다
+	TALENT:(ARG:0):정조관념 = 0
+	TALENT:(ARG:0):정조관념없음 = 1
+ELSEIF !TALENT:(ARG:0):정조관념없음
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<정조관념없음>을 얻었다
+	TALENT:(ARG:0):정조관념없음 = 1
+ENDIF
+SIF !ARG:1
+	RESETCOLOR
+
+;-------------------------------------------------
+;공허의 상실·회복 처리
+;-------------------------------------------------
+@TALENT_CHECK_LOSE_MIND(ARG:0)
+
+SIF TALENT:(ARG:0):붕괴
+	RETURN 0
+
+IF !TALENT:(ARG:0):공허 && CFLAG:(ARG:0):붕괴 >= 1000 + MAX(MAXBASE:(ARG:0):정신력, 1000)
+	CALL SINGLE_EMPTY_LINE()
+	CALL KOJO_EVENT(ARG:0, 78)
+	SETCOLOR 칼라_주의
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<공허>를 얻었다
+	RESETCOLOR
+	TALENT:(ARG:0):공허 = 1
+
+;[공허]의 회복
+ELSEIF TALENT:(ARG:0):공허 && CFLAG:(ARG:0):붕괴 < -500 + MAX(MAXBASE:(ARG:0):정신력, 1000)
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 바뀌었다…
+	PRINTFORML 피폐 하고 있었던 %ANAME(ARG:0)%의 마음은 어떻게든 평소대로 돌아온 것 같다
+	SETCOLOR 칼라_주의
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<공허>를 잃었다
+	RESETCOLOR
+	TALENT:(ARG:0):공허 = 0
+ENDIF
+
+;[붕괴]의 취득
+IF !TALENT:(ARG:0):붕괴 && CFLAG:(ARG:0):붕괴 >= 3500 + MAX(MAXBASE:(ARG:0):정신력, 1000)
+	CALL SINGLE_EMPTY_LINE()
+	CALL KOJO_EVENT(ARG:0, 79)
+	SETCOLOR 칼라_주의
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<붕괴>를 얻었다
+	RESETCOLOR
+	TALENT:(ARG:0):붕괴 = 1
+ENDIF
+
+;-------------------------------------------------
+;연모·복종·음란
+;-------------------------------------------------
+@TALENT_CHECK_FALLEN(ARG:0)
+
+LOCAL:1 = 0
+
+
+IF !IS_SLAVE(ARG:0) && !IS_LOVER(ARG:0) && !IS_SLAVED_BY(ARG:0) && !TALENT:(ARG:0):친구 && IS_SAMESEX(MASTER, ARG:0) && !TALENT:(ARG:0):바이 && CFLAG:(ARG:0):호감도 >= 1500
+	CALL SINGLE_EMPTY_LINE()
+	CALL KOJO_EVENT(ARG:0, 61)
+	SETCOLOR 칼라_주의
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<친구>를 얻었다
+	RESETCOLOR
+	TALENT:(ARG:0):친구 = 1
+ENDIF
+
+IF !IS_SLAVE(ARG:0) && !IS_SLAVED_BY(ARG:0) 
+	IF !TALENT:(ARG:0):연모 && CFLAG:(ARG:0):호감도 > CFLAG:(ARG:0):종속도 && CFLAG:(ARG:0):호감도 >= 1500  && CFLAG:(ARG:0):의존도 >= 300 && (!IS_SAMESEX(MASTER, ARG:0) || TALENT:(ARG:0):바이 || TALENT:(ARG:0):연인)
+		CALL SINGLE_EMPTY_LINE()
+		CALL KOJO_EVENT(ARG:0, 60)
+		SETCOLOR 칼라_주의
+		IF TALENT:(ARG:0):친구
+			PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<친구>를 잃어<연모>를 얻었다
+		ELSE
+			PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<연모>를 얻었다
+		ENDIF
+		RESETCOLOR
+		TALENT:(ARG:0):연모 = 1
+		TALENT:(ARG:0):친구 = 0
+		;떨어뜨린 인원수＋1
+		FLAG:함락인원수 += !(CFLAG:(ARG:0):함락완료)
+		CFLAG:(ARG:0):함락완료 = 1
+		LOCAL:1 = 1
+	ENDIF
+
+	IF !TALENT:(ARG:0):친애 && CFLAG:(ARG:0):호감도 >= 10000 && CFLAG:(ARG:0):의존도 >= 3000 && ABL:(ARG:0):봉사 >= 랭크역치:랭크_그외:랭크_C && TALENT:(ARG:0):연모
+		CALL SINGLE_EMPTY_LINE()
+		CALL KOJO_EVENT(ARG:0, 62)
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<친애>를 얻었다
+		RESETCOLOR
+		TALENT:(ARG:0):친애 = 1
+		LOCAL:1 = 2
+	ENDIF
+ENDIF
+
+IF !IS_LOVER(ARG:0) && !IS_SLAVED_BY(ARG:0) 
+	IF !TALENT:(ARG:0):복종 && CFLAG:(ARG:0):종속도 >= 1500 && CFLAG:(ARG:0):의존도 >= 300 && !TALENT:(ARG:0):연모
+		CALL SINGLE_EMPTY_LINE()
+		CALL KOJO_EVENT(ARG:0, 63)
+		SETCOLOR 칼라_주의
+		IF TALENT:(ARG:0):친구
+			PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<친구>를 잃어<복종>을 얻었다
+		ELSE
+			PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<복종>을 얻었다
+		ENDIF
+		RESETCOLOR
+		SIF TALENT:(ARG:0):프라이드높음
+			CALL TALENT_LOSE_PRIDE(ARG:0)
+		TALENT:(ARG:0):친구 = 0
+		TALENT:(ARG:0):복종 = 1
+		;떨어뜨린 인원수＋1
+		FLAG:함락인원수 += !(CFLAG:(ARG:0):함락완료)
+		CFLAG:(ARG:0):함락완료 = 1
+		LOCAL:1 = 3
+	ENDIF
+
+	IF !TALENT:(ARG:0):예속 && CFLAG:(ARG:0):종속도 >= 10000 && CFLAG:(ARG:0):의존도 >= 3000 && ABL:(ARG:0):봉사 >= 랭크역치:랭크_그외:랭크_C && TALENT:(ARG:0):복종
+		CALL SINGLE_EMPTY_LINE()
+		CALL KOJO_EVENT(ARG:0, 64)
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<예속>을 얻었다
+		RESETCOLOR
+		TALENT:(ARG:0):예속 = 1
+		LOCAL:1 = 4
+	ENDIF
+ENDIF
+
+IF !IS_LOVER(ARG:0) && !IS_SLAVE(ARG:0) 
+	IF !TALENT:(ARG:0):주인 && CFLAG:(ARG:0):지배도 >= 1500 && CFLAG:(ARG:0):의존도 >= 300 && !TALENT:(ARG:0):연모
+		CALL SINGLE_EMPTY_LINE()
+		CALL KOJO_EVENT(ARG:0, 66)
+		SETCOLOR 칼라_주의
+		IF TALENT:(ARG:0):친구
+			PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<친구>를 잃어, %ANAME(MASTER)%의<주인>이 되었다
+		ELSE
+			PRINTFORMW %조사처리(ANAME(ARG:0),"는")% %ANAME(MASTER)%의<주인>이 되었다
+		ENDIF
+		RESETCOLOR
+		TALENT:(ARG:0):친구 = 0
+		TALENT:(ARG:0):주인 = 1
+		;떨어뜨린 인원수＋1
+		FLAG:함락인원수 += !(CFLAG:(ARG:0):함락완료)
+		CFLAG:(ARG:0):함락완료 = 1
+		LOCAL:1 = 6
+	ENDIF
+
+	IF !TALENT:(ARG:0):소유자 && CFLAG:(ARG:0):지배도 >= 10000 && CFLAG:(ARG:0):의존도 >= 3000 && ABL:(ARG:0):봉사 >= 랭크역치:랭크_그외:랭크_C && TALENT:(ARG:0):주인
+		CALL SINGLE_EMPTY_LINE()
+		CALL KOJO_EVENT(ARG:0, 67)
+		SETCOLOR 칼라_주의
+		PRINTFORMW %조사처리(ANAME(ARG:0),"는")% %ANAME(MASTER)%의<소유자>가 되었다
+		RESETCOLOR
+		TALENT:(ARG:0):소유자 = 1
+		LOCAL:1 = 7
+	ENDIF
+ENDIF
+
+
+LOCAL:0 = ABL:(ARG:0):Ｃ감 + ABL:(ARG:0):Ｖ감 + ABL:(ARG:0):Ａ감 + ABL:(ARG:0):Ｂ감 + ABL:(ARG:0):Ｍ감 + ABL:(ARG:0):사정
+{
+IF !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음란) && ABL:(ARG:0):욕망 >= 랭크역치:랭크_그외:랭크_B && MAX(ABL:(ARG:0):정애, ABL:(ARG:0):봉사) >= 랭크역치:랭크_그외:랭크_C &&
+MAX(ABL:(ARG:0):성교, ABL:(ARG:0):레즈, ABL:(ARG:0):자위) >= 랭크역치:랭크_그외:랭크_D && LOCAL:0 >= 20 && EXP:(ARG:0):절정경험 >= 500
+}
+	CALL SINGLE_EMPTY_LINE()
+	CALL KOJO_EVENT(ARG:0, 65)
+	SETCOLOR 칼라_주의
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<음란>을 얻었다
+	RESETCOLOR
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_음란
+	LOCAL:1 = 5
+ENDIF
+SELECTCASE LOCAL:1
+	;연모
+	CASE 1
+		IF TALENT:(ARG:0):선을넘지않음
+			CALL COLOR_PRINTW(@"%조사처리(ANAME(ARG:0),"는")%<선을넘지않음>을 잃었다", 칼라_주의)
+			TALENT:(ARG:0):선을넘지않음 = 0
+		ENDIF
+		IF TALENT:(ARG:0):무관심
+			CALL COLOR_PRINTW(@"%조사처리(ANAME(ARG:0),"는")%<무관심>을 잃었다", 칼라_주의)
+			TALENT:(ARG:0):무관심 = 0
+		ENDIF
+	;친애
+	CASE 2
+		IF TALENT:(ARG:0):고고함
+			CALL COLOR_PRINTW(@"%조사처리(ANAME(ARG:0),"는")%<고고함>을 잃었다", 칼라_주의)
+			TALENT:(ARG:0):고고함 = 0
+		ENDIF
+	;종속
+	CASE 3
+		IF TALENT:(ARG:0):선을넘지않음
+			CALL COLOR_PRINTW(@"%조사처리(ANAME(ARG:0),"는")%<선을넘지않음>을 잃었다", 칼라_주의)
+			TALENT:(ARG:0):선을넘지않음 = 0
+		ENDIF
+		IF TALENT:(ARG:0):반항적
+			CALL COLOR_PRINTW(@"%조사처리(ANAME(ARG:0),"는")%<반항적>을 잃었다", 칼라_주의)
+			TALENT:(ARG:0):반항적 = 0
+		ENDIF
+	;예속
+	CASE 4
+		IF TALENT:(ARG:0):억압
+			CALL COLOR_PRINTW(@"%조사처리(ANAME(ARG:0),"는")%<억압>을 잃었다", 칼라_주의)
+			TALENT:(ARG:0):억압 = 0
+		ENDIF
+	CASE 6
+		IF TALENT:(ARG:0):자제심
+			CALL COLOR_PRINTW(@"%조사처리(ANAME(ARG:0),"는")%<자제심>을 잃었다", 칼라_주의)
+			TALENT:(ARG:0):자제심 = 0
+		ENDIF
+	CASE 7
+		IF !TALENT:(ARG:0):해방
+			CALL COLOR_PRINTW(@"%조사처리(ANAME(ARG:0),"는")%<해방>을 얻었다", 칼라_주의)
+			TALENT:(ARG:0):해방 = 1
+		ENDIF
+	;음란
+	CASE 5
+		;대상이 특수 세력의 함락계인가 암캐인가 육변기나 모판을 소지하고 있는지, 원격조교의 타겟 실행 회수가 20회 이상이라면 정조관념을 상실
+		IF TALENT:(ARG:0):정조관념 && (IS_FALLEN_TO_SP_COUNTRY(ARG:0) || GETBIT(TALENT:(ARG:0):음란계, 소질_음란_암캐) || GETBIT(TALENT:(ARG:0):음란계, 소질_음란_정액변소) || GETBIT(TALENT:(ARG:0):음란계, 소질_음란_모판) || COM_EXP:(ARG:0):398 >= 200)
+			CALL COLOR_PRINTW(@"%조사처리(ANAME(ARG:0),"는")%<정조관념>을 잃었다", 칼라_주의)
+			TALENT:(ARG:0):정조관념 = 0
+		ENDIF
+		IF TALENT:(ARG:0):쾌감을부정
+			CALL COLOR_PRINTW(@"%조사처리(ANAME(ARG:0),"는")%<쾌감을부정>을 잃었다", 칼라_주의)
+			TALENT:(ARG:0):쾌감을부정 = 0
+		ENDIF
+ENDSELECT
+
+
+;-------------------------------------------------
+;함락 보너스 취득
+;-------------------------------------------------
+@GET_FALLEN_BONUS(ARG:0)
+
+SIF FLAG:함락인원수 < (FLAG:함락보너스수령수 + 1) * 5
+	RETURN 0
+
+CALL SINGLE_EMPTY_LINE()
+CALL COLOR_PRINTL(@"지금까지 타인을 함락 시켜 온 경험으로, 뭔가 얻을 수 있을 생각이 든다……", 칼라_주의)
+CALL ASK_MULTI_JUDGE("수수께끼의매력", !TALENT:MASTER:수수께끼의매력, "하늘의사자", !TALENT:MASTER:하늘의사자, "기사", !TALENT:MASTER:기사, "절륜", !TALENT:MASTER:절륜, "군주의그릇", !TALENT:MASTER:군주의그릇, "구심력", !TALENT:MASTER:구심력, "금", 1)
+SELECTCASE RESULT
+	CASE 0
+		CALL COLOR_PRINTW(@"%조사처리(ANAME(MASTER),"는")%<수수께끼의매력>을 몸에 익혔다", 칼라_주의)
+		TALENT:MASTER:수수께끼의매력 = 1
+	CASE 1
+		CALL COLOR_PRINTW(@"%조사처리(ANAME(MASTER),"는")%<하늘의사자>를 몸에 익혔다", 칼라_주의)
+		TALENT:MASTER:하늘의사자 = 1
+	CASE 2
+		CALL COLOR_PRINTW(@"%조사처리(ANAME(MASTER),"는")%<기사>를 몸에 익혔다", 칼라_주의)
+		TALENT:MASTER:기사 = 1
+	CASE 3
+		CALL COLOR_PRINTW(@"%조사처리(ANAME(MASTER),"는")%<절륜>을 몸에 익혔다", 칼라_주의)
+		TALENT:MASTER:절륜 = 1
+	CASE 4
+		CALL COLOR_PRINTW(@"%조사처리(ANAME(MASTER),"는")%<군주의그릇>을 몸에 익혔다", 칼라_주의)
+		TALENT:MASTER:군주의그릇 = 1
+	CASE 5
+		CALL COLOR_PRINTW(@"%조사처리(ANAME(MASTER),"는")%<구심력>을 몸에 익혔다", 칼라_주의)
+		TALENT:MASTER:구심력 = 1
+	CASE 6
+		CALL COLOR_PRINTW(@"금 50000을 손에 넣었다", 칼라_주의)
+		MONEY += 50000
+ENDSELECT
+FLAG:함락보너스수령수 ++
+
+RETURN 1
+
+;-------------------------------------------------
+;그 외 소질 취득
+;-------------------------------------------------
+@TALENT_CHECK_OTHERS(ARG:0)
+;취기누적치가 150000이상으로 폭주가가 뒤따르는 술못함의 경우는 술못함을 잃는다
+IF !TALENT:(ARG:0):폭주가 && CFLAG:(ARG:0):취기누적치 >= 150000
+	CFLAG:(ARG:0):취기누적치 = 0 
+	CALL SINGLE_EMPTY_LINE()
+	CALL KOJO_EVENT(ARG:0, 74)
+	SETCOLOR 칼라_주의
+	IF TALENT:(ARG:0):술못함
+		PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<술못함>을 잃었다
+		TALENT:(ARG:0):술못함 = 0
+	ELSE
+		PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<폭주가>를 얻었다
+		TALENT:(ARG:0):폭주가 = 1
+	ENDIF
+	RESETCOLOR
+ENDIF
+
+;실금경험 30이상으로 오줌싸개
+IF !TALENT:(ARG:0):오줌싸개 && EXP:(ARG:0):실금경험 >= 30
+	CALL SINGLE_EMPTY_LINE()
+	CALL KOJO_EVENT(ARG:0, 76)
+	SETCOLOR 칼라_주의
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<오줌싸개>를 얻었다
+	RESETCOLOR
+	TALENT:(ARG:0):오줌싸개 = 1
+ENDIF
+
+
+;-------------------------------------------------
+;에로 소질
+;-------------------------------------------------
+@TALENT_CHECK_EROS(ARG:0)
+;윤간경험 200이상, 욕망 B이상, 성교 C이상으로 육변기
+IF !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_정액변소) && EXP:(ARG:0):윤간경험 >= 200 && ABL:(ARG:0):욕망 >= 랭크역치:랭크_그외:랭크_B && ABL:(ARG:0):성교 >= 랭크역치:랭크_그외:랭크_C
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다……
+	IF TALENT:(ARG:0):프라이드높음
+		PRINTFORMW %조사처리(ANAME(ARG:0),"는")% 범해지는 쾌감에 져, 자신이 성처리용의 변기인 것을 받아들여 버렸다
+	ELSE
+		PRINTFORMW %조사처리(ANAME(ARG:0),"는")% 범해지는 쾌감을 느껴, 변기로서 사용되는 기쁨에 몸을 바치기로 한 것 같다
+	ENDIF
+	CALL KOJO_EVENT(ARG:0,  82)
+	SETCOLOR 칼라_핑크
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<정액변소>가 되었다
+	RESETCOLOR
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_정액변소
+	SIF TALENT:(ARG:0):프라이드높음
+		CALL TALENT_LOSE_PRIDE(ARG:0)
+	CALL TALENT_LOSE_TEISOU(ARG:0)
+ENDIF
+
+;약물의존이 300을 넘으면 약물의존을 취득
+IF !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_약물중독) && CFLAG:(ARG:0):약물의존 > 300
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다……
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%, 거듭되는 약물의 사용에 의해, 그리고 떨어질 수 없게 되었다
+	CALL KOJO_EVENT(ARG:0, 85)
+	SETCOLOR 칼라_핑크	
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<약물 중독>을 얻었다
+	RESETCOLOR
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_약물중독
+ENDIF
+
+;피최면경험 300이상, 최면 절정경험 500이상, 최면 S
+IF !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_꼭두각시) && EXP:(ARG:0):피최면경험 > 300 && EXP:(ARG:0):최면절정경험 >= 500 && ABL:(ARG:0):최면 >= 랭크역치:랭크_그외:랭크_S
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다……
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%, 몇 번이나 깊은 최면을 걸쳐진 것에 의해, 손가락을 울리는 것만으로 가랑이를 여는 완구에 전락한 것 같다
+	CALL KOJO_EVENT(ARG:0, 95)
+	CALL COLOR_PRINTW(@"%조사처리(ANAME(ARG:0),"는")%<꼭두각시>를 얻었다", 칼라_핑크)
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_꼭두각시
+ENDIF
+
+;ＮＴＲ경험 5
+IF !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_바람기버릇) && EXP:(ARG:0):ＮＴＲ경험 >= 5
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다……
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%, 몇 번이나 네토라레 당한 것에 의해, 곧 타인에게가랑이를 열게 되어 버렸다
+	CALL KOJO_EVENT(ARG:0, 96)
+	CALL COLOR_PRINTW(@"%조사처리(ANAME(ARG:0),"는")%<바람기버릇>을 얻었다", 칼라_핑크)
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_바람기버릇
+ENDIF
+
+
+
+
+;-------------------------------------------------
+;부위 특화 소질＆새드마조의 취득 처리
+;1회의 조교로 취득할 수 있는 소질은 1개만
+;-------------------------------------------------
+@TALENT_CHECK_PART(ARG:0)
+;[새드] 봉사 A이상, 성기술 B이상, 우후후 주도도 1000이상, 도착도 800이상으로, 이번 주인공의 절정 회수가 30이상, 새드 B이상
+IF !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_새드) && ABL:(ARG:0):봉사 >= 랭크역치:랭크_그외:랭크_A && ABL:(ARG:0):성기술 >= 랭크역치:랭크_그외:랭크_B && ABL:(ARG:0):주도도Ｕ >= 1000 && ABL:(ARG:0):도착도 >= 800 && SUM_EX(MASTER) >= 30 && ABL:(ARG:0):새드 >= 랭크역치:랭크_그외:랭크_B
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다…
+	PRINTFORML %조사처리(ANAME(ARG:0),"는")% 다른 사람을 성적으로 괴롭히는 것을 강한 쾌감을 느끼게 되었다…
+	CALL KOJO_EVENT(ARG:0, 71)
+	SETCOLOR 칼라_핑크
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<새드>를 얻었다
+	RESETCOLOR
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_새드
+ENDIF
+
+;[마조] 우후후 주도도-1000 이하, 도착도 800이상, 긴박경험 50이상, 고통쾌락경험 200이상, 이번 절정 회수가 100이상, 마조 B이상
+IF  !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_마조) && ABL:(ARG:0):주도도Ｕ <= -1000 && ABL:(ARG:0):도착도 >= 800 && EXP:(ARG:0):긴박경험 >= 50 && EXP:(ARG:0):고통쾌락경험 >= 200 && SUM_EX(ARG:0) >= 100 && ABL:(ARG:0):마조 >= 랭크역치:랭크_그외:랭크_B
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다…
+	PRINTFORML %조사처리(ANAME(ARG:0),"는")% 완전히 괴롭힐 수 있는 쾌감의 포로가 되어 버린 것 같다…
+	CALL KOJO_EVENT(ARG:0, 72)
+	SETCOLOR 칼라_핑크
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<마조>를 얻었다
+	RESETCOLOR
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_마조
+ENDIF
+
+;[음핵] 장대 없음, Ｃ감각Ｓ랭크 이상, 도착도 100이상, 이번Ｃ절정 회수가 50이상
+IF  !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음핵) && !HAS_PENIS(ARG:0) && ABL:(ARG:0):Ｃ감 >= 랭크역치:랭크_그외:랭크_S && ABL:(ARG:0):도착도 >= 100 && EX:(ARG:0):Ｃ절정 >= 50
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다…
+	PRINTFORML %조사처리(ANAME(ARG:0),"는")% 클리토리스가 가져오는 암컷의 쾌락에 완전히 빠져 버린 것 같다…
+	CALL KOJO_EVENT(ARG:0, 66)
+	SETCOLOR 칼라_핑크
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<음핵>을 얻었다
+	RESETCOLOR
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_음핵
+ENDIF
+
+;[음호] 「Ｖ감각Ａ랭크 이상 한편, 성교 D랭크 이상 한편, Ｖ확장경험 30 이상」혹은 「Ｖ감각Ｓ랭크 이상 한편, 성교Ｃ랭크 이상」으로, 이번Ｖ절정 회수가 50이상
+IF  !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음호) && ((ABL:(ARG:0):Ｖ감 >= 랭크역치:랭크_그외:랭크_A && ABL:(ARG:0):성교 >= 랭크역치:랭크_그외:랭크_D && EXP:(ARG:0):Ｖ확장경험 >= 30) || (ABL:(ARG:0):Ｖ감 >= 랭크역치:랭크_그외:랭크_S && ABL:(ARG:0):성교 >= 랭크역치:랭크_그외:랭크_C)) && EX:(ARG:0):Ｖ절정 >= 50
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다…
+	PRINTFORML %ANAME(ARG:0)%의 추잡한 꿀단지는, 항상 남자의 것을 요구해 쑤시게 되어 버렸다…
+	CALL KOJO_EVENT(ARG:0, 67)
+	SETCOLOR 칼라_핑크
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<음호>를 얻었다
+	RESETCOLOR
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_음호
+ENDIF
+
+;[항문광] 「Ａ감각Ａ랭크 이상 한편, Ａ확장경험 50 이상」혹은 「Ａ감각Ｓ랭크 이상, 도착도 800이상」으로, 이번Ａ절정 회수가 50이상
+IF  !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_항문광) && ((ABL:(ARG:0):Ａ감 >= 랭크역치:랭크_그외:랭크_A && EXP:(ARG:0):Ａ확장경험 >= 50) || (ABL:(ARG:0):Ａ감 >= 랭크역치:랭크_그외:랭크_S && ABL:(ARG:0):도착도 >= 800)) && EX:(ARG:0):Ａ절정 >= 50
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다…
+	PRINTFORML %ANAME(ARG:0)%의 엉덩이 구멍은 완전히 쾌락을 얻기 위한 추잡한 기관으로 바뀌어 버렸다…
+	CALL KOJO_EVENT(ARG:0, 68)
+	SETCOLOR 칼라_핑크
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<항문광>를 얻었다
+	RESETCOLOR
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_항문광
+ENDIF
+
+;[음유] Ｂ감각Ｓ랭크 이상, 도착도 100이상, 이번Ｂ절정 회수가 50이상
+IF  !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음유) && ABL:(ARG:0):Ｂ감 >= 랭크역치:랭크_그외:랭크_S && ABL:(ARG:0):도착도 >= 100 && EX:(ARG:0):Ｂ절정 >= 50
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다…
+	PRINTFORML %ANAME(ARG:0)%의 가슴은 얼마안 되는 자극에서도 소리를 높여 버릴 만큼 추잡하게 개발 다 되어 버렸다…
+	CALL KOJO_EVENT(ARG:0, 69)
+	SETCOLOR 칼라_핑크
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<음유>를 얻었다
+	RESETCOLOR
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_음유
+ENDIF
+
+;[키스마] Ｍ감각Ａ랭크 이상, 키스경험 200이상, 구음경험 100이상, 이번Ｍ절정 회수가 50이상
+IF  !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_키스마) && ABL:(ARG:0):Ｍ감 >= 랭크역치:랭크_그외:랭크_A && EXP:(ARG:0):키스경험 >= 200 && EXP:(ARG:0):구음경험 >= 100 && EX:(ARG:0):Ｍ절정 >= 50
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다…
+	PRINTFORML %ANAME(ARG:0)%의 입은 아래의 입과 같은, 성적 쾌락을 느끼기 위한 암컷의 성기로 바뀌어 버렸다…
+	CALL KOJO_EVENT(ARG:0, 70)
+	SETCOLOR 칼라_핑크
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<키스마>을 얻었다
+	RESETCOLOR
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_키스마
+ENDIF
+
+;[사정광] 장대 있어, Ｃ감각Ｃ랭크 이상, 사정Ａ랭크 이상, 이번 사정횟수가 30이상
+IF  !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_사정광) && HAS_PENIS(ARG:0) && ABL:(ARG:0):Ｃ감 >= 랭크역치:랭크_그외:랭크_C && ABL:(ARG:0):사정 >= 랭크역치:랭크_그외:랭크_A && EX:(ARG:0):사정 >= 30
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다…
+	PRINTFORML %ANAME(ARG:0)%의 육봉은 몇번정액을 발해도 다음의 사정을 애타게 기다려 쑤시게 되어 버렸다…
+	CALL KOJO_EVENT(ARG:0, 73)
+	SETCOLOR 칼라_핑크
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<사정광>을 얻었다
+	RESETCOLOR
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_사정광
+ENDIF
+
+;[모판] 촉수Ｃ랭크 이상, 촉수출산경험 100이상
+IF  !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_모판) && ABL:(ARG:0):촉수 >= 랭크역치:랭크_그외:랭크_C && EXP:(ARG:0):촉수출산경험 >= 100
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다…
+	PRINTFORML %조사처리(ANAME(ARG:0),"는")% 촉수에 의존해, 촉수의 모판으로 되는 것을 기쁨을 느끼게 된 것 같다
+	CALL KOJO_EVENT(ARG:0, 86)
+	SETCOLOR 칼라_핑크
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<모판>이 되었다
+	RESETCOLOR
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_모판
+ENDIF
+
+;[노콘섹스중독] Ｖ(Ａ）감Ａ랭크 이상, Ｖ（Ａ）성교경험 200이상, 이번 절정 회수 100이상
+IF !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_노콘섹스중독) && ((ABL:(ARG:0):Ｖ감 >= 랭크역치:랭크_그외:랭크_A && EXP:(ARG:0):Ｖ성교경험 >= 200 && EXP:(ARG:0):질내사정경험 >= 150) || (ABL:(ARG:0):Ａ감 >= 랭크역치:랭크_그외:랭크_A && EXP:(ARG:0):Ａ성교경험 >= 200 && EXP:(ARG:0):장내사정경험 >= 150)) && SUM_EX(ARG:0) >= 100
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다…
+	PRINTFORML %조사처리(ANAME(ARG:0),"는")% 몇 번이나 성교를 반복한 결과, 콘돔 없이 생으로 섹스가 아니면 만족 할 수 없는 신체가 된 것 같다
+	CALL KOJO_EVENT(ARG:0, 87)
+	SETCOLOR 칼라_핑크
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<노콘섹스중독>을 얻었다
+	RESETCOLOR
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_노콘섹스중독
+ENDIF
+
+;[임신하고 싶어해] 출산 C, 임신경험 10이상
+IF  !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_임신하고싶어함) && ABL:(ARG:0):출산 >= 랭크역치:랭크_그외:랭크_C && ABL:(ARG:0):성교 >= 랭크역치:랭크_그외:랭크_A
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다…
+	PRINTFORML %조사처리(ANAME(ARG:0),"는")% 몇 번이나 임신과 출산을 반복한 결과, 그 쾌락에 완전히 빠진 것 같다
+	CALL KOJO_EVENT(ARG:0, 88)
+	SETCOLOR 칼라_핑크
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<임신하고 싶어해>를 얻었다
+	RESETCOLOR
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_임신하고싶어함
+ENDIF
+
+;[노출광] 노출 A, 욕망 A, 자위 C
+IF  !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_노출광) && ABL:(ARG:0):노출 >= 랭크역치:랭크_그외:랭크_A && ABL:(ARG:0):욕망 >= 랭크역치:랭크_그외:랭크_A && ABL:(ARG:0):자위 >= 랭크역치:랭크_그외:랭크_C
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다…
+	PRINTFORML %조사처리(ANAME(ARG:0),"는")% 당신의 육체를 과시하는 쾌감에 완전히 빠진 것 같다
+	CALL KOJO_EVENT(ARG:0, 92)
+	SETCOLOR 칼라_핑크
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<노출광>을 얻었다
+	RESETCOLOR
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_노출광
+ENDIF
+
+;수간경험 200이상, 욕망 A이상, 성교 C이상으로 암캐
+IF  !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_암캐) && EXP:(ARG:0):수간경험 >= 200 && ABL:(ARG:0):욕망 >= 랭크역치:랭크_그외:랭크_A && ABL:(ARG:0):성교 >= 랭크역치:랭크_그외:랭크_B
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다……
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%, 짐승과 사귀는 쾌감을 잊을 수 없게 되어 버린 것 같다
+	CALL KOJO_EVENT(ARG:0,  83)
+	SETCOLOR 칼라_핑크
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<암캐>가 되었다
+	RESETCOLOR
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_암캐
+ENDIF
+
+;녀 한정, 매춘경험 100이상, 욕망 B이상, 성기술 C, 봉사 C이상으로 창녀
+IF  !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_창녀) && IS_FEMALE(ARG:0) && EXP:(ARG:0):매춘경험 >= 100 && ABL:(ARG:0):욕망 >= 랭크역치:랭크_그외:랭크_B && ABL:(ARG:0):성기술 >= 랭크역치:랭크_그외:랭크_C && ABL:(ARG:0):봉사 >= 랭크역치:랭크_그외:랭크_C
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다……
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%, 스스로의 신체를 돈으로 파는 것을 기쁨을 발견하게 되었다
+	CALL KOJO_EVENT(ARG:0,  84)
+	SETCOLOR 칼라_핑크
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<창녀>가 되었다
+	RESETCOLOR
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_창녀
+	CALL TALENT_LOSE_TEISOU(ARG:0)
+ENDIF
+
+;녀 한정, 촬영경험 300이상, 욕망 A이상, 성기술 A, 노출 C이상으로ＡＶ여배우
+IF  !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_ＡＶ여배우) && IS_FEMALE(ARG:0) && EXP:(ARG:0):촬영경험 >= 300 && ABL:(ARG:0):욕망 >= 랭크역치:랭크_그외:랭크_A && ABL:(ARG:0):성기술 >= 랭크역치:랭크_그외:랭크_A && ABL:(ARG:0):노출 >= 랭크역치:랭크_그외:랭크_C
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다……
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%, 스스로의 치태를 기록에 남기는 것을 기쁨을 느끼게 되었다
+	CALL KOJO_EVENT(ARG:0,  89)
+	SETCOLOR 칼라_핑크
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<ＡＶ여배우>가 되었다
+	RESETCOLOR
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_ＡＶ여배우
+	CALL TALENT_LOSE_TEISOU(ARG:0)
+ENDIF
+
+;[양질모태]
+;이하의 어느 쪽인지
+;촉수 A, 촉수출산경험 300, 모판 소지
+;출산 A, 임신경험 30
+{
+IF !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_양질모태) && 
+	(
+		(ABL:(ARG:0):촉수 > 랭크역치:랭크_그외:랭크_A && EXP:(ARG:0):촉수출산경험 >= 300 && GETBIT(TALENT:(ARG:0):음란계, 소질_음란_모판)) ||
+		(ABL:(ARG:0):출산 >= 랭크역치:랭크_그외:랭크_A && EXP:(ARG:0):임신경험 >= 30 && GETBIT(TALENT:(ARG:0):음란계, 소질_음란_임신하고싶어함))
+	)
+}
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다…
+	PRINTFORML 몇번이고 임신해지는 것을 통해, %조사처리(ANAME(ARG:0),"는")% 지극히 배란하기 쉬운, 임신하기 쉬운 체질이 된 것 같다
+	CALL KOJO_EVENT(ARG:0, 93)
+	SETCOLOR 칼라_핑크
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<양질모태>가 되었다
+	RESETCOLOR
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_양질모태
+ENDIF
+
+;[진한정액] 성교 A, 사정 A, 임신시킨경험 30이상
+IF !GETBIT(TALENT:(ARG:0):음란계, 소질_음란_진한정액) && ABL:(ARG:0):성교 >= 랭크역치:랭크_그외:랭크_A && ABL:(ARG:0):사정 >= 랭크역치:랭크_그외:랭크_A && EXP:(ARG:0):임신시킨경험 >= 30
+	CALL SINGLE_EMPTY_LINE()
+	PRINTFORMW %ANAME(ARG:0)%의 모습이 이상하다…
+	PRINTFORML 몇번이고 여자를 잉 다투는 가운데, %ANAME(ARG:0)%의 정액은 임신시키는데 최적이고 농후해서 대량의 것이 된 것 같다
+	CALL KOJO_EVENT(ARG:0, 94)
+	SETCOLOR 칼라_핑크
+	PRINTFORMW %조사처리(ANAME(ARG:0),"는")%<진한정액>이 되었다
+	RESETCOLOR
+	SETBIT TALENT:(ARG:0):음란계, 소질_음란_진한정액
+ENDIF

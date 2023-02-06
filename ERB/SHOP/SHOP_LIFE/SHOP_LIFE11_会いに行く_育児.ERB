@@ -1,0 +1,59 @@
+﻿;-------------------------------------------------
+;육아용(ARG=아이 ARG:1=교육자
+;-------------------------------------------------
+;CFLAG:(ARG:1):교육 방침 = 10
+@교육(ARG,ARG:1,ARG:2)
+VARSET LOCALS
+;SIF ! ARG:2
+;	ARG:2 = CFLAG:(ARG:1):교육 방침
+SELECTCASE ARG:2
+	CASE 10
+		LOCAL = GETNUM(ABL, "무투")
+		LOCALS = 무술
+	CASE 11
+		LOCAL = GETNUM(ABL, "방위")
+		LOCALS = 호신
+	CASE 12
+		LOCALS = 병법
+		LOCAL = GETNUM(ABL, "지략")
+	CASE 13
+		LOCALS = 학문
+		LOCAL = GETNUM(ABL, "정치")
+	CASE 14
+		LOCALS = 가무
+		LOCAL = GETNUM(ABL, "가창")
+	CASE 15
+		LOCALS = 요리
+		LOCAL = GETNUM(ABL, "요리")
+ENDSELECT
+MPLY:0 = ARG:1
+MTAR:0 = ARG
+
+FOR LOCAL:1, 0, 5
+	CALL COM_SLG_TRAIN_MAIN_PROCESS(LOCAL, 1)
+NEXT
+
+PRINTFORMW %조사처리(ANAME(ARG:1),"는")% %ANAME(ARG)%에 %조사처리(LOCALS,"를")% 가르치고 있다…
+CALL TRAIN_AUTO_ABLUP(ARG)
+
+
+@EDUCATION(ARG)
+#FUNCTIONS
+SELECTCASE ARG
+	CASE 10
+		LOCALS = 무술
+	CASE 11
+		LOCALS = 호신
+	CASE 12
+		LOCALS = 병법
+	CASE 13
+		LOCALS = 학문
+	CASE 14
+		LOCALS = 가무
+	CASE 15
+		LOCALS = 요리
+	CASEELSE
+		LOCALS = 없음
+ENDSELECT
+RETURNF LOCALS
+

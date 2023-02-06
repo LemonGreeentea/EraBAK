@@ -1,0 +1,1711 @@
+﻿;콘피그로부터 실시하는 강제 데이터 조작
+
+;-------------------------------------------------
+;데이터 조작
+;-------------------------------------------------
+@CONFIG_DATA_EDIT
+CALL SINGLE_DRAWLINE
+PRINTL 실시하는 조작을 선택해 주세요
+SETCOLOR 0xD0A080
+PRINTL   ◎조작에 따라서는 위독한 불안정이 발생하는 경우가 있습니다
+PRINTL   ◎남용하면 게임의 즐거움을 해칠 우려가 있습니다
+PRINTL   이상을 이해한 다음 이용하십시오
+RESETCOLOR
+CALL SINGLE_DRAWLINE
+
+PRINTBUTTON " 0[캐릭터 데이터의 개별 개서]", 0
+PRINTL 
+PRINTBUTTON " 1[캐릭터 데이터의 일괄 개서]", 1
+PRINTL 
+PRINTBUTTON " 2[소지금의 추가]", 2
+PRINTL 
+PRINTBUTTON " 3[세력도의 변경]", 3
+PRINTL 
+PRINTBUTTON " 4[전 아이템 추가]", 4
+PRINTL
+PRINTBUTTON " 5[시기 설정]", 5
+PRINTL
+IF IS_COUNTRY(CFLAG:MASTER:소속)
+	PRINTBUTTON " 6[각국과의 관계 설정]", 6
+	PRINTL
+ENDIF
+PRINTBUTTON " 7[이어받아 데이터 작성]", 7
+PRINTL
+PRINTBUTTON " 8[부대 덤프]", 8
+PRINTL
+PRINTBUTTON " 9[난수 조정]", 9
+PRINTL
+PRINTBUTTON "10[랜덤 캐릭터 추가]", 10
+PRINTL
+PRINTBUTTON "11[병을 늘린다]", 11
+PRINTL
+PRINTBUTTON "12[복수 캐릭터를 랜덤에서 사망시킨다]", 12
+PRINTL
+PRINTBUTTON "13[랜덤 캐릭터 복수 추가]", 13
+PRINTL
+PRINTBUTTON "15[MASTER와 캐릭터를 바꿔 넣는다]", 15
+PRINTL
+PRINTBUTTON "16[기존의 캐릭터의 클론 생성]", 16
+PRINTL
+PRINTBUTTON "17[전캐릭터의 행동완료를 리셋트]", 17
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTBUTTON " 99[돌아온다]", 99
+PRINTL 
+
+REDRAW 0
+
+$INPUT_LOOP
+INPUT
+
+IF RESULT == 99
+	REDRAW 1
+	RETURN
+ELSEIF RESULT == 0
+	REDRAW 1
+	WHILE 1
+	CALL SELECT_CHARA_LIST_ONLY_LOGIC_SLG("NONE", "NONE")
+	SIF RESULT == -1
+		BREAK
+	CALL CHARACTER_EDIT(RESULT, 1)
+	WEND
+ELSEIF RESULT == 1
+	REDRAW 1
+	CALL CONFIG_DATA_EDIT_CHARA_ALL
+ELSEIF RESULT == 2
+	REDRAW 1
+	PRINTFORML 추가하는 소지금의 양을 입력해 주세요(현재:{MONEY})
+	INPUT
+	MONEY = LIMIT(MONEY + RESULT, 0, 9999999999999)
+ELSEIF RESULT == 3
+	CALL CONFIG_DATA_EDIT_SLG
+ELSEIF RESULT == 4
+	CALL ASK_YN("번호 지정", "전추가")
+	IF RESULT == 0
+		PRINTFORML 번호 지정
+		INPUT
+		LOCAL:1 = RESULT
+		PRINTFORML 개수 지정
+		INPUT
+		LOCAL:2 = RESULT
+		ITEM:(LOCAL:1) = LOCAL:2
+	ELSE
+		REDRAW 1
+		PRINTFORML 구입 가능한 전 아이템을 판매 개시해, 한편 추가해 두었습니다
+		FOR LOCAL, 0, 499
+			IF ITEMNAME:LOCAL != ""
+				SELECTCASE LOCAL
+					CASE 140
+						ITEMSALES:LOCAL = 1
+						ITEMTERM:LOCAL = 0
+						ITEM:LOCAL = 1
+					CASE 141, 142
+						ITEMSALES:LOCAL = 1
+						ITEMTERM:LOCAL = 0
+					CASE 100 TO 149
+						ITEMSALES:LOCAL = 0
+						ITEM:LOCAL = 1
+						ITEMTERM:LOCAL = 0
+					CASE 150 TO 199
+						ITEMSALES:LOCAL = 1
+						ITEM:LOCAL = 99
+						ITEMTERM:LOCAL = 0
+					CASE 200 TO 249
+						ITEMSALES:LOCAL = 0
+						ITEM:LOCAL = 1
+						ITEMTERM:LOCAL = 0
+					CASE 250 TO 279
+						ITEMSALES:LOCAL = 1
+						ITEM:LOCAL = 99
+						ITEMTERM:LOCAL = 0
+					CASE IS >= 280
+						ITEMSALES:LOCAL = 1
+						ITEMTERM:LOCAL = 0
+				ENDSELECT
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 5
+	REDRAW 1
+		PRINTFORML 제몇기로 합니까? (현재:{DAY})
+		PRINTFORML 0 이하 입력으로 캔슬할 수 있습니다
+		INPUT
+		IF RESULT <= 0
+			PRINTFORML 캔슬했습니다
+		ELSE
+			PRINTFORML {RESULT}기로 했습니다
+			DAY = RESULT
+		ENDIF
+ELSEIF RESULT == 6 && IS_COUNTRY(CFLAG:MASTER:소속)
+	VARSET LOCAL
+	VARSET LOCALS
+	$DEPLOMACY_LOOP
+	CALL SINGLE_DRAWLINE
+	PRINTL 관계 설정을 실시하는 세력을 선택해 주세요
+	CALL SINGLE_DRAWLINE
+	PRINTL                     【관계】【우호도／적대도】  【인상】  【붙잡고 있는 포로】        【붙잡혀 있는 포로】
+
+	;외 세력 일람의 표시
+	FOR LOCAL:0, 1, MAX_COUNTRY
+		;도둑은 원래 표시시키지 않다
+		IF IS_COUNTRY(LOCAL:0) && LOCAL:0 != CFLAG:MASTER:소속
+			LOCALS:0 = {LOCAL:0, 2}[%ANAME(GET_COUNTRY_BOSS(LOCAL:0))%]
+			;외교 금지 플래그가 서 있다면 회색 표시
+			IF COUNTRY_IS_CLOSED:(LOCAL:0)
+				SETCOLOR 칼라_선택불가
+				PRINTPLAINFORM %LOCALS:0, 22, LEFT%
+				RESETCOLOR
+			ELSE
+				PRINTBUTTON @"%LOCALS:0, 22, LEFT%", LOCAL:0
+			ENDIF
+
+			CALL TMP_SETCOLOR_COUNTRY_RELATION(CFLAG:MASTER:소속, LOCAL:0)
+			PRINTFORM %TMP_TOSTR_COUNTRY_RELATION(CFLAG:MASTER:소속, LOCAL:0, 0), 9, LEFT%
+			RESETCOLOR
+			LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+			LOCAL:5 = GET_COUNTRY_BOSS(LOCAL:0)
+	;		PRINTFORM 
+			PRINTFORM {REL_LIKE:(LOCAL:5):(LOCAL:4), 5, RIGHT}
+			PRINT 　
+			PRINTFORM {REL_HATE:(LOCAL:5):(LOCAL:4), 5, RIGHT}
+			PRINT        
+
+			CALL TMP_PRINT_COUNTRY_RELATION2(LOCAL:5, LOCAL:4)
+			PRINT      
+
+			;붙잡고 있는 포로의 표시
+			LOCALS:1 = 
+			FOR LOCAL:1, 0, CHARANUM
+				IF CFLAG:(LOCAL:1):소속 == LOCAL:0 && CFLAG:(LOCAL:1):포로처 == CFLAG:MASTER:소속
+					IF LOCALS:1 == ""
+						LOCALS:1 = %ANAME(LOCAL:1)%
+					ELSE
+						IF STRLENS(@"%LOCALS:1%、%ANAME(LOCAL:1)%") >= 24
+							LOCALS:1 = %LOCALS:1%, 외
+							BREAK
+						ELSE
+							LOCALS:1 = %LOCALS:1%、%ANAME(LOCAL:1)%
+						ENDIF
+					ENDIF
+				ENDIF
+			NEXT
+			SETCOLOR 0xFF8020
+			PRINTFORM %LOCALS:1, 26, LEFT%
+			RESETCOLOR
+
+			;붙잡혀 있는 포로의 표시
+			LOCALS:1 = 
+			FOR LOCAL:1, 0, CHARANUM
+				IF CFLAG:(LOCAL:1):소속 == CFLAG:MASTER:소속 && CFLAG:(LOCAL:1):포로처 == LOCAL:0
+					IF LOCALS:1 == ""
+						LOCALS:1 = %ANAME(LOCAL:1)%
+					ELSE
+						IF STRLENS(@"%LOCALS:1%、%ANAME(LOCAL:1)%") >= 24
+							LOCALS:1 = %LOCALS:1%, 외
+							BREAK
+						ELSE
+							LOCALS:1 = %LOCALS:1%、%ANAME(LOCAL:1)%
+						ENDIF
+					ENDIF
+				ENDIF
+			NEXT
+			SETCOLOR 0x40FFFF
+			PRINTFORM %LOCALS:1, 26, LEFT%
+			RESETCOLOR
+			PRINTL 
+		ENDIF
+	NEXT
+	CALL SINGLE_DRAWLINE
+	PRINTBUTTON "98[일괄]", 98
+	PRINTL
+	PRINTBUTTON "99[돌아온다]", 99
+	PRINTL 
+	REDRAW 0
+
+	$INPUT_LOOP2
+	INPUT
+
+	IF RESULT >= 1 && RESULT < MAX_COUNTRY && RESULT != CFLAG:MASTER:소속 && IS_COUNTRY(RESULT) && !COUNTRY_IS_CLOSED:RESULT
+		LOCAL:1 = RESULT
+		REDRAW 1
+		PRINTFORML 우호도를 얼마로 합니까? (부의 수로 현상 유지, 최대치 1500)
+		INPUT
+		IF RESULT < 0
+		ELSE
+			REL_LIKE:(GET_COUNTRY_BOSS(LOCAL:1)):(GET_COUNTRY_BOSS(CFLAG:MASTER:소속)) = MIN(RESULT, 1500)
+		ENDIF
+		PRINTFORML 적대도를 얼마로 합니까? (부의 수로 현상 유지, 최대치 1500)
+		INPUT
+		IF RESULT < 0
+		ELSE
+			REL_HATE:(GET_COUNTRY_BOSS(LOCAL:1)):(GET_COUNTRY_BOSS(CFLAG:MASTER:소속)) = MIN(RESULT, 1500)
+		ENDIF
+		PRINTFORMW 설정했습니다
+		GOTO DEPLOMACY_LOOP
+	ELSEIF RESULT == 98
+		REDRAW 1
+		PRINTFORML 우호도를 얼마로 합니까? (부의 수로 현상 유지, 최대치 1500)
+		INPUT
+		IF RESULT < 0
+		ELSE
+			FOR LOCAL, 0, MAX_COUNTRY
+				IF IS_COUNTRY(LOCAL) && !COUNTRY_IS_CLOSED:LOCAL && LOCAL != CFLAG:MASTER:소속
+					REL_LIKE:(GET_COUNTRY_BOSS(LOCAL)):(GET_COUNTRY_BOSS(CFLAG:MASTER:소속)) = MIN(RESULT, 1500)
+				ENDIF
+			NEXT
+		ENDIF
+		PRINTFORML 적대도를 얼마로 합니까? (부의 수로 현상 유지, 최대치 1500)
+		INPUT
+		IF RESULT < 0
+		ELSE
+			FOR LOCAL, 0, MAX_COUNTRY
+				IF IS_COUNTRY(LOCAL) && !COUNTRY_IS_CLOSED:LOCAL && LOCAL != CFLAG:MASTER:소속
+					REL_HATE:(GET_COUNTRY_BOSS(LOCAL)):(GET_COUNTRY_BOSS(CFLAG:MASTER:소속)) = MIN(RESULT, 1500)
+				ENDIF
+			NEXT
+		ENDIF
+		PRINTFORMW 설정했습니다
+		GOTO DEPLOMACY_LOOP
+	ELSEIF RESULT != 99
+		CLEARLINE 1
+		GOTO INPUT_LOOP2
+	ENDIF
+	REDRAW 1
+	RESTART
+ELSEIF RESULT == 7
+	PRINTFORMW 이어받아 데이터를 작성합니다
+	FLAG:클리어직후플래그 = 1
+	CALL SAVE_GAME
+	FLAG:클리어직후플래그 = 0
+ELSEIF RESULT == 8
+	FOR LOCAL, 0, MAX_COUNTRY
+		SIF !IS_COUNTRY(LOCAL)
+			CONTINUE
+		LOCAL:6 = GET_COUNTRY_BOSS(LOCAL:0)
+		FOR LOCAL:1, 0, MAX_UNIT
+			SIF UNIT_SOLDIER:(LOCAL:0):(LOCAL:1) <= 0
+				CONTINUE
+			CALL PRINT_UNIT_INFO(LOCAL:0, LOCAL:1)
+			PRINTFORM 거리:%GET_CITYNAME(UNIT_POSITION:(LOCAL:0):(LOCAL:1))%
+			PRINTL
+		NEXT
+	NEXT
+	RESETCOLOR
+	WAIT
+ELSEIF RESULT == 9
+	PRINTFORML random number generation 회수를 입력(0 이하를 입력으로 캔슬)
+	INPUT
+	IF RESULT > 0
+		LOCAL:1 = RESULT
+		FOR LOCAL, 0, LOCAL:1
+			LOCAL:2 = RAND:2
+		NEXT
+	ENDIF
+ELSEIF RESULT == 10
+	CALL CONFIG_DATA_EDIT_RECRUIT_RANDOM_CHARA
+ELSEIF RESULT == 11
+	FOR LOCAL:0, 1, MAX_COUNTRY
+		SIF IS_COUNTRY(LOCAL:0)
+			PRINTFORML [{LOCAL:0}] - %ANAME(GET_COUNTRY_BOSS(LOCAL:0))%
+	NEXT
+	PRINTFORML [99] 돌아온다
+	$INPUT_LOOP_SOLDIER
+	INPUT
+	IF RESULT == 99
+	ELSEIF IS_COUNTRY(RESULT)
+		LOCAL = RESULT
+		PRINTFORML 늘리는 수를 입력
+		INPUT
+		COUNTRY_SOLDIER:(LOCAL:0) += RESULT
+	ELSE
+		GOTO INPUT_LOOP_SOLDIER
+	ENDIF
+ELSEIF RESULT == 12
+	CALL CONFIG_DATA_EDIT_RANDOM_DEAD
+ELSEIF RESULT == 13
+	CALL CONFIG_DATA_EDIT_ADD_RANDOM_CHARA_MULTI
+ELSEIF RESULT == 15
+	CALL CONFIG_DATA_EDIT_SWAP_MASTER
+ELSEIF RESULT == 16
+	CALL CONFIG_DATA_EDIT_CREATE_CLONE
+ELSEIF RESULT == 17
+	FOR LOCAL, 0, CHARANUM
+		CFLAG:LOCAL:행동완료 = 0
+	NEXT
+ELSE
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+RESTART
+
+;-------------------------------------------------
+;캐릭터 데이터의 개서
+;-------------------------------------------------
+@CONFIG_DATA_EDIT_CHARA_ALL
+#DIM FIRST_LINE
+FIRST_LINE = LINECOUNT
+CALL SINGLE_DRAWLINE
+PRINTFORML 캐릭터 데이터의 변경(일괄)    ※주인공은 변경의 적용외입니다
+CALL SINGLE_DRAWLINE
+
+LOCALS:0 = 전원에게 함락소질을 붙인다
+PRINTFORM    %LOCALS:0, 24, RIGHT% 
+PRINTBUTTON " 100[  연모]", 100
+PRINTBUTTON " 101[  친애]", 101
+PRINTBUTTON " 102[  연인]", 102
+PRINTL 
+PRINTFORM %TOSTR_SPACE(28)%
+PRINTBUTTON " 103[  복종]", 103
+PRINTBUTTON " 104[  예속]", 104
+PRINTBUTTON " 107[  주인]", 107
+PRINTBUTTON " 108[소유자]", 108
+PRINTBUTTON " 105[  낙인]", 105
+PRINTBUTTON " 106[  합의]", 106
+PRINTL 
+
+LOCALS:0 = 전원의 성별을 변경
+PRINTFORM    %LOCALS:0, 24, RIGHT% 
+PRINTBUTTON " 110[  남성]", 110
+PRINTBUTTON " 111[  여성]", 111
+PRINTBUTTON " 112[  여성(후타)]", 112
+PRINTL 
+PRINTFORM %TOSTR_SPACE(28)%
+PRINTBUTTON " 113[  남성(후타)]", 113
+PRINTBUTTON " 114[오토코노코]", 114
+PRINTBUTTON " 115[오토코노코(후타)]", 115
+PRINTL 
+
+LOCALS:0 = 전원의 성 경험을 변경
+PRINTFORM    %LOCALS:0, 24, RIGHT% 
+PRINTBUTTON " 120[  처녀]", 120
+PRINTBUTTON " 121[비처녀]", 121
+PRINTBUTTON " 122[  동정]", 122
+PRINTBUTTON " 123[비동정]", 123
+PRINTBUTTON " 124[키스미경험]", 124
+PRINTBUTTON " 125[키스경험함]", 125
+PRINTBUTTON " 126[애널처녀]", 126
+PRINTBUTTON " 127[애널비처녀]", 127
+PRINTL 
+
+LOCALS:0 = 전원을 포로로 한다
+PRINTFORM    %LOCALS:0, 24, RIGHT% 
+PRINTBUTTON " 130[타국의 사관만]", 130
+PRINTBUTTON " 131[모든 사관]", 131
+PRINTL 
+PRINTL 
+
+LOCALS:0 = 전원을 사관으로 한다
+PRINTFORM    %LOCALS:0, 24, RIGHT% 
+PRINTBUTTON " 150[모든 사관]", 150
+PRINTL 
+PRINTL 
+
+LOCALS:0 = 전원의 호감도를 변경
+PRINTFORM    %LOCALS:0, 24, RIGHT% 
+PRINTBUTTON " 200[  고정]", 200
+PRINTBUTTON " 201[  이상]", 201
+PRINTBUTTON " 202[  이하]", 202
+PRINTL 
+
+LOCALS:0 = 전원의 종속도를 변경
+PRINTFORM    %LOCALS:0, 24, RIGHT% 
+PRINTBUTTON " 210[  고정]", 210
+PRINTBUTTON " 211[  이상]", 211
+PRINTBUTTON " 212[  이하]", 212
+PRINTL 
+
+LOCALS:0 = 전원의 의존도를 변경
+PRINTFORM    %LOCALS:0, 24, RIGHT% 
+PRINTBUTTON " 220[  고정]", 220
+PRINTBUTTON " 221[  이상]", 221
+PRINTBUTTON " 222[  이하]", 222
+PRINTL 
+PRINTL 
+
+LOCALS:0 = 전원의 지배도를 변경
+PRINTFORM    %LOCALS:0, 24, RIGHT% 
+PRINTBUTTON " 230[  고정]", 230
+PRINTBUTTON " 231[  이상]", 231
+PRINTBUTTON " 232[  이하]", 232
+PRINTL 
+PRINTL 
+
+LOCALS:0 = 전원에게 소질을 추가
+PRINTFORM    %LOCALS:0, 24, RIGHT% 
+PRINTBUTTON " 300[명칭 지정]", 300
+PRINTBUTTON " 301[번호 지정]", 301
+PRINTL 
+
+LOCALS:0 = 전원의 소질을 삭제
+PRINTFORM    %LOCALS:0, 24, RIGHT% 
+PRINTBUTTON " 310[명칭 지정]", 310
+PRINTBUTTON " 311[번호 지정]", 311
+PRINTL 
+
+LOCALS:0 = 전원의 능력치를 변경
+PRINTFORM    %LOCALS:0, 24, RIGHT% 
+PRINT  명칭 지정→
+PRINTBUTTON " 320[  고정]", 320
+PRINTBUTTON " 321[  이상]", 321
+PRINTBUTTON " 322[  이하]", 322
+PRINTL 
+PRINTFORM %TOSTR_SPACE(29)%번호 지정→
+PRINTBUTTON " 330[  고정]", 330
+PRINTBUTTON " 331[  이상]", 331
+PRINTBUTTON " 332[  이하]", 332
+PRINTL 
+PRINTL 
+LOCALS:0 = 전원의 체력을 변경
+PRINTFORM    %LOCALS:0, 24, RIGHT% 
+PRINT  명칭 지정→
+PRINTBUTTON " 340[  고정]", 340
+PRINTBUTTON " 341[  이상]", 341
+PRINTBUTTON " 342[  이하]", 342
+PRINTL 
+LOCALS:0 = 전원의 기력을 변경
+PRINTFORM    %LOCALS:0, 24, RIGHT% 
+PRINT  명칭 지정→
+PRINTBUTTON " 350[  고정]", 350
+PRINTBUTTON " 351[  이상]", 351
+PRINTBUTTON " 352[  이하]", 352
+PRINTL 
+LOCALS:0 = 전원의 정신력을 변경
+PRINTFORM    %LOCALS:0, 24, RIGHT% 
+PRINT  명칭 지정→
+PRINTBUTTON " 360[  고정]", 360
+PRINTBUTTON " 361[  이상]", 361
+PRINTBUTTON " 362[  이하]", 362
+PRINTL 
+
+LOCALS:0 = 전원의 대면 상태를 변경
+PRINTFORM    %LOCALS:0, 24, RIGHT% 
+PRINTBUTTON " 400[첫대면]", 400
+PRINTBUTTON " 401[대면이 끝난 상태]", 401
+PRINTL 
+
+CALL SINGLE_DRAWLINE
+PRINTBUTTON " 999[돌아온다]", 999
+PRINTL 
+
+REDRAW 0
+
+$INPUT_LOOP
+INPUT
+
+IF RESULT == 999
+	REDRAW 1
+	RETURN
+ELSEIF RESULT == 100
+	PRINTFORML 주인공을 제외한 모든 캐릭터에게[연모]를 붙여, 호감도를 1500, 의존도를 300으로 합니다
+	PRINTFORML 현재의 호감도·의존도가 더 이상의 경우는, 그 값이 유지됩니다
+	PRINTFORML 또, 모든 캐릭터에 대해, 첫대면 상태가 해제됩니다
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				TALENT:(LOCAL:0):복종 = 0
+				TALENT:(LOCAL:0):예속 = 0
+				TALENT:(LOCAL:0):친구 = 0
+				TALENT:(LOCAL:0):주인 = 0
+				TALENT:(LOCAL:0):소유자 = 0
+				TALENT:(LOCAL:0):연모 = 1
+				CFLAG:(LOCAL:0):2 = MAX(CFLAG:(LOCAL:0):2, 1500)
+				CFLAG:(LOCAL:0):3 = MAX(CFLAG:(LOCAL:0):3, 300)
+				CFLAG:(LOCAL:0):안면 = 1
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 101
+	PRINTFORML 주인공을 제외한 모든 캐릭터에게[친애]를 붙여, 호감도를 10000, 의존도를 3000으로 합니다
+	PRINTFORML 현재의 호감도·의존도가 더 이상의 경우는, 그 값이 유지됩니다
+	PRINTFORML 또, 모든 캐릭터에 대해, 첫대면 상태가 해제됩니다
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				TALENT:(LOCAL:0):복종 = 0
+				TALENT:(LOCAL:0):예속 = 0
+				TALENT:(LOCAL:0):친구 = 0
+				TALENT:(LOCAL:0):주인 = 0
+				TALENT:(LOCAL:0):소유자 = 0
+				TALENT:(LOCAL:0):연모 = 1
+				TALENT:(LOCAL:0):친애 = 1
+				CFLAG:(LOCAL:0):2 = MAX(CFLAG:(LOCAL:0):2, 10000)
+				CFLAG:(LOCAL:0):3 = MAX(CFLAG:(LOCAL:0):3, 3000)
+				CFLAG:(LOCAL:0):안면 = 1
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 102
+	PRINTFORML 주인공을 제외한 모든 캐릭터에게[연인]를 붙입니다
+	PRINTFORML 또, 모든 캐릭터에 대해, 첫대면 상태가 해제됩니다
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				TALENT:(LOCAL:0):낙인 = 0
+				TALENT:(LOCAL:0):연인 = 1
+				CFLAG:(LOCAL:0):안면 = 1
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 103
+	PRINTFORML 주인공을 제외한 모든 캐릭터에게[복종]을 붙여, 종속도를 1500, 의존도를 300으로 합니다
+	PRINTFORML 현재의 종속도·의존도가 더 이상의 경우는, 그 값이 유지됩니다
+	PRINTFORML 또, 모든 캐릭터에 대해, 첫대면 상태가 해제됩니다
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				TALENT:(LOCAL:0):연모 = 0
+				TALENT:(LOCAL:0):친애 = 0
+				TALENT:(LOCAL:0):친구 = 0
+				TALENT:(LOCAL:0):주인 = 0
+				TALENT:(LOCAL:0):소유자 = 0
+				TALENT:(LOCAL:0):복종 = 1
+				CFLAG:(LOCAL:0):4 = MAX(CFLAG:(LOCAL:0):4, 1500)
+				CFLAG:(LOCAL:0):3 = MAX(CFLAG:(LOCAL:0):3, 300)
+
+				CFLAG:(LOCAL:0):안면 = 1
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 104
+	PRINTFORML 주인공을 제외한 모든 캐릭터에게[예속]을 붙여, 종속도를 10000, 의존도를 3000으로 합니다
+	PRINTFORML 현재의 종속도·의존도가 더 이상의 경우는, 그 값이 유지됩니다
+	PRINTFORML 또, 모든 캐릭터에 대해, 첫대면 상태가 해제됩니다
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				TALENT:(LOCAL:0):연모 = 0
+				TALENT:(LOCAL:0):친애 = 0
+				TALENT:(LOCAL:0):친구 = 0
+				TALENT:(LOCAL:0):주인 = 0
+				TALENT:(LOCAL:0):소유자 = 0
+				TALENT:(LOCAL:0):복종 = 1
+				TALENT:(LOCAL:0):예속 = 1
+				CFLAG:(LOCAL:0):4 = MAX(CFLAG:(LOCAL:0):4, 10000)
+				CFLAG:(LOCAL:0):3 = MAX(CFLAG:(LOCAL:0):3, 3000)
+				CFLAG:(LOCAL:0):안면 = 1
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 107
+	PRINTFORML 주인공을 제외한 모든 캐릭터에게[소유자]를 붙여, 지배도를 10000, 의존도를 3000으로 합니다
+	PRINTFORML 현재의 지배도·의존도가 더 이상의 경우는, 그 값이 유지됩니다
+	PRINTFORML 또, 모든 캐릭터에 대해, 첫대면 상태가 해제됩니다
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				TALENT:(LOCAL:0):연모 = 0
+				TALENT:(LOCAL:0):친애 = 0
+				TALENT:(LOCAL:0):친구 = 0
+				TALENT:(LOCAL:0):복종 = 0
+				TALENT:(LOCAL:0):예속 = 0
+				TALENT:(LOCAL:0):주인 = 1
+				TALENT:(LOCAL:0):소유자 = 1
+				CFLAG:(LOCAL:0):5 = MAX(CFLAG:(LOCAL:0):5, 10000)
+				CFLAG:(LOCAL:0):3 = MAX(CFLAG:(LOCAL:0):3, 3000)
+				CFLAG:(LOCAL:0):안면 = 1
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 108
+	PRINTFORML 주인공을 제외한 모든 캐릭터에게[주인]을 붙여, 지배도를 1500, 의존도를 300으로 합니다
+	PRINTFORML 현재의 지배도·의존도가 더 이상의 경우는, 그 값이 유지됩니다
+	PRINTFORML 또, 모든 캐릭터에 대해, 첫대면 상태가 해제됩니다
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				TALENT:(LOCAL:0):연모 = 0
+				TALENT:(LOCAL:0):친애 = 0
+				TALENT:(LOCAL:0):친구 = 0
+				TALENT:(LOCAL:0):복종 = 0
+				TALENT:(LOCAL:0):예속 = 0
+				TALENT:(LOCAL:0):주인 = 1
+				TALENT:(LOCAL:0):소유자 = 0
+				CFLAG:(LOCAL:0):5 = MAX(CFLAG:(LOCAL:0):5, 1500)
+				CFLAG:(LOCAL:0):3 = MAX(CFLAG:(LOCAL:0):3, 300)
+				CFLAG:(LOCAL:0):안면 = 1
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 105
+	PRINTFORML 주인공을 제외한 모든 캐릭터에게[낙인]을 붙입니다
+	PRINTFORML 또, 모든 캐릭터에 대해, 첫대면 상태가 해제됩니다
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				TALENT:(LOCAL:0):연인 = 0
+				TALENT:(LOCAL:0):낙인 = 1
+				CFLAG:(LOCAL:0):안면 = 1
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 106
+	PRINTFORML 주인공을 제외한 모든 캐릭터에게[합의]를 붙입니다
+	PRINTFORML 또, 모든 캐릭터에 대해, 첫대면 상태가 해제됩니다
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				TALENT:(LOCAL:0):합의 = 1
+				CFLAG:(LOCAL:0):안면 = 1
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 110
+	PRINTFORML 주인공을 제외한 모든 캐릭터를 남성으로 합니다
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				TALENT:(LOCAL:0):성별 = 0
+				CALL CLEAR_PIERCE_HOLE_SEX_CHANGE(LOCAL)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 111
+	PRINTFORML 주인공과 동물을 제외한 모든 캐릭터를 여성으로 합니다
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER && !IS_ANIMAL(LOCAL:0)
+				TALENT:(LOCAL:0):성별 = 1
+				CALL CLEAR_PIERCE_HOLE_SEX_CHANGE(LOCAL)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 112
+	PRINTFORML 주인공을 제외한 모든 캐릭터를 여성(후타나리)로 합니다
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER && !IS_ANIMAL(LOCAL:0)
+				TALENT:(LOCAL:0):성별 = 2
+				CALL CLEAR_PIERCE_HOLE_SEX_CHANGE(LOCAL)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 113
+	PRINTFORML 주인공을 제외한 모든 캐릭터를 남성(후타나리)로 합니다
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER && !IS_ANIMAL(LOCAL:0)
+				TALENT:(LOCAL:0):성별 = 3
+				CALL CLEAR_PIERCE_HOLE_SEX_CHANGE(LOCAL)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 114
+	PRINTFORML 주인공을 제외한 모든 캐릭터를 오토코노코로 합니다
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER && !IS_ANIMAL(LOCAL:0)
+				TALENT:(LOCAL:0):성별 = 4
+				CALL CLEAR_PIERCE_HOLE_SEX_CHANGE(LOCAL)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 115
+	PRINTFORML 주인공을 제외한 모든 캐릭터를 오토코노코(후타나리)로 합니다
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER && !IS_ANIMAL(LOCAL:0)
+				TALENT:(LOCAL:0):성별 = 5
+				CALL CLEAR_PIERCE_HOLE_SEX_CHANGE(LOCAL)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 120
+	PRINTFORML 주인공을 제외한 모든 캐릭터를 처녀로 합니다(감도나 경험은 변경되지 않습니다)
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				CALL VIRGINIZE(LOCAL:0, 첫체험_처녀)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 121
+	PRINTFORML 주인공을 제외한 모든 캐릭터를 비처녀로 합니다
+	CALL ASK_MULTI("실행", "캔슬", "대상명을 입력")
+	IF RESULT == 2
+		PRINTFORML 누가 빼앗았는지를 입력해 주세요
+		INPUTS
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				TALENT:(LOCAL:0):처녀 = 0
+				SEXUAL_EXPERIENCE:(LOCAL:0):첫체험_처녀 = %RESULTS%
+				SEXUAL_LAST_EXPERIENCE:(LOCAL:0):첫체험_처녀 = %RESULTS%
+			ENDIF
+		NEXT
+	ELSEIF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				TALENT:(LOCAL:0):처녀 = 0
+				SEXUAL_EXPERIENCE:(LOCAL:0):첫체험_처녀 = 불명
+				SEXUAL_LAST_EXPERIENCE:(LOCAL:0):첫체험_처녀 = 불명
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 122
+	PRINTFORML 주인공을 제외한 모든 캐릭터를 동정으로 합니다(감도나 경험은 변경되지 않습니다)
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				CALL VIRGINIZE(LOCAL:0, 첫체험_동정)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 123
+	PRINTFORML 주인공을 제외한 모든 캐릭터를 비동정으로 합니다
+	CALL ASK_MULTI("실행", "캔슬", "대상명을 입력")
+	IF RESULT == 2
+		PRINTFORML 누가 빼앗았는지를 입력해 주세요
+		INPUTS
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				TALENT:(LOCAL:0):동정 = 0
+				SEXUAL_EXPERIENCE:(LOCAL:0):첫체험_동정 = %RESULTS%
+				SEXUAL_LAST_EXPERIENCE:(LOCAL:0):첫체험_동정 = %RESULTS%
+			ENDIF
+		NEXT
+	ELSEIF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				TALENT:(LOCAL:0):동정 = 0
+				SEXUAL_EXPERIENCE:(LOCAL:0):첫체험_동정 = 불명
+				SEXUAL_LAST_EXPERIENCE:(LOCAL:0):첫체험_동정 = 불명
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 124
+	PRINTFORML 주인공을 제외한 모든 캐릭터의 키스경험을 소거합니다
+	CALL ASK_MULTI("실행",　"캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				CALL VIRGINIZE(LOCAL:0, 첫체험_키스)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 125
+	PRINTFORML 주인공을 제외한 모든 캐릭터를 키스 경험함으로 합니다
+	CALL ASK_MULTI("실행", "캔슬", "대상명을 입력")
+	IF RESULT == 2
+		PRINTFORML 누가 빼앗았는지를 입력해 주세요
+		INPUTS
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				TALENT:(LOCAL:0):키스미경험 = 0
+				SEXUAL_EXPERIENCE:(LOCAL:0):첫체험_키스 = %RESULTS%
+				SEXUAL_LAST_EXPERIENCE:(LOCAL:0):첫체험_키스 = %RESULTS%
+			ENDIF
+		NEXT
+	ELSEIF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				TALENT:(LOCAL:0):키스미경험 = 0
+				SEXUAL_EXPERIENCE:(LOCAL:0):첫체험_키스 = 불명
+				SEXUAL_LAST_EXPERIENCE:(LOCAL:0):첫체험_키스 = 불명
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 126
+	PRINTFORML 주인공을 제외한 모든 캐릭터의 엉덩이 구멍경험을 소거합니다
+	CALL ASK_MULTI("실행",　"캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				CALL VIRGINIZE(LOCAL:0, 첫체험_애널처녀)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 127
+	PRINTFORML 주인공을 제외한 모든 캐릭터의 애널을 경험이 끝난 상태로 합니다
+	CALL ASK_MULTI("실행", "캔슬", "대상명을 입력")
+	IF RESULT == 2
+		PRINTFORML 누가 빼앗았는지를 입력해 주세요
+		INPUTS
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				TALENT:(LOCAL:0):애널처녀 = 0
+				SEXUAL_EXPERIENCE:(LOCAL:0):첫체험_애널처녀 = %RESULTS%
+				SEXUAL_LAST_EXPERIENCE:(LOCAL:0):첫체험_애널처녀 = %RESULTS%
+			ENDIF
+		NEXT
+	ELSEIF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				TALENT:(LOCAL:0):애널처녀 = 0
+				SEXUAL_EXPERIENCE:(LOCAL:0):첫체험_애널처녀 = 불명
+				SEXUAL_LAST_EXPERIENCE:(LOCAL:0):첫체험_애널처녀 = 불명
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 130
+	PRINTFORML 주인공과 다른 세력에 소속하는, 미등장·사망이 끝난 상태·군주가 아닌 전캐릭터를 포로로 합니다
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 1, CHARANUM
+			SIF CFLAG:LOCAL:특수상태 == 특수상태_사망 || (!CFLAG:LOCAL:소속 && !CFLAG:LOCAL:특수상태) || GET_COUNTRY_BOSS(CFLAG:LOCAL:소속) == LOCAL:0
+				CONTINUE
+			IF CFLAG:MASTER:소속 != CFLAG:LOCAL:소속
+				CALL CAPTURE(LOCAL:0, CFLAG:MASTER:소속)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 131
+	PRINTFORML 미등장·사망이 끝난 상태·군주가 아닌 전캐릭터를 포로로 합니다
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 1, CHARANUM
+			SIF CFLAG:LOCAL:특수상태 == 특수상태_사망 || (!CFLAG:LOCAL:소속 && !CFLAG:LOCAL:특수상태) || GET_COUNTRY_BOSS(CFLAG:LOCAL:소속) == LOCAL:0
+				CONTINUE
+			CALL CAPTURE(LOCAL:0, CFLAG:MASTER:소속)
+		NEXT
+	ENDIF
+ELSEIF RESULT == 150
+	PRINTFORML 미등장·사망이 끝난 상태·군주가 아닌 전캐릭터를 자국의 사관으로 합니다
+	PRINTFORML 주인공이 방랑하고 있는 경우, 전원 방랑합니다
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			SIF CFLAG:LOCAL:특수상태 == 특수상태_사망 || (!CFLAG:LOCAL:소속 && !CFLAG:LOCAL:특수상태) || GET_COUNTRY_BOSS(CFLAG:LOCAL:소속) == LOCAL:0
+				CONTINUE
+			CALL CHANGE_COUNTRY(LOCAL:0, CFLAG:MASTER:소속, 1)
+		NEXT
+	ENDIF
+ELSEIF RESULT == 200
+	PRINTFORML 모든 캐릭터의 호감도를, 지정한 값으로 변경합니다
+	PRINTFORML 지정할 수 있는 값은 -1000～999999999999로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= -1000 && RESULT <= 999999999999
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				CFLAG:(LOCAL:0):2 = RESULT
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 201
+	PRINTFORML 모든 캐릭터의 호감도를, 지정한 값으로 변경합니다
+	PRINTFORML 다만, 원래의 호감도가 지정한 값보다 큰 경우, 원래의 값이 유지됩니다
+	PRINTFORML 지정할 수 있는 값은 -1000～999999999999로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= -1000 && RESULT <= 999999999999
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				CFLAG:(LOCAL:0):2 = MAX(CFLAG:(LOCAL:0):2, RESULT)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 202
+	PRINTFORML 모든 캐릭터의 호감도를, 지정한 값으로 변경합니다
+	PRINTFORML 다만, 원래의 호감도가 지정한 값보다 작은 경우, 원래의 값이 유지됩니다
+	PRINTFORML 지정할 수 있는 값은 -1000～999999999999로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= -1000 && RESULT <= 999999999999
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				CFLAG:(LOCAL:0):2 = MIN(CFLAG:(LOCAL:0):2, RESULT)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 210
+	PRINTFORML 모든 캐릭터의 종속도를, 지정한 값으로 변경합니다
+	PRINTFORML 지정할 수 있는 값은 -1000～999999999999로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= -1000 && RESULT <= 999999999999
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				CFLAG:(LOCAL:0):4 = RESULT
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 211
+	PRINTFORML 모든 캐릭터의 종속도를, 지정한 값으로 변경합니다
+	PRINTFORML 다만, 원래의 호감도가 지정한 값보다 큰 경우, 원래의 값이 유지됩니다
+	PRINTFORML 지정할 수 있는 값은 -1000～999999999999로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= -1000 && RESULT <= 999999999999
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				CFLAG:(LOCAL:0):4= MAX(CFLAG:(LOCAL:0):4, RESULT)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 212
+	PRINTFORML 모든 캐릭터의 종속도를, 지정한 값으로 변경합니다
+	PRINTFORML 다만, 원래의 호감도가 지정한 값보다 작은 경우, 원래의 값이 유지됩니다
+	PRINTFORML 지정할 수 있는 값은 -1000～999999999999로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= -1000 && RESULT <= 999999999999
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				CFLAG:(LOCAL:0):4 = MIN(CFLAG:(LOCAL:0):4, RESULT)
+			ENDIF
+		NEXT
+	ENDIF
+
+
+ELSEIF RESULT == 220
+	PRINTFORML 모든 캐릭터의 의존도를, 지정한 값으로 변경합니다
+	PRINTFORML 지정할 수 있는 값은 -1000～999999999999로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= -1000 && RESULT <= 999999999999
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				CFLAG:(LOCAL:0):3 = RESULT
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 221
+	PRINTFORML 모든 캐릭터의 의존도를, 지정한 값으로 변경합니다
+	PRINTFORML 다만, 원래의 호감도가 지정한 값보다 큰 경우, 원래의 값이 유지됩니다
+	PRINTFORML 지정할 수 있는 값은 -1000～999999999999로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= -1000 && RESULT <= 999999999999
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				CFLAG:(LOCAL:0):3 = MAX(CFLAG:(LOCAL:0):3, RESULT)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 222
+	PRINTFORML 모든 캐릭터의 의존도를, 지정한 값으로 변경합니다
+	PRINTFORML 다만, 원래의 호감도가 지정한 값보다 작은 경우, 원래의 값이 유지됩니다
+	PRINTFORML 지정할 수 있는 값은 -1000～999999999999로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= -1000 && RESULT <= 999999999999
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				CFLAG:(LOCAL:0):3 = MIN(CFLAG:(LOCAL:0):3, RESULT)
+			ENDIF
+		NEXT
+	ENDIF
+
+ELSEIF RESULT == 230
+	PRINTFORML 모든 캐릭터의 지배도를, 지정한 값으로 변경합니다
+	PRINTFORML 지정할 수 있는 값은 -1000～999999999999로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= -1000 && RESULT <= 999999999999
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				CFLAG:(LOCAL:0):5 = RESULT
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 231
+	PRINTFORML 모든 캐릭터의 지배도를, 지정한 값으로 변경합니다
+	PRINTFORML 다만, 원래의 호감도가 지정한 값보다 큰 경우, 원래의 값이 유지됩니다
+	PRINTFORML 지정할 수 있는 값은 -1000～999999999999로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= -1000 && RESULT <= 999999999999
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				CFLAG:(LOCAL:0):5 = MAX(CFLAG:(LOCAL:0):5, RESULT)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 232
+	PRINTFORML 모든 캐릭터의 지배도를, 지정한 값으로 변경합니다
+	PRINTFORML 다만, 원래의 호감도가 지정한 값보다 작은 경우, 원래의 값이 유지됩니다
+	PRINTFORML 지정할 수 있는 값은 -1000～999999999999로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= -1000 && RESULT <= 999999999999
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				CFLAG:(LOCAL:0):5 = MIN(CFLAG:(LOCAL:0):5, RESULT)
+			ENDIF
+		NEXT
+	ENDIF
+	
+
+;소질의 추가
+ELSEIF RESULT == 300 || RESULT == 301
+	LOCAL:5 = -1
+	IF RESULT == 300
+		PRINTFORML 추가하는 소질의 명칭을 입력해 주세요(완전 일치)
+		INPUTS
+		IF RESULTS != ""
+			FOR LOCAL:0, 0, 1000
+				IF TALENTNAME:(LOCAL:0) == RESULTS
+					LOCAL:5 = LOCAL:0
+					BREAK
+				ENDIF
+			NEXT
+		ENDIF
+		IF LOCAL:5 == -1 && RESULTS != ""
+			PRINTFORMW 「%RESULTS%」라고 일치하는 명칭의 소질은 존재하지 않습니다
+		ENDIF
+	ELSE
+		PRINTFORML 추가하는 소질의 번호를 입력해 주세요
+		INPUT
+		IF RESULT >= 0 && RESULT <= 999 && TALENTNAME:RESULT != ""
+			LOCAL:5 = RESULT
+		ENDIF
+		IF LOCAL:5 == -1
+			PRINTFORMW 그 번호의 소질은 정의되고 있지 않습니다
+		ENDIF
+	ENDIF
+	IF LOCAL:5 >= 0
+		IF IS_CONTROLABLE_TALENT(LOCAL:5)
+			FOR LOCAL:0, 0, CHARANUM
+				IF LOCAL:0 != MASTER
+					TALENT:(LOCAL:0):(LOCAL:5) = 1
+				ENDIF
+			NEXT
+			PRINTFORMW 모든 캐릭터에게 「%TALENTNAME:(LOCAL:5)%」를 추가했습니다
+		ELSE
+			PRINTFORMW 소질 「%TALENTNAME:(LOCAL:5)%」를 직접 조작할 수 없습니다
+		ENDIF
+	ENDIF
+
+;소질의 삭제
+ELSEIF RESULT == 310 || RESULT == 311
+	LOCAL:5 = -1
+	IF RESULT == 310
+		PRINTFORML 삭제하는 소질의 명칭을 입력해 주세요(완전 일치)
+		INPUTS
+		IF RESULTS != ""
+			FOR LOCAL:0, 0, 1000
+				IF TALENTNAME:(LOCAL:0) == RESULTS
+					LOCAL:5 = LOCAL:0
+					BREAK
+				ENDIF
+			NEXT
+		ENDIF
+		IF LOCAL:5 == -1 && RESULTS != ""
+			PRINTFORMW 「%RESULTS%」라고 일치하는 명칭의 소질은 존재하지 않습니다
+		ENDIF
+	ELSE
+		PRINTFORML 삭제하는 소질의 번호를 입력해 주세요
+		INPUT
+		IF RESULT >= 0 && RESULT <= 999 && TALENTNAME:RESULT != ""
+			LOCAL:5 = RESULT
+		ENDIF
+		IF LOCAL:5 == -1
+			PRINTFORMW 그 번호의 소질은 정의되고 있지 않습니다
+		ENDIF
+	ENDIF
+	IF LOCAL:5 >= 0
+		IF IS_CONTROLABLE_TALENT(LOCAL:5)
+			FOR LOCAL:0, 0, CHARANUM
+				IF LOCAL:0 != MASTER
+					TALENT:(LOCAL:0):(LOCAL:5) = 0
+				ENDIF
+			NEXT
+			PRINTFORMW 모든 캐릭터로부터 「%TALENTNAME:(LOCAL:5)%」를 삭제했습니다
+		ELSE
+			PRINTFORMW 소질 「%TALENTNAME:(LOCAL:5)%」를 직접 조작할 수 없습니다
+		ENDIF
+	ENDIF
+
+ELSEIF GROUPMATCH(RESULT, 320, 321, 322, 330, 331, 332)
+	LOCAL:5 = -1
+	LOCAL:6 = RESULT % 10
+	IF RESULT < 330
+		PRINTFORML 추가하는 능력의 명칭을 입력해 주세요(완전 일치)
+		INPUTS
+		IF RESULTS != ""
+			FOR LOCAL:0, 0, 100
+				IF ABLNAME:(LOCAL:0) == RESULTS
+					LOCAL:5 = LOCAL:0
+					BREAK
+				ENDIF
+			NEXT
+		ENDIF
+		IF LOCAL:5 == -1 && RESULTS != ""
+			PRINTFORMW 「%RESULTS%」라고 일치하는 명칭의 능력은 존재하지 않습니다
+		ENDIF
+	ELSE
+		PRINTFORML 추가하는 능력의 번호를 입력해 주세요
+		INPUT
+		IF RESULT >= 0 && RESULT <= 99 && ABLNAME:RESULT != ""
+			LOCAL:5 = RESULT
+		ENDIF
+		IF LOCAL:5 == -1
+			PRINTFORMW 그 번호의 능력은 정의되고 있지 않습니다
+		ENDIF
+	ENDIF
+	IF LOCAL:5 >= 0
+		IF LOCAL:6 == 1
+			PRINTFORML 「%ABLNAME:(LOCAL:5)%」의 값을 입력해 주세요({ABL_MIN:(LOCAL:5)}～{ABL_MAX:(LOCAL:5)})
+			PRINTFORML 현재의 값이 입력한 값보다 큰 경우, 현재의 값이 유지됩니다
+			PRINTFORML 범위외의 값을 입력했을 경우, 캔슬 취급이 됩니다
+			INPUT
+			IF RESULT >= ABL_MIN:(LOCAL:5) && RESULT <= ABL_MAX:(LOCAL:5)
+				FOR LOCAL:0, 0, CHARANUM
+					IF LOCAL:0 != MASTER
+						ABL:(LOCAL:0):(LOCAL:5) = MAX(ABL:(LOCAL:0):(LOCAL:5), RESULT)
+					ENDIF
+				NEXT
+			ENDIF
+			PRINTFORMW 모든 캐릭터의 「%ABLNAME:(LOCAL:5)%」를 {RESULT}이상으로 설정했습니다
+		ELSEIF LOCAL:6 == 2
+			PRINTFORML 「%ABLNAME:(LOCAL:5)%」의 값을 입력해 주세요({ABL_MIN:(LOCAL:5)}～{ABL_MAX:(LOCAL:5)})
+			PRINTFORML 현재의 값이 입력한 값보다 작은 경우, 현재의 값이 유지됩니다
+			PRINTFORML 범위외의 값을 입력했을 경우, 캔슬 취급이 됩니다
+			INPUT
+			IF RESULT >= ABL_MIN:(LOCAL:5) && RESULT <= ABL_MAX:(LOCAL:5)
+				FOR LOCAL:0, 0, CHARANUM
+					IF LOCAL:0 != MASTER
+						ABL:(LOCAL:0):(LOCAL:5) = MIN(ABL:(LOCAL:0):(LOCAL:5), RESULT)
+					ENDIF
+				NEXT
+			ENDIF
+			PRINTFORMW 모든 캐릭터의 「%ABLNAME:(LOCAL:5)%」를 {RESULT}이하로 설정했습니다
+		ELSE
+			PRINTFORML 「%ABLNAME:(LOCAL:5)%」의 값을 입력해 주세요({ABL_MIN:(LOCAL:5)}～{ABL_MAX:(LOCAL:5)})
+			PRINTFORML 범위외의 값을 입력했을 경우, 캔슬 취급이 됩니다
+			INPUT
+			IF RESULT >= ABL_MIN:(LOCAL:5) && RESULT <= ABL_MAX:(LOCAL:5)
+				FOR LOCAL:0, 0, CHARANUM
+					IF LOCAL:0 != MASTER
+						ABL:(LOCAL:0):(LOCAL:5) = RESULT
+					ENDIF
+				NEXT
+			ENDIF
+			PRINTFORMW 모든 캐릭터의 「%ABLNAME:(LOCAL:5)%」%조사만처리(ABLNAME:(LOCAL:5),"를")% {RESULT}로 설정했습니다
+		ENDIF
+	ENDIF
+ELSEIF RESULT == 340
+	PRINTFORML 모든 캐릭터의 체력을, 지정한 값으로 변경합니다
+	PRINTFORML 지정할 수 있는 값은 1～5000으로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= 1 && RESULT <= 5000
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				MAXBASE:LOCAL:체력 = RESULT
+				BASE:LOCAL:체력 = RESULT
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 341
+	PRINTFORML 모든 캐릭터의 체력을, 지정한 값으로 변경합니다
+	PRINTFORML 다만, 원래의 체력이 지정한 값보다 큰 경우, 원래의 값이 유지됩니다
+	PRINTFORML 지정할 수 있는 값은 1～5000으로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= 1 && RESULT <= 5000
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				MAXBASE:LOCAL:체력 = MAX(MAXBASE:LOCAL:체력, RESULT)
+				BASE:LOCAL:체력 = MAX(MAXBASE:LOCAL:체력, RESULT)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 342
+	PRINTFORML 모든 캐릭터의 체력을, 지정한 값으로 변경합니다
+	PRINTFORML 다만, 원래의 체력이 지정한 값보다 작은 경우, 원래의 값이 유지됩니다
+	PRINTFORML 지정할 수 있는 값은 1～5000으로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= 1 && RESULT <= 5000
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				MAXBASE:LOCAL:체력 = MIN(MAXBASE:LOCAL:체력, RESULT)
+				BASE:LOCAL:체력 = MIN(MAXBASE:LOCAL:체력, RESULT)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 350
+	PRINTFORML 모든 캐릭터의 기력을, 지정한 값으로 변경합니다
+	PRINTFORML 지정할 수 있는 값은 1～5000으로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= 1 && RESULT <= 5000
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				MAXBASE:LOCAL:기력 = RESULT
+				BASE:LOCAL:기력 = RESULT
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 351
+	PRINTFORML 모든 캐릭터의 기력을, 지정한 값으로 변경합니다
+	PRINTFORML 다만, 원래의 기력이 지정한 값보다 큰 경우, 원래의 값이 유지됩니다
+	PRINTFORML 지정할 수 있는 값은 1～5000으로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= 1 && RESULT <= 5000
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				MAXBASE:LOCAL:기력 = MAX(MAXBASE:LOCAL:기력, RESULT)
+				BASE:LOCAL:기력 = MAX(MAXBASE:LOCAL:기력, RESULT)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 352
+	PRINTFORML 모든 캐릭터의 기력을, 지정한 값으로 변경합니다
+	PRINTFORML 다만, 원래의 기력이 지정한 값보다 작은 경우, 원래의 값이 유지됩니다
+	PRINTFORML 지정할 수 있는 값은 1～5000으로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= 1 && RESULT <= 5000
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				MAXBASE:LOCAL:기력 = MIN(MAXBASE:LOCAL:기력, RESULT)
+				BASE:LOCAL:기력= MIN(MAXBASE:LOCAL:기력, RESULT)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 360
+	PRINTFORML 모든 캐릭터의 정신력을, 지정한 값으로 변경합니다
+	PRINTFORML 지정할 수 있는 값은 1～5000으로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= 1 && RESULT <= 5000
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				MAXBASE:LOCAL:정신력 = RESULT
+				BASE:LOCAL:정신력 = RESULT
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 361
+	PRINTFORML 모든 캐릭터의 정신력을, 지정한 값으로 변경합니다
+	PRINTFORML 다만, 원래의 정신력이 지정한 값보다 큰 경우, 원래의 값이 유지됩니다
+	PRINTFORML 지정할 수 있는 값은 1～5000으로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= 1 && RESULT <= 5000
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				MAXBASE:LOCAL:정신력 = MAX(MAXBASE:LOCAL:정신력, RESULT)
+				BASE:LOCAL:정신력 = MAX(MAXBASE:LOCAL:정신력, RESULT)
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 362
+	PRINTFORML 모든 캐릭터의 정신력을, 지정한 값으로 변경합니다
+	PRINTFORML 다만, 원래의 정신력이 지정한 값보다 작은 경우, 원래의 값이 유지됩니다
+	PRINTFORML 지정할 수 있는 값은 1～5000으로, 범위외의 값은 캔슬 취급이 됩니다
+	PRINTFORML 지정하는 값을 입력해 주세요
+	INPUT
+	IF RESULT >= 1 && RESULT <= 5000
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				MAXBASE:LOCAL:정신력 = MIN(MAXBASE:LOCAL:정신력, RESULT)
+				BASE:LOCAL:정신력= MIN(MAXBASE:LOCAL:정신력, RESULT)
+			ENDIF
+		NEXT
+	ENDIF
+
+
+ELSEIF RESULT == 400
+	PRINTFORML 모든 캐릭터를 첫대면 상태에 되돌립니다
+	CALL ASK_MULTI("실행(플래그만 리셋트)", "실행(플래그·호감도·종속도·의존도·함락소질을 리셋트)", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				CFLAG:(LOCAL:0):안면 = 0
+			ENDIF
+		NEXT
+	ELSEIF RESULT == 1
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				CFLAG:(LOCAL:0):안면 = 0
+				CFLAG:(LOCAL:0):2 = 0
+				CFLAG:(LOCAL:0):3 = 0
+				CFLAG:(LOCAL:0):4 = 0
+				TALENT:(LOCAL:0):연모 = 0
+				TALENT:(LOCAL:0):친애 = 0
+				TALENT:(LOCAL:0):친구 = 0
+				TALENT:(LOCAL:0):연인 = 0
+				TALENT:(LOCAL:0):복종 = 0
+				TALENT:(LOCAL:0):예속 = 0
+				TALENT:(LOCAL:0):낙인 = 0
+				TALENT:(LOCAL:0):합의 = 0
+			ENDIF
+		NEXT
+	ENDIF
+ELSEIF RESULT == 401
+	PRINTFORML 모든 캐릭터와 안면이 있는 상태로 합니다
+	CALL ASK_YN("실행", "캔슬")
+	IF RESULT == 0
+		FOR LOCAL:0, 0, CHARANUM
+			IF LOCAL:0 != MASTER
+				CFLAG:(LOCAL:0):안면 = 1
+			ENDIF
+		NEXT
+	ENDIF
+ELSE
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+CLEARLINE LINECOUNT - FIRST_LINE
+RESTART
+
+;-------------------------------------------------
+;소질이 전원 일괄의 데이터 조작으로 변경 가능한가 어떤가를 조사하는 함수
+;-------------------------------------------------
+@IS_CONTROLABLE_TALENT(ARG:0)
+#FUNCTION
+SIF ARG:0 == GETNUM(TALENT, "쵸로인")
+	RETURNF 1
+SIF ARG:0 <= 9 || ARG:0 >= 300
+	RETURNF 0
+SIF GROUPMATCH(TALENTNAME:(ARG:0), "임신", "육아중", "촉수임신", "Ａ촉수임신")
+	RETURNF 0
+SIF GROUPMATCH(TALENTNAME:(ARG:0), "가슴크기", "페니스사이즈")
+	RETURNF 0
+RETURNF 1
+
+;-------------------------
+;사관을모집
+;-------------------------
+@CONFIG_DATA_EDIT_RECRUIT_RANDOM_CHARA
+#DIM hold = -1
+#DIM showingHold = 0
+#DIM FIRST_LINE
+LOCAL:10 = 0
+LOCAL:11 = 0
+hold = -1
+showingHold = 0
+
+CALL SINGLE_DRAWLINE
+PRINTL 새로운 사관을 모집합니다
+PRINTL 요구하는 인재를 설정해 주세요
+CALL SINGLE_DRAWLINE
+PRINTL ～모집요항～
+
+FIRST_LINE = LINECOUNT
+$SHOW_LOOP
+
+PRINTL ◆요구하는 인재는
+PRINT    
+CALL PRINT_SELECT_BUTTON(" 10{다    능}", 10, LOCAL:10 == 0)
+CALL PRINT_SELECT_BUTTON(" 11{무    관}", 11, LOCAL:10 == 1)
+CALL PRINT_SELECT_BUTTON(" 12{군    사}", 12, LOCAL:10 == 2)
+CALL PRINT_SELECT_BUTTON(" 13{정 무 관}", 13, LOCAL:10 == 3)
+CALL PRINT_SELECT_BUTTON(" 14{아 이 돌}", 14, LOCAL:10 == 4)
+CALL PRINT_SELECT_BUTTON(" 15{요 리 인}", 15, LOCAL:10 == 5)
+PRINTL 
+PRINTL 
+
+PRINTL ◆성별은
+PRINT    
+CALL PRINT_SELECT_BUTTON(" 20{묻지않는다}", 20, LOCAL:11 == 0)
+CALL PRINT_SELECT_BUTTON(" 21{남    성}", 21, LOCAL:11 == 1)
+CALL PRINT_SELECT_BUTTON(" 22{여    성}", 22, LOCAL:11 == 2)
+CALL PRINT_SELECT_BUTTON(" 23{여 후 타}", 23, LOCAL:11 == 3)
+CALL PRINT_SELECT_BUTTON(" 23{남 후 타}", 24, LOCAL:11 == 4)
+CALL PRINT_SELECT_BUTTON(" 24{오토코노코}", 25, LOCAL:11 == 5)
+CALL PRINT_SELECT_BUTTON(" 24{남낭 후타}", 26, LOCAL:11 == 6)
+
+PRINTL 
+PRINTL
+PRINTL ◆이름은
+PRINT    
+CALL PRINT_SELECT_BUTTON(" 30{일 본 식}", 30, LOCAL:13 == 0)
+CALL PRINT_SELECT_BUTTON(" 31{서 양 식}", 31, LOCAL:13 == 1)
+;CALL PRINT_SELECT_BUTTON(" 32{중 화 식}", 32, LOCAL:13 == 2)
+CALL PRINT_SELECT_BUTTON(" 32{한 국 식}", 32, LOCAL:13 == 2)
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "  0[이 조건으로 모집]", 0
+PRINTL 
+PRINTBUTTON "  1[캔슬]", 1
+PRINTL 
+
+REDRAW 0
+
+$INPUT_LOOP
+INPUT
+
+IF RESULT == 1
+	REDRAW 1
+	RETURN 0
+ELSEIF RESULT >= 10 && RESULT <= 15 && LOCAL:10 != RESULT - 10
+	LOCAL:10 = RESULT - 10
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT >= 20 && RESULT <= 26 && LOCAL:11 != RESULT - 20
+	LOCAL:11 = RESULT - 20
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT >= 30 && RESULT <= 32 && LOCAL:13 != RESULT - 30
+	LOCAL:13 = RESULT - 30
+	CLEARLINE LINECOUNT - FIRST_LINE
+	GOTO SHOW_LOOP
+ELSEIF RESULT != 0
+	CLEARLINE 1
+	GOTO INPUT_LOOP
+ENDIF
+
+REDRAW 1
+
+LOCAL:0 = GET_COMMANDER_NUM(CFLAG:MASTER:소속)
+
+;군주가[동물귀]or[꼬리]를 가진다면 케모율 높은
+LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+IF LOCAL:4 >= 0 && (TALENT:(LOCAL:4):동물귀 || TALENT:(LOCAL:4):꼬리)
+	LOCAL:5 = 75
+ELSE
+	LOCAL:5 = 1
+ENDIF
+
+$INPUT_LOOP_NEWCHARA
+
+;지정의 조건으로 랜덤 캐릭터를 작성
+CALL CREATE_RANDOM_CHARA(LOCAL:5, LOCAL:10, LOCAL:11 - 1, LOCAL:13)
+LOCAL:2 = RESULT
+
+;사관의 작성에 실패했을 경우
+IF LOCAL:2 < 0
+	PRINTW 유감스럽지만 눈주위 사관은 발견되지 않았습니다…
+
+;성공
+ELSE
+	CALL SINGLE_DRAWLINE
+	PRINTFORML %조사처리(ANAME(LOCAL:2),"가")% 관직에 오름을 요구해 왔습니다
+
+	$INPUT_LOOP_SELECT
+
+	;SHOW_INFO의 초기 화면을 기본 정보로 한다
+	FLAG:능력표시모드 = 0
+
+	;캐릭터의 정보를 표시
+	CALL SINGLE_DRAWLINE
+	CALL SHOW_INFO(LOCAL:2)
+	CALL SINGLE_DRAWLINE
+
+	PRINTBUTTON "0[이 캐릭터를 등용]", 0
+	PRINT    
+	PRINTBUTTON "1[다른 캐릭터를 찾는다]", 1
+	PRINT    
+	IF hold == -1
+	ELSEIF showingHold
+		PRINTBUTTON "2[진행된다]", 2
+	ELSE
+		PRINTBUTTON "2[돌아온다]", 2
+	ENDIF
+	
+	PRINT    
+	PRINTBUTTON "9[중지]", 9
+	PRINTL 
+
+	$INPUT_LOOP_TREAT
+	INPUT
+
+	IF RESULT == 0
+		CALL CHANGE_COUNTRY(LOCAL:2, CFLAG:MASTER:소속)
+		PRINTFORMW %조사처리(ANAME(LOCAL:2),"가")% 우리 나라의 사관이 되었습니다
+		IF hold != -1
+			CALL DELETE_CHARA(hold)
+		ENDIF
+		RESTART
+	ELSEIF RESULT == 1
+		IF hold != -1
+			;필요없는 캐릭터를 삭제
+			CALL DELETE_CHARA(hold)
+		ENDIF
+		hold = CHARANUM - 1
+		showingHold = 0
+		GOTO INPUT_LOOP_NEWCHARA
+	ELSEIF RESULT == 2
+		IF showingHold
+			showingHold = 0
+		ELSE
+			showingHold = 1
+		ENDIF
+			;스왑
+			LOCAL:21 = hold
+			hold    = LOCAL:2
+			LOCAL:2 = LOCAL:21
+		GOTO INPUT_LOOP_SELECT
+	ELSEIF RESULT == 9
+		;PRINTW 이번은 등용을 보류하기로 했습니다
+		;작성한 캐릭터를 삭제
+		CALL DELETE_CHARA(CHARANUM - 1)
+		IF hold != -1
+			CALL DELETE_CHARA(CHARANUM - 1)
+		ENDIF
+	ELSE
+		GOTO INPUT_LOOP_TREAT
+	ENDIF
+ENDIF
+
+RETURN 0
+
+@CONFIG_DATA_EDIT_RANDOM_DEAD
+#DIM LOOP_C
+#DIM 종별
+#DIM 비율
+#DIM 삭제하지않는다
+
+PRINTFORML 어느 종류별로 속하는 모든 캐릭터를, 난수의 결과 나름으로 사망시킵니다
+PRINTFORML （「MASTER」 「군주」 「포로」 「임신중」 「동물」은 대상외）
+PRINTFORML 고정 캐릭터 이외의 경우, 캐릭터 데이터 자체를 삭제하는 일도 가능합니다
+PRINTFORML
+
+PRINTFORML 캐릭터의 종별은?
+CALL ASK_MULTI("（캔슬）", "모두", "고정 캐릭터", "랜덤 캐릭터（아이 이외）", "아이", "특수 캐릭터（동물 이외）")
+IF RESULT == 0
+	PRINTFORML 캔슬했습니다
+	RETURN
+ENDIF
+종별 = RESULT
+
+SIF 종별 == 1
+	PRINT 고정 캐릭터 이외의 경우,
+IF 종별 != 2
+	PRINTFORML 캐릭터 데이터 자체를 삭제합니까?
+	CALL ASK_YN("삭제한다（두 번 다시 부활할 수 없습니다）", "「특수상태」등의 개서 마셔（부활 가능）")
+	삭제하지않는다 = RESULT
+ENDIF
+
+PRINTFORML 사망 상태로 하는 확률（퍼센트）는? （101이상 또는 0 이하 입력으로 캔슬할 수 있습니다）
+PRINTFORML [0] [50] [100]
+INPUT
+IF RESULT <= 0 || RESULT > 100
+	PRINTFORML 캔슬했습니다
+	RETURN
+ENDIF
+비율 = RESULT
+
+FOR LOOP_C, CHARANUM - 1, -1, -1
+	SIF (LOOP_C == MASTER) || (GET_COUNTRY_FROM_BOSS_ID(GET_ID(LOOP_C)) > 0) || CFLAG:LOOP_C:포로처 || TALENT:LOOP_C:임신
+		CONTINUE
+	SIF (종별 == 2) && !IS_FIXED_CHARA(LOOP_C)
+		CONTINUE
+	SIF (종별 == 3) && !IS_RANDOM_CHARA(LOOP_C)
+		CONTINUE
+	SIF (종별 == 4) && !IS_CHILD(LOOP_C)
+		CONTINUE
+	SIF (종별 == 5) && !IS_SP_CHARA(LOOP_C)
+		CONTINUE
+	SIF IS_ANIMAL(LOOP_C) ; IS_ANIMAL 가 진정한 경우는 IS_SP_CHARA 도 진일 것이지만 일단 단독으로 체크해 둔다
+		CONTINUE
+	SIF RAND:100 >= 비율
+		CONTINUE
+	CALL FORCE_FREE(LOOP_C)
+	IF IS_FIXED_CHARA(LOOP_C) || 삭제하지않는다
+		IF  (CFLAG:LOOP_C:특수상태 != 특수상태_사망)
+			PRINTFORML %ANAME(LOOP_C)%를 사망 상태로 합니다.
+			CALL CHANGE_COUNTRY(LOOP_C, 0, 1, 1)
+		ENDIF
+	ELSE
+		PRINTFORML %ANAME(LOOP_C)%를 삭제합니다.
+		CALL DELETE_CHARA(LOOP_C)
+	ENDIF
+NEXT
+
+@CONFIG_DATA_EDIT_ADD_RANDOM_CHARA_MULTI
+#DIM 소속
+#DIM 인원수
+#DIM LOOP1
+#DIM 성별
+#DIM 특수
+
+IF !CAN_ADD_RANDOM_CHARA()
+	PRINTFORML 랜덤 캐릭터가 만원인 것으로 추가 할 수 없어
+	RETURN
+ENDIF
+
+PRINTFORML 랜덤 캐릭터를 복수 추가합니다（이름이나 능력의 경향은 지정할 수 없습니다）
+PRINTFORML 특수 캐릭터 취급으로 하는 일도 가능합니다
+PRINTFORML
+
+PRINTFORML 캐릭터의 성별은?
+CALL ASK_MULTI("（캔슬）", "묻지 않는다", "남성", "여성", "여성(후타)", "남성(후타)", "오토코노코", "오토코노코(후타)")
+IF RESULT == 0
+	PRINTFORML 캔슬했습니다
+	RETURN
+ENDIF
+성별 = RESULT - 2
+
+PRINTFORML 캐릭터의 종별은? （※ 특수 캐릭터의 방랑은 추천할 수 없을지도 모릅니다）
+CALL ASK_YN("랜덤 캐릭터", "특수 캐릭터 취급")
+특수 = RESULT
+
+PRINTFORML 소속은?
+CALL ASK_YN("방랑", "MASTER와 같음")
+소속 = RESULT
+SIF 소속
+	소속 = CFLAG:MASTER:소속
+
+PRINTFORML 추가하는 인원수는? （0 이하 입력으로 캔슬할 수 있습니다）
+PRINTFORML [0] [5] [10] [20]
+INPUT
+IF RESULT <= 0
+	PRINTFORML 캔슬했습니다
+	RETURN
+ENDIF
+인원수 = RESULT
+FOR LOOP1, 0, 인원수
+	CALL CREATE_RANDOM_CHARA(,,성별)
+	IF RESULT < 0
+		PRINTFORML {LOOP1}인생 이루었습니다
+		RETURN
+	ELSE
+		IF 특수
+			; @VIGILANTE_INIT 를 참고로 한다.
+			FLAG:범용무장카운트 --
+			NO:RESULT = GET_EMPTY_NO()
+			;CALL INIT_NEWCHARA(RESULT)
+		ENDIF
+		CALL CHANGE_COUNTRY(RESULT, 소속)
+	ENDIF
+NEXT
+PRINTFORML {인원수}인생 이루었습니다
+
+@CONFIG_DATA_EDIT_CREATE_CLONE
+#DIM 대상
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 클론을 만드는 캐릭터를 선택
+CALL SINGLE_DRAWLINE
+
+CALL SELECT_CHARA_LIST_ONLY_LOGIC_SLG("NONE", "NONE")
+
+SIF RESULT == -1
+	RETURN
+대상 = RESULT
+CALL SAVE_CUSTOM_DATA(-1, 대상)
+CALL LOAD_CUSTOM_DATA(-1)
+
+CFLAG:RESULT:소속 = CFLAG:대상:소속
+CFLAG:RESULT:포로처 = CFLAG:대상:포로처
+CFLAG:RESULT:특수상태 = CFLAG:대상:특수상태
+
+@CONFIG_DATA_EDIT_SWAP_MASTER
+#DIM 대상
+; 데이터 조작으로 MASTER 당신과 랜덤 캐릭터를 바꿔 넣는 패치
+PRINTFORML 다른 캐릭터와 바꿔 넣고 할 수 있습니다
+PRINTFORML 어느 캐릭터와 바꿔 넣습니까?
+CALL SELECT_CHARA_LIST_ONLY_LOGIC_SLG("SWAP_MASTER", "NONE")
+SIF RESULT < 0
+	RETURN
+대상 = RESULT
+CALL FORCE_FREE(MASTER)
+CALL SWAP_CHARA(MASTER, 대상)
+;우선 호감도, 의존도, 종속도는 그대로 해 둔다
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_SWAP_MASTER(대상)
+#DIM 대상
+RETURN IS_FIXED_CHARA(대상) || IS_SP_CHARA(대상)
+

@@ -1,0 +1,196 @@
+﻿;-------------------------------------------------
+;구상 데일리 이벤트 개시시의 범용 연출.
+;-------------------------------------------------	
+@KOJO_DAILY_START(ARGS:0)
+CALL SINGLE_DRAWLINE
+CALL COLOR_PRINTL(@"-구상 데일리 이벤트 『%ARGS:0%』발생-", 칼라_주의)
+FORCEWAIT
+CALL SINGLE_DRAWLINE
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORML ·
+
+
+;-------------------------------------------------
+;구상 데일리 이벤트 개시시의 범용 연출.
+;-------------------------------------------------	
+@KOJO_DAILY_START_DERIVATION(ARGS:0)
+CALL SINGLE_DRAWLINE
+CALL COLOR_PRINTL(@"-파생 구상 데일리 이벤트 『%ARGS:0%』발생-", 칼라_주의)
+FORCEWAIT
+CALL SINGLE_DRAWLINE
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORML ·
+
+;-------------------------------------------------
+;desc  :구상 데일리의 인덱스를 영어명으로부터 취득한다
+;param :대상    :대상 캐릭터
+;PARAM :장르:구상 데일리의 장르
+;param :악 세사:구상 데일리의 영어명
+;return:구상 데일리의 인덱스
+;-------------------------------------------------
+@GET_KOJO_DAILY_INDEX_FROM_ENG(대상, 장르,악세사)
+#FUNCTION
+#DIM 대상
+#DIM 대상NO
+#DIM 장르
+#DIMS 악세사
+
+대상NO = NO:대상
+
+FOR LOCAL, 0, VARSIZE("KOJO_DAILY_EVENT_NAME_ENG", 2)
+	SIF KOJO_DAILY_EVENT_NAME_ENG:대상NO:장르:LOCAL == 악세사
+		RETURNF LOCAL
+NEXT
+RETURNF -1
+
+;-------------------------------------------------
+;desc  :구상 데일리의 온 오프를 영어명으로부터 취득한다
+;param :대상    :대상 캐릭터
+;param :악 세사:구상 데일리의 영어명
+;return:구상 데일리의 온 오프
+;-------------------------------------------------
+@KOJO_DAILY_GET_DISABLE_CONFIG(대상, 악세사)
+#FUNCTION
+#DIM 대상
+#DIM 대상NO
+#DIMS 악세사
+#DIM 번호
+
+대상NO = NO:대상
+
+번호 = -1
+FOR LOCAL, 0, VARSIZE("KOJO_DAILY_DISABLE_NAME", 1)
+	IF KOJO_DAILY_DISABLE_NAME:대상NO:LOCAL == 악세사
+		번호 = LOCAL
+		BREAK
+	ENDIF
+NEXT
+SIF 번호 >= 0
+	RETURNF KOJO_DAILY_DISABLE:대상NO:번호
+THROW KOJO_DAILY_DISABLE_NAME상에 존재하지 않는 이름%악세사%가 건네받았습니다
+
+
+;-------------------------------------------------
+;desc  :지정한 캐릭터의 지정한 영어명의 구상 데일리의 온 오프를 지정한다
+;param :대상:대상 캐릭터
+;param :악 세사:구상 데일리의 영어명
+;param :상태:온 오프
+;return:반환값:온 오프에 성공했는지（변동했는가는 묻지 않는다）
+;-------------------------------------------------
+@KOJO_DAILY_SET_DISABLE(대상, 악세사, 상태)
+#DIM 대상
+#DIM 대상NO
+#DIMS 악세사
+#DIM 번호
+#DIM 상태
+대상NO = NO:대상
+번호 = -1
+FOR LOCAL, 0, VARSIZE("KOJO_DAILY_DISABLE_NAME", 1)
+	IF KOJO_DAILY_DISABLE_NAME:대상NO:LOCAL == 악세사
+		번호 = LOCAL
+		BREAK
+	ENDIF
+NEXT
+
+SIF 번호 < 0
+	RETURN 0
+
+KOJO_DAILY_DISABLE:대상NO:번호 = 상태
+RETURN 1
+
+;-------------------------------------------------
+;desc  :데일리의 맵을 생성하기 위한 허브
+;-------------------------------------------------
+@CREATE_KOJO_DAILY_MAP()
+FOR LOCAL, 0, CHARANUM
+	SIF !IS_FIXED_CHARA(LOCAL)
+		CONTINUE
+	TRYCALLFORM CREATE_KOJO_DAILY_MAP_K{NO:LOCAL}(LOCAL)
+NEXT
+
+
+;-------------------------------------------------
+;desc  :구상 데일리를 등록한다
+;param :대상:대상 캐릭터
+;param :장르:데일리의 장르
+;param :악 세사:구상 데일리의 영어명
+;param :이름:구상 데일리의 일본어명
+;-------------------------------------------------
+@REGISTER_KOJO_DAILY(대상, 장르, 악세사, 이름)
+#DIM 대상
+#DIM 대상NO
+#DIM 장르
+#DIMS 악세사
+#DIMS 이름
+#DIMS ＳＬＧ
+#DIMS 파생
+#DIM 번호
+
+대상NO = NO:대상
+
+SIF !INRANGE(장르, 데일리_통상, 데일리_통상파생)
+	THROW KOJO_DAILY_REGISTER에 존재하지 않는 장르{장르}가 건네받았습니다
+
+SIF !IS_FIXED_CHARA(대상)
+	RETURN
+
+
+IF 장르 == 데일리_통상파생
+	파생 = DERIVATION_
+ELSE
+	파생 = 
+ENDIF
+
+IF 장르 == 데일리_통상
+	TRYCCALLFORM KOJO_DAILY_K{대상NO}_%파생%%악세사%_RATE(대상)
+	CATCH
+		SETCOLOR 칼라_경고
+		PRINTFORMW KOJO_DAILY_REGISTER에게 건네진 %이름%, %악세사%의 RATE 함수가 발견되지 않습니다
+		PRINTFORMW 당신이 플레이어라면, 패치에 누락이 없는지, 경합이 없는가를 확인해 주세요
+		PRINTFORMW 당신이 개발 사람이라면, RATE 함수 이하의 필수 함수를 설정했는지를 확인해 주세요
+		RETURN
+	ENDCATCH
+ELSE
+	TRYCCALLFORM KOJO_DAILY_K{대상NO}_%파생%%악세사%_DISABLE(대상)
+	CATCH
+		SETCOLOR 칼라_경고
+		PRINTFORMW KOJO_DAILY_REGISTER에게 건네진 %이름%, %악세사%의 DISABLE 함수가 발견되지 않습니다
+		PRINTFORMW 당신이 플레이어라면, 패치에 누락이 없는지, 경합이 없는가를 확인해 주세요
+		PRINTFORMW 당신이 개발 사람이라면, RATE 함수 이하의 필수 함수를 설정했는지를 확인해 주세요
+		RETURN
+	ENDCATCH
+ENDIF
+
+KOJO_DAILY_EVENT_NAME_ENG:대상NO:장르:(KOJO_DAILY_EVENT_NUM:대상NO:장르) = %악세사%
+KOJO_DAILY_EVENT_NAME:대상NO:장르:(KOJO_DAILY_EVENT_NUM:대상NO:장르) = %이름%
+
+;파생형은 DISABLE_NAME에 등록할 필요가 없기에 FINALLY에
+SIF 장르 == 데일리_통상파생
+	GOTO FINALLY
+
+번호 = -1
+FOR LOCAL, 0, VARSIZE("KOJO_DAILY_DISABLE_NAME", 1)
+	IF KOJO_DAILY_DISABLE_NAME:대상NO:LOCAL == 악세사
+		번호 = LOCAL
+		BREAK
+	ENDIF
+NEXT
+
+;등록이 끝난 상태라면 FINALLY에
+SIF 번호 != -1
+	GOTO FINALLY
+
+;아직 등록하고 있지 않으면, 비어있는 번호를 찾아 등록
+FOR LOCAL, 0, VARSIZE("KOJO_DAILY_DISABLE_NAME", 1)
+	IF KOJO_DAILY_DISABLE_NAME:대상NO:LOCAL == ""
+		KOJO_DAILY_DISABLE_NAME:대상NO:LOCAL = %악세사%
+		BREAK
+	ENDIF
+NEXT
+
+$FINALLY
+
+KOJO_DAILY_EVENT_NUM:대상NO:장르 ++
+

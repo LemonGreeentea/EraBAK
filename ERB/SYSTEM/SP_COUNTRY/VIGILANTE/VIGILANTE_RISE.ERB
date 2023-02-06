@@ -1,0 +1,66 @@
+﻿;--------------------------------------
+;봉기 이벤트가 발생할까의 판정
+;--------------------------------------
+@VIGILANTE_RISE_RATE()
+;이미 출현하고 있는지, 자경단 없음 설정이라면 발동하지 않는다
+SIF SP_COUNTRY_APPEARED:특수세력_자경단 || !SP_COUNTRY_RANK:(특수세력_자경단)
+	RETURN 0
+
+;가득하면 안 돼
+SIF GET_NEW_COUNTRY() == -1
+	RETURN 0
+
+SIF !CHECK_SP_COUNTRY_RISE()
+	RETURN 0
+RETURN 1
+
+
+;--------------------------------------
+;자경단 출현 이벤트
+;출현할 수 있으면 1, 할 수 없으면 0을 돌려준다
+;--------------------------------------
+@VIGILANTE_RISE(도시 = 0)
+#DIM 자경단
+#DIM 도시
+;자경단 세력을 작성
+CALL VIGILANTE_INIT()
+자경단 = RESULT
+
+;만들 수 없으면 되돌린다
+SIF 자경단 == -1
+	RETURN 0
+
+CALL SP_COUNTRY_RISE(자경단, 도시)
+
+SIF !RESULT
+	RETURN 0
+
+SP_COUNTRY_APPEARED:특수세력_자경단 = 1
+RETURN 자경단
+
+;--------------------------------------
+;봉기 이벤트용 도시 선택 처리
+;--------------------------------------
+@VIGILANTE_RISE_SELECT_CITY()
+#DIM 주택가
+주택가 = GET_CITYNUMBER("인간마을 주택가")
+IF 주택가 >= 0 && (!IS_COUNTRY(CITY_OWNER:주택가) || GET_OWN_CITY(CITY_OWNER:주택가) >= 2)
+	LOCAL = 주택가
+ELSE
+	CALL SP_COUNTRY_RISE_SELECT_CITY()
+	LOCAL = RESULT
+ENDIF
+RETURN LOCAL
+
+;--------------------------------------
+;봉기 이벤트용 메세지 함수
+;--------------------------------------
+@VIGILANTE_RISE_MSG(세력, 대상)
+#DIM 세력
+#DIM 대상
+CALL SINGLE_DRAWLINE
+SETCOLOR 칼라_경고
+PRINTFORMW 거칠어지는 환상향을 우려하는 용사들이, %CITY_NAME:(대상)%\@ GET_OWN_CITY(세력) > 1 ? 등 # \@로 자경단을 시작했습니다!
+PRINTFORMW 자신들이야말로 환상향을 평화롭게 수습할 수 있다고 생각한 그들은, 보다 세력을 늘리려고 하고 있는 것 같습니다
+PRINTFORMW 「본고장의 사람들의 웃는 얼굴이 무엇보다」 「치안 유지를 위해 분골쇄신」등을 좀더-에, 이상한 듯한 사상을 넓히고 있습니다……
+RESETCOLOR

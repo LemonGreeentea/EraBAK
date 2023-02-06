@@ -1,0 +1,99 @@
+﻿;-------------------------------------------------
+;「지방에파견」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE_NAME45
+RESULTS:0 '= "지방에파견"
+
+;-------------------------------------------------
+;「지방에파견」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE_CHECK45
+SIF CFLAG:MASTER:포로처
+	RETURN 0
+SIF !CFLAG:MASTER:소속
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「지방에파견」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA45(ARG:0)
+;비주인공, 동일 세력, 범용 캐릭터, 군주가 아닌, 포로가 아닌, 부대에 소속하지 않은, 호감도 300 필요
+{
+RETURN ARG:0 != MASTER && CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속 && (IS_CHILD(ARG:0) || IS_RANDOM_CHARA(ARG:0)) && GET_COUNTRY_BOSS(CFLAG:(ARG:0):소속) != ARG:0 &&
+CFLAG:(ARG:0):포로처 == 0 && TMP_IS_FREE:(ARG:0):0 == 0 && CFLAG:(ARG:0):2 >= 300 && !IS_ANIMAL(ARG:0) && CFLAG:(ARG:0):파견불가 == 0
+}
+
+;-------------------------------------------------
+;「지방에파견의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY45
+FLAG:거점페이즈페이지 = 1
+FLAG:요바이 = 0
+RETURN 0
+
+;-------------------------------------------------
+;「지방에파견」의 오른쪽 컬럼 표시 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SHOW45
+CALL COLUMN_RIGHT_TITLE("대상자 선택", "0", "1", "0", "0")
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+CALL COLOR_PRINT(" 호감을 얻은 범용 캐릭터를 지방에파견 해, 능력에 응해 경제력과 병력을 얻습니다", 칼라_주석)
+CALL COLUMN_RIGHT_PRINTL
+CALL COLOR_PRINT(" 파견한 캐릭터는 삭제되고 두 번 다시 돌아오지 않습니다", 칼라_선택중)
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+;표준적인 캐릭터 리스트와 페이지 이동
+CALL COLUMN_RIGHT_CHARALIST
+RETURN 0
+
+;-------------------------------------------------
+;「지방에파견」의 리스트 1 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP45(ARG:0)
+;대상 캐릭터의 정보를 표시
+CALL SINGLE_DRAWLINE
+CALL SHOW_INFO(ARG:0)
+CALL SINGLE_DRAWLINE
+
+;LOCAL:10에 자세력의 사관수를 격납, 행동횟수의 감시가 목적
+LOCAL:10 = GET_COMMANDER_NUM(CFLAG:MASTER:소속)
+PRINTFORML 정말로 %조사처리(ANAME(ARG:0),"를")% 파견합니까?
+;「사관 인원수가 감소하면 최대 행동횟수가 감소한다」한편 「감소 후의 최대 행동횟수가 현재의 행동횟수와 일치」하는 경우 경고를 표시
+IF CALC_SHOP_TIME(1) == SHOP_TIME
+	SETCOLOR 칼라_경고
+	PRINTFORML 파견을 실시했을 경우, 최대 행동횟수 감소에 의해 즉시 금기의 거점 페이즈가 종료합니다!
+	RESETCOLOR
+ENDIF
+CALL ASK_YN
+IF RESULT == 0
+	;병 수의 증가량(무투·지략·가창)
+	LOCAL:6 = (ABL:(ARG:0):무투 + ABL:(ARG:0):방위 + ABL:(ARG:0):정치 + ABL:(ARG:0):지략 + ABL:(ARG:0):가창 + ABL:(ARG:0):요리) * 30 + 3000
+	;경제 규모의 증가량(정치·요리)
+	LOCAL:7 = (ABL:(ARG:0):무투 + ABL:(ARG:0):방위 + ABL:(ARG:0):정치 + ABL:(ARG:0):지략 + ABL:(ARG:0):가창 + ABL:(ARG:0):요리) * 10 + 2000
+
+	;병 수의 증가(일시적으로 병수의 한계를 넘을 수 있다)
+	COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += LOCAL:6
+	;경제 규모의 증가
+	CALL GROW_COUNTRY_ECONOMY(CFLAG:MASTER:소속, LOCAL:7)
+
+	PRINTFORML %조사처리(ANAME(ARG:0),"를")% 지방에파견 했습니다
+	SETCOLOR 칼라_주의
+	PRINTFORMW 우리 나라의 병수가 {LOCAL:6}, 경제 규모가 합계 {LOCAL:7 / 100}만 증가했습니다
+	RESETCOLOR
+
+	;캐릭터를 삭제해 번호를 채운다
+	CALL DELETE_CHARA(ARG:0)
+	
+	IF CALC_SHOP_TIME() == SHOP_TIME
+		PRINTFORMW 인원수 부족에 의한 일의 악영향에 의해 자유시간이 없어졌으므로 거점 페이즈를 종료합니다
+		LINES_SHOP = LINECOUNT
+		BEGIN TURNEND
+	ENDIF
+ENDIF
+RETURN 1
+

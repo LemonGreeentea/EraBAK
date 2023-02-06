@@ -1,0 +1,67 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_REST_UNDER_A_TREE_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_REST_UNDER_A_TREE_DECISION(대상)
+#DIM 대상
+RETURN 1
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_REST_UNDER_A_TREE(대상)
+#DIM 대상
+PRINTFORML 숲속을 걷고 있으면, 꼭 좋은 나무 그늘을 찾아냈다
+PRINTFORML 뒹굴면 기분 좋음 그렇다
+PRINTFORMW 어떻게 하지?
+PRINTL
+CALL ASK_YN("뒹군다", "떠난다")
+IF RESULT == 1
+	PRINTFORML 지금은 앞을 서두르고 있다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 그 자리를 뒤로 했다
+	RETURN 1
+ENDIF
+
+PRINTFORML 모처럼이니까 쉬어 가자
+PRINTFORMW %조사처리(ANAME(대상),"는")% 나무 그늘에 드러누웠다
+IF RAND:3 == 0
+	PRINTFORML 하면 허리의 근처에 뭔가 딱딱한 것이 맞는 것을 느꼈다
+	PRINTFORML 뭔가가 메워지고 있을까?
+	PRINTFORML 파내 보면 엽전의 산이 나왔다!
+	PRINTFORML 일찍이 누군가가 묻은 것 같다
+	PRINTFORMW 적중에 사람의 기색은 없는, 받아 가기로 했다
+	MONEY += 5000
+	CALL ICPRINT("금<5000>을 손에 넣었다", "W", 칼라_주의)
+ELSE
+	PRINTFORML 털썩 뒹굴어 눈을 감는다
+	PRINTFORML 뺨에 해당되는 바람이 기분 좋다
+	PRINTFORMW 점차 졸음에 습격당해 꾸벅꾸벅하기 시작했다
+	PRINTFORML ·
+	PRINTFORML ·
+	PRINTFORMW ·
+	IF RAND:2 == 0
+		PRINTFORML 까마귀의 울음 소리로 깨어났다
+		PRINTFORML 아무래도 완전히 자 버리고 있던 것 같은, 하늘은 저녁놀에 물들고 있다
+		PRINTFORML 매우 마음의 좋은 잠이었다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 일어나 훨씬 1기지개를 켜면, 경쾌한 발걸음으로 귀로에 들었다
+	ELSE
+		PRINTFORML 까마귀의 울음 소리로 깨어났다
+		PRINTFORML 아무래도 완전히 자 버리고 있던 것 같은, 하늘은 저녁놀에 물들고 있다
+		PRINTFORML 일어나 돌아가려고 한 %조사처리(ANAME(대상),"는")% 위화감을 기억했다
+		PRINTFORMW 지갑이 없다!
+		PRINTFORML 아무래도 자고 있는 동안에 누군가에게 스라고 끝낸 것 같다
+		PRINTFORMW 조심성이 없는 자신을 탓하면서 터벅터벅 귀로에 들었다
+		LOCAL = MIN(MONEY, 3000)
+		MONEY -= LOCAL
+		CALL ICPRINT(@"금<{LOCAL}>를 잃었다", "W", 칼라_주의)
+	ENDIF
+ENDIF
+RETURN 1
+

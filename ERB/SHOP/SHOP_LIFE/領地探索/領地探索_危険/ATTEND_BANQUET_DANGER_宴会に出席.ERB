@@ -1,0 +1,63 @@
+﻿;-------------------
+;존재 판정
+;굳이 시키지 않는 것
+;-------------------
+@TERRITORY_EVENT_ATTEND_BANQUET_DANGER_EXISTS()
+#DIM 대상
+RETURN 1
+
+;-------------------
+;발생 판정
+;-------------------
+@TERRITORY_EVENT_ATTEND_BANQUET_DANGER_DECISION(대상)
+#DIM 대상
+RETURN IS_FEMALE(대상)
+
+;-------------------
+;본체
+;-------------------
+@TERRITORY_EVENT_ATTEND_BANQUET_DANGER(대상)
+#DIM 대상
+PRINTFORML 연회에 조우했다
+PRINTFORML 인간과 요괴가 섞여 분위기를 살리고 있다
+PRINTFORML ……술주정꾼의 한사람이 손짓했다
+PRINTL
+CALL PRINT_ABILITY(대상, GETNUM(ABL, "주량"))
+
+CALL ASK_YN("참가한다" ,"그 자리를 뒤로 한다")
+IF RESULT == 1
+	PRINTFORML 그런 기분이 아니다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 그 자리를 뒤로 했다
+	RETURN 1
+ENDIF
+PRINTFORML 모처럼인 것으로 참가하기로 했다
+PRINTFORMW 그들은 %조사처리(ANAME(대상),"를")% 환영해, 즉시 술을 권해 왔다
+PRINTFORML ·
+PRINTFORML ·
+PRINTFORMW ·
+IF ABL:대상:주량 >= 3 + RAND:4
+	PRINTFORML %ANAME(대상)%의 이해에 갈채가 일어났다
+	PRINTFORML 연회를 통해, %조사처리(ANAME(대상),"는")% 기분이 좋은 것 같은 청년과 의기 투합했다
+	PRINTFORML 이야기가 활기를 띠는 대로, %조사처리(ANAME(대상),"는")% 청년에게 침상에 데리고 들어가졌다
+	PRINTFORML 
+	PRINTFORMW 청년에게 %STR_BODY("질:처녀 확인:시간 경과:감도", 대상)%를 밀어올릴 수 있어 %조사처리(ANAME(대상),"는")% 견딜 수 없다는 소리를 지르고 있다
+	PRINTFORML 그는 정력 왕성해, %ANAME(대상)%의 자궁에는 다 이미 들어가지 않을 만큼의 정액이 발해지고 있다
+	PRINTFORML 청년이 신음해, 몇 번째인가의 질내사정을 하면, %조사처리(ANAME(대상),"는")% 전신을 진동시켜 절정 했다
+	PRINTFORML 
+	CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, Ｖ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("지나가는 남자"), @"지나가는 남자의 \@RAND:2 ? 페니스 # 입술\@", "지나가는 남자", "", "화간")
+	PRINTFORMW 즐거운 연회는 밤새도록 계속되었다
+ELSE
+	PRINTFORML %조사처리(ANAME(대상),"는")% 취해 무너져 버렸다
+	PRINTFORMW 몹시 취한 남자들은 %조사처리(ANAME(대상),"를")% 간호하는 체를 해, 침상으로 데리고 들어갔다
+	PRINTFORML 
+	PRINTFORMW 남자들에게 둘러싸져 %조사처리(ANAME(대상),"는")% 양구멍을 범해지고 있다
+	PRINTFORML 이미 몇 사람이나 되는 상대를 하게 해, %조사처리(ANAME(대상),"는")% 전신 새하얗게 되어 있다
+	PRINTFORML 몇 발째인가의 정액이 발해지면, %조사처리(ANAME(대상),"는")% 견딜 수 없다는 소리를 질러 절정 했다
+	PRINTFORML 
+	CALL FUCK(대상, "욕망, 봉사, 정애, 성기술, 성교, Ｃ, Ｖ, Ｂ, Ｍ, 키스, 펠라티오, 윤간, Ｖ성교, Ａ성교", "처녀상실, 질내사정, 키스상실, 구강사정", GET_SPERM_ID("지나가는 남자"), @"지나가는 남자의 \@RAND:2 ? 페니스 # 입술\@", "지나가는 남자", "", "제정신을 잃은 끝의 윤간")
+	CALL ADD_COOLTIME(대상, 1)
+ENDIF
+
+CALL PRINT_ADD_EXP(대상, "주량경험치", RAND(50, 100), 1)
+
+RETURN 1

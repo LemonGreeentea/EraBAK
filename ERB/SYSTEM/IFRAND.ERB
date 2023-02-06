@@ -1,0 +1,157 @@
+﻿;--------------------------------------------
+;IFRAND CODED BY 아우성친다
+;난수를 생성하는 함수. 준 조건에 응해 반환되는 난수의 범위를 교체된다
+;후 음수를 돌려주게 할 수도 있다
+;「메세지를 RAND로 분기 시키고 싶지만, 캐릭터가 특정의 소질을 가지고 있는 경우 이 분기만 연주하고 싶다」같은 때에 사용할 수 있다
+
+;반환하는 값은 10000방법까지 갈 수 있다. 늘리고 싶다면 RANDARRAY를 늘리는 것
+
+;VARSTR:0-5	생성하는 값을 콤마 단락으로 지정한다.
+;			요소 1개에 대해 1000개까지 지정아이가 들어온다
+;			포함되는 값이 반환 후보가 되려면, 대응하는 CONDITION가 진일 필요가 있다
+;			덧붙여 반환 후보의 값이 감싸고 있었을 경우, 단순하게 쌍꺼풀로 들어온다（그 값의 선택되는 확률이 배가 된다）
+
+;지정자의 쓰는 법
+;방법①:A, B, C... 	단순한 추가. 반환 후보에 A와 B와 C가 들어간다
+;방법②:ATOB,.... 	단순한 반환 후보에 A로부터 B까지가 연속한 값이 들어온다
+;					더 A<B일 필요는 없다
+;방법③:D1, D2... 	지정한 값을, 반환 후보로부터 제외한다
+;					삭제 처리는 각 VARSTR의 처리를 한 후, 반환 직전에 행해진다
+;					하고 싶어해, VARSTR:0으로 제외 지정을 한 후 VARSTR:1으로 추가 지정을 해도, 그 값은 반환 후보가 되지 않는다
+;					같은 값이 복수 반환 후보에 포함되어 있는 경우도 마찬가지이다
+;방법④:D1TO10... 	삭제 지정에서도 TO에서의 지정을 사용할 수 있다.
+
+;CONDITION:0-5	진위치. 진이었던 경우, 대응하는 VARSTR를 반환 후보에 포함한다
+;				예를 들어 「LOCAL:0번의 캐릭터가 거유 때만, VARSTR:1에게 준 값을 반환 후보에 포함하고 싶다」라면,
+;				CONDITION:1에 TALENT:(LOCAL:0):거유 == 1을 주면 좋다
+
+;용례
+;LOCAL:0 = IFRAND("0 TO5, 7", 1, "6 TO10", TALENT:(ARG:0):가성 포경, "D1, D7, D8", TALENT:(ARG:0):폭유)
+;LOCAL:0에 0-5, 7의 어느쪽이든을 대입. ARG:0의 캐릭터가 가성 포경이라면 6-10도 후보에 포함되기 (위해)때문에, 0-10(7만 확률배)이 된다. 다만, ARG:0의 캐릭터가 폭유라면 1으로 7으로 8은 대입시키지 않다.
+
+;주의점
+;최종적으로 돌려주어야 할 값이 없는 경우나, 지정자의 쓰는 법이 부정한 경우, 에러를 토해 떨어진다.
+;---------------------------------------------
+@IFRAND(VALSTR:0, CONDITION:0, VALSTR:1 = "", CONDITION:1 = 0, VALSTR:2 = "" , CONDITION:2 = 0, VALSTR:3 = "", CONDITION:3 = 0, VALSTR:4 = "", CONDITION:4 = 0, VALSTR:5 = "", CONDITION:5 = 0, VALSTR:6 = "", CONDITION:6 = 0, VALSTR:7 = "", CONDITION:7 = 0, VALSTR:8 = "", CONDITION:8 = 0, VALSTR:9 = "", CONDITION:9 = 0)
+#FUNCTION
+;치 지정 문자열
+#DIMS VALSTR, 10
+;치 지정이 유효한가  호출측에서 진위 판정 처넣어 주세요（대상이 거유인가?   라든지）
+#DIM CONDITION, 10
+;콤마로 SPLIT 된 후의 값지정
+#DIMS SPLIT_VALSTR, 1000
+;치 지정의 분할수
+#DIM SPLIT_VALSTR_NUM
+;지금 보고 있는 값지정
+#DIMS THIS_VALSTR
+;치 지정으로 범위 지정을 이용했을 때 용
+#DIMS RANGESTR, 2
+#DIM RANGE, 2
+;최종적으로 생성되는 난수를 격납하는 배열
+#DIM RANDARRAY, 10000
+;최종적으로 생성되는 난수의 후보수
+#DIM RAND_NUM
+;삭제하는 값을 격납하는 배열
+#DIM DELETEARRAY, 10000
+;삭제하는 값의
+#DIM DELETE_NUM
+;RESULT 보존용(오염하기 위해(때문에))
+#DIM SAVED_RESULT
+
+VARSET RANDARRAY
+VARSET RAND_NUM
+VARSET DELETEARRAY
+VARSET DELETE_NUM
+
+SAVED_RESULT = RESULT
+
+FOR LOCAL, 0, VARSIZE("CONDITION")
+
+	;진위 판정이 가짜이면 그 값지정을 무시한다
+	SIF !CONDITION:LOCAL
+		CONTINUE
+
+	;치 지정을 분할한다
+	SPLIT VALSTR:LOCAL, "," , SPLIT_VALSTR
+	SPLIT_VALSTR_NUM = RESULT
+
+	FOR LOCAL:1, 0, SPLIT_VALSTR_NUM
+		;스페이스를 제거
+		THIS_VALSTR = %SPLIT_VALSTR:(LOCAL:1)%
+		THIS_VALSTR = %REPLACE(THIS_VALSTR, "　", "")%
+		THIS_VALSTR = %REPLACE(THIS_VALSTR, " ", "")%
+
+		;빈 문자열이 되면 무시
+		SIF THIS_VALSTR == ""
+			CONTINUE
+
+		;소거 지정을 이용하고 있는 경우
+		IF STRFIND(THIS_VALSTR, "D") == 0
+			THIS_VALSTR = %SUBSTRING(THIS_VALSTR, 1)%
+			;소거 지정으로 범위 지정
+			IF STRFIND(THIS_VALSTR, "TO") != -1
+				;ATOB를 「값A와 값B」로 해 RANGE에 격납
+				SPLIT THIS_VALSTR, "TO", RANGESTR
+				SIF !ISNUMERIC(RANGESTR:0) || !ISNUMERIC(RANGESTR:1)
+					THROW 삭제 범위 지정에 부정한 값이 포함되어 있습니다 %THIS_VALSTR%
+				RANGE:0 = TOINT(RANGESTR:0)
+				RANGE:1 = TOINT(RANGESTR:1)
+				;ATOB를 DELETEARRAY에 격납
+				FOR LOCAL:2, MIN(RANGE:0, RANGE:1), MAX(RANGE:0, RANGE:1) + 1
+					DELETEARRAY:DELETE_NUM = LOCAL:2
+					DELETE_NUM ++
+				NEXT
+			;소거 지정의 단일치 지정
+			ELSE
+				SIF !ISNUMERIC(THIS_VALSTR)
+					THROW 삭제치 지정에 부정한 값이 포함되어 있습니다 %THIS_VALSTR%
+				DELETEARRAY:DELETE_NUM = TOINT(THIS_VALSTR)
+				DELETE_NUM ++
+			ENDIF
+
+		;범위 지정을 이용하고 있는 경우
+		ELSEIF STRFIND(THIS_VALSTR, "TO") != -1
+			;A-B를 「값A와 값B」로 해 RANGE에 격납
+			SPLIT THIS_VALSTR, "TO", RANGESTR
+			SIF !ISNUMERIC(RANGESTR:0) || !ISNUMERIC(RANGESTR:1)
+				THROW 범위 지정에 부정한 값이 포함되어 있습니다 %THIS_VALSTR%
+			RANGE:0 = TOINT(RANGESTR:0)
+			RANGE:1 = TOINT(RANGESTR:1)
+			;ATOB를 RANDARRAY에 격납
+			FOR LOCAL:2, MIN(RANGE:0, RANGE:1), MAX(RANGE:0, RANGE:1) + 1
+				RANDARRAY:RAND_NUM = LOCAL:2
+				RAND_NUM ++
+			NEXT
+
+		;단일의 값인 경우
+		ELSE
+			SIF !ISNUMERIC(THIS_VALSTR)
+				THROW 치 지정에 부정한 값이 포함되어 있습니다 %THIS_VALSTR%
+			RANDARRAY:RAND_NUM = TOINT(THIS_VALSTR)
+			RAND_NUM ++
+		ENDIF
+	NEXT
+NEXT
+
+
+FOR LOCAL, 0, DELETE_NUM
+	WHILE FINDELEMENT(RANDARRAY, DELETEARRAY:LOCAL, 0, RAND_NUM) != -1
+		LOCAL:1 = FINDELEMENT(RANDARRAY, DELETEARRAY:LOCAL, 0, RAND_NUM)
+;		PRINTFORML {DELETEARRAY:LOCAL} {LOCAL:1},  
+		IF LOCAL:1 == VARSIZE("RANDARRAY") - 1
+			RANDARRAY:(LOCAL:1) = 0
+		ELSE
+			;이 녀석 같은 것 제 2 인수의 정부로 거동 다르지만
+			ARRAYSHIFT RANDARRAY, -1, 0, LOCAL:1
+		ENDIF
+		RAND_NUM -= 1
+	WEND
+NEXT
+
+SIF RAND_NUM == 0
+	THROW IFRAND의 반환 후보치가 한 개도 없습니다
+
+;오염된 RESULT를 원래대로 되돌린다
+RESULT = SAVED_RESULT
+
+RETURNF RANDARRAY:(RAND:RAND_NUM)
