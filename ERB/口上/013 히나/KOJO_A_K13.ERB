@@ -155,7 +155,7 @@ ELSEIF CFLAG:201 < 3 && MARK:2 == 1
 	CFLAG:201 = 3
 	;행동 불능이라면 플래그만 세워 표시는 하지 않는다
 	IF !(TCVAR:51 || TCVAR:52 || TCVAR:53)
-		PRINTFORMW 첫 만남이지만 즐거웠어~
+		PRINTFORMW 
 	ENDIF
 
 ;-------------------------------------------------
@@ -192,7 +192,7 @@ ENDIF
 IF TALENT:공허
 	RETURN
 ELSE
-	PRINTFORMW (침실호출시 대사)
+;	PRINTFORMW (침실호출 대사)
 ENDIF
 
 ;=================================================
@@ -214,7 +214,7 @@ ELSEIF TCVAR:52 || BASE:기력 <= 300
 ELSEIF TCVAR:51
 	;PRINTFORMW 
 ELSE
-	PRINTFORMW (침실호출 종료 대사)
+;	PRINTFORMW (침실호출 종료 대사)
 ENDIF
 
 ;=================================================
@@ -5531,7 +5531,7 @@ IF SELECTCOM == 300
 			;PRINTFORMW 
 		;그 이외
 		ELSE
-			;PRINTFORMW 
+			PRINTFORMW 「응, 그렇구나.」
 		ENDIF
 	ENDIF
 ENDIF
