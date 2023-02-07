@@ -106,11 +106,8 @@ ELSEIF MARK:2 == 2
 ELSEIF MARK:2 == 1
 	;PRINTFORMW 
 ;기성 사실 Lv0로 연모
-ELSEIF MARK:2 == 0 && TALENT:연모
-	;PRINTFORMW 
-;기성 사실 Lv0
-ELSEIF MARK:2 == 0
-	;PRINTFORMW 
+ELSE
+	PRINTFORMW 「어서와, 오늘은 무슨 일이야?」
 ENDIF
 
 ;=================================================
@@ -158,14 +155,14 @@ ELSEIF CFLAG:201 < 3 && MARK:2 == 1
 	CFLAG:201 = 3
 	;행동 불능이라면 플래그만 세워 표시는 하지 않는다
 	IF !(TCVAR:51 || TCVAR:52 || TCVAR:53)
-		;PRINTFORMW 
+		PRINTFORMW 첫 만남이지만 즐거웠어~
 	ENDIF
 
 ;-------------------------------------------------
 ;종료시(2회째 이후)
 ;-------------------------------------------------
 ;행동 불능이라면 비표시
-ELSEIF !(TCVAR:51 || TCVAR:52 || TCVAR:53)
+ELSE
 	;기성 사실 Lv3 또한 연모
 	IF MARK:2 == 3 && TALENT:연모
 		;PRINTFORMW 
@@ -181,9 +178,9 @@ ELSEIF !(TCVAR:51 || TCVAR:52 || TCVAR:53)
 	;기성 사실 Lv0로 연모
 	ELSEIF MARK:2 == 0 && TALENT:연모
 		;PRINTFORMW 
-	;기성 사실 Lv0
-	ELSEIF MARK:2 == 0
-		;PRINTFORMW 
+	ELSE
+		PRINTFORMW 「조심히 들어가.」
+		PRINTFORMW 　히나는 방에서 떠나는 %조사처리(ANAME(MASTER),"을")% 배웅했다.
 	ENDIF
 ENDIF
 
@@ -194,6 +191,8 @@ ENDIF
 ;[속이 빈 것]상태라면 구상을 표시하지 않는다
 IF TALENT:공허
 	RETURN
+ELSE
+	PRINTFORMW (침실호출시 대사)
 ENDIF
 
 ;=================================================
@@ -215,7 +214,7 @@ ELSEIF TCVAR:52 || BASE:기력 <= 300
 ELSEIF TCVAR:51
 	;PRINTFORMW 
 ELSE
-	;PRINTFORMW 
+	PRINTFORMW (침실호출 종료 대사)
 ENDIF
 
 ;=================================================
