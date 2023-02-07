@@ -518,7 +518,18 @@ CASE 0
 		sPrint_Text += @"<img src='스탠딩_의복_통상_여' height='{iFont_Hei_mag}'>"
 	ENDIF
 CASE 1 TO CHARANUM
-	sPrint_Text += @"<img src='\@FLAG:스탠딩종류?얼굴#스탠딩\@%sTemp:0%_%eText%_{iID}' height='{iFont_Hei_mag}'>"
+	IF IS_RANDOM_CHARA(iID)
+		LOCALS:10 = 커스텀
+		IF IS_FEMALE(iID)
+			LOCALS:10 = %LOCALS:10%_F
+		ELSE
+			LOCALS:10 = %LOCALS:10%_M
+		ENDIF
+		LOCALS:10 = %LOCALS:10%_\@FLAG:스탠딩종류?얼굴#스탠딩\@_의복_통상_{TALENT:iID:커스텀페이스}
+		sPrint_Text += @"<img src='%LOCALS:10%' height='{iFont_Hei_mag}'>"
+	ELSE
+		sPrint_Text += @"<img src='\@FLAG:스탠딩종류?얼굴#스탠딩\@%sTemp:0%_%eText%_{iID}' height='{iFont_Hei_mag}'>"
+	ENDIF
 CASEELSE
 	IF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
 		sPrint_Text += @"<img src='스탠딩_의복_통상_도둑' height='{iFont_Hei_mag}'>"
@@ -677,7 +688,18 @@ FOR iID, 1, CHARANUM
 		sPrint_Text = <p align='left'><shape type = 'space'param = '{1000 * (iEnter_Wid)}'>
 		SELECTCASE iID
 		CASE 1 TO CHARANUM
-			sPrint_Text += @"<img src='\@FLAG:스탠딩종류?얼굴#스탠딩\@%sTemp:0%%sTemp:1%_{iID}' height='{iFont_Hei_mag}' ypos='-{(iEnter_Con) * iFont_Hei_mag / 10+1}'>"
+			IF IS_RANDOM_CHARA(iID)
+				LOCALS:10 = 커스텀
+				IF IS_FEMALE(iID)
+					LOCALS:10 = %LOCALS:10%_F
+				ELSE
+					LOCALS:10 = %LOCALS:10%_M
+				ENDIF
+				LOCALS:10 = %LOCALS:10%_\@FLAG:스탠딩종류?얼굴#스탠딩\@_의복_통상_{TALENT:iID:커스텀페이스}
+				sPrint_Text += @"<img src='%LOCALS:10%' height='{iFont_Hei_mag}' ypos='-{(iEnter_Con) * iFont_Hei_mag / 10+1}'>"
+			ELSE
+				sPrint_Text += @"<img src='\@FLAG:스탠딩종류?얼굴#스탠딩\@%sTemp:0%%sTemp:1%_{iID}' height='{iFont_Hei_mag}' ypos='-{(iEnter_Con) * iFont_Hei_mag / 10+1}'>"
+			ENDIF
 		CASEELSE
 			sPrint_Text += @"<img src='더미' height='{iFont_Hei_mag}'>"
 		ENDSELECT

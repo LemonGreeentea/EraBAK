@@ -454,7 +454,100 @@ ENDIF
 ;-------------------------------------------------
 ;ARG:0번의 캐릭터의 이름을 표시
 ;-------------------------------------------------
-@SHOW_HEADER(iID, iSize=700)
+;@SHOW_HEADER(ARG:0)
+;이름의 표시
+;IF CSTR:(ARG:0):0 == "" && CSTR:(ARG:0):1 == "" && NAME:(ARG:0) == CALLNAME:(ARG:0)
+;	PRINTFORM 〇%ANAME(ARG:0), 30, LEFT%
+;ELSE
+;	;성명
+;	IF !TALENT:(ARG:0):성명역전
+;		LOCALS:0 =%CSTR:(ARG:0):0%
+;		SIF CSTR:(ARG:0):5 != "" && CSTR:(ARG:0):0 != CSTR:(ARG:0):5
+;			LOCALS:0 = %LOCALS:0%(%TOHALF(CSTR:(ARG:0):5)%)
+;		SIF LOCALS:0 != ""
+;			LOCALS:0 = %LOCALS:0 + " "%
+;		LOCALS:0 = %LOCALS:0%%CSTR:(ARG:0):1%
+;		SIF CSTR:(ARG:0):6 != "" && CSTR:(ARG:0):1 != CSTR:(ARG:0):6
+;			LOCALS:0 = %LOCALS:0%(%TOHALF(CSTR:(ARG:0):6)%)
+;	ELSE
+;		LOCALS:0 =%CSTR:(ARG:0):1%
+;		SIF CSTR:(ARG:0):6 != "" && CSTR:(ARG:0):1 != CSTR:(ARG:0):6
+;			LOCALS:0 = %LOCALS:0%(%TOHALF(CSTR:(ARG:0):6)%)
+;		SIF LOCALS:0 != ""
+;			LOCALS:0 = %LOCALS:0 + " "%
+;		LOCALS:0 = %LOCALS:0%%CSTR:(ARG:0):0%
+;		SIF CSTR:(ARG:0):5 != "" && CSTR:(ARG:0):0 != CSTR:(ARG:0):5
+;			LOCALS:0 = %LOCALS:0%(%TOHALF(CSTR:(ARG:0):5)%)
+;	ENDIF
+;
+;	;자
+;	IF CSTR:(ARG:0):2 != ""
+;		LOCALS:0 = %LOCALS:0% %CSTR:(ARG:0):2%
+;		SIF CSTR:(ARG:0):7 != ""
+;			LOCALS:0 = %LOCALS:0%(%TOHALF(CSTR:(ARG:0):7)%)
+;	ENDIF
+;	PRINTFORM 〇%LOCALS:0, 40, LEFT%
+;ENDIF
+;
+;LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:(ARG:0):소속)
+;IF LOCAL:4 >= 0
+;	LOCALS:0 = %ANAME(LOCAL:4), MAX_CHARANAME_LENGTH, LEFT%
+;ELSE
+;	LOCALS:0 = %"----", MAX_CHARANAME_LENGTH, LEFT%
+;ENDIF
+;PRINTFORM 소속:%LOCALS:0%
+;LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:(ARG:0):포로처)
+;IF LOCAL:4 >= 0
+;	LOCALS:0 = %ANAME(LOCAL:4)%
+;ELSE
+;	LOCALS:0 = %"----"%
+;ENDIF
+;IF LOCAL:4 >= 0
+;	IF CFLAG:(ARG:0):연금중 == 0
+;		LOCALS:0 = %LOCALS:0+"(감금)"%
+;	ELSE
+;		LOCALS:0 = %LOCALS:0+"(연금)"%
+;	ENDIF
+;ENDIF
+;PRINTFORM 포로:%LOCALS:0, MAX_CHARANAME_LENGTH+6, LEFT%
+;
+;CALL PRINT_SEX(ARG:0, 0, 0, 10)
+;
+;LOCALS:0 = 구분:
+;IF ARG:0 != MASTER
+;	IF IS_FIXED_CHARA(ARG:0)
+;		SETCOLOR 칼라_주의
+;		LOCALS:0 = 고정
+;	ELSEIF IS_RANDOM_CHARA(ARG:0)
+;		SETCOLOR 칼라_시안
+;		LOCALS:0 = 범용
+;	ELSEIF IS_CHILD(ARG:0)
+;		SETCOLOR 0x00FF80
+;		LOCALS:0 = 아이
+;	ELSEIF TALENT:(ARG:0):커스텀캐릭터
+;		SETCOLOR 칼라_오렌지
+;		LOCALS:0 = 커스텀
+;	ELSE
+;		SETCOLOR 칼라_오렌지
+;		LOCALS:0 = 특수
+;	ENDIF
+;ENDIF
+;PRINTFORM %LOCALS:0%
+;RESETCOLOR
+
+;PRINTL
+
+
+;CALL SHOW_TAG(ARG:0)
+;PRINTL
+
+;CALL SINGLE_DRAWLINE
+
+
+;-------------------------------------------------------------
+;SHOW_INFOの画像処理
+;-------------------------------------------------------------
+@SHOW_HEADER(iID, iSize=800)
 #DIM iSize
 #DIMS sHtml
 #DIM iFont_Hei_mag
@@ -470,7 +563,7 @@ IF FLAG:화상설정
 	iFont_Hei_mag = GETCONFIG("一行の高さ") * iSize*10 / GETCONFIG("フォントサイズ")
 	iFont_Hei_mag = (iFont_Hei_mag/10) + (iFont_Hei_mag%10 >= 5? 1#0)
 
-	iSpace = iSize + 50
+	iSpace = iSize + 100
 
 	;名前の表示
 	IF CSTR:iID:0 == "" && CSTR:iID:1 == "" && NAME:iID == CALLNAME:iID
@@ -557,40 +650,54 @@ IF FLAG:화상설정
 	iSpace = 100
 	sHtml = <p align='left'><shape type='space' param='{iSpace}'>
 
-	SELECTCASE iID
-		CASE 0
-			IF IS_MALE(iID)
-				sName = 스탠딩_의복_통상_남
-			ELSE
-				sName = 스탠딩_의복_통상_여
-			ENDIF
-		CASE 1 TO CHARANUM
-			sName = 얼굴_의복_통상_{iID}
-		CASEELSE
-			IF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
-				sName = 스탠딩_의복_통상_도둑
-			ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_홉고블린)
-				sName = 스탠딩_의복_통상_홉고블린
-			ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_외래인)
-				sName = 스탠딩_의복_통상_외래인
-			ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_촉수)
-				sName = 스탠딩_의복_통상_촉수
-			ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_자경단)
-				sName = 스탠딩_의복_통상_자경단
-			ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_서큐버스)
-				sName = 스탠딩_의복_통상_서큐버스
-			ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_광신도)
-				sName = 스탠딩_의복_통상_광신도
-			ENDIF
-	ENDSELECT
-
+	IF IS_RANDOM_CHARA(iID)
+		IF IS_FEMALE(iID)
+			sName = 커스텀_F_얼굴_의복_통상_{TALENT:iID:커스텀페이스}
+		ELSE
+			sName = 커스텀_M_얼굴_의복_통상_{TALENT:iID:커스텀페이스}
+		ENDIF
+	ELSE
+		SELECTCASE iID
+			CASE 0
+				IF IS_MALE(iID)
+					sName = 스탠딩_의복_통상_남
+				ELSE
+					sName = 스탠딩_의복_통상_여
+				ENDIF
+			CASE 1 TO CHARANUM
+				sName = 얼굴_의복_통상_{iID}
+			CASEELSE
+				IF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
+					sName = 스탠딩_의복_통상_도둑
+				ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_홉고블린)
+					sName = 스탠딩_의복_통상_홉고블린
+				ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_외래인)
+					sName = 스탠딩_의복_통상_외래인
+				ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_촉수)
+					sName = 스탠딩_의복_통상_촉수
+				ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_자경단)
+					sName = 스탠딩_의복_통상_자경단
+				ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_서큐버스)
+					sName = 스탠딩_의복_통상_서큐버스
+				ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_광신도)
+					sName = 스탠딩_의복_통상_광신도
+				ENDIF
+		ENDSELECT
+	ENDIF
+	
 	sHtml += @"<img src='%sName%' height='{iFont_Hei_mag}'"
 
 	iEnter_Con = 5
 	sHtml += @"ypos='-{iEnter_Con * 100}'>"
 	HTML_PRINT sHtml
+	
+	iEnter_Con++
+	sHtml =  <p align='left'><nobr>
+	sHtml += @"<shape type='space' param='{iSpace}'><img src='Frame_1' height='{iFont_Hei_mag}'"
+	sHtml += @"ypos='-{iEnter_Con * 100}'>"
+	HTML_PRINT sHtml
 
-	PRINT 　　　 　　　　
+	PRINT 　　　 　　　　　
 
 	CALL PRINT_SEX(iID, 0, 0, 10)
 
@@ -703,7 +810,6 @@ ELSE
 	PRINTL
 ENDIF
 CALL SINGLE_DRAWLINE
-
 ;-------------------------------------------------
 ;ARG:0번의 캐릭터의 태그를 표시
 ;-------------------------------------------------

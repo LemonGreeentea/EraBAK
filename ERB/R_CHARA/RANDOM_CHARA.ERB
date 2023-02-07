@@ -41,6 +41,9 @@ CALL RANDOM_CHARA_CLOTH_SETTING()
 ;태그의 설정
 CALL RANDOM_CHARA_TAG_SETTING()
 
+;얼굴 설정
+CALL RANDOM_CHARA_FACE_SETTING()
+
 ;타겟의 재설정
 TARGET = LOCAL:0
 
@@ -852,6 +855,16 @@ IF HAS_TAG(TARGET, 태그_요괴)
 		CASEELSE
 			CALL ADD_TAG(TARGET, 태그_아마노자쿠)
 	ENDSELECT
+ENDIF
+
+;-------------------------
+;커스터페이스 랜덤설정
+;-------------------------
+@RANDOM_CHARA_FACE_SETTING
+IF IS_FEMALE(TARGET)
+	TALENT:TARGET:커스텀페이스 = RAND:20 + 1
+ELSE
+	TALENT:TARGET:커스텀페이스 = RAND:3 + 1
 ENDIF
 
 ;-------------------------
