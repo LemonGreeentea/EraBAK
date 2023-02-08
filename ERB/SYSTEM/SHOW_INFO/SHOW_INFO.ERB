@@ -355,7 +355,7 @@ PRINTL   선호 Lv가 높을 정도 실행시에 중독충족의 소스가 많�
 PRINTL   선호 Lv를 올리는데 필요한 실행 회수는  Lv0→1:10회  Lv1→2:35회  Lv2→3:100회
 CALL SINGLE_DRAWLINE
 PRINTL        < 커맨드 명칭 >       < 플레이어 >        <   타겟   >        <  제삼자  >
-PRINT 　　　　　　  　　　　　　　　　
+PRINT 　　　　　　   　　　　　　　　
 PRINTBUTTON "[+]", 10000
 PRINTBUTTON "[-]", 11000
 PRINT 　　　　　　　
@@ -451,98 +451,6 @@ ELSE
 	RESETCOLOR
 ENDIF
 
-;-------------------------------------------------
-;ARG:0번의 캐릭터의 이름을 표시
-;-------------------------------------------------
-;@SHOW_HEADER(ARG:0)
-;이름의 표시
-;IF CSTR:(ARG:0):0 == "" && CSTR:(ARG:0):1 == "" && NAME:(ARG:0) == CALLNAME:(ARG:0)
-;	PRINTFORM 〇%ANAME(ARG:0), 30, LEFT%
-;ELSE
-;	;성명
-;	IF !TALENT:(ARG:0):성명역전
-;		LOCALS:0 =%CSTR:(ARG:0):0%
-;		SIF CSTR:(ARG:0):5 != "" && CSTR:(ARG:0):0 != CSTR:(ARG:0):5
-;			LOCALS:0 = %LOCALS:0%(%TOHALF(CSTR:(ARG:0):5)%)
-;		SIF LOCALS:0 != ""
-;			LOCALS:0 = %LOCALS:0 + " "%
-;		LOCALS:0 = %LOCALS:0%%CSTR:(ARG:0):1%
-;		SIF CSTR:(ARG:0):6 != "" && CSTR:(ARG:0):1 != CSTR:(ARG:0):6
-;			LOCALS:0 = %LOCALS:0%(%TOHALF(CSTR:(ARG:0):6)%)
-;	ELSE
-;		LOCALS:0 =%CSTR:(ARG:0):1%
-;		SIF CSTR:(ARG:0):6 != "" && CSTR:(ARG:0):1 != CSTR:(ARG:0):6
-;			LOCALS:0 = %LOCALS:0%(%TOHALF(CSTR:(ARG:0):6)%)
-;		SIF LOCALS:0 != ""
-;			LOCALS:0 = %LOCALS:0 + " "%
-;		LOCALS:0 = %LOCALS:0%%CSTR:(ARG:0):0%
-;		SIF CSTR:(ARG:0):5 != "" && CSTR:(ARG:0):0 != CSTR:(ARG:0):5
-;			LOCALS:0 = %LOCALS:0%(%TOHALF(CSTR:(ARG:0):5)%)
-;	ENDIF
-;
-;	;자
-;	IF CSTR:(ARG:0):2 != ""
-;		LOCALS:0 = %LOCALS:0% %CSTR:(ARG:0):2%
-;		SIF CSTR:(ARG:0):7 != ""
-;			LOCALS:0 = %LOCALS:0%(%TOHALF(CSTR:(ARG:0):7)%)
-;	ENDIF
-;	PRINTFORM 〇%LOCALS:0, 40, LEFT%
-;ENDIF
-;
-;LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:(ARG:0):소속)
-;IF LOCAL:4 >= 0
-;	LOCALS:0 = %ANAME(LOCAL:4), MAX_CHARANAME_LENGTH, LEFT%
-;ELSE
-;	LOCALS:0 = %"----", MAX_CHARANAME_LENGTH, LEFT%
-;ENDIF
-;PRINTFORM 소속:%LOCALS:0%
-;LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:(ARG:0):포로처)
-;IF LOCAL:4 >= 0
-;	LOCALS:0 = %ANAME(LOCAL:4)%
-;ELSE
-;	LOCALS:0 = %"----"%
-;ENDIF
-;IF LOCAL:4 >= 0
-;	IF CFLAG:(ARG:0):연금중 == 0
-;		LOCALS:0 = %LOCALS:0+"(감금)"%
-;	ELSE
-;		LOCALS:0 = %LOCALS:0+"(연금)"%
-;	ENDIF
-;ENDIF
-;PRINTFORM 포로:%LOCALS:0, MAX_CHARANAME_LENGTH+6, LEFT%
-;
-;CALL PRINT_SEX(ARG:0, 0, 0, 10)
-;
-;LOCALS:0 = 구분:
-;IF ARG:0 != MASTER
-;	IF IS_FIXED_CHARA(ARG:0)
-;		SETCOLOR 칼라_주의
-;		LOCALS:0 = 고정
-;	ELSEIF IS_RANDOM_CHARA(ARG:0)
-;		SETCOLOR 칼라_시안
-;		LOCALS:0 = 범용
-;	ELSEIF IS_CHILD(ARG:0)
-;		SETCOLOR 0x00FF80
-;		LOCALS:0 = 아이
-;	ELSEIF TALENT:(ARG:0):커스텀캐릭터
-;		SETCOLOR 칼라_오렌지
-;		LOCALS:0 = 커스텀
-;	ELSE
-;		SETCOLOR 칼라_오렌지
-;		LOCALS:0 = 특수
-;	ENDIF
-;ENDIF
-;PRINTFORM %LOCALS:0%
-;RESETCOLOR
-
-;PRINTL
-
-
-;CALL SHOW_TAG(ARG:0)
-;PRINTL
-
-;CALL SINGLE_DRAWLINE
-
 
 ;-------------------------------------------------------------
 ;SHOW_INFOの画像処理
@@ -564,50 +472,40 @@ IF FLAG:화상설정
 	iFont_Hei_mag = (iFont_Hei_mag/10) + (iFont_Hei_mag%10 >= 5? 1#0)
 
 	iSpace = iSize + 100
-
-	;名前の表示
+	iSpace = 100
+	PRINT  　　　　　　　　
 	IF CSTR:iID:0 == "" && CSTR:iID:1 == "" && NAME:iID == CALLNAME:iID
-		String = %ANAME(iID)%
+		PRINTFORML 〇%ANAME(iID), 30, LEFT%
 	ELSE
-		;姓名
+		;성명
 		IF !TALENT:iID:성명역전
-			String =%CSTR:iID:0%
+			LOCALS:0 =%CSTR:iID:0%
 			SIF CSTR:iID:5 != "" && CSTR:iID:0 != CSTR:iID:5
-				String = %String%(%TOHALF(CSTR:iID:5)%)
-			SIF String != ""
-				String = %String + " "%
-			;ミドルネーム
-			IF CSTR:iID:2 != ""
-				String = %String% %CSTR:iID:2%
-				SIF CSTR:iID:7 != "" && CSTR:iID:2 != CSTR:iID:7
-					String = %String%(%TOHALF(CSTR:iID:7)%)
-			ENDIF
-			SIF String != ""
-				String = %String + " "%
-			String = %String%%CSTR:iID:1%
+				LOCALS:0 = %LOCALS:0%(%TOHALF(CSTR:iID:5)%)
+			SIF LOCALS:0 != ""
+				LOCALS:0 = %LOCALS:0 + " "%
+			LOCALS:0 = %LOCALS:0%%CSTR:iID:1%
 			SIF CSTR:iID:6 != "" && CSTR:iID:1 != CSTR:iID:6
-				String = %String%(%TOHALF(CSTR:iID:6)%)
+				LOCALS:0 = %LOCALS:0%(%TOHALF(CSTR:iID:6)%)
 		ELSE
-			String =%CSTR:iID:1%
+			LOCALS:0 =%CSTR:iID:1%
 			SIF CSTR:iID:6 != "" && CSTR:iID:1 != CSTR:iID:6
-				String = %String%(%TOHALF(CSTR:iID:6)%)
-			SIF String != ""
-				String = %String + " "%
-			;ミドルネーム
-			IF CSTR:iID:2 != ""
-				String = %String% %CSTR:iID:2%
-				SIF CSTR:iID:7 != "" && CSTR:iID:2 != CSTR:iID:7
-					String = %String%(%TOHALF(CSTR:iID:7)%)
-			ENDIF
-			SIF String != ""
-				String = %String + " "%
-			String = %String%%CSTR:iID:0%
+				LOCALS:0 = %LOCALS:0%(%TOHALF(CSTR:iID:6)%)
+			SIF LOCALS:0 != ""
+				LOCALS:0 = %LOCALS:0 + " "%
+			LOCALS:0 = %LOCALS:0%%CSTR:iID:0%
 			SIF CSTR:iID:5 != "" && CSTR:iID:0 != CSTR:iID:5
-				String = %String%(%TOHALF(CSTR:iID:5)%)
+				LOCALS:0 = %LOCALS:0%(%TOHALF(CSTR:iID:5)%)
 		ENDIF
-	ENDIF
 
-	sHtml = <p align='left'><shape type='space' param='{iSpace}'>○%String%<br>
+		;자
+		IF CSTR:iID:2 != ""
+			LOCALS:0 = %LOCALS:0% %CSTR:iID:2%
+			SIF CSTR:iID:7 != ""
+				LOCALS:0 = %LOCALS:0%(%TOHALF(CSTR:iID:7)%)
+		ENDIF
+		PRINTFORML 〇%LOCALS:0, 40, LEFT%
+	ENDIF
 
 	;タグ表示
 	FOR Integer, 0, MAX_TAG
@@ -619,35 +517,16 @@ IF FLAG:화상설정
 			String = %String% [%TAG_NAME:(TAG:iID:Integer)%]
 		ENDIF
 	NEXT
-	sHtml += @"<shape type='space' param='{iSpace}'>%String%　"
-
-	Integer = GET_COUNTRY_BOSS(CFLAG:iID:소속)
-	IF Integer >= 0
-		String = %ANAME(Integer), MAX_CHARANAME_LENGTH, LEFT%
+	PRINT  　　　　　　　　
+	PRINTFORML 태그:%String%
+	IF TALENT:iID:웨폰
+		PRINT  　　　　　　　　
+		PRINTFORML 타입:%WEAPON_TYPE(TALENT:iID:웨폰)%
 	ELSE
-		String = %"----", MAX_CHARANAME_LENGTH, LEFT%
+		PRINT  　　　　　　　　
+		PRINTFORML 타입:불명
 	ENDIF
-	PRINTFORM 
-
-	sHtml += @"<br><br><shape type='space' param='{iSpace}'>소속:%String%<br>"
-
-	Integer = GET_COUNTRY_BOSS(CFLAG:iID:포로처)
-	IF Integer >= 0
-		String = %ANAME(Integer)%
-	ELSE
-		String = %"----"%
-	ENDIF
-	IF Integer >= 0
-		IF CFLAG:iID:연금중 == 0
-			String = %String+"(감금)"%
-		ELSE
-			String = %String+"(연금)"%
-		ENDIF
-	ENDIF
-	sHtml += @"<shape type='space' param='{iSpace}'>포로:%String%<br>"
-	HTML_PRINT sHtml
-
-	iSpace = 100
+	
 	sHtml = <p align='left'><shape type='space' param='{iSpace}'>
 
 	IF IS_RANDOM_CHARA(iID)
@@ -687,19 +566,49 @@ IF FLAG:화상설정
 	
 	sHtml += @"<img src='%sName%' height='{iFont_Hei_mag}'"
 
-	iEnter_Con = 5
+	iEnter_Con = 3
 	sHtml += @"ypos='-{iEnter_Con * 100}'>"
-	HTML_PRINT sHtml
 	
-	iEnter_Con++
-	sHtml =  <p align='left'><nobr>
-	sHtml += @"<shape type='space' param='{iSpace}'><img src='Frame_1' height='{iFont_Hei_mag}'"
-	sHtml += @"ypos='-{iEnter_Con * 100}'>"
+	SIF TALENT:iID:웨폰
+		sHtml += @"<shape type='space' param='{iSpace * 13}'><img src='웨폰_{TALENT:iID:웨폰}' height='{iFont_Hei_mag}' ypos='-{iEnter_Con * 125}'>"
 	HTML_PRINT sHtml
 
-	PRINT 　　　 　　　　　
+	Integer = GET_COUNTRY_BOSS(CFLAG:iID:소속)
+	IF Integer >= 0
+		String = %ANAME(Integer), MAX_CHARANAME_LENGTH, LEFT%
+	ELSE
+		String = %"----", MAX_CHARANAME_LENGTH, LEFT%
+	ENDIF
+	PRINTFORM 
 
-	CALL PRINT_SEX(iID, 0, 0, 10)
+	PRINT  　　　　　　　　
+	PRINTFORML 소속:%String%
+
+	Integer = GET_COUNTRY_BOSS(CFLAG:iID:포로처)
+	IF Integer >= 0
+		String = %ANAME(Integer)%
+	ELSE
+		String = %"----"%
+	ENDIF
+	IF Integer >= 0
+		IF CFLAG:iID:연금중 == 0
+			String = %String+"(감금)"%
+		ELSE
+			String = %String+"(연금)"%
+		ENDIF
+	ENDIF
+	PRINT  　　　　　　　　
+	PRINTFORML 포로:%String%
+	
+	iEnter_Con = 6
+	sHtml =  <p align='left'><nobr>
+	sHtml += @"<shape type='space' param='{iSpace}'><img src='Frame_1' height='{iFont_Hei_mag}' ypos='-{iEnter_Con * 100}'>"
+
+	HTML_PRINT sHtml
+
+	PRINT  　　　　　　　　
+
+	CALL PRINT_SEX(iID, 0, 0, 14)
 
 	LOCALS:0 = 구분:
 	IF iID != MASTER
@@ -720,9 +629,13 @@ IF FLAG:화상설정
 			LOCALS:0 = 특수
 		ENDIF
 	ENDIF
-	PRINTFORM %LOCALS:0%
+	PRINTFORM %LOCALS:0, 6, LEFT%
 	RESETCOLOR
-
+	
+	IF TALENT:iID:웨폰
+		PRINT  　　　　　　　　　　　　
+		PRINTFORM 【 %WEAPON_NAME(TALENT:iID:웨폰)% 】
+	ENDIF
 	PRINTL
 ELSE
 	IF CSTR:iID:0 == "" && CSTR:iID:1 == "" && NAME:iID == CALLNAME:iID
