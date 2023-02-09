@@ -54,11 +54,24 @@ RETURN 1
 #DIM 대상세력
 #DIM 대상부대
 대상측 = !발동측
-BATTLE_RATE_GRD:발동측 += 10
-PRINTFORML 자부대의 피해를 경감한다!
+CALL DECREASE_SOLDIER(대상세력, 대상부대, RAND(1000, 2000), 1)
+SELECTCASE RAND:6
+    CASE 0
+        PRINTFORML 「유닛 기동.」
+    CASE 1
+        PRINTFORML 「상태 양호. 간다.」
+    CASE 2
+        PRINTFORML 「드론, 작동 개시.」
+    CASE 3
+        PRINTFORML 「화력지원을 시작한다.」
+    CASE 4
+        PRINTFORML 「타겟 설정완료.」
+    CASE 5
+        PRINTFORML 「지원공격.」
+ENDSELECT
 
 @SKILL_1_BASE_0_EXPLANATION
-RESULTS = 자부대의 피해를 경감한다.
+RESULTS = 휴대용 드론 공격으로 적에게 피해를 준다.
 
 
 
@@ -74,4 +87,4 @@ RESULTS = 자부대의 피해를 경감한다.
 #DIM 대상측
 #DIM 대상세력
 #DIM 대상부대
-RETURN 100
+RETURN 1000
