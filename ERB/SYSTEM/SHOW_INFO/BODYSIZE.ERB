@@ -388,7 +388,7 @@ RETURNF TALENT:대상:임신 ? BASE:대상:가슴 / 100 * CFLAG:대상:임신기
 아이사이즈 = GET_BABY_SIZE(대상)
 아이가슴 = GET_BABY_BUST(대상)
 
-IF HAS_TAG(대상, 태그_소인) || GROUPMATCH(대상, NAME_TO_CHARA("샹하이인형"), NAME_TO_CHARA("호라이인형"), NAME_TO_CHARA("오오에도인형"), NAME_TO_CHARA("신묘마루"))
+IF GROUPMATCH(대상, NAME_TO_CHARA("샹하이인형"), NAME_TO_CHARA("호라이인형"), NAME_TO_CHARA("오오에도인형"), NAME_TO_CHARA("신묘마루"))
 	PRINTFORM 신장:%DECIMAL_STRING(BASE:대상:신장 / 5, 1), 7, RIGHT%cm/ 
 	PRINTFORM 체중:{BASE:대상:체중 * 5 + 아이중량, 5, RIGHT}g
 ;	SIF TALENT:대상:임신

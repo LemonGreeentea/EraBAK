@@ -795,74 +795,97 @@ NEXT
 ;범용 무장에 태그를 설정한다
 ;-------------------------
 @RANDOM_CHARA_TAG_SETTING
-
-;인간인가, 인외인가
-SIF 50 > RAND:100
-	CALL ADD_TAG(TARGET, 태그_인간)
-
-SIF 5 > RAND:100 || (50 > RAND:100 && !HAS_TAG(TARGET, 태그_인간))
-	CALL ADD_TAG(TARGET, 태그_인외)
-
-IF HAS_TAG(TARGET, 태그_인외)
-	SELECTCASE RAND:100
-		CASE IS < 20
+IF IS_FEMALE(TARGET)
+	SELECTCASE RAND:85
+		CASE IS < 15
+			CALL ADD_TAG(TARGET, 태그_게헨나)
+		CASE IS < 30
+			CALL ADD_TAG(TARGET, 태그_밀레니엄)
 		CASE IS < 45
-			CALL ADD_TAG(TARGET, 태그_요괴)
-		CASE IS < 65
-			CALL ADD_TAG(TARGET, 태그_요정)
-		CASE IS < 75
-			CALL ADD_TAG(TARGET, 태그_유령)
-		CASE IS < 80
-			CALL ADD_TAG(TARGET, 태그_망령)
-		CASE IS < 85
-			CALL ADD_TAG(TARGET, 태그_신)
-		CASE IS < 88
-			CALL ADD_TAG(TARGET, 태그_인형)
-		CASE IS < 91
-			CALL ADD_TAG(TARGET, 태그_사신)
-		CASE IS < 93
-			CALL ADD_TAG(TARGET, 태그_천인)
-		CASE IS < 95
-			CALL ADD_TAG(TARGET, 태그_츠쿠모가미)
-		CASE IS < 97
-			CALL ADD_TAG(TARGET, 태그_월인)
-		CASE IS < 99
-			CALL ADD_TAG(TARGET, 태그_원령)
-		CASEELSE
-			CALL ADD_TAG(TARGET, 태그_마계인)
-	ENDSELECT
-ENDIF
-
-IF HAS_TAG(TARGET, 태그_요괴)
-	SELECTCASE RAND:100
-		CASE IS < 25
-		CASE IS < 45
-			CALL ADD_TAG(TARGET, 태그_요수)
+			CALL ADD_TAG(TARGET, 태그_트리니티)
+		CASE IS < 50
+			CALL ADD_TAG(TARGET, 태그_백귀야행)
 		CASE IS < 55
-			CALL ADD_TAG(TARGET, 태그_텐구)
+			CALL ADD_TAG(TARGET, 태그_산해경)
+		CASE IS < 60
+			CALL ADD_TAG(TARGET, 태그_붉은겨울)
 		CASE IS < 65
-			CALL ADD_TAG(TARGET, 태그_갓파)
+			CALL ADD_TAG(TARGET, 태그_발키리)
+		CASE IS < 70
+			CALL ADD_TAG(TARGET, 태그_아리우스)
 		CASE IS < 75
-			CALL ADD_TAG(TARGET, 태그_마법사)
+			CALL ADD_TAG(TARGET, 태그_오디세이)
 		CASE IS < 80
-			CALL ADD_TAG(TARGET, 태그_흡혈귀)
+			CALL ADD_TAG(TARGET, 태그_총학생회)
 		CASE IS < 85
-			CALL ADD_TAG(TARGET, 태그_소령)
-		CASE IS < 90
-			CALL ADD_TAG(TARGET, 태그_악마)
-		CASE IS < 95
-			CALL ADD_TAG(TARGET, 태그_달토끼)
-		CASEELSE
-			CALL ADD_TAG(TARGET, 태그_아마노자쿠)
+			CALL ADD_TAG(TARGET, 태그_용역)
 	ENDSELECT
+ELSE
+	CALL ADD_TAG(TARGET, 태그_PMC)
 ENDIF
-
 ;-------------------------
 ;커스터페이스 랜덤설정
 ;-------------------------
 @RANDOM_CHARA_FACE_SETTING
 IF IS_FEMALE(TARGET)
-	TALENT:TARGET:커스텀페이스 = RAND:20 + 1
+	IF HAS_TAG(TARGET, 태그_게헨나)
+		SELECTCASE RAND:4
+			CASE 0
+				TALENT:TARGET:커스텀페이스 = 5
+			CASE 1
+				TALENT:TARGET:커스텀페이스 = 6
+			CASE 2
+				TALENT:TARGET:커스텀페이스 = 7
+			CASE 3
+				TALENT:TARGET:커스텀페이스 = 14
+		ENDSELECT
+
+	ELSEIF HAS_TAG(TARGET, 태그_밀레니엄)
+		TALENT:TARGET:커스텀페이스 = 8
+
+	ELSEIF HAS_TAG(TARGET, 태그_트리니티)
+		SELECTCASE RAND:5
+			CASE 0
+				TALENT:TARGET:커스텀페이스 = 9
+			CASE 1
+				TALENT:TARGET:커스텀페이스 = 10
+			CASE 2
+				TALENT:TARGET:커스텀페이스 = 11
+			CASE 3
+				TALENT:TARGET:커스텀페이스 = 12
+			CASE 4
+				TALENT:TARGET:커스텀페이스 = 13
+		ENDSELECT
+
+	ELSEIF HAS_TAG(TARGET, 태그_백귀야행)
+		TALENT:TARGET:커스텀페이스 = 20
+
+	ELSEIF HAS_TAG(TARGET, 태그_산해경)
+		TALENT:TARGET:커스텀페이스 = 15
+
+	ELSEIF HAS_TAG(TARGET, 태그_붉은겨울)
+		TALENT:TARGET:커스텀페이스 = 16
+
+	ELSEIF HAS_TAG(TARGET, 태그_발키리)
+		TALENT:TARGET:커스텀페이스 = 18
+
+	ELSEIF HAS_TAG(TARGET, 태그_아리우스)
+		TALENT:TARGET:커스텀페이스 = 19
+
+	ELSEIF HAS_TAG(TARGET, 태그_오디세이)
+		TALENT:TARGET:커스텀페이스 = 3
+
+	ELSEIF HAS_TAG(TARGET, 태그_총학생회)
+		SELECTCASE RAND:2
+			CASE 0
+				TALENT:TARGET:커스텀페이스 = 1
+			CASE 1
+				TALENT:TARGET:커스텀페이스 = 2
+		ENDSELECT
+
+	ELSEIF HAS_TAG(TARGET, 태그_용역)
+		TALENT:TARGET:커스텀페이스 = 17
+	ENDIF
 ELSE
 	TALENT:TARGET:커스텀페이스 = RAND:3 + 1
 ENDIF
