@@ -54,7 +54,7 @@ RETURN 1
 #DIM 대상세력
 #DIM 대상부대
 대상측 = !발동측
-CALL DECREASE_SOLDIER(대상세력, 대상부대, RAND(1000, 2000), 1)
+CALL DECREASE_SOLDIER(대상세력, 대상부대, RAND(500, 800), 1)
 SELECTCASE RAND:6
     CASE 0
         PRINTFORML 「유닛 기동.」
