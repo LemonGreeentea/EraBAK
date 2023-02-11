@@ -1149,13 +1149,15 @@ NEXT
 RETURN
 
 
-@FACE_IMAGE(ARG, iSize)
+@FACE_IMAGE(ARG, iSize, iSpace = 0, iChk = 0)
 #DIMS sImageName
 #DIMS sFrame
 #DIMS sWeapon
 #DIM iSize
 #DIM iPadding
+#DIM iSpace
 #DIM iVar
+#DIM iChk
 
 sImageName = %GET_IMAGE_NAME(ARG)%
 sFrame = Frame_1
@@ -1167,9 +1169,10 @@ FOR iVar, 0, iPadding
 	HTML_PRINT "<br>"
 NEXT
 
-CALL PRINT_HTML_IMAGE(sImageName, iSize, iPadding, 1)
-CALL PRINT_HTML_IMAGE(sFrame, iSize, iPadding + 1, 1)
-CALL PRINT_HTML_IMAGE(sWeapon, iSize, iPadding + 2, 4)
+CALL PRINT_HTML_IMAGE(sImageName, iSize, iPadding, iSpace)
+CALL PRINT_HTML_IMAGE(sFrame, iSize, iPadding + 1, iSpace)
+SIF iChk == 0
+	CALL PRINT_HTML_IMAGE(sWeapon, iSize, iPadding + 2, iSpace + 4)
 
 RETURN
 
@@ -1185,7 +1188,7 @@ iSizeFactor = 100 * GETCONFIG("一行の高さ") / GETCONFIG("フォントサイ
 iHeight *= iSizeFactor
 iPos *= iSizeFactor
 iSpace *= iSizeFactor
-HTML_PRINT @"<shape type='space' param='{iSpace}'><img src='%sImageName%' height='{iHeight}' ypos='-{iPos}'>"
+HTML_PRINT @"<shape type='space' param='{iSpace+10}'><img src='%sImageName%' height='{iHeight}' ypos='-{iPos}'>"
 
 RETURN
 

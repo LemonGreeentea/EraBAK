@@ -455,7 +455,7 @@ ENDIF
 ;-------------------------------------------------------------
 ;SHOW_INFOの画像処理
 ;-------------------------------------------------------------
-@SHOW_HEADER(iID, iSize=800)
+@SHOW_HEADER(iID, iSize=900)
 #DIM iSize
 #DIMS sHtml
 #DIM iFont_Hei_mag
@@ -473,7 +473,7 @@ IF FLAG:화상설정
 
 	iSpace = iSize + 100
 	iSpace = 100
-	PRINT  　　　　　　　　
+	PRINT  　　　　　　　　　
 	IF CSTR:iID:0 == "" && CSTR:iID:1 == "" && NAME:iID == CALLNAME:iID
 		PRINTFORML 〇%ANAME(iID), 30, LEFT%
 	ELSE
@@ -517,13 +517,13 @@ IF FLAG:화상설정
 			String = %String% [%TAG_NAME:(TAG:iID:Integer)%]
 		ENDIF
 	NEXT
-	PRINT  　　　　　　　　
+	PRINT  　　　　　　　　　
 	PRINTFORML 태그:%String%
 	IF TALENT:iID:웨폰
-		PRINT  　　　　　　　　
+		PRINT  　　　　　　　　　
 		PRINTFORML 타입:%WEAPON_TYPE(TALENT:iID:웨폰)%
 	ELSE
-		PRINT  　　　　　　　　
+		PRINT  　　　　　　　　　
 		PRINTFORML 타입:불명
 	ENDIF
 	
@@ -578,7 +578,7 @@ IF FLAG:화상설정
 	sHtml += @"ypos='-{iEnter_Con * 100}'>"
 	
 	SIF TALENT:iID:웨폰
-		sHtml += @"<shape type='space' param='{iSpace * 13}'><img src='웨폰_{TALENT:iID:웨폰}' height='{iFont_Hei_mag}' ypos='-{iEnter_Con * 125}'>"
+		sHtml += @"<shape type='space' param='{iSpace * 13}'><img src='웨폰_{TALENT:iID:웨폰}' height='{iFont_Hei_mag - 50}' ypos='-{iEnter_Con * 125}'>"
 	HTML_PRINT sHtml
 
 	Integer = GET_COUNTRY_BOSS(CFLAG:iID:소속)
@@ -589,7 +589,7 @@ IF FLAG:화상설정
 	ENDIF
 	PRINTFORM 
 
-	PRINT  　　　　　　　　
+	PRINT  　　　　　　　　　
 	PRINTFORML 소속:%String%
 
 	Integer = GET_COUNTRY_BOSS(CFLAG:iID:포로처)
@@ -605,20 +605,53 @@ IF FLAG:화상설정
 			String = %String+"(연금)"%
 		ENDIF
 	ENDIF
-	PRINT  　　　　　　　　
+	PRINT  　　　　　　　　　
 	PRINTFORML 포로:%String%
 	
 	iEnter_Con = 6
 	sHtml =  <p align='left'><nobr>
 	sHtml += @"<shape type='space' param='{iSpace}'><img src='Frame_1' height='{iFont_Hei_mag}' ypos='-{iEnter_Con * 100}'>"
-
 	HTML_PRINT sHtml
-
-	PRINT  　　　　　　　　
-
+	
+	IF HAS_TAG(iID, 태그_게헨나)
+		String = 게헨나_2
+	ELSEIF HAS_TAG(iID, 태그_밀레니엄)
+		String = 밀레니엄_2
+	ELSEIF HAS_TAG(iID, 태그_트리니티)
+		String = 트리니티_2
+	ELSEIF HAS_TAG(iID, 태그_백귀야행)
+		String = 백귀야행_2
+	ELSEIF HAS_TAG(iID, 태그_산해경)
+		String = 산해경_2
+	ELSEIF HAS_TAG(iID, 태그_붉은겨울)
+		String = 붉은겨울_2
+	ELSEIF HAS_TAG(iID, 태그_발키리)
+		String = 발키리_2
+	ELSEIF HAS_TAG(iID, 태그_아리우스)
+		String = 아리우스_2
+	ELSEIF HAS_TAG(iID, 태그_오디세이)
+		String = 샬레_2
+	ELSEIF HAS_TAG(iID, 태그_총학생회)
+		String = 총학생회_2
+	ELSEIF HAS_TAG(iID, 태그_아비도스)
+		String = 아비도스_2
+	ELSEIF HAS_TAG(iID, 태그_용역)
+		String = 용역단_2
+	ELSEIF HAS_TAG(iID, 태그_헬멧단)
+		String = 헬멧단_2
+	ELSEIF HAS_TAG(iID, 태그_불량배)
+		String = 불량배_2
+	ELSE
+		String = 무소속_2
+	ENDIF
+	
+	iEnter_Con = 0
+	sHtml =  <p align='left'><nobr>
+	sHtml += @"<shape type='space' param='{iSpace}'><img src='%String%' height='{iFont_Hei_mag - 700}' ypos='-{iEnter_Con * 100}'>"
+	HTML_PRINT sHtml
+	
+	PRINT  　　　　　　　　　
 	CALL PRINT_SEX(iID, 0, 0, 14)
-
-	LOCALS:0 = 구분:
 	IF iID != MASTER
 		IF IS_FIXED_CHARA(iID)
 			SETCOLOR 칼라_주의
@@ -641,7 +674,7 @@ IF FLAG:화상설정
 	RESETCOLOR
 	
 	IF TALENT:iID:웨폰
-		PRINT  　　　　　　　　　　　　
+		PRINT 　　　　　　　　　　　　　
 		PRINTFORM 【 %WEAPON_NAME(TALENT:iID:웨폰)% 】
 	ENDIF
 	PRINTL
