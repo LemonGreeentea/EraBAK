@@ -1147,3 +1147,63 @@ FOR COUNT:0, 0, 10
 NEXT
 
 RETURN
+
+
+@FACE_IMAGE(ARG, iSize)
+#DIMS sImageName
+#DIMS sFrame
+#DIMS sWeapon
+#DIM iSize
+#DIM iPadding
+#DIM iVar
+
+sImageName = %GET_IMAGE_NAME(ARG)%
+sFrame = Frame_1
+sWeapon = 웨폰_{TALENT:ARG:웨폰}
+
+iPadding = iSize - 3
+
+FOR iVar, 0, iPadding
+	HTML_PRINT "<br>"
+NEXT
+
+CALL PRINT_HTML_IMAGE(sImageName, iSize, iPadding, 1)
+CALL PRINT_HTML_IMAGE(sFrame, iSize, iPadding + 1, 1)
+CALL PRINT_HTML_IMAGE(sWeapon, iSize, iPadding + 2, 4)
+
+RETURN
+
+@PRINT_HTML_IMAGE(sImageName, iHeight, iPos, iSpace)
+#DIMS sImageName
+#DIM iHeight
+#DIM iPos
+#DIM iSpace
+#DIM iSizeFactor
+#DIMS sHtml
+
+iSizeFactor = 100 * GETCONFIG("一行の高さ") / GETCONFIG("フォントサイズ")
+iHeight *= iSizeFactor
+iPos *= iSizeFactor
+iSpace *= iSizeFactor
+HTML_PRINT @"<shape type='space' param='{iSpace}'><img src='%sImageName%' height='{iHeight}' ypos='-{iPos}'>"
+
+RETURN
+
+@GET_IMAGE_NAME(iID)
+#FUNCTIONS
+#DIM iID
+#DIMS sName
+IF TALENT:(iID):커스텀페이스 > 0
+	sName = 커스텀
+	;성별전환 커스텀페이스
+	IF IS_MALE(iID)
+		sName = %sName%_M
+	ELSEIF IS_FEMALE(iID)
+		sName = %sName%_F
+	ENDIF
+	sName = %sName%_얼굴_의복_통상_{TALENT:(iID):커스텀페이스}
+ELSE
+	sName = F_DUMMY
+ENDIF
+
+RETURNF sName

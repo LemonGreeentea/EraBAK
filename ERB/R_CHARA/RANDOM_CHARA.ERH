@@ -1,0 +1,11 @@
+﻿;여성 모브 캐릭터 수
+#DIM CONST MOB_PACE_F = 31
+
+;남성 모브 캐릭터 수
+#DIM CONST MOB_PACE_M = 3
+
+;여성 커스텀 캐릭터 수
+#DIM CONST CUSTOM_PACE_F = 1
+
+;남성 커스텀 캐릭터 수
+#DIM CONST CUSTOM_PACE_M = 1

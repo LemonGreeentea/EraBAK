@@ -30,6 +30,8 @@ SELECTCASE RESULT
 	;능력
 	CASE 300 TO 310
 		CALL MASTER_EDIT_PROCESS_SLG_ABL(대상, RESULT - 300)
+	CASE 400 TO 410
+		CALL MASTER_EDIT_PROCESS_FACE_WEAPON_ABL(대상, RESULT - 400)
 	;성적 능력
 	CASE 1000 TO 1999
 		CALL MASTER_EDIT_PROCESS_SEX_ABL(대상, RESULT - 1000)
@@ -99,6 +101,7 @@ CALL INVERT_TAG(대상, 번호)
 #DIM 대상
 #DIM 번호
 TALENT:대상:성별 = 번호
+TALENT:대상:커스텀페이스 = 0
 
 ;-------------------------
 ;성 경험 처리
@@ -268,6 +271,41 @@ ELSE
 ENDIF
 
 ;-------------------------
+;프로필 웨폰 처리
+;-------------------------
+@MASTER_EDIT_PROCESS_FACE_WEAPON_ABL(대상, 번호)
+#DIM 대상
+#DIM 번호
+
+IF 번호 == 0
+	IF TALENT:대상:커스텀페이스 == 0
+		IF IS_MALE(대상)
+			TALENT:대상:커스텀페이스 = MOB_PACE_M
+		ELSEIF IS_FEMALE(대상)
+			TALENT:대상:커스텀페이스 = MOB_PACE_F
+		ENDIF
+	ELSEIF TALENT:대상:커스텀페이스 == 1
+		TALENT:대상:커스텀페이스 = 101
+	ELSEIF TALENT:대상:커스텀페이스 == 101
+		TALENT:대상:커스텀페이스 = 0
+	ELSE
+		TALENT:대상:커스텀페이스 --
+	ENDIF
+ELSEIF 번호 == 1
+	IF (IS_MALE(대상) && TALENT:대상:커스텀페이스 == CUSTOM_PACE_M + 100) || (IS_FEMALE(대상) && TALENT:대상:커스텀페이스 == CUSTOM_PACE_F + 100)
+		TALENT:대상:커스텀페이스 = 1
+	ELSEIF TALENT:대상:커스텀페이스 == 0
+		TALENT:대상:커스텀페이스 = 101
+	ELSEIF (IS_MALE(대상) && TALENT:대상:커스텀페이스 == MOB_PACE_M) || (IS_FEMALE(대상) && TALENT:대상:커스텀페이스 == MOB_PACE_F)
+		TALENT:대상:커스텀페이스 = 0
+	ELSE
+		TALENT:대상:커스텀페이스 ++
+	ENDIF
+ELSEIF 번호 == 2
+	CALL WEAPON_MENU(대상)
+ENDIF
+
+;-------------------------
 ;소질 처리
 ;-------------------------
 @MASTER_EDIT_PROCESS_TALENT(대상, 번호)
@@ -319,6 +357,10 @@ CALL MASTER_EDIT_TAG(대상)
 CALL SINGLE_DRAWLINE
 PRINTFORML 성별
 CALL MASTER_EDIT_SEX(대상)
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 프로필 사진/웨폰
+CALL MASTER_EDIT_FACE_WEAPON(대상)
 
 CALL SINGLE_DRAWLINE
 PRINTFORML 성 경험
@@ -386,6 +428,21 @@ CALL PRINT_SELECT_BUTTON("[여성(후타)]", 102, TALENT:대상:성별 == 2)
 CALL PRINT_SELECT_BUTTON("[남성(후타)]", 103, TALENT:대상:성별 == 3)
 CALL PRINT_SELECT_BUTTON("[오토코노코]", 104, TALENT:대상:성별 == 4)
 CALL PRINT_SELECT_BUTTON("[오토코노코(후타)]", 105, TALENT:대상:성별 == 5)
+PRINTL
+
+;-------------------------
+;성별 UI
+;-------------------------
+@MASTER_EDIT_FACE_WEAPON(대상)
+#DIM 대상
+SIF TALENT:대상:웨폰 == 0
+	TALENT:대상:웨폰 = 100
+CALL FACE_IMAGE(대상, 7, 2)
+PRINTBUTTON "[◁]", 400
+PRINT [프로필사진]
+PRINTBUTTON "[▷]", 401
+PRINT     
+PRINTBUTTON @"[웨폰:%WEAPON_NAME(TALENT:대상:웨폰)%]", 402
 PRINTL
 
 ;-------------------------

@@ -55,6 +55,16 @@ PRINTBUTTON "[    피어스]:", 108
 CALL PRINT_PIERCE(대상)
 PRINTL
 CALL COLOR_LINE
+SIF TALENT:대상:웨폰 == 0
+	TALENT:대상:웨폰 = 100
+CALL FACE_IMAGE(대상, 7, 2)
+PRINTBUTTON "[◁]", 109
+PRINT [프로필사진]
+PRINTBUTTON "[▷]", 110
+PRINT     
+PRINTBUTTON @"[웨폰:%WEAPON_NAME(TALENT:대상:웨폰)%]", 111
+PRINTL
+CALL COLOR_LINE
 PRINTFORM 태그:
 FOR LOCAL, 0, VARSIZE("TAG_NAME")
 	CALL PRINT_TOGGLE_BUTTON(@"[%TAG_NAME:LOCAL%]", 1000 + LOCAL, HAS_TAG(대상, LOCAL))
@@ -93,6 +103,7 @@ SELECTCASE RESULT
 			CALL SET_BODYSIZE(대상)
 		SIF LOCAL:1 == 0 && HAS_PENIS(대상)
 			CALL SET_PENISSIZE(대상)
+		TALENT:대상:커스텀페이스 = 0
 	;가슴
 	CASE 101
 		CALL BEAUTIFY(대상)
@@ -110,6 +121,32 @@ SELECTCASE RESULT
 		CALL TATTOO_MENU(대상, 1)
 	CASE 108
 		CALL PIERCE_MENU(대상, 1)
+	CASE 109
+		IF TALENT:대상:커스텀페이스 == 0
+			IF IS_MALE(대상)
+				TALENT:대상:커스텀페이스 = MOB_PACE_M
+			ELSEIF IS_FEMALE(대상)
+				TALENT:대상:커스텀페이스 = MOB_PACE_F
+			ENDIF
+		ELSEIF TALENT:대상:커스텀페이스 == 1
+			TALENT:대상:커스텀페이스 = 101
+		ELSEIF TALENT:대상:커스텀페이스 == 101
+			TALENT:대상:커스텀페이스 = 0
+		ELSE
+			TALENT:대상:커스텀페이스 --
+		ENDIF
+	CASE 110
+		IF (IS_MALE(대상) && TALENT:대상:커스텀페이스 == CUSTOM_PACE_M + 100) || (IS_FEMALE(대상) && TALENT:대상:커스텀페이스 == CUSTOM_PACE_F + 100)
+			TALENT:대상:커스텀페이스 = 1
+		ELSEIF TALENT:대상:커스텀페이스 == 0
+			TALENT:대상:커스텀페이스 = 101
+		ELSEIF (IS_MALE(대상) && TALENT:대상:커스텀페이스 == MOB_PACE_M) || (IS_FEMALE(대상) && TALENT:대상:커스텀페이스 == MOB_PACE_F)
+			TALENT:대상:커스텀페이스 = 0
+		ELSE
+			TALENT:대상:커스텀페이스 ++
+		ENDIF
+	CASE 111
+		CALL WEAPON_MENU(대상)
 	CASE 1000 TO 1000 + VARSIZE("TAG_NAME")
 		CALL INVERT_TAG(대상, 입력치 - 1000)
 ENDSELECT

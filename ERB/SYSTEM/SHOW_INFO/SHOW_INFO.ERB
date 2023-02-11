@@ -538,10 +538,18 @@ IF FLAG:화상설정
 	ELSE
 		SELECTCASE iID
 			CASE 0
-				IF IS_MALE(iID)
-					sName = 스탠딩_의복_통상_남
+				IF TALENT:iID:커스텀페이스
+					IF IS_MALE(iID)
+						sName = 커스텀_M_얼굴_의복_통상_{TALENT:iID:커스텀페이스}
+					ELSE
+						sName = 커스텀_F_얼굴_의복_통상_{TALENT:iID:커스텀페이스}
+					ENDIF
 				ELSE
-					sName = 스탠딩_의복_통상_여
+					IF IS_MALE(iID)
+						sName = 스탠딩_의복_통상_남
+					ELSE
+						sName = 스탠딩_의복_통상_여
+					ENDIF
 				ENDIF
 			CASE 1 TO CHARANUM
 				sName = 얼굴_의복_통상_{iID}
