@@ -44,6 +44,9 @@ CALL RANDOM_CHARA_TAG_SETTING()
 ;얼굴 설정
 CALL RANDOM_CHARA_FACE_SETTING()
 
+;웨폰 설정
+CALL RANDOM_CHARA_WEAPON_SETTING()
+
 ;타겟의 재설정
 TARGET = LOCAL:0
 
@@ -889,6 +892,36 @@ IF IS_FEMALE(TARGET)
 ELSE
 	TALENT:TARGET:커스텀페이스 = RAND:3 + 1
 ENDIF
+
+;-------------------------
+;웨폰 랜덤설정
+;-------------------------
+@RANDOM_CHARA_WEAPON_SETTING
+;돌격소총(AR) 15%, 화염방사기(FT) 3%, 유탄발사기(GL) 7%, 권총(HG) 15%, 기관총(MG) 10%, 박격포(MT) 5%, 레일건(RG) 2%, 로켓런처(RL) 4%, 샷건(SG) 12%, 기관단총(SMG) 15%, 저격소총(SR) 12%
+SELECTCASE RAND:100
+	CASE IS < 15
+		TALENT:TARGET:웨폰 = 100
+	CASE IS < 18
+		TALENT:TARGET:웨폰 = 200
+	CASE IS < 25
+		TALENT:TARGET:웨폰 = 300
+	CASE IS < 40
+		TALENT:TARGET:웨폰 = 400
+	CASE IS < 50
+		TALENT:TARGET:웨폰 = 500
+	CASE IS < 55
+		TALENT:TARGET:웨폰 = 600
+	CASE IS < 57
+		TALENT:TARGET:웨폰 = 700
+	CASE IS < 61
+		TALENT:TARGET:웨폰 = 800
+	CASE IS < 73
+		TALENT:TARGET:웨폰 = 900
+	CASE IS < 88
+		TALENT:TARGET:웨폰 = 1000
+	CASEELSE
+		TALENT:TARGET:웨폰 = 1100
+ENDSELECT
 
 ;-------------------------
 ;가슴크기를 랜덤으로 설정하는 함수
