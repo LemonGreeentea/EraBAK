@@ -417,6 +417,85 @@ RESULT = SAVE_RESULT
 RETURN RESULT
 
 [SKIPEND]
+;=========================================================
+;   복장 변경에 따른 화상변화 적용
+; 
+;   대상(ARG)의 다른 의상이 있다면 이곳에서 설정한다.
+;   리소스 폴더 내 CSV에도 화상 지정 필요
+;   
+;=========================================================
+@PRINT_IMAGE_OTHER_CLOTHES(ARG)
+#DIMS clothes
+clothes = _의복
+SELECTCASE ARG
+	CASE 1
+		;시로코(라이딩, 수영복, 체육복)
+		IF CLOTH:ARG:의상부위_상하의 == 8
+			clothes = _라이딩
+		ELSEIF CLOTH:ARG:의상부위_상하의 == 10
+			clothes = _수영복
+		ELSEIF CLOTH:ARG:의상부위_상하의 == 9
+			clothes = _체육복
+		ELSE
+			clothes = _의복
+		ENDIF
+	CASE 2
+		;호시노(수영복, 체육복)
+		IF CLOTH:ARG:의상부위_상하의 == 10
+			clothes = _수영복
+		ELSEIF CLOTH:ARG:의상부위_상하의 == 9
+			clothes = _체육복
+		ELSE
+			clothes = _의복
+		ENDIF
+	CASE 3
+		;세리카(수영복, 정월, 체육복)
+		IF CLOTH:ARG:의상부위_상하의 == 10
+			clothes = _수영복
+		ELSEIF CLOTH:ARG:의상부위_상하의 == 2
+			clothes = _정월				
+		ELSEIF CLOTH:ARG:의상부위_상하의 == 9
+			clothes = _체육복
+		ELSE
+			clothes = _의복
+		ENDIF
+	CASE 4
+		;노노미(수영복, 체육복)
+		IF CLOTH:ARG:의상부위_상하의 == 10
+			clothes = _수영복
+		ELSEIF CLOTH:ARG:의상부위_상하의 == 9
+			clothes = _체육복
+		ELSE
+			clothes = _의복
+		ENDIF
+	CASE 5
+		;아야네(수영복, 체육복)
+		IF CLOTH:ARG:의상부위_상하의 == 10
+			clothes = _수영복
+		ELSEIF CLOTH:ARG:의상부위_상하의 == 9
+			clothes = _체육복
+		ELSE
+			clothes = _의복
+		ENDIF
+	CASE 13 
+		;히나(수영복)
+		IF CLOTH:ARG:의상부위_상하의 == 6
+			clothes = _학교수영복
+		ELSE
+			clothes = _의복
+		ENDIF
+	CASE 16
+		;치나츠(온천) 
+		IF CLOTH:ARG:의상부위_상하의 == 3
+			clothes = _온천
+		ELSE
+			clothes = _의복
+		ENDIF
+ENDSELECT
+RESULTS = %clothes%
+RETURN
+
+
 
 ;=========================================================
 ;	신분 화면의 그림표시
@@ -440,73 +519,9 @@ iFont_Hei_mag = GETCONFIG("一行の高さ") * iSize*10 / GETCONFIG("フォン�
 iFont_Hei_mag = (iFont_Hei_mag/10) + (iFont_Hei_mag%10 >= 5? 1#0)
 
 sPrint_Text = <p align='left'>
-sTEMP = _의복
-SELECTCASE iID
-	CASE 1
-		;시로코(라이딩)
-		IF CLOTH:iID:의상부위_상하의 == 8
-			sTemp:0 = _라이딩
-		ELSEIF CLOTH:iID:의상부위_상하의 == 10
-			sTemp:0 = _수영복
-		ELSEIF CLOTH:iID:의상부위_상하의 == 9
-			sTemp:0 = _체육복
-		ELSE
-			sTemp:0 = _의복
-		ENDIF
-	CASE 2
-		;호시노(수영복, 체육복)
-		IF CLOTH:iID:의상부위_상하의 == 10
-			sTemp:0 = _수영복
-		ELSEIF CLOTH:iID:의상부위_상하의 == 9
-			sTemp:0 = _체육복
-		ELSE
-			sTemp:0 = _의복
-		ENDIF
-	CASE 3
-		;세리카(수영복, 정월, 체육복)
-		IF CLOTH:iID:의상부위_상하의 == 10
-			sTemp:0 = _수영복
-		ELSEIF CLOTH:iID:의상부위_상하의 == 2
-			sTemp:0 = _정월				
-		ELSEIF CLOTH:iID:의상부위_상하의 == 9
-			sTemp:0 = _체육복
-		ELSE
-			sTemp:0 = _의복
-		ENDIF
-	CASE 4
-		;노노미(수영복, 체육복)
-		IF CLOTH:iID:의상부위_상하의 == 10
-			sTemp:0 = _수영복
-		ELSEIF CLOTH:iID:의상부위_상하의 == 9
-			sTemp:0 = _체육복
-		ELSE
-			sTemp:0 = _의복
-		ENDIF
-	CASE 5
-		;아야네(수영복, 체육복)
-		IF CLOTH:iID:의상부위_상하의 == 10
-			sTemp:0 = _수영복
-		ELSEIF CLOTH:iID:의상부위_상하의 == 9
-			sTemp:0 = _체육복
-		ELSE
-			sTemp:0 = _의복
-		ENDIF
-	CASE 13 
-		;히나(수영복)
-		IF CLOTH:iID:의상부위_상하의 == 6
-			sTemp:0 = _학교수영복
-		ELSE
-			sTemp:0 = _의복
-		ENDIF
-	CASE 16
-		;치나츠(온천) 
-		IF CLOTH:iID:의상부위_상하의 == 3
-			sTemp:0 = _온천
-		ELSE
-			sTemp:0 = _의복
-		ENDIF
-ENDSELECT
-
+sTEMP:0 = _의복
+CALL PRINT_IMAGE_OTHER_CLOTHES(iID)
+sTEMP:0 = %RESULTS%
 SELECTCASE iID
 ;-----------------
 ;복장 변경에 따른 화상변경 (정보창)
@@ -605,72 +620,8 @@ FOR iID, 1, CHARANUM
 		;복장 변경에 따른 화상변경 (조교시)
 		;-----------------
 		sTemp:0 = _의복
-		SELECTCASE iID
-			CASE 1
-				;시로코(라이딩, 수영복, 체육복)
-				IF CLOTH:iID:의상부위_상하의 == 8
-					sTemp:0 = _라이딩
-				ELSEIF CLOTH:iID:의상부위_상하의 == 10
-					sTemp:0 = _수영복
-				ELSEIF CLOTH:iID:의상부위_상하의 == 9
-					sTemp:0 = _체육복
-				ELSE
-					sTemp:0 = _의복
-				ENDIF
-			CASE 2
-				;호시노(수영복, 체육복)
-				IF CLOTH:iID:의상부위_상하의 == 10
-					sTemp:0 = _수영복
-				ELSEIF CLOTH:iID:의상부위_상하의 == 9
-					sTemp:0 = _체육복
-				ELSE
-					sTemp:0 = _의복
-				ENDIF
-			CASE 3
-				;세리카(수영복, 정월, 체육복)
-				IF CLOTH:iID:의상부위_상하의 == 10
-					sTemp:0 = _수영복
-				ELSEIF CLOTH:iID:의상부위_상하의 == 2
-					sTemp:0 = _정월				
-				ELSEIF CLOTH:iID:의상부위_상하의 == 9
-					sTemp:0 = _체육복
-				ELSE
-					sTemp:0 = _의복
-				ENDIF
-			CASE 4
-				;노노미(수영복, 체육복)
-				IF CLOTH:iID:의상부위_상하의 == 10
-					sTemp:0 = _수영복
-				ELSEIF CLOTH:iID:의상부위_상하의 == 9
-					sTemp:0 = _체육복
-				ELSE
-					sTemp:0 = _의복
-				ENDIF
-			CASE 5
-				;아야네(수영복, 체육복)
-				IF CLOTH:iID:의상부위_상하의 == 10
-					sTemp:0 = _수영복
-				ELSEIF CLOTH:iID:의상부위_상하의 == 9
-					sTemp:0 = _체육복
-				ELSE
-					sTemp:0 = _의복
-				ENDIF
-			CASE 13 
-				;히나(수영복)
-				IF CLOTH:iID:의상부위_상하의 == 6
-					sTemp:0 = _학교수영복
-				ELSE
-					sTemp:0 = _의복
-				ENDIF
-			CASE 16
-				;치나츠(온천) 
-				IF CLOTH:iID:의상부위_상하의 == 3
-					sTemp:0 = _온천
-				ELSE
-					sTemp:0 = _의복
-				ENDIF
-		ENDSELECT
-
+		CALL PRINT_IMAGE_OTHER_CLOTHES(iID)
+			sTemp:0 = %RESULTS%
 		SIF FLAG:그림표시 == dIsplay_Num
 			BREAK
 		IF dIsplay_Num == 5

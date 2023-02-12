@@ -552,7 +552,8 @@ IF FLAG:화상설정
 					ENDIF
 				ENDIF
 			CASE 1 TO CHARANUM
-				sName = 얼굴_의복_통상_{iID}
+				CALL PRINT_IMAGE_OTHER_CLOTHES(iID)
+				sName = 얼굴%RESULTS%_통상_{iID}
 			CASEELSE
 				IF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
 					sName = 스탠딩_의복_통상_도둑
