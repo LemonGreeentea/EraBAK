@@ -1,0 +1,88 @@
+﻿;---------------------
+;발생 확률(1000분 율 100으로 10%)
+;---------------------
+@EVENT_DAILY_MATTAKKU_RATE()
+RETURN 1
+
+;---------------------
+;확률 이외의 발생 판정
+;---------------------
+@EVENT_DAILY_MATTAKKU_DECISION()
+SIF DVAR:마따끄_실행여부 >= 1
+	RETURN 0
+
+RETURN 1
+
+@EVENT_DAILY_MATTAKKU_IMAGE(String)
+#DIM iSize
+#DIMS sHtml
+#DIM iFont_Hei_mag
+#DIM iEnter_Con
+#DIM iSpace
+#DIMS String
+#DIM Integer
+#DIM iID
+#DIMS test
+#DIMS sName
+iEnter_Con = 0
+sHtml =  <p align='left'><nobr>
+sHtml += @"<shape type='space' param='{iSpace}'><img src='%String%' height='850' ypos='0'>"
+HTML_PRINT sHtml
+PRINTFORML
+PRINTFORML
+PRINTFORML
+PRINTFORML
+PRINTFORML
+PRINTFORML
+PRINTFORML
+PRINTFORML
+
+
+;---------------------
+;장르
+;---------------------
+@EVENT_DAILY_MATTAKKU_GENRE()
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;---------------------
+@EVENT_DAILY_MATTAKKU
+
+
+
+PRINTFORMW 키보토스 거리를 거닐고있던 %ANAME(MASTER)% 앞에 아즈사가 나타났다.
+CALL EVENT_DAILY_MATTAKKU_IMAGE("표정_55_일반_2")
+PRINTFORMW 「마따끄...」
+PRINTFORMW 「잠깐 순찰 좀 안한 사이에」
+PRINTFORMW 「거리가 아주 씹창이 났잖아?」
+PRINTFORML
+CALL ASK_MULTI("허... 허억!!!", "키...키보토스의 얼음마녀...", "아즈사가 나타났다!!!")
+PRINTFORML
+CALL EVENT_DAILY_MATTAKKU_IMAGE("표정_55_수영복_2")
+PRINTFORMW 「흐응...」
+PRINTFORMW 「맨날 싸우는 나쁜 아이들에겐」
+PRINTFORMW 「[punishment♡]를 내려야겠지?」
+PRINTFORML
+CALL ASK_MULTI("오들 오들...")
+PRINTFORML
+CALL EVENT_DAILY_MATTAKKU_IMAGE("표정_55_수영복_1")
+PRINTFORMW 「얼음여왕(Queen)의 매혹적인 향기♡」
+PRINTFORMW 「[seductive peroro]!」
+PRINTFORML
+CALL ASK_MULTI("끄아아아아아앙!!!")
+PRINTFORML
+PRINTFORMW 뷰릇 퓨뷰르릇...!!!
+PRINTFORML
+CALL ASK_MULTI("헤...헤으응...♡")
+PRINTFORMW (덜덜덜...)
+PRINTFORML
+CALL EVENT_DAILY_MATTAKKU_IMAGE("표정_55_일반_4")
+PRINTFORMW 「나쁜 아이들은 혼내줬으니 아즈사는 갈거야♡」
+PRINTFORMW 「혹시 또... 나쁜 친구들이 찾아온다면」
+PRINTFORMW 
+CALL EVENT_DAILY_MATTAKKU_IMAGE("표정_55_일반_1")
+PRINTFORMW 「콱!!!」
+PRINTFORMW 「잡아먹을거니까 각오해♡」
+DVAR:마따끄_실행여부 ++
+RETURN 1
