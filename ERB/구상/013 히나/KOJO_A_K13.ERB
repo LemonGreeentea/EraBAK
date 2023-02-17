@@ -11,7 +11,17 @@
 ;●「만나러간다」의 개시시의 대사
 ;=================================================
 @KOJO_TRAIN_START_A1_K13
-;[속이 빈 것]상태라면 구상을 표시하지 않는다
+
+IF IS_SLAVE(TARGET)
+	LOCALS:0 = 주인님
+ELSEIF TALENT:MASTER:선생 == 1
+	LOCALS:0 = 선생
+ELSE
+	LOCALS:0 = %ANAME(MASTER)%
+ENDIF
+
+
+;[공허]상태라면 구상을 표시하지 않는다
 IF TALENT:공허
 	RETURN
 ENDIF
@@ -64,10 +74,10 @@ IF CFLAG:200 == 0
 	;이미 만났던 적이 있는 경우
 	ELSE
 		PRINTFORMW 　히나의 방에 들어가자 책상에 앉아 서류를 검토하던 히나와 눈이 마주쳤다.
-		PRINTFORMW 「어서와 %ANAME(TARGET)%.」
+		PRINTFORMW 「어서와 %ANAME(MASTER)%.」
 		PRINTFORMW 「여기서 본건 처음이네.」
-		PRINTFORMW 「다시 한번 인사할게 내 이름은 히나. 여기서 선도부장을 맡고 있어.」
-		PRINTFORMW 「앞으로 잘 부탁해 %ANAME(TARGET)%.」
+		PRINTFORMW 「다시 한번 인사할게 내 이름은 히나. 선도부장을 맡고 있어.」
+		PRINTFORMW 「앞으로 잘 부탁해 %ANAME(MASTER)%.」
 	ENDIF
 
 ;-------------------------------------------------

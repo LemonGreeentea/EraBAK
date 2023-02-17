@@ -1,0 +1,25 @@
+﻿;-----------------------------
+; 얼굴 화상 표시 함수
+; String에 해당 이미지를 넣으면 얼굴 화상이 표시된다.
+;-----------------------------
+@FACE_IMAGE_N(String)
+#DIM iSize
+#DIMS sHtml
+#DIM iFont_Hei_mag
+#DIM iEnter_Con
+#DIM iSpace
+#DIMS String
+#DIM Integer
+#DIM iID
+iEnter_Con = 0
+sHtml =  <p align='left'><nobr>
+sHtml += @"<shape type='space' param='{iSpace}'><img src='%String%' height='850' ypos='0'>"
+HTML_PRINT sHtml
+PRINTFORML
+PRINTFORML
+PRINTFORML
+PRINTFORML
+PRINTFORML
+PRINTFORML
+PRINTFORML
+PRINTFORML

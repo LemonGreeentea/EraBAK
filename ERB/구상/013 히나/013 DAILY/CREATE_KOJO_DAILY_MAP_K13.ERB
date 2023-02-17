@@ -2,6 +2,7 @@
 ;desc  :구상 데일리를 등록한다. REGISGER_KOJO_DAILY를 호출한다
 ;param :대상:대상의 캐릭터 번호
 ;-------------------------------------------------
-@CREATE_KOJO_DAILY_MAP_KXX(대상)
+@CREATE_KOJO_DAILY_MAP_K13(대상)
 #DIM 대상
-CALL REGISTER_KOJO_DAILY(대상, 데일리_통상, "악 세사", "이름")
+CALL REGISTER_KOJO_DAILY(대상, 데일리_통상, "WORK_STRESS", "업무 스트레스")
+CALL REGISTER_KOJO_DAILY(대상, 데일리_통상, "CONNECTION_STORY_1", "인연스토리 01 심야의 회의")
