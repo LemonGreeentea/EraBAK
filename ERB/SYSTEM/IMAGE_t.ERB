@@ -562,10 +562,14 @@ SELECTCASE iID
 ;복장 변경에 따른 화상변경 (정보창)
 ;-----------------
 CASE 0
-	IF IS_MALE(iID)
-		sPrint_Text += @"<img src='스탠딩_의복_통상_남' height='{iFont_Hei_mag}'>"
+	IF DVAR:MASTER_FACE_CHARA == 0
+		IF IS_MALE(iID)
+			sPrint_Text += @"<img src='스탠딩_의복_통상_남' height='{iFont_Hei_mag}'>"
+		ELSE
+			sPrint_Text += @"<img src='스탠딩_의복_통상_여' height='{iFont_Hei_mag}'>"
+		ENDIF
 	ELSE
-		sPrint_Text += @"<img src='스탠딩_의복_통상_여' height='{iFont_Hei_mag}'>"
+		sPrint_Text += @"<img src='스탠딩_의복_통상_{DVAR:MASTER_FACE_CHARA}' height='{iFont_Hei_mag}'>"
 	ENDIF
 CASE 1 TO CHARANUM
 	IF IS_RANDOM_CHARA(iID)
