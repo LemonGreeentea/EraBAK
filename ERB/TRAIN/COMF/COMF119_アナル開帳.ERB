@@ -1,0 +1,238 @@
+﻿;おねだり
+
+;-------------------------------------------------
+;コマンド名称
+;-------------------------------------------------
+@COM_NAME119
+LOCALS:0 = 애널벌리기
+RESULTS:0 = %LOCALS:0%한다
+RESULTS:1 = %LOCALS:0%당한다
+RESULTS:2 = %LOCALS:0%시킨다
+RESULTS:3 = %LOCALS:0%된다
+RESULTS:4 = %LOCALS:0%시킨다
+RESULTS:5 = %LOCALS:0%과시하고
+
+;-------------------------------------------------
+;選択可否判定
+;-------------------------------------------------
+@COM_ABLE119
+;共通部分
+CALL COM_ABLE_COMMON(119)
+SIF RESULT == 0
+	RETURN 0
+;プレイヤーは最大で5人まで
+SIF MPLY_NUM <= 0 || MPLY_NUM > 5
+	RETURN 0
+;ターゲットは最大で5人まで
+SIF MTAR_NUM <= 0 || MTAR_NUM > 5
+	RETURN 0
+
+;We won't make this one very restrictive since it's a single quick action
+;just imagine they pause whatever they're doing for a moment
+FOR LOCAL:0, 0, MPLY_NUM
+	;プレイヤーが行動不能なら不可
+	SIF !IS_PLAYABLE(MPLY:LOCAL)
+		RETURN 0
+	;Ａ挿入中なら不可
+	SIF IS_INSERT_SINGLE(MPLY:(LOCAL:0), "전")
+		RETURN 0
+	;拘束されていたらダメ
+	SIF IS_BIND(MPLY:(LOCAL:0))
+		RETURN 0
+NEXT
+
+RETURN 1
+
+;-------------------------------------------------
+;メイン処理
+;-------------------------------------------------
+@COM119
+;実行判定
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+
+;●全プレイヤーについて処理
+FOR LOCAL:0, 0, MPLY_NUM
+	LOCAL:2 = MPLY:(LOCAL:0)
+
+	DOWNBASE:(LOCAL:2):체력 += 40
+
+	SOURCE:(LOCAL:2):노출 = 70
+	SOURCE:(LOCAL:2):일탈 = 50
+	SOURCE:(LOCAL:2):반감 = 40
+	SOURCE:(LOCAL:2):노출 = 1400
+
+	;奉仕経験値を得られるコマンドのフラグ
+	TCVAR:(MPLY:0):4 = 1
+
+	;主導権に応じた優越・屈従のソース追加
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:2, 50, 200)
+NEXT
+
+;●全ターゲットについて処理
+FOR LOCAL:0, 0, MTAR_NUM
+	LOCAL:2 = MTAR:(LOCAL:0)
+	
+	DOWNBASE:(LOCAL:2):체력 += 40
+
+	SOURCE:(LOCAL:2):기학 = 60
+	SOURCE:(LOCAL:2):일탈 = 30
+	SOURCE:(LOCAL:2):접촉 = 40
+
+	;主導権に応じた優越・屈従のソース追加
+	CALL ADD_SOURCE_INITIATIVE_U(LOCAL:2, 160, 80)
+NEXT
+
+;主導度変化基準値
+TFLAG:49 = 3
+
+;倒錯度変化基準値
+TFLAG:50 = 2
+
+;レズ・ＢＬ経験基準値
+TFLAG:51 = 4
+
+RETURN 1
+
+;-------------------------------------------------
+;継続コマンドかどうかを設定
+;-------------------------------------------------
+@COM_IS_EQUIP119
+RETURN 1
+
+;-------------------------------------------------
+;계속 상태의 처리
+;-------------------------------------------------
+@COM_EQUIP118(ARG:0)
+
+;●모든 플레이어에 대해 처리
+FOR LOCAL:0, 0, MEQUIP_PLAYER_NUM:(ARG:0)
+	LOCAL:2 = MEQUIP_PLAYER:(ARG:0):(LOCAL:0)
+	
+	SOURCE:(LOCAL:2):노출 = 40
+	SOURCE:(LOCAL:2):일탈 = 20
+	SOURCE:(LOCAL:2):반감 = 20
+	SOURCE:(LOCAL:2):노출 = 700
+	
+NEXT
+
+;●전 타겟으로 붙어 처리
+FOR LOCAL:0, 0, MEQUIP_TARGET_NUM:(ARG:0)
+	LOCAL:2 = MEQUIP_TARGET:(ARG:0):(LOCAL:0)
+	
+	SOURCE:(LOCAL:2):기학 = 30
+	SOURCE:(LOCAL:2):일탈 = 10
+	SOURCE:(LOCAL:2):접촉 = 20
+NEXT
+		
+;-------------------------------------------------
+;계속중의 표시
+;-------------------------------------------------
+@EQUIP_MESSAGE119(ARG:0)
+
+RESULTS = %조사처리(EQUIP_PLAYER_ANAME(ARG:0), "가")% 애널벌리기중
+		
+;-------------------------------------------------
+;固有の実行判定
+;-------------------------------------------------
+@COM_ORDER_PLAYER119(ARG:0)
+;実行値の設定
+TCVAR:(ARG:0):25 = 105
+
+;共通部分
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 3 / 2)
+CALL COM_ORDER_ELEMENT(ARG:0, @"노출Lv{ABL:(ARG:0):노출}", ABL:(ARG:0):노출 * 5 / 2)
+CALL COM_ORDER_ELEMENT(ARG:0, @"마조Lv{ABL:(ARG:0):마조}", ABL:(ARG:0):마조 * 5 / 2)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정Lv{LOCAL:0}", MIN(LOCAL:0 * 3, 30))
+
+IF TCVAR:(ARG:0):60
+	CALL COM_ORDER_ELEMENT(ARG:0, "미약", 6)
+ENDIF
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -4)
+ENDIF
+
+
+RETURN 1
+
+;-------------------------------------------------
+;地の文(前文)
+;-------------------------------------------------
+@COM_TEXT_BEFORE119
+
+;プレイヤーが2人以上
+IF MPLY_NUM >= 2
+	LOCALS:0 = %ANAME(MPLY:0)%들
+;プレイヤーが１人
+ELSE
+	LOCALS:0 = %ANAME(MPLY:0)%
+ENDIF
+;ターゲットが2人以上
+IF MTAR_NUM >= 2
+	LOCALS:1 = %ANAME(MTAR:0)%들
+;ターゲットが1人
+ELSE
+	LOCALS:1 = %ANAME(MTAR:0)%
+ENDIF
+
+SELECTCASE GET_COM_INITIATIVE()
+	CASE 0
+	CASE 1
+		IF MTAR_NUM == 1 && ABL:(MTAR:0):새드 >= 3
+			PRINTFORMW %조사처리(LOCALS:1, "는")% 가학적인 미소를 띄우며 %LOCALS:0%에게 명령해, 자신의 %조사처리(STR_BODY("애널", MPLY:0), "를")% 손가락으로 열게%PLAYER_STR("했다", "라고 온")%…
+		ELSEIF MTAR_NUM == 1 && ABL:(MTAR:0):주도도Ｕ < 100
+			PRINTFORMW %조사처리(LOCALS:1, "는")% 조금 긴장한 모습으로 %LOCALS:0%에 명령해, %조사처리(STR_BODY("애널", MPLY:0), "를")% 손가락끝으로 열게 했다…
+		ELSE
+			PRINTFORMW %조사처리(LOCALS:1, "는")% %LOCALS:0%에 명령해, %조사처리(STR_BODY("애널", MPLY:0), "를")% 손가락끝으로 열게 했다…
+		ENDIF
+	;第三者に主導権
+	CASEELSE
+		PRINTFORML %조사처리(ANAME(TFLAG:45), "는")% %LOCALS:0%에게, %조사처리(LOCALS:1, "가")% %조사처리(STR_BODY("애널", MPLY:0), "를")% 손가락끝으로 열도록(듯이) 명령했다
+ENDSELECT
+
+PRINTFORM %조사처리(ANAME(MPLY:(LOCAL:0), MPLY_NUM),"는")%,
+SELECTCASE ABL:(MPLY:0):노출
+	CASE IS < 랭크역치:랭크_그외:랭크_E
+		PRINTFORM 수치로 얼굴을 붉게 물들이면서
+	CASE IS < 랭크역치:랭크_그외:랭크_C
+		PRINTFORM 당황스러움을 느끼면서도
+	CASE IS < 랭크역치:랭크_그외:랭크_A
+		PRINTFORM 즐거움을 느끼면서
+	CASEELSE
+		PRINTFORM 볼 수 있는 흥분에 애액을 방울져 떨어지게 한이면서
+ENDSELECT
+
+PRINTFORMW %조사처리(STR_BODY("애널", MPLY:0), "를")% 손가락끝으로 나누어 열어 보였다……
+
+
+@COM_TEXT_LAST119
+FOR LOCAL:0, 0, MPLY_NUM
+	LOCAL:1 = MPLY:(LOCAL:0)
+	SIF CUM_GET_COUNT:(LOCAL:1):사정부위_애널 > 0
+		PRINTFORML 장내사정을 받은 %ANAME(LOCAL:1)%의 %STR_BODY("애널", LOCAL:1)%로부터, 흰 것이 흘러넘쳤다……
+NEXT
+
+;-------------------------------------------------
+
+;コマンド区分
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN119
+RETURN 커맨드_우후후
+
+;--------------------
+;性嗜好用関数
+;--------------------
+@COM_PREFERENCE_PLAYER_119()
+RETURN POWER(2, 성적기호_욕보여지고싶다) + POWER(2, 성적기호_노출하고싶다)
+
+@COM_PREFERENCE_TARGET_119()
+RETURN POWER(2, 성적기호_욕보이고싶다)
+
