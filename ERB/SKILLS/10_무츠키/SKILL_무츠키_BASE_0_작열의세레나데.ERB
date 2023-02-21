@@ -1,0 +1,90 @@
+﻿;-----------------------------------
+;기본치 계산에 앞서 처리하는 것
+;-----------------------------------
+@SKILL_1_BASE_0_EXIST
+RETURN 1
+
+@SKILL_1_BASE_0_NAME
+RESULTS = 작열의 세레나데
+
+;레벨은 1-5까지
+@SKILL_1_BASE_0_LEVEL
+RETURN 3
+
+;대상 선택
+@SKILL_1_BASE_0_SETTARGET(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+;부대 대상
+RETURN 1
+
+;발동 판정
+@SKILL_1_BASE_0_CAN_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+대상측 = !발동측
+RETURN 1
+
+;효과를 여기에 기술
+@SKILL_1_BASE_0_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+대상측 = !발동측
+CALL DECREASE_SOLDIER(대상세력, 대상부대, RAND(500, 1500), 1)
+SELECTCASE RAND:6
+    CASE 0
+        PRINTFORML 「짠! 불꽃놀이 시작해 볼까?」
+    CASE 1
+        PRINTFORML 「두근두근하는 시간이 다가왔어~!」
+    CASE 2
+        PRINTFORML 「자, 간다~!」
+    CASE 3
+        PRINTFORML 「꺄하하! 팝콘 같아!」
+    CASE 4
+        PRINTFORML 「받아라~! 빵! 아하하, 재밌다~!」
+    CASE 5
+        PRINTFORML 「쾅쾅 터져버려~ 폭.발.해.라♥」
+ENDSELECT
+
+@SKILL_1_BASE_0_EXPLANATION
+RESULTS = 폭탄을 던져 피해를 준다.
+
+
+
+
+@SKILL_1_BASE_0_RATE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+RETURN 500
