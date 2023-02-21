@@ -526,6 +526,16 @@ SELECTCASE ARG
 		ELSE
 			clothes = _의복
 		ENDIF
+
+	CASE 42
+		;아스나(바니걸, 교복) 
+		IF CLOTH:ARG:의상부위_상하의 == 1
+			clothes = _바니걸
+		ELSEIF CLOTH:ARG:의상부위_상하의 == 11
+			clothes = _교복
+		ELSE
+			clothes = _의복
+		ENDIF
 ENDSELECT
 RESULTS = %clothes%
 RETURN
