@@ -14,6 +14,8 @@ CONFIG:80 = 2
 CALL INIT_CONFIG_SLG
 ;데일리 부분의 콘피그의 초기설정
 CALL INIT_CONFIG_DAILY
+;라이벌 부분의 콘피그의 초기설정
+CALL INIT_CONFIG_RIVAL
 ;-------------------------------------------------
 ;콘피그 화면의 처리
 ;-------------------------------------------------
@@ -38,7 +40,9 @@ PRINTL
 PRINTBUTTON @"  9[%"캐릭터 그림의 표시", 24, RIGHT%]", 9
 PRINTL 
 PRINTBUTTON @" 10[%"커맨드 필터", 24, RIGHT%]", 10
-PRINTL 
+PRINTL
+PRINTBUTTON @" 11[%"라이벌 설정", 24, RIGHT%]", 11
+PRINTL
 PRINTL 
 PRINTBUTTON @" 80[%"현재의 설정을 보존", 24, RIGHT%]", 80
 PRINTL 
@@ -85,6 +89,8 @@ ELSEIF RESULT == 9
 	CALL COMFIG_IMAGE_K
 ELSEIF RESULT == 10
 	CALL CONFIG_COM_FILTER
+ELSEIF RESULT == 11
+	CALL CONFIG_RIVAL
 ELSEIF GROUPMATCH(RESULT, 80, 82)
 	CALL CONFIG_SAVE(RESULT == 80)
 ELSEIF GROUPMATCH(RESULT, 81, 83)
