@@ -1,0 +1,52 @@
+﻿@RIVAL_FIRST(RIVAL_TARGET)
+#DIM RIVAL_TARGET
+VARSET LOCAL
+
+LOCAL:0 = RAND(10) + 5*(CONFIG:506)
+CFLAG:RIVAL_TARGET:관심도 += LOCAL:0
+CFLAG:RIVAL_TARGET:호감도 -= RAND(10) + 3*(CONFIG:507)
+
+IF CONFIG:509 == 1
+    CALL SINGLE_DRAWLINE
+    PRINTFORML 「아, 안녕하세요. 처음 뵙겠습니다.」
+    PRINTFORML %조사처리(ANAME(RIVAL_TARGET),"은")% 라이벌에게 인사를 했다.
+    PRINTL
+    CALL PRINT_RIVAL(RIVAL_TARGET, "관심도", LOCAL:0, "L")
+ENDIF
+
+
+
+
+;ARGS:0은 관심도 OR 굴복도
+;ARGS:1은 PRINT문의 "" OR "L" OR "W" 
+;ARG:1 는 양
+@PRINT_RIVAL(RIVAL_TARGET, ARGS, ARG:1, ARGS:1 = "")
+#DIM RIVAL_TARGET
+
+IF ARGS:1 == "L"
+    IF ARGS == "관심도"
+        PRINTFORML %ANAME(RIVAL_TARGET)%의 라이벌에 대한 호감도가 {ARG:1} 만큼 올랐습니다.
+    ELSEIF ARGS == "굴복도"
+        PRINTFORML %ANAME(RIVAL_TARGET)%의 라이벌에 대한 굴복도가 {ARG:1} 만큼 올랐습니다.
+    ELSE
+        DEBUGPRINTFORML PRINT_RIVAL 인수 부족
+    ENDIF
+ELSEIF ARGS:1 == ""
+    IF ARGS == "관심도"
+        PRINTFORM %ANAME(RIVAL_TARGET)%의 라이벌에 대한 호감도가 {ARG:1} 만큼 올랐습니다.
+    ELSEIF ARGS == "굴복도"
+        PRINTFORM %ANAME(RIVAL_TARGET)%의 라이벌에 대한 굴복도가 {ARG:1} 만큼 올랐습니다.
+    ELSE
+        DEBUGPRINTFORML PRINT_RIVAL 인수 부족
+    ENDIF
+ELSEIF ARGS:1 == "W"
+    IF ARGS == "관심도"
+        PRINTFORMW %ANAME(RIVAL_TARGET)%의 라이벌에 대한 호감도가 {ARG:1} 만큼 올랐습니다.
+    ELSEIF ARGS == "굴복도"
+        PRINTFORMW %ANAME(RIVAL_TARGET)%의 라이벌에 대한 굴복도가 {ARG:1} 만큼 올랐습니다.
+    ELSE
+        DEBUGPRINTFORML PRINT_RIVAL 인수 부족
+    ENDIF
+ELSE
+    DEBUGPRINTFORML PRINT_RIVAL 인수 부족
+ENDIF

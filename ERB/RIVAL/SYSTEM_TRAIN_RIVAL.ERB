@@ -1,0 +1,65 @@
+﻿@RIVAL_EVENTCOMEND
+#DIM RIVAL_TARGET
+
+SIF CONFIG:500 == 0
+    RETURN
+
+CALL RIVAL_RESET_TARGET
+SIF CONFIG:510 == 0
+    CONFIG:510 = RIVAL_GET_TARGET()
+RIVAL_TARGET = CONFIG:510
+
+IF CFLAG:RIVAL_TARGET:첫대면 == 0   
+    CALL RIVAL_FIRST(RIVAL_TARGET)
+    CFLAG:RIVAL_TARGET:첫대면 = 1
+    RETURN
+ENDIF
+
+;타겟의 초기화
+@RIVAL_RESET_TARGET
+#DIM 라이벌_ID
+#DIM 라이벌의현재위치
+라이벌_ID = NO_TO_CHARA(RIVAL_ID)
+라이벌의현재위치 = CFLAG:라이벌_ID:현재위치
+
+IF GROUPMATCH(CFLAG:(CONFIG:510):현재위치, 라이벌의현재위치, CITY_ROUTE:라이벌의현재위치:0, CITY_ROUTE:라이벌의현재위치:1, CITY_ROUTE:라이벌의현재위치:2, CITY_ROUTE:라이벌의현재위치:3, CITY_ROUTE:라이벌의현재위치:4, CITY_ROUTE:라이벌의현재위치:5) || CFLAG:(LOCAL:0):현재위치 < 0
+    CONFIG:510 = 0
+    RETURN
+ENDIF
+
+;타겟을 초기화
+IF RAND(10) > 8
+    CONFIG:510 = 0
+    RETURN
+ENDIF
+
+;랜덤한 타겟을 라이벌의 현재 위치에서 얻어오기
+@RIVAL_GET_TARGET
+#FUNCTION
+#DIM TARGET_COUNT
+#DIM TARGET_ID, 1000
+#DIM 라이벌_ID
+#DIM 라이벌의현재위치
+TARGET_COUNT = 0
+VARSET TARGET_ID
+라이벌_ID = NO_TO_CHARA(RIVAL_ID)
+라이벌의현재위치 = CFLAG:라이벌_ID:현재위치
+
+FOR LOCAL:0, 0, CHARANUM
+    ;플레이어와 함께라면 스킵
+	SIF CFLAG:(LOCAL:0):조교참가플래그
+        CONTINUE
+    SIF !HAS_VAGINA(LOCAL:0)
+        CONTINUE
+    ;플래그가 없을 시 스킵
+    SIF CFLAG:(LOCAL:0):플래그 == 0
+        CONTINUE
+    ;라이벌이랑 근처에 없으면 스킵
+    SIF !(GROUPMATCH(CFLAG:(LOCAL:0):현재위치, 라이벌의현재위치, CITY_ROUTE:라이벌의현재위치:0, CITY_ROUTE:라이벌의현재위치:1, CITY_ROUTE:라이벌의현재위치:2, CITY_ROUTE:라이벌의현재위치:3, CITY_ROUTE:라이벌의현재위치:4, CITY_ROUTE:라이벌의현재위치:5) && CFLAG:(LOCAL:0):현재위치 > 0)
+        CONTINUE
+    TARGET_ID:TARGET_COUNT = LOCAL:0
+    TARGET_COUNT++
+NEXT
+
+LOCAL:0 = RAND(TARGET_COUNT)
+RETURNF TARGET_ID:TARGET_COUNT

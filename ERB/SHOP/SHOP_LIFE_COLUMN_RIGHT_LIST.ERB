@@ -181,7 +181,9 @@ ENDIF
 #DIM LINE_NUM_BUTTON
 #DIM BUTTON_LINE
 #DIM PRINTOPTION
+#DIM 라이벌_ID
 
+라이벌_ID = NO_TO_CHARA(RIVAL_ID)
 ;하나의 페이지에 표시 가능한 버튼수의 최대치를 계산((거점 페이즈 화면 최대행수 - 2 - 현재 표시행수) * LINE_NUM_BUTTON)/BUTTON_LINE
 MAX_BUTTON = ((LINES_SHOP_DRAW - 2 - (LINECOUNT - FIRST_COLUMN_RIGHT_LINE)) * LINE_NUM_BUTTON) / BUTTON_LINE
 
@@ -189,6 +191,8 @@ MAX_BUTTON = ((LINES_SHOP_DRAW - 2 - (LINECOUNT - FIRST_COLUMN_RIGHT_LINE)) * LI
 MENU_CHARANUM = 0
 
 FOR LOCAL:0, 0, CHARANUM
+	SIF LOCAL:0 == 라이벌_ID
+		CONTINUE
 	;선택 가능한 조건을 채우고 있는 캐릭터를 판정
 	TRYCALLFORM SHOP_LIFE_CHECKCHARA{FLAG:거점페이즈선택커맨드}(LOCAL:0)
 	IF RESULT
@@ -214,6 +218,8 @@ NOW_PAGE_BUTTON_END = FLAG:거점페이즈페이지 * MAX_BUTTON
 
 ;캐릭터 리스트 개시
 FOR LOCAL:0, 0, CHARANUM
+	SIF LOCAL:0 == 라이벌_ID
+		CONTINUE
 	;이번 체크하는 캐릭터（캐릭터 번호순서는 아니고, 리스트용으로 줄서 바꿀 수 있었던 순서로 체크）
 	NOW_CHECK_CHARA = SHOP_CHARA_LIST:(LOCAL:0)
 	;리스트로부터 제외되고 있는 캐릭터라면 다음의 캐릭터에게
