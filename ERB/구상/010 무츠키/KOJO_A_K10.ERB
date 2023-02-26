@@ -11,6 +11,16 @@
 ;●「만나러간다」의 개시시의 대사
 ;=================================================
 @KOJO_TRAIN_START_A1_K10
+
+IF IS_SLAVE(TARGET)
+	LOCALS:0 = 주인님
+ELSEIF TALENT:MASTER:선생 == 1
+	LOCALS:0 = 선생님
+ELSE
+	LOCALS:0 = %ANAME(MASTER)%
+ENDIF
+
+
 ;[속이 빈 것]상태라면 구상을 표시하지 않는다
 IF TALENT:공허
 	RETURN
@@ -23,10 +33,11 @@ IF CFLAG:200 == 0
 	CFLAG:200 = 1
 	;구상+ 기능 활성화 여부 묻기
 
+;마스터가 [선생] 소질을 가지고 있다면
 [SKIPSTART]
 	;마스터가 [선생] 소질을 가지고 있다면
 	IF TALENT:MASTER:선생 == 1
-		PRINTFORMW 무츠키가 당신을 부르는 호칭을 어떻게 할까요?
+		PRINTFORMW 히나가 당신을 부르는 호칭을 어떻게 할까요?
 		PRINTFORMW [0] 선생이라고 부른다.
 		PRINTFORMW [1] 이름으로 부른다.
 		$INPUT_LOOP1
@@ -35,10 +46,10 @@ IF CFLAG:200 == 0
 			GOTO INPUT_LOOP1
 		ELSEIF RESULT == 0
 			CFLAG:301 == %선생%
-			PRINTFORMW 무츠키는 당신을 선생님이라고 부릅니다.
+			PRINTFORMW 히나는 당신을 선생이라고 부릅니다.
 		ELSEIF RESULT == 1
 			CFLAG:301 == %ANAME(MASTER)%
-			PRINTFORMW 무츠키는 당신을 %조사처리(CFLAG:301,"이")%이라고 부릅니다.
+			PRINTFORMW 히나는 당신을 %조사처리(CFLAG:301,"이")%이라고 부릅니다.
 		ENDIF
 	;마스터가 [선생] 소질을 가지고 있지 않다면
 	ELSE
@@ -49,7 +60,9 @@ IF CFLAG:200 == 0
 	;첫대면의 경우
 	IF !CFLAG:17
 		PRINTFORMW  해돋이 산을 한가롭게 돌아다니던 중, 갑작스럽게 누군가 백허그를 해왔다.
-		PRINTFORMW 「후후~ 선생님~♥」
+		PRINTFORML
+		PRINTFORMW 「후후~ %LOCALS:0%~♥」
+		PRINTFORML
 		PRINTFORML [0]-갑작스러운 허그에 깜짝 놀란다.
 		PRINTFORML [1]-바로 떼어낸다.
 		PRINTFORML [2]-몸에 둘러진 손을 꼬옥 잡는다.
@@ -57,28 +70,39 @@ IF CFLAG:200 == 0
 		SELECTCASE RESULT
 			CASE 0
 				PRINTFORMW  우, 우왓!
-				PRINTFORMW 「쿠후흣, 선생님 놀라는 거 귀여워~♥」
+				CALL FACE_IMAGE_N("표정_10_일반_10")
+				PRINTFORML 「쿠후흣, %LOCALS:0% 놀라는 거 재밌어~!」
 				PRINTFORMW 「내 장난~ 완벽하게 먹혀들었네~」
+				PRINTFORML
 				PRINTFORMW  뒤돌아 보니, 게헨나의 교복을 입은 여자아이가 있었다.
 			CASE 1
 				PRINTFORMW  침착하게 낯선 자를 떼어냈다.
-				PRINTFORMW 「에에~ 선생님, 재미없어..」
+				CALL FACE_IMAGE_N("표정_10_일반_4")
+				PRINTFORML 「에에~ %LOCALS:0%, 재미없어..」
 				PRINTFORMW 「적어도 놀라는 척이라도 해 주라구~」
+				PRINTFORML
 				PRINTFORMW  뒤돌아 보니, 게헨나의 교복을 입은 여자아이가 있었다.
 			CASE 2
 				PRINTFORMW  손을 꼬옥 잡고 체온을 느낀다.
-				PRINTFORMW 「흐응? 선생님, 그렇게 아무나에게 허락하면 안된다구~」
+				PRINTFORML
+				PRINTFORML 「흐응? %LOCALS:0%, 그렇게 아무나에게 허락하면 안된다구~」
 				PRINTFORMW 「내가 혼내줘야 겠네~ 우후후~♥」
+				PRINTFORML
 				PRINTFORMW  손을 떼고 뒤를 돌아보니, 게헨나의 교복을 입은 여자아이가 있었다.
-				PRINTFORMW 「아, 그리고 선생님의 몸 따뜻하네~」
+				CALL FACE_IMAGE_N("표정_10_일반_11")
+				PRINTFORML 「아, 그리고 %LOCALS:0%의 몸 따뜻하네~」
 				PRINTFORMW 「쿠후후, 또 안아 버릴까~」
+				CALL FACE_IMAGE_N("표정_10_일반_2")
 				PRINTFORMW 「어라, 너무 놀렸나. 혹시 화났어?」
 		ENDSELECT
 		PRINTFORMW  %ANAME(MASTER)%은 그녀가 게헨나의 학생인 것을 알아차린 후 그녀를 꾸짖었다.
-		PRINTFORMW 「아아~ 선생님에게 혼나버렸다~」
+		CALL FACE_IMAGE_N("표정_10_일반_8")
+		PRINTFORMW 「아아~ %LOCALS:0%에게 혼나버렸다~」
+		CALL FACE_IMAGE_N("표정_10_일반_11")
 		PRINTFORMW 「쿠후후후~ 그래도 재미있었어~♥」
-		PRINTFORMW 「난 아사기 무츠키야~」
-		PRINTFORMW 「앞으로 잘 부탁해, 선생님♥」
+		PRINTFORML
+		PRINTFORML 「난 아사기 무츠키야~」
+		PRINTFORMW 「앞으로 잘 부탁해, %LOCALS:0%♥」
 	ENDIF
 ;-------------------------------------------------
 ;개시시(1회만)
@@ -5532,10 +5556,14 @@ ENDIF
 IF SELECTCOM == 300
 	;처음(주도권을 고려하지 않는다)
 	IF IS_COM_FIRST(1)
-		 PRINTFORMW 「응? 선생님이 선생님인지 어떻게 알았냐구?」
-		 PRINTFORMW 「그야, 흥신소에 의뢰자랑 선생님 말고는 볼일이 없는데,」
-		 PRINTFORMW 「누가 봐도 의뢰자처럼은 안 보였다구?」
-		 PRINTFORMW 「그보다, 애초에 남자 어른은 선생님 밖에 없는 걸~」
+		PRINTFORMW 「응? 선생님이 선생님인지 어떻게 알았냐구?」
+		PRINTFORML
+		PRINTFORML 「그야, 흥신소에 의뢰자랑 선생님 말고는 볼일이 없는데,」
+		PRINTFORMW 「누가 봐도 의뢰자처럼은 안 보였다구?」
+		IF TALENT:MASTER:선생 == 1
+			PRINTFORML
+			PRINTFORMW 「그보다, 애초에 남자 어른은 선생님 밖에 없는 걸~」
+		ENDIF
 	;2회째 이후
 	ELSE
 		;연모 or 복종 or 친구
@@ -5545,10 +5573,10 @@ IF SELECTCOM == 300
 		ELSE
 		SELECTCASE RAND:5
 			CASE 0
-				PRINTFORMW 「저번에 하던 놀이 마저 할까?」
+				PRINTFORML 「저번에 하던 놀이 마저 할까?」
 				PRINTFORMW 「그거.. 재밌었지?♥」
 			CASE 1
-				PRINTFORMW 「응? 가방 속에 뭐가 들어 있냐고?」
+				PRINTFORML 「응? 가방 속에 뭐가 들어 있냐고?」
 				PRINTFORMW 「쿠후후, 비밀~♥」
 			CASE 2
 				PRINTFORMW 「선생님, 오늘은 뭐하고 놀까?♥」
@@ -5560,16 +5588,20 @@ IF SELECTCOM == 300
 				INPUT
 				IF RESULT == 0
 					PRINTFORMW 「후후~ 그러면 지금 바로 나랑 놀자!」
+					PRINTFORML
 					PRINTFORMW 「뭐하고 노냐고?」
 					PRINTFORMW 「쿠후후~ 선생님이 생각하고 있는 '그거'?♥」
 				ELSEIF RESULT == 1
 					PRINTFORMW 「흐응? 그렇단 말이지?」
+					PRINTFORML
 					PRINTFORMW  무츠키가 갑자기 달라 붙었다.
+					PRINTFORML
 					PRINTFORMW 「쿠후후~♥ 이렇게 하면 한가하지 않더라도 신경 쓸 수 밖에 없지~?」
 					PRINTFORMW 「그러니까~ 일은 나중에 하고 나랑 놀자, 응?」
 				ENDIF
 			CASE 4
 				PRINTFORMW 「아루쨩은 순진한 성격이 재미있단 말이지~」
+				PRINTFORML
 				PRINTFORMW 「앗, 선생님도 마찬가지라구~?」
 				PRINTFORMW 「그러니까, 오늘도 열심히 놀려 볼까~ 쿠후후후♥」
 		ENDSELECT
@@ -5804,7 +5836,7 @@ IF SELECTCOM == 320
 					PRINTFORMW 「어때? 내 손 부드럽지? 후후~♥」
 				CASE 1
 					PRINTFORMW  무츠키가 %ANAME(MASTER)%의 손을 자신의 허리로 이끌었다.
-					PRINTFORMW 「쿠후후~ 선생님, 착한 어른이면 이럴 땐 저항해야 한다구?♥」
+					PRINTFORMW 「쿠후후~ 선생님, 착한 어른은 이럴 땐 저항해야 한다구?♥」
 			ENDSELECT
 			ENDIF
 		ENDIF
@@ -5837,7 +5869,7 @@ IF SELECTCOM == 320
 					PRINTFORMW  무츠키의 어깨를 주물러 주었다.
 					PRINTFORMW 「응응, 거기 좋앗♥」
 					PRINTFORMW  이상한 소리 내지 마.
-					PRINTFORMW 「흐응? 선생님, 학생을 대상으로 무슨 생각을 하는 거야? 후후♥」
+					PRINTFORMW 「흐응? 선생님, 무슨 생각을 하는 거야? 후후♥」
 				CASE 2
 					PRINTFORMW  무츠키의 허리를 쓰다듬었다.
 					PRINTFORMW 「쿠후후~ 선생님, 손길이 야하다구?♥」
@@ -6046,9 +6078,11 @@ IF SELECTCOM == 324
 			IF MARK:2 >= 2
 				;PRINTFORMW 
 			ELSE
-				PRINTFORMW 「저기, 선생님~」
+				PRINTFORML 「저기, 선생님~」
 				PRINTFORMW 「선생님한테 달콤한 말을 듣고 싶은데~♥」
+				PRINTFORML
 				PRINTFORMW  달콤한 말이라고 해도, 무슨 말을 해야 할지..
+				PRINTFORML
 				PRINTFORMW 「그냥 나에 대한 선생님의 마음을 말해 줘~」
 				PRINTFORML [0]-귀여워
 				PRINTFORML [1]-사랑스러워
@@ -6066,10 +6100,10 @@ IF SELECTCOM == 324
 						PRINTFORMW 「방금 전 선생님의 말로 조금 두근거렸을 지도~?」
 					CASE 2
 						PRINTFORMW 「엣, 정말로 마음을 말해버리면 어떡해~ 아하하!」
-						PRINTFORMW 「좋아한다는거, 학생으로서 좋아한다는 거지~?」
+						PRINTFORML 「좋아한다는거, 학생으로서 좋아한다는 거지~?」
 						PRINTFORMW 「다른 의미라면 선생님, 나쁜 어른이라구~♥」
 					CASE 3
-						PRINTFORMW 「에? 사, 사랑한다니..」
+						PRINTFORML 「에? 사, 사랑한다니..」
 						PRINTFORMW 「아아~ 선생님한테 고백 받아버렸네~ 아하핫!」
 						PRINTFORMW 「학생한테 사랑한다고 하다니, 결코 착한 어른은 아니지?」
 						PRINTFORMW 「쿠후후~ 그래도, 가슴 두근거렸다구?♥」
@@ -6085,9 +6119,11 @@ IF SELECTCOM == 324
 				;PRINTFORMW 
 			;그 이외
 			ELSE
-				PRINTFORMW 「저기, 선생님~」
+				PRINTFORML 「저기, 선생님~」
 				PRINTFORMW 「선생님한테 달콤한 말을 듣고 싶은데~♥」
+				PRINTFORML
 				PRINTFORMW  달콤한 말이라고 해도, 무슨 말을 해야 할지..
+				PRINTFORML
 				PRINTFORMW 「그냥 나에 대한 선생님의 마음을 말해 줘~」
 				PRINTFORML [0]-귀여워
 				PRINTFORML [1]-사랑스러워
@@ -6105,10 +6141,10 @@ IF SELECTCOM == 324
 						PRINTFORMW 「방금 전 선생님의 말로 조금 두근거렸을 지도~?」
 					CASE 2
 						PRINTFORMW 「엣, 정말로 마음을 말해버리면 어떡해~ 아하하!」
-						PRINTFORMW 「좋아한다는거, 학생으로서 좋아한다는 거지~?」
+						PRINTFORML 「좋아한다는거, 학생으로서 좋아한다는 거지~?」
 						PRINTFORMW 「다른 의미라면 선생님, 나쁜 어른이라구~♥」
 					CASE 3
-						PRINTFORMW 「에? 사, 사랑한다니..」
+						PRINTFORML 「에? 사, 사랑한다니..」
 						PRINTFORMW 「아아~ 선생님한테 고백 받아버렸네~ 아하핫!」
 						PRINTFORMW 「학생한테 사랑한다고 하다니, 결코 착한 어른은 아니지?」
 						PRINTFORMW 「쿠후후~ 그래도, 가슴 두근거렸다구?♥」
