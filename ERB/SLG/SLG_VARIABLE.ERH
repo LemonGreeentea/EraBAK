@@ -481,7 +481,7 @@
 ;그 턴, 특별훈련 실시필
 #DIM SAVEDATA DONE_SPECIAL_TRAIN
 
-;그 턴, 영지탐색 실시필
+;그 턴, 거리탐색 실시필
 #DIM SAVEDATA DONE_TERRITORYSEARCH
 
 ;-------------------------------------------------

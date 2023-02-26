@@ -1,0 +1,491 @@
+﻿;愛撫
+
+;-------------------------------------------------
+;コマンド名称
+;-------------------------------------------------
+@COM_NAME332
+RESULTS:0 = 엉덩이애무한다
+RESULTS:1 = 엉덩이애무당한다
+RESULTS:2 = 엉덩이애무해 받는다
+RESULTS:3 = 엉덩이애무된다
+
+;-------------------------------------------------
+;選択可否判定
+;-------------------------------------------------
+@COM_ABLE332
+;共通部分
+CALL COM_ABLE_COMMON(332)
+SIF RESULT == 0
+	RETURN 0
+;行動不能なら不可
+SIF !IS_PLAYABLE(MPLY:0)
+	RETURN 0
+SIF !HAS_VAGINA(MTAR:0)
+	RETURN 0
+;主人公以外が実行する場合、実行可能でなければ表示されない
+IF MPLY:0 != MASTER
+	TCVAR:(MPLY:0):24 = 0
+	SKIPDISP 1
+	CALL COM_ORDER_PLAYER332(MPLY:0)
+	SKIPDISP 0
+	SIF TCVAR:(MPLY:0):24 < TCVAR:(MPLY:0):25 
+		RETURN 0
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;メイン処理
+;-------------------------------------------------
+@COM332
+;実行判定
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;プレイヤー
+DOWNBASE:(MPLY:0):체력 += 100
+EXP:(MPLY:0):성기술경험치 += 1
+
+SOURCE:(MPLY:0):봉사 = SERVE_HOUSHI(LOCAL:2, 100)
+SOURCE:(MPLY:0):노출 = 50
+SOURCE:(MPLY:0):접촉 = 60
+SOURCE:(MPLY:0):성행동 = 90
+
+;主導権に応じた優越・屈従のソース追加
+CALL ADD_SOURCE_INITIATIVE_U(MPLY:0, 100, 40)
+
+;奉仕経験値を得られるコマンドのフラグ
+TCVAR:(MPLY:0):4 = 1
+
+;ターゲット
+DOWNBASE:(MTAR:0):체력 += 60
+
+SOURCE:(MTAR:0):쾌Ｃ += SENSE_HOUSHI(MPLY:0, MTAR:0, 150)
+SOURCE:(MTAR:0):쾌Ｖ += SENSE_HOUSHI(MPLY:0, MTAR:0, 150)
+SOURCE:(MTAR:0):쾌Ａ += SENSE_HOUSHI(MPLY:0, MTAR:0, 150)
+SOURCE:(MTAR:0):노출 = 150
+SOURCE:(MTAR:0):접촉 = 60
+SOURCE:(MTAR:0):성행동 = 120
+
+;射精箇所と対象をセット
+CALL STACK_SPERM(MTAR:0, MPLY:0, 0)
+
+;主導権に応じた優越・屈従のソース追加
+CALL ADD_SOURCE_INITIATIVE_U(MPLY:0, 80, 0)
+
+;主導度変化基準値
+TFLAG:49 = 2
+
+;倒錯度変化基準値
+TFLAG:50 = 1
+
+;レズ・ＢＬ経験基準値
+TFLAG:51 = 5
+
+;知識がなければ、獲得する
+CALL SET_COM_KNOWLEDGE(MPLY:0, 0)
+CALL SET_COM_KNOWLEDGE(MTAR:0, 0)
+
+RETURN 1
+
+;-------------------------------------------------
+;継続コマンドかどうかを設定
+;-------------------------------------------------
+@COM_IS_EQUIP332
+RETURN 1
+
+;-------------------------------------------------
+;継続状態の処理
+;-------------------------------------------------
+@COM_EQUIP332(ARG:0)
+
+;プレイヤー
+DOWNBASE:(MEQUIP_PLAYER:(ARG:0):0):체력 += 20
+EXP:(MEQUIP_PLAYER:(ARG:0):0):성기술경험치 += 1
+
+SOURCE:(MEQUIP_PLAYER:(ARG:0):0):봉사 = SERVE_HOUSHI(MEQUIP_PLAYER:(ARG:0):0, 60)
+SOURCE:(MEQUIP_PLAYER:(ARG:0):0):노출 = 50
+SOURCE:(MEQUIP_PLAYER:(ARG:0):0):접촉 = 30
+SOURCE:(MEQUIP_PLAYER:(ARG:0):0):성행동 = 30
+
+;射精箇所と対象をセット
+CALL STACK_SPERM(MEQUIP_PLAYER:(ARG:0):0, MEQUIP_PLAYER:(ARG:0):0, 0)
+
+;主導権に応じた優越・屈従のソース追加
+CALL ADD_SOURCE_INITIATIVE_U(MEQUIP_PLAYER:(ARG:0):0, 100, 40)
+
+;倒錯度変化基準値
+TCVAR:(MEQUIP_PLAYER:(ARG:0):0):50 += 1
+
+;奉仕経験値を得られるコマンドのフラグ
+TCVAR:(MEQUIP_PLAYER:(ARG:0):0):4 = 1
+
+;ターゲット
+DOWNBASE:(MEQUIP_TARGET:(ARG:0):0):체력 += 10
+
+SOURCE:(MEQUIP_TARGET:(ARG:0):0):쾌Ｃ += SENSE_HOUSHI(MEQUIP_PLAYER:(ARG:0):0, MEQUIP_TARGET:(ARG:0):0, 50)
+SOURCE:(MEQUIP_TARGET:(ARG:0):0):쾌Ｖ += SENSE_HOUSHI(MEQUIP_PLAYER:(ARG:0):0, MEQUIP_TARGET:(ARG:0):0, 50)
+SOURCE:(MEQUIP_TARGET:(ARG:0):0):쾌Ａ += SENSE_HOUSHI(MEQUIP_PLAYER:(ARG:0):0, MEQUIP_TARGET:(ARG:0):0, 50)
+SOURCE:(MEQUIP_TARGET:(ARG:0):0):노출 = 100
+SOURCE:(MEQUIP_TARGET:(ARG:0):0):접촉 = 30
+SOURCE:(MEQUIP_TARGET:(ARG:0):0):성행동 = 45
+
+;射精箇所と対象をセット
+CALL STACK_SPERM(MEQUIP_TARGET:(ARG:0):0, MEQUIP_PLAYER:(ARG:0):0, 0)
+
+;主導権に応じた優越・屈従のソース追加
+CALL ADD_SOURCE_INITIATIVE_U(MEQUIP_PLAYER:(ARG:0):0, 80, 0)
+
+;倒錯度変化基準値
+TCVAR:(MEQUIP_TARGET:(ARG:0):0):50 += 1
+
+;-------------------------------------------------
+;継続中の表示
+;-------------------------------------------------
+@EQUIP_MESSAGE332(ARG:0)
+LOCAL:2 = 0
+RESULTS = %조사처리(EQUIP_PLAYER_ANAME(ARG:0), "가")% %EQUIP_TARGET_ANAME(ARG:0)%에 엉덩이 애무중
+
+;-------------------------------------------------
+;継続中の地の文(前文)
+;-------------------------------------------------
+@COM_TEXT_BEFORE_EQUIP332(ARG:0)
+PRINTFORML %조사처리(EQUIP_PLAYER_ANAME(ARG:0), "가")% %EQUIP_TARGET_ANAME(ARG:0)%의 엉덩이를 만지작거리고 있다…
+
+;-------------------------------------------------
+;継続を解除したときの地の文
+;-------------------------------------------------
+@COM_TEXT_RELEASE_EQUIP332(ARG:0)
+
+
+;-------------------------------------------------
+;固有の実行判定
+;-------------------------------------------------
+@COM_ORDER_PLAYER332(ARG:0)
+;実行値の設定
+TCVAR:(ARG:0):25 = 70
+
+;共通部分
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 4)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 2, 20))
+
+;ムード
+IF TFLAG:37 < 10
+	LOCAL:0 = -10
+ELSEIF TFLAG:37 < 30
+	LOCAL:0 = -5
+ELSEIF TFLAG:37 < 50
+	LOCAL:0 = 0
+ELSEIF TFLAG:37 < 100
+	LOCAL:0 = (TFLAG:37 - 50) / 10
+ELSE
+	LOCAL:0 = MIN(10, (TFLAG:37 - 100) / 50 + 5)
+ENDIF
+CALL COM_ORDER_ELEMENT(MTAR:0, "ムード", LOCAL:0)
+
+IF TALENT:(ARG:0):정조관념
+	CALL COM_ORDER_ELEMENT(ARG:0, "정조관념", -6)
+ENDIF
+IF TALENT:(ARG:0):정조관념없음
+	CALL COM_ORDER_ELEMENT(ARG:0, "정조관념없음", 3)
+ENDIF
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -1)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 6)
+ENDIF
+IF TALENT:(ARG:0):남성혐오 && IS_MALE(MASTER)
+	CALL COM_ORDER_ELEMENT(ARG:0, "남성혐오", -12)
+ENDIF
+IF TALENT:(ARG:0):여성혐오 && IS_FEMALE(MASTER)
+	CALL COM_ORDER_ELEMENT(ARG:0, "여성혐오", -12)
+ENDIF
+IF TFLAG:54
+	CALL COM_ORDER_ELEMENT(ARG:0, "데이트중", 6)
+ENDIF
+
+;合意
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -10)
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+;固有の実行判定(ターゲット側)
+;-------------------------------------------------
+@COM_ORDER_TARGET332(ARG:0)
+;実行値の設定
+TCVAR:(ARG:0):25 = 70
+
+;共通部分
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 4)
+
+LOCAL:0 = GET_PALAMLV(PALAM:(ARG:0):욕정)
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 2, 20))
+
+;ムード
+IF TFLAG:37 < 10
+	LOCAL:0 = -10
+ELSEIF TFLAG:37 < 30
+	LOCAL:0 = -5
+ELSEIF TFLAG:37 < 50
+	LOCAL:0 = 0
+ELSEIF TFLAG:37 < 100
+	LOCAL:0 = (TFLAG:37 - 50) / 10
+ELSE
+	LOCAL:0 = MIN(10, (TFLAG:37 - 100) / 50 + 5)
+ENDIF
+CALL COM_ORDER_ELEMENT(MTAR:0, "ムード", LOCAL:0)
+
+IF TALENT:(ARG:0):정조관념
+	CALL COM_ORDER_ELEMENT(ARG:0, "정조관념", -6)
+ENDIF
+IF TALENT:(ARG:0):정조관념없음
+	CALL COM_ORDER_ELEMENT(ARG:0, "정조관념없음", 3)
+ENDIF
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -1)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 6)
+ENDIF
+IF TALENT:(ARG:0):남성혐오 && IS_MALE(MASTER)
+	CALL COM_ORDER_ELEMENT(ARG:0, "남성혐오", -12)
+ENDIF
+IF TALENT:(ARG:0):여성혐오 && IS_FEMALE(MASTER)
+	CALL COM_ORDER_ELEMENT(ARG:0, "여성혐오", -12)
+ENDIF
+IF TFLAG:54
+	CALL COM_ORDER_ELEMENT(ARG:0, "데이트중", 6)
+ENDIF
+
+;合意
+IF !TALENT:(ARG:0):합의 && !TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "합의 없음", -10)
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE332
+#DIMS PENIS_NAME
+;SKIPDISP 하고 나서 호출해 RESULT를 취하면(자), 캐릭터 말로부터 어느 패턴인가 읽을 수 있는…하즈
+LOCAL:3 = 0
+
+IF PALAM:(MTAR:0):윤활 >= PALAMLV:5
+	LOCALS:1 = 흠뻑 젖은
+ELSEIF PALAM:(MTAR:0):윤활 >= PALAMLV:3
+	LOCALS:1 = 애액으로 습기찬
+ELSEIF PALAM:(MTAR:0):윤활 >= PALAMLV:2
+	LOCALS:1 = 젖기 시작한
+ENDIF
+
+SELECTCASE GET_COM_INITIATIVE()
+	;플레이어에 주도권
+	CASE 0
+	PRINTFORM  %ANAME(MPLY:0)%는
+		SELECTCASE PREVCOM
+			;업무중
+			CASE 303, 304
+				LOCAL:3 = 1
+				PRINTDATA
+					DATAFORM 업무중의 %ANAME(MTAR:0)%의 %LOCALS:1% 속옷 위로부터
+					DATAFORM 정무에 힘쓰는 %ANAME(MTAR:0)%의 %LOCALS:1% 속옷 위로부터
+					DATAFORM 서류를 처리하는 %ANAME(MTAR:0)%의 %LOCALS:1% 속옷 위로부터
+				ENDDATA
+			;훈련 후
+			CASE 301, 302
+				LOCAL:3 = 2
+				PRINTDATA
+					DATAFORM %ANAME(MTAR:0)%의 격렬한 운동으로 뜸든 %LOCALS:1% 속옷 위로부터
+					DATAFORM %ANAME(MTAR:0)%의 %LOCALS:1% 속옷 위로부터
+					DATAFORM 숨을 가쁘게 쉬는 %ANAME(MTAR:0)%의 %LOCALS:1% 속옷 위로부터
+				ENDDATA
+			;가창
+			CASE 306
+				LOCAL:3 = 3
+				PRINTFORM 노랫소리를 연주하는 %ANAME(MTAR:0)%의 %LOCALS:1% 속옷 위로부터
+			;청소 페라
+			CASE 310, 311
+				LOCAL:3 = 4
+				PRINTDATA
+					DATAFORM 술기운으로 붉어진 %ANAME(MTAR:0)%의 %LOCALS:1% 속옷 위로부터
+					DATAFORM 술기운에 틈새를 붉게 물들인 %ANAME(MTAR:0)%의 %LOCALS:1% 속옷 위로부터
+				ENDDATA
+			;현장 연습
+			CASE 550
+				LOCAL:3 = 5
+				PRINTFORM 조속히 실천할 수 있도록 %ANAME(MTAR:0)%의 %LOCALS:1% 속옷 위로부터
+			;뒷골목 페라
+			CASE 305
+				LOCAL:3 = 6
+				PRINTFORM 인기가 없는 뒷골목으로 데리고 들어가면(자), %ANAME(MTAR:0)%의 %LOCALS:1% 속옷 위로부터
+			;음담
+			CASE 307
+				LOCAL:3 = 7
+				PRINTFORM 음담에 흥분을 억제할 수 없게 되어, %ANAME(MTAR:0)%의 %LOCALS:1% 속옷 위로부터
+			CASEELSE
+				IF GET_PLACENAME(TFLAG:54) == "성 주변 마을"
+					LOCAL:3 = 6
+					PRINTFORM 인기가 없는 뒷골목으로 데리고 들어가면(자), %ANAME(MTAR:0)%의 %LOCALS:1% 속옷 위로부터
+			;온천
+				ELSEIF GET_PLACENAME(TFLAG:54) == "온천"
+					LOCAL:3 = 10
+					IF RAND:2 == 0
+						PRINTFORM 알몸의 %ANAME(MTAR:0)%의 %LOCALS:1% 
+					ELSE
+						PRINTFORM 목욕통 중(안)에서 %ANAME(MTAR:0)%의 %LOCALS:1% 
+					ENDIF
+				ELSEIF GET_PLACENAME(TFLAG:54) == "강변"
+					LOCAL:3 = 11
+					PRINTDATA
+						DATAFORM 헤엄쳐 피로바위에 앉는 %ANAME(MTAR:0)%의 %LOCALS:1% 속옷 위로부터
+						DATAFORM %ANAME(MTAR:0)%의 피부에 붙은%LOCALS:1% 속옷 위로부터
+						DATAFORM 바위 밭의 그림자로 %ANAME(MTAR:0)%의 %LOCALS:1% 속옷 위로부터
+					ENDDATA
+				ELSEIF GET_PLACENAME(TFLAG:54) == "삼림"
+					PRINTDATA
+						DATAFORM 나무 그늘에서 몸을 쉴 수 있는 %ANAME(MTAR:0)%의 %LOCALS:1% 속옷 위로부터
+						DATAFORM 조용한 숲 중(안)에서 %ANAME(MTAR:0)%의 %LOCALS:1% 속옷 위로부터
+						DATAFORM 숲오두막에 데리고 들어가면(자) %ANAME(MTAR:0)%의 %LOCALS:1% 속옷 위로부터
+					ENDDATA
+				ELSE
+					PRINTDATA
+						DATAFORM %ANAME(MTAR:0)%의 %LOCALS:1% 속옷 위로부터
+					ENDDATA
+				ENDIF
+		ENDSELECT
+		IF HAS_PENIS(MTAR:0)
+			PRINTFORMW 장대의 밑[付け根]으로부터 엉덩이에 걸쳐 손가락끝으로 만지작거려 돌리기 %TARGET_STR("", "라고 온")%…
+		ELSE
+			PRINTFORMW 엉덩이를 천천히 어루만지고 돌리기 %TARGET_STR("", "라고 온")%…
+		ENDIF
+	;타겟으로 주도권
+	CASE 1
+		PRINTFORM  %ANAME(MTAR:0)%는 %LOCALS:0%
+		SELECTCASE PREVCOM
+			;업무중
+			CASE 303, 304
+				LOCAL:3 = 21
+				PRINTDATA
+					DATAFORM 업무중의 %ANAME(MPLY:0)%의 손을 자신의%LOCALS:1% 속옷으로 이끌어
+					DATAFORM 정무에 힘쓰는 %ANAME(MPLY:0)%의 손을 자신의%LOCALS:1% 속옷으로 이끌어
+					DATAFORM 서류를 처리하는 %ANAME(MPLY:0)%의 손을 자신의%LOCALS:1% 속옷으로 이끌어
+				ENDDATA
+			;훈련 후
+			CASE 301, 302
+				LOCAL:3 = 22
+				PRINTDATA
+					DATAFORM 난폭한 한숨 돌리는 %ANAME(MPLY:0)%의 손을 자신의%LOCALS:1% 속옷으로 이끌어
+					DATAFORM 숨을 정돈하는 %ANAME(MPLY:0)%의 손을 자신의%LOCALS:1% 속옷으로 이끌어
+					DATAFORM 땀을 닦는 %ANAME(MPLY:0)%의 손을 자신의%LOCALS:1% 속옷으로 이끌어
+				ENDDATA
+			;가창
+			CASE 306
+				LOCAL:3 = 23
+				PRINTFORM 노래하면서 %ANAME(MPLY:0)%의 손을 자신의%LOCALS:1% 속옷으로 이끌어
+			;청소 페라
+			CASE 310, 311
+				LOCAL:3 = 24
+				PRINTDATA
+					DATAFORM 술기운으로 붉어진 피부를 대어 %ANAME(MPLY:0)%의 손을 자신의%LOCALS:1% 속옷으로 이끌어
+					DATAFORM 술기운에 자를 붉게 물들이면서 %ANAME(MPLY:0)%의 손을 자신의%LOCALS:1% 속옷으로 이끌어
+				ENDDATA
+			;현장 연습
+			CASE 550
+				LOCAL:3 = 25
+				PRINTFORM 조속히 실천이라고만에 %ANAME(MPLY:0)%의 손을 자신의%LOCALS:1% 속옷으로 이끌어
+			;뒷골목 페라
+			CASE 305
+				LOCAL:3 = 26
+				PRINTFORM 인기가 없는 뒷골목으로 데리고 들어가면(자), %ANAME(MPLY:0)%의 손을 자신의%LOCALS:1% 속옷으로 이끌어
+			;음담
+			CASE 307
+				LOCAL:3 = 27
+				PRINTFORM 음담에 흥분한 모습으로 %ANAME(MPLY:0)%의 손을 자신의%LOCALS:1% 속옷으로 이끌어
+			CASEELSE
+				IF GET_PLACENAME(TFLAG:54) == "성 주변 마을"
+					LOCAL:3 = 26
+					PRINTFORM 인기가 없는 뒷골목으로 데리고 들어가면(자), %ANAME(MPLY:0)%의 손을 자신의%LOCALS:1% 속옷으로 이끌어
+			;온천
+				ELSEIF GET_PLACENAME(TFLAG:54) == "온천"
+					LOCAL:3 = 30
+					IF RAND:2 == 0
+						PRINTFORM 맨살을 공격 %ANAME(MPLY:0)%의 손을 자신의
+					ELSE
+						PRINTFORM 목욕통 중(안)에서 %ANAME(MPLY:0)%의 손을 자신의
+					ENDIF
+				ELSEIF GET_PLACENAME(TFLAG:54) == "강변"
+					LOCAL:3 = 31
+					PRINTDATA
+						DATAFORM 헤엄쳐 피로바위에 앉는 %ANAME(MPLY:0)%의 손을 자신의%LOCALS:1% 속옷으로 이끌어
+						DATAFORM 젖어 피부에 붙은 %ANAME(MPLY:0)%의 손을 자신의%LOCALS:1% 속옷으로 이끌어
+						DATAFORM 바위 그늘에 데리고 들어가면(자) %ANAME(MPLY:0)%의 손을 자신의%LOCALS:1% 속옷으로 이끌어
+					ENDDATA
+				ELSEIF GET_PLACENAME(TFLAG:54) == "삼림"
+					PRINTDATA
+						DATAFORM 나무 그늘에서 몸을 쉴 수 있는 %ANAME(MPLY:0)%의 손을 자신의%LOCALS:1% 속옷으로 이끌어
+						DATAFORM 조용한 숲 중(안)에서 %ANAME(MPLY:0)%의 손을 자신의%LOCALS:1% 속옷으로 이끌어
+						DATAFORM 숲오두막에 데리고 들어가면(자) %ANAME(MPLY:0)%의 손을 자신의%LOCALS:1% 속옷으로 이끌어
+					ENDDATA
+				ELSE
+					PRINTDATA
+						DATAFORM %ANAME(MPLY:0)%의 손을 자신의%LOCALS:1% 속옷으로 이끌어
+					ENDDATA
+				ENDIF
+		ENDSELECT
+		IF HAS_PENIS(MTAR:0)
+			PRINTFORMW 장대의 밑[付け根]으로부터 엉덩이를 손대어 기분 좋게 하도록(듯이) 명령해 %TARGET_STR("", "라고 온")%…
+		ELSE
+			PRINTFORMW 엉덩이에 꽉 눌러 손대어 기분 좋게 하도록(듯이) 명령했다…
+		ENDIF
+ENDSELECT
+
+RETURN LOCAL:3
+
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST332
+IF MTAR:0 != MASTER
+	LOCAL:2 = CUP:(MTAR:0):쾌Ｃ+ CUP:(MTAR:0):쾌Ｂ + CUP:(MTAR:0):쾌Ｍ
+
+	IF TCVAR:(MTAR:0):52
+		;기절중
+		PRINTFORML %ANAME(MTAR:0)%는 의식을 잃은 채로 벌벌몸을 진동시키고 있다
+	ELSEIF LOCAL:2 < 100
+		IF TALENT:(MTAR:0):반항적 && ! TALENT:(MTAR:0):합의
+			PRINTFORML %ANAME(MTAR:0)%는 애무되면서도 반항적인 태도를 취하고 있다
+		ELSE
+			PRINTFORML %ANAME(MTAR:0)%두 가려운 듯이  신체를 비틀지만 쾌락을 느끼기까지는 도달하지 않는 것 같다
+		ENDIF
+	ELSEIF LOCAL:2 < 300
+		PRINTFORML %ANAME(MTAR:0)%는 이쪽의 애무에 반응해 신체를 진동시키고 있다
+	ELSEIF LOCAL:2 < 1000
+		PRINTFORML %ANAME(MTAR:0)%는 가벼운 전격에서도 신체에 달렸는지와 같이 작게 떨렸다
+	ELSEIF LOCAL:2 < 3000
+		PRINTFORML %ANAME(MTAR:0)%는 분명하게 쾌락을 느끼고 있는 모습으로 요염한 허덕이는 소리를 지르고 있다
+	ELSEIF LOCAL:2 < 6000
+		PRINTFORML %ANAME(MTAR:0)%는 애무에 격렬하게 쾌락을 느껴 스스로 조르도록(듯이) 손을 목에 돌려 왔다
+	ELSE
+		PRINTFORML %ANAME(MTAR:0)%는 이쪽의 애무만으로 마구 격렬하게 느끼고 있어 새로운 자극을 요구해 기대고 걸려 왔다
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;커맨드 구분
+;-------------------------------------------------
+@COM_AVAILABLE_WHEN332
+RETURN 커맨드_일상

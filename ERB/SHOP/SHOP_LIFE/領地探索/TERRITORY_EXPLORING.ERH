@@ -1,5 +1,5 @@
-﻿#DIM CONST 영지탐색_통상 = 0
-#DIM CONST 영지탐색_위험 = 1
+﻿#DIM CONST 거리탐색_통상 = 0
+#DIM CONST 거리탐색_위험 = 1
 
 #DIM SAVEDATA TERRITORY_EXPLORING_DANGER_EVENT
 
