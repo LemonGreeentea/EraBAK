@@ -53,8 +53,8 @@ FLAG:능력표시모드 = 0
 SAVE_LINE_SHOP_LIFE = LINECOUNT
 
 CALL SINGLE_DRAWLINE
-PRINTFORML %ANAME(ARG:0)%에 적당한 죄를 씌워, 투옥합니다
-PRINTFORML 당연, 본인으로부터는 미움받습니다
+PRINTFORML %ANAME(ARG:0)%에 적당한 죄를 씌워서 감옥에 가둡니다.
+PRINTFORML %ANAME(ARG:0)%에게 미움을 받습니다.
 PRINTFORML 그런데도 실행합니까?
 CALL ASK_YN
 IF RESULT == 0

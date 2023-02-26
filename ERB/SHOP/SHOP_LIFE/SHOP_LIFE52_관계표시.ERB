@@ -2,7 +2,7 @@
 ;「관계일람」의 명칭
 ;-------------------------------------------------
 @SHOP_LIFE_NAME52
-RESULTS:0 '= "관계일람"
+RESULTS:0 '= "관계표시"
 
 ;-------------------------------------------------
 ;「관계일람」의 선택 가부
@@ -169,13 +169,13 @@ FIRST_LINE = LINECOUNT
 CALL SINGLE_DRAWLINE
 
 군주 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
-PRINTFORML 개인의 지갑으로부터 돈을 꺼내, 노를 위로해 세력에의 충성을 높입니다
-PRINTFORML 효과는 지불한 액, %조사처리(ANAME(MASTER),"와")% %ANAME(대상)%의 정치에 의해 정해집니다
-PRINTFORML 아무리 지불합니까? (리스트로부터 선택, 또는 손입력)
+PRINTFORML 크레딧을 소비하여, 학생을 위로하여 세력에의 충성을 높입니다
+PRINTFORML 효과는 지불한 크레딧, %조사처리(ANAME(MASTER),"와")% %ANAME(대상)%의 정치에 의해 정해집니다
+PRINTFORML 크레딧을 지불합니까? (리스트로부터 선택, 또는 직접 입력)
 CALL SINGLE_DRAWLINE
 PRINTFORML %ANAME(대상)%의 %ANAME(군주)%에의 우호도:{REL_LIKE:대상:군주} 혐오도:{REL_HATE:대상:군주}
 PRINTFORML %ANAME(MASTER)%의 정치:{ABL:MASTER:정치} %ANAME(대상)%의 정치:{ABL:대상:정치}
-PRINTFORML 소지금:{MONEY}
+PRINTFORML 크레딧:{MONEY}
 CALL SINGLE_DRAWLINE
 
 FOR LOCAL, 0, VARSIZE("리스트")
@@ -191,7 +191,7 @@ INPUT
 IF RESULT == 0
 	RETURN 0
 ELSEIF INRANGE(RESULT, 0, MONEY)
-	PRINTFORMW %ANAME(대상)%에{RESULT}지불했습니다
+	PRINTFORMW %ANAME(대상)%에 {RESULT}크레딧을 지불했습니다
 	효과량 = RESULT / 50
 	정치비 = MIN(ABL:MASTER:정치 * 100 / ABL:대상:정치, 300)
 	효과량 = 효과량 * 정치비 / 100

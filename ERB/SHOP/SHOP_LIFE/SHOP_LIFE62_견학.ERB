@@ -2,7 +2,7 @@
 ;「제국방문」의 명칭
 ;-------------------------------------------------
 @SHOP_LIFE_NAME62
-RESULTS:0 '= "제국방문"
+RESULTS:0 '= "견학"
 
 ;-------------------------------------------------
 ;「제국방문」의 선택 가부 판정
@@ -69,7 +69,7 @@ NEXT
 대상 = 후보:(RAND:인원수)
 
 CALL SINGLE_DRAWLINE
-PRINTFORMW %ANAME(방문지군주)%의 세력을 방문했다……
+PRINTFORMW %ANAME(방문지군주)%의 동아리를 방문했다……
 IF FLAG:화상설정
 	IF IS_LOVER(대상)
 		CALL PRINT_STATE_IMAGE(대상, "미소")
