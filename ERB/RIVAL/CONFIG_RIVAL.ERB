@@ -1,7 +1,7 @@
 ﻿@INIT_CONFIG_RIVAL
 CONFIG:505 = 1
 CONFIG:506 = 1
-
+CONFIG:510 = -1
 ;-------------------------------------------------
 ;라이벌 설정
 ;-------------------------------------------------
@@ -23,12 +23,10 @@ ELSE
 ENDIF
 PRINTL
 IF CONFIG:500 == 1
-    LOCALS:0 = 라이벌의 소속
+    LOCALS:0 = 라이벌의 이동
     PRINTFORM %LOCALS:0, 36, RIGHT% -
     PRINTBUTTON " 1[변경] ", 1
     IF CONFIG:501 == 0
-        PRINTFORM 라이벌이 %조사처리(ANAME(MASTER),"랑")% 따라 다닙니다.
-    ELSEIF CONFIG:501 == 1
         PRINTFORM 라이벌이 %ANAME(MASTER)%의 국가 내에서 움직입니다.
     ELSE
         PRINTFORM 라이벌은 어디든지 다닙니다.
@@ -41,7 +39,7 @@ IF CONFIG:500 == 1
     IF CONFIG:502 == 0
         PRINTFORM 라이벌이 아무나 하고 만납니다.
     ELSEIF CONFIG:502 == 1
-        PRINTFORM 라이벌이 %조사처리(ANAME(MASTER),"와")% 연모하고 있는 학생만 만납니다.
+        PRINTFORM 라이벌이 %조사처리(ANAME(MASTER),"을")% 연모하고 있는 학생만 만납니다.
     ELSE
         PRINTFORM 라이벌이 %조사처리(ANAME(MASTER),"을")% 연모하고 있는 학생 빼고 만납니다.
     ENDIF
@@ -61,7 +59,7 @@ IF CONFIG:500 == 1
     ENDIF
     PRINTL
 
-    LOCALS:0 = 요바이(504) 강도
+    LOCALS:0 = 요바이 강도
     PRINTFORM %LOCALS:0, 36, RIGHT% -
     PRINTBUTTON " 4[변경] ", 4
     IF CONFIG:504 == 0
@@ -134,7 +132,7 @@ IF RESULT == 0
     ENDIF
 ELSEIF RESULT == 1
     CONFIG:501++
-    SIF CONFIG:501 > 2
+    SIF CONFIG:501 > 1
         CONFIG:501 = 0
 ELSEIF RESULT == 2
     CONFIG:502++

@@ -16,7 +16,6 @@
 
 라이벌_ID = NO_TO_CHARA(RIVAL_ID)
 
-
 FOR 대상, 0, CHARANUM
 	대상현재위치 = CFLAG:대상:현재위치
 	대상소속 = CFLAG:대상:소속
@@ -26,22 +25,6 @@ FOR 대상, 0, CHARANUM
 	;마스터는 스킵
 	SIF 대상 == MASTER
 		CONTINUE
-	;라이벌
-    IF 대상 == 라이벌_ID
-        SELECTCASE CONFIG:501
-            CASE 0
-				IF CFLAG:라이벌_ID:현재위치 != CFLAG:MASTER:현재위치
-					LOCALS = %CITY_NAME:(CFLAG:MASTER:현재위치)%
-					PRINTFORML 라이벌이 %조사처리(LOCALS, "로")% 이동했습니다.
-                	CFLAG:라이벌_ID:현재위치 = CFLAG:MASTER:현재위치
-				ENDIF
-            CASE 1
-                GOTO LOOP_0
-            CASE 2
-                GOTO LOOP_1
-        ENDSELECT
-		CONTINUE
-    ENDIF
 	;사망이면 스킵
 	SIF GROUPMATCH(CFLAG:대상:특수상태, 특수상태_사망) > 0
 		CONTINUE
@@ -106,7 +89,8 @@ FOR 대상, 0, CHARANUM
 		NEXT
 		CONTINUE
 	ENDIF
-	$LOOP_0
+	SIF 대상 == 라이벌_ID && CONFIG:501 == 1
+		GOTO LOOP_0
 	;자국 밖에 있을 경우 자국 영지로 랜덤 리셋
 	IF CITY_OWNER:대상현재위치 != 대상소속 && 포로처주인 == 0 && CHECK_COUNTRY_RELATION_F(대상소속, 현재위치주인) <= 2
 		SIF GET_OWN_CITY(대상소속) <= 0
@@ -121,6 +105,7 @@ FOR 대상, 0, CHARANUM
 				CFLAG:대상:현재위치 = 후보위치
 				IF 대상 == 라이벌_ID
 					LOCALS = %CITY_NAME:(CFLAG:대상:현재위치)%
+					CALL SINGLE_DRAWLINE
 					PRINTFORML 라이벌이 %조사처리(LOCALS, "로")% 이동했습니다.
 				ENDIF
 				BREAK
@@ -128,7 +113,7 @@ FOR 대상, 0, CHARANUM
 		NEXT
 		CONTINUE
 	ENDIF
-	$LOOP_1
+	$LOOP_0
 	;도시에 있는 인접 이동 가능 도시로 이동하거나 머무른다
 	FOR LOCAL:0, 0, 10
 		후보위치 = CITY_ROUTE:대상현재위치:(LOCAL:0)
@@ -148,6 +133,7 @@ FOR 대상, 0, CHARANUM
             IF RAND:100 > 40
 				CFLAG:대상:현재위치 = 후보위치
 				LOCALS = %CITY_NAME:(CFLAG:대상:현재위치)%
+				CALL SINGLE_DRAWLINE
 				PRINTFORML 라이벌이 %조사처리(LOCALS, "로")% 이동했습니다.
 				BREAK
 			ENDIF

@@ -18,6 +18,11 @@ RETURN 1
 ;「지방에파견」의 선택 가능 캐릭터 존재 판정
 ;-------------------------------------------------
 @SHOP_LIFE_CHECKCHARA45(ARG:0)
+#DIM 라이벌_ID
+
+라이벌_ID = NO_TO_CHARA(RIVAL_ID)
+SIF ARG:0 == 라이벌_ID
+	RETURN 0
 ;비주인공, 동일 세력, 범용 캐릭터, 군주가 아닌, 포로가 아닌, 부대에 소속하지 않은, 호감도 300 필요
 {
 RETURN ARG:0 != MASTER && CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속 && (IS_CHILD(ARG:0) || IS_RANDOM_CHARA(ARG:0)) && GET_COUNTRY_BOSS(CFLAG:(ARG:0):소속) != ARG:0 &&

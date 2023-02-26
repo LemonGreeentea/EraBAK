@@ -1,12 +1,16 @@
 ﻿@RIVAL_EVENTCOMEND
 #DIM RIVAL_TARGET
+#DIM 라이벌_ID
+라이벌_ID = NO_TO_CHARA(RIVAL_ID)
 
 SIF CONFIG:500 == 0
     RETURN
-
-CALL RIVAL_RESET_TARGET
-SIF CONFIG:510 == 0
+SIF RAND(100) > 96
+    CONFIG:510 = -1
+SIF CONFIG:510 == -1
     CONFIG:510 = RIVAL_GET_TARGET()
+SIF CONFIG:510 < 0
+    RETURN
 RIVAL_TARGET = CONFIG:510
 
 IF CFLAG:RIVAL_TARGET:첫대면 == 0   
@@ -15,39 +19,41 @@ IF CFLAG:RIVAL_TARGET:첫대면 == 0
     RETURN
 ENDIF
 
-;타겟의 초기화
-@RIVAL_RESET_TARGET
+@RIVAL_FOLLOW_MASTER
 #DIM 라이벌_ID
-#DIM 라이벌의현재위치
 라이벌_ID = NO_TO_CHARA(RIVAL_ID)
-라이벌의현재위치 = CFLAG:라이벌_ID:현재위치
 
-IF GROUPMATCH(CFLAG:(CONFIG:510):현재위치, 라이벌의현재위치, CITY_ROUTE:라이벌의현재위치:0, CITY_ROUTE:라이벌의현재위치:1, CITY_ROUTE:라이벌의현재위치:2, CITY_ROUTE:라이벌의현재위치:3, CITY_ROUTE:라이벌의현재위치:4, CITY_ROUTE:라이벌의현재위치:5) || CFLAG:(LOCAL:0):현재위치 < 0
-    CONFIG:510 = 0
-    RETURN
+;라이벌의 소속 마스터 따라가기
+IF CFLAG:라이벌_ID:소속 != CFLAG:MASTER:소속
+    CFLAG:라이벌_ID:소속 = CFLAG:MASTER:소속
+    PRINTFORML 라이벌의 소속이 변경되었습니다.
 ENDIF
 
-;타겟을 초기화
-IF RAND(10) > 8
-    CONFIG:510 = 0
-    RETURN
-ENDIF
 
-;랜덤한 타겟을 라이벌의 현재 위치에서 얻어오기
+;랜덤한 타겟을 설정
 @RIVAL_GET_TARGET
 #FUNCTION
 #DIM TARGET_COUNT
 #DIM TARGET_ID, 1000
 #DIM 라이벌_ID
 #DIM 라이벌의현재위치
-TARGET_COUNT = 0
 VARSET TARGET_ID
 라이벌_ID = NO_TO_CHARA(RIVAL_ID)
+TARGET_COUNT = 0
+
 라이벌의현재위치 = CFLAG:라이벌_ID:현재위치
 
 FOR LOCAL:0, 0, CHARANUM
+    SIF LOCAL:0 == MASTER
+        CONTINUE
     ;플레이어와 함께라면 스킵
 	SIF CFLAG:(LOCAL:0):조교참가플래그
+        CONTINUE
+    ;죽었으면 스킵
+    SIF GROUPMATCH(CFLAG:(LOCAL:0):특수상태, 특수상태_사망) > 0
+        CONTINUE
+    ;고정캐가 아니면 스킵
+    SIF !IS_FIXED_CHARA(LOCAL:0)
         CONTINUE
     SIF !HAS_VAGINA(LOCAL:0)
         CONTINUE
@@ -57,9 +63,18 @@ FOR LOCAL:0, 0, CHARANUM
     ;라이벌이랑 근처에 없으면 스킵
     SIF !(GROUPMATCH(CFLAG:(LOCAL:0):현재위치, 라이벌의현재위치, CITY_ROUTE:라이벌의현재위치:0, CITY_ROUTE:라이벌의현재위치:1, CITY_ROUTE:라이벌의현재위치:2, CITY_ROUTE:라이벌의현재위치:3, CITY_ROUTE:라이벌의현재위치:4, CITY_ROUTE:라이벌의현재위치:5) && CFLAG:(LOCAL:0):현재위치 > 0)
         CONTINUE
+    ;연모 등의 타겟 설정
+    IF CONFIG:502 == 1
+        SIF TALENT:(LOCAL:0):연모 == 0 && TALENT:(LOCAL:0):친애 == 0 && TALENT:(LOCAL:0):연인 == 0
+            CONTINUE
+    ELSEIF CONFIG:502 == 2
+        SIF TALENT:(LOCAL:0):연모 == 1 || TALENT:(LOCAL:0):친애 == 1 || TALENT:(LOCAL:0):연인 == 1
+            CONTINUE
+    ENDIF    
     TARGET_ID:TARGET_COUNT = LOCAL:0
     TARGET_COUNT++
 NEXT
-
+SIF TARGET_COUNT == 0
+    RETURNF -1
 LOCAL:0 = RAND(TARGET_COUNT)
-RETURNF TARGET_ID:TARGET_COUNT
+RETURNF TARGET_ID:(LOCAL:0)
