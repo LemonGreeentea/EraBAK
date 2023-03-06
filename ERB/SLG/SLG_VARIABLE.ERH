@@ -7,7 +7,7 @@
 #DIM CONST MAX_CITY = 170
 
 ;세력의 최대수
-#DIM CONST MAX_COUNTRY = 35
+#DIM CONST MAX_COUNTRY = 36
 
 ;각 세력이 가지는 부대의 최대수
 #DIM CONST MAX_UNIT = 10

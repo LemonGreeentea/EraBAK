@@ -91,24 +91,24 @@ PRINTL
 
 ;역조교
 IF GROUPMATCH(FLAG:조교모드, 4, 5, 7)
-	PRINTFORML %TOSTR_SPACE(11)%%TOSTR_SPACE(44)%기분 체력 기력    민/둔   상태
+	PRINTFORML %TOSTR_SPACE(11)%%TOSTR_SPACE(58)%기분  체력 기력    민/둔  상태
 ;참가인수가 2명 이상
 ELSEIF TFLAG:44 >= 2
-	PRINTFORML %TOSTR_SPACE(11)%<주도권><실행>  <대상>%TOSTR_SPACE(44)%기분 체력 기력    민/둔   상태
+	PRINTFORML %TOSTR_SPACE(11)%<주도권><실행>  <대상>%TOSTR_SPACE(58)%기분  체력 기력    민/둔  상태
 ;참가인수가 1명
 ELSE
 	;만나러간다
 	IF FLAG:조교모드 == 0
 		IF FLAG:우후후플래그
-			PRINTFORML %TOSTR_SPACE(11)%<주도권>%TOSTR_SPACE(48)%기분 취기 체력 기력    민/둔   상태
+			PRINTFORML %TOSTR_SPACE(11)%<주도권>%TOSTR_SPACE(62)%기분  취기 체력 기력    민/둔  상태
 		ELSE
-			PRINTFORML %TOSTR_SPACE(11)%<주도권>%TOSTR_SPACE(48)%기분 취기
+			PRINTFORML %TOSTR_SPACE(11)%<주도권>%TOSTR_SPACE(62)%기분  취기
 		ENDIF
 	;육아
 	ELSEIF FLAG:조교모드 == 3
-		PRINTFORML %TOSTR_SPACE(11)%<주도권>%TOSTR_SPACE(48)%기분
+		PRINTFORML %TOSTR_SPACE(11)%<주도권>%TOSTR_SPACE(62)%기분
 	ELSE
-		PRINTFORML %TOSTR_SPACE(11)%<주도권>%TOSTR_SPACE(48)%기분 체력 기력    민/둔   상태
+		PRINTFORML %TOSTR_SPACE(11)%<주도권>%TOSTR_SPACE(62)%기분  체력 기력    민/둔  상태
 	ENDIF
 ENDIF
 
@@ -129,7 +129,7 @@ IF !FLAG:우후후플래그
 		IF LOCAL:0 / 10 > LOCAL:2
 			PRINTFORM ♥
 		ELSE
-			PRINTFORM _
+			PRINTFORM ＿
 		ENDIF
 	NEXT
 	SETCOLOR 0xFF80FF
@@ -137,7 +137,7 @@ IF !FLAG:우후후플래그
 		IF LOCAL:1 / 10 > LOCAL:2
 			PRINTFORM ♥
 		ELSE
-			PRINTFORM _
+			PRINTFORM ＿
 		ENDIF
 	NEXT
 	RESETCOLOR
