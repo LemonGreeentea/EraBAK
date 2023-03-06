@@ -12,10 +12,13 @@
 ;=================================================
 @KOJO_TRAIN_START_A1_K13
 
+;노예면 '주인님'이라고 부름
 IF IS_SLAVE(TARGET)
 	LOCALS:0 = 주인님
+;아나타가 [선생]이면 '선생님'이라고 부름
 ELSEIF TALENT:MASTER:선생 == 1
-	LOCALS:0 = 선생
+	LOCALS:0 = 선생님
+;그 외엔 이름으로 부름
 ELSE
 	LOCALS:0 = %ANAME(MASTER)%
 ENDIF

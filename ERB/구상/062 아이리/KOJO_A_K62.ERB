@@ -1,32 +1,51 @@
 ﻿;===============================================
-; EraBlueArchiveK 구상 템플릿_A
-; 개조자 : 레몬녹차
-; 템플릿 최종 수정 : 2023-03-01
+; EraBlueArchiveK 아이리 구상 A
+; 제작자 : 레몬녹차
+; 구상 최종 수정 : 2023-03-05
 ; 
-; 일반적인 상황만 적어놨으니 캐릭터 특색에 맞게 수정하시면 됩니다.
-; 
-; [템플릿 사용 방법]
-; 1. '바꾸기' 기능으로 " K62 "를 " K(캐릭터 번호) "로 수정한다.
-; 2. 각 상황에 맞는 대사를 적는다.
+; 자칭 '평범'호소인이 아닌 진짜 '평범'한 학생 아이리 구상
+; 아이리 귀여워 (★≧▽^))★☆
 ; 
 ;-------------------------------------------------
 ; CFLAG 관리
-; 200 = 만나러간다 첫 회 여부
-; 
+; 200 = 만나러간다 시작 관련
+; 201 = 만나러간다 종료 관련
 ; 
 ;-------------------------------------------------
 ;「만나러간다」 「침실호출」 「육아」 「포로 회화」의 구상
 ;-------------------------------------------------
-
 ;=================================================
 ;●「만나러간다」의 개시시의 대사
 ;=================================================
 @KOJO_TRAIN_START_A1_K62
-;[공허]상태라면 구상을 표시하지 않는다
-IF TALENT:공허
-	RETURN
+
+;------------------------------------------------
+;호칭의 설정
+;------------------------------------------------
+;노예면 '주인님'이라고 부름
+IF IS_SLAVE(TARGET)
+	LOCALS:0 = 주인님
+;아나타가 [선생]이면 '선생님'이라고 부름
+ELSEIF TALENT:MASTER:선생 == 1
+	LOCALS:0 = 선생님
+;친구라면 ~쨩으로 부름
+ELSEIF TALENT:친구
+	LOCALS:0 = %ANAME(MASTER)%쨩
+;그 외엔 이름으로 부름
+ELSE
+	LOCALS:0 = %ANAME(MASTER)%
 ENDIF
 
+;-------------------------------------------------
+;[공허]상태라면 구상을 표시하지 않는다
+IF TALENT:공허
+	PRINTFORML 아이리의 방에 들어갔지만 아무런 기척도 느껴지지 않는다.
+	PRINTFORMW ...?
+	PRINTFORML 아이리는 방 구석에 앉아서 벽면만 바라보고 있다.
+	PRINTFORMW 「......」
+	PRINTFORMW %ANAME(MASTER)%의 얼굴을 보고도 아무런 반응이 없다. 
+	RETURN
+ENDIF
 ;-------------------------------------------------
 ;첫회
 ;-------------------------------------------------
@@ -34,12 +53,17 @@ IF CFLAG:200 == 0
 	CFLAG:200 = 1
 	;첫대면의 경우
 	IF !CFLAG:17
-		;PRINTFORMW 만나러간다 첫 회, 초면
-				
-
+		PRINTFORMW 아이리의 방에 들어가자 아이리가 방에 들어온 %조사처리(ANAME(MASTER),"를")% 보고 고개를 갸우뚱한다.
+		CALL FACE_IMAGE_N("표정_62_일반_2")
+		PRINTFORMW 「어라? 누구신가요?」
+		PRINTFORML 「아, %LOCALS:0%!」
+		PRINTFORML 「반가워요! 저는 쿠리무라 아이리!」
+		PRINTFORMW 「디저트나 달콤한걸 좋아해요!」
+		PRINTFORMW 「혹시 %LOCALS:0%도 달달한 디저트 좋아하시나요?」
 	;이미 만났던 적이 있는 경우
 	ELSE
-		;PRINTFORMW 만나러간다 첫 회, 구면
+		PRINTFORMW 「아, 안녕하세요 %LOCALS:0%.」
+		PRINTFORMW 「」
 	ENDIF
 ;-------------------------------------------------
 ;개시시(1회만 출력)
@@ -47,19 +71,20 @@ IF CFLAG:200 == 0
 ;연모면서 합의(섹스)
 ELSEIF CFLAG:200 < 5 && TALENT:합의 && TALENT:연모
 	CFLAG:200 = 5
-;	PRINTFORMW 연모면서 합의(섹스)를 한 다음
+	PRINTFORMW 연모면서 합의(섹스)를 한 다음
 ;연모+연인이 된 다음
 ELSEIF CFLAG:200 < 4 && TALENT:연인  && TALENT:연모
 	CFLAG:200 = 4
-;	PRINTFORMW 연인이 된 다음
+	PRINTFORMW 연인이 된 다음
 ;첫 키스를 한 이후
-ELSEIF CFLAG:200 < 3 && !TALENT:키스미경험 && CFLAG:250 > 1
+ELSEIF CFLAG:200 < 3 && !TALENT:키스미경험 && CFLAG:250 > 0
 	CFLAG:200 = 3
-;	PRINTFORMW  첫 키스를 한 이후
+	PRINTFORMW  첫 키스를 한 이후
 ; 연모면서 키스 미경험
 ELSEIF CFLAG:200 < 2 && TALENT:연모 && TALENT:키스미경험 && CFLAG:250 < 1
 	CFLAG:200 = 2
-;	PRINTFORMW 연모인 이후 첫 만나러간다 구상
+	PRINTFORMW 연모인 이후 첫 만나러간다 구상
+
 ;-------------------------------------------------
 ;개시시(2회째 이후)
 ;-------------------------------------------------
@@ -83,7 +108,16 @@ ELSEIF TALENT:연모
 	;PRINTFORMW
 ;일반 만남
 ELSE
-	;PRINTFORMW 
+	SELECTCASE RAND:4
+		CASE 0
+			PRINTFORMW 「%LOCALS:0% 안녕하세요~」
+		CASE 1
+			PRINTFORMW 「오늘은 무슨 디저트를 먹으러 갈까요?」
+		CASE 2
+			PRINTFORMW 「안녕하세요! 민트초코 마카롱 드실래요?」
+		CASE 3
+			PRINTFORMW 「안녕하세요!」
+	ENDSELECT
 
 ENDIF
 
@@ -119,13 +153,13 @@ ELSEIF CFLAG:201 < 4 && TALENT:연인  && TALENT:연모
 	CFLAG:201 = 4
 ;	PRINTFORMW 연인이 된 다음
 ;첫 키스를 한 이후
-ELSEIF CFLAG:201 < 3 && !TALENT:키스미경험 && CFLAG:250 > 1
+ELSEIF CFLAG:201 < 3 && !TALENT:키스미경험 && CFLAG:250 > 0
 	CFLAG:201 = 3
 ;	PRINTFORMW  첫 키스를 한 이후
 ; 연모면서 키스 미경험
 ELSEIF CFLAG:201 < 2 && TALENT:연모 && TALENT:키스미경험 && CFLAG:250 < 1
 	CFLAG:201 = 2
-;	PRINTFORMW 연모인 이후 첫 만나러간다 구상
+;	PRINTFORMW 연모인 이후 첫 만나러간다 종료 구상
 
 ;-------------------------------------------------
 ;종료시(2회째 이후)
@@ -169,8 +203,30 @@ ENDIF
 ;[공허]상태라면 구상을 표시하지 않는다
 IF TALENT:공허
 	RETURN
+ENDIF
+
+;연인이면서 섹스(합의)한 상태
+IF TALENT:연인 && TALENT:합의
+	;PRINTFORMW 
+;연인이면서 섹스(합의) 안 한 사이
+ELSEIF TALENT:연인
+	;PRINTFORMW
+;복종이면서 섹스(합의)한 사이
+ELSEIF TALENT:복종 && TALENT:합의
+	;PRINTFORMW 
+;복종이면서 섹스(합의) 안 한 사이
+ELSEIF TALENT:복종
+	;PRINTFORMW 
+;연모면서 섹스(합의)한 사이
+ELSEIF TALENT:합의 && TALENT:연모
+	;PRINTFORMW
+;연모 (섹스안함)
+ELSEIF TALENT:연모
+	;PRINTFORMW
+;일반 만남
 ELSE
-	PRINTFORMW (침실호출 대사)
+	;PRINTFORMW 
+
 ENDIF
 
 ;=================================================
@@ -191,8 +247,28 @@ ELSEIF TCVAR:52 || BASE:기력 <= 300
 ;피로에 의한 행동 불능
 ELSEIF TCVAR:51
 	;PRINTFORMW 
+;연인이면서 섹스(합의)한 상태
+ELSEIF TALENT:연인 && TALENT:합의
+	;PRINTFORMW 
+;연인이면서 섹스(합의) 안 한 사이
+ELSEIF TALENT:연인
+	;PRINTFORMW
+;복종이면서 섹스(합의)한 사이
+ELSEIF TALENT:복종 && TALENT:합의
+	;PRINTFORMW 
+;복종이면서 섹스(합의) 안 한 사이
+ELSEIF TALENT:복종
+	;PRINTFORMW 
+;연모면서 섹스(합의)한 사이
+ELSEIF TALENT:합의 && TALENT:연모
+	;PRINTFORMW
+;연모 (섹스안함)
+ELSEIF TALENT:연모
+	;PRINTFORMW
+;일반 만남
 ELSE
-;	PRINTFORMW (침실호출 종료 대사)
+	;PRINTFORMW 
+
 ENDIF
 
 ;=================================================
@@ -231,6 +307,20 @@ IF TALENT:공허 || IS_EQUIP_CONTINUE(TARGET, "입장착")
 	RETURN 0
 ENDIF
 
+;노예면 '주인님'이라고 부름
+IF IS_SLAVE(TARGET)
+	LOCALS:0 = 주인님
+;아나타가 [선생]이면 '선생님'이라고 부름
+ELSEIF TALENT:MASTER:선생 == 1
+	LOCALS:0 = 선생님
+;친구라면 ~쨩으로 부름
+ELSEIF TALENT:친구
+	LOCALS:0 = %ANAME(MASTER)%쨩
+;그 외엔 이름으로 부름
+ELSE
+	LOCALS:0 = %ANAME(MASTER)%
+ENDIF
+
 ;-------------------------------------------------
 ;키스
 ;-------------------------------------------------
@@ -239,18 +329,24 @@ IF SELECTCOM == 20
 	IF IS_INITIATIVE(TARGET)
 		;퍼스트 키스
 		IF TALENT:키스미경험
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
+			;연모
+			IF TALENT:연모
 				;PRINTFORMW 
+			;복종
+			ELSEIF TALENT:복종
+				;PRINTFORMW
 			;그 이외
 			ELSE
 				;PRINTFORMW 
 			ENDIF
 		;키스경험이 끝난 상태
 		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
+			;연모
+			IF TALENT:연모
 				;PRINTFORMW 
+			;복종
+			ELSEIF TALENT:복종
+				;PRINTFORMW
 			;그 이외
 			ELSE
 				;PRINTFORMW 
@@ -260,18 +356,24 @@ IF SELECTCOM == 20
 	ELSE
 		;퍼스트 키스
 		IF TALENT:키스미경험
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
+			;연모
+			IF TALENT:연모
 				;PRINTFORMW 
+			;복종
+			ELSEIF TALENT:복종
+				;PRINTFORMW
 			;그 이외
 			ELSE
 				;PRINTFORMW 
 			ENDIF
 		;키스경험이 끝난 상태
 		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
+			;연모
+			IF TALENT:연모
 				;PRINTFORMW 
+			;복종
+			ELSEIF TALENT:복종
+				;PRINTFORMW
 			;그 이외
 			ELSE
 				;PRINTFORMW 
@@ -282,24 +384,36 @@ IF SELECTCOM == 20
 ENDIF
 
 ;-------------------------------------------------
-;짝 맞추기 놀이
+;조개 맞대기
 ;-------------------------------------------------
 IF SELECTCOM == 21
 	;이 캐릭터가 주도권을 가지고 있다
 	IF IS_INITIATIVE(TARGET)
 		;처음
 		IF IS_COM_FIRST()
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
+			;연모
+			IF TALENT:연모
 				;PRINTFORMW 
+			;복종
+			ELSEIF TALENT:복종
+				;PRINTFORMW
 			;그 이외
 			ELSE
 				;PRINTFORMW 
 			ENDIF
 		;2회째 이후
 		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
+			;연모
+			IF TALENT:연모
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;복종
+			ELSEIF TALENT:복종
 				;Ｃ감 Lv3 이상
 				IF ABL:Ｃ감 >= 3
 					;PRINTFORMW 
@@ -322,17 +436,29 @@ IF SELECTCOM == 21
 	ELSE
 		;처음
 		IF IS_COM_FIRST()
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
+			;연모
+			IF TALENT:연모
 				;PRINTFORMW 
+			;복종
+			ELSEIF TALENT:복종
+				;PRINTFORMW
 			;그 이외
 			ELSE
 				;PRINTFORMW 
 			ENDIF
 		;2회째 이후
 		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
+			;연모
+			IF TALENT:연모
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;복종
+			ELSEIF TALENT:복종
 				;Ｃ감 Lv3 이상
 				IF ABL:Ｃ감 >= 3
 					;PRINTFORMW 
@@ -498,6 +624,20 @@ IF TALENT:공허 || IS_EQUIP_CONTINUE(TARGET, "입장착")
 	RETURN 0
 ENDIF
 
+;노예면 '주인님'이라고 부름
+IF IS_SLAVE(TARGET)
+	LOCALS:0 = 주인님
+;아나타가 [선생]이면 '선생님'이라고 부름
+ELSEIF TALENT:MASTER:선생 == 1
+	LOCALS:0 = 선생님
+;친구라면 ~쨩으로 부름
+ELSEIF TALENT:친구
+	LOCALS:0 = %ANAME(MASTER)%쨩
+;그 외엔 이름으로 부름
+ELSE
+	LOCALS:0 = %ANAME(MASTER)%
+ENDIF
+
 ;-------------------------------------------------
 ;애무(타겟)
 ;-------------------------------------------------
@@ -506,42 +646,54 @@ IF SELECTCOM == 0
 	IF IS_INITIATIVE(TARGET)
 		;처음
 		IF IS_COM_FIRST()
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
+			;연모
+			IF TALENT:연모
+				;PRINTGORMW
+			;복종
+			ELSEIF TALENT:복종
 				;PRINTFORMW 
 			;그 이외
 			ELSE
-				PRINTFORMW 아이리 애무 처음(아이리 주도)
+				;PRINTFORMW
 			ENDIF
 		;2회째 이후
 		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
-				;PRINTFORMW 
+			;연모
+			IF TALENT:연모
+				;PRINTGORMW
+			;복종
+			ELSEIF TALENT:복종
+				;PRINTFORMW
 			;그 이외
 			ELSE
-				PRINTFORMW 아이리 애무(아이리 주도)
+				;PRINTFORMW
 			ENDIF
 		ENDIF
 	;이 캐릭터가 주도권을 가지고 있지 않다
 	ELSE
 		;처음
 		IF IS_COM_FIRST()
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
-				;PRINTFORMW 
+			;연모
+			IF TALENT:연모
+				;PRINTGORMW
+			;복종
+			ELSEIF TALENT:복종
+				;PRINTFORMW
 			;그 이외
 			ELSE
-				PRINTFORMW 아이리 애무 처음(마스터 주도)
+				;PRINTFORMW
 			ENDIF
 		;2회째 이후
 		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
-				;PRINTFORMW 
+			;연모
+			IF TALENT:연모
+				;PRINTGORMW
+			;복종
+			ELSEIF TALENT:복종
+				;PRINTFORMW
 			;그 이외
 			ELSE
-				PRINTFORMW 아이리 애무(마스터 주도)
+				;PRINTFORMW
 			ENDIF
 		ENDIF
 	ENDIF
@@ -556,17 +708,29 @@ IF SELECTCOM == 1
 	IF IS_INITIATIVE(TARGET)
 		;처음
 		IF IS_COM_FIRST()
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
-				;PRINTFORMW 
+			;연모
+			IF TALENT:연모
+				;PRINTGORMW
+			;복종
+			ELSEIF TALENT:복종
+				;PRINTFORMW
 			;그 이외
 			ELSE
 				;PRINTFORMW 
 			ENDIF
 		;2회째 이후
 		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
+			;연모
+			IF TALENT:연모
+				;Ｂ감 Lv3 이상
+				IF ABL:Ｂ감 >= 3
+					;PRINTFORMW 
+				;Ｂ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;복종
+			ELSEIF TALENT:복종
 				;Ｂ감 Lv3 이상
 				IF ABL:Ｂ감 >= 3
 					;PRINTFORMW 
@@ -589,8 +753,11 @@ IF SELECTCOM == 1
 	ELSE
 		;처음
 		IF IS_COM_FIRST()
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
+			;연모
+			IF TALENT:연모
+				;PRINTFORMW
+			;복종
+			ELSEIF TALENT:복종
 				;PRINTFORMW 
 			;그 이외
 			ELSE
@@ -598,8 +765,17 @@ IF SELECTCOM == 1
 			ENDIF
 		;2회째 이후
 		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
+			;연모
+			IF TALENT:연모
+				;Ｂ감 Lv3 이상
+				IF ABL:Ｂ감 >= 3
+					;PRINTFORMW 
+				;Ｂ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;복종
+			ELSEIF TALENT:복종
 				;Ｂ감 Lv3 이상
 				IF ABL:Ｂ감 >= 3
 					;PRINTFORMW 
@@ -630,8 +806,11 @@ IF SELECTCOM == 2
 	IF IS_INITIATIVE(TARGET)
 		;처음
 		IF IS_COM_FIRST()
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
+			;연모
+			IF TALENT:연모
+				;PRINTFORMW 
+			;복종
+			ELSEIF TALENT:복종
 				;PRINTFORMW 
 			;그 이외
 			ELSE
@@ -639,8 +818,17 @@ IF SELECTCOM == 2
 			ENDIF
 		;2회째 이후
 		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
+			;연모
+			IF TALENT:연모
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;복종
+			ELSEIF TALENT:복종
 				;Ｃ감 Lv3 이상
 				IF ABL:Ｃ감 >= 3
 					;PRINTFORMW 
@@ -663,8 +851,11 @@ IF SELECTCOM == 2
 	ELSE
 		;처음
 		IF IS_COM_FIRST()
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
+			;연모
+			IF TALENT:연모
+				;PRINTFORMW 
+			;복종
+			ELSEIF TALENT:복종
 				;PRINTFORMW 
 			;그 이외
 			ELSE
@@ -672,8 +863,17 @@ IF SELECTCOM == 2
 			ENDIF
 		;2회째 이후
 		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
+			;연모
+			IF TALENT:연모
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;복종
+			ELSEIF TALENT:복종
 				;Ｃ감 Lv3 이상
 				IF ABL:Ｃ감 >= 3
 					;PRINTFORMW 
@@ -706,8 +906,11 @@ IF SELECTCOM == 3
 		IF IS_COM_FIRST()
 			;처녀
 			IF TALENT:처녀
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
+				;연모
+				IF TALENT:연모
+					;PRINTFORMW 
+				;복종
+				ELSEIF TALENT:복종
 					;PRINTFORMW 
 				;그 이외
 				ELSE
@@ -715,8 +918,11 @@ IF SELECTCOM == 3
 				ENDIF
 			;비처녀
 			ELSE
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
+				;연모
+				IF TALENT:연모
+					;PRINTFORMW 
+				;복종
+				ELSEIF TALENT:복종
 					;PRINTFORMW 
 				;그 이외
 				ELSE
@@ -725,8 +931,17 @@ IF SELECTCOM == 3
 			ENDIF
 		;2회째 이후
 		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
+			;연모
+			IF TALENT:연모
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;복종
+			ELSEIF TALENT:복종
 				;Ｖ감 Lv3 이상
 				IF ABL:Ｖ감 >= 3
 					;PRINTFORMW 
@@ -751,8 +966,11 @@ IF SELECTCOM == 3
 		IF IS_COM_FIRST()
 			;처녀
 			IF TALENT:처녀
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
+				;연모
+				IF TALENT:연모
+					;PRINTFORMW 
+				;복종
+				ELSEIF TALENT:복종
 					;PRINTFORMW 
 				;그 이외
 				ELSE
@@ -760,8 +978,11 @@ IF SELECTCOM == 3
 				ENDIF
 			;비처녀
 			ELSE
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
+				;연모
+				IF TALENT:연모
+					;PRINTFORMW 
+				;복종
+				ELSEIF TALENT:복종
 					;PRINTFORMW 
 				;그 이외
 				ELSE
@@ -770,8 +991,17 @@ IF SELECTCOM == 3
 			ENDIF
 		;2회째 이후
 		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
+			;연모
+			IF TALENT:연모
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;복종
+			ELSEIF TALENT:복종
 				;Ｖ감 Lv3 이상
 				IF ABL:Ｖ감 >= 3
 					;PRINTFORMW 
@@ -1505,7 +1735,17 @@ IF SELECTCOM == 30
 					;PRINTFORMW 
 				;그 이외
 				ELSE
-					;PRINTFORMW 
+					PRINTFORMW 「우으... %LOCALS:0%... 이거 들어갈 수 있을까요?」
+					PRINTFORMW 아이리의 음부에 %ANAME(MASTER)%의 것을 갖다대자 긴장이 된 듯 몸이 굳어진다.
+					PRINTFORMW 「괜찮다고요...? 네, %LOCALS:0%만 믿을게요.」
+					PRINTFORML 「으긋...」
+					PRINTFORMW %ANAME(MASTER)%가 허리에 힘을 주자 끝부분이 천천히 아이리의 안에 파고들어간다.
+					PRINTFORMW 「아파...」
+					PRINTFORMW 아이리는 처녀막이 찢어지는 감각이 아팠는지 눈물을 글썽인다.
+					PRINTFORMW 「우우... 잠시만 움직이지 말아주세요.」
+					PRINTFORMW 잠시동안 아이리를 달래주자 고통이 줄어들었는지 살짝 웃는다.
+					PRINTFORMW 「에헤헤... 이제 움직이셔도 될 거 같아요.」
+					PRINTFORMW 그 말을 듣고 허리를 흔들자 아이리는 눈을 감고 그 감각을 느끼고 있다.
 				ENDIF
 			;비처녀
 			ELSE
@@ -1514,7 +1754,7 @@ IF SELECTCOM == 30
 					;PRINTFORMW 
 				;그 이외
 				ELSE
-					;PRINTFORMW 
+					PRINTFORMW 허접 ㅋㅋ
 				ENDIF
 			ENDIF
 		;2회째 이후
@@ -1550,7 +1790,7 @@ IF SELECTCOM == 30
 					;PRINTFORMW 
 				;그 이외
 				ELSE
-					;PRINTFORMW 
+					
 				ENDIF
 			;비처녀
 			ELSE
@@ -1559,7 +1799,7 @@ IF SELECTCOM == 30
 					;PRINTFORMW 
 				;그 이외
 				ELSE
-					;PRINTFORMW 
+					PRINTFORMW 「우으... %LOCALS:0%... 이거 들어갈 수 있을까요?」
 				ENDIF
 			ENDIF
 		;2회째 이후
@@ -1580,7 +1820,7 @@ IF SELECTCOM == 30
 					;PRINTFORMW 
 				;Ｖ감 Lv3 미만
 				ELSE
-					;PRINTFORMW 
+					PRINTFORMW 아이리의 안을 오가며 질의 감촉을 느꼈다.
 				ENDIF
 			ENDIF
 		ENDIF
@@ -5494,14 +5734,17 @@ IF SELECTCOM == 213
 	ENDIF
 	RETURN 0
 ENDIF
-
+;=========================================
+; [만나러간다] 명령어 모음
+; 
+; 
 ;-------------------------------------------------
-;회화
+;만나러간다-교류-회화(132)
 ;-------------------------------------------------
 IF SELECTCOM == 300
 	;처음(주도권을 고려하지 않는다)
-	IF IS_COM_FIRST(1)
-		;PRINTFORMW 
+	IF IS_COM_FIRST()
+		;PRINTFORMW
 	;2회째 이후
 	ELSE
 		;연모 or 복종 or 친구
@@ -5509,13 +5752,13 @@ IF SELECTCOM == 300
 			;PRINTFORMW 
 		;그 이외
 		ELSE
-			PRINTFORMW 「응, 그렇구나.」
+			PRINTFORMW 
 		ENDIF
 	ENDIF
 ENDIF
 
 ;-------------------------------------------------
-;무술 훈련
+;만나러간다-훈련/내정-무술 훈련(133)
 ;-------------------------------------------------
 IF SELECTCOM == 301
 	;처음(주도권을 고려하지 않는다)
@@ -5534,7 +5777,7 @@ IF SELECTCOM == 301
 ENDIF
 
 ;-------------------------------------------------
-;병법 학습
+;만나러간다-훈련/내정-호신술 학습(134)
 ;-------------------------------------------------
 IF SELECTCOM == 302
 	;처음(주도권을 고려하지 않는다)
@@ -5553,7 +5796,7 @@ IF SELECTCOM == 302
 ENDIF
 
 ;-------------------------------------------------
-;정무
+;만나러간다-훈련/내정-병법(135)
 ;-------------------------------------------------
 IF SELECTCOM == 303
 	;처음(주도권을 고려하지 않는다)
@@ -5570,9 +5813,8 @@ IF SELECTCOM == 303
 		ENDIF
 	ENDIF
 ENDIF
-
 ;-------------------------------------------------
-;순찰
+;만나러간다-훈련/내정-정무(136)
 ;-------------------------------------------------
 IF SELECTCOM == 304
 	;처음(주도권을 고려하지 않는다)
@@ -5591,7 +5833,7 @@ IF SELECTCOM == 304
 ENDIF
 
 ;-------------------------------------------------
-;가창 훈련
+;만나러간다-훈련/내정-순찰(137)
 ;-------------------------------------------------
 IF SELECTCOM == 305
 	;처음(주도권을 고려하지 않는다)
@@ -5610,7 +5852,7 @@ IF SELECTCOM == 305
 ENDIF
 
 ;-------------------------------------------------
-;요리
+;만나러간다-훈련/내정-가창 훈련(138)
 ;-------------------------------------------------
 IF SELECTCOM == 306
 	;처음(주도권을 고려하지 않는다)
@@ -5629,9 +5871,28 @@ IF SELECTCOM == 306
 ENDIF
 
 ;-------------------------------------------------
-;음담
+;만나러간다-훈련/내정-요리(139)
 ;-------------------------------------------------
 IF SELECTCOM == 307
+	;처음(주도권을 고려하지 않는다)
+	IF IS_COM_FIRST(1)
+		;PRINTFORMW 
+	;2회째 이후
+	ELSE
+		;연모 or 복종 or 친구
+		IF TALENT:연모 || TALENT:복종 || TALENT:친구
+			;PRINTFORMW 
+		;그 이외
+		ELSE
+			;PRINTFORMW 
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;만나러간다-교류-엣치한 이야기를 꺼낸다 (140)
+;-------------------------------------------------
+IF SELECTCOM == 309
 	;성공
 	IF TFLAG:17
 		;이 캐릭터가 주도권을 가지고 있다
@@ -5667,12 +5928,12 @@ IF SELECTCOM == 307
 		ENDIF
 	;실패
 	ELSE
-		;PRINTFORMW 
+		PRINTFORMW 야한건 안돼욧!
 	ENDIF
 ENDIF
 
 ;-------------------------------------------------
-;술을 마신다
+;만나러간다-교류-술을 마신다
 ;-------------------------------------------------
 IF SELECTCOM == 310
 	;처음(주도권을 고려하지 않는다)
@@ -5691,7 +5952,7 @@ IF SELECTCOM == 310
 ENDIF
 
 ;-------------------------------------------------
-;벌꿀수
+;만나러간다-교류-벌꿀수
 ;-------------------------------------------------
 IF SELECTCOM == 311
 	;처음(주도권을 고려하지 않는다)
@@ -5710,7 +5971,7 @@ IF SELECTCOM == 311
 ENDIF
 
 ;-------------------------------------------------
-;스킨쉽(타겟)
+;만나러간다-교류-스킨쉽(타겟)
 ;-------------------------------------------------
 IF SELECTCOM == 320
 	;이 캐릭터가 주도권을 가지고 있다
@@ -5763,7 +6024,7 @@ IF SELECTCOM == 320
 ENDIF
 
 ;-------------------------------------------------
-;두를 어루만진다(타겟)
+;머리를 쓰다듬는다(타겟)
 ;-------------------------------------------------
 IF SELECTCOM == 321
 	;이 캐릭터가 주도권을 가지고 있다
@@ -11523,6 +11784,19 @@ IF TALENT:공허 || IS_EQUIP_CONTINUE(TARGET, "입장착")
 	RETURN 0
 ENDIF
 
+IF IS_SLAVE(TARGET)
+	LOCALS:0 = 주인님
+;아나타가 [선생]이면 '선생님'이라고 부름
+ELSEIF TALENT:MASTER:선생 == 1
+	LOCALS:0 = 선생님
+;친구라면 ~쨩으로 부름
+ELSEIF TALENT:친구
+	LOCALS:0 = %ANAME(MASTER)%쨩
+;그 외엔 이름으로 부름
+ELSE
+	LOCALS:0 = %ANAME(MASTER)%
+ENDIF
+
 ;-------------------------------------------------
 ;처녀상실
 ;-------------------------------------------------
@@ -11533,7 +11807,17 @@ IF TCVAR:13 == 1
 		;PRINTFORMW 
 	;그 이외
 	ELSE
-		;PRINTFORMW 
+		PRINTFORMW 「우으... %LOCALS:0%... 이거 들어갈 수 있을까요?」
+		PRINTFORMW 아이리의 음부에 %ANAME(MASTER)%의 것을 갖다대자 긴장이 된 듯 몸이 굳어진다.
+		PRINTFORMW 「괜찮다고요...? 네, %LOCALS:0%만 믿을게요.」
+		PRINTFORML 「으긋...」
+		PRINTFORMW %ANAME(MASTER)%가 허리에 힘을 주자 끝부분이 천천히 아이리의 안에 파고들어간다.
+		PRINTFORMW 「아파...」
+		PRINTFORMW 아이리는 처녀막이 찢어지는 감각이 아팠는지 눈물을 글썽인다.
+		PRINTFORMW 「우우... 잠시만 움직이지 말아주세요.」
+		PRINTFORMW 잠시동안 아이리를 달래주자 고통이 줄어들었는지 살짝 웃는다.
+		PRINTFORMW 「에헤헤... 이제 움직이셔도 될 거 같아요.」
+		PRINTFORMW 그 말을 듣고 허리를 흔들자 아이리는 눈을 감고 그 감각을 느끼고 있다.
 	ENDIF
 ;주인공에게 섹스 이외로 처녀를 빼앗긴다
 ELSEIF TCVAR:13 == 2
@@ -11542,7 +11826,7 @@ ELSEIF TCVAR:13 == 2
 		;PRINTFORMW 
 	;그 이외
 	ELSE
-		;PRINTFORMW 
+		PRINTFORMW 22
 	ENDIF
 ;그 이외때에 처녀상실
 ELSE
@@ -11551,7 +11835,7 @@ ELSE
 		;PRINTFORMW 
 	;그 이외
 	ELSE
-		;PRINTFORMW 
+		PRINTFORMW 바보 멍청이
 	ENDIF
 ENDIF
 
