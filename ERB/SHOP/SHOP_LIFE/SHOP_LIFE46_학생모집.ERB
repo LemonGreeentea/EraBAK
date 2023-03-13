@@ -1,0 +1,207 @@
+﻿;-------------------------------------------------
+;「학생모집」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE_NAME46
+RESULTS:0 '= "학생모집"
+
+;-------------------------------------------------
+;「학생모집」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE_CHECK46
+SIF !FLAG:랜덤캐릭터사용
+	RETURN 0
+SIF CFLAG:MASTER:포로처
+	RETURN 0
+SIF !CFLAG:MASTER:소속
+	RETURN 0
+SIF APPOINT_DONE
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「학생모집의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY46
+FLAG:거점페이즈페이지 = 1
+FLAG:요바이 = 0
+MENUVAR:1 = 0
+MENUVAR:2 = 0
+MENUVAR:3 = 0
+RETURN 0
+
+;-------------------------------------------------
+;「학생모집」의 오른쪽 컬럼 버튼 입력치를 캐릭터 번호로 변환하는 처리의 오프 판정
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP_COLUMN_RIGHT_CONVERT_CHARANUM_OFF_CHECK46
+
+;-------------------------------------------------
+;「학생모집」의 오른쪽 컬럼 표시 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SHOW46
+
+;타이틀
+CALL COLUMN_RIGHT_TITLE("모집요항의 설정", "", "", "전", "0")
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+PRINTBUTTON "[이 조건으로 모집]", 0
+PRINTPLAIN   
+CALL COLOR_PRINT(" 차례당 한 번만 모집할 수 있습니다", 칼라_주석)
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+CALL COLOR_PRINT(" 재능:", 칼라_주석)
+CALL PRINT_SELECT_BUTTON(" [다재능]", 110, MENUVAR:1 == 0)
+CALL PRINT_SELECT_BUTTON(" [무관]", 111, MENUVAR:1 == 1)
+CALL PRINT_SELECT_BUTTON(" [군사]", 112, MENUVAR:1 == 2)
+CALL PRINT_SELECT_BUTTON(" [정무]", 113, MENUVAR:1 == 3)
+CALL PRINT_SELECT_BUTTON(" [예능]", 114, MENUVAR:1 == 4)
+CALL PRINT_SELECT_BUTTON(" [요리]", 115, MENUVAR:1 == 5)
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_PRINTL
+
+CALL COLOR_PRINT(" 성별:", 칼라_주석)
+CALL PRINT_SELECT_BUTTON(" [불문]", 120, MENUVAR:2 == 0)
+CALL PRINT_SELECT_BUTTON(" [남성]", 121, MENUVAR:2 == 1)
+CALL PRINT_SELECT_BUTTON(" [여성]", 122, MENUVAR:2 == 2)
+CALL PRINT_SELECT_BUTTON(" [여성(후타)]", 123, MENUVAR:2 == 3)
+CALL PRINT_SELECT_BUTTON(" [남성(후타)]", 124, MENUVAR:2 == 4)
+CALL PRINT_SELECT_BUTTON(" [오토코노코]", 125, MENUVAR:2 == 5)
+CALL PRINT_SELECT_BUTTON(" [오토코노코(후타)]", 126, MENUVAR:2 == 6)
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_PRINTL
+
+CALL COLOR_PRINT(" 이름:", 칼라_주석)
+CALL PRINT_SELECT_BUTTON(" [일본식]", 130, MENUVAR:3 == 0)
+CALL PRINT_SELECT_BUTTON(" [서양식]", 131, MENUVAR:3 == 1)
+;CALL PRINT_SELECT_BUTTON(" [중화식]", 132, MENUVAR:3 == 2)
+CALL PRINT_SELECT_BUTTON(" [한국식]", 132, MENUVAR:3 == 2)
+
+;나머지는 빈행
+CALL COLUMN_RIGHT_CLEAR
+
+;-------------------------------------------------
+;「학생모집」의 오른쪽 컬럼 버튼의 입력 처리 보좌
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SUB46(ARG:0)
+;이 조건으로 모집 이외의 숫자라면 돌아온다
+SIF ARG:0 != 0
+	RETURN 0
+
+MENUVAR:11 = -1
+MENUVAR:12 = 0
+
+LOCAL:0 = GET_COMMANDER_NUM(CFLAG:MASTER:소속)
+
+;군주가[동물귀]or[꼬리]를 가진다면 케모율 높은
+LOCAL:4 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+IF LOCAL:4 >= 0 && (TALENT:(LOCAL:4):동물귀 || TALENT:(LOCAL:4):꼬리)
+	LOCAL:5 = 75
+ELSE
+	LOCAL:5 = 1
+ENDIF
+
+$INPUT_LOOP_NEWCHARA
+
+;지정의 조건으로 랜덤 캐릭터를 작성
+CALL CREATE_RANDOM_CHARA(LOCAL:5, MENUVAR:1, MENUVAR:2 - 1, MENUVAR:3)
+LOCAL:2 = RESULT
+
+;사관의 작성에 실패했을 경우
+IF LOCAL:2 < 0
+	PRINTW 유감스럽게도 입부할 학생을 찾지 못하였다…
+
+;성공
+ELSE
+	CALL SINGLE_DRAWLINE
+	PRINTFORML %조사처리(ANAME(LOCAL:2),"가")% 입부를 신청하였습니다.
+
+	$INPUT_LOOP_SELECT
+
+	;SHOW_INFO의 초기 화면을 기본 정보로 한다
+	FLAG:능력표시모드 = 0
+
+	;캐릭터의 정보를 표시
+	CALL SINGLE_DRAWLINE
+	CALL SHOW_INFO(LOCAL:2)
+	CALL SINGLE_DRAWLINE
+
+	PRINTBUTTON "[이 캐릭터를 등용]", 0
+	PRINT    
+	PRINTBUTTON "[다른 캐릭터를 찾는다]", 1
+	PRINT    
+	IF MENUVAR:11 == -1
+	ELSEIF MENUVAR:12
+		PRINTBUTTON "[진행된다]", 2
+	ELSE
+		PRINTBUTTON "[돌아온다]", 2
+	ENDIF
+	
+	PRINT    
+	PRINTBUTTON "[중지]", 9
+	PRINTL 
+
+	$INPUT_LOOP_TREAT
+	INPUT
+
+	IF RESULT == 0
+		CALL CHANGE_COUNTRY(LOCAL:2, CFLAG:MASTER:소속)
+		PRINTFORMW %조사처리(ANAME(LOCAL:2),"가")% 입부하였습니다.
+		IF MENUVAR:11 != -1
+			CALL DELETE_CHARA(MENUVAR:11)
+		ENDIF
+		;이 턴에 있어서의 등용이 끝난 플래그를 ON
+		APPOINT_DONE = 1
+		SHOP_TIME ++
+		BEGIN TURNEND
+		RETURN 1
+	ELSEIF RESULT == 1
+		IF MENUVAR:11 != -1
+			;필요없는 캐릭터를 삭제
+			CALL DELETE_CHARA(MENUVAR:11)
+		ENDIF
+		MENUVAR:11 = CHARANUM - 1
+		MENUVAR:12 = 0
+		GOTO INPUT_LOOP_NEWCHARA
+	ELSEIF RESULT == 2
+		IF MENUVAR:12
+			MENUVAR:12 = 0
+		ELSE
+			MENUVAR:12 = 1
+		ENDIF
+			;스왑
+			LOCAL:21 = MENUVAR:11
+			MENUVAR:11    = LOCAL:2
+			LOCAL:2 = LOCAL:21
+		GOTO INPUT_LOOP_SELECT
+	ELSEIF RESULT == 9
+		;PRINTW 이번은 등용을 보류하기로 했습니다
+		;작성한 캐릭터를 삭제
+		CALL DELETE_CHARA(CHARANUM - 1)
+		IF MENUVAR:11 != -1
+			CALL DELETE_CHARA(CHARANUM - 1)
+		ENDIF
+	ELSE
+		GOTO INPUT_LOOP_TREAT
+	ENDIF
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+;「학생모집」의 리스트 1 입력 처리
+;  캐릭터 번호에의 변환 오프이기 때문에 ARG:0=입력치
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP46(ARG:0)
+IF ARG:0 >= 110 && ARG:0 <= 115
+	MENUVAR:1 = ARG:0 - 110
+ELSEIF ARG:0 >= 120 && ARG:0 <= 126
+	MENUVAR:2 = ARG:0 - 120
+ELSEIF ARG:0 >= 130 && ARG:0 <= 132
+	MENUVAR:3 = ARG:0 - 130
+ENDIF
+
+RETURN 0
+

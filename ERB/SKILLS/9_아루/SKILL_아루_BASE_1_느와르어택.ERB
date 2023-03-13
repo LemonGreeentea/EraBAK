@@ -1,18 +1,18 @@
 ﻿;-----------------------------------
 ;기본치 계산에 앞서 처리하는 것
 ;-----------------------------------
-@SKILL_1_BASE_1_EXIST
+@SKILL_9_BASE_1_EXIST
 RETURN 1
 
-@SKILL_1_BASE_1_NAME
+@SKILL_9_BASE_1_NAME
 RESULTS = 느와르 어택
 
 ;레벨은 1-5까지
-@SKILL_1_BASE_1_LEVEL
+@SKILL_9_BASE_1_LEVEL
 RETURN 3
 
 ;대상 선택
-@SKILL_1_BASE_1_SETTARGET(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+@SKILL_9_BASE_1_SETTARGET(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
 #DIM 발동자
 #DIM 발동번호
 #DIM 스킬
@@ -27,7 +27,7 @@ RETURN 3
 RETURN 1
 
 ;발동 판정
-@SKILL_1_BASE_1_CAN_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+@SKILL_9_BASE_1_CAN_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
 #DIM 발동자
 #DIM 발동번호
 #DIM 스킬
@@ -42,7 +42,7 @@ RETURN 1
 RETURN 1
 
 ;효과를 여기에 기술
-@SKILL_1_BASE_1_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+@SKILL_9_BASE_1_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
 #DIM 발동자
 #DIM 발동번호
 #DIM 스킬
@@ -57,13 +57,13 @@ RETURN 1
 BATTLE_RATE_ATC:대상측 += 10
 PRINTFORML 적부대의 받은 피해가 증가했다!
 
-@SKILL_1_BASE_1_EXPLANATION
+@SKILL_9_BASE_1_EXPLANATION
 RESULTS = 적부대의 받은 피해를 증가시킨다.
 
 
 
 
-@SKILL_1_BASE_1_RATE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+@SKILL_9_BASE_1_RATE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
 #DIM 발동자
 #DIM 발동번호
 #DIM 스킬

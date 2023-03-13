@@ -1,0 +1,168 @@
+﻿;=====================================================
+; 블루아카이브K 무츠키 데일리 구상 - 무츠키는 이상형이 되고싶어
+; 구상 제작자 : 나는토끼(feat. 레몬녹차)
+; 구상 설명
+;   무츠키가 당신의 이상형이 되기 위해서 여러가지 노력을 합니다.
+;   이 이벤트에선 무츠키의 경험치가 증가합니다.
+;
+;=====================================================
+;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@KOJO_DAILY_K10_MUTSUKI_WANNABE_A_STRANGE_BROTHER_RATE(대상)
+#DIM 대상
+;이벤트 발생확률. (70%)
+RETURN 700
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@KOJO_DAILY_K10_MUTSUKI_WANNABE_A_STRANGE_BROTHER_DECISION(대상)
+#DIM 대상
+;무츠키가 플레이어 소속이면서 포로가 아닐 것
+IF CFLAG:대상:소속 == CFLAG:MASTER:소속 && CFLAG:대상:포로처 == 0
+	RETURN 1
+ENDIF
+RETURN 0
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@KOJO_DAILY_K10_MUTSUKI_WANNABE_A_STRANGE_BROTHER_GENRE(대상)
+#DIM 대상
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@KOJO_DAILY_K10_MUTSUKI_WANNABE_A_STRANGE_BROTHER(대상)
+#DIM 대상
+
+IF IS_SLAVE(대상)
+	LOCALS:0 = 주인님
+ELSEIF TALENT:MASTER:선생 == 1
+	LOCALS:0 = 선생님
+ELSE
+	LOCALS:0 = %ANAME(MASTER)%
+ENDIF
+
+PRINTFORMW %조사처리(ANAME(MASTER),"와(과)")% 무츠키는 평소처럼 대화하고 있다.
+CALL FACE_IMAGE_N("표정_10_일반_9")
+PRINTFORMW 「그런데, %LOCALS:0%은 이상형 같은 거 있어~?」
+PRINTFORML
+CALL ASK_MULTI("「강한 여자」", "「듬직한 여자」",  "「지적인 여자」", "「리더십 있는 여자」")
+	IF RESULT == 0
+		CALL FACE_IMAGE_N("표정_10_일반_3")
+		PRINTFORMW 「흐응~ 그렇구나...」
+		PRINTFORML
+		PRINTFORMW 당일 밤. . .
+		PRINTFORML
+		CALL FACE_IMAGE_N("표정_12_일반_12")
+		PRINTFORML 「네? 제, 제가 무술 훈련을 도와달라구요?」
+		PRINTFORMW 「그, 그치만 저 따위는 도움이 안 될 걸요...」
+		CALL FACE_IMAGE_N("표정_10_일반_4")
+		PRINTFORML 「제발 도와 줘~」
+		PRINTFORMW 「하루카쨩밖에 못 하는 일이라구~」
+		CALL FACE_IMAGE_N("표정_12_일반_11")
+		PRINTFORMW 「끄응...」
+		CALL FACE_IMAGE_N("표정_12_일반_7")
+		PRINTFORML 「아, 알겠어요. 도와드릴게요...」
+		PRINTFORMW 「대, 대신 도움이 안 되는 것 같으면 언제든지 말씀해주세요..!」
+		CALL FACE_IMAGE_N("표정_10_일반_10")
+		PRINTFORMW 「응! 그럼 당장 시작하자~!」
+		CALL FACE_IMAGE_N("표정_12_일반_13")
+		PRINTFORMW 「아앗, 네, 넷!」
+		PRINTFORML
+		PRINTFORMW 무츠키는 하루카에게 무술 훈련을 받았다.
+		PRINTFORML
+		PRINTFORML 무츠키: 무투경험치 +4
+		PRINTFORMW 하루카: 무투경험치 +2
+		EXP:대상:무투경험치 += 2
+		EXP:12:무투경험치 += 1
+	ELSEIF RESULT == 1
+		CALL FACE_IMAGE_N("표정_10_일반_3")
+		PRINTFORMW 「흐응~ 그렇구나...」
+		PRINTFORML
+		PRINTFORMW 당일 밤. . .
+		PRINTFORML
+		CALL FACE_IMAGE_N("표정_9_일반_7")
+		PRINTFORMW 「응? 갑자기 호신술을 가르쳐 달라고?」
+		CALL FACE_IMAGE_N("표정_10_일반_10")
+		PRINTFORMW 「응! 아루쨩은 대단한 악당이니까 당연히 호신술도 훨씬 잘 알고 있잖아~!」
+		CALL FACE_IMAGE_N("표정_9_일반_6")
+		PRINTFORML 「어? 그, 그럼! 당연하지!」
+		PRINTFORMW 「이 몸은 사장이니까~!」
+		CALL FACE_IMAGE_N("표정_10_일반_10")
+		PRINTFORMW 「와아~ 그럼 가르쳐 주는 거지~?」
+		CALL FACE_IMAGE_N("표정_9_일반_8")
+		PRINTFORMW 「으, 응! 무츠키쨩에게는 특별히 가르쳐 줄게!」
+		CALL FACE_IMAGE_N("표정_9_일반_10")
+		PRINTFORML 「'아아, 어떡하지...'」
+		PRINTFORMW 「'나도 무츠키쨩이 아는 만큼만 아는데...'」
+		PRINTFORML
+		PRINTFORMW 무츠키는 아루와 함께 호신술을 훈련했다.
+		PRINTFORML
+		PRINTFORML 무츠키: 방위경험치 +3
+		PRINTFORMW 아루: 방위경험치 +3
+		EXP:대상:방위경험치 += 3
+		EXP:9:방위경험치 += 3
+	ELSEIF RESULT == 2
+		CALL FACE_IMAGE_N("표정_10_일반_3")
+		PRINTFORMW 「흐응~ 그렇구나...」
+		PRINTFORML
+		PRINTFORMW 당일 밤. . .
+		PRINTFORML
+		CALL FACE_IMAGE_N("표정_11_일반_4")
+		PRINTFORML 「응? 병법을 배우고 싶다고?」
+		PRINTFORMW 「...어째서?」
+		CALL FACE_IMAGE_N("표정_10_일반_2")
+		PRINTFORML 「그, 그냥~ 배워두면 좋을 것 같아서..?」
+		CALL FACE_IMAGE_N("표정_11_일반_7")
+		PRINTFORMW 「'...뭔가 다른 속셈이 있구나'」
+		CALL FACE_IMAGE_N("표정_10_일반_4")
+		PRINTFORMW 「제발~ 흥신소의 참모인 카요코쨩 말고는 배울 사람이 없다구~」
+		CALL FACE_IMAGE_N("표정_11_일반_8")
+		PRINTFORML 「하아... 알았어.」
+		PRINTFORMW 「어차피 안 된다고 해도 계속 달라 붙을 것 같으니까...」
+		PRINTFORML
+		PRINTFORMW 무츠키는 카요코에게 병법을 배웠다.
+		PRINTFORML
+		PRINTFORML 무츠키: 지략경험치 +4
+		PRINTFORMW 카요코: 지략경험치 +2
+		EXP:대상:지략경험치 += 4
+		EXP:11:지략경험치 += 2
+	ELSEIF RESULT == 3
+		CALL FACE_IMAGE_N("표정_10_일반_3")
+		PRINTFORMW 「흐응~ 그렇구나...」
+		PRINTFORML
+		PRINTFORMW 당일 밤. . .
+		PRINTFORML
+		CALL FACE_IMAGE_N("표정_11_일반_4")
+		PRINTFORML 「응? 정치를 배우고 싶다고?」
+		PRINTFORMW 「...어째서?」
+		CALL FACE_IMAGE_N("표정_10_일반_2")
+		PRINTFORML 「그, 그냥~ 배워두면 좋을 것 같아서..?」
+		CALL FACE_IMAGE_N("표정_11_일반_7")
+		PRINTFORMW 「'...뭔가 다른 속셈이 있구나'」
+		CALL FACE_IMAGE_N("표정_10_일반_4")
+		PRINTFORMW 「제발~ 흥신소의 참모인 카요코쨩 말고는 배울 사람이 없다구~」
+		CALL FACE_IMAGE_N("표정_11_일반_8")
+		PRINTFORML 「하아... 알았어.」
+		PRINTFORMW 「어차피 안 된다고 해도 계속 달라 붙을 것 같으니까...」
+		PRINTFORML
+		PRINTFORMW 무츠키는 카요코에게 정치를 배웠다.
+		PRINTFORML
+		PRINTFORML 무츠키: 정치경험치 +4
+		PRINTFORMW 카요코: 정치경험치 +2
+		EXP:대상:정치경험치 += 4
+		EXP:11:정치경험치 += 2
+	ENDIF
+
+
+RETURN 1

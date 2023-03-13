@@ -3304,7 +3304,7 @@ PRINTFORML ·
 	IF ! ARG:0
 		ARG:0 = DAY
 	ENDIF
-	LOCAL:0 = (ARG:0 + 12) / 12
+	LOCAL:0 = (ARG:0 + 48) / 48
 	RETURNF LOCAL:0
 
 ;============================================================================== 
@@ -3315,7 +3315,21 @@ PRINTFORML ·
 	IF ! ARG:0
 		ARG:0 = DAY
 	ENDIF
-	LOCAL:0 = (ARG:0 + 12) % 12
+	LOCAL:0 = (ARG:0 + 48) % 48
+	LOCAL:0 /= 4
+	RETURNF LOCAL:0
+
+;============================================================================== 
+;◆금기가 몇주인지를 돌려준다
+;============================================================================== 
+@DISPLAY_WEEK(ARG:0)
+	#FUNCTION
+	IF ! ARG:0
+		ARG:0 = DAY
+	ENDIF
+	LOCAL:0 = (ARG:0 + 48) % 4
+	SIF LOCAL:0 == 0
+		LOCAL:0 = 4
 	RETURNF LOCAL:0
 
 ;============================================================================== 
@@ -3326,32 +3340,33 @@ PRINTFORML ·
 	IF ! ARG:0
 		ARG:0 = DAY
 	ENDIF
-	LOCAL:0 = (ARG:0 + 12) % 12
+	LOCAL:0 = (ARG:0 + 48) % 48
+
 	SELECTCASE LOCAL:0
-		CASE 0
-			LOCALS:0 = 12월
-		CASE 1
+		CASE IS <= 4
 			LOCALS:0 = 1월
-		CASE 2
+		CASE IS <= 8
 			LOCALS:0 = 2월
-		CASE 3
+		CASE IS <= 12
 			LOCALS:0 = 3월
-		CASE 4
+		CASE IS <= 16
 			LOCALS:0 = 4월
-		CASE 5
+		CASE IS <= 20
 			LOCALS:0 = 5월
-		CASE 6
+		CASE IS <= 24
 			LOCALS:0 = 6월
-		CASE 7
+		CASE IS <= 28
 			LOCALS:0 = 7월
-		CASE 8
+		CASE IS <= 32
 			LOCALS:0 = 8월
-		CASE 9
+		CASE IS <= 36
 			LOCALS:0 = 9월
-		CASE 10
+		CASE IS <= 40
 			LOCALS:0 = 10월
-		CASE 11
+		CASE IS <= 44
 			LOCALS:0 = 11월
+		CASE IS <= 48
+			LOCALS:0 = 12월
 	ENDSELECT
 	RETURNF LOCALS:0
 
@@ -3363,18 +3378,21 @@ PRINTFORML ·
 	IF ! ARG:0
 		ARG:0 = DAY
 	ENDIF
-	LOCAL:0 = (ARG:0 + 12) % 12
-	IF LOCAL:0 == 3 || LOCAL:0 == 4 || LOCAL:0 == 5
-		LOCALS:0 = 봄
-	ELSEIF LOCAL:0 == 6 || LOCAL:0 == 7 || LOCAL:0 == 8
-		LOCALS:0 = 여름
-	ELSEIF LOCAL:0 == 9 || LOCAL:0 == 10 || LOCAL:0 == 11
-		LOCALS:0 = 가을
-	ELSE
-		LOCALS:0 = 겨울
-	ENDIF
-	RETURNF LOCALS:0
+	LOCAL:0 = ARG:0 % 48
+	SELECTCASE LOCAL:0
+		CASE IS <= 8
+			LOCALS:0 = 겨울
+		CASE IS <= 20
+			LOCALS:0 = 봄
+		CASE IS <= 32
+			LOCALS:0 = 여름
+		CASE IS <= 44
+			LOCALS:0 = 가을
+		CASE IS <= 48
+			LOCALS:0 = 겨울
+	ENDSELECT
 
+	RETURNF LOCALS:0
 ;-------------------------------------------------
 ;카타카나 판정 함수
 ;명명 처리용으로 문자열이 카타카나인가 어떤가를 판정한다（1이라면 카타카나）

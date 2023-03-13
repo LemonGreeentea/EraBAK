@@ -1,0 +1,244 @@
+﻿;-------------------------------------------------
+;「학생정보」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE_NAME51
+RESULTS:0 '= "학생정보"
+
+;-------------------------------------------------
+;「학생정보」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE_CHECK51
+RETURN 1
+
+;-------------------------------------------------
+;「학생정보」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA51(ARG:0)
+CALL SHOP_LIFE_CHECKCHARA_NOURYOKU(ARG:0)
+RETURN RESULT
+
+;-------------------------------------------------
+;「학생정보의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY51
+FLAG:거점페이즈페이지 = 1
+FLAG:요바이 = 0
+RETURN 0
+
+;-------------------------------------------------
+;「학생정보」의 오른쪽 컬럼 캐릭터 리스트 1의 버튼（함수미지정이라면 선택중색없음 표시）
+;-------------------------------------------------
+@SHOP_LIFE_LIST1_BUTTON51(ARG:0, ARG:1)
+;캐릭터, 선택중 칼라 표시 플래그, 버튼 번호에 추가하는 수치, CHECKCHARA의 반환값, 행동이 끝난 마크를 오프로 하는 플래그
+CALL COLUMN_RIGHT_CHARALIST_BUTTON(ARG:0, CFLAG:(ARG:0):침실호출선택중, SHOP_LIFE_LIST1_ADD_INPUT, ARG:1, 1)
+RETURN 0
+
+;-------------------------------------------------
+;「학생정보」의 오른쪽 컬럼 표시 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SHOW51
+;타이틀
+CALL COLUMN_RIGHT_TITLE("대상자 선택", "0", "1", "0", "0")
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+PRINTBUTTON @"[%CHARALIST_MODE(), MAX_CHARANAME_LENGTH, LEFT%]", 1
+PRINTPLAIN   
+PRINTBUTTON @"[%"능력일람 표시", MAX_CHARANAME_LENGTH, LEFT%]", 2
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_CHARALIST
+RETURN
+
+;-------------------------------------------------
+;「학생정보」의 오른쪽 컬럼 버튼의 입력 처리 보좌
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SUB51(ARG:0)
+;학생정보 필터
+IF ARG:0 == 1
+	FLAG:능력표시필터 = ROUND_INCREMENT(FLAG:능력표시필터, 0, 3)
+	RETURN 0
+;능력일람 표시
+ELSEIF ARG:0 == 2
+	;SIF FLAG:거점페이즈선택커맨드 == 51 || FLAG:범용 무장 카운트 == 1025
+	CALL SHOP_LIFE_CHARA_TABLE
+ENDIF
+
+;-------------------------------------------------
+;「학생정보」의 리스트 1 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP51(ARG:0)
+;SHOW_INFO의 초기 화면을 기본 정보로 한다
+CALL CREATE_SELECTOR_SORT_LIST
+LOCAL:1 = 0
+FLAG:능력표시모드 = 0
+FOR LOCAL, 0, CHARANUM
+	SIF SHOP_CHARA_LIST:(LOCAL) == -1
+		CONTINUE
+	TRYCALLFORM SHOP_LIFE_CHECKCHARA{FLAG:거점페이즈선택커맨드}(SHOP_CHARA_LIST:(LOCAL))
+	IF !RESULT
+		SHOP_CHARA_LIST:LOCAL = -1
+		CONTINUE
+	ENDIF
+NEXT
+CALL SHOW_INFO_WITH_UI(ARG:0, 1)
+REDRAW 1
+RETURN 1
+
+;-------------------------------------------------
+;「학생정보」의 메뉴 표시로 사용하는 필터링의 모드 문자열
+;-------------------------------------------------
+@CHARALIST_MODE
+#FUNCTIONS
+SELECTCASE FLAG:능력표시필터
+	CASE 0
+		RETURNF "사관+포로+우호"
+	CASE 1
+		RETURNF "사관"
+	CASE 2
+		RETURNF "사관+포로"
+	CASE 3
+		RETURNF "모두"
+ENDSELECT
+
+;-------------------------------------------------
+;「학생정보」의 처리
+;ARG:0=대상의 캐릭터 번호, ARG:1=페이지 이동을 허가할지 어떨지
+;-------------------------------------------------
+@SELECTED_SHOWDATA(ARG:0, ARG:1 = 0)
+#DIM 현기호LV
+#DIM 경험수
+
+PRINTBUTTON " 9[돌아온다]", 9
+PRINT   
+CALL PRINTBUTTON_EX(" 0[기본 정보]", 0, 1, FLAG:능력표시모드 == 0)
+IF ARG:0 == MASTER
+	SETCOLOR 칼라_선택불가
+	PRINTFORM  1[성벽 설정]
+	RESETCOLOR
+ELSE
+	CALL PRINTBUTTON_EX(" 1[성벽 설정]", 1, 1, FLAG:능력표시모드 == 1)
+ENDIF
+CALL PRINTBUTTON_EX(" 2[능력 상세]", 2, 1, FLAG:능력표시모드 == 2)
+CALL PRINTBUTTON_EX(" 3[임신 기록]", 3, 1, FLAG:능력표시모드 == 3)
+CALL PRINTBUTTON_EX(" 4[스킬 표시]", 4, 1, FLAG:능력표시모드 == 4)
+IF ARG:1
+	PRINTL
+	PRINTBUTTON " 7[이전캐릭터]", 7
+	PRINTBUTTON " 8[다음캐릭터]", 8
+ENDIF
+PRINTL 
+
+$INPUT_LOOP
+INPUT 9
+
+IF FLAG:능력표시모드 == 1
+	;「성벽 설정」전용의 입력 처리
+	IF RESULT == 101
+		FLAG:성벽설정페이지수 --
+		RETURN 1
+	ELSEIF RESULT == 102
+		FLAG:성벽설정페이지수 ++
+		RETURN 1
+	ELSEIF RESULT >= 1000 && RESULT < 1900
+		현기호LV = COM_TENDENCY:(ARG:0):(RESULT - 1000)
+		경험수 = COM_EXP:(ARG:0):(RESULT - 1000) /10
+		IF (현기호LV == 0 && 경험수 >= 10) || (현기호LV == 1 && 경험수 >= 35) || (현기호LV == 2 && 경험수 >= 100)
+			COM_TENDENCY:(ARG:0):(RESULT - 1000) ++
+		ENDIF
+		RETURN 1
+	ELSEIF RESULT >= 2000 && RESULT < 2900
+		IF COM_TENDENCY:(ARG:0):(RESULT - 2000) >= 1
+			COM_TENDENCY:(ARG:0):(RESULT - 2000) --
+		ENDIF
+		RETURN 1
+	ELSEIF RESULT == 3000 || RESULT == 4000 || RESULT == 5000 || RESULT == 6000 || RESULT == 7000 || RESULT == 8000
+		CALL 성벽일괄변경(ARG,RESULT)
+		RETURN 1
+	ENDIF
+ENDIF
+
+IF RESULT == 9
+	RETURN 0
+ELSEIF RESULT >= 0 && RESULT <= 4 && FLAG:능력표시모드 != RESULT && !(RESULT == 1 && ARG:0 == MASTER)
+	FLAG:능력표시모드 = RESULT
+	RETURN 1
+ELSEIF RESULT == 7 && ARG:1
+	RETURN 2
+ELSEIF RESULT == 8 && ARG:1
+	RETURN 3
+;★
+ELSEIF RESULT == 1000
+	FLAG:능력표시모드 = 10
+	RETURN 1
+ENDIF
+
+CLEARLINE 1
+GOTO INPUT_LOOP
+
+
+;-------------------------------------------------
+;「학생정보」의 처리 「성벽 설정」의 일괄 지정
+;성벽의 일괄 상승·하강 ARG=캐릭터 번호 ARG:1
+;-------------------------------------------------
+@성벽일괄변경(ARG,ARG:1)
+#DIM 현기호LV
+#DIM 경험수
+SELECTCASE ARG:1
+	CASE 10000
+		FOR LOCAL,0,1000
+			$LOOP
+			현기호LV = COM_TENDENCY:(ARG:0):LOCAL
+			경험수 = COM_EXP:(ARG:0):LOCAL / 10
+			IF TRAINNAME:LOCAL == ""
+				CONTINUE
+			ELSEIF (현기호LV == 0 && 경험수 >= 10) || (현기호LV == 1 && 경험수 >= 35) || (현기호LV == 2 && 경험수 >= 100)
+				COM_TENDENCY:(ARG:0):LOCAL ++
+				SIF COM_TENDENCY:(ARG:0):LOCAL < 2
+					GOTO LOOP
+			ENDIF
+		NEXT
+	CASE 11000
+		FOR LOCAL,0,1000
+			SIF COM_TENDENCY:(ARG:0):LOCAL
+				COM_TENDENCY:(ARG:0):LOCAL --
+		NEXT
+	CASE 12000
+		FOR LOCAL,1000,2000
+			$LOOP2
+			현기호LV = COM_TENDENCY:(ARG:0):LOCAL
+			경험수 = COM_EXP:(ARG:0):LOCAL / 10
+			IF TRAINNAME:(LOCAL - 1000)== ""
+				CONTINUE
+			ELSEIF (현기호LV == 0 && 경험수 >= 10) || (현기호LV == 1 && 경험수 >= 35) || (현기호LV == 2 && 경험수 >= 100)
+				COM_TENDENCY:(ARG:0):LOCAL ++
+				SIF COM_TENDENCY:(ARG:0):LOCAL < 2
+					GOTO LOOP2
+			ENDIF
+		NEXT
+	CASE 13000
+		FOR LOCAL,1000,2000
+			SIF COM_TENDENCY:(ARG:0):LOCAL
+				COM_TENDENCY:(ARG:0):LOCAL --
+		NEXT
+	CASE 14000
+		FOR LOCAL,2000,2999
+			$LOOP3
+			현기호LV = COM_TENDENCY:(ARG:0):LOCAL
+			경험수 = COM_EXP:(ARG:0):LOCAL / 10
+			IF TRAINNAME:(LOCAL - 2000)== ""
+				CONTINUE
+			ELSEIF (현기호LV == 0 && 경험수 >= 10) || (현기호LV == 1 && 경험수 >= 35) || (현기호LV == 2 && 경험수 >= 100)
+				COM_TENDENCY:(ARG:0):LOCAL ++
+				SIF COM_TENDENCY:(ARG:0):LOCAL < 2
+					GOTO LOOP3
+			ENDIF
+		NEXT
+	CASE 15000
+		FOR LOCAL,2000, 2999
+			SIF COM_TENDENCY:(ARG:0):LOCAL
+				COM_TENDENCY:(ARG:0):LOCAL --
+		NEXT
+ENDSELECT
+

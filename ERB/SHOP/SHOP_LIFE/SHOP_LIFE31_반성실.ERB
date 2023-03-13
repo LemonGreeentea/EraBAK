@@ -1,0 +1,406 @@
+﻿;-------------------------------------------------
+;「포로의조교」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE_NAME31
+RESULTS:0 '= "반성실"
+
+;-------------------------------------------------
+;「포로의조교」의 선택 가부 판정
+;-------------------------------------------------
+@SHOP_LIFE_CHECK31
+SIF CFLAG:MASTER:행동불능상태 == 행동불능_임월 || COOLTIME:MASTER:0 > 1
+	RETURN 0
+SIF CFLAG:MASTER:포로처
+	RETURN 0
+SIF !CFLAG:MASTER:소속
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「포로의조교」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA31(ARG:0)
+;비주인공, 주인공 세력의 포로, 감옥에서 감금중
+RETURN CHECK91(ARG:0, 2, (ARG:0 != MASTER && CFLAG:(ARG:0):포로처 == CFLAG:MASTER:소속 && CFLAG:(ARG:0):연금중 == 0) || CFLAG:(ARG:0):외교조교중)
+
+;-------------------------------------------------
+;「포로의조교」의 추가 체크
+;-------------------------------------------------
+@SHOP_LIFE_CHECK_ADDITIONAL_CHECK31()
+FOR LOCAL, 0, CHARANUM
+	SIF CFLAG:LOCAL:포로처 == CFLAG:MASTER:소속 && CFLAG:LOCAL:연금중 != 1
+		RETURN 1
+NEXT
+
+
+;-------------------------------------------------
+;「포로의조교」의 조수의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA_SUB31(ARG:0)
+;침실호출의 선택 가능 캐릭터 존재 판정
+CALL SHOP_LIFE_CHECKCHARA_NEYA(ARG:0)
+RETURN CHECK91(ARG:0, 2, RESULT && SHOP_LIFE_CHECKCHARA_ZYOSYU(ARG:0) && CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속)
+RETURN 0
+
+;-------------------------------------------------
+;「포로의조교의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY31
+FLAG:거점페이즈페이지 = 1
+FLAG:요바이 = 0
+RETURN 0
+
+;-------------------------------------------------
+;「포로의조교」의 오른쪽 컬럼 캐릭터 리스트 1의 버튼（함수미지정이라면 선택중색없음 표시）
+;-------------------------------------------------
+@SHOP_LIFE_LIST1_BUTTON31(ARG:0, ARG:1)
+;캐릭터, 선택중 칼라 표시 플래그, 버튼 번호에 추가하는 수치, CHECKCHARA의 반환값
+CALL COLUMN_RIGHT_CHARALIST_BUTTON(ARG:0, FINDELEMENT(PRISONER_TARGET, ARG:0) != -1, SHOP_LIFE_LIST1_ADD_INPUT, ARG:1, 0, "TOP")
+RETURN
+
+;-------------------------------------------------
+;「포로의조교」의 오른쪽 컬럼 캐릭터 리스트 2의 버튼（함수미지정이라면 선택중색없음 표시）
+;-------------------------------------------------
+@SHOP_LIFE_LIST2_BUTTON31(ARG:0, ARG:1)
+;캐릭터, 선택중 칼라 표시 플래그, 버튼 번호에 추가하는 수치, CHECKCHARA의 반환값
+CALL COLUMN_RIGHT_CHARALIST_BUTTON(ARG:0, CFLAG:(ARG:0):포로조교의조수, SHOP_LIFE_LIST2_ADD_INPUT, ARG:1, 0, "BOTTOM")
+RETURN 0
+
+;-------------------------------------------------
+;「포로의조교」의 오른쪽 컬럼 캐릭터 리스트 버튼（상）표시에 추적 시키는 정보
+;  Default의 정보를 표시하지 않는 경우는 RETURN 1
+;-------------------------------------------------
+@SHOP_LIFE_BUTTON_ADD_TOP31(ARG:0)
+CALL SHOP_LIFE_BUTTON_ADD_TOP_PRISONER(ARG:0)
+RETURN RESULT
+
+;-------------------------------------------------
+;「포로의조교」의 오른쪽 컬럼 캐릭터 리스트 버튼（상）표시에 추적 시키는 정보
+;  Default의 정보를 표시하지 않는 경우는 RETURN 1
+;-------------------------------------------------
+@SHOP_LIFE_BUTTON_ADD_BOTTOM31(ARG:0)
+CALL SHOP_LIFE_BUTTON_ADD_BOTTOM_PRISONER(ARG:0)
+RETURN RESULT
+
+;-------------------------------------------------
+;「포로의조교」의 오른쪽 컬럼 표시 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SHOW31
+#DIM 선택인원수
+선택인원수 = INRANGEARRAY(PRISONER_TARGET, 0, CHARANUM + 1)
+
+CALL COLUMN_RIGHT_TITLE("대상자 선택", TOSTR(선택인원수), TOSTR(VARSIZE("PRISONER_TARGET")), "1", "0", "조수 선택가능  관리도 가능")
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+IF 선택인원수 >= 1
+	PRINTBUTTON "[이 멤버로 결정]", 1
+ELSE
+	SETCOLOR 칼라_선택불가
+	PRINTPLAINFORM [이 멤버로 결정]
+	RESETCOLOR
+ENDIF
+PRINTPLAIN   
+CALL COLOR_PRINT(@"관리(연금/해방/병사의 성노예화/처형등)은 행동 소비 없음", 칼라_주석)
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+CALL COLOR_PRINT(@"일괄관리", 칼라_주석)
+PRINTPLAIN   
+PRINTBUTTON "[해방]", 2
+PRINTBUTTON "[추방]", 3
+PRINTBUTTON "[연금]", 4
+PRINTBUTTON "[처형]", 5
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+;오른쪽 컬럼의 상하 2의 캐릭터 리스트상과 페이지 이동을 부른다
+CALL COLUMN_RIGHT_CHARALIST_TOP(1)
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+;조수를 센다
+LOCAL:1 = 0
+FOR LOCAL:0, 0, CHARANUM
+	;선택 가능한 조건을 채우고 있는지 어떤지를 판정
+	TRYCALLFORM SHOP_LIFE_CHECKCHARA_SUB{FLAG:거점페이즈선택커맨드}(LOCAL:0)
+	IF RESULT == 1
+		;선택중의 인원수를 센다
+		IF CFLAG:(LOCAL:0):포로조교의조수
+			LOCAL:1 ++
+		ENDIF
+	ELSE
+		;조건을 채우지 않으면 강제적으로ＯＦＦ
+		CFLAG:(LOCAL:0):포로조교의조수 = 0
+	ENDIF
+NEXT
+
+PRINTFORM 조수를 최대 4명까지 데리고 가는 것이 가능합니다
+SIF LOCAL:1 >= 4
+	SETCOLOR 칼라_오렌지
+PRINTFORM (현재{LOCAL:1}/4인)
+RESETCOLOR
+PRINTPLAIN   
+PRINTBUTTON @"[%ZYOSYU_MODE()%]", 7
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+;오른쪽 컬럼의 상하 2의 캐릭터 리스트하와 페이지 이동을 부른다
+CALL COLUMN_RIGHT_CHARALIST_BOTTOM(1)
+RETURN 0
+
+;-------------------------------------------------
+;「포로의조교」의 오른쪽 컬럼 버튼의 입력 처리 보좌
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SUB31(ARG:0)
+;이 멤버로 결정
+SELECTCASE ARG:0 
+	CASE 1
+		SELECTCASE INRANGEARRAY(PRISONER_TARGET, 0, CHARANUM + 1)
+			CASE 0
+				;없다고 생각하지만 일단
+			CASE 1
+				CALL PRISONER_TRAIT(PRISONER_TARGET:0)
+			CASEELSE
+				CALL DECIDE_PRISONER_MEMBER()
+		ENDSELECT
+		IF RESULT
+			RETURN 1
+		ENDIF
+	CASE 2, 3, 4, 5, 6
+		CALL PRISONER_BULK_MANAGEMENT(ARG:0)
+		RETURN RESULT
+	CASE 7
+		FLAG:조수필터 = ROUND_INCREMENT(FLAG:조수필터, 0, 3)
+ENDSELECT
+RETURN 0
+
+;-------------------------------------------------
+;「포로의조교」의 리스트 1 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP31(ARG:0)
+LOCAL = FINDELEMENT(PRISONER_TARGET, ARG:0)
+;있으면 지운다
+IF LOCAL != -1
+	PRISONER_TARGET:LOCAL = -1
+	;배열의 엉덩이 이외를 지웠을 경우는, 그 한 개 뒤로부터 엉덩이까지를, 한 개 전에 늦춘다
+	SIF LOCAL != VARSIZE("PRISONER_TARGET") -1
+		ARRAYSHIFT PRISONER_TARGET, -1, -1, LOCAL, VARSIZE("PRISONER_TARGET")
+;없었으면 추가한다
+ELSE
+	FOR LOCAL, 0, VARSIZE("PRISONER_TARGET")
+		IF PRISONER_TARGET:LOCAL == -1
+			PRISONER_TARGET:LOCAL = ARG:0
+			BREAK
+		ENDIF
+	NEXT
+ENDIF
+RETURN 0
+
+;-------------------------------------------------
+;「포로의조교」의 리스트 2 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP_SUB31(ARG:0)
+;참가 캐릭터의 수를 센다
+LOCAL:5 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):포로조교의조수
+		LOCAL:5 ++
+	ENDIF
+NEXT
+IF CFLAG:(ARG:0):포로조교의조수 || LOCAL:5 < 4
+	;조교참가플래그를 반전
+	CFLAG:(ARG:0):포로조교의조수 = !CFLAG:(ARG:0):포로조교의조수
+ENDIF
+RETURN 0
+
+;-------------------------------------------------
+;「포로의조교」의 처리
+;-------------------------------------------------
+@DECIDE_PRISONER_MEMBER()
+CVARSET CFLAG, 6, 0
+FOR LOCAL:0, 0, CHARANUM
+	IF LOCAL:0 != MASTER && CFLAG:(LOCAL:0):포로조교의조수
+		CFLAG:(LOCAL:0):조교참가플래그 = 1
+	ENDIF
+NEXT
+;이 턴 조교되었다
+FOR LOCAL:0, 0, VARSIZE("PRISONER_TARGET")
+	IF PRISONER_TARGET:LOCAL != -1
+		CFLAG:(PRISONER_TARGET:LOCAL):조교참가플래그 = 1
+	ENDIF
+NEXT
+;조교 초기설정
+IF INRANGEARRAY(PRISONER_TARGET, 0, CHARANUM + 1) == 1
+	CALL TRAIN_TARGET_SETTING(PRISONER_TARGET:0)
+ENDIF
+;초기의 우후후플래그를ＯＮ로 한다
+FLAG:우후후플래그 = 1
+;포로 조교 모드
+FLAG:조교모드 = 2
+;행동 개시시의 공통 설정
+CALL START_TRAIN_COMMON
+REDRAW 1
+RETURN 1
+
+;-------------------------------------------------
+;포로의조교의 일괄관리
+;-------------------------------------------------
+@PRISONER_BULK_MANAGEMENT(ARG:0)
+#DIMS 내용
+#DIMS 내용영
+#DIM 대상
+SELECTCASE ARG:0
+	CASE 2
+		내용 = 해방
+		내용영 = PURGE
+	CASE 3
+		내용 = 추방
+		내용영 = BANISH
+	CASE 4
+		내용 = 연금
+		내용영 = NANKIN
+	CASE 5
+		내용 = 처형
+		내용영 = EXECUTE
+ENDSELECT
+
+CALL SINGLE_DRAWLINE
+PRINTFORML %내용%하는 대상을 선택해 주세요
+PRINTFORML （일괄관리에서는, 처형시의 이벤트등은 발생하지 않습니다）
+CALL SINGLE_DRAWLINE
+CALL SELECT_CHARA_LIST_MULTI_ONLY_LOGIC_SLG(-1, "PRISONER_MANAGE_" + 내용영, "NONE")
+
+SIF SELECTED_CHARA_NUM == 0
+	RETURN 0
+
+FOR LOCAL, 0, SELECTED_CHARA_NUM
+	대상 = SELECTED_CHARA:LOCAL
+	PRINTFORML %조사처리(ANAME(대상),"를")% %내용%했습니다
+	SELECTCASE ARG:0
+		CASE 2
+			CALL CAPTURE(대상, 0, TALENT:대상:붕괴)
+		CASE 3
+			CALL CHANGE_COUNTRY(대상, 0, 1)
+			CALL CAPTURE(대상, 0, TALENT:대상:붕괴)
+		CASE 4
+			CFLAG:대상:연금중 = 1
+		CASE 5
+			CALL CHANGE_COUNTRY(대상, 0, 1, 1)
+	ENDSELECT
+NEXT
+
+VARSET PRISONER_TARGET, -1
+
+IF CALC_SHOP_TIME() <= SHOP_TIME
+	PRINTFORML 인원수 부족에 의한 일의 악영향에 의해 자유시간이 없어졌으므로 거점 페이즈를 종료합니다
+	LINES_SHOP = LINECOUNT
+	BEGIN TURNEND
+ENDIF
+
+RETURN 1
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_PRISONER_MANAGE_PURGE(대상)
+#DIM 대상
+RETURN CFLAG:대상:포로처 == CFLAG:MASTER:소속 && !CFLAG:대상:연금중
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_PRISONER_MANAGE_BANISH(대상)
+#DIM 대상
+RETURN ALLSAMES(CFLAG:대상:포로처, CFLAG:대상:소속, CFLAG:MASTER:소속)
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_PRISONER_MANAGE_NANKIN(대상)
+#DIM 대상
+RETURN CFLAG:대상:포로처 == CFLAG:MASTER:소속 && CFLAG:대상:소속 != CFLAG:MASTER:소속 && !CFLAG:대상:연금중
+
+@SELECT_CHARA_LIST_SHOW_LOGIC_PRISONER_MANAGE_EXECUTE(대상)
+#DIM 대상
+RETURN CFLAG:대상:포로처 == CFLAG:MASTER:소속 && !CFLAG:대상:연금중
+
+;-------------------------------------------------
+;「포로의조교」로 대상이 혼자일 때, 다른 포로가 대역으로 되려고 한다
+;-------------------------------------------------
+@PRISONER_SCAPEGOAT(대상)
+#DIM 대상
+#DIM 후보
+#DIM 판정치, 3000
+VARSET 판정치, __INT_MIN__
+FOR LOCAL, 0, CHARANUM
+	SIF GROUPMATCH(LOCAL, 대상, MASTER)
+		CONTINUE
+	SIF GROUPMATCH(1, TALENT:LOCAL:붕괴, TALENT:LOCAL:공허)
+		CONTINUE
+	SIF CFLAG:(LOCAL):소속 == CFLAG:MASTER:소속
+		CONTINUE
+	IF CFLAG:대상:포로처 && CFLAG:LOCAL:포로처 == CFLAG:대상:포로처
+		SIF REL_LIKE:LOCAL:대상 > 0
+			판정치:LOCAL += RAND(REL_LIKE:LOCAL:대상, REL_LIKE:LOCAL:대상 * 2) 
+		SIF RELATION:LOCAL:대상 >= 100
+			판정치:LOCAL += (RELATION:LOCAL:대상 - 100) * 1000
+		SIF CFLAG:LOCAL:소속 != CFLAG:대상:소속
+			판정치:LOCAL = 판정치:LOCAL * 2 / 3
+	ENDIF
+NEXT
+
+후보 = FINDELEMENT(판정치, MAXARRAY(판정치, 0, CHARANUM), 0, CHARANUM)
+
+
+IF 판정치:후보 > RAND:10000
+	PRINTFORMW %조사처리(ANAME(MASTER),"가")% %ANAME(대상)%의 조교를 개시하려고 하면, %조사처리(ANAME(후보),"가")% 달라붙어 왔다
+	PRINTFORML 자신이 대신에 되는, 그러니까%조사처리(ANAME(대상),"은")% 놓쳤으면 좋은, 라는 것이라고 하지만……
+	CALL ASK_MULTI("받아들인다", @"받아들이면서, %ANAME(대상)%에 과시한다", "무시한다")
+	SELECTCASE RESULT
+		CASE 0
+			PRINTFORMW 거기까지 말한다면, 인정해 주자
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(후보),"를")% 조교하기로 했다……
+			PRISONER_TARGET:FINDELEMENT(PRISONER_TARGET, 대상) = 후보
+		CASE 1
+			PRINTFORMW 거기까지 말한다면, 인정해 주자
+			PRINTFORMW 다만, %조사처리(ANAME(후보),"가")% 범해지는 모양을, %ANAME(대상)%에 과시해 주자
+			PRINTFORMW 어떤 얼굴을 하는지, 지금부터 즐거움이다……
+			PRISONER_TARGET:FINDELEMENT(PRISONER_TARGET, 대상) = 후보
+			CFLAG:대상:포로조교의조수 = 1
+			CFLAG:대상:조교중돌아가지않는다 = 1
+		CASE 2
+			PRINTFORMW 무엇을 바보 같은 말을 하고 있을 것이다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(후보),"를")% 무시해, %ANAME(대상)%의 조교 니토리 걸렸다
+	ENDSELECT
+ELSE
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;「포로의조교라든지의」의 메뉴 표시로 사용하는 필터링의 모드 문자열
+;-------------------------------------------------
+@ZYOSYU_MODE
+#FUNCTIONS
+SELECTCASE FLAG:조수필터
+	CASE 0
+		RETURNF "전"
+	CASE 1
+		RETURNF "남"
+	CASE 2
+		RETURNF "여"
+	CASE 3
+		RETURNF "쌍"
+ENDSELECT
+
+;-------------------------------------------------
+;「포로의조교라든지의」의 메뉴 표시로, 필터에 성별이 적합할까
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA_ZYOSYU(ARG:0)
+#FUNCTION
+SELECTCASE FLAG:조수필터
+	CASE 0
+		RETURNF 1
+	CASE 1
+		RETURNF IS_MALE(ARG:0)
+	CASE 2
+		RETURNF IS_FEMALE(ARG:0)
+	CASE 3
+		RETURNF (HAS_PENIS(ARG:0) && IS_FEMALE(ARG:0)) || (HAS_VAGINA(ARG:0) && IS_MALE(ARG:0))
+ENDSELECT
+

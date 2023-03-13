@@ -1,0 +1,256 @@
+﻿;-------------------------------------------------
+;「제국방문」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE_NAME62
+RESULTS:0 '= "동아리방문"
+
+;-------------------------------------------------
+;「제국방문」의 선택 가부 판정
+;-------------------------------------------------
+@SHOP_LIFE_CHECK62
+SIF CFLAG:MASTER:행동불능상태 == 행동불능_임월 || COOLTIME:MASTER:0 > 1
+	RETURN 0
+SIF CFLAG:MASTER:포로처
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「제국방문」의 선택 가능 캐릭터 존재 판정（갈 수 있는 앞）
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA62(ARG:0)
+;비주인공, 어딘가의 세력의 대단한 사람(자세력 이외)
+RETURN ARG:0 != MASTER && GET_COUNTRY_BOSS(CFLAG:(ARG:0):소속) == ARG:0 && CFLAG:(ARG:0):소속 != CFLAG:MASTER:소속
+
+;-------------------------------------------------
+;「제국방문의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY62
+FLAG:거점페이즈페이지 = 1
+FLAG:요바이 = 0
+RETURN 0
+
+;-------------------------------------------------
+;「제국방문」의 오른쪽 컬럼 표시 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SHOW62
+;타이틀
+CALL COLUMN_RIGHT_TITLE("대상세력선택", "", "", "1", "0")
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+;표준적인 캐릭터 리스트와 페이지 이동
+CALL COLUMN_RIGHT_CHARALIST
+RETURN 0
+
+;-------------------------------------------------
+;「제국방문」의 리스트 1 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP62(방문지군주)
+#DIM 방문지군주
+#DIM 방문지
+#DIM 후보, 3000
+#DIM 인원수
+#DIM 대상
+#DIM CONST VISIT_EVENT_MAX = 10
+#DIM 호감도효과량
+방문지 = CFLAG:(방문지군주):소속
+
+FLAG:능력표시모드 = 0
+
+VARSET 후보, -1
+VARSET 인원수
+FOR LOCAL, 0, CHARANUM
+	IF 방문지 == CFLAG:LOCAL:소속 && CFLAG:LOCAL:포로처 == 0
+		후보:인원수 = LOCAL
+		인원수 ++
+	ENDIF
+NEXT
+
+대상 = 후보:(RAND:인원수)
+
+CALL SINGLE_DRAWLINE
+PRINTFORMW %ANAME(방문지군주)%의 동아리를 방문했다……
+IF FLAG:화상설정
+	IF IS_LOVER(대상)
+		CALL PRINT_STATE_IMAGE(대상, "미소")
+	ELSE
+		CALL PRINT_STATE_IMAGE(대상)
+	ENDIF
+ENDIF
+PRINTFORMW ……%조사처리(ANAME(대상),"를")% 만났다
+PRINTFORMW 조금의 사이, 잡담을 했다……
+
+IF !CFLAG:대상:안면
+	CALL COLOR_PRINTL(@"%ANAME(대상)%의 안면을 얻었습니다", 칼라_주의)
+	CFLAG:대상:안면 = 1
+ENDIF
+
+;1500에 대한 현재의 호감도의 비율. 다만 최악이어도 100은 들어간다
+호감도효과량 = MAX(500 * MAX((1500 - CFLAG:대상:호감도) / 15, 0) / 100, 100)
+CFLAG:대상:호감도 += 호감도효과량
+
+CALL COLOR_PRINTL(@"%ANAME(대상)%의 호감도가 {호감도효과량} 올랐습니다", 칼라_주의)
+
+PRINTFORML
+
+SHOP_TIME += 1
+
+
+FOR LOCAL, 0, VISIT_EVENT_MAX
+	TRYCCALLFORM VISIT_EVENT_{LOCAL}_RATE(방문지군주, 방문지, 대상)
+		IF RAND:1000 < RESULT
+			CALLFORM VISIT_EVENT_{LOCAL}_DECISION(방문지군주, 방문지, 대상)
+			IF RESULT == 1
+				CALLFORM VISIT_EVENT_{LOCAL}(방문지군주, 방문지, 대상)
+				BREAK
+			ENDIF
+		ENDIF
+	CATCH
+		BREAK
+	ENDCATCH
+NEXT
+
+RESULT = 1
+LINES_SHOP = LINECOUNT
+BEGIN TURNEND
+
+
+;-------------------------------------------------
+;이적의 의사표현
+;-------------------------------------------------
+@VISIT_EVENT_0_RATE(방문지군주, 방문지, 대상)
+#DIM 방문지군주
+#DIM 방문지
+#DIM 대상
+RETURN 250
+
+@VISIT_EVENT_0_DECISION(방문지군주, 방문지, 대상)
+#DIM 방문지군주
+#DIM 방문지
+#DIM 대상
+SIF !CFLAG:MASTER:소속
+	RETURN 0
+SIF !IS_SLAVE(대상) && !IS_LOVER(대상) && !IS_SLAVED_BY(대상)
+	RETURN 0
+SIF 대상 == 방문지군주
+	RETURN 0
+SIF IS_SP_COUNTRY(CFLAG:MASTER:소속)
+	RETURN 0
+RETURN 1
+
+@VISIT_EVENT_0(방문지군주, 방문지, 대상)
+#DIM 방문지군주
+#DIM 방문지
+#DIM 대상
+PRINTFORMW ……이별할 때, %ANAME(대상)%에 불러 세울 수 있었다
+PRINTFORMW 부디 측에 두어 주지 않는지, 라고다
+PRINTFORMW %ANAME(MASTER)%에의 생각으로부터, %ANAME(방문지군주)%를 버려, %ANAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))%에 대하자고 하는 일인것 같다
+PRINTFORMW 이적해 주면 조 빌리고는 하지만, %ANAME(방문지군주)%로부터 하면 배반하도록(듯이) 부추긴 것처럼 보일 것이다
+PRINTFORMW 관계가 나빠지는 것은 불가피하지만……
+CALL ASK_YN("와 받는다", "거절한다")
+IF RESULT == 0
+	PRINTFORML %ANAME(대상)%의 힘은, 외교 관계의 악화를 두어도 부디 갖고 싶다
+	PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(대상)%의 손을 잡아 당겨, 거점으로 둘이서 돌아왔다……
+	CALL COLOR_PRINTL(@"%조사처리(ANAME(대상),"가")% 동료가 되었습니다", 칼라_주의)
+	CALL COLOR_PRINTL(@"%ANAME(방문지군주)%와의 관계가 악화되었습니다", 칼라_경고)
+	CALL CHANGE_COUNTRY(대상, CFLAG:MASTER:소속, 1)
+	CALL CHANGE_RELATION_C_TO_O(방문지, MASTER, -100, 100)
+ELSE
+	PRINTFORML %ANAME(방문지군주)%와의 관계를 악화시킬 수는 없다
+	PRINTFORML 정중하게 거절하면, %ANAME(대상)%끼워 할 것 같은 표정을 띄웠지만, 납득해 준 것 같다……
+ENDIF
+
+
+;-------------------------------------------------
+;이적의 권유
+;-------------------------------------------------
+@VISIT_EVENT_1_RATE(방문지군주, 방문지, 대상)
+#DIM 방문지군주
+#DIM 방문지
+#DIM 대상
+RETURN (ABL:MASTER:무투 + ABL:MASTER:방위 + ABL:MASTER:지략 + ABL:MASTER:정치) / 3 + MIN(CFLAG:대상:호감도 / 10, 150)
+
+@VISIT_EVENT_1_DECISION(방문지군주, 방문지, 대상)
+#DIM 방문지군주
+#DIM 방문지
+#DIM 대상
+SIF !CFLAG:MASTER:소속
+	RETURN 0
+SIF GET_COUNTRY_BOSS(CFLAG:MASTER:소속) == MASTER
+	RETURN 0
+RETURN 1
+
+@VISIT_EVENT_1(방문지군주, 방문지, 대상)
+#DIM 방문지군주
+#DIM 방문지
+#DIM 대상
+#DIM 준비금
+
+준비금 = (ABL:MASTER:무투 + ABL:MASTER:지략 + ABL:MASTER:정치) * 50 * RAND(80, 120) / 100
+
+PRINTFORMW ……이별할 때, %ANAME(대상)%에 불러 세울 수 있었다
+PRINTFORMW %ANAME(방문지군주)%아래에 오지 않는지, 라고다
+PRINTFORM 준비금으로서 돈
+CALL COLOR_PRINT(@"{준비금}", 칼라_주의)
+PRINTFORM 를 준비해 있다고 한다
+PRINTFORMW 아무래도 %ANAME(MASTER)%의 능력을 전망해, 뽑아 내려고 하고 있는 것 같다
+PRINTFORMW 응하면, %ANAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))%와의 관계는 나빠져 버리겠지만……?
+
+CALL ASK_YN("응한다", "거절한다")
+IF RESULT == 0
+	PRINTFORML 이런 시대다. 전망이 있는 것을 뒤따라 가는 것이 정답이라고 할 것이다
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 수긍하면, %조사처리(ANAME(대상),"는")% 만족인 미소를 띄웠다……
+	CALL COLOR_PRINTW(@"%ANAME(방문지군주)%아래에 이적했습니다", 칼라_주의)
+	CALL COLOR_PRINTW(@"준비금{준비금}를 받았습니다", 칼라_주의)
+	CALL COLOR_PRINTW(@"%ANAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))%와의 관계가 악화되었습니다", 칼라_경고)
+	CALL CHANGE_RELATION_C_TO_O(CFLAG:MASTER:소속, MASTER, -300, 300)
+	CALL CHANGE_COUNTRY(MASTER, 방문지, 1)
+	MONEY += 준비금
+ELSE
+	PRINTFORML %ANAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))%와의 관계를 악화시킬 수는 없다
+	PRINTFORML 정중하게 거절하면, %조사처리(ANAME(대상),"는")% 유감스러운 표정을 띄웠지만, 납득해 준 것 같다……
+ENDIF
+
+;-------------------------------------------------
+;사관의 권유
+;-------------------------------------------------
+@VISIT_EVENT_2_RATE(방문지군주, 방문지, 대상)
+#DIM 방문지군주
+#DIM 방문지
+#DIM 대상
+RETURN (ABL:MASTER:무투 + ABL:MASTER:방위 + ABL:MASTER:지략 + ABL:MASTER:정치) / 3 + MIN(CFLAG:대상:호감도 / 10, 150)
+
+@VISIT_EVENT_2_DECISION(방문지군주, 방문지, 대상)
+#DIM 방문지군주
+#DIM 방문지
+#DIM 대상
+SIF CFLAG:MASTER:소속
+	RETURN 0
+RETURN 1
+
+@VISIT_EVENT_2(방문지군주, 방문지, 대상)
+#DIM 방문지군주
+#DIM 방문지
+#DIM 대상
+#DIM 준비금
+
+준비금 = (ABL:MASTER:무투 + ABL:MASTER:지략 + ABL:MASTER:정치) * 50 * RAND(80, 120) / 100
+
+PRINTFORMW ……이별할 때, %ANAME(대상)%에 불러 세울 수 있었다
+PRINTFORMW %ANAME(방문지군주)%아래에 오지 않는지, 라고다
+PRINTFORM 준비금으로서 돈
+CALL COLOR_PRINT(@"{준비금}", 칼라_주의)
+PRINTFORM 를 준비해 있다고 한다
+PRINTFORMW 아무래도 %ANAME(MASTER)%의 능력을 전망해, 등용하려고 하고 있는 것 같다
+
+CALL ASK_YN("응한다", "거절한다")
+IF RESULT == 0
+	PRINTFORML 이런 시대다. 전망이 있는 것을 뒤따라 가는 것이 정답이라고 할 것이다
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 수긍하면, %조사처리(ANAME(대상),"는")% 만족인 미소를 띄웠다……
+	CALL COLOR_PRINTW(@"%ANAME(방문지군주)%아래에 이적했습니다", 칼라_주의)
+	CALL COLOR_PRINTW(@"준비금{준비금}를 받았습니다", 칼라_주의)
+	CALL CHANGE_COUNTRY(MASTER, 방문지, 1)
+	MONEY += 준비금
+ELSE
+	PRINTFORML 정중하게 거절하면, %조사처리(ANAME(대상),"는")% 유감스러운 표정을 띄웠지만, 납득해 준 것 같다……
+ENDIF

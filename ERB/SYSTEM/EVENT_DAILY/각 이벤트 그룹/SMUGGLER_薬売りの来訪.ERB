@@ -4,6 +4,8 @@ RETURN 80
 
 
 @EVENT_DAILY_SMUGGLER_DECISION()
+SIF DVAR:데일리_장르세부_NTR == 0
+	RETURN 0
 ;베고 있으면 안 돼
 SIF DVAR:약팔이_발생플래그 == -1
 	RETURN 0

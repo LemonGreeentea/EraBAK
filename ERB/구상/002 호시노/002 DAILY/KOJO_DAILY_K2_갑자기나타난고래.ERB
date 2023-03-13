@@ -1,0 +1,166 @@
+﻿;=====================================================
+; 블루아카이브K 호시노 데일리 구상 - 갑자기나타난고래
+; 구상 제작자 : 수틀리면분탕침
+; 구상 설명,조건
+;   1. 호시노 친애
+;   2. 호시노 자국에 있을때
+;   3. 일회용 데일리
+;     
+;
+;=====================================================
+;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@KOJO_DAILY_K2_SUDDENWHALE_RATE(대상)
+#DIM 대상
+RETURN 150
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@KOJO_DAILY_K2_SUDDENWHALE_DECISION(대상)
+#DIM 대상
+
+;대상(호시노)
+;대상자가 같은 소속이면서 포로가 아닐것
+IF CFLAG:대상:소속 == CFLAG:MASTER:소속 && CFLAG:대상:포로처 == 0 
+	;호시노가 친애가 아니면 스킵
+	SIF ! TALENT:대상:친애 == 1
+		RETURN 0
+	;해당 데일리 이벤트 경험이 있으면 스킵
+	SIF KDVAR:대상:호시노_갑자기나타난고래 == 1
+		RETURN 0
+	;아나타가 자지가 없으면 스킵
+	SIF !HAS_PENIS(MASTER)
+		RETURN 0
+	;호시노가 자국의 포로가 아니면서 안면이 있을 것
+	RETURN CHECK_KOJO_DAILY_HAPPEN(대상, 1, 0, 1)
+ENDIF
+RETURN 0
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@KOJO_DAILY_K2_SUDDENWHALE_GENRE(대상)
+#DIM 대상
+RETURN 데일리_장르_그외
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@KOJO_DAILY_K2_SUDDENWHALE(대상)
+#DIM 대상
+
+IF IS_SLAVE(대상)
+	LOCALS:0 = 주인님
+ELSEIF TALENT:MASTER:선생 == 1
+	LOCALS:0 = 선생님
+ELSE
+	LOCALS:0 = %ANAME(MASTER)%
+ENDIF
+
+CALL ASK_MULTI("......")
+PRINTFORMW 침묵이 오고간다
+PRINTFORMW 날씨가 더운 탓만이 아니다
+PRINTFORMW 이변도 아니다 호시노가 여기로 오자고 권한탓이다
+PRINTFORMW 그럼에도 여기에 왔고 지금 괴아한 광경을 보고 있다
+PRINTFORMW 「......」
+CALL ASK_MULTI("호시노야 여기 시원하다매 선생님을 속인거니?")
+PRINTFORMW 당신은 호시노의 얼굴 바로 앞에 얼굴을 갖다대었다
+PRINTFORMW 「선생도 동의해서 온거 잖아?」
+PRINTFORMW 호시노도 당신의 얼굴에 바짝 가까이 대었다
+PRINTFORMW 그 말도 틀린건 아니었기에 괴이한 광경을 바라본다
+PRINTFORMW 「이번 거는 진짜 나 아니야 선생」
+PRINTFORMW 「내가 저걸 어떻게 소환을 하겠어」
+PRINTFORMW 눈 앞에 바라본 광경은 고래가 하늘에 떠있는 광경이었다
+PRINTFORML      __________...----..____..-'``-..___
+PRINTFORML    ,'.                                  ```--.._
+PRINTFORML   :                                             ``._
+PRINTFORML   |                           --                    ``.
+PRINTFORML   |                   -.-      -.     -   -.        `.  `
+PRINTFORML   :                     __           --            .     `
+PRINTFORML   `._____________     (  `.   -.-      --  -   .   `     |
+PRINTFORML      `-----------------|   |_.--------..__..--.._ `. `.   :
+PRINTFORML                         `--'     SSt             `-._ .   |
+PRINTFORML                                                      `.`  |
+PRINTFORML                                                        `` |
+PRINTFORML                                                         ` |
+PRINTFORML                                                         / ``.
+PRINTFORML                                                        /  _`-'
+PRINTFORML                                                       /_,'
+CALL ASK_MULTI("이거 꿈이니? 어 잠깐만 고래가 이쪽을 바라보는거 같지않니?")
+PRINTFORMW 「... 설마 선생」
+PRINTFORMW 그 말대로 고래가 이쪽을 슬슬 바라보고있었다
+PRINTFORMW 거기다가 주변에 햇빛 비추던게 어느새 먹구름이 끼얹어져 어두워졌다
+PRINTFORML                                ...',;;:cccccccc:;,..
+PRINTFORML                            ..,;:cccc::::ccccclloooolc;'.
+PRINTFORML                         .',;:::;;;;:loodxk0kkxxkxxdocccc;;'..
+PRINTFORML                       .,;;;,,;:coxldKNWWWMMMMWNNWWNNKkdolcccc:,.
+PRINTFORML                    .',;;,',;lxo:...dXWMMMMMMMMNkloOXNNNX0koc:coo;.
+PRINTFORML                 ..,;:;,,,:ldl'   .kWMMMWXXNWMMMMXd..':d0XWWN0d:;lkd,
+PRINTFORML               ..,;;,,'':loc.     lKMMMNl. .c0KNWNK:  ..';lx00X0l,cxo,.
+PRINTFORML             ..''....'cooc.       c0NMMX;   .l0XWN0;       ,ddx00occl:.
+PRINTFORML           ..'..  .':odc.         .x0KKKkolcld000xc.       .cxxxkkdl:,..
+PRINTFORML         ..''..   ;dxolc;'         .lxx000kkxx00kc.      .;looolllol:'..
+PRINTFORML        ..'..    .':lloolc:,..       'lxkkkkk0kd,   ..':clc:::;,,;:;,'..
+PRINTFORML        ......   ....',;;;:ccc::;;,''',:loddol:,,;:clllolc:;;,'........
+PRINTFORML            .     ....'''',,,;;:cccccclllloooollllccc:c:::;,'..
+PRINTFORML                    .......'',,,,,,,,;;::::ccccc::::;;;,,''...
+PRINTFORML                      ...............''',,,;;;,,''''''......
+PRINTFORML                           ............................
+PRINTFORMW 고래의 눈이 우리 둘을 향해있었다 적의도 없었지만 다가오고있었다
+PRINTFORML
+PRINTFORML
+SETCOLOR 0xFF0000
+PRINTFORMW   그리고 그것은 속도가 빨라졌다
+RESETCOLOR
+PRINTFORML
+PRINTFORML
+PRINTFORMW 「오,온다! 도망치자!」
+PRINTFORMW 어디로든지 도망을 치던지 갈곳 없는걸 알고있어도 당신의 다리와 호시노의 다리가 바빠졌다
+PRINTFORMW 고래의 얼굴은 점점 다가오고있었다
+PRINTFORMW 옆을 보니 호시노의 공포에 찬 얼굴을 한 옆모습이 보였다
+PRINTFORML
+PRINTFORMW 「저건 고래가 아니야-!!!!」
+PRINTFORML
+PRINTFORML
+PRINTFORML
+PRINTFORMW 그리고 그 둘은 고래에게 먹혔다
+PRINTFORML
+PRINTFORML .....
+PRINTFORML ...
+PRINTFORML .
+PRINTFORML .
+PRINTFORML
+PRINTFORML
+PRINTFORML
+PRINTFORMW 「히...!!흐에에엑--!!?」
+PRINTFORMW 비명을 지르며 일어나는 호시노의 얼굴은 공포에 가득 차있었다
+PRINTFORMW 「하윽..!학...!」
+PRINTFORMW 「고래...!고래가..!아니...학...!」
+PRINTFORMW 한동안 있던 호시노는 고개를 떨구다가 문득 생각났다는 듯이 고개를 치켜오른다
+PRINTFORMW 「맞다!! 선생!!」
+PRINTFORMW 호시노의 잠옷 차림 그대로 방방 달려서 당신의 거처 바로 앞에 갔다
+PRINTFORMW 「선생! 선생!」
+PRINTFORMW 노크도 없이 방에 들어와서 호시노는 의자에 앉아 있는 당신을 보고 잠시 멈추더니 바로 달려와서 안겼다
+PRINTFORMW 「나 무서웠어!!」
+PRINTFORMW 당신은 그런 호시노를 보다가 호시노의 머리를 쓰다듬기 시작했다
+PRINTFORMW 「고래가!! 고래가 아니었어!! 흐윽...흑...」
+PRINTFORMW 연신 울부짖던 호시노는 당신의 머리 쓰다듬에 서서히 사그라들었다
+CALL ASK_MULTI("괜찮아 모두 악몽일 뿐이야")
+PRINTFORMW 울다가 지친 호시노는 당신의 말에 안심을 하면서도 악몽에 지쳐 잠들었다
+PRINTFORMW 분명 꿈이란 자신이 알던 정보를 재조합해서 다시 보여주는 리플레이같은 방식이다
+PRINTFORMW 하지만 그럼에도 호시노와 당신은 꿈을 동시에 경험했으며 또한 서로간 꿈이 링크된 상태였다
+PRINTFORMW 이것을 대체 어떻게 해석해야 할까?
+PRINTFORMW 당신은 한숨을 하면서 주변을 둘러보다가 어느 한 물체에 눈길이 닿았다
+PRINTFORMW 당신의 눈길 끝에 있던 건 이전에 호시노가 주워온 고래 인형이 있었다
+;데일리 이벤트 경험 처리
+KDVAR:대상:호시노_갑자기나타난고래 = 1
+
+RETURN 1

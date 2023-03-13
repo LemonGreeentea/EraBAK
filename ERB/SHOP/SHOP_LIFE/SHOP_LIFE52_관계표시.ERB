@@ -1,0 +1,203 @@
+﻿;-------------------------------------------------
+;「관계일람」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE_NAME52
+RESULTS:0 '= "관계표시"
+
+;-------------------------------------------------
+;「관계일람」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE_CHECK52
+SIF CFLAG:MASTER:포로처
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「관계일람」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA52(ARG:0)
+;능력표시
+CALL SHOP_LIFE_CHECKCHARA_NOURYOKU(ARG:0)
+RETURN RESULT
+
+;-------------------------------------------------
+;「관계일람의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY52
+FLAG:거점페이즈페이지 = 1
+FLAG:관계일람표시대상 = 0
+FLAG:관계일람표시모드 = 0
+FLAG:요바이 = 0
+RETURN 0
+
+;-------------------------------------------------
+;「관계일람」의 오른쪽 컬럼 캐릭터 리스트 버튼 표시에 추적 시키는 정보
+;  이 덧붙여 씀 후 Default의 정보를 표시하지 않는 경우는 RETURN 1
+;-------------------------------------------------
+@SHOP_LIFE_BUTTON_ADD52(ARG:0)
+PRINTPLAIN  
+IF FLAG:관계일람표시대상 >= 0
+	IF FLAG:관계일람표시모드 == 0
+		SETCOLOR 0xE98FB0
+		PRINTFORM 호
+		SETCOLOR 칼라_주석
+		PRINTFORM :
+		RESETCOLOR
+		PRINTFORM  %NUM_FORMAT(REL_LIKE:(FLAG:관계일람표시대상):(ARG:0)), 5%
+		PRINTFORM   
+		SETCOLOR 0x8F99E0
+		PRINTFORM 싫어
+		SETCOLOR 칼라_주석
+		PRINTFORM :
+		RESETCOLOR
+		PRINTFORM  %NUM_FORMAT(REL_HATE:(FLAG:관계일람표시대상):(ARG:0)), 5% 
+	ELSE
+		SETCOLOR 0xE98FB0
+		PRINTFORM 호
+		SETCOLOR 칼라_주석
+		PRINTFORM :
+		RESETCOLOR
+		PRINTFORM  %NUM_FORMAT(REL_LIKE:(ARG:0):(FLAG:관계일람표시대상)), 5%
+		PRINTFORM   
+		SETCOLOR 0x8F99E0
+		PRINTFORM 싫어
+		SETCOLOR 칼라_주석
+		PRINTFORM :
+		RESETCOLOR
+		PRINTFORM  %NUM_FORMAT(REL_HATE:(ARG:0):(FLAG:관계일람표시대상)), 5% 
+	ENDIF
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;「관계일람」의 오른쪽 컬럼 캐릭터 리스트 1의 버튼（함수미지정이라면 선택중색없음 표시）
+;-------------------------------------------------
+@SHOP_LIFE_LIST1_BUTTON52(ARG:0, ARG:1)
+;캐릭터, 선택중 칼라 표시 플래그, 버튼 번호에 추가하는 수치, CHECKCHARA의 반환값, 행동이 끝난 마크를 오프로 하는 플래그
+CALL COLUMN_RIGHT_CHARALIST_BUTTON(ARG:0, ARG:0 == FLAG:관계일람표시대상, SHOP_LIFE_LIST1_ADD_INPUT, ARG:1, 1)
+RETURN 0
+
+;-------------------------------------------------
+;「관계일람」의 오른쪽 컬럼 표시 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SHOW52
+#DIM 선택인원수
+#DIM PRINTOPTION
+
+IF FLAG:관계일람표시대상 >= 0
+	선택인원수 = 1
+ELSE
+	선택인원수 = 0
+ENDIF
+
+;타이틀
+CALL COLUMN_RIGHT_TITLE("대상자 선택", TOSTR(선택인원수), "1", "0", "0")
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+PRINTBUTTON @"[%CHARALIST_MODE(), MAX_CHARANAME_LENGTH, LEFT%]", 2
+PRINTPLAIN   
+IF FLAG:관계일람표시모드 == 0
+	IF FLAG:관계일람표시대상 >= 0
+		LOCALS:0 '= ANAME(FLAG:관계일람표시대상) + " ➡ 타인"
+	ELSE
+		LOCALS:0 '= "선택 대상으로부터의 감정"
+	ENDIF
+ELSE
+	IF FLAG:관계일람표시대상 >= 0
+		LOCALS:0 '= "타인 ➡ " + ANAME(FLAG:관계일람표시대상)
+	ELSE
+		LOCALS:0 '= "선택 대상에의 감정"
+	ENDIF
+ENDIF
+PRINTBUTTON @"[%LOCALS:0, MAX_CHARANAME_LENGTH + 4, LEFT%]", 1
+PRINTPLAIN   
+
+;표시 대상이 MASTER가 아니고, 소속이 있어, 주인공과 동일 소속으로, 군주가 아닌 경우
+IF FLAG:관계일람표시대상 != MASTER && IS_COUNTRY(CFLAG:(FLAG:관계일람표시대상):소속) && CFLAG:(FLAG:관계일람표시대상):소속 == CFLAG:MASTER:소속 && GET_COUNTRY_BOSS(CFLAG:(FLAG:관계일람표시대상):소속) != FLAG:관계일람표시대상
+	PRINTBUTTON "[보상]", 3
+ELSE
+	SETCOLOR 칼라_선택불가
+	PRINTPLAIN [보상]
+	RESETCOLOR
+ENDIF
+
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+;표준적인 캐릭터 리스트와 페이지 이동
+CALL COLUMN_RIGHT_CHARALIST
+
+RETURN 0
+
+;-------------------------------------------------
+;「관계일람」의 오른쪽 컬럼 버튼의 입력 처리 보좌
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SUB52(ARG:0)
+;「에의」 「로부터의」변환
+IF ARG:0 == 1
+	FLAG:관계일람표시모드 = !FLAG:관계일람표시모드
+	RETURN 0
+;능력표시 필터
+ELSEIF ARG:0 == 2
+	FLAG:능력표시필터 = ROUND_INCREMENT(FLAG:능력표시필터, 0, 3)
+	RETURN 0
+ELSEIF ARG:0 == 3
+	CALL SHOP_LIFE_PAYMENT(FLAG:관계일람표시대상)
+ENDIF
+RETURN 0
+
+;-------------------------------------------------
+;「관계일람」의 리스트 1 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP52(ARG:0)
+FLAG:관계일람표시대상 = ARG:0
+RETURN 0
+
+@SHOP_LIFE_PAYMENT(대상)
+#DIM 대상
+#DIM 군주
+#DIM 효과량
+#DIM 정치비
+#DIM FIRST_LINE
+#DIM CONST 리스트 = 1000, 3000, 5000, 10000, 15000, 30000, 50000, 75000
+
+FIRST_LINE = LINECOUNT
+
+CALL SINGLE_DRAWLINE
+
+군주 = GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
+PRINTFORML 크레딧을 소비하여, 학생을 위로하여 세력에의 충성을 높입니다
+PRINTFORML 효과는 지불한 크레딧, %조사처리(ANAME(MASTER),"와")% %ANAME(대상)%의 정치에 의해 정해집니다
+PRINTFORML 크레딧을 지불합니까? (리스트로부터 선택, 또는 직접 입력)
+CALL SINGLE_DRAWLINE
+PRINTFORML %ANAME(대상)%의 %ANAME(군주)%에의 우호도:{REL_LIKE:대상:군주} 혐오도:{REL_HATE:대상:군주}
+PRINTFORML %ANAME(MASTER)%의 정치:{ABL:MASTER:정치} %ANAME(대상)%의 정치:{ABL:대상:정치}
+PRINTFORML 크레딧:{MONEY}
+CALL SINGLE_DRAWLINE
+
+FOR LOCAL, 0, VARSIZE("리스트")
+	SIF 리스트:LOCAL > MONEY
+		BREAK
+	PRINTFORML [{리스트:LOCAL}] 금{리스트:LOCAL}
+NEXT
+
+PRINTBUTTON "[돌아온다]", 0
+
+INPUT
+
+IF RESULT == 0
+	RETURN 0
+ELSEIF INRANGE(RESULT, 0, MONEY)
+	PRINTFORMW %ANAME(대상)%에 {RESULT}크레딧을 지불했습니다
+	효과량 = RESULT / 50
+	정치비 = MIN(ABL:MASTER:정치 * 100 / ABL:대상:정치, 300)
+	효과량 = 효과량 * 정치비 / 100
+	CALL CHANGE_RELATION_O_TO_C(대상, CFLAG:대상:소속, 효과량, 효과량 * -1)
+	RETURN 0
+ENDIF
+
+CLEARLINE LINECOUNT - FIRST_LINE
+RESTART

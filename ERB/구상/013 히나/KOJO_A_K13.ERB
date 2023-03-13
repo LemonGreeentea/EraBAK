@@ -2,7 +2,7 @@
 ; CFLAG 관리
 ; 200 = 만나러간다 첫 회 여부
 ;
-; 301 = 히나의 '당신' 호칭
+;
 ;-------------------------------------------------
 ;「만나러간다」 「침실호출」 「육아」 「포로 회화」의 구상
 ;-------------------------------------------------
@@ -12,14 +12,16 @@
 ;=================================================
 @KOJO_TRAIN_START_A1_K13
 
+;노예면 '주인님'이라고 부름
 IF IS_SLAVE(TARGET)
 	LOCALS:0 = 주인님
+;아나타가 [선생]이면 '선생님'이라고 부름
 ELSEIF TALENT:MASTER:선생 == 1
-	LOCALS:0 = 선생
+	LOCALS:0 = 선생님
+;그 외엔 이름으로 부름
 ELSE
 	LOCALS:0 = %ANAME(MASTER)%
 ENDIF
-
 
 ;[공허]상태라면 구상을 표시하지 않는다
 IF TALENT:공허
@@ -32,29 +34,6 @@ ENDIF
 IF CFLAG:200 == 0
 	CFLAG:200 = 1
 	;구상+ 기능 활성화 여부 묻기
-
-[SKIPSTART]
-	;마스터가 [선생] 소질을 가지고 있다면
-	IF TALENT:MASTER:선생 == 1
-		PRINTFORMW 히나가 당신을 부르는 호칭을 어떻게 할까요?
-		PRINTFORMW [0] 선생이라고 부른다.
-		PRINTFORMW [1] 이름으로 부른다.
-		$INPUT_LOOP1
-		INPUT
-		IF RESULT != 0 && RESULT != 1
-			GOTO INPUT_LOOP1
-		ELSEIF RESULT == 0
-			CFLAG:301 == %선생%
-			PRINTFORMW 히나는 당신을 선생이라고 부릅니다.
-		ELSEIF RESULT == 1
-			CFLAG:301 == %ANAME(MASTER)%
-			PRINTFORMW 히나는 당신을 %조사처리(CFLAG:301,"이")%이라고 부릅니다.
-		ENDIF
-	;마스터가 [선생] 소질을 가지고 있지 않다면
-	ELSE
-		CFLAG:301 == %ANAME(MASTER)%
-	ENDIF
-[SKIPEND]
 
 	;첫대면의 경우
 	IF !CFLAG:17
@@ -5685,7 +5664,7 @@ IF SELECTCOM == 307
 		ELSE
 			;처음
 			IF IS_COM_FIRST()
-				;PRINTFORMW 
+				PRINTFORMW 잉 1
 			;2회째 이후
 			ELSE
 				;연모 or 복종 or 친구
@@ -5693,13 +5672,13 @@ IF SELECTCOM == 307
 					;PRINTFORMW 
 				;그 이외
 				ELSE
-					;PRINTFORMW 
+					PRINTFORMW 잉  2
 				ENDIF
 			ENDIF
 		ENDIF
 	;실패
 	ELSE
-		;PRINTFORMW 
+		PRINTFORMW 뭐라는거야
 	ENDIF
 ENDIF
 

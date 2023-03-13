@@ -1,0 +1,166 @@
+﻿;=====================================================
+; 블루아카이브K 무츠키 데일리 구상 - 무츠키 심심해
+; 구상 제작자 : 나는토끼(feat. 레몬녹차)
+; 구상 설명
+;   1. 랜덤 확률로 무츠키가 심심해진다.
+;   2. 심심한 무츠키가 무슨 일을 할지 모른다. (예를 들면 폭탄 테러)
+;   3. 무츠키가 사고치는 것을 대비하기 위해 무츠키를 놀아주자.
+;     - 놀이, 데이트(연인 아니어도 됨), 야한거 등등
+;
+;=====================================================
+;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@KOJO_DAILY_K10_MUTSUKI_GETS_BORED_RATE(대상)
+#DIM 대상
+;이벤트 발생확률. 기본 5%지만 무츠키의 심심함이 올라갈수록 확률이 늘어난다. (최대 심심함 100, 최대확률 75%)
+RETURN 50 + (100 - DVAR:무츠키_심심함_수치) * 7
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@KOJO_DAILY_K10_MUTSUKI_GETS_BORED_DECISION(대상)
+#DIM 대상
+;무츠키가 플레이어 소속이면서 포로가 아닐 것
+IF CFLAG:대상:소속 == CFLAG:MASTER:소속 && CFLAG:대상:포로처 == 0
+	;무츠키 첫 이벤트를 무시하면 스킵한다.
+	SIF DVAR:무츠키_심심함_진행도 == 0
+		RETURN 0
+	SIF DVAR:무츠키_심심함_진행도 == -1
+		RETURN 0
+	;무츠키 스트레스가 100 이상이면 스킵
+	IF DVAR:무츠키_심심함_수치 >= 100
+		RETURN 0
+	ENDIF
+	RETURN CHECK_KOJO_DAILY_HAPPEN(대상, 1, 0)
+ENDIF
+RETURN 0
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@KOJO_DAILY_K10_MUTSUKI_GETS_BORED_GENRE(대상)
+#DIM 대상
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@KOJO_DAILY_K10_MUTSUKI_GETS_BORED(대상)
+#DIM 대상
+
+IF IS_SLAVE(대상)
+	LOCALS:0 = 주인님
+ELSEIF TALENT:MASTER:선생 == 1
+	LOCALS:0 = 선생님
+ELSE
+	LOCALS:0 = %ANAME(MASTER)%
+ENDIF
+
+SELECTCASE RAND:50
+	CASE IS < 35
+		PRINTFORML 무츠키가 허공을 바라보고 있다.
+		CALL FACE_IMAGE_N("표정_10_일반_1")
+		PRINTFORMW 「...심심해」
+		PRINTFORMW 「흥신소에 의뢰라도 넣어볼까?」
+		PRINTFORML
+		PRINTFORMW 무츠키는 할 일이 없기에 심심해졌다. (심심함 + 10)
+		DVAR:무츠키_심심함_수치 += 10
+		SIF DVAR:무츠키_심심함_수치 >= 100
+			DVAR:무츠키_심심함_수치 = 100
+		PRINTFORML
+		PRINTFORMW 현재 무츠키가 심심한 정도 : {DVAR:무츠키_심심함_수치} / 100
+		IF DVAR:무츠키_심심함_수치 == 100
+			PRINTFORML 
+			PRINTFORMW 무츠키의 심심함이 한계에 도달하였다.
+			PRINTFORML 
+			PRINTFORMW . . .
+			PRINTFORML
+			CALL FACE_IMAGE_N("표정_10_일반_9")
+			PRINTFORMW 「♪~ ♪♪~」
+			PRINTFORML
+			CALL ASK_MULTI("「응? 무츠키?」")
+			PRINTFORML ...아마도 듣지 못한 것 같다.
+			PRINTFORMW 어디를 가길래 저렇게 신난걸까.
+			PRINTFORML 
+			PRINTFORMW . . .
+			PRINTFORML
+			CALL FACE_IMAGE_N("표정_10_일반_11")
+			PRINTFORMW 「...여기도 설치 완료~♪」
+			PRINTFORMW 「쿠흐흣, 재밌겠다~♪」
+			PRINTFORML 
+			PRINTFORMW 펑! 퍼버벙!
+			PRINTFORML
+			CALL FACE_IMAGE_N("표정_10_일반_13")
+			PRINTFORML 「쾅쾅! 폭발해라~!」
+			PRINTFORMW 「꺄핫! 팝콘같아서 재밌다~!」
+			PRINTFORML 
+			PRINTFORMW 무츠키에 의해 폭발 테러를 당했다.
+			PRINTFORML 
+			PRINTFORMW 무츠키는 재미있었던 것 같다. (심심함 -70)
+			DVAR:무츠키_심심함_수치 -= 70
+			PRINTFORML
+			PRINTFORMW 현재 무츠키가 심심한 정도 : {DVAR:무츠키_심심함_수치} / 100
+		ENDIF
+	CASE IS < 50
+		PRINTFORMW 무츠키는 %조사처리(ANAME(MASTER),"에")% 대해 생각하고 있다.
+		CALL FACE_IMAGE_N("표정_10_일반_4")
+		PRINTFORML 「요즘 %LOCALS:0%, 너무 나에게 무관심하단 말이지...」
+		PRINTFORMW 「매일 바쁘다면서 놀아주지도 않고...」
+		PRINTFORMW 「이렇게 귀여운 학생을 방치하다니, 정말 심술궂다구~」
+		PRINTFORML
+		PRINTFORMW 무츠키는 %조사처리(ANAME(MASTER),"을")% 생각하니 더욱 심심해졌다. (심심함 + 30)
+		DVAR:무츠키_심심함_수치 += 30
+		SIF DVAR:무츠키_심심함_수치 >= 100
+			DVAR:무츠키_심심함_수치 = 100
+		PRINTFORML
+		PRINTFORMW 현재 무츠키가 심심한 정도 : {DVAR:무츠키_심심함_수치} / 100
+		IF DVAR:무츠키_심심함_수치 == 100
+			PRINTFORML 
+			PRINTFORMW 무츠키의 심심함이 한계에 도달하였다.
+			PRINTFORML 
+			PRINTFORMW . . .
+			PRINTFORML
+			CALL FACE_IMAGE_N("표정_10_일반_9")
+			PRINTFORMW 「♪~ ♪♪~」
+			PRINTFORML
+			CALL ASK_MULTI("「응? 무츠키?」")
+			PRINTFORML ...아마도 듣지 못한 것 같다.
+			PRINTFORMW 어디를 가길래 저렇게 신난걸까.
+			PRINTFORML 
+			PRINTFORMW . . .
+			PRINTFORML
+			CALL FACE_IMAGE_N("표정_10_일반_11")
+			PRINTFORMW 「...여기도 설치 완료~♪」
+			PRINTFORMW 「쿠흐흣, 재밌겠다~♪」
+			PRINTFORML 
+			PRINTFORMW 펑! 퍼버벙!
+			PRINTFORML
+			CALL FACE_IMAGE_N("표정_10_일반_13")
+			PRINTFORML 「쾅쾅! 폭발해라~!」
+			PRINTFORMW 「꺄핫! 팝콘같아서 재밌다~!」
+			PRINTFORML 
+			PRINTFORMW 무츠키에 의해 폭발 테러를 당했다.
+			PRINTFORML 
+			PRINTFORMW 무츠키는 재미있었던 것 같다. (심심함 -70)
+			DVAR:무츠키_심심함_수치 -= 70
+			PRINTFORML
+			PRINTFORMW 현재 무츠키가 심심한 정도 : {DVAR:무츠키_심심함_수치} / 100
+		ENDIF
+	CASE IS < 80
+
+	CASE IS < 100
+
+ENDSELECT
+
+
+
+
+
+RETURN 1
