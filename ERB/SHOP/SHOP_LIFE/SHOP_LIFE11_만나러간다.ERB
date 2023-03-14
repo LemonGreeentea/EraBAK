@@ -37,6 +37,11 @@ RETURN 1
 ;  RETURN 2:이 캐릭터는 회색으로 리스트에 실리지만 선택 불가
 ;-------------------------------------------------
 @SHOP_LIFE_CHECKCHARA11(ARG:0)
+#DIM 라이벌_ID
+
+라이벌_ID = NO_TO_CHARA(RIVAL_ID)
+SIF ARG:0 == 라이벌_ID
+	RETURN 0
 ;※사용전에 TMP_CREATE_RELATION_MAP 함수를 호출할 필요 있어
 ;  현재 TMP_CREATE_RELATION_MAP 는 SHOP.ERB 로 불려 가고 있다
 LOCAL:0 = TMP_COUNTRY_RELATION:(CFLAG:MASTER:소속):(CFLAG:(ARG:0):소속)
