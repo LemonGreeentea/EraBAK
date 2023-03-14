@@ -1,0 +1,142 @@
+﻿@RIVAL_EVENTCOMEND
+#DIM RIVAL_TARGET
+#DIM 라이벌_ID
+라이벌_ID = NO_TO_CHARA(RIVAL_ID)
+SIF CONFIG:500 == 0
+    RETURN
+SIF RAND(100) > 90
+    CONFIG:510 = -1
+CALL RIVAL_TARGET
+SIF CONFIG:510 == -1
+    CONFIG:510 = RIVAL_GET_TARGET()
+IF CONFIG:510 < 0
+    RETURN
+ENDIF
+RIVAL_TARGET = CONFIG:510
+
+IF CFLAG:RIVAL_TARGET:첫대면 == 0   
+    CALL RIVAL_FIRST(RIVAL_TARGET)
+    CFLAG:RIVAL_TARGET:첫대면 = 1
+    RETURN
+ENDIF
+
+@RIVAL_FOLLOW_MASTER
+#DIM 라이벌_ID
+라이벌_ID = NO_TO_CHARA(RIVAL_ID)
+
+;라이벌의 소속 마스터 따라가기
+IF CFLAG:라이벌_ID:소속 != CFLAG:MASTER:소속
+    CFLAG:라이벌_ID:소속 = CFLAG:MASTER:소속
+    PRINTFORML 라이벌의 소속이 변경되었습니다.
+ENDIF
+
+@NEW_RIVAL
+#DIM 라이벌_ID
+#DIM 대상소속
+#DIM 후보위치
+
+라이벌_ID = NO_TO_CHARA(RIVAL_ID)
+CALL FLAG_RIVAL_ON
+대상소속 = CFLAG:라이벌_ID:소속
+IF CITY_OWNER:(CFLAG:라이벌_ID:현재위치) != 대상소속
+    LOCAL:0 = RAND:(GET_OWN_CITY(대상소속)) + 1
+    LOCAL:1 = 0
+    FOR 후보위치, 0, MAX_CITY
+        SIF CITY_OWNER:(후보위치) == 대상소속
+            LOCAL:1 ++
+        IF LOCAL:0 == LOCAL:1
+            CFLAG:라이벌_ID:현재위치 = 후보위치
+            BREAK
+        ENDIF
+    NEXT
+ENDIF
+CONFIG:511 = 1
+
+;랜덤한 타겟을 설정
+@RIVAL_GET_TARGET
+#FUNCTION
+#DIM TARGET_COUNT
+#DIM TARGET_ID, 1000
+#DIM 라이벌_ID
+#DIM 라이벌의현재위치
+VARSET TARGET_ID
+라이벌_ID = NO_TO_CHARA(RIVAL_ID)
+TARGET_COUNT = 0
+
+라이벌의현재위치 = CFLAG:라이벌_ID:현재위치
+
+FOR LOCAL:0, 0, CHARANUM
+    SIF LOCAL:0 == MASTER || LOCAL:0 == 라이벌_ID
+        CONTINUE
+    ;플레이어와 함께라면 스킵
+	SIF CFLAG:(LOCAL:0):조교참가플래그
+        CONTINUE
+    ;죽었으면 스킵
+    SIF GROUPMATCH(CFLAG:(LOCAL:0):특수상태, 특수상태_사망) > 0
+        CONTINUE
+    ;고정캐가 아니면 스킵
+    SIF !IS_FIXED_CHARA(LOCAL:0)
+        CONTINUE
+    SIF !HAS_VAGINA(LOCAL:0)
+        CONTINUE
+    ;플래그가 없을 시 스킵
+    SIF CFLAG:(LOCAL:0):플래그 == 0
+        CONTINUE
+    ;라이벌이랑 근처에 없으면 스킵
+    SIF !(GROUPMATCH(CFLAG:(LOCAL:0):현재위치, 라이벌의현재위치, CITY_ROUTE:라이벌의현재위치:0, CITY_ROUTE:라이벌의현재위치:1, CITY_ROUTE:라이벌의현재위치:2, CITY_ROUTE:라이벌의현재위치:3, CITY_ROUTE:라이벌의현재위치:4, CITY_ROUTE:라이벌의현재위치:5) && CFLAG:(LOCAL:0):현재위치 > 0)
+        CONTINUE
+    ;연모 등의 타겟 설정
+    IF CONFIG:502 == 1
+        SIF TALENT:(LOCAL:0):연모 == 0 && TALENT:(LOCAL:0):친애 == 0 && TALENT:(LOCAL:0):연인 == 0
+            CONTINUE
+    ELSEIF CONFIG:502 == 2
+        SIF TALENT:(LOCAL:0):연모 == 1 || TALENT:(LOCAL:0):친애 == 1 || TALENT:(LOCAL:0):연인 == 1
+            CONTINUE
+    ENDIF    
+    TARGET_ID:TARGET_COUNT = LOCAL:0
+    TARGET_COUNT++
+NEXT
+SIF TARGET_COUNT == 0
+    RETURNF -1
+LOCAL:0 = RAND(TARGET_COUNT)
+RETURNF TARGET_ID:(LOCAL:0)
+
+
+@FLAG_RIVAL_ON
+#DIM 라이벌_ID
+라이벌_ID = NO_TO_CHARA(RIVAL_ID)
+
+FOR LOCAL:0, 0, CHARANUM
+    SIF LOCAL:0 == MASTER || LOCAL:0 == 라이벌_ID
+        CONTINUE
+    SIF !IS_FIXED_CHARA(LOCAL:0)
+        CONTINUE
+    SIF !HAS_VAGINA(LOCAL:0)
+        CONTINUE
+    CFLAG:(LOCAL:0):플래그 = 1
+NEXT
+
+
+@RIVAL_TARGET
+#DIM 라이벌_ID
+#DIM 라이벌의현재위치
+
+라이벌_ID = NO_TO_CHARA(RIVAL_ID)
+라이벌의현재위치 = CFLAG:라이벌_ID:현재위치
+SIF CONFIG:510 == -1
+    RETURN
+SIF CFLAG:(CONFIG:510):조교참가플래그 == 1
+    CONFIG:510 = -1
+SIF GROUPMATCH(CFLAG:(LOCAL:0):특수상태, 특수상태_사망) > 0
+    CONFIG:510 = -1
+SIF !(GROUPMATCH(CFLAG:(LOCAL:0):현재위치, 라이벌의현재위치, CITY_ROUTE:라이벌의현재위치:0, CITY_ROUTE:라이벌의현재위치:1, CITY_ROUTE:라이벌의현재위치:2, CITY_ROUTE:라이벌의현재위치:3, CITY_ROUTE:라이벌의현재위치:4, CITY_ROUTE:라이벌의현재위치:5) && CFLAG:(LOCAL:0):현재위치 > 0)
+    CONFIG:510 = -1
+SIF CFLAG:(LOCAL:0):플래그 == 0
+    CONFIG:510 = -1
+IF CONFIG:502 == 1
+    SIF TALENT:(LOCAL:0):연모 == 0 && TALENT:(LOCAL:0):친애 == 0 && TALENT:(LOCAL:0):연인 == 0
+    CONFIG:510 = -1
+ELSEIF CONFIG:502 == 2
+    SIF TALENT:(LOCAL:0):연모 == 1 || TALENT:(LOCAL:0):친애 == 1 || TALENT:(LOCAL:0):연인 == 1
+    CONFIG:510 = -1
+ENDIF 

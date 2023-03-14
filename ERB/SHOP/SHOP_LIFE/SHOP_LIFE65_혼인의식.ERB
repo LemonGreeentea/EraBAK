@@ -30,6 +30,11 @@ RETURN 1
 ;「혼인의식」의 선택 가능 캐릭터 존재 판정
 ;-------------------------------------------------
 @SHOP_LIFE_CHECKCHARA65(ARG:0)
+#DIM 라이벌_ID
+
+라이벌_ID = NO_TO_CHARA(RIVAL_ID)
+SIF ARG:0 == 라이벌_ID
+	RETURN 0
 ;비주인공, 동일 세력, 포로가 아닌, 호감도 10000이상,[연인]or[낙인], 특수상태가 서 있지 않다
 RETURN ARG:0 != MASTER && CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속 && CFLAG:(ARG:0):포로처 == 0 && CFLAG:(ARG:0):호감도 >= 10000 && (TALENT:(ARG:0):연인 || TALENT:(ARG:0):낙인) && CFLAG:(ARG:0):특수상태 == 0 && !IS_ANIMAL(ARG:0) && !TALENT:(ARG:0):정실 && !TALENT:(ARG:0):첩
 

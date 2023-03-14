@@ -22,6 +22,11 @@ RETURN 1
 ;「매춘한다」의 선택 가능 캐릭터 존재 판정（당하는 측）
 ;-------------------------------------------------
 @SHOP_LIFE_CHECKCHARA23(ARG:0)
+#DIM 라이벌_ID
+
+라이벌_ID = NO_TO_CHARA(RIVAL_ID)
+SIF ARG:0 == 라이벌_ID
+	RETURN 0
 ;주인공
 IF ARG:0 == MASTER
 	SIF COOLTIME:MASTER:0 < 2 && CFLAG:(ARG:0):행동불능상태 != 행동불능_임월

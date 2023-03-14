@@ -14,6 +14,11 @@ RETURN 1
 ;「학생정보」의 선택 가능 캐릭터 존재 판정
 ;-------------------------------------------------
 @SHOP_LIFE_CHECKCHARA51(ARG:0)
+#DIM 라이벌_ID
+
+라이벌_ID = NO_TO_CHARA(RIVAL_ID)
+SIF ARG:0 == 라이벌_ID
+	RETURN 0
 CALL SHOP_LIFE_CHECKCHARA_NOURYOKU(ARG:0)
 RETURN RESULT
 
