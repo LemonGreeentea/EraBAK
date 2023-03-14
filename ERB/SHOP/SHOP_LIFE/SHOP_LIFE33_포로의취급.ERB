@@ -20,6 +20,11 @@ RETURN 1
 ;「포로의취급」의 선택 가능 캐릭터 존재 판정
 ;-------------------------------------------------
 @SHOP_LIFE_CHECKCHARA33(ARG:0)
+#DIM 라이벌_ID
+
+라이벌_ID = NO_TO_CHARA(RIVAL_ID)
+SIF ARG:0 == 라이벌_ID
+	RETURN 0
 ;주인공이라면 안 돼
 SIF ARG:0 == MASTER
 	RETURN 0

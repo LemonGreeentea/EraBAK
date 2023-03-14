@@ -18,6 +18,11 @@ RETURN 1
 ;「마음에든다」의 선택 가능 캐릭터 존재 판정
 ;-------------------------------------------------
 @SHOP_LIFE_CHECKCHARA64(ARG:0)
+#DIM 라이벌_ID
+
+라이벌_ID = NO_TO_CHARA(RIVAL_ID)
+SIF ARG:0 == 라이벌_ID
+	RETURN 0
 ;비주인공, 포로가 아니다
 RETURN ARG:0 != MASTER && CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속 && CFLAG:(ARG:0):포로처 == 0 && !IS_ANIMAL(ARG:0)
 
