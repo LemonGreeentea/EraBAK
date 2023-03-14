@@ -8,8 +8,10 @@ IF ARGS == "관심도"
 ELSEIF ARGS == "굴복도"
     LOCAL:2 = ARG:1 * CONFIG:506 + RAND(10)
 ENDIF
-PRINTFORM %ANAME(ARG:0)%:관심도 + {LOCAL:0, 2}(합계: {CFLAG:(ARG:0):관심도, 4}) 
-PRINTFORML 굴복도 + {LOCAL:2, 2}(합계: {CFLAG:(ARG:0):굴복도, 4})
+IF CONFIG:509
+    PRINTFORM %ANAME(ARG:0)%:관심도 + {LOCAL:0, 2}(합계: {CFLAG:(ARG:0):관심도, 4}) 
+    PRINTFORML 굴복도 + {LOCAL:2, 2}(합계: {CFLAG:(ARG:0):굴복도, 4})
+ENDIF
 CFLAG:(ARG:0):관심도 += LOCAL:0
 CFLAG:(ARG:0):굴복도 += LOCAL:2
 CFLAG:(ARG:0):호감도 -= LOCAL:1

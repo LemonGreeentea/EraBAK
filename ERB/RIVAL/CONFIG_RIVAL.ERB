@@ -2,6 +2,7 @@
 CONFIG:505 = 1
 CONFIG:506 = 1
 CONFIG:510 = -1
+
 ;-------------------------------------------------
 ;라이벌 설정
 ;-------------------------------------------------
@@ -127,9 +128,8 @@ IF RESULT == 0
     CONFIG:500++
     SIF CONFIG:500 > 0
         CONFIG:500 = 1
-    IF NO_TO_CHARA(RIVAL_ID) == -1
-        ADDCHARA RIVAL_ID
-    ENDIF
+    SIF CONFIG:511 == 0
+        CALL NEW_RIVAL
 ELSEIF RESULT == 1
     CONFIG:501++
     SIF CONFIG:501 > 1
