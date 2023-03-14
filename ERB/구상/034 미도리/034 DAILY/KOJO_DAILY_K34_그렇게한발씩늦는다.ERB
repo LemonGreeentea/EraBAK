@@ -1,0 +1,181 @@
+﻿;=====================================================
+; 블루아카이브K 미도리 데일리 구상 - 그렇게한발씩늦는다
+; 구상 제작자 : 수틀리면분탕침
+; 구상 설명,조건
+;   1. 모모이 친애
+;   2. 미도리 연모
+;   3. 모모이,미도리,유즈 자국
+;   4. 일회용 데일리
+;   5. 유즈 안면
+;=====================================================
+;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@KOJO_DAILY_K34_ONESTEPBEHIND_RATE(대상)
+#DIM 대상
+RETURN 0
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@KOJO_DAILY_K34_ONESTEPBEHIND_DECISION(대상)
+#DIM 대상
+
+;자국에 있으면서 포로가 아니며 안면이 있는게 아니면 스킵
+SIF CHECK_KOJO_DAILY_HAPPEN(대상, 1, 0, 1) == 0
+	RETURN 0
+;모모이 33
+SIF CHECK_KOJO_DAILY_HAPPEN(33, 1, 0, 1) == 0 
+	RETURN 0
+;유즈 35
+SIF CHECK_KOJO_DAILY_HAPPEN(35, 1, 0, 1) == 0
+	RETURN 0
+
+;일회용 데일리
+
+SIF KDVAR:대상:미도리_그렇게한발씩늦는다
+	RETURN 0
+
+;단계 아닐시 스킵
+SIF ! TALENT:대상:연모
+	RETURN 0
+SIF ! TALENT:33:친애
+	RETURN 0
+
+;아나타가 자지가 없으면 스킵
+SIF !HAS_PENIS(MASTER)
+	RETURN 0
+
+RETURN CHECK_KOJO_DAILY_HAPPEN(대상, 1, 0, 1)
+
+RETURN 0
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@KOJO_DAILY_K34_ONESTEPBEHIND_GENRE(대상)
+#DIM 대상
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@KOJO_DAILY_K34_ONESTEPBEHIND(대상)
+#DIM 대상
+
+IF IS_SLAVE(대상)
+	LOCALS:0 = 주인님
+ELSEIF TALENT:MASTER:선생 == 1
+	LOCALS:0 = 선생님
+ELSE
+	LOCALS:0 = %ANAME(MASTER)%
+ENDIF
+		PRINTFORMW 「김~치!」
+		PRINTFORMW 찰칵!
+		PRINTFORMW 「미도리! 여기 사진이 좀 잘 찍힌거 같지 않아?」
+		PRINTFORMW 「으음~좀 더 뒤로 가서 찍어도 되지 않았을까 싶은데..」
+		PRINTFORMW 「조금 더?」
+		PRINTFORMW 모모이가 미도리를 향해 고개를 돌리면서 말하자 미도리는 고개를 끄덕인다
+		PRINTFORMW 「여기, 여기 좀 흐릿하게 보여. 다시 찍어보자」
+		PRINTFORMW 「응」
+		PRINTFORMW 「자~ 찍는다?」
+		PRINTFORMW 달칵
+		CALL ASK_MULTI("얘들아 들어가도 되니?")
+		PRINTFORMW 찰칵
+		PRINTFORML 「%ANAME(MASTER)%」
+		PRINTFORMW 「엇 %ANAME(MASTER)%?」
+		PRINTFORMW 갑작스레 문을 열고 들어온 당신을 본 두 자매
+		PRINTFORMW 손에 든 카메라는 당신을 향해 있었다
+		PRINTFORMW 척 보기에도 사진을 찍고있엇다는 건 알만했다
+		PRINTFORMW 찰칵
+		PRINTFORMW 모모이의 손에 들린 카메라가 찍혔다
+		PRINTFORMW 「왓 찍혓다!」
+		PRINTFORMW 모모이와 미도리는 카메라에 찍힌 당신을 바라보고있었고
+		PRINTFORMW 당신은 머쓱해하며 방으로 들어왔다
+		PRINTFORMW 「으음.. %ANAME(MASTER)%」
+		PRINTFORMW 모모이가 찍은 카메라를 바라보던 미도리가 우물쭈물한 목소리로 불렀다
+		PRINTFORMW 「혹시 저녁식사를 어떻게 하실건가요?」
+		CALL ASK_MULTI("아직 별 생각이 없는데..")
+		PRINTFORMW 당신의 말에 미도리의 얼굴에 약간 화색이 돌았다
+		PRINTFORMW 「그러면 저녁 드시고 가실래요? 언니도 동의하지?」
+		PRINTFORMW 「응? 아, 그러자.%ANAME(MASTER)%도 먹고가」
+		PRINTFORMW 모모이는 여전히 카메라를 보고있었고 미도리는 웃으면서 밖으로 나갔다
+		PRINTFORMW 「%ANAME(MASTER)%. 저는 먹을거리를 사올게요!」
+		PRINTFORMW 밖으로 나가는 미도리의 말에 손을 흔들고 당신은 모모이의 옆으로 갔다
+		PRINTFORMW 「아 %ANAME(MASTER)% 여기 옆에 있는 애는 뭐야?」
+				SETCOLOR 0xFF0000
+		PRINTFORML
+		PRINTFORML 뭐?
+		PRINTFORMW
+				RESETCOLOR
+		PRINTFORMW 「아 유즈구나..」
+		PRINTFORMW 무슨 빨간색이 보이나 했더니 캐비넷 안에 있던 유즈엿다
+		PRINTFORMW 순간 식은 땀이 났던 당신은 캐비넷을 바라보자 캐비넷이 살짝 움직인 느낌이 났다
+		PRINTFORMW 「한번 더 찍어보자 %ANAME(MASTER)%」
+		PRINTFORMW 유즈와도 찍어보지 않겠냐는 당신의 말에 모모이는 캐비넷을 바라봤다
+		PRINTFORMW 「유즈으~! 여기 %ANAME(MASTER)%이 플레단으로 올려줄거라는데?」
+		PRINTFORMW 쾅!
+		PRINTFORMW 「정말이신가요!」
+		PRINTFORMW 흥분을 감추지 못하는 유즈가 캐비넷을 차고 밖으로 나왔다
+		PRINTFORMW 「%ANAME(MASTER)%이랑 사진 찍어준다면 말이지~」
+		PRINTFORMW 소악마같이 웃는 모모이의 말에 유즈가 보더니 한숨을 쉬었다
+		PRINTFORMW 「우으..알겟어」
+		PRINTFORMW 찰칵!
+		PRINTFORMW 덜컥!
+		PRINTFORMW 「먹을거리 사왔어요」
+		PRINTFORMW 사진찍음과 동시에 문이 열리면서 미도리도 다함께 찍혔다
+		PRINTFORMW 「어..우왓!?」
+		PRINTFORMW 당신고 함께 찍히는 것이 처음인 미도리가 당황했다
+		PRINTFORMW 미도리는 당황해서 얼굴을 붉히면서도 모모이에게 가서 찍힌 카메라를 봤다
+		PRINTFORMW 「미도리 여기 %ANAME(MASTER)%하고 찍힌거 잘 나온거같지않아?」
+		PRINTFORMW 「으..응 그래 이거 한장 줄수있어?」
+		PRINTFORMW 「응 여기」
+		PRINTFORMW 모모이가 인화해서 미도리에게 찍힌 사진을 주고 당신은 그 자리에서 미도리가 사온 먹을거리로 저녁을 준비했다
+		PRINTFORML ...
+		PRINTFORML ..
+		PRINTFORMW .
+		PRINTFORMW 「냠냠 이거 맛있다 미도리」
+		PRINTFORMW 미도리가 사온 저녁거리에는 장어가 있길래 당신은 직접 장어를 구웠다
+		PRINTFORMW 「%ANAME(MASTER)%도 이거 굽는데 익숙한가봐?」
+		PRINTFORMW 당신은 손사레를 치면서 쑥스럽게 웃었다
+		PRINTFORMW 「%ANAME(MASTER)% 오늘은 안 돌아가시는건가요?」
+		PRINTFORMW 미도리의 물음에 당신은 돌아갈 예정이라고 했다
+		PRINTFORMW 「제가 너무 술을 많이 샀었나요? 제가 부축을 해드릴게요」
+		PRINTFORMW 그래도 괜찮다는 당신의 말에 미도리는 볼을 살짝 부풀렸다
+		CALL ASK_MULTI("나는 괜찮으니까 미도리도 이 것을 먹어봐")
+		PRINTFORMW 당신의 말에 이어진 장어쌈을 보면서 미도리는 볼 부풀린것도 없어지면서 기쁘게 먹었다
+		PRINTFORMW 그래서일까 미도리가 맛있게 먹는 동안 모모이가 당신과 미도리의 잔에 술을 따라주는걸 보지못했다
+		PRINTFORML
+		PRINTFORML
+		PRINTFORMW 잠시후-
+		PRINTFORMW (우..으..머리가 왜 이러지..?)
+		PRINTFORMW 미도리는 지금 머리가 어지럽다
+		PRINTFORMW (물만 마신줄 알았는데..)
+		PRINTFORMW (어질어질해..)
+		PRINTFORMW 미도리의 앞에는 여전히 건재한 모모이와 당신이 있었다
+		PRINTFORMW 하지만 당신도 곧 술에 취한 모습이 되었다
+		PRINTFORMW 「%ANAME(MASTER)%. 술에 너무 취한거아냐?」
+		PRINTFORMW 당신은 아직 괜찮다는 말과 함께 손사레를 쳣지만 모모이가 손을 내밀어서 당신의 손을 내렸다
+		PRINTFORMW 「%ANAME(MASTER)%도 너무 많이 마시면 골로 가~」
+		PRINTFORMW 「그렇지? 미도리」
+		PRINTFORMW 모모이가 미도리를 바라보면서 천진난만하게 말을 하지만 미도리는 다르게 들린것처럼 했다
+		PRINTFORMW 「%ANAME(MASTER)%. 여기서 자고갈거지?」
+		CALL ASK_MULTI("윽...아니 돌아가서 쉴거야")
+		PRINTFORMW 「알겠어- 미도리. 내가 %ANAME(MASTER)%을 부축할게」
+		PRINTFORMW (어..?분명 내가 부축을 권했..)
+		PRINTFORMW 멀어져가는 의식에 모모이가 당신을 부축하는 모습이 살짝 보였다
+		PRINTFORMW 「방에 가기전에 잠깐 편의점에라도 들르자~」
+		PRINTFORMW 거의 의식이 사라지기 전에 미도리는 살짝 팔을 뻗어서 당신에게 손을 뻗었지만 술기운에 의해 땅으로 내려앉으면서 완전히 잠에 들었다
+				SETCOLOR #FF00FF
+		PRINTFORMW 「%ANAME(MASTER)%과의 '게임'. 전에 못했던 진도까지 다 해보자고♥」
+				RESETCOLOR
+		PRINTFORMW 미도리가 마지막에 들었던 소리였다
+KDVAR:대상:미도리_그렇게한발씩늦는다 = 1
+
+
+RETURN 1
