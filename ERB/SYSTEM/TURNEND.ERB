@@ -6,7 +6,6 @@
 
 FLAG:전략페이즈페이지 = 1
 
-CALL MOVE_CHARA_CITY()
 ;거점 페이즈
 IF TIME == 0
 	IF SHOP_TIME >= CALC_SHOP_TIME() || CFLAG:MASTER:포로처
@@ -245,8 +244,6 @@ SIF !FLAG:턴엔드조교
 	CALL TURNEND_COMMON
 
 $SKIPPED
-
-;라이벌 요바이 설정
 
 ;시간을 진행시킨다
 DAY ++
