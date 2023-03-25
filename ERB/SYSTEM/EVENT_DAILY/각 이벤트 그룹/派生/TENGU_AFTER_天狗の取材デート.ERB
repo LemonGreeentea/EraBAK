@@ -45,12 +45,8 @@ RETURN RAND:100 < 15
 ;---------------------
 @EVENT_DAILY_DERIVATION_TENGU_AFTER()
 #DIM 대상
-#DIM 아야
-#DIM 하타테
 
 대상 = ID_TO_CHARA(DVAR:텐구취재_캐릭터ID)
-아야 = NAME_TO_CHARA("아야")
-하타테 = NAME_TO_CHARA("하타테")
 
 SELECTCASE DVAR:텐구취재_데이트
 	CASE 0
@@ -61,15 +57,8 @@ SELECTCASE DVAR:텐구취재_데이트
 		PRINTFORML 그렇게 말하는 그녀의 표정은 너무 좋지 않다. 뭔가 트러블이 있을까?
 		PRINTFORMW 「아, 아니, 그런 것이 아니라!」
 		PRINTFORMW 「홍보잡지은 순조롭습니다만,……중요한 자신의 신문용의 재료가, 조금 막히고 있어…」
-		IF CFLAG:아야:소속 == CFLAG:MASTER:소속 &&  !(MASTER == NAME_TO_CHARA("아야"))
-			PRINTFORML 「샤메이마루씨는, 재료 찾기에 빈번하게 날아다니고 있는데……」
-			PRINTFORMW 「자신은 최근, 시간이 잡히지 않아서……. 꽤 취재라든지에도 갈 수 있고 없습니다」
-		ELSEIF CFLAG:하타테:소속 == CFLAG:MASTER:소속 &&  !(MASTER == NAME_TO_CHARA("하타테"))
-			PRINTFORML 「히메카이도씨는, 최근 좋게 날아다녀 연사에 의지하지 않고 취재하고 있는데……」
-			PRINTFORMW 「자신은 꽤 시간이 잡히지 않아서……. 재료 찾기라든지에도 갈 수 있고 없습니다」
-		ELSE
-			PRINTFORMW 「특히 최근에는 시간이 잡히지 않아서……. 꽤, 재료 찾기의 취재라든지에도 갈 수 있고 없습니다」
-		ENDIF
+		PRINTFORMW 「특히 최근에는 시간이 잡히지 않아서……. 꽤, 재료 찾기의 취재라든지에도 갈 수 있고 없습니다」
+
 		PRINTFORMW 그렇게 말하면 %조사처리(ANAME(대상),"는")% 괴로운 듯이 팔짱을 껴, 왜 그러는 것일까 하고 고민하고 있다
 		PRINTFORML 오늘까지 훌륭하게 일해 주고 있는 그녀다. 가끔씩은 리프레쉬를 위해서(때문에) 휴일을 올리는 것도 좋을 것이다
 		PRINTFORMW %조사처리(ANAME(대상),"는")%, 이번 휴일에, 둘이서 취재하러 가지 않겠는가, 라고 그녀에게 제안했다

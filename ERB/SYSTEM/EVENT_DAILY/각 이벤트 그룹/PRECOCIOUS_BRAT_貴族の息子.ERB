@@ -8,7 +8,8 @@ RETURN 30
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_PRECOCIOUS_BRAT_DECISION()
-
+SIF 데일리_장르세부_NTR == 0
+	RETURN 0
 SIF DVAR:에로꼬맹이_발생플래그 != 0
 	RETURN 0
 

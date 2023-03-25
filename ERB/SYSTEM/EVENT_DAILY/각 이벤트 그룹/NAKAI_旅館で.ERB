@@ -8,7 +8,8 @@ RETURN 40
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_NAKAI_DECISION()
-
+SIF 데일리_장르세부_NTR == 0
+	RETURN 0
 SIF DVAR:여관_발생플래그 < 0
 	RETURN 0
 SIF DVAR:여관_더부살이중캐릭터ID

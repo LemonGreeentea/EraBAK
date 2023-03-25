@@ -1,0 +1,683 @@
+﻿;=====================================================
+; 블루아카이브K 무츠키 데일리 구상 - 무츠키 심심해
+; 구상 제작자 : 나는토끼(feat. 레몬녹차)
+; 구상 설명
+;   1. 랜덤 확률로 무츠키가 심심해진다.
+;   2. 심심한 무츠키가 무슨 일을 할지 모른다. (예를 들면 폭탄 테러)
+;   3. 무츠키가 사고치는 것을 대비하기 위해 무츠키를 놀아주자.
+;     - 놀이, 데이트(연인 아니어도 됨), 야한거 등등
+;
+;=====================================================
+;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@KOJO_DAILY_K10_MUTSUKI_IS_BORED_RATE(대상)
+#DIM 대상
+;이벤트 발생확률. 기본 5%지만 무츠키의 심심함이 올라갈수록 확률이 늘어난다. (최대 심심함 100, 최대확률 75%)
+RETURN 50 + (100 - DVAR:무츠키_심심함_수치) * 7
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@KOJO_DAILY_K10_MUTSUKI_IS_BORED_DECISION(대상)
+#DIM 대상
+;무츠키가 플레이어 소속이면서 포로가 아닐 것
+IF CFLAG:대상:소속 == CFLAG:MASTER:소속 && CFLAG:대상:포로처 == 0
+	;무츠키 첫 이벤트를 무시하면 스킵한다.
+	SIF DVAR:무츠키_심심함_진행도 == 0
+		RETURN 1
+	SIF DVAR:무츠키_심심함_진행도 == -1
+		RETURN 0
+	;무츠키 심심함 20 이하면 스킵
+	IF DVAR:무츠키_심심함_수치 <= 20
+		RETURN 0
+	ENDIF
+	RETURN CHECK_KOJO_DAILY_HAPPEN(대상, 1, 0)
+ENDIF
+RETURN 0
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@KOJO_DAILY_K10_MUTSUKI_IS_BORED_GENRE(대상)
+#DIM 대상
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@KOJO_DAILY_K10_MUTSUKI_IS_BORED(대상)
+#DIM 대상
+
+IF IS_SLAVE(대상)
+	LOCALS:0 = 주인님
+ELSEIF TALENT:MASTER:선생 == 1
+	LOCALS:0 = 선생님
+ELSE
+	LOCALS:0 = %ANAME(MASTER)%
+ENDIF
+
+IF DVAR:무츠키_심심함_진행도 == 0
+	;무츠키 스트레스 기본수치
+	DVAR:무츠키_심심함_수치 = 60
+	PRINTFORMW 평온한 하루를 보내던 중, 느닷없이 무츠키가 달려온다.
+	CALL FACE_IMAGE_N("표정_10_일반_10")
+	PRINTFORMW 「앗! %LOCALS:0% 발견~! 나랑 놀자~!」
+	PRINTFORML
+	CALL ASK_YN("가만히 서 있는다", "사무실로 도망친다")
+	IF RESULT == 1
+		PRINTFORML 오늘은 휘둘릴 수 없다.
+		PRINTFORMW %조사처리(ANAME(MASTER),"은(는)")% 무츠키를 피해 사무실로 들어갔다.
+		CALL FACE_IMAGE_N("표정_10_일반_2")
+		PRINTFORMW 「에? %LOCALS:0%?」
+		DVAR:무츠키_심심함_진행도 == -1
+	ELSEIF RESULT == 0
+		PRINTFORML 어, 어?
+		PRINTFORMW %조사처리(ANAME(MASTER),"은(는)")% 당황하며 가만히 서 있었다.
+		PRINTFORML
+		PRINTFORMW 무츠키는 무서운 속도로 달려와 %조사처리(ANAME(MASTER),"을(를)")% 껴안았다.
+		CALL FACE_IMAGE_N("표정_10_일반_7")
+		PRINTFORMW 「쿠후후~ %LOCALS:0%, 나랑 놀자?♥」
+		PRINTFORML
+		CALL ASK_MULTI("「일 때문에 바빠서 안돼.」")
+		CALL FACE_IMAGE_N("표정_10_일반_5")
+		PRINTFORMW 「에~? %LOCALS:0%, 나보다 일이 더 중요한 거야..?」
+		PRINTFORML
+		CALL ASK_MULTI("「그건 아니지만...」", "「응.」")
+		IF RESULT == 0
+			PRINTFORMW 「역시 그렇지~? 그럼 놀자~」
+			CALL FACE_IMAGE_N("표정_10_일반_4")
+			PRINTFORMW 「응?」
+			PRINTFORML
+			CALL ASK_MULTI("「하아... 알았어.」")
+		ELSEIF RESULT == 1
+			CALL FACE_IMAGE_N("표정_10_일반_2")
+			PRINTFORMW 「엣, 단호해...」
+			CALL FACE_IMAGE_N("표정_10_일반_4")
+			PRINTFORML 「응... 그럼 어쩔 수 없네...」
+			PRINTFORMW 「혼자서 노는 수 밖에...」
+			PRINTFORML
+			CALL ASK_MULTI("「뭐, 뭐하고 놀건데..?」")
+			CALL FACE_IMAGE_N("표정_10_일반_6")
+			PRINTFORMW 「으음... 그거 있잖아, 쾅! 콰쾅! 하는거 말이야!」
+			PRINTFORML
+			CALL ASK_MULTI("「아! 폭죽놀이를 하려는 거구나, 맞지?」")
+			CALL FACE_IMAGE_N("표정_10_일반_6")
+			PRINTFORMW 「...」
+			PRINTFORML
+			CALL ASK_MULTI("「...폭죽놀이 맞지?」")
+			PRINTFORMW 「...」
+			PRINTFORML
+			CALL ASK_MULTI("「놀아줄 테니 제발 하지마.」")
+		ENDIF
+		PRINTFORMW 
+		DVAR:무츠키_심심함_진행도 = 1
+		DVAR:무츠키_심심함_수치 = 50
+		PRINTFORML
+		PRINTFORML
+		PRINTFORMW 턴마다 랜덤 확률로 무츠키의 심심함이 올라갑니다.
+		PRINTFORMW 데이트, 놀이 등을 통해 무츠키의 심심함을 낮출 수 있습니다.
+		PRINTFORML
+		PRINTFORML . . .
+	ENDIF
+ELSE
+	PRINTFORMW 무츠키를 놀아주기 위해서 흥신소 사무실에 갔다.
+ENDIF
+
+IF DVAR:무츠키_심심함_진행도 == 1
+	SELECTCASE RAND:5
+		CASE 0
+			CALL FACE_IMAGE_N("표정_10_일반_6")
+			PRINTFORML 「안녕, %LOCALS:0%~! 오늘도 나랑 놀러 온거지?」
+		CASE 1
+			CALL FACE_IMAGE_N("표정_10_일반_10")
+			PRINTFORML 「어서 와, %LOCALS:0%! 기다리고 있었어~」
+		CASE 2
+			CALL FACE_IMAGE_N("표정_10_일반_9")
+			PRINTFORML 「어서 와~! %LOCALS:0%을 기다리는 동안 심심해 죽을뻔 했다고~」
+		CASE 3
+			CALL FACE_IMAGE_N("표정_10_일반_7")
+			PRINTFORML 「쿠후후~ %LOCALS:0%, 내가 보고싶어서 왔구나?」
+		CASE 4
+			CALL FACE_IMAGE_N("표정_10_일반_7")
+			PRINTFORML 「후후~♥ 오늘도 놀러 왔구나.」
+			PRINTFORML 「마침 %LOCALS:0%을 생각하고 있었거든~」
+			PRINTFORML 「이 정도면 우리, 운명일지도?~♥」
+	ENDSELECT
+	$INPUT_LOOP1
+	PRINTFORML
+	PRINTFORML 무츠키가 심심한 정도 : {DVAR:무츠키_심심함_수치} / 100
+	PRINTFORML 오늘은 무츠키와 무엇을 할까?
+	PRINTFORML
+	CALL ASK_MULTI("놀이를 한다.", "데이트 한다.", "야한걸 한다.", "그만둔다.")
+	;놀이
+	IF RESULT == 0
+		PRINTFORMW 무츠키와 놀이를 하기로 했다.
+		CALL FACE_IMAGE_N("표정_10_일반_6")
+		PRINTFORMW 「응, 그럼 무슨 놀이를 할까?」
+		PRINTFORML
+		CALL ASK_MULTI("술래잡기 하자", "장난감 갖고 놀자", "무츠키가 하고 싶은 거 하자")
+		;술래잡기
+		IF RESULT == 0
+			CALL FACE_IMAGE_N("표정_10_일반_10")
+			PRINTFORML 「응! 재밌겠다~!」
+			PRINTFORMW 「술래는 가위바위보로 정하자~」
+			CALL FACE_IMAGE_N("표정_10_일반_8")
+			PRINTFORMW 「간다~! 가위~ 바위~」
+			PRINTFORML
+			PRINTFORMW 「보!」
+			PRINTFORML
+			;가위바위보로 술래정하기
+			SELECTCASE RAND:2
+				CASE 0
+					PRINTFORMW 이겼다.
+					CALL FACE_IMAGE_N("표정_10_일반_3")
+					PRINTFORMW 「앗, 져버렸네~」
+					PRINTFORML 「술래가 하고 싶었는데... 어쩔 수 없지~!」
+					PRINTFORMW 「그럼 열심히 잡아 봐, %LOCALS:0%~♥」
+					PRINTFORML
+					PRINTFORML . . .
+					PRINTFORMW
+					;무투 수치 비교
+					IF ABL:대상:50 > ABL:MASTER:50
+						PRINTFORMW 술래잡기를 하는 동안 단 한 번도 무츠키를 잡지 못했다.
+						CALL FACE_IMAGE_N("표정_10_일반_4")
+						PRINTFORML 「%LOCALS:0%, 이거 밖에 안되는 거야~?」
+						PRINTFORMW 「그 정도로는 옷깃조차 안 닿는다구?」
+						CALL FACE_IMAGE_N("표정_10_일반_11")
+						PRINTFORML 「좀 더 분발하는 게 좋겠어~」
+						PRINTFORMW 「허~접♥」
+						PRINTFORML
+						CALL ASK_MULTI("「...」")
+						CALL FACE_IMAGE_N("표정_10_일반_2")
+						PRINTFORMW 「어라... %LOCALS:0%, 화났어..?」
+					ELSEIF ABL:대상:50 <= ABL:MASTER:50
+						PRINTFORMW 둘 다 술래잡기에 열중하고 있다.
+						PRINTFORML
+						CALL ASK_MULTI("「얍!」")
+						CALL FACE_IMAGE_N("표정_10_일반_10")
+						PRINTFORMW 「아하핫, 방금 진짜로 위험했어~」
+						PRINTFORML
+						CALL ASK_MULTI("「이얍!!」")
+						CALL FACE_IMAGE_N("표정_10_일반_3")
+						PRINTFORMW 「왓, 방심하면 정말로 잡히겠는데?」
+						PRINTFORML
+						CALL ASK_MULTI("「이야압!!!」")
+						CALL FACE_IMAGE_N("표정_10_일반_2")
+						PRINTFORMW 「앗.」
+						PRINTFORML
+						PRINTFORMW 쿠당당!
+						PRINTFORML
+						CALL ASK_MULTI("「으으...」")
+						CALL FACE_IMAGE_N("표정_10_일반_4")
+						PRINTFORMW 「정말~ %LOCALS:0%, 무슨 짓을 하는 거야~」
+						PRINTFORML
+						PRINTFORMW 무츠키를 잡으려다 발을 헛딛어 의도치 않게 덮쳐버렸다.
+						PRINTFORML
+						CALL ASK_MULTI("「이, 이건, 그러니까...」")
+						PRINTFORMW 「그래서?」
+						PRINTFORML
+						CALL ASK_MULTI("「...응?」")
+						CALL FACE_IMAGE_N("표정_10_일반_11")
+						PRINTFORMW 「그래서 이 다음엔 어떻게 할 건데?♥」
+					ENDIF
+				CASE 1
+				PRINTFORMW 졌다.
+				CALL FACE_IMAGE_N("표정_10_일반_11")
+				PRINTFORMW 「쿠후후~ 내가 이겼네~!」
+				PRINTFORML 「그럼 열부터 셀 테니까,」
+				PRINTFORMW 「그동안 최대한 멀리 도망쳐 봐, %LOCALS:0%♥」
+				PRINTFORML
+				CALL ASK_MULTI("설렁설렁 도망친다", "최선을 다해 멀리 도망친다")
+				IF RESULT == 0
+					PRINTFORMW 어차피 놀아주는 것이니 적당히 도망치자.
+					CALL FACE_IMAGE_N("표정_10_일반_99")
+					PRINTFORMW 「둘~ 하나~ 땡!」
+					CALL FACE_IMAGE_N("표정_10_일반_14")
+					PRINTFORMW 「자, 간다~!」
+					PRINTFORML
+					PRINTFORMW 무츠키의 눈빛이 뭔가 달라졌다.
+					PRINTFORMW 왠지 잡히면 안 될 것 같은 느낌이...」
+					PRINTFORML
+					CALL ASK_MULTI("「우, 우와악!!」")
+					CALL FACE_IMAGE_N("표정_10_일반_14")
+					PRINTFORML 「꺄핫! 좀 더 최선을 다해서 도망치라고~!」
+					PRINTFORMW 「그 속도로는 얼마 안 가서 잡힐 테니까 말이야~ 아하핫!」
+					PRINTFORML
+					PRINTFORMW 무츠키의 말대로 10초도 채 되지 않아 결국 잡혔다.
+					CALL FACE_IMAGE_N("표정_10_일반_10")
+					PRINTFORML 「짜잔~! 승리승리~!」
+					PRINTFORMW 「%LOCALS:0%, 결국 잡혀버렸네~ 아하하!」
+					PRINTFORML
+					PRINTFORMW 「자, 그럼...」
+					PRINTFORMW 그 순간 무츠키에게 그대로 덮쳐졌다.
+					CALL FACE_IMAGE_N("표정_10_일반_11")
+					PRINTFORMW 「진 사람에게는 벌칙이 주어져야겠지?♥」
+				ELSEIF RESULT == 1
+					PRINTFORMW 이왕 하는거 제대로 도망치자.
+					CALL FACE_IMAGE_N("표정_10_일반_99")
+					PRINTFORMW 「둘~ 하나~ 땡!」
+					CALL FACE_IMAGE_N("표정_10_일반_14")
+					PRINTFORMW 「자, 간다~!」
+					PRINTFORML
+					PRINTFORMW 무츠키의 눈빛이 뭔가 달라졌다.
+					PRINTFORML
+					CALL ASK_MULTI("「히, 히익..!」")
+					PRINTFORMW 멀리 도망쳤음에도 불구하고 본능적으로 벽 뒤로 숨어버렸다.
+					PRINTFORML
+					CALL ASK_MULTI("「그, 그래도, 이렇게 숨어있으면 안잡히겠지..?」")
+					PRINTFORMW 라고 생각한 순간
+					PRINTFORMW 뒤에서 누군가가 껴안았다.
+					PRINTFORML
+					CALL ASK_MULTI("「서, 설마...」")
+					PRINTFORMW 천천히 고개를 뒤로 돌리니 무츠키가 %조사처리(ANAME(MASTER),"을(를)")% 껴안고 있었다.
+					CALL FACE_IMAGE_N("표정_10_일반_7")
+					PRINTFORMW 「%LOCALS:0% 잡았다..♥」
+					PRINTFORML
+					CALL ASK_MULTI("「으아악!!!」")
+					CALL FACE_IMAGE_N("표정_10_일반_2")
+					PRINTFORMW 「엣, 어째서 그렇게 귀신이라도 본 듯이 놀라는 거야?」
+					PRINTFORML
+					CALL ASK_MULTI("「그건, 무츠키의 눈빛이 엄청 무서웠었다고」")
+					CALL FACE_IMAGE_N("표정_10_일반_10")
+					PRINTFORML 「아하하, 그렇게나 무서웠나?」
+					PRINTFORMW 「%LOCALS:0%이 놀라는 표정, 재밌었어~」
+					CALL FACE_IMAGE_N("표정_10_일반_4")
+					PRINTFORMW 「그보다, 이건 술래잡기니까 원래 숨으면 안된다구~」
+					CALL FACE_IMAGE_N("표정_10_일반_7")
+					PRINTFORMW 「뭐어, 나는 %LOCALS:0%이 어디에 있든 다~ 알 수 있으니까 찾았지만 말이야~♥」
+					PRINTFORML
+					PRINTFORMW 「그래도 말이야~」
+					PRINTFORML
+					PRINTFORMW 그 순간 무츠키에게 그대로 덮쳐졌다.
+					CALL FACE_IMAGE_N("표정_10_일반_11")
+					PRINTFORMW 「룰을 어겼으니 벌칙을 받아야지?♥ 후후~♥」
+				ENDIF
+			ENDSELECT
+		;장난감
+		ELSEIF RESULT == 1
+			CALL FACE_IMAGE_N("표정_10_일반_10")
+			PRINTFORMW 「응, 재밌을 것 같아~! 바로 하자!」
+			PRINTFORML
+			CALL ASK_MULTI("「그럼 장난감 사러 갖다 올게.」")
+			CALL FACE_IMAGE_N("표정_10_일반_9")
+			PRINTFORMW 「그럴 필요 없어~」
+			PRINTFORML
+			PRINTFORMW 무츠키는 그렇게 말하면서 가방에서 무언가를 꺼낸다.
+			CALL FACE_IMAGE_N("표정_10_일반_10")
+			SELECTCASE RAND:2
+				CASE 0
+					PRINTFORML 「짠~! 통아저씨가 나왔습니다~」
+					PRINTFORMW 복불복 해적 룰렛이었다.
+					CALL FACE_IMAGE_N("표정_10_일반_9")
+					PRINTFORMW 「자, 자~ %LOCALS:0%부터 시작해~!」
+					PRINTFORML
+					CALL ASK_MULTI("「어째서 나부터 하는거야.」")
+					CALL FACE_IMAGE_N("표정_10_일반_4")
+					PRINTFORMW 「그런 건 상관없잖아~ 빨리 하라구!」
+					PRINTFORML
+					CALL ASK_MULTI("「알겠어...」")
+					PRINTFORMW 신중히 고른 후 단숨에 꽂아넣었다.
+					PRINTFORML
+					CALL ASK_MULTI("「여기닷!!」")
+					PRINTFORMW 해적이 머리가 튕겨져 나옴과 동시에 의문의 빨간 액체가 뿜어져 나온다.
+					PRINTFORML
+					CALL ASK_MULTI("「끼야악!!!」")
+					CALL FACE_IMAGE_N("표정_10_일반_10")
+					PRINTFORMW 「아하하! %LOCALS:0%, 당첨이네~」
+					PRINTFORML
+					CALL ASK_MULTI("「뭔가 이상해, 바로 걸릴 리가 없잖아!」")
+					PRINTFORMW 머리를 다시 끼워넣고, 다른 곳에 꽂아봤다.
+					PRINTFORML
+					PRINTFORMW 역시나, 예상대로 어느 곳에 꽂든 머리가 튕겨져 나왔다.
+					PRINTFORML
+					PRINTFORMW
+					CALL FACE_IMAGE_N("표정_10_일반_11")
+					PRINTFORML 「앗, 들켜버렸다~」
+					PRINTFORMW 「좀 더 가지고 놀려고 했는데 말이야~♥」
+					PRINTFORML
+					PRINTFORMW 아무래도 무츠키에게 장난감은 나였던 것 같다.
+				CASE 1
+					PRINTFORMW 「짠~ 거짓말 탐지기입니다~!」
+					PRINTFORML
+					CALL FACE_IMAGE_N("표정_10_일반_9")
+					PRINTFORMW 「%LOCALS:0%, 손 줘 봐~ 끼워줄게♥」
+					PRINTFORML
+					CALL ASK_MULTI("「왜 당연하다는 듯이 내가 끼우는 거야.」")
+					CALL FACE_IMAGE_N("표정_10_일반_7")
+					PRINTFORMW 「그런 사소한 건 신경 쓰지 말고, 자~」
+					PRINTFORML
+					PRINTFORMW 무츠키는 내 손을 가져가서 장난감에 끼웠다.
+					CALL FACE_IMAGE_N("표정_10_일반_11")
+					PRINTFORMW 「그럼, 무슨 질문을 해볼까나~」
+					PRINTFORML 「%LOCALS:0%, 날 이렇게 신경써주는 거 보니까~」
+					PRINTFORMW 「나를 좋아하는 거지~?♥」
+					PRINTFORML
+					CALL ASK_MULTI("「무, 무슨 소리야. 그런거 아니야.」")
+					PRINTFORML
+					PRINTFORMW 두구두구두구두구...
+					PRINTFORML 
+					PRINTFORMW 지이이잉~
+					CALL FACE_IMAGE_N("표정_10_일반_7")
+					PRINTFORML 「흐응~? %LOCALS:0%, 그런 거였구나~」
+					PRINTFORMW 「후후~ 확실히 알았어♥」
+					PRINTFORML
+					PRINTFORMW 억까당했다.
+			ENDSELECT
+		;무츠키가 하고 싶은거
+		ELSEIF RESULT == 2
+			CALL FACE_IMAGE_N("표정_10_일반_3")
+			PRINTFORMW 「내가 하고 싶은거라...」
+			CALL FACE_IMAGE_N("표정_10_일반_11")
+			PRINTFORMW 「쿠후후~ 이건 어때?♥」
+			PRINTFORML
+			PRINTFORMW 무츠키의 손에는 어디서 나온지 모를 빼빼로가 들려 있었다.
+			CALL FACE_IMAGE_N("표정_10_일반_11")
+			PRINTFORMW 「후후, 어떤 게임인지는 알고 있지~?♥」
+			PRINTFORML
+			PRINTFORMW 무츠키는 빼빼로 하나를 꺼내 한 쪽 끝을 물었다.
+			CALL FACE_IMAGE_N("표정_10_일반_7")
+			PRINTFORMW 「자, %LOCALS:0%도 빨리~♥」
+			PRINTFORML
+			PRINTFORMW %조사처리(ANAME(MASTER),"은(는)")% 무츠키의 재촉에 응하여 다른 한 쪽 끝을 물었다.
+			PRINTFORML
+			PRINTFORML %조사처리(ANAME(MASTER),"이(가)")% 시작하기를 망설이고 있을 때 무츠키가 먼저 빼빼로를 과감히 씹어나갔고,
+			PRINTFORMW 이에 %조사처리(ANAME(MASTER),"도")% 할 수 없이 무츠키를 따라 빼빼로를 씹어나가기 시작한다.
+			PRINTFORML
+			PRINTFORMW 오독, 오독
+			PRINTFORML
+			PRINTFORML 두 사람이 빼빼로를 씹으며 전진할 때마다 서로의 얼굴이 가까워지고,
+			PRINTFORMW 그에 따라 서로의 숨소리와 심장이 뛰는 소리가 선명히 들려온다.
+			PRINTFORML
+			PRINTFORML 그렇게 어느 정도 거리가 있었던 두 사람의 얼굴은
+			PRINTFORMW 앞으로 조금만 전진하여도 부딪힐 정도로 가까워졌다.
+			PRINTFORML
+			PRINTFORMW 그리고 마침내 두 입술이 맞닿기 까지 앞으로 한 번 남았을 때
+			PRINTFORML
+			PRINTFORML 무츠키는 평소 소악마적인 성격과 맞지 않게 긴장한 듯 얼굴을 붉힌 채 눈을 천천히 감았다.
+			PRINTFORMW 그것은 마치 %조사처리(ANAME(MASTER),"에")% 의해 입술이 접촉하기를 원하는 것처럼 보였다.
+			PRINTFORML
+			CALL ASK_MULTI("「그, 그만!」")
+			CALL FACE_IMAGE_N("표정_10_일반_2")
+			PRINTFORML 「...응?」
+			PRINTFORMW 「...더 안 하는거야?」
+			CALL FACE_IMAGE_N("표정_10_일반_4")
+			PRINTFORML 「아아~ 아까워라...」
+			PRINTFORMW 「앞으로 조금이었는데 말이야...」
+			CALL FACE_IMAGE_N("표정_10_일반_7")
+			PRINTFORMW 「뭐, 이번엔 이 정도로 만족해줄게~」
+			PRINTFORMW 「다음번을 노리면 되니까♥ 후후~♥」
+		ENDIF
+		PRINTFORML
+		SELECTCASE RAND:100
+			CASE IS < 15
+				PRINTFORML 무츠키가 많이 재미있어 한 것 같다. (심심함 -20, 호감도 +15)
+				DVAR:무츠키_심심함_수치 -= 20
+				CFLAG:대상:호감도 += 15
+				PRINTFORMW 무츠키가 심심한 정도 : {DVAR:무츠키_심심함_수치} / 100
+			CASE IS < 85
+				PRINTFORML 무츠키는 재밌었던 것 같다. (심심함 -10, 호감도 +10)
+				DVAR:무츠키_심심함_수치 -= 10
+				CFLAG:대상:호감도 += 10
+				PRINTFORMW 무츠키가 심심한 정도 : {DVAR:무츠키_심심함_수치} / 100
+			CASE IS < 100
+				PRINTFORML ... 무츠키는 별로 재미가 없었던 것 같다. (심심함 -0, 호감도 +5)
+				CFLAG:대상:호감도 += 5
+				PRINTFORMW 무츠키가 심심한 정도 : {DVAR:무츠키_심심함_수치} / 100
+		ENDSELECT
+	;데이트
+	ELSEIF RESULT == 1
+		CALL FACE_IMAGE_N("표정_10_일반_10")
+		PRINTFORML 「응, 좋아~!」
+		PRINTFORMW 「그럼 어디로 갈까?」
+		CALL ASK_MULTI("카페", "공원")
+		IF RESULT == 0
+			CALL FACE_IMAGE_N("표정_10_일반_2")
+			PRINTFORMW 「에?」
+			PRINTFORML
+			CALL ASK_MULTI("「무슨 문제 있어?」")
+			CALL FACE_IMAGE_N("표정_10_일반_9")
+			PRINTFORMW 「아니야, 빨리 가자~!」
+			PRINTFORML
+			PRINTFORMW 카페에 들어갔다. . .
+			PRINTFORML
+			PRINTFORMW 종업원「주문 도와드리겠습니다.」
+			PRINTFORML
+			CALL ASK_MULTI("「무츠키, 뭐 먹을래?」")
+			CALL FACE_IMAGE_N("표정_10_일반_2")
+			PRINTFORML 「으, 응? 난 아메리카노면 돼~」
+			PRINTFORMW 「오늘 입맛이 조금 없어서...」
+			PRINTFORML
+			CALL ASK_MULTI("「흠... 그렇구나.」")
+			PRINTFORML
+			PRINTFORMW %조사처리(ANAME(MASTER),"은(는)")% 무언가 골똘히 생각하고 있다.
+			PRINTFORML 
+			CALL ASK_MULTI("「주문할게요.」")
+			PRINTFORML
+			PRINTFORMW . . .
+			PRINTFORML
+			CALL FACE_IMAGE_N("표정_10_일반_9")
+			PRINTFORMW 「%LOCALS:0%은 뭐 시켰어?~」
+			PRINTFORML
+			CALL ASK_MULTI("「아이스 카페모카. 내가 좋아하는 커피야.」")
+			CALL FACE_IMAGE_N("표정_10_일반_9")
+			PRINTFORML 「흐응~ 그렇구나~」
+			PRINTFORMW 「뭔지는 모르겠지만 %LOCALS:0%이 좋아한다니까 마셔보고 싶네~」
+			PRINTFORML
+			PRINTFORMW . . .
+			PRINTFORML
+			PRINTFORMW 종업원「주문하신 아이스 카페모카와 초콜릿 크림 칩 프라푸치노 나왔습니다.」
+			CALL FACE_IMAGE_N("표정_10_일반_2")
+			PRINTFORML 「...응? 잘못 나온 것 같은데요?」
+			PRINTFORMW
+			CALL ASK_MULTI("「잘못 나온 거 아니야.」")
+			PRINTFORML
+			CALL ASK_MULTI("「이건 내 카페모카고. 자, 여기 네 꺼.」")
+			CALL FACE_IMAGE_N("표정_10_일반_2")
+			PRINTFORML 「...에?」
+			PRINTFORMW 「난 분명 아메리카노 시켰는데..?」
+			PRINTFORMW 「그보다 이거, 엄청 비싼거잖아...」
+			PRINTFORML
+			CALL ASK_MULTI("「괜찮아, 내가 사는 거니까.」")
+			CALL FACE_IMAGE_N("표정_10_일반_2")
+			PRINTFORMW 「...」
+			CALL FACE_IMAGE_N("표정_10_일반_7")
+			PRINTFORMW 「응, 고마워...」
+			PRINTFORML
+			CALL ASK_MULTI("「빨리 마셔 봐. 뭘 좋아할지 몰라서 일단 가장 비싼걸로 시켰는데.」")
+			CALL FACE_IMAGE_N("표정_10_일반_7")
+			PRINTFORMW 「알았어.」
+			CALL FACE_IMAGE_N("표정_10_일반_99")
+			PRINTFORMW 「음음...」
+			PRINTFORMW 「...」
+			PRINTFORML
+			CALL ASK_MULTI("「...어때? 입맛에 맞아?」")
+			CALL FACE_IMAGE_N("표정_10_일반_10")
+			PRINTFORML 「응! 달달하고 입맛에 딱 맞아!」
+			PRINTFORMW 「내가 마셔본 음료 중에 가장 맛있어!~」
+			PRINTFORML
+			CALL ASK_MULTI("「와, 맛있다니 다행이네.」")
+			CALL FACE_IMAGE_N("표정_10_일반_7")
+			PRINTFORML 「후후~♥ %LOCALS:0%, 정말 상냥하구나.」
+			PRINTFORMW 「매일 %LOCALS:0%이랑 이렇게 데이트 하고 싶다~♥」
+			PRINTFORML
+			CALL ASK_MULTI("「다음에 또 오자.」")
+			CALL FACE_IMAGE_N("표정_10_일반_9")
+			PRINTFORMW 「정말?! 응, 좋아~!」
+		ELSEIF RESULT == 1
+			CALL FACE_IMAGE_N("표정_10_일반_10")
+			PRINTFORMW 「응 좋아, 그럼 바로 나가자~!」
+			PRINTFORML
+			PRINTFORMW 무츠키와 공원을 돌아다니며 데이트 했다.
+		ENDIF
+		SELECTCASE RAND:100
+			CASE IS < 15
+				PRINTFORML
+				PRINTFORML 무츠키가 많이 재미있어 한 것 같다. (심심함 -20, 호감도 +15)
+				DVAR:무츠키_심심함_수치 -= 20
+				CFLAG:대상:호감도 += 15
+				PRINTFORMW 무츠키가 심심한 정도 : {DVAR:무츠키_심심함_수치} / 100
+			CASE IS < 100
+				PRINTFORML
+				PRINTFORML 무츠키는 재밌었던 것 같다. (심심함 -10, 호감도 +10)
+				DVAR:무츠키_심심함_수치 -= 10
+				CFLAG:대상:호감도 += 10
+				PRINTFORMW 무츠키가 심심한 정도 : {DVAR:무츠키_심심함_수치} / 100
+		ENDSELECT
+	;야한거
+	ELSEIF RESULT == 2
+		PRINTFORMW 무츠키와 야한걸 하기로 했다.
+		IF TALENT:대상:연모
+			CALL FACE_IMAGE_N("표정_10_일반_7")
+			PRINTFORMW 「흐응~? %LOCALS:0%, 사실은 그냥 나랑 하고 싶은거지?」
+			PRINTFORMW 「쿠후후~ 좋아, 마침 심심하기도 했고~♥」
+			PRINTFORML
+			PRINTFORMW 이후 메챠쿠챠했다.
+			SELECTCASE RAND:100
+				CASE IS < 15
+					PRINTFORML 무츠키가 많이 재미있어 한 것 같다. (심심함 -20, 호감도 +15)
+					DVAR:무츠키_심심함_수치 -= 20
+					CFLAG:대상:호감도 += 15
+					PRINTFORMW 무츠키가 심심한 정도 : {DVAR:무츠키_심심함_수치} / 100
+				CASE IS < 85
+					PRINTFORML 무츠키는 재밌었던 것 같다. (심심함 -10, 호감도 +10)
+					DVAR:무츠키_심심함_수치 -= 10
+					CFLAG:대상:호감도 += 10
+					PRINTFORMW 무츠키가 심심한 정도 : {DVAR:무츠키_심심함_수치} / 100
+				CASE IS < 100
+					PRINTFORML ... 무츠키는 별로 재미가 없었던 것 같다. (심심함 -0, 호감도 +5)
+					CFLAG:대상:호감도 += 5
+					PRINTFORMW 무츠키가 심심한 정도 : {DVAR:무츠키_심심함_수치} / 100
+			ENDSELECT
+		ELSE
+			CALL FACE_IMAGE_N("표정_10_일반_2")
+			PRINTFORMW 「...응?」
+			PRINTFORMW 「그건 조금 이르지 않아?」
+			GOTO INPUT_LOOP1
+		ENDIF
+	;그만둔다
+	ELSEIF RESULT == 3
+		CALL ASK_MULTI("오늘은 그만 둔다", "이제 더 이상 돕지 않는다.", "다시 생각해본다.")
+		IF RESULT == 0
+			PRINTFORMW 오늘은 그냥 돌아가기로 했다.
+			CALL FACE_IMAGE_N("표정_10_일반_4")
+			PRINTFORML 「응? 그냥 간다고?」
+			PRINTFORMW 「어째서? 심심해, 놀아줘~」
+			PRINTFORML
+			CALL ASK_MULTI("「다음에 놀아줄게.」")
+			CALL FACE_IMAGE_N("표정_10_일반_5")
+			PRINTFORMW 「우으... 알겠어.」
+			CALL FACE_IMAGE_N("표정_10_일반_4")
+			PRINTFORMW 「대신 다음에 꼭 놀아줘야 해?」
+		ELSEIF RESULT == 1
+			PRINTFORMW 더 이상 무츠키를 놀아주지 않겠습니까?
+			CALL ASK_YN("네", "아니오")
+			IF RESULT == 0
+				DVAR:무츠키_심심함_진행도 == -1
+			ELSEIF RESULT == 1
+				GOTO INPUT_LOOP1
+			ENDIF
+		ELSEIF RESULT == 2
+			GOTO INPUT_LOOP1
+		ENDIF
+	ENDIF
+ENDIF
+
+
+
+
+
+
+
+
+[SKIPSTART]
+
+PRINTFORML 심야. 순찰을 위해 복도를 걷고 있자, %조사처리(ANAME(대상),"가")% 자기의 방에서 손짓하고 있는 것을 발견했다
+PRINTFORML 도대체 무슨 일 때문일까……
+PRINTFORML
+CALL ASK_YN("다가간다", "무시한다")
+IF RESULT == 1
+	PRINTFORMW 상관 없으려나, 지금 바쁘고……
+	PRINTFORMW %ANAME(대상)%에게는 미안하지만, 무시하고 순찰을 계속하기로 했다
+	RETURN 1
+ELSE
+	IF KDVAR:대상:레이무_호색가무녀 == 0
+		PRINTFORMW 「%LOCALS:0%. 실은 조금, 부탁이 있어」
+		PRINTFORMW 그 %조사처리(ANAME(대상),"가")%, 평생 안 할 것 같던 「부탁」이 있다니. 도대체 무슨 일이길래 그러는 걸까.
+		PRINTFORML 그러고 보니, %조사처리(ANAME(대상),"는")% 뭔가 정상적인 컨디션이 아닌 것 같다. 얼굴이 붉고, 호흡도 흐트러지고 있다.
+		PRINTFORMW 감기라도 걸리고 있는 게 아닌 지, 따뜻하게 하고서 자는 것이 좋다고 말하자, %조사처리(ANAME(대상),"는")% 목을 가로로 저었다.
+		;일찍이 조교된 패턴
+		IF IS_FALLEN_TO_SP_COUNTRY(대상) && !IS_SP_COUNTRY(CFLAG:대상:소속)
+			PRINTFORMW 「참지 않으면, 하고 생각하지만…… 그치만, 어쩔 수가 없는 거야」
+			PRINTFORMW 「밤이 되면, "그 사람들"에게 당했던 게 생각나서, 그래서, 몸이 쑤셔」
+			PRINTFORML "그 사람들". 일찍이 %조사처리(ANAME(대상),"를")% 포로로 잡고서, 능욕한 그 무리들일 것이다.
+			PRINTFORMW 그 녀석들을 생각하면, 내장이 끓는 것만 같다……
+			PRINTFORMW 「안 된다는 건 알고 있지만, 그치만 어쩔 수 없는거야」
+			PRINTFORMW 「하고 싶어서, 견딜 수 없어서, 혼자서 위로하고, 위로해도, 전혀 충분하지가 않아」
+			PRINTFORMW 「따로 부탁해볼 사람도 없고, 무엇보다도 %LOCALS:0% 이외는 나 자신이 싫어」
+			PRINTFORMW 「그러니까, 말이야?  부탁해, 터무니없을 정도로 해도 괜찮으니까, 어떻게든 해줘……」
+		;단순하게 호색가
+		ELSEIF ABL:대상:욕망 >= 5
+			PRINTFORMW 「누구 탓으로 이렇게 되었다고 생각하는 거야」
+			PRINTFORMW 「나, 자꾸자꾸 추잡해지고 있어…… 만져지지 않으면, 이상해져 버릴 것 같아」
+			PRINTFORMW 「기분 좋아지고 싶은 거, 억제 할 수가 없어서, 스스로 위로하고 위로했는데도, 그런데도 너무나도 부족해서」
+			PRINTFORMW 「이젠, 머리 속이 질척질척해…… 이렇게 만들어버린거, %조사처리(LOCALS:0,"겠")%지, 책임져……!」
+		;강신의 영향
+		ELSE
+			PRINTFORMW 「낮에, 오랜만에 강신을 좀 했어. 수행하라고 유카리가 시끄럽게 굴어서」
+			PRINTFORML 「근데 말이야, 그, 무녀는, 내림 받은 신에게 영향을 받거든. 어떤 영향인가는, 신의 성질에 따라 다르지만」
+			PRINTFORMW 「그런데, 신님들은 보통  다산이잖아?  즉, 호색가야. 이번에 그 영향을, 그대로 받아 버린 것 같아서…… 그」
+			PRINTFORMW 호색가인 신의 영향을 받았다…… 와 %ANAME(대상)%의 숨이 거친 것을 합치자, 말하고자 하는 게 뭔지 어쩐지 알 수 있었다.
+			PRINTFORMW 결론적으론, 강신의 영향으로, 흥분해버렸다…… 라는 것일거다.
+			PRINTFORMW 「점심부터, 쭉 혼자서 해결해보려고 했는데도, 부족해, 아니 그보다는 자꾸자꾸 심해져서, 이상해질 것 같아」
+			PRINTFORMW 「다른 사람들에게는 부탁할 수 없고, %조사처리(LOCALS:0,"가")% 도와준다면, 어떻게든 될 것 같으니까, 그러니까 그…… 부탁해」
+		ENDIF
+		PRINTFORMW 그렇게 말하면서 껴안아 오는 %ANAME(대상)%의 몸은 뜨겁게 달아오른 채 당신을 받아드릴 준비를 완전히 마치고 있는 것 같았다.
+		PRINTFORML ……이미 밤도 늦고, 내일도 바쁠 것이다. 빨리 자야 하겠지만……
+	ELSEIF KDVAR:대상:레이무_호색가무녀 == 1
+		PRINTFORML 방에 들어갔다. %ANAME(대상)%의 얼굴은 뜨거운 채 상기되고 있었다. 호흡도 거친 것 같다.
+		PRINTFORMW 이전처럼, 여러 이유로 억제할 수 없게 된 것일거다……
+		PRINTFORMW 「미안해……참지 않으면, 그 정도는 알고는 있지만」
+		PRINTFORML 「그렇지만 더 이상 참는 거, 무리. ……안아줘?」
+	ELSE
+		PRINTFORML 방에 들어갔다. %ANAME(대상)%의 얼굴은 뜨거운 채 상기되고 있었다. 호흡도 거친 것 같다.
+		PRINTFORMW 이전처럼, 여러 이유로 억제할 수 없게 된 것일거다……
+		PRINTFORMW 「이번에는, 혼자 하고 싶지 않으니까……」
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 그렇게 말하면서, 이쪽을 껴안았다.
+		PRINTFORML 그런 것 치곤 이미 많이 가 버린 것 같지만……
+	ENDIF
+	PRINTFORML
+	CALL ASK_YN("껴안는다", "바빠서……")
+	IF RESULT == 1
+		PRINTFORMW 「%조사처리(LOCALS:0,"는")% 심술쟁이……!」
+		PRINTFORMW 원망의 말을 등에 받으면서, 방을 뒤로 했다……
+		CFLAG:대상:호감도 = MAX(CFLAG:대상:호감도 - 500, 0)
+		CFLAG:대상:종속도 = MAX(CFLAG:대상:종속도 - 500, 0)
+		KDVAR:대상:레이무_호색가무녀 = 2
+	ELSE
+		PRINTFORMW 이렇게 요구해주는데 무시하는 것은 용기를 낸 그녀에게도 미안한 일이다. 피부를 쓰다듬으면서 %ANAME(대상)%의 몸을 껴안은 채, 상냥하게 쓰러트렸다……
+		CFLAG:대상:호감도 += 300
+		;전원의 조교참가플래그를 클리어
+		CVARSET CFLAG, 6, 0
+		CFLAG:대상:조교참가플래그 = 1
+		CFLAG:대상:조교중돌아가지않는다 = 1
+		CFLAG:대상:강제우호화 = 1
+		BASE:대상:체력 = MAXBASE:대상:체력
+		BASE:대상:기력 = MAXBASE:대상:기력
+		;강제 역조교플래그를 온
+		FLAG:턴엔드조교 = 1
+		;그 이후의 데일리 이벤트 발생을 잡는다
+		DAILY_CANCEL = 1
+		;플래그
+		KDVAR:대상:레이무_호색가무녀 = 1
+	ENDIF
+ENDIF
+[SKIPEND]
+
+RETURN 1

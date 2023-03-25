@@ -8,6 +8,8 @@ RETURN (DVAR:야쿠자_연결 > 0 ? 200 # 30)
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_YAKUZA_DECISION()
+SIF 데일리_장르세부_NTR == 0
+	RETURN 0
 SIF DAY < 10
 	RETURN 0
 

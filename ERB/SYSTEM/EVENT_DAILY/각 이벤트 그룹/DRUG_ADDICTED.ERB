@@ -27,6 +27,8 @@ RETURN 데일리_장르_에로
 ;대상이 존재하지 않고 데일리를 개시 할 수 없는 경우는 0을 돌려주는 것으로 데일리의 발생을 캔슬한다
 ;---------------------
 @EVENT_DAILY_DRUG_ADDICT_SETTARGET()
+SIF 데일리_장르세부_NTR == 0
+	RETURN 0
 FOR LOCAL, 0, CHARANUM
 	IF !CFLAG:LOCAL:포로처 && CFLAG:LOCAL:특수상태 != 특수상태_사망 && IS_FEMALE(LOCAL)
 		;CFLAG:약물의존에 응해 판정（최대 30）. TALENT 약물의존 소유라면 50%까지 증가.

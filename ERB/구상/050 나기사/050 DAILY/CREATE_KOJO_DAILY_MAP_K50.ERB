@@ -1,0 +1,18 @@
+﻿;-------------------------------------------------
+;desc  :구상 데일리를 등록한다. REGISGER_KOJO_DAILY를 호출한다
+;param :대상:대상의 캐릭터 번호
+;-------------------------------------------------
+@CREATE_KOJO_DAILY_MAP_K50(대상)
+#DIM 대상
+CALL REGISTER_KOJO_DAILY(대상, 데일리_통상, "SECRETTEEPARTY", "은밀한티파티")
+
+
+;단발성 이벤트 함수
+;SIF KDVAR:대상:사쿠야_주의주인은
+;	RETURN 0
+
+;CALL ASK_YN("제정신인가?", "그렇게 시켜 받자")
+;두가지 선택지
+;IF RESULT == 0
+;ELSE
+;ENDIF

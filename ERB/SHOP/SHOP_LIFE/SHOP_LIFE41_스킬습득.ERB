@@ -1,0 +1,461 @@
+﻿;-------------------------------------------------
+;「스킬습득」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE_NAME41
+RESULTS:0 '= "스킬습득"
+
+;-------------------------------------------------
+;「스킬습득」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE_CHECK41
+SIF FLAG:클리어플래그
+	RETURN 0
+SIF CFLAG:MASTER:포로처
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「스킬습득」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA41(ARG:0)
+;포로가 아닌, 동일 세력, 통상 상태 또는 육아중
+RETURN CFLAG:MASTER:소속 && CFLAG:MASTER:소속 == CFLAG:(ARG:0):소속 && !CFLAG:(ARG:0):포로처
+
+;-------------------------------------------------
+;「스킬습득의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY41
+FLAG:거점페이즈페이지 = 1
+FLAG:요바이 = 0
+RETURN 0
+
+;-------------------------------------------------
+;「스킬습득」의 오른쪽 컬럼 표시 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SHOW41
+CALL COLUMN_RIGHT_TITLE("습득자 선택", "0", "1", "", @"%NUM_FORMAT(SKILL_LEARN_PRICE:1)%~")
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+;표준적인 캐릭터 리스트와 페이지 이동
+CALL COLUMN_RIGHT_CHARALIST
+RETURN 0
+
+;-------------------------------------------------
+;「스킬습득」의 리스트 1 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP41(대상, 편집모드= 0)
+#DIM 대상
+#DIM FIRST_LINE
+#DIM 장르
+#DIM 편집모드
+
+;당신을 선택하면 여기서 연주해져?
+IF !편집모드
+	TRYCALLFORM SHOP_LIFE_CHECKCHARA{FLAG:거점페이즈선택커맨드}(대상)
+	SIF !RESULT
+		RETURN 0
+ENDIF
+
+
+REDRAW 0
+FIRST_LINE = LINECOUNT
+
+CALL SHOP_LIFE_SKILL_CREATE_LIST(대상, 편집모드)
+
+FOR LOCAL, 0, VARSIZE("SHOP_SKILL_PAGE")
+	SHOP_SKILL_PAGE:LOCAL = 1
+NEXT
+
+$SHOW_LOOP
+
+CALL SINGLE_DRAWLINE
+
+IF !편집모드
+	CALL ICPRINT(@"금을 소비해,<%ANAME(대상)%>에 스킬을 습득·망각시킵니다%TOSTR_SPACE(10)%소지금:%NUM_FORMAT(MONEY)%", "", 칼라_주의)
+ELSE
+	CALL ICPRINT(@"<%ANAME(대상)%>에 스킬을 습득·망각시킵니다", "", 칼라_주의)
+ENDIF
+
+PRINTL
+CALL SINGLE_DRAWLINE
+CALL SHOP_LIFE_SKILL_PRINT_TABS(장르)
+
+IF 장르 == SKILL_GENRE_NUM
+	CALL SHOP_LIFE_SKILL_PRINT_FORGET_LIST(대상, 편집모드)
+ELSE
+	CALL SHOP_LIFE_SKILL_PRINT_LEARN_LIST(장르,대상, 편집모드)
+ENDIF
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "[돌아온다]", 99999
+
+INPUT 99999
+
+
+SELECTCASE RESULT
+	CASE 0 TO 3000
+		IF 장르 != SKILL_GENRE_NUM
+			CALL SHOP_LEARN_SKILL(대상, 장르, RESULT, 편집모드)
+		ELSE
+			CALL SHOP_FORGET_SKILL(대상, RESULT, 편집모드)
+		ENDIF
+		LOCAL = RESULT
+		CALL SHOP_LIFE_SKILL_CREATE_LIST(대상, 편집모드)
+		IF LOCAL == 1 && !편집모드
+			CLEARLINE LINECOUNT - FIRST_LINE
+			GOTO SHOW_LOOP			
+		ENDIF
+CASE 4000 TO (4000 + SKILL_GENRE_NUM)
+		장르 = RESULT - 4000
+	;탭 변환 처리
+	CASE 5000
+		SHOP_SKILL_PAGE:장르 --
+	CASE 5001
+		SHOP_SKILL_PAGE:장르 ++
+	;돌아온다
+	CASE 99999
+		RETURN 0
+ENDSELECT
+CLEARLINE LINECOUNT - FIRST_LINE
+GOTO SHOW_LOOP
+
+;----------------------------
+;스킬습득을 코코로 본다
+;----------------------------
+@SHOP_LEARN_SKILL(대상, 장르, 번호, 편집모드 = 0)
+#DIM 대상
+#DIM 교사
+#DIM 번호
+#DIM 장르
+#DIM 스킬
+#DIM 스킬위치
+#DIM 레벨
+#DIMS 스킬명
+#DIM 편집모드
+
+CALLFORM SKILL_{SHOP_SKILL_NO_LIST:장르:번호}_%SKILL_GENRE_ENG:장르%_{SHOP_SKILL_ID_LIST:장르:번호}_LEVEL
+레벨 = RESULT
+
+;자금부족이라면 안 돼
+IF SKILL_LEARN_PRICE:레벨 > MONEY && !편집모드
+	PRINTFORMW (자금부족입니다)
+	RETURN
+ENDIF
+
+CALL SKILL_LEARN(대상, 장르, SHOP_SKILL_NO_LIST:장르:번호, SHOP_SKILL_ID_LIST:장르:번호)
+
+;가득하면 안 돼
+IF RESULT == 0
+	PRINTFORML (이 장르의 스킬은 이미 기억하고 자르고 있습니다)
+	PRINTFORMW (새로운 것을 기억하려면, 뭔가를 잊을 필요가 있습니다)
+	RETURN 
+ENDIF
+
+CALLFORM SKILL_{SHOP_SKILL_NO_LIST:장르:번호}_%SKILL_GENRE_ENG:장르%_{SHOP_SKILL_ID_LIST:장르:번호}_NAME
+스킬명 = %RESULTS%
+
+SIF 편집모드
+	RETURN 1
+
+교사 = NO_TO_CHARA(SHOP_SKILL_NO_LIST:장르:번호)
+
+IF 교사 == -1 || 교사 == 대상 || 교사 == NAME_TO_CHARA("당신")
+	CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"는")% 『%스킬명%』를 습득했다!", 칼라_주의)
+ELSE
+	CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"는")% %ANAME(교사)%로부터 『%스킬명%』를 습득했다!", 칼라_주의)
+ENDIF
+
+MONEY -= SKILL_LEARN_PRICE:레벨
+
+RETURN 1
+
+;----------------------------
+;스킬 망각을 코코로 본다
+;----------------------------
+@SHOP_FORGET_SKILL(대상, 번호, 편집모드)
+#DIM 대상
+#DIM 번호
+#DIM 장르
+#DIM 스킬
+#DIM 스킬위치
+#DIM 레벨
+#DIM 편집모드
+#DIMS 스킬명
+
+장르 = 번호 / MAX_SKILL_SLOT
+스킬 = 번호 % MAX_SKILL_SLOT
+
+;자금부족이라면 안 돼
+IF SKILL_FORGET_PRICE > MONEY && !편집모드
+	PRINTFORMW (자금부족입니다)
+	RETURN
+ENDIF
+
+;해당 스킬의 습득 판정
+IF SKILL_NO_SLOT:대상:장르:스킬 < 0 || SKILL_ID_SLOT:대상:장르:스킬 < 0
+	PRINTFORML (그 스킬은 기억하고 있지 않습니다)
+	RETURN
+ENDIF
+
+CALLFORM SKILL_{SKILL_NO_SLOT:대상:장르:스킬}_%SKILL_GENRE_ENG:장르%_{SKILL_ID_SLOT:대상:장르:스킬}_NAME
+스킬명 = %RESULTS%
+
+
+
+SKILL_NO_SLOT:대상:장르:스킬 = -1
+SKILL_ID_SLOT:대상:장르:스킬 = -1
+
+SIF 편집모드
+	RETURN 1
+
+CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"는")% 『%스킬명%』를 잊었다!", 칼라_주의)
+
+MONEY -= SKILL_FORGET_PRICE
+
+CFLAG:대상:행동완료 = 1
+
+RETURN 1
+
+;----------------------------
+;스킬 탭 묘화
+;----------------------------
+@SHOP_LIFE_SKILL_PRINT_TABS(장르)
+#DIM 장르
+FOR LOCAL, 0, SKILL_GENRE_NUM
+	IF 장르 == LOCAL
+		SETCOLOR 칼라_선택중
+	ENDIF
+	PRINTBUTTON @"[%SKILL_GENRE:LOCAL%]", 4000 + LOCAL
+	PRINT  
+	RESETCOLOR
+NEXT
+IF 장르 == LOCAL
+	SETCOLOR 칼라_선택중
+ENDIF
+PRINTBUTTON @"[잊는다]", 4000 + LOCAL
+RESETCOLOR
+PRINTL
+
+;----------------------------
+;습득 가능 스킬 묘화
+;----------------------------
+@SHOP_LIFE_SKILL_PRINT_LEARN_LIST(장르, 대상, 편집모드)
+#DIM 대상
+#DIM 장르
+#DIM 스킬
+#DIM 최대페이지
+#DIM CONST 항목수 = 10
+#DIM 빈슬롯
+#DIM 편집모드
+#DIM 레벨
+#DIM 묘화행
+
+최대페이지 = MAX(SHOP_SKILL_NUM:장르 - 1, 0) / 항목수 + 1
+
+IF SHOP_SKILL_PAGE:장르 <= 0
+	SHOP_SKILL_PAGE:장르 = 최대페이지
+ELSEIF SHOP_SKILL_PAGE:장르 > 최대페이지
+	SHOP_SKILL_PAGE:장르 = 1
+ENDIF
+
+빈슬롯 = GET_EMPTY_SKILL_SLOT(대상, 장르)
+
+CALL SINGLE_DRAWLINE
+PRINTFORM -스킬의 습득-
+IF 빈슬롯 == -1
+	CALL COLOR_PRINTL(@"  이 장르의 스킬 슬롯이 가득입니다", 칼라_주의)
+ELSE
+	PRINTL
+ENDIF
+CALL SINGLE_DRAWLINE
+
+묘화행 = 0
+FOR 스킬, (SHOP_SKILL_PAGE:장르 - 1) * 항목수, MIN(SHOP_SKILL_PAGE:장르 * 항목수, SHOP_SKILL_NUM:장르)
+
+	CALLFORM SKILL_{SHOP_SKILL_NO_LIST:장르:스킬}_%SKILL_GENRE_ENG:장르%_{SHOP_SKILL_ID_LIST:장르:스킬}_LEVEL
+	레벨 = RESULT
+
+	CALL COLOR_LINE
+	;습득 버튼은 제일왼쪽
+	IF (SKILL_LEARN_PRICE:레벨 > MONEY && !편집모드) || 빈슬롯 == -1
+		SETCOLOR 칼라_선택불가
+		PRINTPLAIN [습득]
+		RESETCOLOR
+	ELSE
+		PRINTBUTTON "[습득]", 스킬
+	ENDIF
+	;항목 묘화
+	SIF !편집모드
+		PRINTFORM  가격:%NUM_FORMAT(SKILL_LEARN_PRICE:레벨), 7, RIGHT% 
+	CALL SKILL_EXPLANATION(장르, SHOP_SKILL_NO_LIST:장르:스킬, SHOP_SKILL_ID_LIST:장르:스킬, 19)
+	묘화행 ++
+NEXT
+
+IF 항목수 - 묘화행 > 0
+	FOR LOCAL, 묘화행, 항목수
+		PRINTL
+		PRINTL
+		SIF LOCAL != 항목수 - 1
+			PRINTL
+	NEXT
+ENDIF
+
+CALL SINGLE_DRAWLINE
+PRINTFORML {SHOP_SKILL_PAGE:장르} / {최대페이지}
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "[이전페이지]", 5000
+PRINTBUTTON "[다음페이지]", 5001
+PRINTL
+
+
+;----------------------------
+;망각 스킬 묘화
+;----------------------------
+@SHOP_LIFE_SKILL_PRINT_FORGET_LIST(대상, 편집모드)
+#DIM 대상
+#DIM 장르
+#DIM 장르수
+#DIM 스킬수
+#DIM 스킬
+#DIM 최대페이지
+#DIM CONST 항목수 = 10
+#DIMS 악세사
+#DIMS 캐릭터명
+#DIMS 스킬명
+#DIM 레벨
+#DIM 편집모드
+#DIMS 설명
+#DIM 묘화행
+#DIM 오프셋
+
+장르수 = SKILL_GENRE_NUM
+
+;페이지수 내는 용
+스킬수 = 0
+FOR 장르, 0, 장르수
+	FOR 스킬, 0, MAX_SKILL_SLOT
+		SIF SKILL_NO_SLOT:대상:장르:스킬 >= 0 && SKILL_ID_SLOT:대상:장르:스킬 >= 0
+			스킬수 ++
+	NEXT
+NEXT
+
+최대페이지 = MAX(스킬수 - 1, 0) / 항목수 + 1
+
+IF SHOP_SKILL_PAGE:장르수 <= 0
+	SHOP_SKILL_PAGE:장르수 = 최대페이지
+ELSEIF SHOP_SKILL_PAGE:장르수 > 최대페이지
+	SHOP_SKILL_PAGE:장르수 = 1
+ENDIF
+
+CALL SINGLE_DRAWLINE
+PRINTFORML -스킬의 망각-
+CALL SINGLE_DRAWLINE
+
+
+오프셋 = 0
+묘화행 = 0
+FOR 장르, 0, SKILL_GENRE_NUM
+	FOR 스킬, 0, MAX_SKILL_SLOT
+		IF 오프셋 < (SHOP_SKILL_PAGE:장르수 - 1) * 항목수
+			오프셋 ++
+			CONTINUE
+		ELSEIF 오프셋 >= MIN(SHOP_SKILL_PAGE:장르수 * 항목수, 스킬수)
+			BREAK
+		ENDIF
+		;존재 판정
+		TRYCCALLFORM SKILL_{SKILL_NO_SLOT:대상:장르:스킬}_%SKILL_GENRE_ENG:장르%_{SKILL_ID_SLOT:대상:장르:스킬}_EXIST
+		CATCH
+			CONTINUE
+		ENDCATCH
+
+		CALL COLOR_LINE
+
+		;습득 버튼은 제일왼쪽
+		IF SKILL_FORGET_PRICE > MONEY && !편집모드
+			SETCOLOR 칼라_선택불가
+			PRINTPLAIN [망각]
+			RESETCOLOR
+		ELSE
+			PRINTBUTTON "[망각]", 장르 * MAX_SKILL_SLOT + 스킬
+		ENDIF
+		;항목 묘화
+		SIF !편집모드
+			PRINTFORM  가격:%NUM_FORMAT(SKILL_FORGET_PRICE), 7, RIGHT% 
+		CALL SKILL_EXPLANATION(장르, SKILL_NO_SLOT:대상:장르:스킬, SKILL_ID_SLOT:대상:장르:스킬, 19)
+		묘화행 ++
+		오프셋 ++
+	NEXT
+NEXT
+
+IF 항목수 - 묘화행 > 0
+	FOR LOCAL, 묘화행, 항목수
+		PRINTL
+		PRINTL
+		SIF LOCAL != 항목수 - 1
+			PRINTL
+	NEXT
+ENDIF
+
+CALL SINGLE_DRAWLINE
+PRINTFORML {SHOP_SKILL_PAGE:장르수} / {최대페이지}
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "[이전페이지]", 5000
+PRINTBUTTON "[다음페이지]", 5001
+PRINTL
+
+
+;----------------------------
+;있는 캐릭터가 습득할 수 있는 스킬 리스트 생성
+;----------------------------
+@SHOP_LIFE_SKILL_CREATE_LIST(대상, 편집모드)
+#DIM 캐릭터
+#DIM 장르
+#DIM 스킬ID
+#DIM 대상
+#DIM 대상스킬
+#DIM 편집모드
+
+VARSET SHOP_SKILL_NO_LIST
+VARSET SHOP_SKILL_ID_LIST
+VARSET SHOP_SKILL_NUM
+
+FOR 캐릭터, 0, CHARANUM
+	;0차례는 범용인 것으로 스킵  본인도 스킵
+	IF !(NO:캐릭터 == 0 || 캐릭터 == 대상)
+		SIF (CFLAG:캐릭터:소속 != CFLAG:MASTER:소속 || CFLAG:캐릭터:특수상태 == 특수상태_방랑) && !편집모드
+			CONTINUE
+		SIF CFLAG:캐릭터:포로처 && !편집모드
+			CONTINUE
+		SIF !IS_FIXED_CHARA(캐릭터)
+			CONTINUE
+	ENDIF
+	FOR 장르, 0, SKILL_GENRE_NUM
+		FOR 스킬ID, 0, MAX_SKILLS
+			TRYCCALLFORM SKILL_{NO:캐릭터}_%SKILL_GENRE_ENG:장르%_{스킬ID}_EXIST
+				;가르칠 수 없다
+				TRYCCALLFORM SKILL_{NO:캐릭터}_%SKILL_GENRE_ENG:장르%_{스킬ID}_CANT_TELL
+					SIF NO:캐릭터 != NO:대상 && !편집모드
+						GOTO CANCEL
+				CATCH
+				ENDCATCH
+				;소지하고 있으면 안 돼
+				SIF CHECK_SKILL_DUPLICATE(대상, 장르, NO:캐릭터, 스킬ID)
+					GOTO CANCEL
+				;숍 경유로 안된 스킬을 연주한다
+				TRYCCALLFORM SKILL_{NO:캐릭터}_%SKILL_GENRE_ENG:장르%_{스킬ID}_CANT_LEARN_FROM_SHOP
+					SIF !편집모드
+						GOTO CANCEL
+				CATCH
+					SHOP_SKILL_NO_LIST:장르:(SHOP_SKILL_NUM:장르) = NO:캐릭터
+					SHOP_SKILL_ID_LIST:장르:(SHOP_SKILL_NUM:장르) = 스킬ID
+					SHOP_SKILL_NUM:장르 ++
+				ENDCATCH
+			CATCH
+				$CANCEL
+			ENDCATCH
+		NEXT
+	NEXT
+NEXT
+
+CALL SINGLE_DRAWLINE
+

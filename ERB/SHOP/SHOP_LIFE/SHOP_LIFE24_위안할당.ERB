@@ -1,0 +1,304 @@
+﻿;-------------------------------------------------
+;「위안할당」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE_NAME24
+RESULTS:0 '= "위안할당"
+
+;-------------------------------------------------
+;「위안할당」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE_CHECK24
+SIF CFLAG:MASTER:포로처
+	RETURN 0
+SIF !CFLAG:MASTER:소속
+	RETURN 0
+RETURN 1
+-------------
+;「위안할당」로 당하는 측의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA24(ARG:0)
+;주인공은 안 돼
+SIF ARG:0 == MASTER
+	RETURN 0
+;침실호출의 선택 가능 캐릭터 존재 판정
+CALL SHOP_LIFE_CHECKCHARA_NEYA(ARG:0)
+SIF RESULT && CFLAG:(ARG:0):위안참가자
+	RETURN 2
+RETURN CHECK91(ARG:0, 2, RESULT)
+
+;------------------------------------
+;-------------------------------------------------
+;「위안할당」로위안할당 먼저 되는 가부 판정
+;  엔들레스 루프 회피를 위해 성지식이 필요
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA_SUB24(ARG:0)
+SIF CFLAG:(ARG:0):침실호출선택중 && !CFLAG:(ARG:0):위안참가자
+	RETURN 2
+
+LOCAL:0 = TMP_COUNTRY_RELATION:(CFLAG:MASTER:소속):(CFLAG:(ARG:0):소속)
+;포로가 아닌, 비주인공, 동일 세력 or공투 세력, 성지식 1이상
+RETURN CHECK91(ARG:0, 2, ARG:0 != MASTER && !CFLAG:(ARG:0):포로처 && LOCAL:0 >= 2 && ABL:(ARG:0):성지식 > 0 && CFLAG:(ARG:0):행동불능상태 != 행동불능_임월)
+RETURN 0
+
+;-------------------------------------------------
+;「위안할당의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY24
+FLAG:거점페이즈페이지 = 1
+FLAG:요바이 = 0
+RETURN 0
+
+;-------------------------------------------------
+;「위안할당」의 오른쪽 컬럼 캐릭터 리스트 1의 버튼（함수미지정이라면 선택중색없음 표시）
+;-------------------------------------------------
+@SHOP_LIFE_LIST1_BUTTON24(ARG:0, ARG:1)
+;캐릭터, 선택중 칼라 표시 플래그, 버튼 번호에 추가하는 수치, CHECKCHARA의 반환값
+CALL COLUMN_RIGHT_CHARALIST_BUTTON(ARG:0, CFLAG:(ARG:0):침실호출선택중, SHOP_LIFE_LIST1_ADD_INPUT, ARG:1, 0, "TOP")
+RETURN 0
+
+;-------------------------------------------------
+;「위안할당」의 오른쪽 컬럼 캐릭터 리스트 2의 버튼（함수미지정이라면 선택중색없음 표시）
+;-------------------------------------------------
+@SHOP_LIFE_LIST2_BUTTON24(ARG:0, ARG:1)
+;캐릭터, 선택중 칼라 표시 플래그, 버튼 번호에 추가하는 수치, CHECKCHARA의 반환값
+CALL COLUMN_RIGHT_CHARALIST_BUTTON(ARG:0, CFLAG:(ARG:0):위안참가자, SHOP_LIFE_LIST2_ADD_INPUT, ARG:1, 0, "BUTTOM")
+RETURN 0
+
+;-------------------------------------------------
+;「위안할당」의 오른쪽 컬럼 캐릭터 리스트 버튼（상）표시에 추적 시키는 정보
+;  Default의 정보를 표시하지 않는 경우는 RETURN 1
+;-------------------------------------------------
+@SHOP_LIFE_BUTTON_ADD_TOP24(ARG:0)
+CALL SHOP_LIFE_BUTTON_ADD_BOTTOM_PRISONER(ARG:0)
+RETURN RESULT
+
+;-------------------------------------------------
+;「위안할당」의 오른쪽 컬럼 캐릭터 리스트 버튼（상）표시에 추적 시키는 정보
+;  Default의 정보를 표시하지 않는 경우는 RETURN 1
+;-------------------------------------------------
+@SHOP_LIFE_BUTTON_ADD_BOTTOM24(ARG:0)
+CALL SHOP_LIFE_BUTTON_ADD_TOP_PRISONER(ARG:0)
+RETURN RESULT
+
+
+;-------------------------------------------------
+;「위안할당」의 오른쪽 컬럼 표시 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SHOW24
+#DIM 선택인원수
+#DIM 위안할당처
+#DIM 주어지는측
+#DIM 최대인원수
+
+최대인원수 = MIN(CALC_SHOP_TIME() - SHOP_TIME, 8)
+선택인원수 = 0
+위안할당처 = 0
+주어지는측 = 0
+
+FOR LOCAL:0, 0, CHARANUM
+	;선택 가능한 조건을 채우고 있는지 어떤지 판정
+	RESULT = 0
+	IF CFLAG:(LOCAL:0):위안참가자
+		선택인원수 ++
+		위안할당처 ++
+	ENDIF
+	TRYCALLFORM SHOP_LIFE_CHECKCHARA{FLAG:거점페이즈선택커맨드}(LOCAL:0)
+	IF RESULT == 1
+		;선택중의 인원수를 센다
+		IF CFLAG:(LOCAL:0):침실호출선택중
+			선택인원수 ++
+			주어지는측 ++
+			IF 선택인원수 > 최대인원수
+				CFLAG:(LOCAL:0):침실호출선택중 = 0
+			ENDIF
+		ENDIF
+	ELSE
+		;조건을 채우지 않으면 강제적으로ＯＦＦ
+		CFLAG:(LOCAL:0):침실호출선택중 = 0
+	ENDIF
+NEXT
+
+CALL COLUMN_RIGHT_TITLE("대상자 선택", TOSTR(선택인원수), TOSTR(최대인원수), "인원수", "피임시만 3, 000")
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+IF 위안할당처 > 0 && 주어지는측 > 0
+	PRINTBUTTON "[이 멤버로 결정]", 1
+ELSE
+	SETCOLOR 칼라_선택불가
+	PRINTPLAINFORM [이 멤버로 결정]
+	RESETCOLOR
+ENDIF
+
+PRINTPLAIN   
+IF FLAG:위안피임약
+	PRINTBUTTON "[피임 있어]", 2
+ELSE
+	IF MONEY > 선택인원수 * 3000
+		PRINTBUTTON "[피임 없음]", 2
+	ELSE
+		SETCOLOR 칼라_선택불가
+		PRINTPLAINFORM [피임 없음]
+		RESETCOLOR
+	ENDIF
+ENDIF
+
+PRINTPLAIN   
+CALL COLOR_PRINT("선물↑과 주는 상대↓합계 2명 선택이 필요합니다", 칼라_주석)
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+;2단조캐릭터 리스트상과 페이지 이동
+CALL COLUMN_RIGHT_CHARALIST_TOP(1)
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+PRINTFORM 위안할당 처（하는 측）의 캐릭터를 선택해 주세요
+PRINTPLAIN   
+SIF 선택인원수 >= 최대인원수
+	SETCOLOR 칼라_오렌지
+PRINTFORM (현재{선택인원수}/{최대인원수}인)
+RESETCOLOR
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+
+;2단조캐릭터 리스트하와 페이지 이동
+CALL COLUMN_RIGHT_CHARALIST_BOTTOM(1)
+
+RETURN 0
+
+;-------------------------------------------------
+;「위안할당」의 오른쪽 컬럼 버튼 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SUB24(ARG:0)
+;이 멤버로 결정
+IF ARG:0 == 1
+	CALL DECIDE_ATEGAU_MEMBER()
+	SIF !RESULT
+		RETURN 0
+;피임 유무
+ELSEIF ARG:0 == 2
+	LOCAL:1 = 0
+	FOR LOCAL, 0, CHARANUM
+		SIF CFLAG:LOCAL:침실호출선택중
+			LOCAL:1 ++
+	NEXT
+	SIF FLAG:위안피임약 || MONEY >= LOCAL:1 * 3000
+		FLAG:위안피임약 = !FLAG:위안피임약
+	RETURN 0
+ENDIF
+RETURN 0
+
+;-------------------------------------------------
+;「위안할당」의 리스트 1 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP24(ARG:0)
+;참가 캐릭터의 수를 센다
+LOCAL:5 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):침실호출선택중 || CFLAG:(LOCAL:0):위안참가자
+		LOCAL:5 ++
+	ENDIF
+NEXT
+IF !CFLAG:(ARG:0):위안참가자 && (CFLAG:(ARG:0):침실호출선택중 || LOCAL:5 < MIN(CALC_SHOP_TIME() - SHOP_TIME, 8))
+	;조교참가플래그를 반전
+	CFLAG:(ARG:0):침실호출선택중 = !CFLAG:(ARG:0):침실호출선택중
+	LOCAL:5 += CFLAG:(ARG:0):침실호출선택중 == 0 ? -1 # 1
+	SIF FLAG:위안피임약 && LOCAL:5 * 3000 > MONEY
+		FLAG:위안피임약 = 0
+ENDIF
+RETURN 0
+
+;-------------------------------------------------
+;「위안할당」의 리스트 2 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP_SUB24(ARG:0)
+;참가 캐릭터의 수를 센다
+LOCAL:5 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):침실호출선택중 || CFLAG:(LOCAL:0):위안참가자
+		LOCAL:5 ++
+	ENDIF
+NEXT
+IF !CFLAG:(ARG:0):침실호출선택중 && (CFLAG:(ARG:0):위안참가자 || LOCAL:5 < MIN(CALC_SHOP_TIME() - SHOP_TIME, 8))
+	;조교참가플래그를 반전
+	CFLAG:(ARG:0):위안참가자 = !CFLAG:(ARG:0):위안참가자
+	LOCAL:5 += CFLAG:(ARG:0):위안참가자 == 0 ? -1 # 1
+	SIF FLAG:위안피임약 && LOCAL:5 * 3000 > MONEY
+		FLAG:위안피임약 = 0
+ENDIF
+RETURN 0
+
+;-------------------------------------------------
+;「위안할당」의 오른쪽 컬럼 버튼 입력 처리 본체
+;-------------------------------------------------
+@DECIDE_ATEGAU_MEMBER()
+#DIM 위안할당처
+#DIM 주어지는측
+#DIM 참가인수
+
+위안할당처 = 0
+주어지는측 = 0
+참가인수 = 0
+FOR LOCAL:0, 0, CHARANUM
+	IF CFLAG:(LOCAL:0):침실호출선택중 || CFLAG:(LOCAL:0):위안참가자
+		CFLAG:(LOCAL:0):조교참가플래그  = 1
+		CFLAG:(LOCAL:0):강제우호화 = 1
+		IF CFLAG:(LOCAL:0):침실호출선택중
+			주어지는측 ++
+		ELSE
+			위안할당처 ++
+		ENDIF
+		IF FLAG:위안피임약
+			PRINTFORML %조사처리(ANAME(LOCAL:0),"는")% 피임약을 복용했다
+			CFLAG:(LOCAL:0):피임약남은턴 += 1
+			MONEY -= 3000
+		ENDIF
+		참가인수 ++
+	ENDIF
+NEXT
+IF 주어지는측 == 0 || 위안할당처 == 0
+	;참가 캐릭터가 없으면 처리하지 않고 0을 돌려준다
+	RETURN 0
+ENDIF
+
+;START_TRAIN_COMMON로 SHOP_TIME가+1되므로, 그것을 끌어 둔다
+SHOP_TIME --
+
+SHOP_TIME += 참가인수
+
+FLAG:위안모드 = 2
+ITEM:A_로터 = 1
+ITEM:A_바이브 = 1
+ITEM:A_애널바이브 = 1
+ITEM:A_페니스밴드 = 1
+ITEM:A_오나홀 = 1
+ITEM:A_클리캡 = 1
+ITEM:A_유두캡 = 1
+ITEM:A_마약 = 99
+ITEM:A_밧줄 = 1
+ITEM:A_채찍 = 1
+ITEM:A_눈가리개 = 1
+ITEM:A_재갈 = 1
+ITEM:A_코걸이 = 1
+ITEM:A_매직 = 1
+ITEM:A_로션 = 99
+ITEM:A_콘돔 = 99
+ITEM:A_미약 = 99
+ITEM:A_배란유발제 = 99
+ITEM:A_도원향 = 99
+ITEM:A_절륜환 = 99
+
+FLAG:조교모드 = 7
+
+;우후후플래그를 ON에
+FLAG:우후후플래그 = 1
+
+;행동 개시시의 공통 처리
+CALL START_TRAIN_COMMON
+RETURN 1
+

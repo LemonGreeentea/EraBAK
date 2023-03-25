@@ -1,0 +1,347 @@
+﻿@INIT_CONFIG_RIVAL
+CONFIG:505 = 1
+CONFIG:506 = 1
+CONFIG:510 = -1
+
+;-------------------------------------------------
+;라이벌 설정
+;-------------------------------------------------
+@CONFIG_RIVAL
+#DIM FIRST_LINE
+FIRST_LINE = LINECOUNT
+
+CALL SINGLE_DRAWLINE
+LOCALS:0 = ●라이벌에 대한 설정●
+PRINTFORML %LOCALS:0, 50, RIGHT%
+CALL SINGLE_DRAWLINE
+LOCALS:0 = 현재 라이벌 설정
+PRINTFORM %LOCALS:0, 36, RIGHT% -
+PRINTBUTTON " 0[변경] ", 0
+IF CONFIG:500 == 0
+	PRINT OFF
+ELSE
+	PRINT ON
+ENDIF
+PRINTL
+IF CONFIG:500 == 1
+    LOCALS:0 = 라이벌의 이동
+    PRINTFORM %LOCALS:0, 36, RIGHT% -
+    PRINTBUTTON " 1[변경] ", 1
+    IF CONFIG:501 == 0
+        PRINTFORM 라이벌이 %ANAME(MASTER)%의 국가 내에서 움직입니다.
+    ELSE
+        PRINTFORM 라이벌은 어디든지 다닙니다.
+    ENDIF
+    PRINTL
+
+    LOCALS:0 = 라이벌의 타겟
+    PRINTFORM %LOCALS:0, 36, RIGHT% -
+    PRINTBUTTON " 2[변경] ", 2
+    IF CONFIG:502 == 0
+        PRINTFORM 라이벌이 아무나 하고 만납니다.
+    ELSEIF CONFIG:502 == 1
+        PRINTFORM 라이벌이 %조사처리(ANAME(MASTER),"을")% 연모하고 있는 학생만 만납니다.
+    ELSE
+        PRINTFORM 라이벌이 %조사처리(ANAME(MASTER),"을")% 연모하고 있는 학생 빼고 만납니다.
+    ENDIF
+    PRINTL
+
+    LOCALS:0 = 라이벌의 처녀 개통
+    PRINTFORM %LOCALS:0, 36, RIGHT% -
+    PRINTBUTTON " 3[변경] ", 3
+    IF CONFIG:503 == 0
+        PRINT 라이벌이 처녀를 지켜줍니다
+    ELSEIF CONFIG:503 == 1
+        PRINT 라이벌을 사랑하는 학생의 처녀를 가져갑니다.
+    ELSEIF CONFIG:503 == 2
+        PRINT 라이벌이 약점을 잡은 학생의 처녀를 가져갑니다.
+    ELSE
+        PRINT 라이벌이 인정사정도 없이 처녀를 가져갑니다.
+    ENDIF
+    PRINTL
+
+    LOCALS:0 = 요바이 강도
+    PRINTFORM %LOCALS:0, 36, RIGHT% -
+    PRINTBUTTON " 4[변경] ", 4
+    IF CONFIG:504 == 0
+        PRINT 찌질하게 조교합니다.
+    ELSEIF CONFIG:504 == 1
+        PRINT 그래도 남자다운 면은 보여줍니다.
+    ELSEIF CONFIG:504 == 2
+        PRINT 험란하게 다뤄집니다.
+    ELSE
+        PRINT 조교의 마스터.
+    ENDIF
+    PRINTL
+
+    LOCALS:0 = 요바이 횟수
+    PRINTFORM %LOCALS:0, 36, RIGHT% -
+    PRINTBUTTON " 5[변경] ", 5
+    PRINTFORM {CONFIG:505} 번 (최대 10번)
+    PRINTL
+
+    LOCALS:0 = 라이벌을 향한 학생들의 호감도 변화
+    PRINTFORM %LOCALS:0, 36, RIGHT% -
+    PRINTBUTTON " 6[변경] ", 6
+    PRINTFORM 현재 호감도 배율 {CONFIG:506} 배 (최대 10배)
+    PRINTL
+
+    LOCALS:0 = %조사처리(ANAME(MASTER),"을")% 향한 호감도 하락치
+    PRINTFORM %LOCALS:0, 36, RIGHT% -
+    PRINTBUTTON " 7[변경] ", 7
+    PRINTFORM 현재 호감도 하락치 배율 {CONFIG:507} 배 (최대 10배)
+    PRINTL
+
+    LOCALS:0 = 라이벌의 위치 발각
+    PRINTFORM %LOCALS:0, 36, RIGHT% -
+    PRINTBUTTON " 8[변경] ", 8
+    IF CONFIG:508
+        PRINT 라이벌의 위치가 발각됩니다.
+    ELSE
+        PRINT 라이벌의 위치가 숨겨집니다.
+    ENDIF
+    PRINTL
+
+    LOCALS:0 = 라이벌의 행동 발각
+    PRINTFORM %LOCALS:0, 36, RIGHT% -
+    PRINTBUTTON " 9[변경] ", 9
+    IF CONFIG:509
+        PRINT 라이벌의 행동이 발각됩니다.
+    ELSE
+        PRINT 라이벌의 위치가 숨겨집니다.
+    ENDIF
+    PRINTL
+
+    CALL SINGLE_DRAWLINE
+    PRINTBUTTON "30[라이벌의 상세 설정]", 30
+    PRINTL
+ENDIF
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "99[결정] ", 99
+
+
+CALL SINGLE_DRAWLINE
+
+$LOOP_0
+INPUT
+IF RESULT == 0
+    CONFIG:500++
+    SIF CONFIG:500 > 0
+        CONFIG:500 = 1
+    SIF CONFIG:511 == 0
+        CALL NEW_RIVAL
+ELSEIF RESULT == 1
+    CONFIG:501++
+    SIF CONFIG:501 > 1
+        CONFIG:501 = 0
+ELSEIF RESULT == 2
+    CONFIG:502++
+    SIF CONFIG:502 > 2
+        CONFIG:502 = 0
+ELSEIF RESULT == 3
+    CONFIG:503++
+    SIF CONFIG:503 > 3
+        CONFIG:503 = 0
+ELSEIF RESULT == 4
+    CONFIG:504++
+    SIF CONFIG:504 > 3
+        CONFIG:504 = 0
+ELSEIF RESULT == 5
+    CONFIG:505++
+    SIF CONFIG:505 > 10
+        CONFIG:505 = 1
+ELSEIF RESULT == 6
+    CONFIG:506++
+    SIF CONFIG:506 > 10
+        CONFIG:506 = 1
+ELSEIF RESULT == 7
+    CONFIG:507++
+    SIF CONFIG:507 > 10
+        CONFIG:507 = 0
+ELSEIF RESULT == 8
+    CONFIG:508++
+    SIF CONFIG:508 > 1
+        CONFIG:508 = 0
+ELSEIF RESULT == 9
+    CONFIG:509++
+    SIF CONFIG:509 > 1
+        CONFIG:509 = 0
+ELSEIF RESULT == 30
+    CALL CONFIG_RIVAL_STAT
+ELSEIF RESULT == 99
+    RETURN
+ELSE
+    GOTO LOOP_0
+ENDIF
+CLEARLINE LINECOUNT - FIRST_LINE
+RESTART
+
+
+@CONFIG_RIVAL_STAT
+#DIM FIRST_LINE
+#DIM 라이벌_ID
+FIRST_LINE = LINECOUNT
+라이벌_ID = NO_TO_CHARA(RIVAL_ID)
+
+CALL SINGLE_DRAWLINE
+PRINTL 라이벌의 상세 설정
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "0[라이벌의 마음에 드는 학생]", 0
+PRINTL
+PRINTBUTTON "1[라이벌의 신체 설정]", 1
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "99[결정]", 99
+
+$LOOP_0
+INPUT
+IF RESULT == 0
+    CALL RIVAL_FAVOR
+ELSEIF RESULT == 1
+    CALL RIVAL_STAT_SETTING
+ELSEIF RESULT == 99
+    RETURN
+ELSE
+    GOTO LOOP_0
+ENDIF
+CLEARLINE LINECOUNT - FIRST_LINE
+RESTART
+
+
+@RIVAL_FAVOR
+#DIM FIRST_LINE
+#DIM 라이벌_ID
+FIRST_LINE = LINECOUNT
+라이벌_ID = NO_TO_CHARA(RIVAL_ID)
+LOCAL:1 = 0
+CALL SINGLE_DRAWLINE
+PRINTL 플래그가 세워진 학생만 공략
+CALL SINGLE_DRAWLINE
+FOR LOCAL:0, 0, CHARANUM
+    SIF TALENT:(LOCAL:0):성별 == 0 || TALENT:(LOCAL:0):성별 == 3 || TALENT:(LOCAL:0):성별 == 4 || TALENT:(LOCAL:0):성별 == 5
+        CONTINUE
+    IF CFLAG:(LOCAL:0):플래그 == 0
+        SETCOLOR 칼라_회색
+        PRINTBUTTON @"  {LOCAL:0, 3}[%ANAME(LOCAL:0), 10, RIGHT%]", LOCAL:0
+        RESETCOLOR
+    ELSE
+        PRINTBUTTON @"  {LOCAL:0, 3}[%ANAME(LOCAL:0), 10, RIGHT%]", LOCAL:0
+    ENDIF
+    LOCAL:1++
+    IF LOCAL:1 == 6
+        LOCAL:1 = 0
+        PRINTL
+    ENDIF
+NEXT
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "30[전원]", 30
+PRINTL
+PRINTBUTTON "31[전원취소]", 31
+PRINTL
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "99[결정]", 99
+
+$LOOP_0
+INPUT
+IF RESULT == 99
+    RETURN
+ELSEIF RESULT == 30
+    FOR LOCAL:0, 0, CHARANUM
+        SIF TALENT:(LOCAL:0):성별 == 0 || TALENT:(LOCAL:0):성별 == 3 || TALENT:(LOCAL:0):성별 == 4 || TALENT:(LOCAL:0):성별 == 5
+            CONTINUE
+        CFLAG:(LOCAL:0):플래그 = 1
+    NEXT
+ELSEIF RESULT == 31
+    FOR LOCAL:0, 0, CHARANUM
+        SIF TALENT:(LOCAL:0):성별 == 0 || TALENT:(LOCAL:0):성별 == 3 || TALENT:(LOCAL:0):성별 == 4 || TALENT:(LOCAL:0):성별 == 5
+            CONTINUE
+        CFLAG:(LOCAL:0):플래그 = 0
+    NEXT
+ELSE
+    IF NO_TO_CHARA(RESULT) != -1
+        CFLAG:RESULT:플래그++
+        SIF CFLAG:RESULT:플래그 > 1
+            CFLAG:RESULT:플래그 = 0
+    ELSE
+        GOTO LOOP_0
+    ENDIF
+ENDIF
+CLEARLINE LINECOUNT - FIRST_LINE
+RESTART
+
+
+@RIVAL_STAT_SETTING
+#DIM FIRST_LINE
+#DIM 라이벌_ID
+FIRST_LINE = LINECOUNT
+라이벌_ID = NO_TO_CHARA(RIVAL_ID)
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 라이벌의 신체 설정
+CALL SINGLE_DRAWLINE
+LOCALS:0 = 체격
+PRINTFORM %LOCALS:0, 36, RIGHT% -
+PRINTBUTTON " 0[변경] ", 0
+IF TALENT:라이벌_ID:체격 == -2
+    PRINT 쇼타
+ELSEIF TALENT:라이벌_ID:체격 == -1
+    PRINT 작은 편
+ELSEIF TALENT:라이벌_ID:체격 == 0
+    PRINT 평범
+ELSEIF TALENT:라이벌_ID:체격 == 1
+    PRINT 장신
+ELSEIF TALENT:라이벌_ID:체격 == 2
+    PRINT 커다람
+ELSE
+    PRINT 거대
+ENDIF
+PRINTL
+LOCALS:0 = 체형
+PRINTFORM %LOCALS:0, 36, RIGHT% -
+PRINTBUTTON " 1[변경] ", 1
+IF TALENT:라이벌_ID:체형 == -3
+    PRINT 빼빼마름
+ELSEIF TALENT:라이벌_ID:체형 == -2
+    PRINT 호리호리한
+ELSEIF TALENT:라이벌_ID:체형 == -1
+    PRINT 마른
+ELSEIF TALENT:라이벌_ID:체형 == 0
+    PRINT 보통
+ELSEIF TALENT:라이벌_ID:체형 == 1
+    PRINT 통통한
+ELSEIF TALENT:라이벌_ID:체형 == 2
+    PRINT 풍만한
+ELSE
+    PRINT 뚱뚱한
+ENDIF
+PRINTL
+LOCALS:0 = 페니스 사이즈
+PRINTFORM %LOCALS:0, 36, RIGHT% -
+PRINTBUTTON " 2[변경] ", 2
+PRINTFORML %TOSTR_PENISSIZE(TALENT:라이벌_ID:페니스사이즈)%
+
+CALL SINGLE_DRAWLINE
+PRINTBUTTON "99[결정]", 99
+
+$LOOP_0
+INPUT
+IF RESULT == 0
+    TALENT:라이벌_ID:체격++
+    SIF TALENT:라이벌_ID:체격 > 3
+        TALENT:라이벌_ID:체격 = -2
+ELSEIF RESULT == 1
+    TALENT:라이벌_ID:체형++
+    SIF TALENT:라이벌_ID:체형 > 3
+        TALENT:라이벌_ID:체형 = -3
+ELSEIF RESULT == 2
+    TALENT:라이벌_ID:페니스사이즈++
+    SIF TALENT:라이벌_ID:페니스사이즈 > 2
+        TALENT:라이벌_ID:페니스사이즈 = -2
+ELSEIF RESULT == 99
+    RETURN
+ELSE
+    GOTO LOOP_0
+ENDIF
+CLEARLINE LINECOUNT - FIRST_LINE
+RESTART

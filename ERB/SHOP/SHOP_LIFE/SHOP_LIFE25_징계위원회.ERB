@@ -1,0 +1,74 @@
+﻿;-------------------------------------------------
+;「투옥한다」의 명칭
+;-------------------------------------------------
+@SHOP_LIFE_NAME25
+RESULTS:0 '= "징계위원회"
+
+;-------------------------------------------------
+;「투옥한다」의 선택 가부
+;-------------------------------------------------
+@SHOP_LIFE_CHECK25
+SIF CFLAG:MASTER:포로처
+	RETURN 0
+SIF !CFLAG:MASTER:소속
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「투옥한다」의 선택 가능 캐릭터 존재 판정
+;-------------------------------------------------
+@SHOP_LIFE_CHECKCHARA25(ARG:0)
+;비주인공, 주인공보다 정치가 낮은, 군주가 아닌, 포로가 아닌, 동물이 아닌, 육아 되고 있는 아이가 아닌, 특수 캐릭터가 아니다
+{
+RETURN ARG:0 != MASTER && CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속 && CFLAG:ARG:포로처 == 0 && ARG:0 != GET_COUNTRY_BOSS(CFLAG:MASTER:소속) && !IS_ANIMAL(ARG:0) &&
+ CFLAG:(ARG:0):행동불능상태 != 행동불능_아이 && !IS_SP_CHARA(ARG:0)
+}
+
+;-------------------------------------------------
+;「투옥하는 것 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY25
+FLAG:거점페이즈페이지 = 1
+FLAG:요바이 = 0
+RETURN 0
+
+;-------------------------------------------------
+;「투옥한다」의 오른쪽 컬럼 표시 처리
+;-------------------------------------------------
+@SHOP_LIFE_EVENTBUY_SHOW25
+CALL COLUMN_RIGHT_TITLE("대상자 선택(징계받은 학생에게는 미움받습니다)", "0", "1", "0", "0")
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_LINE
+CALL COLUMN_RIGHT_PRINTL
+CALL COLUMN_RIGHT_CHARALIST()
+RETURN 1
+
+;-------------------------------------------------
+;「투옥한다」의 리스트 1 입력 처리
+;-------------------------------------------------
+@SHOP_LIFE_USERSHOP25(ARG:0)
+#DIM SAVE_LINE_SHOP_LIFE
+
+FLAG:능력표시모드 = 0
+SAVE_LINE_SHOP_LIFE = LINECOUNT
+
+CALL SINGLE_DRAWLINE
+PRINTFORML %ANAME(ARG:0)%에 적당한 죄를 씌워서 반성실에 가둡니다.
+PRINTFORML %ANAME(ARG:0)%에게 미움을 받습니다.
+PRINTFORML 그런데도 실행합니까?
+CALL ASK_YN
+IF RESULT == 0
+	SETCOLOR 칼라_주의
+	PRINTFORMW <%ANAME(ARG:0)%>를 반성실에 가뒀습니다
+	RESETCOLOR
+	CALL CAPTURE(ARG:0, CFLAG:MASTER:소속)
+	CFLAG:(ARG:0):2 -= MAX(500, CFLAG:(ARG:0):2 * 3 / 10)
+	CFLAG:(ARG:0):3 -= MAX(500, CFLAG:(ARG:0):3 * 3 / 10)
+	CFLAG:(ARG:0):4 -= MAX(500, CFLAG:(ARG:0):4 * 3 / 10)
+	RETURN 1
+ELSE
+	LINES_SHOP = SAVE_LINE_SHOP_LIFE
+	RETURN 0
+ENDIF
+
+

@@ -1,0 +1,11801 @@
+﻿;만든놈 : 수틀리면 분탕침
+;-------------------------------------------------
+; CFLAG 관리
+; 200 = 만나러간다 첫 회 여부
+;
+; 301 = 아스나의 '당신' 호칭
+;-------------------------------------------------
+;「만나러간다」 「침실호출」 「육아」 「포로 회화」의 구상
+;-------------------------------------------------
+
+;=================================================
+;●「만나러간다」의 개시시의 대사
+;=================================================
+@KOJO_TRAIN_START_A1_K42
+;[속이 빈 것]상태라면 구상을 표시하지 않는다
+IF TALENT:공허
+	RETURN
+ENDIF
+
+;-------------------------------------------------
+;첫회
+;-------------------------------------------------
+IF CFLAG:200 == 0
+	CFLAG:200 = 1
+	;구상+ 기능 활성화 여부 묻기
+
+[SKIPSTART]
+	;마스터가 [선생] 소질을 가지고 있다면
+	IF TALENT:MASTER:선생 == 1
+		PRINTFORMW 아스나가 당신을 부르는 호칭을 어떻게 할까요?
+		PRINTFORMW [0] 선생이라고 부른다.
+		PRINTFORMW [1] 이름으로 부른다.
+		$INPUT_LOOP1
+		INPUT
+		IF RESULT != 0 && RESULT != 1
+			GOTO INPUT_LOOP1
+		ELSEIF RESULT == 0
+			CFLAG:301 == %선생%
+			PRINTFORMW 아스나는 당신을 선생님이라고 부릅니다.
+		ELSEIF RESULT == 1
+			CFLAG:301 == %ANAME(MASTER)%
+			PRINTFORMW 아스나는 당신을 %조사처리(CFLAG:301,"이")%이라고 부릅니다.
+		ENDIF
+	;마스터가 [선생] 소질을 가지고 있지 않다면
+	ELSE
+		CFLAG:301 == %ANAME(MASTER)%
+	ENDIF
+[SKIPEND]
+
+	;첫대면의 경우
+	IF !CFLAG:17
+		PRINTFORMW  밀레니엄 사이언스 스쿨에 들어오니 과연 최첨단 기계들이 보였다
+		PRINTFORMW	  제일 커보이는 건물 안으로 들어가니 여러 학생들이 보였다
+		PRINTFORMW	  학생들이 당신을 보면서 수근수근하기 시작했다
+		PRINTFORMW        당신은 학생들간에 유독 눈을 반짝이는 학생을 발견했다
+		CALL FACE_IMAGE_N("표정_42_일반_2")
+		PRINTFORMW	「선생님! 아니 주인님!」
+		PRINTFORMW	  주인님?
+		PRINTFORMW	  그 소리에 당신은 잠시간 당혹감을 참지못한 표정이 되었다
+		;[추후 선생/학생 대사 분리용]
+		IF TALENT:MASTER:선생 == 1
+			PRINTFORMW 「선생님이라 부르는게 좋을까- 주인님이라 부르는게 좋을까♬」
+		ELSE
+			PRINTFORMW 「선생님이라 부르는게 좋을까- 주인님이라 부르는게 좋을까♬」
+		ENDIF
+		PRINTFORMW 「그냥 주인님이라고 부를래!」
+		CALL FACE_IMAGE_N("표정_42_일반_3")
+		PRINTFORMW  아스나는 활짝 웃으면서 칭호를 정리하면서 %ANAME(MASTER)%에게 인사한다
+		PRINTFORMW 「밀레니엄 사이언스 스쿨 3학년 이치노세 아스나야. 어서와!」
+		PRINTFORMW 「여기 사이언스 밀레니엄 스쿨엔 처음이지? 내가 안내해줄게!」
+		PRINTFORMW 「어- 날 만나러 온거야? 그랬으면 좋겟..어 정말로?」
+		PRINTFORMW 「히힛♩」
+		PRINTFORMW 아스나는 기분좋게 웃으면서 당신의 손을 잡고 안내하기 시작했다
+	ENDIF
+;-------------------------------------------------
+;개시시(1회만)
+;-------------------------------------------------
+;기성 사실 Lv3(처음으로 섹스를 한 다음의 회)
+ELSEIF CFLAG:200 < 5 && MARK:2 == 3
+	CFLAG:200 = 5
+	PRINTFORMW 합의 후 섹스
+;기성 사실 Lv2(연인이 된 다음의 회)
+ELSEIF CFLAG:200 < 4 && MARK:2 == 2
+	CFLAG:200 = 4
+	PRINTFORMW 선생이랑 연인이 된 이후
+	
+;기성 사실 Lv1(처음으로 키스를 한 다음의 회)
+ELSEIF CFLAG:200 < 3 && MARK:2 == 1
+	CFLAG:200 = 3
+	PRINTFORMW 선생님한테 뽀뽀한 다음
+	
+;기성 사실 Lv0로 연모
+ELSEIF CFLAG:200 < 2 && TALENT:연모
+	CFLAG:200 = 2
+	PRINTFORMW 여느때처럼 있는 선생님
+	PRINTFORMW 아스나는 평소처럼 %ANAME(MASTER)%에게 음료수를 전달하러간다
+	PRINTFORMW 업무에 몰두하고있는 선생님은 다가오는 아스나를 알아채리지 못했다
+		CALL FACE_IMAGE_N("표정_42_일반_3")
+	PRINTFORMW 「%ANAME(MASTER)%, 여기 음료수~」
+	PRINTFORMW 웃으면서 음료수를 건네는 아스나의 손길은 거침없었다
+	PRINTFORMW 아스나가 건네는 음료수에 비로소 아스나가 온걸 알아챈 %ANAME(MASTER)%는 가볍게 웃으면서 아스나가 건네주는 음료수를 받았다
+	PRINTFORMW 그때 음료수를 받으려다가 아스나의 손목을 실수로 잡았다
+		CALL FACE_IMAGE_N("표정_42_일반_2")
+	PRINTFORMW 「앗」
+	PRINTFORMW 아스나는 손목이 잡힐때 머릿속에 무엇인가 지나갔나 하고 %ANAME(MASTER)%를 바라봤지만 %ANAME(MASTER)%는 아무렇지도 않은 듯이 아스나의 손에서 음료수를 가져갔다
+	PRINTFORMW 잘 마시겠다는 %ANAME(MASTER)%의 말에 아스나는 약간 붉어진 느낌으로 방에서 나왔다
+		CALL FACE_IMAGE_N("표정_42_일반_4")
+	PRINTFORMW 「우응..뭘까?」
+	PRINTFORMW 아스나는 %ANAME(MASTER)%가 실수로 잡았던 손목을 쓰다듬으면서 머릿속에 지나간 무엇인가에 대해 생각을 해보게되면서 다음 일과를 준비하러 갔다
+
+;-------------------------------------------------
+;개시시(2회째 이후)
+;-------------------------------------------------
+;기성 사실 Lv3 또한 연모
+ELSEIF MARK:2 == 3 && TALENT:연모
+	;PRINTFORMW 
+;기성 사실 Lv3(섹스가 끝난 상태)
+ELSEIF MARK:2 == 3
+	;PRINTFORMW 
+;기성 사실 Lv2(연인)
+ELSEIF MARK:2 == 2
+	;PRINTFORMW 
+;기성 사실 Lv1(키스가 끝난 상태)
+ELSEIF MARK:2 == 1
+	;PRINTFORMW 
+;기성 사실 Lv0로 연모
+ELSEIF MARK:2 == 0
+		;호감도 -499~100
+		ELSEIF CFLAG:2 <= 100 && CFLAG:2 >= -499
+		PRINTFORMW 「....」
+		PRINTFORMW 아스나는 무표정으로 보고있었다
+		;호감도 -500이하
+		ELSEIF CFLAG:2 <= -500
+		PRINTFORMW 「....」
+		PRINTFORMW 아스나는 벌레보듯이 보고있다
+ELSE
+	PRINTFORMW  아스나를 만나기 위해 C&C로 향했다.
+	PRINTFORMW 「앗 주인님!」
+	PRINTFORMW 「어서와! 오늘도 열심히 해보자!」
+	PRINTFORMW 「오늘은 무언가 좋은 일이 생길거 같아~」
+	PRINTFORMW 「엉. 주인님도? 아핫-」
+ENDIF
+
+;=================================================
+;●「만나러간다」의 종료시의 대사
+;=================================================
+@KOJO_TRAIN_END_A1_K42
+;[속이 빈 것]상태라면 구상을 표시하지 않는다
+IF TALENT:공허
+	RETURN
+ENDIF
+
+;-------------------------------------------------
+;행동 불능의 경우
+;-------------------------------------------------
+;술에 취함에 의한 행동 불능
+IF TCVAR:53 == 1
+	;PRINTFORMW 
+;쾌감인 나머지 기절
+ELSEIF TCVAR:52
+	;PRINTFORMW 
+;피로에 의한 행동 불능
+ELSEIF TCVAR:51
+	;PRINTFORMW 
+ENDIF
+
+;-------------------------------------------------
+;종료시(1회만)
+;-------------------------------------------------
+;기성 사실 Lv3(처음으로 섹스했다)
+IF CFLAG:201 < 5 && MARK:2 == 3
+	CFLAG:201 = 5
+	;행동 불능이라면 플래그만 세워 표시는 하지 않는다
+	IF !(TCVAR:51 || TCVAR:52 || TCVAR:53)
+		;PRINTFORMW 
+	ENDIF
+;기성 사실 Lv2(연인이 되었다)
+ELSEIF CFLAG:201 < 4 && MARK:2 == 2
+	CFLAG:201 = 4
+	;행동 불능이라면 플래그만 세워 표시는 하지 않는다
+	IF !(TCVAR:51 || TCVAR:52 || TCVAR:53)
+		;PRINTFORMW 
+	ENDIF
+;기성 사실 Lv1(처음으로 키스했다)
+ELSEIF CFLAG:201 < 3 && MARK:2 == 1
+	CFLAG:201 = 3
+	;행동 불능이라면 플래그만 세워 표시는 하지 않는다
+	IF !(TCVAR:51 || TCVAR:52 || TCVAR:53)
+		PRINTFORMW 
+	ENDIF
+
+;-------------------------------------------------
+;종료시(2회째 이후)
+;-------------------------------------------------
+;행동 불능이라면 비표시
+ELSE
+	;기성 사실 Lv3 또한 연모
+	IF MARK:2 == 3 && TALENT:연모
+		;PRINTFORMW 
+	;기성 사실 Lv3(섹스가 끝난 상태)
+	ELSEIF MARK:2 == 3
+		;PRINTFORMW 
+	;기성 사실 Lv2(연인)
+	ELSEIF MARK:2 == 2
+		;PRINTFORMW 
+	;기성 사실 Lv1(키스가 끝난 상태)
+	ELSEIF MARK:2 == 1
+		;PRINTFORMW 
+	;기성 사실 Lv0로 연모
+	ELSEIF MARK:2 == 0
+		;호감도 -499~100
+		ELSEIF CFLAG:2 <= 100 && CFLAG:2 >= -499
+		PRINTFORMW 「....」
+		PRINTFORMW 아스나는 무표정으로 지나갔다
+		;호감도 -500이하
+		ELSEIF CFLAG:2 <= -500
+		PRINTFORMW 「....」
+		PRINTFORMW 아스나는 벌레보듯이 무시하면서도 당신과 멀어지고 있었다
+	ELSE
+		PRINTFORMW 「응- 조심해서 들어가줘 아니면 내가 같이 따라가줄까?」
+		PRINTFORMW  당신은 아스나를 말리고 방에서 떠났다
+	ENDIF
+ENDIF
+
+
+
+
+;=================================================
+;●「침실호출」의 개시시의 대사 ※단독으로 불렸을 경우만 불린다
+;=================================================
+@KOJO_TRAIN_START_A2_K42
+;[속이 빈 것]상태라면 구상을 표시하지 않는다
+IF TALENT:공허
+	RETURN
+ELSE
+;	PRINTFORMW (침실호출 대사)
+ENDIF
+
+;=================================================
+;●「침실호출」의 종료시의 대사 ※단독으로 불렸을 경우만 불린다
+;=================================================
+@KOJO_TRAIN_END_A2_K42
+;[속이 빈 것]상태라면 구상을 표시하지 않는다
+IF TALENT:공허
+	RETURN
+ENDIF
+
+;술에 취함에 의한 행동 불능
+IF TCVAR:53 == 1
+	;PRINTFORMW 
+;쾌감인 나머지 기절 or 기력 300 이하
+ELSEIF TCVAR:52 || BASE:기력 <= 300
+	;PRINTFORMW 
+;피로에 의한 행동 불능
+ELSEIF TCVAR:51
+	;PRINTFORMW 
+ELSE
+;	PRINTFORMW (침실호출 종료 대사)
+ENDIF
+
+;=================================================
+;●커맨드 실행전(이 캐릭터가 타겟측 때)
+;※지문이 표시되기 전에 실행된다. 반환값에 1을 설정하는(RETURN 1)와 지문이 컷 된다
+;  필요에 따라서 KOJO_COM_TARGET 대신에 사용한다
+;=================================================
+@KOJO_COM_BEFORE_TARGET_A_K42
+;[속이 빈 것]상태의 경우, 입이 막히고 있는 경우는 구상을 표시하지 않는다
+IF TALENT:공허 || IS_EQUIP_CONTINUE(TARGET, "입장착")
+	RETURN 0
+ENDIF
+
+RETURN 0
+
+;=================================================
+;●커맨드 실행전(이 캐릭터가 플레이어측 때)
+;※지문이 표시되기 전에 실행된다. 반환값에 1을 설정하는(RETURN 1)와 지문이 컷 된다
+;  필요에 따라서 KOJO_COM_PLAYER 대신에 사용한다
+;=================================================
+@KOJO_COM_BEFORE_PLAYER_A_K42
+;[속이 빈 것]상태의 경우, 입이 막히고 있는 경우는 구상을 표시하지 않는다
+IF TALENT:공허 || IS_EQUIP_CONTINUE(TARGET, "입장착")
+	RETURN 0
+ENDIF
+
+RETURN 0
+
+;=================================================
+;●커맨드 실행시(이 캐릭터가 플레이어로도 타겟에서도 불려 간다)
+;  플레이어·타겟의 구별이 없는 커맨드는 여기에 구상을 기술한다
+;=================================================
+@KOJO_COM_A_K42
+;[속이 빈 것]상태의 경우, 입이 막히고 있는 경우는 구상을 표시하지 않는다
+IF TALENT:공허 || IS_EQUIP_CONTINUE(TARGET, "입장착")
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;키스
+;-------------------------------------------------
+IF SELECTCOM == 20
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;퍼스트 키스
+		IF TALENT:키스미경험
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;키스경험이 끝난 상태
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;퍼스트 키스
+		IF TALENT:키스미경험
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;키스경험이 끝난 상태
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;짝 맞추기 놀이
+;-------------------------------------------------
+IF SELECTCOM == 21
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;쌍두 바이브
+;-------------------------------------------------
+IF SELECTCOM == 22
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;이 캐릭터와 주인공이 함께 처녀
+			IF TALENT:처녀 && TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;이 캐릭터만 처녀
+			ELSEIF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공만 처녀
+			ELSEIF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;이 캐릭터와 주인공이 함께 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;이 캐릭터와 주인공이 함께 처녀
+			IF TALENT:처녀 && TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;이 캐릭터만 처녀
+			ELSEIF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공만 처녀
+			ELSEIF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;이 캐릭터와 주인공이 함께 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;=================================================
+;●커맨드 실행시(이 캐릭터가 타겟측 때)
+;=================================================
+@KOJO_COM_TARGET_A_K42
+;[속이 빈 것]상태의 경우, 입이 막히고 있는 경우는 구상을 표시하지 않는다
+IF TALENT:공허 || IS_EQUIP_CONTINUE(TARGET, "입장착")
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;애무(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 0
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;가슴애무(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 1
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｂ감 Lv3 이상
+				IF ABL:Ｂ감 >= 3
+					;PRINTFORMW 
+				;Ｂ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｂ감 Lv3 이상
+				IF ABL:Ｂ감 >= 3
+					;PRINTFORMW 
+				;Ｂ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｂ감 Lv3 이상
+				IF ABL:Ｂ감 >= 3
+					;PRINTFORMW 
+				;Ｂ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｂ감 Lv3 이상
+				IF ABL:Ｂ감 >= 3
+					;PRINTFORMW 
+				;Ｂ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;쿤닐링구스(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 2
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;손가락삽입(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 3
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;애널애무(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 4
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;거품 춤(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 5
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;꼬리 삽입(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 6
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;꼬리Ａ삽입(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 7
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;손 애무(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 10
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;펠라치오(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 11
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;파이즈리(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 12
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;스마타(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 13
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;풋잡(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 14
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;엉덩이 코키(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 15
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;오나호코키(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 16
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;꼬리 코키(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 17
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;정상위(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 30
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;후배위(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 31
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;대면좌위(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 32
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;배면좌위(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 33
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;기승위(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 34
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;배면 기승위(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 35
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;Ａ정상위(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 40
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;Ａ후배위(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 41
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;Ａ대면좌위(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 42
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;Ａ배면좌위(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 43
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;Ａ기승위(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 44
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;Ａ배면 기승위(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 45
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;로터(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 60
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;바이브(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 61
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;애널바이브(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 62
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;클리캡(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 63
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;유두캡(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 64
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｂ감 Lv3 이상
+				IF ABL:Ｂ감 >= 3
+					;PRINTFORMW 
+				;Ｂ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｂ감 Lv3 이상
+				IF ABL:Ｂ감 >= 3
+					;PRINTFORMW 
+				;Ｂ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｂ감 Lv3 이상
+				IF ABL:Ｂ감 >= 3
+					;PRINTFORMW 
+				;Ｂ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｂ감 Lv3 이상
+				IF ABL:Ｂ감 >= 3
+					;PRINTFORMW 
+				;Ｂ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;Ｖ확장 벌룬(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 65
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv3 이상
+				IF ABL:Ｖ감 >= 3
+					;PRINTFORMW 
+				;Ｖ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;Ａ확장 벌룬(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 66
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;로션(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 70
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;미약(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 71
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;배란유발제(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 72
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;절륜환(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 73
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;위협한다(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 80
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;스팽킹(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 81
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;채찍(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 82
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;바늘(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 83
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;눈가리개(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 84
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;밧줄(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 85
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;재갈(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 86
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;피스트퍽(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 87
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv5 이상
+				IF ABL:Ｖ감 >= 5
+					;PRINTFORMW 
+				;Ｖ감 Lv5 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv5 이상
+				IF ABL:Ｖ감 >= 5
+					;PRINTFORMW 
+				;Ｖ감 Lv5 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｖ감 Lv5 이상
+				IF ABL:Ｖ감 >= 5
+					;PRINTFORMW 
+				;Ｖ감 Lv5 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｖ감 Lv5 이상
+				IF ABL:Ｖ감 >= 5
+					;PRINTFORMW 
+				;Ｖ감 Lv5 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;애널피스트(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 88
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv5 이상
+				IF ABL:Ａ감 >= 5
+					;PRINTFORMW 
+				;Ａ감 Lv5 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv5 이상
+				IF ABL:Ａ감 >= 5
+					;PRINTFORMW 
+				;Ａ감 Lv5 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv5 이상
+				IF ABL:Ａ감 >= 5
+					;PRINTFORMW 
+				;Ａ감 Lv5 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv5 이상
+				IF ABL:Ａ감 >= 5
+					;PRINTFORMW 
+				;Ａ감 Lv5 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;때리기(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 89
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;이라마치오(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 90
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;자위(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 100
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;안면승마(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 101
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;플레이어가 질이 없다(구슬 빨고)
+			;그 이외
+			ELSE
+				;플레이어가 질이 없다(구슬 빨고)
+
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;플레이어가 질이 없다(구슬 빨고)
+			;그 이외
+			ELSE
+				;플레이어가 질이 없다(구슬 빨고)
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;플레이어가 질이 없다(구슬 빨고)
+			;그 이외
+			ELSE
+				;플레이어가 질이 없다(구슬 빨고)
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;플레이어가 질이 없다(구슬 빨고)
+			;그 이외
+			ELSE
+				;플레이어가 질이 없다(구슬 빨고)
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;Ａ안면승마(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 102
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;전기 안마(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 103
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;다리를 빤다(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 104
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;Ｗ안면승마(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 105
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;귀두 비난하는 사람 코키(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 106
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;귀두 고문 페라(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 107
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;방뇨한다(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 130
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;오줌을 건다(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 131
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;이뇨제(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 140
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;관장(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 141
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;관장＆플러그(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 142
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;방귀 한다(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 150
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수 삽입(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 201
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;처녀
+			IF TALENT:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수Ａ삽입(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 202
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수 클리 꾸짖고(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 203
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수 가슴애무(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 204
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수 오나홀(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 205
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수 코키(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 206
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수 착유(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 207
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수 긴박(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 208
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수구욕(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 210
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수 자위(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 211
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수 산란(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 212
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;임신중
+				IF TALENT:임신
+					;PRINTFORMW 
+				;촉수 Lv3 이상
+				ELSEIF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;임신중
+				IF TALENT:임신
+					;PRINTFORMW 
+				;촉수 Lv3 이상
+				ELSEIF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;임신중
+				IF TALENT:임신
+					;PRINTFORMW 
+				;촉수 Lv3 이상
+				ELSEIF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;임신중
+				IF TALENT:임신
+					;PRINTFORMW 
+				;촉수 Lv3 이상
+				ELSEIF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수Ａ산란(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 213
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;회화
+;-------------------------------------------------
+IF SELECTCOM == 300
+	;처음(주도권을 고려하지 않는다)
+	IF IS_COM_FIRST(1)
+		PRINTFORMW 「주인님! 날 만나러온거야? 응? 나와 말을 하고싶다구? 응~알겠어!」
+	;2회째 이후
+	ELSE
+		;연모 or 복종 or 친구
+		IF TALENT:연모 || TALENT:복종 || TALENT:친구
+			SELECTCASE RAND:4
+				CASE 0
+					PRINTFORML %조사처리(ANAME(TARGET),"는")% %ANAME(MASTER)%의 이야기를 들으면서 자연스럽게 손을 잡고있었다
+					PRINTFORMW 「응? 손을 잡은게 부끄러운거야? 아하핫!」
+				CASE 1
+					PRINTFORML 「아하핫-♪」
+					PRINTFORML %조사처리(ANAME(TARGET),"는")% %ANAME(MASTER)%의 얼굴을 보면서 웃고있었다
+					PRINTFORMW 「응- 역시 재밌는 분이라고 몇번 생각해서」
+				CASE 2
+					PRINTFORML 「주인님! 주인님의 이야기를 좀 더 듣고싶어!」
+					PRINTFORMW 「에? 이야기가..저번에 다 한것같다고? 그게뭐야~」
+					PRINTFORMW 졸라대는 아스나의 말에 할수없이 없는이야기있는이야기를 온갖 짜내어서 말을 했다
+				CASE 3
+					PRINTFORML 「주인님하고 말을 하다보면 무엇인가 잘될거라는 예감이 들지않아?」
+					PRINTFORMW 그건 아스나가 특이한게 아닐까..생각하다가 아스나가 당신을 뚫어져라 쳐다보고 있었다
+					PRINTFORMW 「응응 무슨 생각을 해?」
+					PRINTFORMW 아스나 생각을 한다고하니까 활짝 웃는 아스나였다
+			ENDSELECT
+		;그 이외
+		ELSE
+		SELECTCASE RAND:4
+			CASE 0
+				PRINTFORMW 「주인님! 주인님! 청소할시간이야!」
+				PRINTFORMW 청소?
+				PRINTFORMW  「응! 청소시간!」
+				PRINTFORMW 그 청소라는게 참 다양한 의미가 있다는것이 알게된건 아스나하고 좀 더 알아갈때였다..
+			CASE 1
+				PRINTFORMW 「주인님! 휴식은 끝이야!」
+				PRINTFORMW 「에? 휴식은 지금부터?」
+				PRINTFORMW 「아니지! 휴식은 끝나고 지금부터는 노는거야!」
+				PRINTFORMW  당신은 그렇게 아스나에게 휩쓸려갔다
+			CASE 2 
+				PRINTFORMW 「청소랑 세탁은 모두 나한테 맡겨줘!」
+				PRINTFORML 
+				SETCOLOR 0xFF0000
+				;색깔 빨강색
+				PRINTFORMW 「흔적조차 없이..」
+				PRINTFORML
+				RESETCOLOR
+				PRINTFORMW 갑자기 낮게 깔리는 목소리에 무엇인가하고 고개를 돌아봤다
+				PRINTFORMW  아스나가 생글생글 웃으면서 당신을 바라볼뿐이었다
+				PRINTFORMW  「아하핫-! 주인님 표정이 웃겼어!」
+			CASE 3 
+				PRINTFORMW  「으응?」
+				PRINTFORML    ⠀. .ᕱ   ᕱ
+				PRINTFORML    “ପ(„ơ ᴗ ơ„)ଓ”
+				PRINTFORMW 아스나는 귀를 쫑긋하면서 당신을 보고있었다
+		ENDSELECT
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;무술 훈련
+;-------------------------------------------------
+IF SELECTCOM == 301
+	;처음(주도권을 고려하지 않는다)
+	IF IS_COM_FIRST(1)
+		;PRINTFORMW 
+	;2회째 이후
+	ELSE
+		;연모 or 복종 or 친구
+		IF TALENT:연모 || TALENT:복종 || TALENT:친구
+			;PRINTFORMW 
+		;그 이외
+		ELSE
+			;PRINTFORMW 
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;병법 학습
+;-------------------------------------------------
+IF SELECTCOM == 302
+	;처음(주도권을 고려하지 않는다)
+	IF IS_COM_FIRST(1)
+		 PRINTFORMW 「응- 복잡하게 생각하고싶지않은데」
+	;2회째 이후
+	ELSE
+		;연모 or 복종 or 친구
+		IF TALENT:연모 || TALENT:복종 || TALENT:친구
+			;PRINTFORMW 
+		;그 이외
+		ELSE
+			;PRINTFORMW 
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;정무
+;-------------------------------------------------
+IF SELECTCOM == 303
+	;처음(주도권을 고려하지 않는다)
+	IF IS_COM_FIRST(1)
+		PRINTFORMW 「서류작업? 그거 대충 예감대로 하면 되는거 아냐?」
+	;2회째 이후
+	ELSE
+		;연모 or 복종 or 친구
+		IF TALENT:연모 || TALENT:복종 || TALENT:친구
+			PRINTFORMW 「주인님 여기~서류작업 다해놨어」
+			PRINTFORMW 일부의 서류를 확인해보니 진짜로 해놨..
+			PRINTFORMW 왜 이게 되는걸까..?
+		;그 이외
+		ELSE
+			;PRINTFORMW 
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;순찰
+;-------------------------------------------------
+IF SELECTCOM == 304
+	;처음(주도권을 고려하지 않는다)
+	IF IS_COM_FIRST(1)
+		;PRINTFORMW 
+	;2회째 이후
+	ELSE
+		;연모 or 복종 or 친구
+		IF TALENT:연모 || TALENT:복종 || TALENT:친구
+			;PRINTFORMW 
+		;그 이외
+		ELSE
+			;PRINTFORMW 
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;가창 훈련
+;-------------------------------------------------
+IF SELECTCOM == 305
+	;처음(주도권을 고려하지 않는다)
+	IF IS_COM_FIRST(1)
+		;PRINTFORMW 
+	;2회째 이후
+	ELSE
+		;연모 or 복종 or 친구
+		IF TALENT:연모 || TALENT:복종 || TALENT:친구
+			;PRINTFORMW 
+		;그 이외
+		ELSE
+			;PRINTFORMW 
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;요리
+;-------------------------------------------------
+IF SELECTCOM == 306
+	;처음(주도권을 고려하지 않는다)
+	IF IS_COM_FIRST(1)
+		;PRINTFORMW 
+	;2회째 이후
+	ELSE
+		;연모 or 복종 or 친구
+		IF TALENT:연모 || TALENT:복종 || TALENT:친구
+			;PRINTFORMW 
+		;그 이외
+		ELSE
+			;PRINTFORMW 
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;음담
+;-------------------------------------------------
+IF SELECTCOM == 307
+	;성공
+	IF TFLAG:17
+		;이 캐릭터가 주도권을 가지고 있다
+		IF IS_INITIATIVE(TARGET)
+			;처음
+			IF IS_COM_FIRST()
+				;PRINTFORMW 
+			;2회째 이후
+			ELSE
+				;연모 or 복종 or 친구
+				IF TALENT:연모 || TALENT:복종 || TALENT:친구
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;이 캐릭터가 주도권을 가지고 있지 않다
+		ELSE
+			;처음
+			IF IS_COM_FIRST()
+				;PRINTFORMW 
+			;2회째 이후
+			ELSE
+				;연모 or 복종 or 친구
+				IF TALENT:연모 || TALENT:복종 || TALENT:친구
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;실패
+	ELSE
+		;PRINTFORMW 
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;술을 마신다
+;-------------------------------------------------
+IF SELECTCOM == 310
+	;처음(주도권을 고려하지 않는다)
+	IF IS_COM_FIRST(1)
+		;PRINTFORMW 
+	;2회째 이후
+	ELSE
+		;연모 or 복종 or 친구
+		IF TALENT:연모 || TALENT:복종 || TALENT:친구
+			;PRINTFORMW 
+		;그 이외
+		ELSE
+			;PRINTFORMW 
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;벌꿀수
+;-------------------------------------------------
+IF SELECTCOM == 311
+	;처음(주도권을 고려하지 않는다)
+	IF IS_COM_FIRST(1)
+		;PRINTFORMW 
+	;2회째 이후
+	ELSE
+		;연모 or 복종 or 친구
+		IF TALENT:연모 || TALENT:복종 || TALENT:친구
+			;PRINTFORMW 
+		;그 이외
+		ELSE
+			;PRINTFORMW 
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;스킨쉽(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 320
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;두를 어루만진다(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 321
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				 PRINTFORMW 「어,주인님?」
+				 PRINTFORML 아스나는 당신의 손길에 잠시 놀란듯했지만 이내 쓰다듬어지는 느낌에 기분좋다는 듯이 웃었다
+				 PRINTFORMW 뭐랄까..강아지같은 기분이다
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				PRINTFORMW 아스나의 머리를 쓰다듬고 싶어졌다
+				PRINTFORMW 「에헤헤..」
+				PRINTFORMW 한참을 쓰다듬으니 진짜 강아지같다
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				 PRINTFORMW 「어,주인님?」
+				 PRINTFORML 아스나는 당신의 손길에 잠시 놀란듯했지만 이내 쓰다듬어지는 느낌에 기분좋다는 듯이 웃었다
+				 PRINTFORMW 뭐랄까..강아지같은 기분이다
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				PRINTFORMW 아스나의 머리를 쓰다듬고 싶어졌다
+				PRINTFORMW 「에헤헤..」
+				PRINTFORMW 한참을 쓰다듬으니 진짜 강아지같다
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;머리카락을 빗는다(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 322
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				PRINTFORMW 아스나의 머리를 빗다보니 머리길이에 조금은 놀라고있었다 
+				PRINTFORMW 「아핫, 주인님이 멍한 표정 재밌어」
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;빗으로 빗고 빌려준다(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 323
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 아스나의 머리를 빗다보니 머리길이에 조금은 놀라고있었다 
+				PRINTFORMW 「아핫, 주인님이 멍한 표정 재밌어」
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;달콤한 말(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 324
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;서로 응시한다
+;-------------------------------------------------
+IF SELECTCOM == 325
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF TALENT:연인 || TALENT:합의
+				PRINTFORMW 「나와 눈을 마주칠려고?」
+				PRINTFORMW 아스나는 빤히 당신을 바라보고있었다
+			ELSE
+				PRINTFORMW 「후음-」
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			IF TALENT:연인 || TALENT:합의
+				PRINTFORMW 「주인님의 눈 좋다♥」
+				PRINTFORMW 「나의 눈만 바라볼꺼야?」
+				PRINTFORMW 아스나의 입술이 휘어지면서 혀로 입술을 핥고있었다
+			ELSE
+				PRINTFORMW 아스나와 눈싸움 하듯이 서로를 계속해서 보고있었다
+			ENDIF
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF TALENT:연인 || TALENT:합의
+				PRINTFORMW 「나와 눈을 마주칠려고?」
+				PRINTFORMW 아스나는 빤히 당신을 바라보고있었다
+			ELSE
+				PRINTFORMW 「후음-」
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			IF TALENT:연인 || TALENT:합의
+				PRINTFORMW 「주인님의 눈 좋다♥」
+				PRINTFORMW 「나의 눈만 바라볼꺼야?」
+				PRINTFORMW 아스나의 입술이 휘어지면서 혀로 입술을 핥고있었다
+			ELSE
+				PRINTFORMW 아스나와 눈싸움 하듯이 서로를 계속해서 보고있었다
+			ENDIF
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;배의 소리를 듣는다
+;-------------------------------------------------
+IF SELECTCOM == 326
+	;부친이 주인공으로 확정하고 있는 경우
+	IF CFLAG:23 == GET_ID(MASTER)
+		;임신 8기 이후(라고)
+		IF CFLAG:18 >= 8
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;임신 6기 이후(볼록)
+		ELSEIF CFLAG:18 >= 6
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;임신 5기 이전
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;부친 불명, 혹은 다른 사관인 아이
+	ELSE
+		;임신 8기 이후(라고)
+		IF CFLAG:18 >= 8
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;임신 6기 이후(볼록)
+		ELSEIF CFLAG:18 >= 6
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;임신 5기 이전
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;버드 키스(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 340
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;소프트 키스(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 341
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;딥키스(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 342
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;식사
+;-------------------------------------------------
+IF SELECTCOM == 351
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;수영
+;-------------------------------------------------
+IF SELECTCOM == 354
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;헤엄친다
+;-------------------------------------------------
+IF SELECTCOM == 355
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;화관을 재배한다(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 356
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;사냥을 한다
+;-------------------------------------------------
+IF SELECTCOM == 357
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;등을 민다(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 358
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;성의 지식을 가르친다(타겟)
+;-------------------------------------------------
+IF SELECTCOM == 550
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;연모 or 복종 or 친구
+		IF TALENT:연모 || TALENT:복종 || TALENT:친구
+			;PRINTFORMW 
+		;그 이외
+		ELSE
+			;PRINTFORMW 
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;연모 or 복종 or 친구
+		IF TALENT:연모 || TALENT:복종 || TALENT:친구
+			;PRINTFORMW 
+		;그 이외
+		ELSE
+			;PRINTFORMW 
+		ENDIF
+	ENDIF
+ENDIF
+
+;=================================================
+;●커맨드 실행시(이 캐릭터가 플레이어측 때)
+;=================================================
+@KOJO_COM_PLAYER_A_K42
+;[속이 빈 것]상태의 경우, 입이 막히고 있는 경우는 구상을 표시하지 않는다
+IF TALENT:공허 || IS_EQUIP_CONTINUE(TARGET, "입장착")
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;애무(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 0
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;가슴애무(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 1
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;쿤닐링구스(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 2
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;손가락삽입(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 3
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;애널애무(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 4
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;거품 춤(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 5
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;꼬리 삽입(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 6
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;꼬리Ａ삽입(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 7
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;손 애무(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 10
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;펠라치오(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 11
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;파이즈리(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 12
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;스마타(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 13
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;풋잡(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 14
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;엉덩이 코키(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 15
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;오나호코키(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 16
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;꼬리 코키(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 17
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;정상위(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 30
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;후배위(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 31
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;대면좌위(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 32
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;배면좌위(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 33
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;기승위(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 34
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;배면 기승위(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 35
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;Ａ정상위(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 40
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;Ａ후배위(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 41
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;Ａ대면좌위(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 42
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;Ａ배면좌위(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 43
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;Ａ기승위(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 44
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;Ａ배면 기승위(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 45
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;로터(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 60
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;바이브(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 61
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;애널바이브(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 62
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;클리캡(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 63
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;유두캡(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 64
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;Ｖ확장 벌룬(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 65
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;Ａ확장 벌룬(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 66
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;로션(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 70
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;미약(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 71
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;배란유발제(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 72
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;절륜환(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 73
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;위협한다(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 80
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;스팽킹(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 81
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;채찍(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 82
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;바늘(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 83
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;눈가리개(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 84
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;밧줄(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 85
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;재갈(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 86
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;피스트퍽(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 87
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;애널피스트(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 88
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;때리기(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 89
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;이라마치오(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 90
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;자위(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 100
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;자위 Lv2 이상
+				IF ABL:자위 >= 2
+					;PRINTFORMW 
+				;자위 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;자위 Lv2 이상
+				IF ABL:자위 >= 2
+					;PRINTFORMW 
+				;자위 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;자위 Lv2 이상
+				IF ABL:자위 >= 2
+					;PRINTFORMW 
+				;자위 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;자위 Lv2 이상
+				IF ABL:자위 >= 2
+					;PRINTFORMW 
+				;자위 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;안면승마(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 101
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ｃ감 Lv3 이상
+				IF ABL:Ｃ감 >= 3
+					;PRINTFORMW 
+				;Ｃ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;Ａ안면승마(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 102
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;Ａ감 Lv3 이상
+				IF ABL:Ａ감 >= 3
+					;PRINTFORMW 
+				;Ａ감 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;전기 안마(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 103
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;다리를 빤다(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 104
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;귀두 비난하는 사람 코키(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 106
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;귀두 고문 페라(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 107
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;방뇨한다(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 130
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;오줌을 건다(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 131
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;입안 방뇨(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 132
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;이뇨제(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 140
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;관장(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 141
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;관장＆플러그(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 142
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;방귀 한다(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 150
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;안기방귀(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 151
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;배설 Lv2 이상
+				IF ABL:배설 >= 2
+					;PRINTFORMW 
+				;배설 Lv2 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수 삽입(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 201
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;주인공이 처녀
+			IF TALENT:MASTER:처녀
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;주인공이 비처녀
+			ELSE
+				;연모 or 복종
+				IF TALENT:연모 || TALENT:복종
+					;PRINTFORMW 
+				;그 이외
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수Ａ삽입(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 202
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수 클리 꾸짖고(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 203
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수 가슴애무(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 204
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수 오나홀(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 205
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수 코키(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 206
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수 착유(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 207
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수 긴박(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 208
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수구욕(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 210
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수 자위(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 211
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				;촉수 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				;촉수 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				;촉수 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			;그 이외
+			ELSE
+				;촉수 Lv3 이상
+				IF ABL:촉수 >= 3
+					;PRINTFORMW 
+				;촉수 Lv3 미만
+				ELSE
+					;PRINTFORMW 
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수 산란(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 212
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;촉수Ａ산란(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 213
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;스킨쉽(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 320
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;두를 어루만진다(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 321
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				 ;PRINTFORMW
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;머리카락을 빗는다(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 322
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;빗으로 빗고 빌려준다(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 323
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;달콤한 말(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 324
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+;-------------------------------------------------
+;버드 키스(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 340
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;소프트 키스(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 341
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;딥키스(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 342
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;화관을 재배한다(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 356
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;등을 민다(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 358
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;처음
+		IF IS_COM_FIRST()
+			;기성 사실 Lv2 이상
+			IF MARK:2 >= 2
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;2회째 이후
+		ELSE
+			;연모 or 복종 or 친구
+			IF TALENT:연모 || TALENT:복종 || TALENT:친구
+				;PRINTFORMW 
+			;기성 사실 Lv2 이상
+			ELSEIF MARK:2 >= 2
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		ENDIF
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;성의 지식을 가르친다(플레이어)
+;-------------------------------------------------
+IF SELECTCOM == 550
+	;이 캐릭터가 주도권을 가지고 있다
+	IF IS_INITIATIVE(TARGET)
+		;연모 or 복종 or 친구
+		IF TALENT:연모 || TALENT:복종 || TALENT:친구
+			;PRINTFORMW 
+		;그 이외
+		ELSE
+			;PRINTFORMW 
+		ENDIF
+	;이 캐릭터가 주도권을 가지고 있지 않다
+	ELSE
+		;연모 or 복종 or 친구
+		IF TALENT:연모 || TALENT:복종 || TALENT:친구
+			;PRINTFORMW 
+		;그 이외
+		ELSE
+			;PRINTFORMW 
+		ENDIF
+	ENDIF
+ENDIF
+
+;=================================================
+;●커맨드 실행 후(파라미터의 변동 처리가 끝나고 나서 불려 간다)
+;=================================================
+@KOJO_COM_AFTER_A_K42
+;[속이 빈 것]상태의 경우, 입이 막히고 있는 경우는 구상을 표시하지 않는다
+IF TALENT:공허 || IS_EQUIP_CONTINUE(TARGET, "입장착")
+	RETURN 0
+ENDIF
+
+;-------------------------------------------------
+;처녀상실
+;-------------------------------------------------
+;주인공과의 섹스에 의한 처녀상실
+IF TCVAR:13 == 1
+	;연모 or 복종
+	IF TALENT:연모 || TALENT:복종
+		PRINTFORMW 「응♬ 주인님꺼 들어오고있어..」
+	;그 이외
+	ELSE
+		;PRINTFORMW 
+	ENDIF
+;주인공에게 섹스 이외로 처녀를 빼앗긴다
+ELSEIF TCVAR:13 == 2
+	;연모 or 복종
+	IF TALENT:연모 || TALENT:복종
+		;PRINTFORMW 
+	;그 이외
+	ELSE
+		;PRINTFORMW 
+	ENDIF
+;그 이외때에 처녀상실
+ELSE
+	;연모 or 복종
+	IF TALENT:연모 || TALENT:복종
+		;PRINTFORMW 
+	;그 이외
+	ELSE
+		;PRINTFORMW 
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;주인공을 사정시켰다
+;-------------------------------------------------
+IF NOWEX:MASTER:사정 > 0
+	SELECTCASE TCVAR:MASTER:420
+		;질에 사정
+		CASE 1
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;애널에 사정
+		CASE 2
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;손에 사정
+		CASE 3
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				PRINTFORMW 「우와! 아하핫! 내 손에 가버렸네♪」
+				PRINTFORMW 아스나는 계속해서 나오고있는 하얀 액체를 끈적이게 만지면서 즐거운듯이 웃고있었다
+			;그 이외
+			ELSE
+				;PRINTFORMW 
+			ENDIF
+		;구에 사정
+		CASE 4
+			;연모 or 복종 또한 정애Lv2 이상
+			IF (TALENT:연모 || TALENT:복종) && ABL:정애 >= 2
+			SELECTCASE RAND:2
+				CASE 0
+				PRINTFORMW 더 이상 못참고 아스나의 입에 사정을 했다
+				PRINTFORMW 「응♪」
+				PRINTFORMW 아스나의 눈이 커지더니 %ANAME(MASTER)%의 자지를 좀 더 깊숙이 빨더니 다시 머리를 흔들었다
+				PRINTFORMW 안그래도 사정중이엇는데 아스나가 머리를 계속 흔들대니 더욱 더 사정을 했다
+				PRINTFORMW 「주인님 더 많이 나왓네? 히힛」
+				CASE 1
+				PRINTFORMW 더 이상은 못참을거 같아서 아스나의 머리를 잡았다
+				PRINTFORMW 「앗♥」
+				PRINTFORMW 아스나의 입에 잔뜩 사정을 하고있었는데 아스나의 혀가 느껴졌다
+				PRINTFORMW 「조음 더어...♥♥」
+				PRINTFORMW 머리가 붙잡혀있엇는데 아스나의 손은 %ANAME(MASTER)%의 허리를 잡고 안놔줄려했다
+				PRINTFORMW 아스나는 사정중인 자지에도 혀를 계속해서 놀렸다
+				PRINTFORMW 사정을 마친뒤 아스나는 입에 넣어진 정액을 맛있게 먹은 뒤 표정을 지었다
+			ENDSELECT
+			;연모 or 복종
+			ELSEIF TALENT:연모 || TALENT:복종
+				;PRINTFORMW 
+			;그 이외
+			ELSE
+				PRINTFORMW 「읏으..」
+				PRINTFORMW 아직은 정액을 삼키기 괴롭다는 듯이 정액을 휴지에 답아서 뱉어내고있었다
+			ENDIF
+		;가슴에 사정
+		CASE 5
+			;연모 or 복종
+			IF TALENT:연모 || TALENT:복종
+				PRINTFORMW 「응♪」
+				PRINTFORMW 「푸슛♥푸슛♥」
+			;그 이외
+			ELSE
+				PRINTFORMW 「응♪」
+			ENDIF
+		;다리에 사정
+		CASE 6
+		;꼬리에 사정
+		CASE 7
+		;얼굴에 사정
+		CASE 8
+		;머리카락에 사정
+		CASE 9
+		;겨드랑이에 사정
+		CASE 10
+		;그 외의 장소에 사정
+		CASEELSE
+	ENDSELECT
+
+;-------------------------------------------------
+;주인공을 사정시키지 않고 절정 시켰다
+;-------------------------------------------------
+ELSEIF NOWEX:MASTER:Ｃ절정 + NOWEX:MASTER:Ｖ절정 + NOWEX:MASTER:Ａ절정 + NOWEX:MASTER:Ｂ절정 + NOWEX:MASTER:Ｍ절정 > 0
+	;연모 or 복종
+	IF TALENT:연모 || TALENT:복종
+		;PRINTFORMW 
+	;그 이외
+	ELSE
+		;PRINTFORMW 
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;오줌 흘리기 했다
+;-------------------------------------------------
+SELECTCASE TCVAR:0
+	;소변욕이 있는 상태로 절정 강도의 합계가 4이상
+	CASE 1
+		;PRINTFORMW 
+	;소변욕이 높은 상태로 절정
+	CASE 2
+		;PRINTFORMW 
+	;소변욕의 한계
+	CASE 3
+		;PRINTFORMW 
+	;공포에 의한 실금
+	CASE 4
+		;PRINTFORMW 
+ENDSELECT

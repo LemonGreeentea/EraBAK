@@ -1,0 +1,233 @@
+﻿;=====================================================
+; 블루아카이브K 히나 데일리 구상 - 업무 스트레스
+; 구상 제작자 : 레몬녹차
+; 구상 조건 : 히나가 자국에 있을 때 + 포로가 아닐 것
+; 구상 설명
+
+;   1. 랜덤 확률로 히나의 업무 스트레스가 증가한다.
+;   2. 업무 스트레스가 늘어나면 히나가 점점 힘들어한다.
+;   3. 플레이어는 여러가지 행동을 통해 히나의 스트레스를 풀어줄 수 있다.
+;     - 안마, 산책, 데이트(연인일 때), 야한거 등등
+;
+;=====================================================
+;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@KOJO_DAILY_K13_WORK_STRESS_RATE(대상)
+#DIM 대상
+;업무스트레스 이벤트 발생확률. 기본 5%지만 히나의 스트레스가 올라갈수록 확률이 늘어난다. (최대 스트레스 100, 최대확률 55%)
+RETURN 50 + (DVAR:히나_업무스트레스_수치 * 5)
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@KOJO_DAILY_K13_WORK_STRESS_DECISION(대상)
+#DIM 대상
+;히나가 플레이어 소속이면서 포로가 아닐 것
+IF CFLAG:대상:소속 == CFLAG:MASTER:소속 && CFLAG:대상:포로처 == 0
+	;히나 첫 이벤트 진행 안했으면 실행
+	SIF DVAR:히나_업무스트레스_진행도 == 0
+		RETURN 1
+	;히나 첫 이벤트를 무시하면 스킵한다.
+	SIF DVAR:히나_업무스트레스_진행도 == -1
+		RETURN 0
+	;히나 스트레스가 20 이하면 스킵
+	IF DVAR:히나_업무스트레스_수치 <= 20
+		RETURN 0
+	ENDIF
+	RETURN CHECK_KOJO_DAILY_HAPPEN(대상, 1, 0)
+ENDIF
+RETURN 0
+
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@KOJO_DAILY_K13_WORK_STRESS_GENRE(대상)
+#DIM 대상
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@KOJO_DAILY_K13_WORK_STRESS(대상)
+#DIM 대상
+
+IF IS_SLAVE(대상)
+	LOCALS:0 = 주인님
+ELSEIF TALENT:MASTER:선생 == 1
+	LOCALS:0 = 선생님
+ELSE
+	LOCALS:0 = %ANAME(MASTER)%
+ENDIF
+
+IF DVAR:히나_업무스트레스_진행도 == 0
+	;히나 스트레스 기본수치
+	DVAR:히나_업무스트레스_수치 = 60
+	PRINTFORML 늦은 밤, 복도를 걷고 있던 %조사처리(ANAME(MASTER),"은")% 히나의 비명를 들었다.
+	PRINTFORML
+	CALL ASK_YN("살피러간다", "무시한다")
+	IF RESULT == 1
+		PRINTFORML 뭐, 다른 선도부원이 도울 것이다.
+		PRINTFORMW %조사처리(ANAME(MASTER),"은")% 그대로 갈길을 갔다.
+		DVAR:히나_업무스트레스_진행도 == -1
+	ELSEIF RESULT == 0
+		PRINTFORML 혹시 무슨 일이 생겼을지도 모른다.
+		PRINTFORMW %조사처리(ANAME(MASTER),"은")% 발길을 돌려 선도부장실로 들어갔다.
+		CALL FACE_IMAGE_N("표정_13_일반_99")
+		PRINTFORML 선도부장실에 들어가자 히나가 바닥에 쓰러져있다.
+		PRINTFORML
+		CALL ASK_MULTI("히나의 의식을 확인한다.")
+		PRINTFORML 다행히 숨은 쉬고 있다.
+		PRINTFORMW 쓰러진 히나를 업고 양호실로 데려가 침대에 눕혔다.
+		PRINTFORML 
+		PRINTFORML . . .
+		PRINTFORMW
+		CALL FACE_IMAGE_N("표정_13_일반_4")
+		PRINTFORMW 「으으... 여긴 어디?」
+		IF TALENT:대상:연모
+			;얼굴 붉어짐 화상
+			CALL FACE_IMAGE_N("표정_13_일반_10")
+			PRINTFORMW 「%LOCALS:0%...?」
+			PRINTFORML 
+			CALL ASK_MULTI("히나에게 상황을 설명한다.")
+			CALL FACE_IMAGE_N("표정_13_일반_13")
+		ELSE
+			CALL FACE_IMAGE_N("표정_13_일반_13")
+			PRINTFORMW 「%LOCALS:0%...?」
+			PRINTFORML 
+			CALL ASK_MULTI("히나에게 상황을 설명한다.")
+		ENDIF
+		PRINTFORML 「쓰러졌었구나.」
+		PRINTFORMW 「아무래도 요즘 할 일이 많다보니까... 어제도 일 때문에 집에 못 들어갔고.」
+		PRINTFORML
+		CALL ASK_MULTI("「스트레스를 해소해야 할 것 같아.」")
+		CALL FACE_IMAGE_N("표정_13_일반_14")
+		PRINTFORML 「스트레스...? 」
+		PRINTFORML 「확실히 요즘따라 집중도 잘 안되고, 두통도 심해지긴 했는데.」
+		PRINTFORML 「음... 으음...」
+		PRINTFORMW 「스트레스는 어떻게 해소하는거지...?」
+		PRINTFORML
+		CALL ASK_MULTI("「일단 일을 줄이고 마음에 안정이 될만한 걸 해보자.」")
+		PRINTFORML 「일을 줄일순 없고...」
+		PRINTFORMW 「마음에 안정이 되는 일...?」
+		CALL FACE_IMAGE_N("표정_13_일반_99")
+		PRINTFORMW 「. . .」
+		CALL FACE_IMAGE_N("표정_13_일반_12")
+		PRINTFORML 「마음에 안정이 될만한 일이 뭐가 있을까?」
+		PRINTFORML 「별로 쉬어본적이 없어서 무얼 해야 할지...」
+		PRINTFORML 
+		CALL ASK_MULTI("「내가 도와줄게.」")
+		CALL FACE_IMAGE_N("표정_13_일반_19")
+		PRINTFORMW 「%LOCALS:0%...」
+		PRINTFORML 「고마워... %LOCALS:0%가 하자는대로 따를게.」
+		DVAR:히나_업무스트레스_진행도 = 1
+		DVAR:히나_업무스트레스_수치 = 50
+		PRINTFORML
+		PRINTFORML
+		PRINTFORMW 턴마다 랜덤 확률로 히나의 스트레스가 올라갑니다.
+		PRINTFORMW 데이트, 휴식 등을 통해 히나의 스트레스를 풀어줄 수 있습니다.
+		PRINTFORML
+		PRINTFORML . . .
+	ENDIF
+ELSE
+	PRINTFORMW 히나의 스트레스 관리를 위해 선도부장실로 향했다.
+ENDIF
+
+IF DVAR:히나_업무스트레스_진행도 == 1
+	SELECTCASE RAND:5
+		CASE 0
+			CALL FACE_IMAGE_N("표정_13_일반_16")
+			PRINTFORML 「어서와, 오늘은 어떤걸 할거야?」
+		CASE 1
+			CALL FACE_IMAGE_N("표정_13_일반_3")
+			PRINTFORML 「어서와, %LOCALS:0%.」
+		CASE 2
+			CALL FACE_IMAGE_N("표정_13_일반_3")
+			PRINTFORML 「어서와, 기다리고 있었어.」
+		CASE 3
+			CALL FACE_IMAGE_N("표정_13_일반_13")
+			PRINTFORML 「아직 못 끝낸 일이 산더미인데...」
+		CASE 4
+			CALL FACE_IMAGE_N("표정_13_일반_13")
+			PRINTFORML 「피곤해... 」
+	ENDSELECT
+	$INPUT_LOOP1
+	PRINTFORML
+	PRINTFORML 히나의 스트레스 : {DVAR:히나_업무스트레스_수치} / 100
+	PRINTFORML 오늘은 히나와 무엇을 할까?
+	PRINTFORML
+	CALL ASK_MULTI("느긋하게 휴식을 취한다.", "데이트 한다.", "야한걸 한다.(미완성)", "그만둔다.")
+	;휴식
+	IF RESULT == 0
+		PRINTFORMW 히나와 느긋히 휴식을 취하기로 했다.
+		CALL FACE_IMAGE_N("표정_13_일반_18")
+		PRINTFORML 「아무것도 안 하니까 어색해.」
+		PRINTFORMW 「그게 좋은거라고? 잘 모르겠어...」
+		SELECTCASE RAND:100
+			CASE IS < 15
+				PRINTFORML 히나의 스트레스가 많이 풀렸다. (스트레스 -20)
+				DVAR:히나_업무스트레스_수치 -= 20
+				PRINTFORMW 히나의 스트레스 : {DVAR:히나_업무스트레스_수치} / 100
+			CASE IS < 85
+				PRINTFORML 히나의 스트레스가 풀렸다. (스트레스 -10)
+				DVAR:히나_업무스트레스_수치 -= 10
+				PRINTFORMW 히나의 스트레스 : {DVAR:히나_업무스트레스_수치} / 100
+			CASE IS < 100
+				PRINTFORML ... 히나는 별로 쉬지 못 한 것 같다. (스트레스 -0)
+				PRINTFORMW 히나의 스트레스 : {DVAR:히나_업무스트레스_수치} / 100
+		ENDSELECT
+	;데이트
+	ELSEIF RESULT == 1
+		PRINTFORMW 히나와 거리를 다니며 데이트 했다.
+		CALL FACE_IMAGE_N("표정_13_일반_12")
+		PRINTFORML 「업무 외로 외출나온건 정말 오랜만인거 같아.」
+		PRINTFORMW 「이런 풍경이었구나... 업무 때문에 나왔을 땐 거리의 풍경 같은걸 감상할 여유는 없었으니까.」
+		SELECTCASE RAND:100
+			CASE IS < 15
+				PRINTFORML 히나의 스트레스가 많이 풀렸다. (스트레스 -20)
+				DVAR:히나_업무스트레스_수치 -= 20
+				PRINTFORMW 히나의 스트레스 : {DVAR:히나_업무스트레스_수치} / 100
+			CASE IS < 85
+				PRINTFORML 히나의 스트레스가 풀렸다. (스트레스 -10)
+				DVAR:히나_업무스트레스_수치 -= 10
+				PRINTFORMW 히나의 스트레스 : {DVAR:히나_업무스트레스_수치} / 100
+			CASE IS < 100
+				PRINTFORML ... 히나는 별로 쉬지 못 한 것 같다. (스트레스 -0)
+				PRINTFORMW 히나의 스트레스 : {DVAR:히나_업무스트레스_수치} / 100
+		ENDSELECT
+	;야한거
+	ELSEIF RESULT == 2
+		PRINTFORMW 히나와 야한걸 하기로 했다.
+		CALL FACE_IMAGE_N("표정_13_일반_15")
+		PRINTFORML 「%LOCALS:0%.」
+		PRINTFORMW 히나의 무서운 얼굴을 보고 그만두기로 했다.
+		GOTO INPUT_LOOP1
+	;그만둔다
+	ELSEIF RESULT == 3
+		CALL ASK_MULTI("오늘은 그만 둔다", "이제 더 이상 돕지 않는다.", "다시 생각해본다.")
+		IF RESULT == 0
+			PRINTFORMW 오늘은 그냥 돌아가기로 했다.
+			CALL FACE_IMAGE_N("표정_13_일반_3")
+			PRINTFORMW 「바쁘면 어쩔 수 없지. 잘 가 %LOCALS:0%.」
+		ELSEIF RESULT == 1
+			PRINTFORMW 더 이상 히나의 스트레스를 관리하지 않으시겠습니까?
+			CALL ASK_YN("네", "아니오")
+			IF RESULT == 0
+				DVAR:히나_업무스트레스_진행도 == -1
+			ELSEIF RESULT == 1
+				GOTO INPUT_LOOP1
+			ENDIF
+		ELSEIF RESULT == 2
+			GOTO INPUT_LOOP1
+		ENDIF
+	ENDIF
+ENDIF
+
+
+RETURN 1
