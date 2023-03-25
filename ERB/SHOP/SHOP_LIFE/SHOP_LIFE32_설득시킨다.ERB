@@ -18,11 +18,6 @@ RETURN 1
 ;「설득시킨다」의 선택 가능 캐릭터 존재 판정（설득되는 측）
 ;-------------------------------------------------
 @SHOP_LIFE_CHECKCHARA32(ARG:0)
-#DIM 라이벌_ID
-
-라이벌_ID = NO_TO_CHARA(RIVAL_ID)
-SIF ARG:0 == 라이벌_ID
-	RETURN 0
 ;비주인공, 주인공 세력에 소속하지 않은, 주인공 세력의 포로
 RETURN CHECK91(ARG:0, 2, ARG:0 != MASTER && CFLAG:(ARG:0):소속 != CFLAG:MASTER:소속 && CFLAG:(ARG:0):포로처 == CFLAG:MASTER:소속)
 

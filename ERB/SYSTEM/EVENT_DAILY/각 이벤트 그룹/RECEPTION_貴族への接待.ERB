@@ -9,7 +9,7 @@ RETURN 20
 ;---------------------
 @EVENT_DAILY_RECEPTION_DECISION()
 ;주인공이 군주가 아닌 경우
-SIF DVAR:데일리_장르세부_NTR == 0
+SIF 데일리_장르세부_NTR == 0
 	RETURN 0
 SIF GET_COUNTRY_BOSS(CFLAG:MASTER:소속) == MASTER
 	RETURN 0

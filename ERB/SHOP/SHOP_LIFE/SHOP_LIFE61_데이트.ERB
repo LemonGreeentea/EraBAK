@@ -21,11 +21,6 @@ RETURN 1
 ;「데이트」의 선택 가능 캐릭터 존재 판정（권할 수 있는 캐릭터）
 ;-------------------------------------------------
 @SHOP_LIFE_CHECKCHARA61(ARG:0)
-#DIM 라이벌_ID
-
-라이벌_ID = NO_TO_CHARA(RIVAL_ID)
-SIF ARG:0 == 라이벌_ID
-	RETURN 0
 ;비주인공, 동일 세력, 포로가 아닌, 동물이 아닌, 통상 상태 또는 육아중
 RETURN ARG:0 != MASTER && CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속 && CFLAG:(ARG:0):포로처 == 0 && !IS_ANIMAL(ARG:0) && GROUPMATCH(CFLAG:(ARG:0):행동불능상태, 0, 2)
 

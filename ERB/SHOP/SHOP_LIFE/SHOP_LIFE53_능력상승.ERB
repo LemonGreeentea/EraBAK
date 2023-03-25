@@ -20,11 +20,6 @@ RETURN 0
 ;「능력상승」의 선택 가능 캐릭터 존재 판정
 ;-------------------------------------------------
 @SHOP_LIFE_CHECKCHARA53(ARG:0)
-#DIM 라이벌_ID
-
-라이벌_ID = NO_TO_CHARA(RIVAL_ID)
-SIF ARG:0 == 라이벌_ID
-	RETURN 0
 ;동일세력, 포로가 아님, 동물이 아님
 RETURN CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속 && CFLAG:(ARG:0):포로처 == 0 && !IS_ANIMAL(ARG:0)
 

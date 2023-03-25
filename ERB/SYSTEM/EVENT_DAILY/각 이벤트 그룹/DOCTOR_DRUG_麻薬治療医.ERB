@@ -12,7 +12,7 @@ RETURN 40
 ;---------------------
 @EVENT_DAILY_DOCTOR_DRUG_DECISION()
 ;일행력 소속으로 포로가 아닌 약물의존(CFLAG 쪽) 소지자
-SIF DVAR:데일리_장르세부_NTR == 0
+SIF 데일리_장르세부_NTR == 0
 	RETURN 0
 LOCAL:1 = 0
 FOR LOCAL:0, 0, CHARANUM

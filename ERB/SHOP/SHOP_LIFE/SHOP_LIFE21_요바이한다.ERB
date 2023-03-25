@@ -29,11 +29,6 @@ RETURN 1
 ;「요바이한다」의 선택 가능 캐릭터 존재 판정
 ;-------------------------------------------------
 @SHOP_LIFE_CHECKCHARA21(ARG:0)
-#DIM 라이벌_ID
-
-라이벌_ID = NO_TO_CHARA(RIVAL_ID)
-SIF ARG:0 == 라이벌_ID
-	RETURN 0
 ;인접하고 있는 도시가 있다
 IF !CFLAG:MASTER:소속 || TMP_COUNTRY_IS_NEIBORING:(CFLAG:MASTER:소속):(CFLAG:(ARG:0):소속)
 	;비주인공, 포로는 아닌, 별세력, 어딘가의 세력에 소속해 있다（방랑, 미등장, 사망이 끝난 상태는 아니다）
