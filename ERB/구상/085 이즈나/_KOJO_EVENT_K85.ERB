@@ -13,15 +13,32 @@
 ;퍼스트 키스 실행
 ;-------------------------------------------------
 IF ARG == 1
-	;연모 or 복종
-	IF TALENT:연모 || TALENT:복종
-		;PRINTFORMW 
 	;연인
-	ELSEIF TALENT:연인
-		;PRINTFORMW 
+	IF TALENT:연인
+		PRINTFORMW 입술을 떼어 놓으면 달콤한 숨결이 닿았다
+		PRINTFORMW 녹아내린 표정의 이즈나와 시선이 마두쳤다
+		PRINTFORML 「에헤헤… 퍼스트 키스네요?」
+		PRINTFORML 「주군과 사귀기 전까지도 언제해주시나 기다리고 있었어요」
+		PRINTFORMW 당신은 이즈나가 소중했기에 지금껏 하지 않았다 답했다
+		PRINTFORML 「이즈나를 소중히 해줬기에 지금까지 안해주신건가요?」
+		PRINTFORML 「주군께서 그렇게 생각해주신다면 이즈나는 기뻐요!」
+		PRINTFORMW 이즈나는 당신을 꼭 껴안았다
+		PRINTFORML 「하지만… 더한것도 기대하고 있다고요? 주군♥」
+		PRINTFORMW 이즈나의 꼬리는 기쁜걸 참을 기색없이 흔들리고있다
+		;연모 or 복종
+	ELSEIF TALENT:연모 || TALENT:복종
+		PRINTFORMW 입술을 떼어 놓으면 달콤한 숨결이 닿았다
+		PRINTFORMW 어딘가 부족해보이는 표정의 이즈나와 시선이 마주쳤다
+		PRINTFORML 「주군… 이즈나의 마음이 아직도 어딘가 부족해서…」
+		PRINTFORML 「한번만 더 받을 수 있을까요?」
+		PRINTFORMW 당신은 여우에 홀려 다시 한번 입을 맞추었다
 	;그 이외
 	ELSE
-		;PRINTFORMW 
+		PRINTFORMW 입술을 떼어 놓으면 달콤한 숨결이 닿았다
+		PRINTFORMW 넋을 잃은 표정의 이즈나와 시선이 마주쳤다
+		PRINTFORML 「무엇인가, 부끄럽네요…」
+		PRINTFORMW 이즈나를 바라보고 있으면 부끄러운듯이 이즈나가 시선을 돌려버렸다
+		PRINTFORMW 하지만 이즈나의 꼬리가 기쁜듯이 흔들리는것은 감출 수 없었다
 	ENDIF
 	RETURN 0
 ENDIF
@@ -60,8 +77,11 @@ ENDIF
 ;쓰러트리기 성공(합의를 취득)
 ;-------------------------------------------------
 IF ARG == 5
+	;연인
+	IF TALENT:연인
+		
 	;연모 or 복종
-	IF TALENT:연모 || TALENT:복종
+	ELSEIF TALENT:연모 || TALENT:복종
 		;PRINTFORMW 
 	;그 이외
 	ELSE
@@ -325,7 +345,10 @@ ENDIF
 ;연모를 취득
 ;-------------------------------------------------
 IF ARG == 60
-	;PRINTFORMW 
+	PRINTFORML (주군을 생각할떄면 이즈나의 가슴이 엄청 콩닥거려서…)
+	PRINTFORML (주군과 함께 있을 떄의 이 두근거림은 사명감일까요?)
+	PRINTFORML (그리고 주군의 곁에 있으면 행복한 기분이 들어서…)
+	PRINTFORML (이 기분은 무엇일까요…?)
 	RETURN 0
 ENDIF
 
@@ -333,7 +356,8 @@ ENDIF
 ;친구를 취득
 ;-------------------------------------------------
 IF ARG == 61
-	;PRINTFORMW 
+	PRINTFORML 「주군! 혹여 곤란한 일이 있다면 이즈나에게 말해주세요!」
+	PRINTFORML 「이즈나가 할 수 있는한 성심성의것 도와드리겠습니다! 닌닌!」
 	RETURN 0
 ENDIF
 
@@ -341,7 +365,12 @@ ENDIF
 ;친애를 취득
 ;-------------------------------------------------
 IF ARG == 62
-	;PRINTFORMW 
+	PRINTFORML 「주군!주군!주~군! 에헤헤,역시 사랑하는 주군이라 그런지 부르는것 만으로 행복해요」
+	PRINTFORMW 이즈나는 당신의 품에 안겨 사랑에 빠진 목소리로 말하고있다
+	PRINTFORML 「이즈나는 주군과 함께 있는 지금이 행복해요,주군에게 사랑받는 지금이 행복해요」
+	PRINTFORML 「그러니 좀 더 이즈나와 함께 있어주세요…」
+	PRINTFORMW
+	PRINTFORML 「정말 사랑해요 주군」
 	RETURN 0
 ENDIF
 

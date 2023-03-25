@@ -12,134 +12,296 @@
 ;===========================================================================
 
 ;=========================================================
-;   복장 변경에 따른 화상변화 적용
+;   복장 변경/기타 조건에 따른 화상변화 적용 - 레몬녹차
 ; 
 ;   대상(ARG)의 다른 의상이 있다면 이곳에서 설정한다.
 ;   리소스 폴더 내 CSV에도 화상 지정 필요
 ;   
 ;=========================================================
-@PRINT_IMAGE_OTHER_CLOTHES(ARG)
+@PRINT_IMAGE_OTHER_CLOTHES(대상)
+#DIM 대상
+#DIM 옷대상
 #DIMS clothes
-clothes = _의복
-SELECTCASE ARG
+
+;대상이 플레이어면 복장 참고 대상을 0번 캐릭터로
+IF 대상 == FLAG:주인공화상
+	옷대상 = 0
+ELSE
+	옷대상 = 대상
+ENDIF
+
+SELECTCASE 대상
 	CASE 1
 		;시로코(라이딩, 수영복, 체육복)
-		IF CLOTH:ARG:의상부위_상하의 == 8
+		IF CLOTH:옷대상:의상부위_상하의 == 8
 			clothes = _라이딩
-		ELSEIF CLOTH:ARG:의상부위_상하의 == 10
+		ELSEIF CLOTH:옷대상:의상부위_상하의 == 10
 			clothes = _수영복
-		ELSEIF CLOTH:ARG:의상부위_상하의 == 9
+		ELSEIF CLOTH:옷대상:의상부위_상하의 == 9
 			clothes = _체육복
 		ELSE
 			clothes = _의복
 		ENDIF
 	CASE 2
 		;호시노(수영복, 체육복)
-		IF CLOTH:ARG:의상부위_상하의 == 10
+		IF CLOTH:옷대상:의상부위_상하의 == 10
 			clothes = _수영복
-		ELSEIF CLOTH:ARG:의상부위_상하의 == 9
+		ELSEIF CLOTH:옷대상:의상부위_상하의 == 9
 			clothes = _체육복
 		ELSE
 			clothes = _의복
 		ENDIF
 	CASE 3
 		;세리카(수영복, 정월, 체육복)
-		IF CLOTH:ARG:의상부위_상하의 == 10
+		IF CLOTH:옷대상:의상부위_상하의 == 10
 			clothes = _수영복
-		ELSEIF CLOTH:ARG:의상부위_상하의 == 2
+		ELSEIF CLOTH:옷대상:의상부위_상하의 == 2
 			clothes = _정월				
-		ELSEIF CLOTH:ARG:의상부위_상하의 == 9
+		ELSEIF CLOTH:옷대상:의상부위_상하의 == 9
 			clothes = _체육복
 		ELSE
 			clothes = _의복
 		ENDIF
 	CASE 4
 		;노노미(수영복, 체육복)
-		IF CLOTH:ARG:의상부위_상하의 == 10
+		IF CLOTH:옷대상:의상부위_상하의 == 10
 			clothes = _수영복
-		ELSEIF CLOTH:ARG:의상부위_상하의 == 9
+		ELSEIF CLOTH:옷대상:의상부위_상하의 == 9
 			clothes = _체육복
 		ELSE
 			clothes = _의복
 		ENDIF
 	CASE 5
-		;아야네(수영복, 체육복)
-		IF CLOTH:ARG:의상부위_상하의 == 10
-			clothes = _수영복
-		ELSEIF CLOTH:ARG:의상부위_상하의 == 9
-			clothes = _체육복
+		;아야네
+		IF CLOTH:옷대상:의상부위_상하의 == 12
+			clothes = _샬레
+
+		ELSEIF CLOTH:옷대상:의상부위_악세사리 == 1
+				;아야네(수영복, 체육복)
+			IF CLOTH:옷대상:의상부위_상하의 == 10
+				clothes = _안경수영복
+			ELSEIF CLOTH:옷대상:의상부위_상하의 == 9
+				clothes = _안경체육복
+			ELSE
+				clothes = _안경의복
+			ENDIF
 		ELSE
-			clothes = _의복
+			;아야네(수영복, 체육복)
+			IF CLOTH:옷대상:의상부위_상하의 == 10
+				clothes = _수영복
+			ELSEIF CLOTH:옷대상:의상부위_상하의 == 9
+				clothes = _체육복
+			ELSE
+				clothes = _의복
+			ENDIF
 		ENDIF
 	CASE 9
 		;아루(정월)
-		IF CLOTH:ARG:의상부위_상하의 == 2
+		IF CLOTH:옷대상:의상부위_상하의 == 2
 			clothes = _정월
 		ELSE
 			clothes = _의복
 		ENDIF
 	CASE 10
 		;무츠키(정월)
-		IF CLOTH:ARG:의상부위_상하의 == 2
+		IF CLOTH:옷대상:의상부위_상하의 == 2
 			clothes = _정월
 		ELSE
 			clothes = _의복
 		ENDIF
 	CASE 11
 		;카요코(정월)
-		IF CLOTH:ARG:의상부위_상하의 == 2
+		IF CLOTH:옷대상:의상부위_상하의 == 2
 			clothes = _정월
 		ELSE
 			clothes = _의복
 		ENDIF
 	CASE 12
-		;카요코(정월)
-		IF CLOTH:ARG:의상부위_상하의 == 2
+		;카요코(정월,샬레)
+		IF CLOTH:옷대상:의상부위_상하의 == 2
 			clothes = _정월
+		ELSEIF CLOTH:옷대상:의상부위_상하의 == 12
+			clothes = _샬레
 		ELSE
 			clothes = _의복
 		ENDIF
-	CASE 13 
-		;히나(수영복)
-		IF CLOTH:ARG:의상부위_상하의 == 6
+	CASE 13
+		;히나(수영복, 파자마)
+		IF CLOTH:옷대상:의상부위_상하의 == 6
 			clothes = _학교수영복
-		ELSEIF CLOTH:ARG:의상부위_상하의 == 13
+		ELSEIF CLOTH:옷대상:의상부위_상하의 == 13
 			clothes = _파자마
+		ELSE
+			clothes = _의복
+		ENDIF
+	CASE 14
+		;아코(샬레, 체육복)
+		IF CLOTH:옷대상:의상부위_상하의 == 12
+			clothes = _샬레
+		ELSEIF CLOTH:옷대상:의상부위_상하의 == 9
+			clothes = _체육복
 		ELSE
 			clothes = _의복
 		ENDIF
 	CASE 15
 		;이오리(수영복)
-		IF CLOTH:ARG:의상부위_상하의 == 6
-			clothes = _학교수영복
+		IF CLOTH:옷대상:의상부위_상하의 == 10
+			clothes = _수영복
 		ELSE
 			clothes = _의복
 		ENDIF
 	CASE 16
 		;치나츠(온천) 
-		IF CLOTH:ARG:의상부위_상하의 == 3
+		IF CLOTH:옷대상:의상부위_상하의 == 3
 			clothes = _온천
+		ELSE
+			clothes = _의복
+		ENDIF
+	CASE 17
+		;하루나(정월, 체육복)
+		IF CLOTH:옷대상:의상부위_상하의 == 2
+			clothes = _정월
+		ELSEIF CLOTH:옷대상:의상부위_상하의 == 9
+			clothes = _체육복
+		ELSE
+			clothes = _의복
+		ENDIF
+	CASE 18
+		;준코(정월, 체육복)
+		IF CLOTH:옷대상:의상부위_상하의 == 2
+			clothes = _정월
+		ELSEIF CLOTH:옷대상:의상부위_상하의 == 9
+			clothes = _체육복
+		ELSE
+			clothes = _의복
+		ENDIF
+	CASE 19
+		;이즈미(정월, 체육복, 수영복)
+		IF CLOTH:옷대상:의상부위_상하의 == 2
+			clothes = _정월
+		ELSEIF CLOTH:옷대상:의상부위_상하의 == 9
+			clothes = _체육복
+		ELSEIF CLOTH:옷대상:의상부위_상하의 == 10
+			clothes = _수영복
+		ELSE
+			clothes = _의복
+		ENDIF
+	CASE 20
+		;아카리(정월, 체육복)
+		IF CLOTH:옷대상:의상부위_상하의 == 2
+			clothes = _정월
+		ELSEIF CLOTH:옷대상:의상부위_상하의 == 9
+			clothes = _체육복
+		ELSE
+			clothes = _의복
+		ENDIF
+	CASE 21
+		;후우카(정월)
+		IF CLOTH:옷대상:의상부위_상하의 == 2
+			clothes = _정월
 		ELSE
 			clothes = _의복
 		ENDIF
 
 	CASE 42
 		;아스나(바니걸, 교복) 
-		IF CLOTH:ARG:의상부위_상하의 == 1
+		IF CLOTH:옷대상:의상부위_상하의 == 1
 			clothes = _바니걸
-		ELSEIF CLOTH:ARG:의상부위_상하의 == 11
+		ELSEIF CLOTH:옷대상:의상부위_상하의 == 11
 			clothes = _교복
 		ELSE
 			clothes = _의복
 		ENDIF
+	CASEELSE
+		clothes = _의복
 ENDSELECT
 RESULTS = %clothes%
+RETURN
+
+;======================================================
+;  ☆ 이미지 출력 함수
+;  따로따로 퍼져있는 화상출력을 한 함수로 통합함(by. 레몬녹차)
+;  대상 : 캐릭터번호
+;  종류 : 스탠딩 혹은 얼굴
+;  표정 : 통상, 웃음, 화남
+;  출력예시 : 얼굴_화남_통상_13
+;======================================================
+@PRINT_IMAGE_CHARA(대상, 종류, 표정)
+#DIM 대상
+#DIMS 표정
+#DIMS 종류
+#DIMS sName
+IF 대상 == -1
+	sName = 더미캐릭터
+
+ELSEIF IS_RANDOM_CHARA(대상)
+		IF IS_FEMALE(대상)
+			sName = 커스텀_F_얼굴_의복_통상_{TALENT:대상:커스텀페이스}
+		ELSE
+			sName = 커스텀_M_얼굴_의복_통상_{TALENT:대상:커스텀페이스}
+		ENDIF
+	ELSE
+		SELECTCASE 대상
+			;플레이어 일 때
+			CASE 0
+				;커스텀 페이스 적용 유무
+				IF TALENT:대상:커스텀페이스
+					;커스텀페이스(남캐)
+					IF IS_MALE(대상)
+						sName = 커스텀_M_얼굴_의복_통상_{TALENT:대상:커스텀페이스}
+					;커스텀페이스(여캐)
+					ELSE
+						sName = 커스텀_F_얼굴_의복_통상_{TALENT:대상:커스텀페이스}
+					ENDIF
+				;주인공이 고정캐릭일 때
+				ELSEIF !FLAG:주인공화상 == 0
+						CALL PRINT_IMAGE_OTHER_CLOTHES(FLAG:주인공화상)
+						sName = %종류%%RESULTS%_%표정%_{FLAG:주인공화상}
+				ELSE
+					;기본 남캐 화상
+					IF IS_MALE(대상)
+						sName = 스탠딩_의복_통상_남
+					;기본 여캐 화상
+					ELSE
+						sName = 스탠딩_의복_통상_여
+					ENDIF
+				ENDIF
+			CASE 1 TO CHARANUM
+				CALL PRINT_IMAGE_OTHER_CLOTHES(대상)
+				sName = %종류%%RESULTS%_%표정%_{대상}
+			CASEELSE
+				IF TALENT:대상:커스텀페이스
+					IF IS_FEMALE(대상)
+						sName = 커스텀_F_얼굴_의복_통상_{TALENT:대상:커스텀페이스}
+					ELSE
+						sName = 커스텀_M_얼굴_의복_통상_{TALENT:대상:커스텀페이스}
+					ENDIF
+				ELSEIF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
+					sName = 스탠딩_의복_통상_도둑
+				ELSEIF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_홉고블린)
+					sName = 스탠딩_의복_통상_홉고블린
+				ELSEIF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_외래인)
+					sName = 스탠딩_의복_통상_외래인
+				ELSEIF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_촉수)
+					sName = 스탠딩_의복_통상_촉수
+				ELSEIF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_자경단)
+					sName = 스탠딩_의복_통상_자경단
+				ELSEIF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_서큐버스)
+					sName = 스탠딩_의복_통상_서큐버스
+				ELSEIF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_광신도)
+					sName = 스탠딩_의복_통상_광신도
+				ENDIF
+		ENDSELECT
+	ENDIF
+
+
+RESULTS = %sName%
 RETURN
 
 
 
 ;=========================================================
-;	신분 화면의 그림표시
+;	갈아입기의 그림표시
 ;
 ;	iID		：캐릭터 ID와 같은 자원명을 표시합니다
 ;	iSize	：폰트에 대한 사이즈%수치세로 기준 종횡비유지 생략으로 1000(10배)
@@ -160,57 +322,8 @@ iFont_Hei_mag = GETCONFIG("一行の高さ") * iSize*10 / GETCONFIG("フォン�
 iFont_Hei_mag = (iFont_Hei_mag/10) + (iFont_Hei_mag%10 >= 5? 1#0)
 
 sPrint_Text = <p align='left'>
-sTEMP:0 = _의복
-CALL PRINT_IMAGE_OTHER_CLOTHES(iID)
-sTEMP:0 = %RESULTS%
-SELECTCASE iID
-;-----------------
-;복장 변경에 따른 화상변경 (정보창)
-;-----------------
-CASE 0
-	IF DVAR:MASTER_FACE_CHARA == 0
-		IF IS_MALE(iID)
-			sPrint_Text += @"<img src='스탠딩_의복_통상_남' height='{iFont_Hei_mag}'>"
-		ELSE
-			sPrint_Text += @"<img src='스탠딩_의복_통상_여' height='{iFont_Hei_mag}'>"
-		ENDIF
-	ELSE
-		sPrint_Text += @"<img src='스탠딩_의복_통상_{DVAR:MASTER_FACE_CHARA}' height='{iFont_Hei_mag}'>"
-	ENDIF
-CASE 1 TO CHARANUM
-	IF IS_RANDOM_CHARA(iID)
-		LOCALS:10 = 커스텀
-		IF IS_FEMALE(iID)
-			LOCALS:10 = %LOCALS:10%_F
-		ELSE
-			LOCALS:10 = %LOCALS:10%_M
-		ENDIF
-		LOCALS:10 = %LOCALS:10%_\@FLAG:스탠딩종류?얼굴#스탠딩\@_의복_통상_{TALENT:iID:커스텀페이스}
-		sPrint_Text += @"<img src='%LOCALS:10%' height='{iFont_Hei_mag}'>"
-	ELSE
-		sPrint_Text += @"<img src='\@FLAG:스탠딩종류?얼굴#스탠딩\@%sTemp:0%_%eText%_{iID}' height='{iFont_Hei_mag}'>"
-	ENDIF
-CASEELSE
-	IF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
-		sPrint_Text += @"<img src='스탠딩_의복_통상_도둑' height='{iFont_Hei_mag}'>"
-	ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_홉고블린)
-		sPrint_Text += @"<img src='스탠딩_의복_통상_홉고블린' height='{iFont_Hei_mag}'>"
-	ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_외래인)
-		sPrint_Text += @"<img src='스탠딩_의복_통상_외래인' height='{iFont_Hei_mag}'>"
-	ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_촉수)
-		sPrint_Text += @"<img src='스탠딩_의복_통상_촉수' height='{iFont_Hei_mag}'>"
-	ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_자경단)
-		sPrint_Text += @"<img src='스탠딩_의복_통상_자경단' height='{iFont_Hei_mag}'>"
-	ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_서큐버스)
-		sPrint_Text += @"<img src='스탠딩_의복_통상_서큐버스' height='{iFont_Hei_mag}'>"
-	ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_광신도)
-		sPrint_Text += @"<img src='스탠딩_의복_통상_광신도' height='{iFont_Hei_mag}'>"
-	ELSE
-		RETURN RESULT
-	ENDIF
-;	sPrint_Text += @"<img src='더미' height='{iFont_Hei_mag}'>"
-ENDSELECT
-
+CALL PRINT_IMAGE_CHARA(iID, "스탠딩", "통상")
+sPrint_Text += @"<img src='%RESULTS%' height='{iFont_Hei_mag}'>"
 HTML_PRINT sPrint_Text
 iEnter_Con = 1
 
@@ -264,9 +377,7 @@ FOR iID, 1, CHARANUM
 		;-----------------
 		;복장 변경에 따른 화상변경 (조교시)
 		;-----------------
-		sTemp:0 = _의복
-		CALL PRINT_IMAGE_OTHER_CLOTHES(iID)
-			sTemp:0 = %RESULTS%
+
 		SIF FLAG:그림표시 == dIsplay_Num
 			BREAK
 		IF dIsplay_Num == 5
@@ -275,35 +386,29 @@ FOR iID, 1, CHARANUM
 		ENDIF
 		eMotion_Text = %TOSTR_EMOTION(iID)%
 		IF GROUPMATCH(eMotion_Text, "행복", "기쁨")
-			sTemp:1 = _미소
+			sTemp:1 = 미소
 		ELSEIF GROUPMATCH(eMotion_Text, "원한", "분노", "분개")
-			sTemp:1 = _분노
+			sTemp:1 = 분노
 		ELSE
-			sTemp:1 = _통상
+			sTemp:1 = 통상
 		ENDIF
+
+		IF FLAG:스탠딩종류 == 0
+			sTemp:2 = 스탠딩
+		ELSEIF FLAG:스탠딩종류 == 1
+			sTemp:2 = 얼굴
+		ENDIF
+
 		sPrint_Text = <p align='left'><shape type = 'space'param = '{1000 * (iEnter_Wid)}'>
-		SELECTCASE iID
-		CASE 1 TO CHARANUM
-			IF IS_RANDOM_CHARA(iID)
-				LOCALS:10 = 커스텀
-				IF IS_FEMALE(iID)
-					LOCALS:10 = %LOCALS:10%_F
-				ELSE
-					LOCALS:10 = %LOCALS:10%_M
-				ENDIF
-				LOCALS:10 = %LOCALS:10%_\@FLAG:스탠딩종류?얼굴#스탠딩\@_의복_통상_{TALENT:iID:커스텀페이스}
-				sPrint_Text += @"<img src='%LOCALS:10%' height='{iFont_Hei_mag}' ypos='-{(iEnter_Con) * iFont_Hei_mag / 10+1}'>"
-			ELSE
-				sPrint_Text += @"<img src='\@FLAG:스탠딩종류?얼굴#스탠딩\@%sTemp:0%%sTemp:1%_{iID}' height='{iFont_Hei_mag}' ypos='-{(iEnter_Con) * iFont_Hei_mag / 10+1}'>"
-			ENDIF
-		CASEELSE
-			sPrint_Text += @"<img src='더미' height='{iFont_Hei_mag}'>"
-		ENDSELECT
+		;화상표시 함수
+		CALL PRINT_IMAGE_CHARA(iID, sTemp:2, sTemp:1)
+		sPrint_Text += @"<img src='%RESULTS%' height='{iFont_Hei_mag}' ypos='-{(iEnter_Con) * iFont_Hei_mag / 10+1}'>"
+
 		HTML_PRINT sPrint_Text
 		iEnter_Con++
 		IF FLAG:화상범위표시
 			sPrint_Text =  <p align='left'><nobr><shape type = 'space'param = '{1000 * (iEnter_Wid)}'>
-			sPrint_Text += @"<img src='프레임%sTemp:1%' height='{iFont_Hei_mag}'"
+			sPrint_Text += @"<img src='프레임_%sTemp:1%' height='{iFont_Hei_mag}'"
 			sPrint_Text += @"ypos='-{(iEnter_Con) * iFont_Hei_mag / 10+1}'>"
 			HTML_PRINT sPrint_Text
 		ELSE
@@ -684,64 +789,38 @@ RETURNF MAX(0, FINDELEMENT(TARGET, 0) - 1)
 #DIM VS_2
 #DIMS TEMP_1
 #DIMS TEMP_2
+#DIMS sPrint_Text,3
 
-IF VS_1 >= 0 && VS_2 >= 0
-	TEMP_1 = {VS_1}
-	TEMP_2 = {VS_2}
-	IF VS_1 == 0
-		IF IS_MALE(VS_1)
-			TEMP_1 = 남
-		ELSE
-			TEMP_1 = 여
-		ENDIF
-	ELSEIF VS_2 == 0
-		IF IS_MALE(VS_2)
-			TEMP_2 = 남
-		ELSE
-			TEMP_2 = 여
-		ENDIF
-	ENDIF
-	IF CFLAG:VS_1:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
-		TEMP_1 = 도둑
-	ELSEIF CFLAG:VS_1:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_홉고블린)
-		TEMP_1 = 홉고블린
-	ELSEIF CFLAG:VS_1:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_외래인)
-		TEMP_1 = 외래인
-	ELSEIF CFLAG:VS_1:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_촉수)
-		TEMP_1 = 촉수
-	ELSEIF CFLAG:VS_1:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_자경단)
-		TEMP_1 = 자경단
-	ELSEIF CFLAG:VS_1:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_서큐버스)
-		TEMP_1 = 서큐버스
-	ELSEIF CFLAG:VS_1:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_광신도)
-		TEMP_1 = 광신도
-	ENDIF
-	IF CFLAG:VS_2:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
-		TEMP_2 = 도둑
-	ELSEIF CFLAG:VS_2:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_홉고블린)
-		TEMP_2 = 홉고블린
-	ELSEIF CFLAG:VS_2:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_외래인)
-		TEMP_2 = 외래인
-	ELSEIF CFLAG:VS_2:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_촉수)
-		TEMP_2 = 촉수
-	ELSEIF CFLAG:VS_2:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_자경단)
-		TEMP_2 = 자경단
-	ELSEIF CFLAG:VS_2:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_서큐버스)
-		TEMP_2 = 서큐버스
-	ELSEIF CFLAG:VS_2:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_광신도)
-		TEMP_2 = 광신도
-	ENDIF
+IF FLAG:화상설정
+	HTML_PRINT "<br>"
+	HTML_PRINT "<br>"
+	HTML_PRINT "<br>"
+	HTML_PRINT "<br>"
+
+	;공격자 표시
+	CALL PRINT_IMAGE_CHARA(VS_1, "스탠딩", "통상")
+	sPrint_Text:0 = <p align='left'>
+	sPrint_Text:0 += @"<shape type='space' param='0'><img src='%RESULTS%' height='1000' ypos='-400'>"
+	HTML_PRINT sPrint_Text:0
+
+	;VS 표시
+	sPrint_Text:1 = <p align='left'>
+	sPrint_Text:1 += @"<shape type='space' param='900'><img src='VS_P' height='1000' ypos='-500'>"
+	HTML_PRINT sPrint_Text:1
+
+	;방어자 표시
+	CALL PRINT_IMAGE_CHARA(VS_2, "스탠딩", "통상")
+	sPrint_Text:2 = <p align='left'>
+	sPrint_Text:2 += @"<shape type='space' param='1350'><img src='%RESULTS%' height='1000' ypos='-600'>"
+	HTML_PRINT sPrint_Text:2
+
+	HTML_PRINT "<br>"
+	HTML_PRINT "<br>"
+	HTML_PRINT "<br>"
+	HTML_PRINT "<br>"
 ELSE
-	RETURN
+
 ENDIF
-
-FOR COUNT:0, 0, 10
-	PRINT_IMG @"스탠딩_의복_통상_P_%TEMP_1%_{COUNT:0}"
-	PRINT_IMG @"VS_P_{COUNT:0}"
-	PRINT_IMG @"스탠딩_의복_통상_P_%TEMP_2%_{COUNT:0}"
-	PRINTL
-NEXT
-
 RETURN
 
 

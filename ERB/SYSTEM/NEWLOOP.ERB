@@ -40,6 +40,8 @@ ENDIF
 
 CALL LEVEL_SETTING
 
+CALL START_CONFIG_SETTING
+
 ;여러가지 끝나고 나서의 리셋트 처리
 CALL NEWLOOP_ADDITIONAL_RESET_VARS
 
@@ -57,6 +59,36 @@ FOR LOCAL:0, 0, LOCAL:2
 		CALL DELETE_CHARA(LOCAL:1)
 	ENDIF
 NEXT
+
+
+;-------------------------------
+; 소속, 학생 선생 설정
+;-------------------------------
+@START_SENSEI
+
+
+
+;-------------------------------
+; 시작 시 설정여부
+;-------------------------------
+@START_CONFIG_SETTING
+PRINTFORML 게임 세팅 (1/3) 
+PRINTFORML 데일리이벤트의 설정
+CALL ASK_MULTI("기본 설정으로 한다.", "수동으로 설정한다.", "")
+IF RESULT == 0
+	CALL SATRT_CONFIG_SETTING_EVENTBASIC
+ELSEIF RESULT == 1
+	CALL START_CONFIG_SETTING_EVENTMANUALLY
+ELSEIF RESULT == 2
+	CALL START_CONFIG_SETTING_EVENTSAMPLE
+ENDIF
+
+
+@SATRT_CONFIG_SETTING_EVENTBASIC
+
+@START_CONFIG_SETTING_EVENTMANUALLY
+
+@START_CONFIG_SETTING_EVENTSAMPLE
 
 
 ;-------------------------------------
@@ -239,7 +271,7 @@ SIF RESULT == 0
 
 TRYCALLFORM SCENARIO_NAME_%SCENARIOID%
 LOCALS '= RESULTS
-PRINTFORML 시나리오 「%LOCALS%」%조사처리(LOCALS,"로")% 개시합니다
+PRINTFORML 시나리오 「%LOCALS%」%조사처리(LOCALS,"로")% 시작합니다
 
 ;시나리오 맵 선택 처리
 TRYCALLFORM SCENARIO_MAPSELECT_%SCENARIOID%
@@ -251,7 +283,7 @@ CALL MAP_INIT
 ;시나리오 인트로
 TRYCALLFORM SCENARIO_INTRO_%SCENARIOID%
 
-PRINTFORML 이 시나리오로 놉니까?
+PRINTFORML 이 시나리오로 플레이하시겠습니까?
 CALL ASK_YN()
 SIF RESULT == 1
 	RETURN 0
@@ -367,9 +399,9 @@ PRINTBUTTON "[돋움체]", 993
 PRINTPLAIN  
 PRINTBUTTON "[궁서체]", 994
 PRINTL
-PRINT ★★소속 세력 선택★★
+PRINT ★★소속 동아리 선택★★
 PRINTPLAIN   
-PRINTBUTTON "[세력정보]", 96
+PRINTBUTTON "[동아리정보]", 96
 PRINTPLAIN   
 PRINTBUTTON "[랜덤]", 97
 PRINTPLAIN   
@@ -394,10 +426,10 @@ CALL SINGLE_DRAWLINE
 보스 = ID_TO_CHARA(COUNTRY_BOSS:선택세력)
 
 IF 보스 < 0
-	PRINTL 도시를 클릭 하는 것으로, 그 세력의 정보를 얻을 수 있습니다
+	PRINTL 지역을 클릭하면 해당 동아리의 정보를 볼 수 있습니다.
 	PRINTL 
 ELSE
-	CALL ICPRINT(@"이 도시는<%NAME_FORMAL(보스)%>의 세력하에 있습니다", "L", COUNTRY_COLOR:선택세력)
+	CALL ICPRINT(@"이 지역은 <%NAME_FORMAL(보스)%>의 동아리가 지배하고 있습니다.", "L", COUNTRY_COLOR:선택세력)
 	;쇼우 표시
 	CALL SINGLE_DRAWLINE
 	PRINTFORM 평가:
@@ -405,7 +437,7 @@ ELSE
 	PRINTL
 	;소속 캐릭터 일람표시
 	CALL SINGLE_DRAWLINE
-	PRINTFORML 도시수: {GET_OWN_CITY(선택세력), 3, LEFT} 경제력: {GET_SUM_ECONOMY(선택세력) / 100, 7, LEFT} 방위력: {GET_SUM_GUARD(선택세력), 7, LEFT}
+	PRINTFORML 지역수: {GET_OWN_CITY(선택세력), 3, LEFT} 경제력: {GET_SUM_ECONOMY(선택세력) / 100, 7, LEFT} 방어력: {GET_SUM_GUARD(선택세력), 7, LEFT}
 	PRINTFORM 소속 캐릭터:
 
 	;보스만 특수 표시
@@ -422,13 +454,13 @@ ELSE
 	;그 세력이 플레이 가능한가 조사한다. 미정도리라면 전세력 플레이 가능으로 한다
 	TRYCCALLFORM IS_COUNTRY_PLAYABLE_%SCENARIOID%(선택세력)
 		IF !RESULT
-			CALL COLOR_PRINT(@"이 시나리오에서는, 그 세력으로 플레이 할 수 없습니다", 칼라_주의)
+			CALL COLOR_PRINT(@"이 시나리오에서는, 해당 동아리로 플레이 할 수 없습니다", 칼라_주의)
 		ELSE
-			PRINTBUTTON " 0[이 세력으로 개시]", 0
+			PRINTBUTTON " 0[이 동아리로 시작]", 0
 			PRINTL
 		ENDIF
 	CATCH
-		PRINTBUTTON " 0[이 세력으로 개시]", 0
+		PRINTBUTTON " 0[이 동아리로 시작]", 0
 		PRINTL
 	ENDCATCH
 ENDIF
@@ -443,11 +475,11 @@ IF RESULT == 0
 		TRYCCALLFORM IS_COUNTRY_PLAYABLE_%SCENARIOID%(선택세력)
 			SIF RESULT
 				GOTO SELECTABLE
-			PRINTFORMW 이 시나리오에서는, 그 세력으로 플레이 할 수 없습니다
+			PRINTFORMW 이 시나리오에서는, 해당 동아리로 플레이 할 수 없습니다
 		CATCH
 			$SELECTABLE
 			FLAG:OP선택세력 = 선택세력
-			PRINTFORMW %ANAME(보스)% 세력으로 개시합니다
+			PRINTFORMW %ANAME(보스)%의 동아리로 시작합니다
 			RETURN 1
 		ENDCATCH
 	ENDIF
@@ -474,12 +506,12 @@ ELSEIF RESULT == 98
 	FLAG:OP선택세력 = -1
 	FLAG:관전모드 = 1
 	TIME = 1
-	PRINTFORMW 관전 모드로 개시합니다
+	PRINTFORMW 관전 모드로 시작합니다
 	RETURN 1
 ELSEIF RESULT == 99
 	FLAG:OP선택세력 = 0
 	TIME = 0
-	PRINTFORMW 방랑 상태로부터 개시합니다
+	PRINTFORMW 무소속 상태로 시작합니다
 	RETURN 1
 ELSEIF RESULT == 100 && GET_NEW_COUNTRY() != -1
 	FLAG:OP선택세력 = -3
@@ -491,7 +523,7 @@ ELSEIF RESULT == 100 && GET_NEW_COUNTRY() != -1
 	RETURN 1
 ELSEIF RESULT == 101 && GET_NEW_COUNTRY() != -1
 	FLAG:OP선택세력 = -4
-	PRINTFORMW 개양 해 개시합니다
+	PRINTFORMW 동아리를 만들어서 시작합니다
 	RETURN 1
 ELSEIF RESULT == 990
 	맵_폰트 '= "MS Gothic"
@@ -537,8 +569,8 @@ GOTO INPUT_LOOP
 ;-------------------------------------------------
 @SP_COUNTRY_START_SELECT()
 #DIM FIRST_LINE
-PRINTFORMW 특수한 세력으로 개시합니다
-PRINTFORMW 어떤 것으로 개시합니까?
+PRINTFORMW 특수한 세력으로 시작합니다
+PRINTFORMW 어떤 세력으로 시작합니까?
 
 FOR LOCAL, 0, MAX_SP_COUNTRY
 	SIF SP_COUNTRY_NAME:LOCAL != ""
@@ -558,17 +590,17 @@ SIF LOCAL == 999
 SIF SP_COUNTRY_NAME:LOCAL == ""
 	GOTO INPUT_LOOP2
 
-PRINTFORML 어떤 처지에서 스타트 합니까?
-CALL ASK_MULTI("사관(조교를 받지 않는다)", "노예(최초부터 합의 떡)", "포로(무소속·포로로부터 스타트)", "군주")
+PRINTFORML 어떤 상황으로 시작 합니까?
+CALL ASK_MULTI("부원(조교를 받지 않는다)", "노예(최초부터 합의 있음)", "포로(무소속·포로로부터 스타트)", "군주")
 SELECTCASE RESULT
 	CASE 0
-		PRINTFORMW 사관으로서 스타트 합니다
+		PRINTFORMW 사관으로 시작 합니다
 	CASE 1
-		PRINTFORMW 노예로서 스타트 합니다
+		PRINTFORMW 노예로 시작 합니다
 	CASE 2
-		PRINTFORMW 포로로서 스타트 합니다
+		PRINTFORMW 포로로 시작 합니다
 	CASE 3
-		PRINTFORMW 군주로서 스타트 합니다
+		PRINTFORMW 부장으로 시작 합니다
 ENDSELECT
 
 SP_COUNTRY_START:LOCAL = RESULT + 1
@@ -651,11 +683,11 @@ ENDIF
 PRINTL 
 CALL SINGLE_DRAWLINE
 IF FLAG:OP선택세력 > 0
-	PRINTBUTTON "[세력 소속의 캐릭터를 사용]", 99
+	PRINTBUTTON "[동아리 소속의 캐릭터로 시작]", 99
 	PRINTL 
 	CALL SINGLE_DRAWLINE
 ELSE
-	PRINTBUTTON "[군주 이외의 캐릭터를 사용]", 99
+	PRINTBUTTON "[동아리장 이외의 캐릭터로 시작]", 99
 	PRINTL
 	CALL SINGLE_DRAWLINE
 ENDIF
@@ -703,7 +735,7 @@ ELSEIF RESULT == 2 && FLAG:당신작성이끝난상태 && MASTER != NAME_TO_CHAR
 ;저번 주회와 같음
 ELSEIF RESULT == 98 && 구MASTERID > 0
 	IF !이어받아사용가능
-		PRINTFORMW 전회의 주인공이, 선택한 세력 이외의 세력의 군주입니다. 「저번 주회와 같음」은 이용할 수 없습니다
+		PRINTFORMW 전회의 주인공이, 선택한 동아리 이외의 동아리장입니다. 「저번 주회와 같음」은 이용할 수 없습니다
 		CLEARLINE LINECOUNT - FIRST_LINE
 		GOTO SHOW_LOOP
 	ENDIF
@@ -732,7 +764,7 @@ CALL SINGLE_DRAWLINE
 CALL SHOW_INFO(ID_TO_CHARA(선택MASTERID))
 CALL SINGLE_DRAWLINE
 
-PRINTBUTTON " [이 캐릭터를 주인공으로 해 개시]", 0
+PRINTBUTTON " [이 캐릭터로 플레이한다.]", 0
 PRINTL 
 PRINTBUTTON " [돌아온다]", 9
 PRINTL 
@@ -742,11 +774,11 @@ REDRAW 0
 $INPUT_LOOP2
 INPUT
 
-;
+
 SELECTCASE RESULT
 	;이 캐릭터를 주인공으로 한다
 	CASE 0
-		DVAR:MASTER_FACE_CHARA = 선택MASTERID - 1
+		FLAG:주인공화상 = 선택MASTERID - 1
 		SIF FLAG:당신신규작성
 			FLAG:당신작성이끝난상태 = 1
 		REDRAW 1
@@ -1077,28 +1109,71 @@ ENDSELECT
 @EXTRA_SETTING
 #DIM FIRST_LINE
 #DIM 랜덤캐릭터
+#DIM 여학생등장
+#DIM 남학생등장
+#DIM 일반남성등장
+#DIM 로봇등장
+#DIM 동물등장
 #DIM 성지식최대
 #DIM 군주
 FIRST_LINE = LINECOUNT
 CALL SINGLE_DRAWLINE
+PRINTFORML ☆ 랜덤캐릭터·성지식 등의 설정
+PRINTFORML (해당 설정은 게임 내에서 바꿀 수 없습니다.)
+CALL SINGLE_DRAWLINE
 
 IF FLAG:OP랜덤캐릭터사용 == 0
-	PRINTFORM 랜덤 캐릭터:
+	PRINTFORM       랜덤 캐릭터:
 	CALL PRINT_SELECT_BUTTON("[사용한다]", 0, 랜덤캐릭터)
 	CALL PRINT_SELECT_BUTTON("[사용하지 않는다]", 1, !랜덤캐릭터)
 	PRINTL
+ELSE
+	PRINTL
+ENDIF
+[SKIPSTART]
+IF 랜덤캐릭터 == 1
+	PRINTFORM    학생 등장 여부:
+	CALL PRINT_SELECT_BUTTON("[등장한다]", 31, 여학생등장)
+	CALL PRINT_SELECT_BUTTON("[등장하지 않는다]", 32, !여학생등장)
+	PRINTL
+ELSE
+	PRINTL
 ENDIF
 
+IF 랜덤캐릭터 == 1
+	PRINTFORM    남성 등장 여부:
+	CALL PRINT_SELECT_BUTTON("[일반 남성만 등장]", 41, 일반남성등장 && !남학생등장)
+	CALL PRINT_SELECT_BUTTON("[남학생만 등장]", 42, !일반남성등장 && 남학생등장)
+	CALL PRINT_SELECT_BUTTON("[남학생과 일반 남성 등장]", 43, 일반남성등장 && 남학생등장)
+	CALL PRINT_SELECT_BUTTON("[등장하지 않는다]", 44, !일반남성등장 && !남학생등장)
+	PRINTL
+ELSE
+	PRINTL
+ENDIF
+
+IF 랜덤캐릭터 == 1
+	PRINTFORM  기계와 동물 등장:
+	CALL PRINT_SELECT_BUTTON("[로봇만 등장]", 51, 로봇등장 && !동물등장)
+	CALL PRINT_SELECT_BUTTON("[동물만 등장]", 52, !로봇등장 && 동물등장)
+	CALL PRINT_SELECT_BUTTON("[로봇과 동물 등장]", 53, 로봇등장 && 동물등장)
+	CALL PRINT_SELECT_BUTTON("[등장하지 않는다]", 54, !로봇등장 && !동물등장)
+	PRINTL
+ELSE
+	PRINTL
+ENDIF
+[SKIPEND]
 IF !FLAG:관전모드
-	PRINTFORM 　　 성지식:
+	PRINTFORM 　      　 성지식:
 	CALL PRINT_SELECT_BUTTON("[5로 한다]", 10, 성지식최대)
 	CALL PRINT_SELECT_BUTTON("[그대로]", 11, !성지식최대)
+	PRINTL
+ELSE
 	PRINTL
 ENDIF
 
 IF FLAG:OP선택세력 > 0 && COUNTRY_BOSS:(CFLAG:MASTER:소속) != GET_ID(MASTER) && !IS_SP_COUNTRY(CFLAG:MASTER:소속)
-	PRINTFORM 　　　 군주:
-	CALL PRINT_SELECT_BUTTON("[군주로 스타트]", 20, 군주)
+	PRINTFORM 　           부장:
+	CALL PRINT_SELECT_BUTTON("[부장으로 시작]", 20, 군주)
 	CALL PRINT_SELECT_BUTTON("[그대로]", 21, !군주)
 	PRINTL
 ENDIF
@@ -1118,6 +1193,8 @@ IF RESULT == 100
 	ELSEIF !랜덤캐릭터
 		FLAG:랜덤캐릭터사용 = 0
 	ENDIF
+
+
 	IF 성지식최대
 		ABL:MASTER:성지식 = 5
 	ENDIF
@@ -1127,6 +1204,7 @@ IF RESULT == 100
 	RETURN
 ELSEIF RESULT == 0 && FLAG:OP랜덤캐릭터사용 == 0
 	랜덤캐릭터 = 1
+	여학생등장 = 1
 ELSEIF RESULT == 1
 	랜덤캐릭터 = 0
 ELSEIF RESULT == 10
@@ -1137,6 +1215,34 @@ ELSEIF RESULT == 20 && FLAG:OP선택세력 > 0 && COUNTRY_BOSS:(CFLAG:MASTER:소
 	군주 = 1
 ELSEIF RESULT == 21
 	군주 = 0
+ELSEIF RESULT == 31
+	여학생등장 = 1
+ELSEIF RESULT == 32
+	여학생등장 = 0
+ELSEIF RESULT == 41
+	일반남성등장 = 1
+	남학생등장 = 0
+ELSEIF RESULT == 42
+	일반남성등장 = 0
+	남학생등장 = 1
+ELSEIF RESULT == 43
+	일반남성등장 = 1
+	남학생등장 = 1
+ELSEIF RESULT == 44
+	일반남성등장 = 0
+	남학생등장 = 0
+ELSEIF RESULT == 51
+	로봇등장 = 1
+	동물등장 = 0
+ELSEIF RESULT == 52
+	로봇등장 = 0
+	동물등장 = 1
+ELSEIF RESULT == 53
+	로봇등장 = 1
+	동물등장 = 1
+ELSEIF RESULT == 54
+	로봇등장 = 0
+	동물등장 = 0
 ENDIF
 
 CLEARLINE LINECOUNT - FIRST_LINE

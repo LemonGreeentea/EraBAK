@@ -56,6 +56,7 @@ IF CFLAG:200 == 0
 				PRINTFORMW 「읏… 이건 긍정의 의미 인가요…?」
 				PRINTFORMW 「이즈나의 주군이 되어 주시겠단건가요?」
 				PRINTFORML 「에헤헤… 이즈나는 지금 행복합니다!」
+				CFLAG:호감도 += 100
 		ENDSELECT
 		PRINTFORMW 「그럼 앞으로도 잘 부탁합니다 주군! 닌닌!」
 
@@ -6313,46 +6314,102 @@ IF SELECTCOM == 340
 	IF IS_INITIATIVE(TARGET)
 		;처음
 		IF IS_COM_FIRST()
-			;기성 사실 Lv2 이상
-			IF MARK:2 >= 2
-				;PRINTFORMW 
+			;연인
+			IF TALENT:연인
+				PRINTFORML 「주군, 잠시 이쪽좀 봐주시겠어요?」
+				PRINTFORMW 당신을 부르는 이즈나의 목소리에 당신이 얼굴을 돌리자 이즈나에게 가볍게 키스당했다
+				PRINTFORML 「츗♥ 좋아해요 주군♥ 헤헷」
+				PRINTFORMW 입술을 떼어 놓자 달콤한 숨결이 닿았다
+				PRINTFORML 「이즈나의 첫키스는 역시 주군께 주고싶었어요♥」
+			;연모 or 복종 
+			ELSEIF TALENT:연모 || TALENT:복종 || TALENT:친구
+				PRINTFORML 「주군, 잠시 이쪽좀 봐주시겠어요?」
+				PRINTFORMW 당신을 부르는 이즈나의 목소리에 당신이 얼굴을 돌리자 이즈나에게 가볍게 키스당했다
+				PRINTFORML 「츗… 이즈나의 첫키스를 받은 기분은 어떠신가요? 주군♪」
+				PRINTFORMW 입술을 떼어 놓자 부끄러운듯이 붉어진 이즈나의 얼굴이 보였다
+				PRINTFORML (이즈나가 하긴했지만 역시 좀 부끄럽네요…)
+				PRINTFORML (그렇지만 주군이라면…♥)
+			;그 이외
 			ELSE
-				;PRINTFORMW 
+				PRINTFORML 「주군, 잠시 이쪽좀 봐주시겠어요?」
+				PRINTFORMW 당신을 부르는 이즈나의 목소리에 당신이 얼굴을 돌리자 이즈나에게 가볍게 키스당했다
+				PRINTFORML 「츗… 이즈나의 첫키스를 받은 기분은 어떠신가요? 주군♪」
+				PRINTFORMW 입술을 떼어 놓자 약간 붉어진 이즈나의 얼굴이 보였다
+				PRINTFORML (이즈나가 하긴했지만 역시 좀 부끄럽네요…)
 			ENDIF
 		;2회째 이후
 		ELSE
-			;연모 or 복종 or 친구
-			IF TALENT:연모 || TALENT:복종 || TALENT:친구
-				;PRINTFORMW 
-			;기성 사실 Lv2 이상
-			ELSEIF MARK:2 >= 2
-				;PRINTFORMW 
+			;연인
+			IF TALENT:연인
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORML 「츗… 연인끼리라도 약간 수줍네요♪」
+					CASE 1
+						PRINTFORML 「츗… 이걸로 끝인가요?」
+					CASE 2
+						PRINTFORML 「츗… 좀 더…♥」
+				ENDSELECT
 			;그 이외
 			ELSE
-				;PRINTFORMW 
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORML 「츗… 뭔가 수줍네요」
+					CASE 1
+						PRINTFORML 「츗… 만족하셨나요?」
+					CASE 2
+						PRINTFORML 「츗… 어땠나요?」
+				ENDSELECT
 			ENDIF
 		ENDIF
 	;이 캐릭터가 주도권을 가지고 있지 않다
 	ELSE
 		;처음
 		IF IS_COM_FIRST()
-			;기성 사실 Lv2 이상
-			IF MARK:2 >= 2
-				;PRINTFORMW 
+			;연인
+			IF TALENT:연인
+				PRINTFORML 「주군? 잠시 이쪽을 봐달라니, 무슨일인가요?」
+				PRINTFORMW 이즈나를 부르는 당신의 목소리에 이즈나가 얼굴을 돌린 후 이즈나에게 가볍게 키스했다
+				PRINTFORML 「츗♥ 이즈나의 첫키스 가져가주셨네요♥」
+				PRINTFORMW 입술을 떼어 놓자 달콤한 숨결이 닿았다
+				PRINTFORML 「역시 이즈나의 첫키스는 주군께 주고싶었어요♥」
+			;연모 or 복종 
+			ELSEIF TALENT:연모 || TALENT:복종 || TALENT:친구
+				PRINTFORML 「주군? 잠시 이쪽을 봐달라니, 무슨일인가요?」
+				PRINTFORMW 이즈나를 부르는 당신의 목소리에 이즈나가 얼굴을 돌린 후 이즈나에게 가볍게 키스했다
+				PRINTFORML 「츗… 이즈나의 첫키스 가져가셧네요♪」
+				PRINTFORMW 입술을 떼어 놓자 부끄러운듯이 붉어진 이즈나의 얼굴이 보였다
+				PRINTFORML (주군께서 이즈나의 첫키스를 가져가셨어요…)
+				PRINTFORML (그렇지만 주군이라면 나쁘지 않을지도…♥)
+			;그 이외
 			ELSE
-				;PRINTFORMW 
+				PRINTFORML 「주군? 잠시 이쪽을 봐달라니, 무슨일인가요?」
+				PRINTFORMW 이즈나를 부르는 당신의 목소리에 이즈나가 얼굴을 돌린 후 이즈나에게 가볍게 키스했다
+				PRINTFORML 「츗… 이즈나의 첫키스 가져가셧네요?」
+				PRINTFORMW 입술을 떼어 놓자 약간 붉어진 이즈나의 얼굴이 보였다
+				PRINTFORML (주군에게 바친 첫키스라… 역시 좀 부끄럽네요…)
 			ENDIF
 		;2회째 이후
 		ELSE
-			;연모 or 복종 or 친구
-			IF TALENT:연모 || TALENT:복종 || TALENT:친구
-				;PRINTFORMW 
-			;기성 사실 Lv2 이상
-			ELSEIF MARK:2 >= 2
-				;PRINTFORMW 
+			;연인
+			IF TALENT:연인
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORML 「츗… 연인끼리라도 약간 수줍네요♪」
+					CASE 1
+						PRINTFORML 「츗… 이걸로 끝인가요?」
+					CASE 2
+						PRINTFORML 「츗… 좀 더…♥」
+				ENDSELECT
 			;그 이외
 			ELSE
-				;PRINTFORMW 
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORML 「츗… 뭔가 수줍네요」
+					CASE 1
+						PRINTFORML 「츗… 만족하셨나요?」
+					CASE 2
+						PRINTFORML 「츗… 어땠나요?」
+				ENDSELECT
 			ENDIF
 		ENDIF
 	ENDIF
@@ -6364,48 +6421,108 @@ ENDIF
 IF SELECTCOM == 341
 	;이 캐릭터가 주도권을 가지고 있다
 	IF IS_INITIATIVE(TARGET)
-		;처음
+	;처음
 		IF IS_COM_FIRST()
-			;기성 사실 Lv2 이상
-			IF MARK:2 >= 2
-				;PRINTFORMW 
+		;연인
+			IF TALENT:연인
+				PRINTFORML 「주군, 잠시 이쪽좀 봐주시겠어요?」
+				PRINTFORMW 당신을 부르는 이즈나의 목소리에 당신이 얼굴을 돌리자 이즈나에게 키스당했다
+				PRINTFORML 「응읏…♥ 응츄, 츗… 죠아해요…♥」
+				PRINTFORMW 입술을 떼어 놓자 달콤한 숨결이 닿았다
+				PRINTFORML 「푸후… 이즈나의 첫키스는 역시 주군께 주고싶었어요♥」
+			;연모 or 복종 
+			ELSEIF TALENT:연모 || TALENT:복종 || TALENT:친구
+				PRINTFORML 「주군, 잠시 이쪽좀 봐주시겠어요?」
+				PRINTFORMW 당신을 부르는 이즈나의 목소리에 당신이 얼굴을 돌리자 이즈나에게 키스당했다
+				PRINTFORML 「응읏… 응츄, 츗… 츄팟…」
+				PRINTFORMW 입술을 떼어 놓자 부끄러운듯이 붉어진 이즈나의 얼굴이 보였다
+				PRINTFORML 「푸흐… 그… 이즈나의 첫키스는 어떠셨나요…?」
+				PRINTFORML (이즈나가 하긴했지만 역시 좀 부끄럽네요…)
+				PRINTFORML (그렇지만 주군이라면…♥)
+			;그 이외
 			ELSE
-				;PRINTFORMW 
+				PRINTFORML 「주군, 잠시 이쪽좀 봐주시겠어요?」
+				PRINTFORMW 당신을 부르는 이즈나의 목소리에 당신이 얼굴을 돌리자 이즈나에게 키스당했다
+				PRINTFORML 「응읏… 응츄, 츗… 츄팟…」
+				PRINTFORMW 입술을 떼어 놓자 약간 붉어진 이즈나의 얼굴이 보였다
+				PRINTFORML 「푸흐… 이즈나의 첫키스는 어떠셨나요?」
+				PRINTFORML (이즈나가 하긴했지만 역시 좀 부끄럽네요…)
 			ENDIF
 		;2회째 이후
 		ELSE
-			;연모 or 복종 or 친구
-			IF TALENT:연모 || TALENT:복종 || TALENT:친구
-				;PRINTFORMW 
-			;기성 사실 Lv2 이상
-			ELSEIF MARK:2 >= 2
-				;PRINTFORMW 
+			;연인
+			IF TALENT:연인
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORML 「츄룻… 주군에게 키스하는것 만으로 기분이 좋아져서…♥」
+					CASE 1
+						PRINTFORML 「츄풋… 사랑하는 주군과의 키스는 이렇게나 좋은거네요♥」
+					CASE 2
+						PRINTFORML 「응우… 츄우…츗, 주군… 좀 더…♥」
+				ENDSELECT
 			;그 이외
 			ELSE
-				;PRINTFORMW 
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORML 「응우…… 츗」
+					CASE 1
+						PRINTFORML 「츗츄…… 이즈나와의 키스 싫지는 않나요?」
+					CASE 2
+						PRINTFORML 「…응 어떠신가요? 주군?」
+				ENDSELECT
 			ENDIF
 		ENDIF
 	;이 캐릭터가 주도권을 가지고 있지 않다
 	ELSE
-		;처음
+	;처음
 		IF IS_COM_FIRST()
-			;기성 사실 Lv2 이상
-			IF MARK:2 >= 2
-				;PRINTFORMW 
+		;연인
+			IF TALENT:연인
+				PRINTFORML 「주군? 잠시 이쪽을 봐달라니, 무슨일인가요?」
+				PRINTFORMW 이즈나를 부르는 당신의 목소리에 이즈나가 얼굴을 돌린 후 이즈나에게 키스했다
+				PRINTFORML 「응읏…?♥ 응츄, 츗… 죠아해요…♥」
+				PRINTFORMW 입술을 떼어 놓자 달콤한 숨결이 닿았다
+				PRINTFORML 「푸후… 이즈나의 첫키스 주군께서 가져가주셨네요♥」
+			;연모 or 복종 
+			ELSEIF TALENT:연모 || TALENT:복종 || TALENT:친구
+				PRINTFORML 「주군? 잠시 이쪽을 봐달라니, 무슨일인가요?」
+				PRINTFORMW 이즈나를 부르는 당신의 목소리에 이즈나가 얼굴을 돌린 후 이즈나에게 키스했다
+				PRINTFORML 「응읏…? 응츄, 츗… 츄팟…」
+				PRINTFORMW 입술을 떼어 놓자 부끄러운듯이 붉어진 이즈나의 얼굴이 보였다
+				PRINTFORML 「저… 기분 좋으셨나요…? 주군?」
+				PRINTFORML (주군께서 이즈나의 첫키스를 가져가셨어요…)
+				PRINTFORML (그렇지만 주군이라면 나쁘지 않을지도…♥)
+			;그 이외
 			ELSE
-				;PRINTFORMW 
+				PRINTFORML 「주군? 잠시 이쪽을 봐달라니, 무슨일인가요?」
+				PRINTFORMW 이즈나를 부르는 당신의 목소리에 이즈나가 얼굴을 돌린 후 이즈나에게 키스했다
+				PRINTFORML 「응읏…? 응츄, 츗… 츄팟…」
+				PRINTFORMW 입술을 떼어 놓자 약간 붉어진 이즈나의 얼굴이 보였다
+				PRINTFORML 「기분 좋으셨나요…? 주군?」
+				PRINTFORML (주군에게 바친 첫키스라… 역시 좀 부끄럽네요…)
 			ENDIF
 		;2회째 이후
 		ELSE
-			;연모 or 복종 or 친구
-			IF TALENT:연모 || TALENT:복종 || TALENT:친구
-				;PRINTFORMW 
-			;기성 사실 Lv2 이상
-			ELSEIF MARK:2 >= 2
-				;PRINTFORMW 
+			;연인
+			IF TALENT:연인
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORML 「츄팟… 주군에게 키스 당하는 것 만으로 가슴이 따듯해져서…♥」
+					CASE 1
+						PRINTFORML 「응우… 츄우…츗, 주군… 좀 더…♥」
+					CASE 2
+						PRINTFORML 「츄우…츗 응우…, 주군…♥」
+				ENDSELECT
 			;그 이외
 			ELSE
-				;PRINTFORMW 
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORML 「응우…… 츗」
+					CASE 1
+						PRINTFORML 「츗츄… 이즈나는 괜찮으니깐…」
+					CASE 2
+						PRINTFORML 「주군이 좋으시다면…」
+				ENDSELECT
 			ENDIF
 		ENDIF
 	ENDIF
@@ -6419,46 +6536,111 @@ IF SELECTCOM == 342
 	IF IS_INITIATIVE(TARGET)
 		;처음
 		IF IS_COM_FIRST()
-			;기성 사실 Lv2 이상
-			IF MARK:2 >= 2
-				;PRINTFORMW 
+		;연인
+			IF TALENT:연인
+				PRINTFORML 「주군, 잠시 이쪽좀 봐주시겠어요?」
+				PRINTFORMW 당신을 부르는 이즈나의 목소리에 당신이 얼굴을 돌리자 이즈나에게 딥키스당했다
+				PRINTFORML 「응읏…♥ 응츄, 츗… 죠아해요…♥」
+				PRINTFORML 「쥬군의 침…♥ 죠아서…」
+				PRINTFORMW 입술을 떼어 놓자 달콤한 숨결이 닿았다
+				PRINTFORML 「푸하아… 이즈나의 첫키스, 딥키스인데 주군은 좋으셨나요♥」
+			;연모 or 복종 
+			ELSEIF TALENT:연모 || TALENT:복종 || TALENT:친구
+				PRINTFORML 「주군, 잠시 이쪽좀 봐주시겠어요?」
+				PRINTFORMW 당신을 부르는 이즈나의 목소리에 당신이 얼굴을 돌리자 이즈나에게 딥키스당했다
+				PRINTFORML 「응읏… 응츄, 츗… 츄팟… 츄릅…♥」
+				PRINTFORMW 입술을 떼어 놓자 부끄러운듯이 붉어진 이즈나의 얼굴이 보였다
+				PRINTFORML 「푸하아… 그… 이즈나의 첫 딥키스 어떠셨나요…?」
+				PRINTFORML (이즈나가 하긴했지만 역시 좀 부끄럽네요…)
+				PRINTFORML (그렇지만 주군이라면…♥)
+			;그 이외
 			ELSE
-				;PRINTFORMW 
+				PRINTFORML 「주군, 잠시 이쪽좀 봐주시겠어요?」
+				PRINTFORMW 당신을 부르는 이즈나의 목소리에 당신이 얼굴을 돌리자 이즈나에게 딥키스당했다
+				PRINTFORML 「응읏… 응츄, 츗… 츄팟…」
+				PRINTFORMW 입술을 떼어 놓자 약간 붉어진 이즈나의 얼굴이 보였다
+				PRINTFORML 「푸하아… 이즈나의 첫키스는 어떠셨나요?」
+				PRINTFORML (이즈나가 하긴했지만 역시 좀 부끄럽네요…)
 			ENDIF
 		;2회째 이후
 		ELSE
-			;연모 or 복종 or 친구
-			IF TALENT:연모 || TALENT:복종 || TALENT:친구
-				;PRINTFORMW 
-			;기성 사실 Lv2 이상
-			ELSEIF MARK:2 >= 2
-				;PRINTFORMW 
+			;연인
+			IF TALENT:연인
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORML 「응읏… 응츄, 츗… 츄팟… 츄릅…♥ 츗츄…♥」
+						PRINTFORMW 두 사람은 격렬히 서로의 혀를 탐하고있다
+					CASE 1
+						PRINTFORML 「츄우…츗 응우…, 주군…♥ 응읏…♥」
+						PRINTFORML (주군과 키스하면서 머리 만져지는 것이 좋아♥)
+					CASE 2
+						PRINTFORML 「응우… 츄우…츗, 주군… 좀 더…♥」
+				ENDSELECT
 			;그 이외
 			ELSE
-				;PRINTFORMW 
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORML 「츗…… 응우… 푸하아」
+					CASE 1
+						PRINTFORML 「츗츄…… 츄르, 츄픗…」
+					CASE 2
+						PRINTFORML 「…응, 츄…… 응우…」
+				ENDSELECT
 			ENDIF
 		ENDIF
 	;이 캐릭터가 주도권을 가지고 있지 않다
 	ELSE
-		;처음
+	;처음
 		IF IS_COM_FIRST()
-			;기성 사실 Lv2 이상
-			IF MARK:2 >= 2
-				;PRINTFORMW 
+		;연인
+			IF TALENT:연인
+				PRINTFORML 「주군? 잠시 이쪽을 봐달라니, 무슨일인가요?」
+				PRINTFORMW 이즈나를 부르는 당신의 목소리에 이즈나가 얼굴을 돌린 후 이즈나에게 딥키스했다
+				PRINTFORML 「응읏…?♥ 응츄, 츗… 죠아해요…♥」
+				PRINTFORMW 입술을 떼어 놓자 달콤한 숨결이 닿았다
+				PRINTFORML 「푸후… 이즈나의 첫키스 딥키스로 주군께서 가져가주셨네요♥」
+			;연모 or 복종 
+			ELSEIF TALENT:연모 || TALENT:복종 || TALENT:친구
+				PRINTFORML 「주군? 잠시 이쪽을 봐달라니, 무슨일인가요?」
+				PRINTFORMW 이즈나를 부르는 당신의 목소리에 이즈나가 얼굴을 돌린 후 이즈나에게 딥키스했다
+				PRINTFORML 「응읏…? 응츄, 츗… 츄팟…」
+				PRINTFORMW 입술을 떼어 놓자 부끄러운듯이 붉어진 이즈나의 얼굴이 보였다
+				PRINTFORML 「저… 기분 좋으셨나요…? 주군?」
+				PRINTFORML (주군께서 딥키스로 이즈나의 첫키스를 가져가셨어요…)
+				PRINTFORML (그렇지만 주군이라면 나쁘지 않을지도…♥)
+			;그 이외
 			ELSE
-				;PRINTFORMW 
+				PRINTFORML 「주군? 잠시 이쪽을 봐달라니, 무슨일인가요?」
+				PRINTFORMW 이즈나를 부르는 당신의 목소리에 이즈나가 얼굴을 돌린 후 이즈나에게 딥키스했다
+				PRINTFORML 「응읏…? 응츄, 츗… 츄팟…」
+				PRINTFORMW 입술을 떼어 놓자 약간 붉어진 이즈나의 얼굴이 보였다
+				PRINTFORML 「기분 좋으셨나요…? 주군?」
+				PRINTFORML (주군에게 바친 첫키스가 딥키스라… 역시 좀 부끄럽네요…)
 			ENDIF
 		;2회째 이후
 		ELSE
-			;연모 or 복종 or 친구
-			IF TALENT:연모 || TALENT:복종 || TALENT:친구
-				;PRINTFORMW 
-			;기성 사실 Lv2 이상
-			ELSEIF MARK:2 >= 2
-				;PRINTFORMW 
+			;연인
+			IF TALENT:연인
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORML 「응읏… 응츄, 츗… 츄팟… 츄릅…♥ 츗츄…♥」
+						PRINTFORMW 두 사람은 격렬히 서로의 혀를 탐하고있다
+					CASE 1
+						PRINTFORML 「츄우…츗 응우…, 주군…♥ 응읏…♥」
+						PRINTFORML (주군과 키스하면서 머리 만져지는 것이 좋아♥)
+					CASE 2
+						PRINTFORML 「응우… 츄우…츗, 주군… 좀 더…♥」
+				ENDSELECT
 			;그 이외
 			ELSE
-				;PRINTFORMW 
+				SELECTCASE RAND:3
+					CASE 0
+						PRINTFORML 「츗…… 응우… 푸하아」
+					CASE 1
+						PRINTFORML 「츗츄…… 츄르, 츄픗…」
+					CASE 2
+						PRINTFORML 「…응, 츄…… 응우…」
+				ENDSELECT
 			ENDIF
 		ENDIF
 	ENDIF
