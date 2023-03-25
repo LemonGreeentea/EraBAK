@@ -8,7 +8,7 @@ RETURN 45
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_NAMPA_DECISION()
-SIF 데일리_장르세부_NTR == 0
+SIF DVAR:데일리_장르세부_NTR == 0
 	RETURN 0
 SIF DAY < 10
 	RETURN 0

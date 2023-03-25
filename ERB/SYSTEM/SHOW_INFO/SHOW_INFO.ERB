@@ -528,9 +528,54 @@ IF FLAG:화상설정
 	ENDIF
 	
 	sHtml = <p align='left'><shape type='space' param='{iSpace}'>
-	;얼굴출력 함수
-	CALL PRINT_IMAGE_CHARA(iID, "얼굴", "통상")
-	sHtml += @"<img src='%RESULTS%' height='{iFont_Hei_mag}'"
+
+	IF IS_RANDOM_CHARA(iID)
+		IF IS_FEMALE(iID)
+			sName = 커스텀_F_얼굴_의복_통상_{TALENT:iID:커스텀페이스}
+		ELSE
+			sName = 커스텀_M_얼굴_의복_통상_{TALENT:iID:커스텀페이스}
+		ENDIF
+	ELSE
+		SELECTCASE iID
+			CASE 0
+				IF TALENT:iID:커스텀페이스
+					IF IS_MALE(iID)
+						sName = 커스텀_M_얼굴_의복_통상_{TALENT:iID:커스텀페이스}
+					ELSE
+						sName = 커스텀_F_얼굴_의복_통상_{TALENT:iID:커스텀페이스}
+					ENDIF
+				ELSEIF !DVAR:MASTER_FACE_CHARA == 0
+						sName = 얼굴_의복_통상_{DVAR:MASTER_FACE_CHARA}
+				ELSE
+					IF IS_MALE(iID)
+						sName = 스탠딩_의복_통상_남
+					ELSE
+						sName = 스탠딩_의복_통상_여
+					ENDIF
+				ENDIF
+			CASE 1 TO CHARANUM
+				CALL PRINT_IMAGE_OTHER_CLOTHES(iID)
+				sName = 얼굴%RESULTS%_통상_{iID}
+			CASEELSE
+				IF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
+					sName = 스탠딩_의복_통상_도둑
+				ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_홉고블린)
+					sName = 스탠딩_의복_통상_홉고블린
+				ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_외래인)
+					sName = 스탠딩_의복_통상_외래인
+				ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_촉수)
+					sName = 스탠딩_의복_통상_촉수
+				ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_자경단)
+					sName = 스탠딩_의복_통상_자경단
+				ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_서큐버스)
+					sName = 스탠딩_의복_통상_서큐버스
+				ELSEIF CFLAG:iID:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_광신도)
+					sName = 스탠딩_의복_통상_광신도
+				ENDIF
+		ENDSELECT
+	ENDIF
+	
+	sHtml += @"<img src='%sName%' height='{iFont_Hei_mag}'"
 
 	iEnter_Con = 3
 	sHtml += @"ypos='-{iEnter_Con * 100}'>"

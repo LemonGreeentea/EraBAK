@@ -1,0 +1,144 @@
+﻿;=====================================================
+; 블루아카이브K 하스미 데일리 구상 - 디저트에대한만용
+; 구상 제작자 : 수틀리면분탕침
+; 구상 설명,조건
+;   1. 하스미 자국에 있을때
+;   2. 하스미의 주도도 800이상
+;   3. 일회용 데일리
+;   4. 
+;   5. 아나타로 남선생이 기반.
+;=====================================================
+;---------------------
+;기본적인 발생 확률(1000분 율 100으로 10%)
+;이것에 콘피그 항목의 발생 빈도를 걸칠 수 있으므로, 반드시 이 대로는 되지 않는다
+;---------------------
+@KOJO_DAILY_K69_APROVOCATIONTODESSERT_RATE(대상)
+#DIM 대상
+RETURN 0
+
+
+;---------------------
+;확률 이외의 발생 판정
+;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
+;---------------------
+@KOJO_DAILY_K69_APROVOCATIONTODESSERT_DECISION(대상)
+#DIM 대상
+;자국에 있으면서 포로가 아니며 안면이 있는게 아니면 스킵
+SIF CHECK_KOJO_DAILY_HAPPEN(대상, 1, 0, 1) == 0
+	RETURN 0
+	;이미 본 이벤트면 스킵
+	SIF KDVAR:대상:하스미_디저트에대한만용 == 1
+		RETURN 0
+	;아나타가 자지가 없다면 스킵
+	SIF !HAS_PENIS(MASTER)
+		RETURN 0
+;하스미 주도도가 800이상
+SIF ABL:대상:주도도Ｕ + ABL:대상:주도도Ｎ < 800
+	RETURN 0
+	;하스미가 친애가 아니면 스킵
+	SIF ! TALENT:대상:친애
+		RETURN 0
+
+
+
+
+RETURN 0
+;---------------------
+;장르
+;콘피그 설정으로 사용
+;---------------------
+@KOJO_DAILY_K69_APROVOCATIONTODESSERT_GENRE(대상)
+#DIM 대상
+RETURN 데일리_장르_에로
+
+;---------------------
+;본체
+;이벤트가 발생했을 경우는 1, 발생하지 않았던 경우는 0을 돌려준다
+;발생하지 않았다는 것은 예를 들면, 특정 조건을 채우는 캐릭터로부터 랜덤에 한사람 선택하는 데일리로, 원래 그 조건을 채우는 캐릭터가 한사람도 없는 것 같은 때
+;구사양으로 만든 적 있는 사람용으로 말하면 「구사양의 데일리 본체 첫머리에서-1을 돌려주는 것 같은 상황」
+;---------------------
+@KOJO_DAILY_K69_APROVOCATIONTODESSERT(대상)
+#DIM 대상
+
+IF IS_SLAVE(대상)
+	LOCALS:0 = 주인님
+ELSEIF TALENT:MASTER:선생 == 1
+	LOCALS:0 = 선생님
+ELSE
+	LOCALS:0 = %ANAME(MASTER)%
+ENDIF
+
+
+
+PRINTFORMW 최근 하스미가 부쩍 허약해진 느낌이 난다
+PRINTFORMW 얼굴이 반쪽된 느낌이라 자세히 하스미의 얼굴을 봤는데 하스미도 %ANAME(MASTER)%의 시선을 느끼고 바라보았다
+PRINTFORMW 「%ANAME(MASTER)% 무슨일이신가요?」
+PRINTFORMW 아무것도 아니라는 %ANAME(MASTER)%의 말에 의아해진 표정을 짓지만 어딘사 수척해진 표정을 짓는다
+PRINTFORMW %ANAME(MASTER)%은 하스미의 손을 잡았다
+PRINTFORMW 「앗..%ANAME(MASTER)%」
+	CALL ASK_MULTI("난 하스미가 걱정되는거야 혹시 최근에 뭐 힘든 일이 없엇니?")
+PRINTFORMW 「아..」
+PRINTFORMW 당신의 말에 담긴 진의를 깨닫게 된 하스미가 살짝 감동받은 얼굴이 된다
+PRINTFORMW 「으음..실은..」
+PRINTFORMW 하스미는 최근 다이어트를 한다고 했다
+PRINTFORMW 여학생이라면 응당 다이어트에 대한 고민은 당연히 들수밖에 없다
+PRINTFORMW 하지만..
+PRINTFORMW 「최근에 파란 피자를 먹다보니..」
+PRINTFORMW        ?
+PRINTFORMW %ANAME(MASTER)%은 의문성이 가득 담긴 표정으로 하스미를 바라보자 하스미는 당황한 표정을 짓는다
+PRINTFORMW 「그 맛없어 보이는 요리를 먹다보면 식욕이 감퇴되지 않을까해서요..」
+PRINTFORMW 그것때문인지 최근 식욕이 떨어지고 얼굴이 반쪽되엇단 말이지
+PRINTFORMW %ANAME(MASTER)%은 하스미를 불러서 제안을 하기로 했다
+	CALL ASK_MULTI("맛있는거 먹으러가자 내가 옆에서 자제를 할게")
+PRINTFORMW 「그렇게 까지 할 필욘..!」
+PRINTFORMW %ANAME(MASTER)%은 손을 들어서 하스미의 입을 막았다
+PRINTFORMW 확고한 의지에 하스미는 결국 식욕감퇴식사를 중지하고 맛있는 음식을 먹기로 했다
+PRINTFORMW 「죄송합니다..저의 다이어트에 끌어들여서..」
+PRINTFORMW 괜찮다는 %ANAME(MASTER)%의 손사레와 함께 식당으로 가서 음식을 고르기 시작했다
+PRINTFORMW 「오랜만에 먹네요」
+PRINTFORMW 활기찬 하스미의 목소리는 평소에 드문 목소리지만 오늘은 그만큼 좋은 목소리였다
+PRINTFORMW 「이것..이것..그리고 이거를 고를게요」
+PRINTFORMW 하스미의 거침없는 메뉴판 손가락질에 %ANAME(MASTER)%은 머릿속에 칼로리를 계산했다
+PRINTFORMW 뭐 넘친다싶으면 내가 먹으면 되니
+PRINTFORMW 거침없이 고른 하스미의 손가락은 탁자위에 내려놓으면서 끝이났고 곧이어 음식이 나오기 시작했다
+PRINTFORMW 「%ANAME(MASTER)%은 안 드시나요?」
+	CALL ASK_MULTI("하스미가 직접 먹여줘")
+PRINTFORMW 「웃...네에..」
+PRINTFORMW 부끄러워하는 표정을 지은 하스미는 손을 부들부들 떨리면서 숟가락 위에 음식을 얹고서 %ANAME(MASTER)%에게 먹였다
+PRINTFORMW 맛있다는 말에 하스미는 행복한 표정을 지으면서 음식을 먹었다
+PRINTFORMW 「다 먹었습니다 %ANAME(MASTER)% 후식도 먹으러 가죠」
+PRINTFORMW 후식이라..
+PRINTFORMW 하스미가 자신있게 권한 디저트를 만드는 카페에는 사람이 없었다
+PRINTFORMW 아까의 행복한 표정으로 돌아온 하스미는 직원에게 디저트를 시키기 시작했다
+PRINTFORMW 「파르페 세개하고 한정판 최근에 나온거 있나요? 그것도 하나 주세요」
+PRINTFORMW 잠시후 하스미의 손에 들려진 쟁반에는 디저트가 한가득이었다
+PRINTFORMW 너무 많이 시킨게 아니냐 라고 지적을 하고싶지만 저 행복해보이는 표정을 보면 그런 말이 쏙 들어간다
+PRINTFORMW 행복하다못해 헤일로가 쨍쨍 빛을 내는 하스미의 모습을 누가 말리랴
+PRINTFORMW 하나 둘씩 사라지는 파르페와 디저트들은 마치 자연재해를 앞둔 인간들과 같아보였다
+PRINTFORMW 이런저런 생각을 하고있을때 엄청난 속도로 엄청나게 먹어치운 하스미가 당신을 바라본다
+PRINTFORMW 「오랜만에 포식을 한거 같습니다」
+PRINTFORMW 잘 먹었냐고 물어보니까 이런 대답이 들려온것이다
+PRINTFORMW 식사와 후식도 끝났으니 당신은 대금을 치루고 하스미에게 다가갔다
+PRINTFORMW 「아직 하나가 남았지만..그건 돌아가서 말해도 될까요?」
+PRINTFORMW 그러라고 한 뒤에 하스미와 같이 방으로 돌아왔다
+PRINTFORMW 문을 열고 방 안으로 들어와서 마저 남은 하나가 무엇이냐고 물어볼..
+SETCOLOR 0xFF0000
+PRINTFORMW 덥썩!
+RESETCOLOR
+PRINTFORMW 갑작스러운 행동에 머리속 사고가 순간적으로 정지가 되었다
+PRINTFORMW 하스미가 어디선가 꺼낸 손수건으로 당신의 입을 막았다
+PRINTFORML 찰칵!
+PRINTFORMW 그러더니 갑자기 문을 잠가버렸다
+PRINTFORMW 「하아...♥」
+PRINTFORMW 얼른 진정하라고 몸부림을 쳤지만 하스미에게는 소용없었다
+PRINTFORMW 「저의 디저트..후우♥」
+PRINTFORMW 멀어져가는 의식에는 혀를 내밀어 입술을 적신 하스미의 입이 서서히 다가오는게 보였다
+CALL FUCK(MASTER, "Ｃ, Ａ, Ｍ, 키스, 욕망, 사정, 봉사, 성교, Ｖ삽입, 긴박, 마조", "키스상실, 동정상실", 0, @"%ANAME(대상)%의 입술", "", @"%ANAME(대상)%의 질", "강간")
+CALL FUCK(대상, "Ｃ, Ｂ, Ｖ, Ａ, Ｍ, 키스, 펠라티오, 욕망, 봉사, 성교, 정애, 성기술, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실", GET_ID(MASTER), @"%ANAME(MASTER)%의 입술", ANAME(MASTER), "", "강간")
+CALL ADD_COOLTIME(MASTER, 1)
+CFLAG:대상:지배도 += 500
+ABL:대상:주도도Ｕ += 50
+
+
+KDVAR:대상:하스미_디저트에대한만용 = 1
+RETURN 1

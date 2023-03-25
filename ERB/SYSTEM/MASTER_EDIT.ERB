@@ -403,7 +403,7 @@ PRINTL
 PRINTFORM 애칭 - %CSTR:대상:98, 20, LEFT%
 PRINTBUTTON "[입력]", 2
 PRINTL
-PRINTFORML ※이름이 너무 길면 게임 내 표시 등이 깨질 수 있습니다.
+PRINTFORML ※너무 길다고 표시 무너지고 합니다
 
 ;-------------------------
 ;태그 UI
@@ -651,7 +651,7 @@ ELSE
 	PRINTFORML 현재:없음
 ENDIF
 
-PRINTBUTTON "[아들·딸의 설정]", 3
+PRINTBUTTON "[아들·아가씨의 설정]", 3
 IF MASTER_EDIT_CHILD_CANDIDATE_NUM > 0
 	PRINTFORM 현재:
 	FOR LOCAL, 0, MASTER_EDIT_CHILD_CANDIDATE_NUM

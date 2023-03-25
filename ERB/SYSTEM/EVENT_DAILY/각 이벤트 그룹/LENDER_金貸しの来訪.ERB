@@ -10,7 +10,7 @@
 @EVENT_DAILY_LENDER_DECISION()
 SIF DVAR:대금업자_발생플래그 == -1
 	RETURN 0
-SIF 데일리_장르세부_NTR == 0
+SIF DVAR:데일리_장르세부_NTR == 0
 	RETURN 0
 SIF DAY < 15
 	RETURN 0
