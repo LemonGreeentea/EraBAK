@@ -1,4 +1,4 @@
-EraBlueArchiveK 0.3.6 업데이트 내역(작성중)
+EraBlueArchiveK 0.4.0 업데이트 내역(작성중)
 
 □ 구상/데일리이벤트 부분
   ○ 이즈나 구상 추가(by. saroshi) https://arca.live/b/textgame/72044897
@@ -12,6 +12,7 @@ EraBlueArchiveK 0.3.6 업데이트 내역(작성중)
 □ 시스템 부분
   ○ 로딩창 문구 변경
   ○ 타이틀 화면 변경(임시) (by.우물파기) https://arca.live/b/textgame/71601764
+  ○ 시작할 때 문구, 설정 변경
 
 □ 오류 수정
   ○ 플레이어의 화상이 변경되던 문제 해결
