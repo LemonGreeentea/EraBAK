@@ -9,14 +9,12 @@
 #DIM 후보자인원수
 #DIM 조교인원수, 1
 #DIM 메인, 1
-#DIM 라이벌_ID
 VARSET 인원수, 0
 VARSET 후보자인원수, 0
 VARSET 호감도리스트, __INT_MIN__
 VARSET 후보자리스트, -1
 VARSET 조교인원수, 0
 VARSET 메인, -1
-라이벌_ID = NO_TO_CHARA(RIVAL_ID)
 
 FOR LCOUNT, 0, CHARANUM
 	SIF GET_ID(LCOUNT) == FLAG:역조교메인조교자
@@ -28,8 +26,6 @@ FOR LCOUNT, 0, CHARANUM
 	SIF ABL:(LCOUNT):성지식 < 2
 		CONTINUE
 	SIF CONFIG:17 && !CFLAG:(LCOUNT):안면
-		CONTINUE
-	SIF LCOUNT == 라이벌_ID
 		CONTINUE
 	호감도리스트:LCOUNT = CFLAG:LCOUNT:호감도
 	인원수 ++

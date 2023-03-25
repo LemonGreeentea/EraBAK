@@ -53,6 +53,12 @@ IF CFLAG:200 == 0
 	CFLAG:200 = 1
 	;첫대면의 경우
 	IF !CFLAG:17
+
+		LOCALS:1 = 「안녕하세요 %LOCALS:0% !」
+		CALL KOJO_K62_COLOR(LOCALS:1, 1)
+
+		CALL KOJO_K62_COLOR(@"「안녕하세요 %LOCALS:0% !」", 1)
+
 		PRINTFORMW 아이리의 방에 들어가자 아이리가 방에 들어온 %조사처리(ANAME(MASTER),"를")% 보고 고개를 갸우뚱한다.
 		CALL FACE_IMAGE_N("표정_62_일반_2")
 		PRINTFORML 「어라? 누구신가요?」
@@ -12069,3 +12075,23 @@ SELECTCASE TCVAR:0
 	CASE 4
 		;PRINTFORMW 
 ENDSELECT
+
+
+
+
+
+
+
+@KOJO_K62_COLOR(대사, 종류)
+#DIMS 대사
+#DIM 종류
+
+SETCOLOR 0x7CCEC3
+IF 종류 == 1
+	PRINTFORMW %대사%
+ELSEIF 종류 == 2
+	PRINTFORML %대사%
+ELSE
+	PRINTFORM %대사%
+ENDIF
+RESETCOLOR

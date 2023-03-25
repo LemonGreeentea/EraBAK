@@ -41,6 +41,7 @@ $SHOW_LOOP
 
 CALL SINGLE_DRAWLINE
 PRINTFORML 데일리의 콘피그를 설정합니다
+PRINTFORML 해당 이벤트가 온이어도 데일리이벤트 세부설정에 따라 발생하지 않을 수 있습니다.
 CALL SINGLE_DRAWLINE
 
 FOR LOCAL, 0, DAILY_GENRE_NUM
@@ -131,10 +132,26 @@ FIRST_LINE = LINECOUNT
 
 $SHOW_LOOP
 
-
 CALL SINGLE_DRAWLINE
-PRINTFORML [1001] NTR계열 데일리 이벤트
-PRINTFORML [1002] 
+PRINTFORML 
+PRINTFORML ☆데일리 이벤트 세부 설정
+PRINTFORML 
+PRINTFORM [1001] NTR계열 데일리 이벤트 - 
+IF 데일리_장르세부_NTR == 0
+	PRINTFORML OFF
+ELSEIF 데일리_장르세부_NTR == 1
+	PRINTFORML ON
+ELSE
+	PRINTFORML ERROR
+ENDIF
+PRINTFORML [1002] 인간남성 등장 이벤트 - 
+IF 데일리_장르세부_인간남성 == 0
+	PRINTFORML OFF
+ELSEIF 데일리_장르세부_인간남성 == 1
+	PRINTFORML ON
+ELSE
+	PRINTFORML ERROR
+ENDIF
 PRINTFORML [1003] 
 PRINTFORML [1004] 
 PRINTFORML [1005] 
@@ -145,15 +162,37 @@ IF RESULT == 9999
 ELSE
 	SELECTCASE RESULT
 		CASE 1001
-			IF DVAR:데일리_장르세부_NTR == 1
+			CALL SINGLE_DRAWLINE
+			PRINTFORML ☆ NTR계열 데일리 이벤트
+			PRINTFORML 
+			PRINTFORML NTR계열의 이벤트의 등장 여부입니다. NTR을 원치 않으시다면 OFF로 해두시기 바랍니다.
+			PRINTFORML NTR계열 이벤트 OFF시 일부 이벤트가 등장하지 않고, 일부 이벤트의 선택지, 전개 등이 달라집니다.
+			PRINTFORML
+			CALL SINGLE_DRAWLINE
+			CALL ASK_MULTI("ON", "OFF")
+			IF RESULT == 1
 				PRINTFORMW NTR계열 데일리 이벤트가 일어나지 않습니다.
-				DVAR:데일리_장르세부_NTR = 0
-			ELSEIF DVAR:데일리_장르세부_NTR == 0
+				데일리_장르세부_NTR = 0
+			ELSEIF RESULT == 0
 				PRINTFORMW NTR계열 데일리 이벤트가 일어납니다.
-				DVAR:데일리_장르세부_NTR = 1
+				데일리_장르세부_NTR = 1
 			ENDIF
 		CASE 1002
-			
+			CALL SINGLE_DRAWLINE
+			PRINTFORML ☆ 인간남성 등장 이벤트
+			PRINTFORML 
+			PRINTFORML 데일리 이벤트에 인간 남성이 등장하는지 여부입니다.
+			PRINTFORML 인간남성이 등장하는 만큼 에로계열의 이벤트가 많습니다.
+			PRINTFORML
+			CALL SINGLE_DRAWLINE
+			CALL ASK_MULTI("ON", "OFF")
+			IF RESULT == 1
+				PRINTFORMW 인간남성 이벤트가 등장하지 않습니다.
+				데일리_장르세부_인간남성 = 0
+			ELSEIF RESULT == 0
+				PRINTFORMW 인간남성 이벤트가 등장합니다.
+				데일리_장르세부_인간남성 = 1
+			ENDIF
 		CASE 1003
 			
 		CASE 1004
