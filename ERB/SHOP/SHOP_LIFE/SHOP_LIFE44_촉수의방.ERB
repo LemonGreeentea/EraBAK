@@ -22,11 +22,6 @@ RETURN 1
 ;「촉수의방」의 선택 가능 캐릭터 존재 판정
 ;-------------------------------------------------
 @SHOP_LIFE_CHECKCHARA44(ARG:0)
-#DIM 라이벌_ID
-
-라이벌_ID = NO_TO_CHARA(RIVAL_ID)
-SIF ARG:0 == 라이벌_ID
-	RETURN 0
 SIF !IS_SYOKUSYU_MANAGE(ARG:0)
 	RETURN 0
 RETURN 1
