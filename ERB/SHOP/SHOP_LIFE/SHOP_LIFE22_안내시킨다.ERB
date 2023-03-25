@@ -46,11 +46,6 @@ RETURN 1
 ;「안내시킨다」의 선택 가능 캐릭터 존재 판정
 ;-------------------------------------------------
 @SHOP_LIFE_CHECKCHARA22(ARG:0)
-#DIM 라이벌_ID
-
-라이벌_ID = NO_TO_CHARA(RIVAL_ID)
-SIF ARG:0 == 라이벌_ID
-	RETURN 0
 ;인접하고 있는 도시가 없다
 SIF CFLAG:MASTER:소속 && !TMP_COUNTRY_IS_NEIBORING:(CFLAG:MASTER:소속):(CFLAG:(ARG:0):소속)
 	RETURN 0
