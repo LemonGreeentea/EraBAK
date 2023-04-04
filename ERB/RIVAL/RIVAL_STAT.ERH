@@ -1,0 +1,12 @@
+﻿#DIM CONST 라이벌_첫만남 = 3
+#DIM CONST 라이벌_첫키스 = 20
+#DIM CONST 라이벌_첫터치 = 10
+#DIM CONST 라이벌_키스 = 15
+#DIM CONST 라이벌_터치 = 7
+#DIM CONST 라이벌_성희롱 = 10
+#DIM CONST 라이벌_성추행 = 20
+#DIM CONST 라이벌_애무 = 20
+#DIM CONST 라이벌_V_섹스 = 40
+#DIM CONST 라이벌_A_섹스 = 45
+#DIM CONST 라이벌_M_섹스 = 30
+#DIM CONST 라이벌_대딸 = 25
