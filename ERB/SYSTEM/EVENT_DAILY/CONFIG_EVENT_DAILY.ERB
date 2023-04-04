@@ -137,22 +137,29 @@ PRINTFORML
 PRINTFORML ☆데일리 이벤트 세부 설정
 PRINTFORML 
 PRINTFORM [1001] NTR계열 데일리 이벤트 - 
-IF 데일리_장르세부_NTR == 0
+IF FLAG:데일리이벤트_NTR == 0
 	PRINTFORML OFF
-ELSEIF 데일리_장르세부_NTR == 1
+ELSEIF FLAG:데일리이벤트_NTR == 1
 	PRINTFORML ON
 ELSE
 	PRINTFORML ERROR
 ENDIF
-PRINTFORML [1002] 인간남성 등장 이벤트 - 
-IF 데일리_장르세부_인간남성 == 0
+PRINTFORM [1002] 인간남성 등장 이벤트 - 
+IF FLAG:데일리이벤트_인간남성 == 0
 	PRINTFORML OFF
-ELSEIF 데일리_장르세부_인간남성 == 1
+ELSEIF FLAG:데일리이벤트_인간남성 == 1
 	PRINTFORML ON
 ELSE
 	PRINTFORML ERROR
 ENDIF
-PRINTFORML [1003] 
+PRINTFORM [1003] 에로계열 데일리 이벤트 - 
+IF FLAG:데일리이벤트_에로 == 0
+	PRINTFORML OFF
+ELSEIF FLAG:데일리이벤트_에로 == 1
+	PRINTFORML ON
+ELSE
+	PRINTFORML ERROR
+ENDIF
 PRINTFORML [1004] 
 PRINTFORML [1005] 
 PRINTFORML [9999] 돌아온다
@@ -172,14 +179,14 @@ ELSE
 			CALL ASK_MULTI("ON", "OFF")
 			IF RESULT == 1
 				PRINTFORMW NTR계열 데일리 이벤트가 일어나지 않습니다.
-				데일리_장르세부_NTR = 0
+				FLAG:데일리이벤트_NTR = 0
 			ELSEIF RESULT == 0
 				PRINTFORMW NTR계열 데일리 이벤트가 일어납니다.
-				데일리_장르세부_NTR = 1
+				FLAG:데일리이벤트_NTR = 1
 			ENDIF
 		CASE 1002
 			CALL SINGLE_DRAWLINE
-			PRINTFORML ☆ 인간남성 등장 이벤트
+			PRINTFORML ☆ 인간남성 등장 데일리 이벤트
 			PRINTFORML 
 			PRINTFORML 데일리 이벤트에 인간 남성이 등장하는지 여부입니다.
 			PRINTFORML 인간남성이 등장하는 만큼 에로계열의 이벤트가 많습니다.
@@ -188,13 +195,27 @@ ELSE
 			CALL ASK_MULTI("ON", "OFF")
 			IF RESULT == 1
 				PRINTFORMW 인간남성 이벤트가 등장하지 않습니다.
-				데일리_장르세부_인간남성 = 0
+				FLAG:데일리이벤트_인간남성 = 0
 			ELSEIF RESULT == 0
 				PRINTFORMW 인간남성 이벤트가 등장합니다.
-				데일리_장르세부_인간남성 = 1
+				FLAG:데일리이벤트_인간남성 = 1
 			ENDIF
 		CASE 1003
-			
+			CALL SINGLE_DRAWLINE
+			PRINTFORML ☆ 에로계열 데일리 이벤트
+			PRINTFORML 
+			PRINTFORML 데일리 이벤트의 에로 전개 여부를 설정할 수 있습니다.
+			PRINTFORML OFF시 에로계열 이벤트가 등장하지 않거나 특정 이벤트에서 에로한 전개로 가지 않습니다.
+			PRINTFORML
+			CALL SINGLE_DRAWLINE
+			CALL ASK_MULTI("ON", "OFF")
+			IF RESULT == 1
+				PRINTFORMW 에로계열 이벤트가 등장하지 않습니다.
+				FLAG:데일리이벤트_에로 = 0
+			ELSEIF RESULT == 0
+				PRINTFORMW 에로계열 이벤트가 등장합니다.
+				FLAG:데일리이벤트_에로 = 1
+			ENDIF
 		CASE 1004
 			
 		CASE 1005

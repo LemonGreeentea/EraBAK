@@ -1,0 +1,132 @@
+﻿;-------------------------------------------------
+;「방위해제」의 명칭
+;-------------------------------------------------
+@SHOP_SLG_NAME33
+RESULTS:0 '= "자동방어"
+
+;-------------------------------------------------
+;「방위해제」의 선택 가부
+;-------------------------------------------------
+@SHOP_SLG_CHECK33
+SIF FLAG:클리어플래그
+	RETURN 0
+SIF FLAG:관전모드
+	RETURN 0
+SIF CFLAG:MASTER:소속 == 0
+	RETURN 0
+SIF CONFIG:302 != 0
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;「방위해제」의 왼쪽 컬럼 메뉴의 입력 처리
+;-------------------------------------------------
+@SHOP_SLG_EVENTBUY33
+CALL AUTOSET_GUARD
+RETURN 1
+
+;-------------------------------------------------
+;「방위 자동 설정」본체
+;-------------------------------------------------
+@AUTOSET_GUARD
+#DIM 무장도
+#DIM 세력
+#DIM 부대
+#DIM 방위스코아, MAX_CITY
+#DIM 방위스코아합계
+#DIM 초기병수
+#DIM 배분병수
+#DIM 도시수
+#DIM 도시
+#DIM 항번
+
+CALL SINGLE_DRAWLINE
+PRINTFORML 미할당 용병을 자동으로 각 도시에 배분합니다
+PRINTFORML 적의 도시와 인접하고 있지 않다면 아무것도 하지 않습니다
+
+CALL ASK_MULTI("실행", "취소")
+
+IF RESULT == 1
+	PRINTFORMW 자동 방어를 취소했습니다
+	RETURN
+ENDIF
+
+VARSET 방위스코아합계
+VARSET 방위스코아, __INT_MIN__
+
+;국가간의 인접 관계 맵의 작성(처리의 고속화)
+CALL TMP_CREATE_COUNTRY_NEIBORING_MAP
+;접속 맵의 작성
+CALL TMP_CREATE_CONNECTION_MAP
+;뚝 떨어진 영토 맵의 작성
+CALL TMP_CREATE_ENCLAVE_MAP
+;유닛 관련
+CALL TMP_CREATE_UNIT_MAP
+CALL TMP_CREATE_COUNTRY_NEIBORING_MAP
+;중요성의 설정
+CALL TMP_CREATE_OFFENSIVE_IMPORTANCE_MAP
+CALL TMP_CREATE_DEFENSIVE_IMPORTANCE_MAP
+;리스크와 침공
+CALL TMP_CREATE_IS_INVADABLE_MAP
+CALL TMP_CREATE_CITY_RISK_MAP
+;사관이 행동 가능한 상태에 있을지 어떨지의 리스트를 작성
+CALL TMP_CREATE_IS_FREE_MAP
+CALL TMP_CREATE_POLITICS_POWER_MAP
+CALL TMP_CREATE_COOKING_POWER_MAP
+;도시수와 경제를 준비
+CALL TMP_CREATE_OWN_CITY_MAP
+CALL TMP_CREATE_SUM_ECONOMY_MAP
+;병력을 준비
+CALL TMP_CREATE_SUM_SOLDIER_MAP
+CALL TMP_CREATE_UNION_TARGET_MAP
+
+FOR LOCAL:0, 0, MAX_CITY
+	IF CITY_OWNER:(LOCAL:0) == CFLAG:MASTER:소속 && GET_CITYNAME(LOCAL:0) != "무명" && !TMP_IS_STAY_ENEMY_UNIT(LOCAL:0, CFLAG:MASTER:소속)
+		IF CITY_SOLDIER:(LOCAL:0) > 500
+			COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += CITY_SOLDIER:(LOCAL:0) - 500
+			CITY_SOLDIER:(LOCAL:0) = 500
+		ENDIF
+	ENDIF
+NEXT
+
+세력 = CFLAG:MASTER:소속
+초기병수 = COUNTRY_SOLDIER:세력
+
+도시수 = 0
+;우선 스코아를 기록
+FOR 도시, 1, GET_CITY_NUM() + 1
+	;거기가 자세력의 도시에서, 적과 접속하고 있다면, 방위 스코아에 가산
+	;최대 뚝 떨어진 영토가 아니면, 최대 뚝 떨어진 영토에 대한 뚝 떨어진 영토 사이즈의 비만 경감된다
+	IF CITY_OWNER:도시 == 세력 && TMP_CITY_RISK:세력:도시 >= 2
+		;적이 있는 도시는 안 돼
+		SIF TMP_IS_STAY_ENEMY_UNIT(도시, 세력) == 1
+			CONTINUE
+		방위스코아:도시 = TMP_DEFFENSIVE_IMPORTANCE:세력:도시 * TMP_ENCLAVE_SIZE:세력:도시 / TMP_MAX_ENCLAVE_SIZE:세력
+		방위스코아합계 += 방위스코아:도시
+		도시수 ++
+	ENDIF
+NEXT
+
+SIF 도시수 == 0
+	GOTO END
+
+;병력 배분＋무장 배분
+;무장 배분의 상황, 큰 순서에 취득합니다
+FOR 항번, 0, 도시수
+	도시 = FINDELEMENT(방위스코아, MAXARRAY(방위스코아))
+	SIF 방위스코아:도시 == __INT_MIN__
+		BREAK
+	SIF COUNTRY_SOLDIER:세력 <= 0
+		CONTINUE
+	;전체에 대한 스코아의 비율로
+	배분병수 = 초기병수 * 방위스코아:도시 / 방위스코아합계
+	CITY_SOLDIER:도시 += MIN(배분병수, COUNTRY_SOLDIER:세력)
+	COUNTRY_SOLDIER:세력 = MAX(COUNTRY_SOLDIER:세력 - 배분병수, 0)
+	;DEBUGPRINTFORML COUNTRY_SOLDIER:{COUNTRY_SOLDIER:세력}
+
+	방위스코아:도시 = __INT_MIN__
+	;DEBUGPRINTFORML %GET_CITYNAME(도시)%의 방위병 {CITY_SOLDIER:도시}
+NEXT
+
+$END
+PRINTFORMW 자동 설정했습니다
