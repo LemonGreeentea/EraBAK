@@ -459,11 +459,6 @@ FOR LOCAL:0, 0, CHARANUM
 	CALL TIGHTNESS_GROW(LOCAL:0)
 	
 	
-	IF HAS_TAG(LOCAL, 태그_봉래인) && CFLAG:LOCAL:특수상태 == 특수상태_사망
-		CALL COLOR_PRINTW("리자레크션!", 칼라_주의)
-		CALL COLOR_PRINTW(@"%NAME_FORMAL(LOCAL)%가 소생했습니다", 칼라_주의)
-		CALL CHANGE_COUNTRY(LOCAL, 0, 1)
-	ENDIF
 
 	;이 턴～계 플래그를 꺾는다
 	CFLAG:(LOCAL:0):행동완료 = 0

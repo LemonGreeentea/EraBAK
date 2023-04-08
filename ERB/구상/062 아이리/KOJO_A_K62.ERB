@@ -18,7 +18,7 @@
 ;●「만나러간다」의 개시시의 대사
 ;=================================================
 @KOJO_TRAIN_START_A1_K62
-
+SETCOLOR 0x7CCEC3
 ;------------------------------------------------
 ;호칭의 설정
 ;------------------------------------------------
@@ -41,9 +41,8 @@ ENDIF
 IF TALENT:공허
 	PRINTFORML 아이리의 방에 들어갔지만 아무런 기척도 느껴지지 않는다.
 	PRINTFORML ...?
-	PRINTFORML 아이리는 방 구석에 앉아서 벽면만 바라보고 있다.
 	PRINTFORML 「......」
-	PRINTFORMW %ANAME(MASTER)%의 얼굴을 보고도 아무런 반응이 없다. 
+	PRINTFORML 아이리는 방 구석에 앉아서 벽면만 바라보고 있다.
 	RETURN
 ENDIF
 ;-------------------------------------------------
@@ -54,10 +53,9 @@ IF CFLAG:200 == 0
 	;첫대면의 경우
 	IF !CFLAG:17
 
-		LOCALS:1 = 「안녕하세요 %LOCALS:0% !」
-		CALL KOJO_K62_COLOR(LOCALS:1, 1)
-
-		CALL KOJO_K62_COLOR(@"「안녕하세요 %LOCALS:0% !」", 1)
+	;	LOCALS:1 = 「안녕하세요 %LOCALS:0% !」
+	;	CALL KOJO_K62_COLOR(LOCALS:1, 1)
+	;	CALL KOJO_K62_COLOR(@"「안녕하세요 %LOCALS:0% !」", 1)
 
 		PRINTFORMW 아이리의 방에 들어가자 아이리가 방에 들어온 %조사처리(ANAME(MASTER),"를")% 보고 고개를 갸우뚱한다.
 		CALL FACE_IMAGE_N("표정_62_일반_2")
@@ -65,12 +63,14 @@ IF CFLAG:200 == 0
 		PRINTFORML 「아, %LOCALS:0%!」
 		PRINTFORML 「반가워요! 저는 쿠리무라 아이리!」
 		PRINTFORML 「디저트나 달콤한걸 좋아해요!」
-		PRINTFORMW 「혹시 %LOCALS:0%도 달달한 디저트 좋아하시나요?」
+		PRINTFORMW 「혹시 %LOCALS:0%도 달콤한 디저트 좋아하시나요?」
+		RESETCOLOR
 		RETURN
 	;이미 만났던 적이 있는 경우
 	ELSE
 		PRINTFORML 「아, 안녕하세요 %LOCALS:0%.」
 		PRINTFORML 「이 곳에서 뵙는건 처음이네요.」
+		RESETCOLOR
 		RETURN
 	ENDIF
 ;-------------------------------------------------
@@ -175,11 +175,12 @@ ELSE
 	ENDSELECT
 
 ENDIF
-
+RESETCOLOR
 ;=================================================
 ;●「만나러간다」의 종료시의 대사
 ;=================================================
 @KOJO_TRAIN_END_A1_K62
+SETCOLOR 0x7CCEC3
 ;[공허]상태라면 구상을 표시하지 않는다
 IF TALENT:공허
 	PRINTFORML 아이리의 방을 
@@ -251,11 +252,13 @@ ELSE
 	;PRINTFORMW 
 
 ENDIF
+RESETCOLOR
 
 ;=================================================
 ;●「침실호출」의 개시시의 대사 ※단독으로 불렸을 경우만 불린다
 ;=================================================
 @KOJO_TRAIN_START_A2_K62
+SETCOLOR 0x7CCEC3
 ;[공허]상태라면 구상을 표시하지 않는다
 IF TALENT:공허
 	RETURN
@@ -284,11 +287,13 @@ ELSE
 	;PRINTFORMW 
 
 ENDIF
+RESETCOLOR
 
 ;=================================================
 ;●「침실호출」의 종료시의 대사 ※단독으로 불렸을 경우만 불린다
 ;=================================================
 @KOJO_TRAIN_END_A2_K62
+SETCOLOR 0x7CCEC3
 ;[공허]상태라면 구상을 표시하지 않는다
 IF TALENT:공허
 	RETURN
@@ -326,6 +331,7 @@ ELSE
 	;PRINTFORMW 
 
 ENDIF
+RESETCOLOR
 
 ;=================================================
 ;●커맨드 실행전(이 캐릭터가 타겟측 때)
@@ -358,6 +364,7 @@ RETURN 0
 ;  플레이어·타겟의 구별이 없는 커맨드는 여기에 구상을 기술한다
 ;=================================================
 @KOJO_COM_A_K62
+SETCOLOR 0x7CCEC3
 ;[공허]상태의 경우, 입이 막히고 있는 경우는 구상을 표시하지 않는다
 IF TALENT:공허 || IS_EQUIP_CONTINUE(TARGET, "입장착")
 	RETURN 0
@@ -6922,11 +6929,12 @@ IF SELECTCOM == 550
 		ENDIF
 	ENDIF
 ENDIF
-
+RESETCOLOR
 ;=================================================
 ;●커맨드 실행시(이 캐릭터가 플레이어측 때)
 ;=================================================
 @KOJO_COM_PLAYER_A_K62
+SETCOLOR 0x7CCEC3
 ;[공허]상태의 경우, 입이 막히고 있는 경우는 구상을 표시하지 않는다
 IF TALENT:공허 || IS_EQUIP_CONTINUE(TARGET, "입장착")
 	RETURN 0
@@ -11840,11 +11848,12 @@ IF SELECTCOM == 550
 		ENDIF
 	ENDIF
 ENDIF
-
+RESETCOLOR
 ;=================================================
 ;●커맨드 실행 후(파라미터의 변동 처리가 끝나고 나서 불려 간다)
 ;=================================================
 @KOJO_COM_AFTER_A_K62
+SETCOLOR 0x7CCEC3
 ;[공허]상태의 경우, 입이 막히고 있는 경우는 구상을 표시하지 않는다
 IF TALENT:공허 || IS_EQUIP_CONTINUE(TARGET, "입장착")
 	RETURN 0
@@ -11913,7 +11922,7 @@ IF NOWEX:MASTER:사정 > 0
 				PRINTFORML 아이리의 질내에 %ANAME(MASTER)%의 정액이 쏟아졌다.
 				PRINTFORML 「우으... %LOCALS:0%의 정액... 뜨거워요...」
 				PRINTFORML 「후으... 아직도 나오고 있어...」
-				PRINTFORMW 아이리의 음부에서 물건을 꺼내자 다 들어가지 못한 정액이 새어나고오 있다.
+				PRINTFORMW 아이리의 음부에서 물건을 꺼내자 다 들어가지 못한 정액이 새어나오고 있다.
 			;그 이외
 			ELSE
 				PRINTFORML 아이리의 질내에 %ANAME(MASTER)%의 정액이 부어진다.
@@ -12075,7 +12084,7 @@ SELECTCASE TCVAR:0
 	CASE 4
 		;PRINTFORMW 
 ENDSELECT
-
+RESETCOLOR
 
 
 

@@ -158,26 +158,6 @@ IF FLAG:조교모드 == 조교_역조교특수
 	NEXT
 ENDIF
 
-;술못함이 아니고 임신하고 있지 않았으면, 이따금 몹시 취한 상태로 스타트
-;종족명이 오니의 경우고확률, 폭주가라도 적당한 확률
-;다만 오니가 아닌 경우, 포로 조교시는 포함하지 않는다
-IF FLAG:조교모드 == 조교_만난다
-	FOR LOCAL, 0, CHARANUM
-		IF CFLAG:(LOCAL:0):조교참가플래그 && !TALENT:(LOCAL:0):술못함 && !TALENT:(LOCAL:0):임신 && CFLAG:(LOCAL:0):행동불능상태 != 행동불능_아이
-			IF HAS_TAG(LOCAL:0, 태그_오니) && !RAND:3
-				PRINTFORMW %조사처리(ANAME(LOCAL:0),"는")% 몹시 취하고 있는 것 같다……
-				PALAM:(LOCAL:0):취기 = RAND(3000, 6000)
-			ELSEIF TALENT:(LOCAL:0):폭주가 && FLAG:조교모드 != 2 && !RAND:5
-				PRINTFORMW %조사처리(ANAME(LOCAL:0),"는")% 몹시 취하고 있는 것 같다……
-				PALAM:(LOCAL:0):취기 = RAND(1500, 3000)
-			ELSEIF FLAG:조교모드 != 2 && !RAND:10
-				PRINTFORMW %조사처리(ANAME(LOCAL:0),"는")% 몹시 취하고 있는 것 같다……
-				PALAM:(LOCAL:0):취기 = RAND(500, 1500)
-			ENDIF
-		ENDIF
-	NEXT
-ENDIF
-
 ;플레이어와 타겟을 클리어
 CALL CLEAR_MPLY
 CALL CLEAR_MTAR
