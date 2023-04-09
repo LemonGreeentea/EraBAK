@@ -1,15 +1,15 @@
 ﻿;성성지식을가르친다
-
+; 2023-04-09 번역체 교정 - 레몬녹차
 ;-------------------------------------------------
 ;커맨드 명칭
 ;-------------------------------------------------
 @COM_NAME550
-RESULTS:0 = 성지식을가르친다
-RESULTS:1 = 성의 지식을 가르치게 되어진다
-RESULTS:2 = 성의 지식을 가르쳐 받는다
-RESULTS:3 = 성의 지식을 가르칠 수 있다
+RESULTS:0 = 성지식을 가르친다
+RESULTS:1 = 성지식을 알려준다
+RESULTS:2 = 성지식을 배운다
+RESULTS:3 = 성지식을 알려달라한다
 RESULTS:4 = 성의 지식을 가르치게 한다
-RESULTS:5 = 성지식을가르친다
+RESULTS:5 = 성지식을 가르친다
 
 ;-------------------------------------------------
 ;선택 가부 판정
@@ -174,38 +174,38 @@ RETURN 1
 IF MPLY:0 == MASTER
 	;주도권이 주인공측
 	IF IS_INITIATIVE(MASTER)
-		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 성의 지식을 말했다
-		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %조사처리(ANAME(MPLY:0),"를")% 이야기 하는 내용을 흥미로운 것 같게 듣고 있다…
+		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에게 성의 지식을 알려줬다
+		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 이야기를 흥미롭게 듣고 있다…
 	;주도권이 상대측
 	ELSE
-		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 어른의 지식을 가르쳐 주도록(듯이) 졸랐다
-		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 (듣)묻는 대로 성의 지식을 가르쳤다…
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 어른의 지식을 알려달라며 졸랐다
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"가")% 궁금한 것을 알려주며 성지식을 가르쳤다…
 	ENDIF
 	PRINTL 
-	PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 올바른 성의 지식을 몸에 익힌 것 같다
+	PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 올바른 성의 지식을 배웠다
 
 ;플레이어가 상대측
 ELSE
 	;주도권이 주인공측
 	IF IS_INITIATIVE(MASTER)
-		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 어른의 지식을 가르쳐 주도록(듯이) 졸랐다
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에게 어른의 지식을 가르쳐 달라며 졸랐다
 		IF TALENT:(MPLY:0):소악마 || TALENT:(MPLY:0):수치심옅음
-			PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 득의양양에 미소지으면, %ANAME(MTAR:0)%에 한껏 성의 지식을 철저히 가르쳤다…
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 의기양양한 미소지으면, %ANAME(MTAR:0)%에게 한껏 성의 지식을 철저히 가르쳤다…
 		ELSEIF TALENT:(MPLY:0):수줍음
-			PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 얼굴을 새빨갛게 하면서도, %ANAME(MTAR:0)%에 성의 지식을 말하기 시작했다…
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 얼굴을 새빨갛게 하면서도, %ANAME(MTAR:0)%에게 성의 지식을 말하기 시작했다…
 		ELSE
-			PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 곤란한 것 같은 표정을 띄우면서도, %ANAME(MTAR:0)%에 성의 지식을 말했다…
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 곤란한 것 같은 표정을 띄우면서도, %ANAME(MTAR:0)%에게 성의 지식을 말했다…
 		ENDIF
 	;주도권이 상대측
 	ELSE
 		IF FLAG:우후후플래그
-			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 실천도 섞어 차분히 성의 지식을 가르쳤다…
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에게 자신의 몸을 가르키며 성지식을 가르쳤다…
 		ELSE
-			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 성의 지식을 철저히 가르쳤다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에게 성의 지식을 철저히 가르쳤다
 		ENDIF
 	ENDIF
 	PRINTL 
-	PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 올바른 성의 지식을 몸에 익혔다
+	PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 올바른 성의 지식을 배웠다
 ENDIF
 
 ;--------------------------------------------------------

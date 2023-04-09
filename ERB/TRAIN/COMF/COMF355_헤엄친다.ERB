@@ -1,11 +1,11 @@
 ﻿;헤엄친다
-
+; 2023-04-09 번역체 교정 - 레몬녹차
 ;-------------------------------------------------
 ;커맨드 명칭
 ;-------------------------------------------------
 @COM_NAME355
 RESULTS:0 = 함께 헤엄친다
-RESULTS:1 = 함께 헤엄쳐진다
+RESULTS:1 = 함께 헤엄친다
 
 ;-------------------------------------------------
 ;선택 가부 판정
@@ -62,10 +62,6 @@ CASEELSE
 	LOCAL:2 = 60
 ENDSELECT
 
-IF MPLY:0 == NAME_TO_CHARA("와카사기히메")
-	LOCAL:1 += 30
-	LOCAL:2 += 30
-ENDIF
 
 
 SELECTCASE LOCAL:6
@@ -86,10 +82,6 @@ CASEELSE
 	LOCAL:4 = 60
 ENDSELECT
 
-IF MTAR:0 == NAME_TO_CHARA("와카사기히메")
-	LOCAL:3 += 30
-	LOCAL:4 += 30
-ENDIF
 
 SIF LOCAL:1 <= RAND:100
 	TFLAG:17 += 1
@@ -239,18 +231,18 @@ IF IS_INITIATIVE(MASTER)
 	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 함께 강에서 헤엄치기로 했다
 ;주도권이 상대측
 ELSE
-	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 이끌려 함께 강에서 헤엄치는 일이 되었다
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 이끌려 함께 강에서 헤엄쳤다
 ENDIF
 
 IF TFLAG:18 == 1
-	PRINTFORML 두 사람 모두 능숙하게 헤엄칠 수가 있어, %조사처리(ANAME(MTAR:0),"는")% 만족한 것 같다…
+	PRINTFORML 두 사람 모두 능숙하게 헤엄쳤다
 ELSEIF TFLAG:18 == -1
 	IF TFLAG:17 == 1
-		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 빠져 흐르게 되어 버렸다…
+		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 물에 빠져버렸다…
 	ELSEIF TFLAG:17 == 2
-		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 빠져 흐르게 되어 버렸다…
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 물에 빠져버렸다…
 	ELSE
-		PRINTFORML 둘이서 사이 좋게 빠져 버렸다…
+		PRINTFORML 둘이서 사이 좋게 물에 빠져 버렸다…
 	ENDIF
 ENDIF
 

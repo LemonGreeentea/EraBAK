@@ -1,11 +1,11 @@
 ﻿;둘이서 나간다
-
+; 2023-04-09 번역체 교정 - 레몬녹차
 ;-------------------------------------------------
 ;커맨드 명칭
 ;-------------------------------------------------
 @COM_NAME390
-RESULTS:0 = 외로 이끈다
-RESULTS:1 = 외에 이끌린다
+RESULTS:0 = 외출한다
+RESULTS:1 = 외출한다
 
 ;-------------------------------------------------
 ;선택 가부 판정
@@ -59,7 +59,7 @@ LOCAL:2 = GET_INITIATIVE_RATE(MTAR:0)
 ;상대의 주도권 포인트가 극단적으로 높은＆파트너에게 주도권이 있으면, 이따금 데이트의 행선지를 멋대로 결정된다
 IF LOCAL:2 >= 40 && MIN(50, LOCAL:2 / 2) > RAND:100 && TFLAG:45 == 1
 	;상대가 잡는다
-	PRINTFORMW %ANAME(MTAR:0)%의 가고 싶은 곳에 데리고 가졌다…
+	PRINTFORMW %ANAME(MTAR:0)%가 가고 싶은 곳으로 이끌려졌다…
 	;강제적으로 대성공이 된다
 	TFLAG:18 = 1
 	TFLAG:54 = LOCAL:0
@@ -231,15 +231,15 @@ ENDIF
 @COM_TEXT_BEFORE390
 ;주도권이 주인공측
 IF IS_INITIATIVE(MASTER)
-	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"를")% 따라 %GET_PLACENAME(TFLAG:54)%로 향했습니다
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"를")% 데리고 %GET_PLACENAME(TFLAG:54)%로 갔다
 ELSE
-	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 선도되도록(듯이)해 %GET_PLACENAME(TFLAG:54)%로 향했습니다
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 이끌려서 %GET_PLACENAME(TFLAG:54)%로 갔다
 ENDIF
 
 IF TFLAG:18 == 1
 	PRINTFORML %조사처리(ANAME(MTAR:0),"는")%, %조사처리(ANAME(MPLY:0),"와")% 나가는 것을 기대하고 있는 것 같다…
 ELSEIF TFLAG:18 == -1
-	PRINTFORML 아무래도, %조사처리(ANAME(MTAR:0),"는")% 그다지 내켜하는 마음은 아닌 것 같다…
+	PRINTFORML 아무래도, %조사처리(ANAME(MTAR:0),"는")% 그다지 나가고 싶지 않은 것 같다…
 ENDIF
 
 ;--------------------------------------------------------

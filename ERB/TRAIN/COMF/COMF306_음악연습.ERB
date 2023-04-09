@@ -4,8 +4,8 @@
 ;커맨드 명칭
 ;-------------------------------------------------
 @COM_NAME306
-RESULTS:0 = 가창 훈련으로 이끈다
-RESULTS:1 = 가창 훈련에 교제한다
+RESULTS:0 = 노래연습 한다
+RESULTS:1 = 노래연습 한다
 
 ;-------------------------------------------------
 ;선택 가부 판정
@@ -43,15 +43,15 @@ RETURN 1
 @COM_TEXT_BEFORE306
 ;주도권이 주인공측
 IF IS_INITIATIVE(MASTER)
-	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 함께 노래의 연습을 실시했다
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 함께 노래연습을 했다
 ELSE
-	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 노래의 연습에 교제해졌다
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 노래연습에 함께했다
 ENDIF
 
 IF TFLAG:18 == 1
-	PRINTFORML 조금 요령을 잡을 수 있던 것 같다…
+	PRINTFORML 꽤나 잘 부른 것 같다…
 ELSEIF TFLAG:18 == -1
-	PRINTFORML ……성대하게 음정을 제외해 버렸다
+	PRINTFORML ……음정을 틀려 버렸다
 ENDIF
 
 ;--------------------------------------------------------

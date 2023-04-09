@@ -4,8 +4,8 @@
 ;커맨드 명칭
 ;-------------------------------------------------
 @COM_NAME309
-RESULTS:0 = 엣치한 이야기를 꺼낸다
-RESULTS:1 = 엣치한 이야기를 꺼내진다
+RESULTS:0 = 야한 이야기를 한다
+RESULTS:1 = 야한 이야기를 듣는다
 
 ;-------------------------------------------------
 ;선택 가부 판정
@@ -221,14 +221,14 @@ RETURN TCVAR:(ARG:0):24 - TCVAR:(ARG:0):25
 IF TFLAG:17
 	;주도권이 주인공측
 	IF IS_INITIATIVE(MASTER)
-		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 엣치한 이야기로 분위기를 살렸다…
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에게 야한 이야기를 했다…
 	;주도권이 상대측
 	ELSE
-		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 엣치한 화제를 털어 조롱했다…
+		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %조사처리(ANAME(MPLY:0)%,"이") 말하는 야한 이야기를 듣는다…
 	ENDIF
 ;실패
 ELSE
-	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 엣치한 화제를 털었지만, %ANAME(MTAR:0)%에 차가운 눈으로 보여져 버렸다…
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에게 야한 주제를 이야기했지만, %조사처리(ANAME(MTAR:0),"은")% 차가운 눈빛으로 째려본다…
 ENDIF
 
 ;--------------------------------------------------------

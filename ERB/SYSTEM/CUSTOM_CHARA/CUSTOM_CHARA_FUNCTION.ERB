@@ -138,16 +138,6 @@ IF TALENT:대상:커스텀캐릭터버젼 < GET_VERSION_VALUE("1.7.0")
 	ENDSELECT
 ENDIF
 
-IF TALENT:대상:커스텀캐릭터버젼 < GET_VERSION_VALUE("1.20.0")
-	CALL COLOR_PRINTL("1.20. 0보다 낡은 버젼으로 세이브된 커스텀 캐릭터를 위해서(때문에), 스킬의 리셋트를 실시했습니다", 칼라_주의)
-	FOR LOCAL, 0, SKILL_GENRE_NUM
-		FOR LOCAL:1, 0, MAX_SKILL_SLOT
-			SKILL_NO_SLOT:대상:(LOCAL):(LOCAL:1) = -1
-			SKILL_ID_SLOT:대상:(LOCAL):(LOCAL:1) = -1
-		NEXT
-	NEXT
-ENDIF
-
 
 
 RETURN

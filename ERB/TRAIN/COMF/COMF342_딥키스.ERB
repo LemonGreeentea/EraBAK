@@ -1,11 +1,11 @@
 ﻿;딥키스
-
+; 2023-04-09 번역체 교정 - 레몬녹차
 ;-------------------------------------------------
 ;커맨드 명칭
 ;-------------------------------------------------
 @COM_NAME342
 RESULTS:0 = 딥키스 한다
-RESULTS:1 = 딥키스를 졸라진다
+RESULTS:1 = 딥키스를 해준다
 RESULTS:2 = 딥키스 시킨다
 RESULTS:3 = 딥키스 된다
 
@@ -289,13 +289,13 @@ CALL SUM_SOURCE(LOCAL:3)
 ;계속중의 표시
 ;-------------------------------------------------
 @EQUIP_MESSAGE342(ARG:0)
-RESULTS = %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"와")% %조사처리(EQUIP_TARGET_ANAME(ARG:0),"가")% 딥키스중
+RESULTS = %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"와")% %조사처리(EQUIP_TARGET_ANAME(ARG:0),"가")% 딥키스 중
 
 ;-------------------------------------------------
 ;계속중의 지문(전문)
 ;-------------------------------------------------
 @COM_TEXT_BEFORE_EQUIP342(ARG:0)
-PRINTFORML %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"와")% %조사처리(EQUIP_TARGET_ANAME(ARG:0),"는")% 혀를 걸면서 키스를 하고 있다…
+PRINTFORML %조사처리(EQUIP_PLAYER_ANAME(ARG:0),"와")% %조사처리(EQUIP_TARGET_ANAME(ARG:0),"는")% 서로의 혀를 휘감으며 키스하고 있다…
 
 ;-------------------------------------------------
 ;계속을 해제했을 때의 지문
@@ -425,34 +425,34 @@ RETURN 1
 IF MPLY:0 == MASTER
 	;주도권이 주인공측
 	IF IS_INITIATIVE(MASTER)
-		PRINTFORM %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 구강을 구석구석까지 빨고 회롱
+		PRINTFORM %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 입 안에 혀를 밀어넣어  
 		IF TALENT:(MTAR:0):연모 || TALENT:(MTAR:0):연인
 			IF RAND:2
-				PRINTFORMW 해, 끈적 혀를 서로 걸면서 타액을 교환했다…
+				PRINTFORMW 서로의 혀를 휘감으며 타액을 교환했다…
 			ELSE
-				PRINTFORMW 해 %ANAME(MTAR:0)%도 적극적으로 혀를 걸어 왔다…
+				PRINTFORMW %ANAME(MTAR:0)%도 적극적으로 혀를 휘감아왔다…
 			ENDIF
 		ELSE
-			PRINTFORMW 했다…
+			PRINTFORMW 키스했다…
 		ENDIF
 	;주도권이 상대측
 	ELSE
-		PRINTFORM %조사처리(ANAME(MPLY:0),"가")% %ANAME(MTAR:0)%의 요구에 응해 혀를 넣으면,
+		PRINTFORML %조사처리(ANAME(MPLY:0),"가")% %ANAME(MTAR:0)%의 키스 요구에 입을 맞추고 혀가 입안으로 들어왔다 
 		IF TALENT:(MTAR:0):연모 || TALENT:(MTAR:0):연인
 			IF RAND:2
-				PRINTFORMW %ANAME(MTAR:0)%도 혀를 걸어 %ANAME(MPLY:0)%의 구강을 구석구석까지 핥아댔다…
+				PRINTFORMW %ANAME(MTAR:0)%도 혀를 걸어 %ANAME(MPLY:0)%의 입 안 구석구석까지 핥아댔다…
 			ELSE
-				PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %조사처리(ANAME(MPLY:0),"를")% 꾸짖도록(듯이) 적극적으로 혀를 걸어 왔다…
+				PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 혀에 적극적으로 혀를 휘감아 왔다…
 			ENDIF
 		ELSE
-			PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %조사처리(ANAME(MPLY:0),"를")% 꾸짖도록(듯이) 혀를 걸어 왔다…
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 혀에 자신의 혀를 휘감았다…
 		ENDIF
 	ENDIF
 
 	IF TFLAG:18 == 1
-		PRINTFORML %조사처리(ANAME(MPLY:0),"가")% 입술을 떼어 놓으면, %조사처리(ANAME(MTAR:0),"는")% 완전히 정신나간 표정으로 여운에 잠겨 있었다…
+		PRINTFORML %조사처리(ANAME(MPLY:0),"가")% 입술을 떼어 놓자, %조사처리(ANAME(MTAR:0),"는")% 완전히 정신나간 표정으로 여운에 잠겨 있었다…
 	ELSEIF TFLAG:18 == 0
-		PRINTFORML %조사처리(ANAME(MPLY:0),"가")% 입술을 떼어 놓으면, %조사처리(ANAME(MTAR:0),"와")%의 사이에 타액이 실을 당겼다…
+		PRINTFORML %조사처리(ANAME(MPLY:0),"가")% 입술을 떼어 놓자, %조사처리(ANAME(MTAR:0),"와")%의 사이에 타액의 실이 늘어졌다…
 	ELSEIF TFLAG:18 == -1
 		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 잘못해 혀를 조금 씹어 버렸다…
 	ENDIF
@@ -460,10 +460,10 @@ IF MPLY:0 == MASTER
 ELSE
 	;주도권이 주인공측
 	IF IS_INITIATIVE(MASTER)
-		PRINTFORM %조사처리(ANAME(MTAR:0),"가")% %ANAME(MPLY:0)%에 키스를 조르면, %조사처리(ANAME(MPLY:0),"는")%
+		PRINTFORM %조사처리(ANAME(MTAR:0),"가")% %ANAME(MPLY:0)%에 키스를 조르자, %조사처리(ANAME(MPLY:0),"는")%
 		IF TALENT:(MPLY:0):연모 || TALENT:(MPLY:0):연인
 			IF RAND:2
-				PRINTFORMW 혀를 넣어, %ANAME(MTAR:0)%의 입안을 사랑하도록(듯이) 정중하게 핥아댔다…
+				PRINTFORMW 혀를 넣어, %ANAME(MTAR:0)%의 입안을 소중한 것을 다루듯 정중하게 핥아댔다…
 			ELSE
 				PRINTFORMW 적극적인 혀놀림으로 %조사처리(ANAME(MTAR:0),"를")% 기쁘게 했다…
 			ENDIF
@@ -472,24 +472,24 @@ ELSE
 		ENDIF
 	;주도권이 상대측
 	ELSE
-		PRINTFORM %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 구강을 구석구석까지 빨고 회
+		PRINTFORM %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 입안을 구석구석까지 빨고 
 		IF TALENT:(MPLY:0):연모 || TALENT:(MPLY:0):연인
 			IF RAND:2
-				PRINTFORMW 해, 끈적 혀를 서로 걸면서 타액을 교환했다…
+				PRINTFORMW 끈적한 혀를 서로 겹치며 타액을 교환했다…
 			ELSE
-				PRINTFORMW 해, 정열적인 혀놀림으로 %조사처리(ANAME(MTAR:0),"를")% 희롱했다…
+				PRINTFORMW 정열적인 혀놀림으로 %조사처리(ANAME(MTAR:0),"를")% 희롱했다…
 			ENDIF
 		ELSE
-			PRINTFORMW 해 혀를 걸어 왔다…
+			PRINTFORMW 혀를 걸어 왔다…
 		ENDIF
 	ENDIF
 
 	IF TFLAG:18 == 1
 		PRINTFORML 입술을 떼어 놓은 뒤도, 두 사람 모두 상기 한 얼굴로 서로를 서로 응시했다…
 	ELSEIF TFLAG:18 == 0
-		PRINTFORML %조사처리(ANAME(MPLY:0),"가")% 입술을 떼어 놓으면, %조사처리(ANAME(MTAR:0),"와")%의 사이에 타액이 실을 당겼다…
+		PRINTFORML %조사처리(ANAME(MPLY:0),"가")% 입술을 떼어 놓자, %조사처리(ANAME(MTAR:0),"와")%의 사이에 타액이 실을 만들었다…
 	ELSEIF TFLAG:18 == -1
-		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 혀놀림에 만족 할 수 없었던 것 같고, 불만얼굴이다…
+		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 혀놀림에 만족 할 수 없었는지 불만 가득한 얼굴이다…
 	ENDIF
 ENDIF
 

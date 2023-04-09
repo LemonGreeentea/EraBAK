@@ -1,10 +1,10 @@
 ﻿;자국으로 이끈다
-
+; 2023-04-09 번역체 교정 - 레몬녹차
 ;-------------------------------------------------
 ;커맨드 명칭
 ;-------------------------------------------------
 @COM_NAME551
-RESULTS:0 = 자국으로 이끈다
+RESULTS:0 = 자신의 동아리로 권유한다
 
 ;-------------------------------------------------
 ;선택 가부 판정
@@ -177,8 +177,8 @@ IF TCVAR:(MTAR:0):24 >= TCVAR:(MTAR:0):25
 		CALL KOJO_EVENT(MTAR:0, 54)
 		PRINTL 
 
-		PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(MTAR:0)%의 안내로 감옥을 빠져 나갔습니다
-		PRINTFORMW %조사처리(ANAME(MTAR:0),"가")% 우리 나라의 사관이 되었습니다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(MTAR:0)%의 안내로 반성실을 빠져 나왔습니다
+		PRINTFORMW %조사처리(ANAME(MTAR:0),"가")% 우리 동아리의 부원이 되었습니다
 		CALL CHANGE_COUNTRY(MTAR:0, CFLAG:MASTER:소속, 1)
 		CALL CAPTURE(MASTER, 0)
 		;강제 종료 플래그를 세운다
@@ -191,20 +191,20 @@ IF TCVAR:(MTAR:0):24 >= TCVAR:(MTAR:0):25
 
 		;자국의 포로내지 방랑중의 경우
 		IF CFLAG:(MTAR:0):포로처 == CFLAG:MASTER:소속 || CFLAG:(MTAR:0):특수상태 == 특수상태_방랑
-			PRINTFORMW %조사처리(ANAME(MTAR:0),"가")% 우리 나라의 사관이 되었습니다
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"가")% 우리 동아리의 부원이 되었습니다
 			CALL CHANGE_COUNTRY(MTAR:0, CFLAG:MASTER:소속, 1)
 		ELSE
 			CALL CHECK_COUNTRY_RELATION(CFLAG:MASTER:소속, CFLAG:(MTAR:0):소속)
 
 			;영구 동맹중의 국가에 소속해 있는 경우
 	 		IF RESULT == 4
-				PRINTFORMW %조사처리(ANAME(MTAR:0),"가")% 우리 나라의 사관이 되었습니다
+				PRINTFORMW %조사처리(ANAME(MTAR:0),"가")% 우리 동아리의 부원이 되었습니다
 				CALL CHANGE_COUNTRY(MTAR:0, CFLAG:MASTER:소속, 1)
 
 			;그 이외의 경우
 			ELSE
-				PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 우리 나라의 사관이 될 것을 약속했습니다
-				PRINTFORMW 동맹·연합이 해제되는 대로, %ANAME(MASTER)%의 나라에 이동합니다
+				PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 우리 동아리의 부원이 될 것을 약속했습니다
+				PRINTFORMW 동맹·연합이 해제되는 대로, %ANAME(MASTER)%의 동아리로 이동합니다
 				;이동 플래그를 세워 둔다
 				CFLAG:(MTAR:0):자국권유성공플래그 = 1
 			ENDIF

@@ -6,15 +6,15 @@
 @COM_NAME320
 ;온천이라면 알몸의 스킨쉽
 IF TFLAG:54 == 7
-	RESULTS:0 = 스킨쉽을 도모한다(알몸)
-	RESULTS:1 = 스킨쉽을 졸라진다(알몸)
-	RESULTS:2 = 스킨쉽을 조른다(알몸)
-	RESULTS:3 = 스킨쉽 된다(알몸)
+	RESULTS:0 = 스킨쉽을 한다(알몸)
+	RESULTS:1 = 스킨쉽을 해준다(알몸)
+	RESULTS:2 = 스킨쉽을 요청한다(알몸)
+	RESULTS:3 = 스킨쉽을 받는다(알몸)
 ELSE
-	RESULTS:0 = 스킨쉽을 도모한다
-	RESULTS:1 = 스킨쉽을 졸라진다
-	RESULTS:2 = 스킨쉽을 조른다
-	RESULTS:3 = 스킨쉽 된다
+	RESULTS:0 = 스킨쉽을 한다
+	RESULTS:1 = 스킨쉽을 해준다
+	RESULTS:2 = 스킨쉽을 요청한다
+	RESULTS:3 = 스킨쉽을 받는다
 ENDIF
 
 ;-------------------------------------------------
@@ -212,16 +212,16 @@ IF TFLAG:54 == 7
 	IF MPLY:0 == MASTER
 		;주도권이 주인공측
 		IF IS_INITIATIVE(MASTER)
-			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %조사처리(ANAME(MTAR:0),"와")% 알몸 상태로 피부를 서로 기대었다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %조사처리(ANAME(MTAR:0),"와")% 알몸 상태로 피부를 포갰다
 		;주도권이 상대측
 		ELSE
-			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 요구에 응해, %LOCALS:0%알몸 상태로 피부를 서로 기대었다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 요구에 응해, %LOCALS:0%알몸 상태로 서로 접촉했다
 		ENDIF
 
 		IF TFLAG:18 == 1
-			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 뭔가 기쁜듯이 하고 있다…
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 뭔가 기쁜것 같아 보인다…
 		ELSEIF TFLAG:18 == -1
-			PRINTFORML 이지만, %ANAME(MTAR:0)%에 고립되어 버렸다…
+			PRINTFORML 하지만 %조사처리(ANAME(MTAR:0),"는")% 기분이 좋지 않아 보인다…
 		ENDIF
 	;플레이어가 상대측
 	ELSE
@@ -249,10 +249,10 @@ ELSE
 	IF MPLY:0 == MASTER
 		;주도권이 주인공측
 		IF IS_INITIATIVE(MASTER)
-			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %조사처리(ANAME(MTAR:0),"와")%의 %LOCALS:1%스킨쉽을 꾀했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %조사처리(ANAME(MTAR:0),"와")%의 %LOCALS:1%스킨쉽을 했다
 		;주도권이 상대측
 		ELSE
-			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %ANAME(MTAR:0)%의 요구에 응해 %LOCALS:1%스킨쉽을 꾀했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %ANAME(MTAR:0)%의 요청에 %LOCALS:1%스킨쉽을 했다
 		ENDIF
 
 		IF TFLAG:18 == 1

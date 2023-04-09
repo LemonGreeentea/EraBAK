@@ -1,11 +1,11 @@
 ﻿;정치를 가르친다
-
+; 2023-04-09 번역체 교정 - 레몬녹차
 ;-------------------------------------------------
 ;커맨드 명칭
 ;-------------------------------------------------
 @COM_NAME503
 IF LOCAL:0 >= 0 && CFLAG:(MTAR:0):아이의성장도 <= 2
-	RESULTS = 성벽아래를 걷는다
+	RESULTS = 뉴스를 시청한다
 ELSE
 	RESULTS = 정치를 가르친다
 ENDIF
@@ -37,11 +37,11 @@ RETURN 1
 @COM_TEXT_BEFORE503
 ;성벽아래로 논다
 IF LOCAL:0 >= 0 && CFLAG:(MTAR:0):아이의성장도 <= 2
-	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 성 주변 마을을 산책했다
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 함께 뉴스를 시청했다
 
 ;정치를 가르친다
 ELSE
-	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 정치의 공부를 시켰다
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에게 정치의 공부를 시켰다
 ENDIF
 
 ;--------------------------------------------------------

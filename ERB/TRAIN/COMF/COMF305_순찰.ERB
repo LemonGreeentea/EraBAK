@@ -4,8 +4,8 @@
 ;커맨드 명칭
 ;------------------------------------------------
 @COM_NAME305
-RESULTS:0 = 순찰에 나간다
-RESULTS:1 = 순찰에 데리고 나가진다
+RESULTS:0 = 거리를 순찰한다
+RESULTS:1 = 거리를 순찰한다
 
 ;-------------------------------------------------
 ;선택 가부 판정
@@ -114,15 +114,15 @@ RETURN 1
 @COM_TEXT_BEFORE305
 ;주도권이 주인공측
 IF IS_INITIATIVE(MASTER)
-	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 거리의 순찰을 실시했다
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 거리의 순찰을 나갔다
 ELSE
-	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 질질 끌어지도록(듯이)해 거리의 순찰로 나갔다
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 이끌려 거리의 순찰을 나갔다
 ENDIF
 
 IF TFLAG:18 == 1
 	PRINTFORML 어쩐지 데이트 하고 있는 것 같은 분위기다…
 ELSEIF TFLAG:18 == -1
-	PRINTFORML ……옥신각신에 말려 들어가 심한 꼴을 당했다
+	PRINTFORML ……골치아픈 사건이 생겨 처리하느라 고생했다
 ENDIF
 PRINTFORML (경제와 병수의 증가량에 보너스!)
 ;--------------------------------------------------------

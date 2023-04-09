@@ -702,9 +702,9 @@ LOCAL:0 = CFLAG:(LOCAL:1):2 + TCVAR:(LOCAL:1):70
 
 IF TALENT:(LOCAL:1):연모 && TALENT:(LOCAL:1):츤데레
 	IF RAND:2
-		PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% %조사처리(ANAME(LOCAL:2),"를")% 기분이 안좋을 것 같은 모습으로 노려보고 있다…
+		PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 기분이 안좋지 %조사처리(ANAME(LOCAL:2),"를")% 노려보고 있다…
 	ELSE
-		PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% %ANAME(LOCAL:2)%에 불평을 말하고 있다…
+		PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% %ANAME(LOCAL:2)%에게 불평하고 있다…
 	ENDIF
 ELSEIF LOCAL:0 < 150
 	IF COM_TEXT_IS_CAUTION(LOCAL:1)
@@ -714,15 +714,15 @@ ELSEIF LOCAL:0 < 150
 	ENDIF
 ELSEIF LOCAL:0 < 300
 	IF COM_TEXT_IS_CAUTION(LOCAL:1)
-		PRINTFORML 조금은 막역해 온 것 같지만, %조사처리(ANAME(LOCAL:1),"는")% 아직 이쪽에 기분을 허락할 생각은 없는 것 같다
+		PRINTFORML 조금은 친해진 것 같지만, %조사처리(ANAME(LOCAL:1),"는")% 아직 이쪽에 기분을 허락할 생각은 없는 것 같다
 	ELSE
-		PRINTFORML %조사처리(ANAME(LOCAL:1),"와")%도 조금은 막역해 온 것 같다
+		PRINTFORML %조사처리(ANAME(LOCAL:1),"와")%도 조금은 친해진 것 같다
 	ENDIF
 ELSEIF LOCAL:0 < 500
 	IF COM_TEXT_IS_CAUTION(LOCAL:1)
-		PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 이쪽을 신용할 마음이 생긴 것 같다
+		PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% 이쪽을 믿을 마음이 생긴 것 같다
 	ELSE
-		PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% %조사처리(ANAME(LOCAL:2),"와")% 함께 있는 일을 즐기고 있는 것 같다
+		PRINTFORML %조사처리(ANAME(LOCAL:1),"는")% %조사처리(ANAME(LOCAL:2),"와")% 함께 있는 것을 즐기고 있는 것 같다
 	ENDIF
 ELSEIF LOCAL:0 < 700
 	IF CFLAG:(LOCAL:1):2 < 300

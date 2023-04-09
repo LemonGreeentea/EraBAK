@@ -1,11 +1,11 @@
 ﻿;수영
-
+; 2023-04-09 번역체 교정 - 레몬녹차
 ;-------------------------------------------------
 ;커맨드 명칭
 ;-------------------------------------------------
 @COM_NAME354
 RESULTS:0 = 수영한다
-RESULTS:1 = 수영에 교제한다
+RESULTS:1 = 수영한다
 
 ;-------------------------------------------------
 ;선택 가부 판정
@@ -170,10 +170,10 @@ RETURN 1
 @COM_TEXT_BEFORE354
 ;주도권이 주인공측
 IF IS_INITIATIVE(MASTER)
-	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 함께 강에서 수영을 했다
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 함께 강가에서 수영을 했다
 ;주도권이 상대측
 ELSE
-	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 이끌려 함께 강에서 수영을 했다
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에게 이끌려 함께 강가에서 수영을 했다
 ENDIF
 
 IF TFLAG:18 == 1
@@ -182,14 +182,14 @@ ELSEIF TFLAG:18 == -1
 	PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 그다지 즐겁지 않는 것 같다…
 ENDIF
 
-PRINTFORM %ANAME(MTAR:0)%의 옷은 젖어 피부에 들러붙어, 그
+PRINTFORM %ANAME(MTAR:0)%의 옷이 흠뻑 젖어 피부에 들러붙어서, 
 	SIF TALENT:(MTAR:0):처녀 == 1 && IS_FEMALE(MTAR:0)
-		PRINT 남을 모른다
+		PRINT 남자를 모르는 
 	SIF TALENT:(MTAR:0):체격 == 체격_아이
-		PRINT 어리다
+		PRINT 미숙한 
 	SIF GET_HIPSIZE(MTAR:0) >= 1 || IS_BOIN(MTAR:0)
-		PRINT 풍만한
-	PRINTFORML 신체의 선을 부각되게 하고 있다.
+		PRINT 풍만한 
+	PRINTFORML 신체의 선이 부각되고 있다.
 
 
 ;-------------------------------------------------

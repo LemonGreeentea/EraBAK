@@ -4,8 +4,8 @@
 ;커맨드 명칭
 ;-------------------------------------------------
 @COM_NAME300
-RESULTS:0 = 회화한다
-RESULTS:1 = 이야기를 들린다
+RESULTS:0 = 이야기한다
+RESULTS:1 = 이야기를 듣는다
 
 ;-------------------------------------------------
 ;선택 가부 판정
@@ -137,62 +137,62 @@ IF TFLAG:17 == 1
 	;주도권이 주인공측
 	IF IS_INITIATIVE(MASTER)
 		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 푸념을 들어 주었다
-		PRINTFORML %ANAME(MTAR:0)%의 분노는 조금 안정된 것 같다…
+		PRINTFORML %ANAME(MTAR:0)%의 분노는 조금 풀린 것 같다…
 	;주도권이 상대측
 	ELSE
-		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 끝없이 푸념을 (들)물었다
-		PRINTFORML %ANAME(MTAR:0)%의 분노는 조금 안정된 것 같다…
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 끝없이 푸념을 들었다
+		PRINTFORML %ANAME(MTAR:0)%의 분노는 조금 풀린 것 같다…
 	ENDIF
 ELSEIF TFLAG:17 == 2
 	;주도권이 주인공측
 	IF IS_INITIATIVE(MASTER)
 		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 고민을 듣기로 했다
-		PRINTFORML %ANAME(MTAR:0)%의 마음은 조금 침착한 것 같다…
+		PRINTFORML %ANAME(MTAR:0)%의 마음은 조금 안정된 것 같다…
 	;주도권이 상대측
 	ELSE
 		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 고민을 털어 놓았다
-		PRINTFORML %ANAME(MTAR:0)%의 마음은 조금 침착한 것 같다…
+		PRINTFORML %ANAME(MTAR:0)%의 마음은 조금 안정된 것 같다…
 	ENDIF
 ELSEIF TFLAG:17 == 3
 	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 이야기를 들으려고 했지만, 거절당해 버렸다
-	PRINTFORML 회화가 중단되면 거북한 공기가 흘렀다…
+	PRINTFORML 회화가 중단되면서 거북한 공기가 흘렀다…
 ELSEIF TFLAG:17 == 4
 	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 이야기를 들으려고 했지만, 거절당해 버렸다
-	PRINTFORML 회화가 중단되면 거북한 공기가 흘렀다…
+	PRINTFORML 회화가 중단되면서 거북한 공기가 흘렀다…
 ELSE
-	PRINTFORM %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")%
+	PRINTFORM %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 
 	IF TALENT:(MTAR:0):연인
 		IF RAND:5 == 0
-			PRINTFORM 손가락끝을 얽히게 되어지면서
+			PRINTFORM 손가락 끝을 맞다으면서 
 		ELSEIF RAND:4 == 0
-			PRINTFORM 서로 이웃해
+			PRINTFORM 서로 마주보며 
 		ELSEIF RAND:3 == 0
-			PRINTFORM 조금 수줍으면서
+			PRINTFORM 조금 수줍어하면서 
 		ELSEIF RAND:2 == 0
-			PRINTFORM 서로 장난하면서
+			PRINTFORM 서로 장난치면서 
 		ELSE
-			PRINTFORM 미소를 주고 받으면서
+			PRINTFORM 미소를 주고 받으면서 
 		ENDIF
 	ELSE
 		IF RAND:6 == 0
-			PRINTFORM 세상
+			PRINTFORM 
 		ELSEIF RAND:5 == 0
-			PRINTFORM 두서가 없다
+			PRINTFORM 두서가 없는
 		ELSEIF RAND:4 == 0
 			PRINTFORM 시시함
 		ELSEIF RAND:3 == 0
-			PRINTFORM 정신이 없다
+			PRINTFORM 정신없이
 		ELSEIF RAND:2 == 0
-			PRINTFORM 하찮다
+			PRINTFORM 조금 하찮은
 		ELSE
 			PRINTFORM 조금
 		ENDIF
 	ENDIF
-	PRINTFORMW 이야기했다
+	PRINTFORMW  이야기했다
 	IF TFLAG:18 == 1
 		PRINTFORML 즐거운 시간이 흘렀다…
 	ELSEIF TFLAG:18 == -1
-		PRINTFORML 회화가 중단되면 거북한 공기가 흘렀다…
+		PRINTFORML 말이 중간에 끊기자 거북한 공기가 흘렀다…
 	ENDIF
 ENDIF
 

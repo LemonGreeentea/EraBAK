@@ -1,13 +1,13 @@
-﻿;화화관을만든다
-
+﻿;화관을만든다
+; 2023-04-09 번역체 교정 - 레몬녹차
 ;-------------------------------------------------
 ;커맨드 명칭
 ;-------------------------------------------------
 @COM_NAME356
-RESULTS:0 = 화관을 선물 한다
-RESULTS:1 = 화관을 만들어진다
-RESULTS:2 = 화관을 재배해 받는다
-RESULTS:3 = 화관을 선물 된다
+RESULTS:0 = 화관을 선물한다
+RESULTS:1 = 화관을 만들어준다
+RESULTS:2 = 화관을 만들어달라한다
+RESULTS:3 = 화관을 선물받는다
 
 ;-------------------------------------------------
 ;선택 가부 판정
@@ -111,23 +111,23 @@ RETURN 1
 IF MPLY:0 == MASTER
 	;주도권이 주인공측
 	IF IS_INITIATIVE(MASTER)
-		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 근처에 나 있는 꽃을 사용해 화관을 재배해, %ANAME(MTAR:0)%의 머리에 씌웠다
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 근처에 있는 꽃을 꺾어 화관을 엮어서 %ANAME(MTAR:0)%의 머리에 씌웠다
 	;주도권이 상대측
 	ELSE
-		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 화관을 재배하게 해 그것을 선물 시켰다
+		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에게 화관을 만들어달라 했다
 	ENDIF
 
 	IF TFLAG:18 == 1
 		IF TALENT:(MTAR:0):유아 || TALENT:(MTAR:0):유치
-			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 화관을 머리에 실은 채로 기쁜듯이 까불며 떠들어 돌았다…
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 화관을 머리에 쓴 채로 기쁜듯이 뛰어다녔다…
 		ELSEIF GROUPMATCH(TALENT:(MTAR:0):성별, 0, 3)
-			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 얼굴을 붉게 하면서, 흠칫흠칫 어울릴지 어떨지 (들)물어 왔다…
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 얼굴을 붉히면서 흠칫흠칫 어울리는지 물어본다…
 		ELSE
-			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 얼굴을 붉게 하면서도, 기쁜듯이 미소지었다…
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 얼굴을 붉히면서도 기쁜듯 미소지었다…
 		ENDIF
 	ELSEIF TFLAG:18 == 0
 		IF TALENT:(MTAR:0):유아 || TALENT:(MTAR:0):유치
-			PRINTFORML 화관을 받은 %조사처리(ANAME(MTAR:0),"는")% 기분 좋은 것같이 미소지었다…
+			PRINTFORML 화관을 받은 %조사처리(ANAME(MTAR:0),"는")% 기쁜 듯이 미소지었다…
 		ELSEIF GROUPMATCH(TALENT:(MTAR:0):성별, 0, 3)
 			PRINTFORML 화관을 받은 %조사처리(ANAME(MTAR:0),"는")% 쓴 웃음 하고 있다…
 		ELSE
@@ -135,11 +135,11 @@ IF MPLY:0 == MASTER
 		ENDIF
 	ELSEIF TFLAG:18 == -1
 		IF TALENT:(MTAR:0):유아 || TALENT:(MTAR:0):유치 || TFLAG:45 == 1
-			PRINTFORML ……이지만, %조사처리(ANAME(MTAR:0),"는")% 마음에 들지 않았던 것일까 받은 화관을 되물리쳤다
+			PRINTFORML ……이지만, %조사처리(ANAME(MTAR:0),"는")% 마음에 들지 않았던 것일까 받은 화관을 되돌려줬다
 		ELSEIF GROUPMATCH(TALENT:(MTAR:0):성별, 0, 3)
-			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 바보 취급 당한 것처럼 느낀 것 같고, 화관을 뿌리쳐 버렸다…
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 바보 취급 당한다고 느꼈는지 화관을 뿌리쳐 버렸다…
 		ELSE
-			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 속셈이기도 하다고 생각했는지, %ANAME(MPLY:0)%에 혐의의 시선을 향하여 있다…
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 속셈이 있다 생각했는지 %ANAME(MPLY:0)%에 의심의 시선을 보냈다…
 		ENDIF
 	ENDIF
 
@@ -147,25 +147,27 @@ IF MPLY:0 == MASTER
 ELSE
 	;주도권이 주인공측
 	IF IS_INITIATIVE(MASTER)
-		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 근처에 나 있는 꽃을 사용해 화관을 재배하도록(듯이) 요구했다
+		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에게 화관을 만들어달라 했다
 
 		IF TFLAG:18 == 1
-			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 기분 좋게 승낙하면, 정중하게 화관을 재배해 %ANAME(MTAR:0)%의 머리에 실었다
-			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 잘 어울리고 있다고 해 즐거운 듯이 미소지었다…
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 기분 좋게 승낙하고는 주변의 꽃으로 화관을 엮어 %ANAME(MTAR:0)%의 머리에 씌워줬다
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 잘 어울린다고 말하며 미소지었다…
 		ELSEIF TFLAG:18 == 0
-			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 기분 좋게 승낙하면, 정중하게 화관을 재배해 %ANAME(MTAR:0)%의 머리에 실었다…
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 기분 좋게 승낙하고는 주변의 꽃으로 화관을 엮어 %ANAME(MTAR:0)%의 머리에 씌워줬다
 		ELSEIF TFLAG:18 == -1
-			PRINTFORML ……이지만, %ANAME(MTAR:0)%에 서로 빼앗아 받을 수 없었다
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 별 관심이 없는 듯, 꽃 몇 개를 엮다 포기했다
 		ENDIF
 
 	;주도권이 상대측
 	ELSE
-		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 근처에 나 있는 꽃을 사용해 화관을 재배해, %ANAME(MTAR:0)%의 머리에 씌웠다
-
 		IF TFLAG:18 == 1
-			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 잘 어울리고 있다고 해 즐거운 듯이 미소지었다…
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 근처에 나 있는 꽃으로 화관을 엮어서 %ANAME(MTAR:0)%의 머리에 씌웠다
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 잘 어울린다고 말하며 미소지었다…
+		ELSEIF TFLAG:18 == 0
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 근처에 나 있는 꽃으로 화관을 엮어서 %ANAME(MTAR:0)%의 머리에 씌웠다
 		ELSEIF TFLAG:18 == -1
-			PRINTFORML 하지만 성과가 좋지 않았던 것일까, %조사처리(ANAME(MPLY:0),"는")% 좀 더라는 표정이다…
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 열심히 화관을 엮었지만 실패했다
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 아쉬운 표정을 지었다
 		ENDIF
 	ENDIF
 ENDIF

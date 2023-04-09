@@ -1,20 +1,20 @@
-﻿;소프트 키스
-
+﻿;버드 키스
+; 2023-04-09 번역체 교정 - 레몬녹차
 ;-------------------------------------------------
 ;커맨드 명칭
 ;-------------------------------------------------
-@COM_NAME341
-RESULTS:0 = 소프트 키스 한다
-RESULTS:1 = 소프트 키스를 졸라진다
-RESULTS:2 = 소프트 키스 시킨다
-RESULTS:3 = 소프트 키스 된다
+@COM_NAME340
+RESULTS:0 = 버드 키스 한다
+RESULTS:1 = 버드 키스를 해준다
+RESULTS:2 = 버드 키스 시킨다
+RESULTS:3 = 버드 키스 받는다
 
 ;-------------------------------------------------
 ;선택 가부 판정
 ;-------------------------------------------------
-@COM_ABLE341
+@COM_ABLE340
 ;공통 부분
-CALL COM_ABLE_COMMON(341)
+CALL COM_ABLE_COMMON(340)
 SIF RESULT == 0
 	RETURN 0
 ;주인공 이외가 실행하는 경우, 호감도가 800이상 필요
@@ -31,7 +31,7 @@ RETURN 1
 ;-------------------------------------------------
 ;메인 처리
 ;-------------------------------------------------
-@COM341
+@COM340
 ;실행 판정
 CALL COM_ORDER_COMMON
 IF RESULT == 0
@@ -51,51 +51,51 @@ ENDIF
 ;●플레이어측의 처리
 ;고정으로 획득하는 소스
 SOURCE:(MPLY:0):환락 = -25
-SOURCE:(MPLY:0):접촉 = 150
-SOURCE:(MPLY:0):애정 = -48
+SOURCE:(MPLY:0):접촉 = 100
+SOURCE:(MPLY:0):애정 = -42
 
 ;친밀하게 응한 환락의 소스 추가
 CALL ADD_SOURCE_KANRAKU(MPLY:0, 50)
 SOURCE:(MPLY:0):환락 = MAX(SOURCE:(MPLY:0):환락, 0)
 
 ;친밀하게 응한 애정의 소스 추가
-CALL ADD_SOURCE_AIZYOU(MPLY:0, 160)
+CALL ADD_SOURCE_AIZYOU(MPLY:0, 140)
 SOURCE:(MPLY:0):애정 = MAX(SOURCE:(MPLY:0):애정, 0)
 
-SOURCE:(MPLY:0):쾌Ｍ = SENSE_HOUSHI(MTAR:0, MPLY:0, 100)
-SOURCE:(MPLY:0):봉사 = SERVE_HOUSHI(MPLY:0, 80)
+SOURCE:(MPLY:0):쾌Ｍ = SENSE_HOUSHI(MTAR:0, MPLY:0, 50)
+SOURCE:(MPLY:0):봉사 = SERVE_HOUSHI(MPLY:0, 50)
 
 ;주도권에 응한 소스의 추가
 CALL ADD_SOURCE_INITIATIVE_N(MPLY:0, 100, 100)
-CALL ADD_SOURCE_INITIATIVE_U(MPLY:0, 20, 20)
+CALL ADD_SOURCE_INITIATIVE_U(MPLY:0, 10, 10)
 
 ;●타겟측의 처리
 ;고정으로 획득하는 소스
 SOURCE:(MTAR:0):환락 = -25
-SOURCE:(MTAR:0):접촉 = 150
-SOURCE:(MTAR:0):애정 = -48
+SOURCE:(MTAR:0):접촉 = 100
+SOURCE:(MTAR:0):애정 = -42
 
 ;친밀하게 응한 환락의 소스 추가
 CALL ADD_SOURCE_KANRAKU(MTAR:0, 50)
 SOURCE:(MTAR:0):환락 = MAX(SOURCE:(MTAR:0):환락, 0)
 
 ;친밀하게 응한 애정의 소스 추가
-CALL ADD_SOURCE_AIZYOU(MTAR:0, 160)
+CALL ADD_SOURCE_AIZYOU(MTAR:0, 140)
 SOURCE:(MTAR:0):애정 = MAX(SOURCE:(MTAR:0):애정, 0)
 
-SOURCE:(MTAR:0):쾌Ｍ = SENSE_HOUSHI(MPLY:0, MTAR:0, 100)
-SOURCE:(MTAR:0):봉사 = SERVE_HOUSHI(MTAR:0, 80)
+SOURCE:(MTAR:0):쾌Ｍ = SENSE_HOUSHI(MPLY:0, MTAR:0, 50)
+SOURCE:(MTAR:0):봉사 = SERVE_HOUSHI(MTAR:0, 50)
 
 ;주도권에 응한 소스의 추가
 CALL ADD_SOURCE_INITIATIVE_N(MTAR:0, 100, 100)
-CALL ADD_SOURCE_INITIATIVE_U(MTAR:0, 20, 20)
+CALL ADD_SOURCE_INITIATIVE_U(MTAR:0, 10, 10)
 
 IF CFLAG:(MTAR:0):2 < 300
-	SOURCE:(MTAR:0):반감 = 400
+	SOURCE:(MTAR:0):반감 = 300
 ELSEIF CFLAG:(MTAR:0):2 < 500
-	SOURCE:(MTAR:0):반감 = 200
+	SOURCE:(MTAR:0):반감 = 150
 ELSEIF CFLAG:(MTAR:0):2 < 800
-	SOURCE:(MTAR:0):반감 = 30
+	SOURCE:(MTAR:0):반감 = 20
 ENDIF
 
 IF TALENT:(MTAR:0):키스미경험
@@ -130,8 +130,11 @@ ENDIF
 
 EXP:(MPLY:0):키스경험 += 1
 EXP:(MTAR:0):키스경험 += 1
+
 CALL KISS_COMMON(MPLY:0, @"%ANAME(MTAR:0)%의 입술", GET_SITUATION_BY_TRAIN_MODE(), MPLY:0 != MASTER)
 CALL KISS_COMMON(MTAR:0, @"%ANAME(MPLY:0)%의 입술", GET_SITUATION_BY_TRAIN_MODE(), MTAR:0 != MASTER)
+
+
 ;주도도 변화 기준치
 TFLAG:49 = 3
 
@@ -146,9 +149,9 @@ RETURN 1
 ;-------------------------------------------------
 ;고유의 실행 판정(플레이어측)
 ;-------------------------------------------------
-@COM_ORDER_PLAYER341(ARG:0)
+@COM_ORDER_PLAYER340(ARG:0)
 ;실행치의 설정
-TCVAR:(ARG:0):25 = 55
+TCVAR:(ARG:0):25 = 45
 
 ;공통 부분
 CALL COM_ORDER(ARG:0)
@@ -196,9 +199,9 @@ RETURN 1
 ;-------------------------------------------------
 ;고유의 실행 판정(타겟측)
 ;-------------------------------------------------
-@COM_ORDER_TARGET341(ARG:0)
+@COM_ORDER_TARGET340(ARG:0)
 ;실행치의 설정
-TCVAR:(ARG:0):25 = 50
+TCVAR:(ARG:0):25 = 40
 
 ;공통 부분
 CALL COM_ORDER(ARG:0)
@@ -260,43 +263,38 @@ RETURN 1
 ;-------------------------------------------------
 ;지문(전문)
 ;-------------------------------------------------
-@COM_TEXT_BEFORE341
+@COM_TEXT_BEFORE340
 ;플레이어가 주인공측
 IF MPLY:0 == MASTER
 	;주도권이 주인공측
 	IF IS_INITIATIVE(MASTER)
-		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 입을, 자신의 입으로 막았다
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 가볍게 입맞추었다
 	;주도권이 상대측
 	ELSE
-		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 요구에 응해, 조금 약간 긴 키스했다
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 뜻대로 살그머니 입맞추었다
 	ENDIF
 
 	IF TFLAG:18 == 1
-		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 넋을 잃은 눈동자로 가만히 %조사처리(ANAME(MPLY:0),"를")% 응시했다…
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 조금 수줍으면서도 기쁜듯이 미소지었다…
 	ELSEIF TFLAG:18 == 0
-		PRINTFORML %조사처리(ANAME(MPLY:0),"가")% 입술을 떼어 놓으면, %조사처리(ANAME(MTAR:0),"는")% 조금 서운한 것 같은 표정을 했다…
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 얼굴을 붉히면서 쑥스러운 듯이 웃었다…
 	ELSEIF TFLAG:18 == -1
-		PRINTFORM 조금 너무 강제적이었는지, %ANAME(MTAR:0)%
-		IF TALENT:(MTAR:0):수줍음 || TALENT:(MTAR:0):겁쟁이 || TALENT:(MTAR:0):얌전함
-			PRINTFORML 는 얼굴을 숙이게 해 버렸다…
-		ELSE
-			PRINTFORML 에 혼나 버렸다…
-		ENDIF
+		PRINTFORML 키스를 하다 이마를 부딪쳐 버렸다…
 	ENDIF
 ;플레이어가 상대측
 ELSE
 	;주도권이 주인공측
 	IF IS_INITIATIVE(MASTER)
-		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 부탁해, 조금 약간 긴 키스를 해 받았다
+		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 부탁해, 가벼운 키스를 받았다
 	;주도권이 상대측
 	ELSE
-		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 얼굴을 끌어 들여, 껴안으면서 입맞추었다
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 얼굴을 접근시키고 가볍게 입맞추었다
 	ENDIF
 
 	IF TFLAG:18 == 1
-		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"를")% 꼬옥 하고 껴안아, 평소보다 길게 키스 계속 했다…
+		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 한 번에서는 만족하지 않고, 여러 번 %ANAME(MTAR:0)%의 입술을 빼앗았다…
 	ELSEIF TFLAG:18 == 0
-		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 조금 수줍으면서 %ANAME(MTAR:0)%의 얼굴을 응시했다…
+		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 수줍으면서, %ANAME(MTAR:0)%의 반응을 살핀다…
 	ELSEIF TFLAG:18 == -1
 		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 반응이 어딘지 부족한 것인지, 조금 기분이 안좋은 것 같다…
 	ENDIF
@@ -305,7 +303,7 @@ ENDIF
 ;-------------------------------------------------
 ;지문(파라미터·각인 변동 후)
 ;-------------------------------------------------
-@COM_TEXT_LAST341
+@COM_TEXT_LAST340
 ;일상 커맨드에 공통의 지문
 CALL COM_TEXT_LAST_LIFE
 
@@ -314,5 +312,5 @@ CALL COM_TEXT_LAST_LIFE
 ;커맨드 구분
 ;-------------------------------------------------
 
-@COM_AVAILABLE_WHEN341
+@COM_AVAILABLE_WHEN340
 RETURN 커맨드_일상
