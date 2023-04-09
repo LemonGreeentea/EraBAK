@@ -1,0 +1,212 @@
+﻿;식사
+; 2023-04-09 번역체 교정 - 레몬녹차
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME351
+;주인공이 여성으로 상대가 남성
+IF IS_FEMALE(MPLY:0) && IS_MALE(MTAR:0)
+	RESULTS:0 = 식사를 먹는다
+	RESULTS:1 = 식사 제안을 받는다
+ELSE
+	RESULTS:0 = 식사 제안을 한다(돈-1000)
+	RESULTS:1 = 식사를 산다(돈-1000)
+ENDIF
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE351
+;공통 부분
+CALL COM_ABLE_COMMON(351)
+SIF RESULT == 0
+	RETURN 0
+;주인공이 플레이어 때 한정
+SIF MPLY:0 != MASTER
+	RETURN 0
+;성 주변 마을에서의 데이트 중한정
+SIF GET_PLACENAME(TFLAG:54) != "성 주변 마을"
+	RETURN 0
+;상처라면 불가
+SIF CFLAG:(MTAR:0):행동불능상태 == 3
+	RETURN 0
+;키스중은 불가
+SIF IS_EQUIP(MPLY:0, 342)
+	RETURN 0
+;주인공이 여성으로 상대가 남성 or 소지금이 1000이상의 어느쪽이든을 채울 필요가 있다
+SIF !((IS_FEMALE(MPLY:0) && IS_MALE(MTAR:0)) || MONEY >= 1000)
+	RETURN 0
+;이미 식사를 실행이 끝난 상태라면 불가
+SIF TFLAG:6
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM351
+;실행 판정
+CALL COM_ORDER_COMMON
+IF RESULT == 0
+	RETURN 0
+ENDIF
+
+;실행이 끝난 플래그를 ON
+TFLAG:6 = 1
+
+IF MPLY:0 == MASTER
+	;커맨드의 성공 여부를 TFLAG:18에 세트
+	CALL JUDGE_COM_RESULT(MTAR:0, 5, 10)
+	LOCAL:1 = MTAR:0
+ELSE
+	;커맨드의 성공 여부를 TFLAG:18에 세트
+	CALL JUDGE_COM_RESULT(MPLY:0, 5, 10)
+	LOCAL:1 = MPLY:0
+ENDIF
+
+;●플레이어측의 처리
+;고정으로 획득하는 소스
+SOURCE:(MPLY:0):환락 = 80
+
+;친밀하게 응한 환락의 소스 추가
+CALL ADD_SOURCE_KANRAKU(MPLY:0, 200)
+SOURCE:(MPLY:0):환락 = MAX(SOURCE:(MPLY:0):환락, 0)
+
+;주도권에 응한 소스의 추가
+CALL ADD_SOURCE_INITIATIVE_N(MPLY:0, 50, 50)
+
+;●타겟측의 처리
+;고정으로 획득하는 소스
+SOURCE:(MTAR:0):환락 = 80
+
+;친밀하게 응한 환락의 소스 추가
+CALL ADD_SOURCE_KANRAKU(MTAR:0, 200)
+SOURCE:(MTAR:0):환락 = MAX(SOURCE:(MTAR:0):환락, 0)
+
+;주도권에 응한 소스의 추가
+CALL ADD_SOURCE_INITIATIVE_N(MTAR:0, 50, 50)
+
+;주인공이 여성으로 상대가 남성
+IF IS_FEMALE(MPLY:0) && IS_MALE(MTAR:0)
+	;요금은 상대 소유
+ELSE
+	MONEY -= 1000
+ENDIF
+
+;실패
+IF TFLAG:18 == -1
+	TIMES SOURCE:(MPLY:0):환락, 0.10
+	TIMES SOURCE:(MTAR:0):환락, 0.10
+	TFLAG:37 -= 5
+;성공
+ELSEIF TFLAG:18 == 0
+
+;대성공
+ELSE
+	TIMES SOURCE:(MPLY:0):환락, 2.00
+	TIMES SOURCE:(MTAR:0):환락, 2.00
+	TFLAG:37 += 5
+ENDIF
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = 0
+
+RETURN 1
+
+;-------------------------------------------------
+;고유의 실행 판정(플레이어측)
+;-------------------------------------------------
+@COM_ORDER_PLAYER351(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 30
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+;호감도
+IF CFLAG:(ARG:0):2 < 300
+	IF CFLAG:(ARG:0):2 < 50
+		LOCAL:0 = -12
+	ELSEIF CFLAG:(ARG:0):2 < 150
+		LOCAL:0 = -8
+	ELSE
+		LOCAL:0 = -4
+	ENDIF
+	CALL COM_ORDER_ELEMENT(ARG:0, @"호감도 부족", LOCAL:0)
+ELSE
+	LOCAL:0 = CFLAG:(ARG:0):2 / 75
+	CALL COM_ORDER_ELEMENT(ARG:0, @"호감도", LOCAL:0)
+ENDIF
+
+IF TALENT:(ARG:0):겁쟁이
+	CALL COM_ORDER_ELEMENT(ARG:0, "겁쟁이", -3)
+ENDIF
+IF TALENT:(ARG:0):얌전함
+	CALL COM_ORDER_ELEMENT(ARG:0, "얌전함", -2)
+ENDIF
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -3)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE351
+;주인공이 여성으로 상대가 남성
+IF IS_FEMALE(MPLY:0) && IS_MALE(MTAR:0)
+	;주도권이 주인공측
+	IF IS_INITIATIVE(MASTER)
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에게 식사를 사달라고 말했다
+	;주도권이 상대측
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에게 식사를 제의했다
+	ENDIF
+
+	IF TFLAG:18 == 1
+		PRINTFORML 너무나 맛있어서 %조사처리(ANAME(MPLY:0),"와")% %조사처리(ANAME(MTAR:0),"는")% 배부르게 식사했다
+	ELSEIF TFLAG:18 == 0
+		PRINTFORML %조사처리(ANAME(MPLY:0),"와")% %조사처리(ANAME(MTAR:0),"는")% 즐겁게 이야기 하면서 식사했다
+	ELSEIF TFLAG:18 == -1
+		PRINTFORML ……너무나도 맛이 없어서 다 먹지도 못한 채 나와버렸다
+	ENDIF
+
+ELSE
+	;주도권이 주인공측
+	IF IS_INITIATIVE(MASTER)
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"를")% 식사를 제안했다(소지금:{MONEY + 1000}→{MONEY})
+	;주도권이 상대측
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에게 식사를 사달라고 졸랐다(소지금:{MONEY + 1000}→{MONEY})
+	ENDIF
+
+	IF TFLAG:18 == 1
+		PRINTFORML 생각한 이상으로 %ANAME(MTAR:0)%에 입맛에 맞은 것 같다
+	ELSEIF TFLAG:18 == 0
+		PRINTFORML %조사처리(ANAME(MPLY:0),"와")% %조사처리(ANAME(MTAR:0),"는")% 즐겁게 이야기 하면서 식사했다
+	ELSEIF TFLAG:18 == -1
+		PRINTFORML ……너무나도 맛이 없어서 다 먹지도 못한 채 나와버렸다
+	ENDIF
+ENDIF
+
+SETCOLOR 칼라_주의
+PRINTFORML 이후의 커맨드 성공율이 약간 상승했습니다
+RESETCOLOR
+
+;-------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;-------------------------------------------------
+@COM_TEXT_LAST351
+;일상 커맨드에 공통의 지문
+CALL COM_TEXT_LAST_LIFE
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN351
+RETURN 커맨드_일상

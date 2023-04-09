@@ -1,0 +1,136 @@
+﻿;사냥을 한다
+; 2023-04-09 번역체 교정 - 레몬녹차
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME357
+RESULTS:0 = 사냥을 한다
+RESULTS:1 = 사냥에 어울린다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE357
+;공통 부분
+CALL COM_ABLE_COMMON(357)
+SIF RESULT == 0
+	RETURN 0
+;주인공이 플레이어 때 한정
+SIF MPLY:0 != MASTER
+	RETURN 0
+;삼림에서의 데이트 중한정
+SIF GET_PLACENAME(TFLAG:54) != "삼림"
+	RETURN 0
+;상처라면 불가
+SIF CFLAG:(MTAR:0):행동불능상태 == 3
+	RETURN 0
+;키스중은 불가
+SIF IS_EQUIP(MPLY:0, 342)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM357
+;커맨드의 성공 여부를 TFLAG:18에 세트
+CALL JUDGE_COM_RESULT(MTAR:0, 5, 5)
+
+;무투의 합계치에 응한 확률로 성공·실패가 바뀐다
+LOCAL:0 = ABL:(MPLY:0):무투 + ABL:(MTAR:0):무투
+IF TFLAG:18 == -1 && RAND:160 < LOCAL:0
+	TFLAG:18 = 0
+ELSEIF TFLAG:18 == 0 && RAND:1000 >= LOCAL:0 * 2 + 800
+	TFLAG:18 = -1
+ENDIF
+
+;성장형에 의한 배율을 취득
+LOCAL:0 = GROWTYPE_RATE(MTAR:0, "무투")
+LOCAL:1 = 120 + (LOCAL:0 - 100) * 5 / 2
+LOCAL:2 = 120 + (LOCAL:0 - 100) * 3 / 2
+
+SOURCE:(MTAR:0):환락 = 20 * LOCAL:1 / 100
+
+;적성이 없고 호감도·종속도가 낮으면 공포와 반감의 소스를 얻는다
+IF LOCAL:0 < 100
+	SOURCE:(MTAR:0):환락 = 0
+	SOURCE:(MTAR:0):공포 = MAX(0, 100 - MAX(CFLAG:(MTAR:0):2, CFLAG:(MTAR:0):4) * 100 / 800)
+	SOURCE:(MTAR:0):불안 = MAX(0, 200 - MAX(CFLAG:(MTAR:0):2, CFLAG:(MTAR:0):4) * 200 / 500)
+ENDIF
+
+;친밀하게 응한 환락의 소스 추가
+CALL ADD_SOURCE_KANRAKU(MTAR:0, LOCAL:2)
+
+;친밀하게 응한 애정의 소스 추가
+CALL ADD_SOURCE_AIZYOU(MPLY:0, 30)
+CALL ADD_SOURCE_AIZYOU(MTAR:0, 30)
+
+;주도권에 응한 소스의 추가
+CALL ADD_SOURCE_INITIATIVE_N(MPLY:0, 100, 100)
+CALL ADD_SOURCE_INITIATIVE_N(MTAR:0, 100, 100)
+
+;실패
+IF TFLAG:18 == -1
+	TIMES SOURCE:(MTAR:0):환락, 0.20
+	TIMES SOURCE:(MTAR:0):애정, 0.20
+	TIMES SOURCE:(MTAR:0):불안, 1.50
+	SOURCE:(MTAR:0):불만 += 300
+
+;성공
+ELSEIF TFLAG:18 == 0
+
+;대성공
+ELSE
+	TIMES SOURCE:(MTAR:0):환락, 2.00
+	TIMES SOURCE:(MTAR:0):애정, 2.00
+	TIMES SOURCE:(MTAR:0):불안, 0.50
+ENDIF
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = 0
+
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE357
+;주도권이 주인공측
+IF IS_INITIATIVE(MASTER)
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 함께 사냥을 하기로 했다
+;주도권이 상대측
+ELSE
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에게 이끌려 함께 사냥을 했다
+ENDIF
+
+IF GETBIT(TALENT:(MTAR:0):음란계, 소질_음란_암캐)
+	PRINTFORMW 수간에 빠진 %조사처리(ANAME(MTAR:0),"는")%,\@ RAND:2 == 0 ? 사냥 도구를 옮기고 있는 말 # 사냥감을 추적하는 사냥개 \@의 몸을 음란한 눈동자로 정신없이 보고 있다
+ENDIF
+
+IF TFLAG:18 == 1
+	PRINTFORML 큰 사냥감을 잡은 %조사처리(ANAME(MTAR:0),"는")% 자랑스러워 하고 있다…
+ELSEIF TFLAG:18 == -1
+	IF RAND:2 == 0 && ABL:(MPLY:0):무투 < 50 && ABL:(MTAR:0):무투 < 50
+		PRINTFORML ……반대로 짐승에 쫓겨 심한 꼴을 당해 버렸다
+	ELSE
+		PRINTFORML ……전혀 사냥감이 잡히지 않았다
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;-------------------------------------------------
+@COM_TEXT_LAST357
+;일상 커맨드에 공통의 지문
+CALL COM_TEXT_LAST_LIFE
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN357
+RETURN 커맨드_일상

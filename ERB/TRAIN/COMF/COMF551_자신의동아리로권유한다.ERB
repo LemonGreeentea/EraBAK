@@ -1,0 +1,235 @@
+﻿;자국으로 이끈다
+; 2023-04-09 번역체 교정 - 레몬녹차
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME551
+RESULTS:0 = 자신의 동아리로 권유한다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE551
+;공통 부분
+CALL COM_ABLE_COMMON(551)
+SIF RESULT == 0
+	RETURN 0
+;플레이어는 최대로 1명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 1
+	RETURN 0
+;타겟은 최대로 1명까지
+SIF MTAR_NUM <= 0 || MTAR_NUM > 1
+	RETURN 0
+;주인공이 플레이어 때 한정
+SIF MPLY:0 != MASTER
+	RETURN 0
+;자국의 관직에 오름은 불가
+SIF CFLAG:(MTAR:0):소속 == CFLAG:(MPLY:0):소속
+	RETURN 0
+;만나러간다·침실호출 ·포로 회화 한정
+SIF !GROUPMATCH(FLAG:조교모드, 0, 1, 6)
+	RETURN 0
+;주인공이 어딘가의 세력에 소속해 있는 경우만
+SIF FLAG:조교모드 == 6 && CFLAG:(MPLY:0):소속 == 0
+	RETURN 0
+;플레이어의 입이 막히고 있다면 불가
+SIF IS_M_HOLD(MPLY:0)
+	RETURN 0
+;상대가 군주라면 불가
+FOR LOCAL:0, 0, MAX_COUNTRY
+	SIF COUNTRY_BOSS:(LOCAL:0) == GET_ID(MTAR:0)
+		RETURN 0
+NEXT
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM551
+;●실행치의 계산
+CVARSET TCVAR, 24, -10000
+CVARSET TCVAR, 25, 10000
+
+;타겟이 자국의 포로의 경우
+IF CFLAG:(MTAR:0):포로처 == CFLAG:(MPLY:0):소속
+	TCVAR:(MTAR:0):25 = 30
+;그 이외의 경우
+ELSE
+	TCVAR:(MTAR:0):25 = 80
+ENDIF
+
+CALL COM_ORDER_BASE(MTAR:0)
+
+IF TALENT:(MTAR:0):반항적
+	CALL COM_ORDER_ELEMENT(MTAR:0, "반항적", -5)
+ENDIF
+IF TALENT:(MTAR:0):꿋꿋함
+	CALL COM_ORDER_ELEMENT(MTAR:0, "꿋꿋함", -5)
+ENDIF
+IF TALENT:(MTAR:0):솔직함
+	CALL COM_ORDER_ELEMENT(MTAR:0, "솔직함", 5)
+ENDIF
+IF TALENT:(MTAR:0):프라이드높음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "프라이드높음", -15)
+ENDIF
+IF TALENT:(MTAR:0):프라이드낮음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "프라이드낮음", 5)
+ENDIF
+IF TALENT:(MTAR:0):호기심
+	CALL COM_ORDER_ELEMENT(MTAR:0, "호기심", 5)
+ENDIF
+IF TALENT:(MTAR:0):보수적
+	CALL COM_ORDER_ELEMENT(MTAR:0, "보수적", -8)
+ENDIF
+IF TALENT:(MTAR:0):고고함
+	CALL COM_ORDER_ELEMENT(MTAR:0, "고고함", -(20 * KOKOU_RATE(MTAR:0) / 100))
+ENDIF
+IF TALENT:(MTAR:0):선을넘지않음
+	CALL COM_ORDER_ELEMENT(MTAR:0, "선을넘지않음", -15)
+ENDIF
+IF GETBIT(TALENT:(MTAR:0):음란계, 소질_음란_음란) && FLAG:우후후플래그
+	CALL COM_ORDER_ELEMENT(MTAR:0, "음란", 5)
+ENDIF
+
+IF TALENT:(MTAR:0):친애
+	CALL COM_ORDER_ELEMENT(MTAR:0, "친애", 50)
+ELSEIF TALENT:(MTAR:0):연모
+	CALL COM_ORDER_ELEMENT(MTAR:0, "연모", 20)
+ELSEIF TALENT:(MTAR:0):친구
+	CALL COM_ORDER_ELEMENT(MTAR:0, "친구", 20)
+ENDIF
+
+IF TALENT:(MTAR:0):연인
+	CALL COM_ORDER_ELEMENT(MTAR:0, "연인", 10)
+ENDIF
+
+IF TALENT:(MTAR:0):예속
+	CALL COM_ORDER_ELEMENT(MTAR:0, "예속", 60)
+ELSEIF TALENT:(MTAR:0):복종
+	CALL COM_ORDER_ELEMENT(MTAR:0, "복종", 30)
+ENDIF
+
+IF TALENT:(MTAR:0):낙인
+	CALL COM_ORDER_ELEMENT(MTAR:0, "낙인", 10)
+ENDIF
+
+IF TALENT:(MTAR:0):소유자
+	CALL COM_ORDER_ELEMENT(MTAR:0, "소유자", 25)
+ELSEIF TALENT:(MTAR:0):주인
+	CALL COM_ORDER_ELEMENT(MTAR:0, "주인", 10)
+ENDIF
+
+
+LOCAL:0 = GET_PALAMLV(PALAM:(MTAR:0):욕정)
+IF LOCAL:0 >= 1
+	CALL COM_ORDER_ELEMENT(MTAR:0, @"욕정 Lv{LOCAL:0}", MIN(LOCAL:0 * 2, 30))
+ENDIF
+
+IF TALENT:(MTAR:0):프라이드높음
+	LOCAL:0 = 4
+ELSEIF TALENT:(MTAR:0):프라이드낮음
+	LOCAL:0 = 1
+ELSE
+	LOCAL:0 = 2
+ENDIF
+
+IF MARK:(MTAR:0):기성사실 >= 1
+	CALL COM_ORDER_ELEMENT(MTAR:0, @"기성 사실 Lv{MARK:(MTAR:0):기성사실}", MARK:(MTAR:0):기성사실 * 3 * LOCAL:0)
+ENDIF
+
+IF FLAG:조교모드 == 6
+	CALL COM_ORDER_ELEMENT(MTAR:0, "포로 회화", -180)
+ELSEIF CFLAG:(MTAR:0):소속 != 0
+	;CALL COM_ORDER_ELEMENT(MTAR:0, "시중들고 있는 군주가 있다", -45)
+	;지금의 군주에의 좋은 인상-악인상을 10으로 나눈 것
+	LOCAL:0 = (REL_LIKE:(MTAR:0):(GET_COUNTRY_BOSS(CFLAG:(MTAR:0):소속)) - REL_HATE:(MTAR:0):(GET_COUNTRY_BOSS(CFLAG:(MTAR:0):소속))) / 10
+	IF LOCAL:0 >= 0
+		CALL COM_ORDER_ELEMENT(MTAR:0, @"지금의 군주의 %ANAME(GET_COUNTRY_BOSS(CFLAG:(MTAR:0):소속))%에 좋은 인상", -(LOCAL:0))
+	ELSEIF LOCAL:0 <= 0
+		CALL COM_ORDER_ELEMENT(MTAR:0, @"지금의 군주의 %ANAME(GET_COUNTRY_BOSS(CFLAG:(MTAR:0):소속))%에 악인상", -(LOCAL:0))
+	ENDIF
+ENDIF
+
+;권해진 세력의 군주에의 좋은 인상-악인상을 10으로 나눈 것
+LOCAL:0 = (REL_LIKE:(MTAR:0):(GET_COUNTRY_BOSS(CFLAG:MASTER:소속)) - REL_HATE:(MTAR:0):(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))) / 10
+IF LOCAL:0 >= 0
+	CALL COM_ORDER_ELEMENT(MTAR:0, @"군주의 %ANAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))%에 좋은 인상", LOCAL:0)
+ELSEIF LOCAL:0 <= 0
+	CALL COM_ORDER_ELEMENT(MTAR:0, @"군주의 %ANAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))%에 악인상", LOCAL:0)
+ENDIF
+
+IF CFLAG:(MTAR:0):2 < 300
+	CALL COM_ORDER_ELEMENT(MTAR:0, "호감도 부족", -20)
+ELSEIF CFLAG:(MTAR:0):2 < 500
+	CALL COM_ORDER_ELEMENT(MTAR:0, "호감도 부족", -10)
+ELSEIF CFLAG:(MTAR:0):2 < 800
+	CALL COM_ORDER_ELEMENT(MTAR:0, "호감도 부족", -5)
+ENDIF
+
+;판정 결과를 표시
+PRINTFORMW  = {TCVAR:(MTAR:0):24} %TOSTR_COMPARE(TCVAR:(MTAR:0):24, TCVAR:(MTAR:0):25)% 실행치{TCVAR:(MTAR:0):25}
+
+;판정 성공
+IF TCVAR:(MTAR:0):24 >= TCVAR:(MTAR:0):25
+	;포로 회화의 경우
+	IF FLAG:조교모드 == 6
+		;구상 표시
+		CALL KOJO_EVENT(MTAR:0, 54)
+		PRINTL 
+
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(MTAR:0)%의 안내로 반성실을 빠져 나왔습니다
+		PRINTFORMW %조사처리(ANAME(MTAR:0),"가")% 우리 동아리의 부원이 되었습니다
+		CALL CHANGE_COUNTRY(MTAR:0, CFLAG:MASTER:소속, 1)
+		CALL CAPTURE(MASTER, 0)
+		;강제 종료 플래그를 세운다
+		TFLAG:38 = 1
+
+	ELSE
+		;구상 표시
+		CALL KOJO_EVENT(MTAR:0, 52)
+		PRINTL 
+
+		;자국의 포로내지 방랑중의 경우
+		IF CFLAG:(MTAR:0):포로처 == CFLAG:MASTER:소속 || CFLAG:(MTAR:0):특수상태 == 특수상태_방랑
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"가")% 우리 동아리의 부원이 되었습니다
+			CALL CHANGE_COUNTRY(MTAR:0, CFLAG:MASTER:소속, 1)
+		ELSE
+			CALL CHECK_COUNTRY_RELATION(CFLAG:MASTER:소속, CFLAG:(MTAR:0):소속)
+
+			;영구 동맹중의 국가에 소속해 있는 경우
+	 		IF RESULT == 4
+				PRINTFORMW %조사처리(ANAME(MTAR:0),"가")% 우리 동아리의 부원이 되었습니다
+				CALL CHANGE_COUNTRY(MTAR:0, CFLAG:MASTER:소속, 1)
+
+			;그 이외의 경우
+			ELSE
+				PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 우리 동아리의 부원이 될 것을 약속했습니다
+				PRINTFORMW 동맹·연합이 해제되는 대로, %ANAME(MASTER)%의 동아리로 이동합니다
+				;이동 플래그를 세워 둔다
+				CFLAG:(MTAR:0):자국권유성공플래그 = 1
+			ENDIF
+		ENDIF
+	ENDIF
+
+;판정 실패
+ELSE
+	;포로 회화의 경우
+	IF FLAG:조교모드 == 6
+		;구상 표시
+		CALL KOJO_EVENT(MTAR:0, 55)
+
+	ELSE
+		;구상 표시
+		CALL KOJO_EVENT(MTAR:0, 53)
+	ENDIF
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN551
+RETURN 커맨드_공통

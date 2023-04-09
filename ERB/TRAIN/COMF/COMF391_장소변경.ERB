@@ -1,0 +1,107 @@
+﻿;이동
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME391
+RESULTS:0 = 장소를 바꾼다
+RESULTS:1 = 장소를 바꾼다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE391
+;공통 부분
+CALL COM_ABLE_COMMON(391)
+SIF RESULT == 0
+	RETURN 0
+;주인공이 플레이어 때 한정
+SIF MPLY:0 != MASTER
+	RETURN 0
+;데이트 중한정
+SIF !TFLAG:54
+	RETURN 0
+;키스중은 불가
+SIF IS_EQUIP(MPLY:0, 342)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM391
+LOCAL:8 = TFLAG:54
+
+;TFLAG:17에 데이트의 종류를 설정
+;0=통상, 1=파트너가 멋대로 결정, 2=파트너의 가고 싶은 데이트처, 3=파트너가 가고 싶은 데이트처 이외
+TFLAG:17 = 0
+
+;상대가 가고 싶은 데이트처를 취득
+CALL PARTNER_SELECT_DATE
+LOCAL:0 = RESULT
+
+;주도권 포인트 계산
+LOCAL:2 = GET_INITIATIVE_RATE(MTAR:0)
+
+LOCAL:1 = 0
+IF LOCAL:2 >= 50
+	LOCAL:1 = MIN(50, LOCAL:2 / 4)
+ENDIF
+
+;상대의 주도권 포인트가 극단적으로 높은＆파트너에게 주도권이 있으면, 이따금 데이트의 행선지를 멋대로 결정된다
+IF LOCAL:1 > RAND:100 && IS_INITIATIVE(MTAR:0) == 1
+	PRINTFORMW %ANAME(MTAR:0)%가 가고 싶은 곳으로 이끌려졌다…
+	TFLAG:54 = LOCAL:0
+	TFLAG:17 = 1
+ELSE
+	;데이트처의 선택
+	CALL SELECT_DATE_PLACE
+	IF RESULT == 0
+		;캔슬했을 경우 커맨드를 중지
+		RETURN 0
+	ENDIF
+	TFLAG:54 = RESULT
+ENDIF
+
+;행선지로 응한 처리
+CALL DATE_START_BYPLACE
+
+;주도권에 응한 소스의 추가
+CALL ADD_SOURCE_INITIATIVE_N(MPLY:0, 100, 100)
+CALL ADD_SOURCE_INITIATIVE_N(MTAR:0, 100, 100)
+
+TRAIN_PLACE = %GET_PLACENAME(TFLAG:54)%
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = -1
+
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE391
+;주도권이 주인공측
+IF IS_INITIATIVE(MASTER)
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"를")% 데리고 %GET_PLACENAME(TFLAG:54)%로 향했습니다
+ELSE
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 이끌려 %GET_PLACENAME(TFLAG:54)%로 향했습니다
+ENDIF
+
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST391
+;일상 커맨드에 공통의 지문
+CALL COM_TEXT_LAST_LIFE
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN391
+RETURN 커맨드_일상

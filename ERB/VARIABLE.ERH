@@ -658,59 +658,39 @@
 ;-------------------------------------------------
 ;태그에 관한 변수·정수
 ;-------------------------------------------------
-#DIM CONST MAX_TAG = 10
+#DIM CONST MAX_TAG = 1
 #DIM SAVEDATA CHARADATA TAG, MAX_TAG
-#DIM CONST 태그_인간 = 0
-#DIM CONST 태그_인외 = 1
-#DIM CONST 태그_요괴 = 2
-#DIM CONST 태그_요정 = 3
-#DIM CONST 태그_마법사 = 4
-#DIM CONST 태그_흡혈귀 = 5
-#DIM CONST 태그_요수 = 6
-#DIM CONST 태그_소령 = 7
-#DIM CONST 태그_유령 = 8
-#DIM CONST 태그_망령 = 9
-#DIM CONST 태그_오니 = 10
-#DIM CONST 태그_봉래인 = 11
-#DIM CONST 태그_텐구 = 12
-#DIM CONST 태그_인형 = 13
-#DIM CONST 태그_사신 = 14
-#DIM CONST 태그_염라 = 15
-#DIM CONST 태그_신 = 16
-#DIM CONST 태그_갓파 = 17
-#DIM CONST 태그_천인 = 18
-#DIM CONST 태그_아비도스 = 19
-#DIM CONST 태그_게헨나 = 20
-#DIM CONST 태그_밀레니엄 = 21
-#DIM CONST 태그_트리니티 = 22
-#DIM CONST 태그_백귀야행 = 23
-#DIM CONST 태그_산해경 = 24
-#DIM CONST 태그_붉은겨울 = 25
-#DIM CONST 태그_발키리 = 26
-#DIM CONST 태그_SRT = 27
-#DIM CONST 태그_아리우스 = 28
-#DIM CONST 태그_총학생회 = 29
-#DIM CONST 태그_오디세이 = 30
-#DIM CONST 태그_용역 = 31
-#DIM CONST 태그_헬멧단 = 32
-#DIM CONST 태그_불량배 = 33
-#DIM CONST 태그_PMC = 34
-#DIM CONST 태그_샬레 = 35
-#DIM CONST 태그_기타 = 36
+#DIM CONST 태그_아비도스 = 1
+#DIM CONST 태그_게헨나 = 2
+#DIM CONST 태그_밀레니엄 = 3
+#DIM CONST 태그_트리니티 = 4
+#DIM CONST 태그_백귀야행 = 5
+#DIM CONST 태그_산해경 = 6
+#DIM CONST 태그_붉은겨울 = 7
+#DIM CONST 태그_발키리 = 8
+#DIM CONST 태그_SRT = 9
+#DIM CONST 태그_아리우스 = 10
+#DIM CONST 태그_총학생회 = 11
+#DIM CONST 태그_오디세이 = 12
+#DIM CONST 태그_용역 = 13
+#DIM CONST 태그_헬멧단 = 14
+#DIM CONST 태그_불량배 = 15
+#DIM CONST 태그_PMC = 16
+#DIM CONST 태그_샬레 = 17
+#DIM CONST 태그_기타 = 18
+#DIM CONST 태그_무소속 = 19
 
 {
-#DIMS CONST TAG_NAME =
-"인간", "인외", "요괴","요정","마법사","흡혈귀","요수","소령","유령","망령","오니",
-"봉래인","텐구","인형","사신","염라","신","갓파","천인","아비도스 고등학교","게헨나 학원",
-"밀레니엄 사이언스 스쿨","트리니티 종합학원","백귀야행 연합학원","산해경 고급중학교",
-"붉은겨울 연방학원","발키리 경찰학교","SRT 특수학원","아리우스 분교","총학생회",
-"오디세이 해양학교","용역","헬멧단","불량배","PMC","샬레","기타"
+#DIMS CONST TAG_NAME = "???",
+"아비도스 고등학교","게헨나 학원","밀레니엄 사이언스 스쿨","트리니티 종합학원",
+"백귀야행 연합학원","산해경 고급중학교","붉은겨울 연방학원","발키리 경찰학교",
+"SRT 특수학원","아리우스 분교","총학생회","오디세이 해양학교","용역","헬멧단",
+"불량배","PMC","샬레","기타","무소속"
 }
 
 ;-------------------------------------------------
 ;상태에 관한 변수·정수
 ;-------------------------------------------------
-#DIM CONST 특수상태_소속중 = 0
 #DIM CONST 특수상태_방랑 = 1
 #DIM CONST 특수상태_사망 = 2
 

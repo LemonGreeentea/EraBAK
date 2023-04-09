@@ -1,0 +1,187 @@
+﻿;등을 민다
+; 2023-04-09 번역체 교정 - 레몬녹차
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME358
+RESULTS:0 = 등을 씻긴다
+RESULTS:1 = 등을 씻겨준다
+RESULTS:2 = 등을 씻겨달라한다
+RESULTS:3 = 등을 씻겨진다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE358
+;공통 부분
+CALL COM_ABLE_COMMON(358)
+SIF RESULT == 0
+	RETURN 0
+;주인공 이외가 실행하는 경우, 호감도가 500이상 필요
+SIF MPLY:0 != MASTER && CFLAG:(MPLY:0):2 < 500
+	RETURN 0
+;온천에서의 데이트 중한정
+SIF GET_PLACENAME(TFLAG:54) != "온천"
+	RETURN 0
+;상처라면 불가
+SIF CFLAG:(MTAR:0):행동불능상태 == 3
+	RETURN 0
+;키스중은 불가
+SIF IS_EQUIP(MPLY:0, 342)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM358
+;실행할 수 있을까의 판정
+CALL COM_ORDER_COMMON
+IF RESULT == 0
+	RETURN 0
+ENDIF
+
+IF MPLY:0 == MASTER
+	;커맨드의 성공 여부를 TFLAG:18에 세트
+	CALL JUDGE_COM_RESULT(MTAR:0, 5, 10)
+ELSE
+	;커맨드의 성공 여부를 TFLAG:18에 세트
+	CALL JUDGE_COM_RESULT(MPLY:0, 5, 10)
+ENDIF
+
+;고정으로 들어가는 소스
+SOURCE:(MPLY:0):접촉 = 300
+SOURCE:(MTAR:0):접촉 = 300
+SOURCE:(MPLY:0):노출 = 40
+SOURCE:(MTAR:0):노출 = 80
+
+;친밀하게 응한 환락의 소스 추가
+SOURCE:(MPLY:0):환락 = -30
+SOURCE:(MTAR:0):환락 = -30
+CALL ADD_SOURCE_KANRAKU(MPLY:0, 165)
+CALL ADD_SOURCE_KANRAKU(MTAR:0, 165)
+SOURCE:(MPLY:0):환락 = MAX(SOURCE:(MPLY:0):환락, 0)
+SOURCE:(MTAR:0):환락 = MAX(SOURCE:(MTAR:0):환락, 0)
+
+;친밀하게 응한 애정의 소스 추가
+CALL ADD_SOURCE_AIZYOU(MPLY:0, 120)
+CALL ADD_SOURCE_AIZYOU(MTAR:0, 120)
+
+;주도권에 응한 소스의 추가
+CALL ADD_SOURCE_INITIATIVE_N(MPLY:0, 70, 70)
+CALL ADD_SOURCE_INITIATIVE_N(MTAR:0, 70, 70)
+
+;레즈·ＢＬ경험기준치
+TFLAG:51 = 1
+
+;실패
+IF TFLAG:18 == -1
+	TIMES SOURCE:(MPLY:0):환락, 0.20
+	TIMES SOURCE:(MPLY:0):애정, 0.20
+	TIMES SOURCE:(MTAR:0):환락, 0.20
+	TIMES SOURCE:(MTAR:0):애정, 0.20
+	SOURCE:(MPLY:0):불만 += 500
+	SOURCE:(MTAR:0):불만 += 500
+	TFLAG:37 -= 5
+;성공
+ELSEIF TFLAG:18 == 0
+
+;대성공
+ELSE
+	TIMES SOURCE:(MPLY:0):환락, 2.00
+	TIMES SOURCE:(MPLY:0):애정, 2.00
+	TIMES SOURCE:(MTAR:0):환락, 2.00
+	TIMES SOURCE:(MTAR:0):애정, 2.00
+	TFLAG:37 += 5
+ENDIF
+
+;주도도 변화 기준치
+TFLAG:49 = 3
+
+;도착도 변화 기준치
+TFLAG:50 = -1
+
+RETURN 1
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER358(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 30
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 3)
+
+;호감도
+LOCAL:0 = CFLAG:(ARG:0):2 / 75
+CALL COM_ORDER_ELEMENT(ARG:0, @"호감도", LOCAL:0)
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -3)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 6)
+ENDIF
+IF TALENT:(ARG:0):모성
+	CALL COM_ORDER_ELEMENT(ARG:0, "모성", 3)
+ENDIF
+IF TFLAG:54
+	CALL COM_ORDER_ELEMENT(ARG:0, "데이트중", 3)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE358
+;플레이어가 주인공측
+IF MPLY:0 == MASTER
+	;주도권이 주인공측
+	IF IS_INITIATIVE(MASTER)
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 타올로 %ANAME(MTAR:0)%의 등을 씻겼다
+	;주도권이 상대측
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 요청에 등을 씻겼다
+	ENDIF
+
+	IF TFLAG:18 == 1
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 기분이 좋은것 같다…
+	ELSEIF TFLAG:18 == -1
+		PRINTFORML 아무래도 너무 강하게 밀어버렸는지, %조사처리(ANAME(MTAR:0),"는")% 아파하며 투덜댄다…
+	ENDIF
+
+;플레이어가 상대측
+ELSE
+	;주도권이 주인공측
+	IF IS_INITIATIVE(MASTER)
+		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에게 등을 씻어달라 했다
+	;주도권이 상대측
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 등 뒤로 다가와 등을 밀어준다
+	ENDIF
+
+	IF TFLAG:18 == 1
+		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 즐거운지 콧노래를 부르며 등을 밀어준다…
+	ELSEIF TFLAG:18 == -1
+		PRINTFORML 등을 너무 강하게 밀었는지 %ANAME(MTAR:0)%의 등이 얼얼했다…
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;-------------------------------------------------
+@COM_TEXT_LAST358
+;일상 커맨드에 공통의 지문
+CALL COM_TEXT_LAST_LIFE
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN358
+RETURN 커맨드_일상

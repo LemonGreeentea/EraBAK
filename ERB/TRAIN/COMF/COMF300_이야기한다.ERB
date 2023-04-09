@@ -1,0 +1,212 @@
+﻿;회화
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME300
+RESULTS:0 = 이야기한다
+RESULTS:1 = 이야기를 듣는다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE300
+;공통 부분
+CALL COM_ABLE_COMMON(300)
+SIF RESULT == 0
+	RETURN 0
+;주인공이 플레이어 때 한정
+SIF MPLY:0 != MASTER
+	RETURN 0
+;키스중은 불가
+SIF IS_EQUIP(MPLY:0, 342)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM300
+LOCAL:0 = 0
+LOCAL:1 = 0
+
+;인상치가 베이스가 됩니다
+LOCAL:0 += REL_LIKE:(MTAR:0):(MPLY:0) / 20
+LOCAL:1 += REL_HATE:(MTAR:0):(MPLY:0) / 20
+;억압·고고함에 의한 LOCAL:0의 감쇠 깎았습니다（극단적인 결과가 되므로）
+SIF TALENT:(MTAR:0):억압
+	LOCAL:1 += YOKUATSU_RATE(MTAR:0) / 3
+SIF TALENT:(MTAR:0):고고함
+	LOCAL:1 += KOKOU_RATE(MTAR:0) / 3
+;호감도 조건 최선시 LOCAL:0 = 25 LOCAL:1 = 5가 대성공율 딱 좋은 간이라고 생각됩니다（현재）
+;최악시는 LOCAL:0 = 0 LOCAL:1 = 80이 됩니다만, 이것이라도 초견 말을 걸어 유카리나 요리히메에 베기 시작해지는 것은 드문 것 같습니다（현재）
+;다만 회화는 거의 통용되지 않습니다  외교로 미움받은 탓입니다  술을 먹입시다
+LOCAL:0 = LIMIT(LOCAL:0, 0, 25)
+LOCAL:1 = LIMIT(LOCAL:1, 5, 80)
+
+;커맨드의 성공 여부를 TFLAG:18에 세트
+CALL JUDGE_COM_RESULT(MTAR:0, LOCAL:0, LOCAL:1)
+
+;●플레이어측의 처리
+;고정으로 획득하는 소스
+SOURCE:(MPLY:0):환락 = 30
+
+;친밀하게 응한 환락의 소스 추가
+CALL ADD_SOURCE_KANRAKU(MPLY:0, 140)
+
+;주도권에 응한 소스의 추가
+CALL ADD_SOURCE_INITIATIVE_N(MPLY:0, 50, 50)
+
+;●타겟측의 처리
+;고정으로 획득하는 소스
+SOURCE:(MTAR:0):환락 = 30
+
+;친밀하게 응한 환락의 소스 추가
+CALL ADD_SOURCE_KANRAKU(MTAR:0, 140)
+
+;주도권에 응한 소스의 추가
+CALL ADD_SOURCE_INITIATIVE_N(MTAR:0, 50, 50)
+
+;상대의 기분에 의해 효과가 변화
+LOCAL:2 = MAX(PALAM:(MTAR:0):로외, PALAM:(MTAR:0):액외, PALAM:(MTAR:0):포외)
+LOCAL:3 = MAX(PALAM:(MTAR:0):로주, PALAM:(MTAR:0):액주, PALAM:(MTAR:0):포주)
+IF LOCAL:2 >= 100
+;	;<고고함> or <억압> 이 있어 의존도가 300 미만의 경우
+;	IF (TALENT:(MTAR:0):고고함 || TALENT:(MTAR:0):억압) && CFLAG:(MTAR:0):3 < 300
+;		;반드시 실패
+;		TFLAG:18 = -1
+;		;지문용으로 플래그를 설정
+;		TFLAG:17 = 4
+	IF LOCAL:2 > LOCAL:3
+		IF LOCAL:2 == PALAM:(MTAR:0):로외
+			;푸념을 듣는다
+			SOURCE:(MTAR:0):우월 += 50
+			TIMES SOURCE:(MTAR:0):환락, 2.00
+			SOURCE:(MTAR:0):해소 += MIN(LOCAL:2, 400)
+			;지문용으로 플래그를 설정
+			TFLAG:17 = 1
+		ELSE
+			;이야기를 듣는다
+			SOURCE:(MTAR:0):애정 += 30
+			CALL ADD_SOURCE_AIZYOU(MTAR:0, 50)
+			SOURCE:(MTAR:0):해소 += MIN(LOCAL:2, 400)
+			;지문용으로 플래그를 설정
+			TFLAG:17 = 2
+		ENDIF
+		;반드시 성공
+		IF TFLAG:18 == -1
+			TFLAG:18 = 0
+		ENDIF
+	ELSE
+		;반드시 실패
+		TFLAG:18 = -1
+		;지문용으로 플래그를 설정
+		TFLAG:17 = 3
+		SIF (TALENT:(MTAR:0):고고함 || TALENT:(MTAR:0):억압)
+			TFLAG:17 = 4
+	ENDIF
+ENDIF
+
+;실패
+IF TFLAG:18 == -1
+	TIMES SOURCE:(MTAR:0):환락, 0.20
+	SOURCE:(MTAR:0):불만 += 300
+	TFLAG:37 -= 5
+;성공
+ELSEIF TFLAG:18 == 0
+	TFLAG:37 += 2
+;대성공
+ELSE
+	TIMES SOURCE:(MTAR:0):환락, 2.00
+	TFLAG:37 += 10
+ENDIF
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = -1
+
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE300
+IF TFLAG:17 == 1
+	;주도권이 주인공측
+	IF IS_INITIATIVE(MASTER)
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 푸념을 들어 주었다
+		PRINTFORML %ANAME(MTAR:0)%의 분노는 조금 풀린 것 같다…
+	;주도권이 상대측
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 끝없이 푸념을 들었다
+		PRINTFORML %ANAME(MTAR:0)%의 분노는 조금 풀린 것 같다…
+	ENDIF
+ELSEIF TFLAG:17 == 2
+	;주도권이 주인공측
+	IF IS_INITIATIVE(MASTER)
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 고민을 듣기로 했다
+		PRINTFORML %ANAME(MTAR:0)%의 마음은 조금 안정된 것 같다…
+	;주도권이 상대측
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 고민을 털어 놓았다
+		PRINTFORML %ANAME(MTAR:0)%의 마음은 조금 안정된 것 같다…
+	ENDIF
+ELSEIF TFLAG:17 == 3
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 이야기를 들으려고 했지만, 거절당해 버렸다
+	PRINTFORML 회화가 중단되면서 거북한 공기가 흘렀다…
+ELSEIF TFLAG:17 == 4
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 이야기를 들으려고 했지만, 거절당해 버렸다
+	PRINTFORML 회화가 중단되면서 거북한 공기가 흘렀다…
+ELSE
+	PRINTFORM %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 
+	IF TALENT:(MTAR:0):연인
+		IF RAND:5 == 0
+			PRINTFORM 손가락 끝을 맞다으면서 
+		ELSEIF RAND:4 == 0
+			PRINTFORM 서로 마주보며 
+		ELSEIF RAND:3 == 0
+			PRINTFORM 조금 수줍어하면서 
+		ELSEIF RAND:2 == 0
+			PRINTFORM 서로 장난치면서 
+		ELSE
+			PRINTFORM 미소를 주고 받으면서 
+		ENDIF
+	ELSE
+		IF RAND:6 == 0
+			PRINTFORM 
+		ELSEIF RAND:5 == 0
+			PRINTFORM 두서가 없는
+		ELSEIF RAND:4 == 0
+			PRINTFORM 시시함
+		ELSEIF RAND:3 == 0
+			PRINTFORM 정신없이
+		ELSEIF RAND:2 == 0
+			PRINTFORM 조금 하찮은
+		ELSE
+			PRINTFORM 조금
+		ENDIF
+	ENDIF
+	PRINTFORMW  이야기했다
+	IF TFLAG:18 == 1
+		PRINTFORML 즐거운 시간이 흘렀다…
+	ELSEIF TFLAG:18 == -1
+		PRINTFORML 말이 중간에 끊기자 거북한 공기가 흘렀다…
+	ENDIF
+ENDIF
+
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST300
+;일상 커맨드에 공통의 지문
+CALL COM_TEXT_LAST_LIFE
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN300
+RETURN 커맨드_일상

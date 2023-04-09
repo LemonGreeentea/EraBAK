@@ -158,26 +158,6 @@ IF FLAG:조교모드 == 조교_역조교특수
 	NEXT
 ENDIF
 
-;술못함이 아니고 임신하고 있지 않았으면, 이따금 몹시 취한 상태로 스타트
-;종족명이 오니의 경우고확률, 폭주가라도 적당한 확률
-;다만 오니가 아닌 경우, 포로 조교시는 포함하지 않는다
-IF FLAG:조교모드 == 조교_만난다
-	FOR LOCAL, 0, CHARANUM
-		IF CFLAG:(LOCAL:0):조교참가플래그 && !TALENT:(LOCAL:0):술못함 && !TALENT:(LOCAL:0):임신 && CFLAG:(LOCAL:0):행동불능상태 != 행동불능_아이
-			IF HAS_TAG(LOCAL:0, 태그_오니) && !RAND:3
-				PRINTFORMW %조사처리(ANAME(LOCAL:0),"는")% 몹시 취하고 있는 것 같다……
-				PALAM:(LOCAL:0):취기 = RAND(3000, 6000)
-			ELSEIF TALENT:(LOCAL:0):폭주가 && FLAG:조교모드 != 2 && !RAND:5
-				PRINTFORMW %조사처리(ANAME(LOCAL:0),"는")% 몹시 취하고 있는 것 같다……
-				PALAM:(LOCAL:0):취기 = RAND(1500, 3000)
-			ELSEIF FLAG:조교모드 != 2 && !RAND:10
-				PRINTFORMW %조사처리(ANAME(LOCAL:0),"는")% 몹시 취하고 있는 것 같다……
-				PALAM:(LOCAL:0):취기 = RAND(500, 1500)
-			ENDIF
-		ENDIF
-	NEXT
-ENDIF
-
 ;플레이어와 타겟을 클리어
 CALL CLEAR_MPLY
 CALL CLEAR_MTAR
@@ -751,12 +731,12 @@ CALL INIT_EQUIP()
 ;육아 모드
 IF FLAG:조교모드 == 3
 	PRINTL 
-	PRINTFORMW (슬슬 해가 집니다. 오늘은 여기까지로 해 천천히 보내기로 했습니다)
+	PRINTFORMW (슬슬 해가 집니다. 오늘은 여기까지 하기로 했습니다)
 	BEGIN AFTERTRAIN
 
 ELSEIF FLAG:조교모드 == 4 || FLAG:조교모드 == 5
 	PRINTL 
-	PRINTFORMW (아무래도 오늘의 조교는 종료한 것 같습니다…)
+	PRINTFORMW (아무래도 오늘의 조교는 끝인 것 같습니다…)
 	BEGIN AFTERTRAIN
 
 ELSEIF FLAG:조교모드 == 7
@@ -769,7 +749,7 @@ ELSEIF FLAG:우후후플래그
 	;수간중
 	IF TFLAG:8
 		PRINTL 
-		PRINTFORMW (눈을 떠지면 맛이 없기에, 뒤처리를 해 빨리 돌아가기로 했습니다)
+		PRINTFORMW (슬슬 잠에서 깰 수 있기에 뒤처리를 하고 돌아가기로 했습니다)
 
 		;주인공이 타겟측의 경우, 타겟과 플레이어를 바꿔 넣어 둔다
 		;(MTAR:0이 반드시 만나러 간 상대를 가리키도록(듯이)해 둔다)
@@ -782,17 +762,17 @@ ELSEIF FLAG:우후후플래그
 	;주인공이 행동불능
 	ELSEIF TFLAG:2
 		PRINTL 
-		PRINTFORMW (과연 밤도 깊어져 왔기 때문에, 어떻게든 해방 해 주어졌습니다)
+		PRINTFORMW (늦은 밤이 되었기에 풀려났습니다)
 	;데이트중
 	ELSEIF TFLAG:54
 		PRINTL 
-		PRINTFORMW (이제(이미/벌써/더는/정말) 밤도 늦은 시간입니다. 오늘은 여기까지로 해 돌아가기로 했습니다)
+		PRINTFORMW (이제 늦은 시간입니다. 오늘은 여기까지하고 돌아가기로 했습니다)
 	ELSEIF FLAG:요바이
 		PRINTL 
-		PRINTFORMW (더 이상 머무는 것은 위험합니다. 오늘은 여기까지로 해 도망치기로 했습니다)
+		PRINTFORMW (더 이상 머무는 것은 위험합니다. 오늘은 여기까지하고 도망치기로 했습니다)
 	ELSE
 		PRINTL 
-		PRINTFORMW (이제(이미/벌써/더는/정말) 밤도 깊어지는 시간대입니다. 오늘은 여기까지로 해 자기로 했습니다)
+		PRINTFORMW (이젠 늦은 시간대입니다. 오늘은 여기까지하고 자기로 했습니다)
 	ENDIF
 	BEGIN AFTERTRAIN
 
@@ -809,7 +789,7 @@ ELSE
 
 	WAIT
 	CALL SINGLE_DRAWLINE
-	PRINTFORMW 슬슬 늦은 시간이 되어 왔습니다…
+	PRINTFORMW 슬슬 늦은 시간이 되었습니다…
 	PRINTL 
 
 	PRINTPLAIN   

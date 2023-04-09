@@ -1,0 +1,262 @@
+﻿;헤엄친다
+; 2023-04-09 번역체 교정 - 레몬녹차
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME355
+RESULTS:0 = 함께 헤엄친다
+RESULTS:1 = 함께 헤엄친다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE355
+;공통 부분
+CALL COM_ABLE_COMMON(355)
+SIF RESULT == 0
+	RETURN 0
+;주인공이 플레이어 때 한정
+SIF MPLY:0 != MASTER
+	RETURN 0
+;강변에서의 데이트 중한정
+SIF GET_PLACENAME(TFLAG:54) != "강변"
+	RETURN 0
+;상처라면 불가
+SIF CFLAG:(MTAR:0):행동불능상태 == 3
+	RETURN 0
+;키스중은 불가
+SIF IS_EQUIP(MPLY:0, 342)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM355
+;실행 판정
+CALL COM_ORDER_COMMON
+SIF RESULT == 0
+	RETURN 0
+
+;성공 여부의 판정은 무투와 적성만으로 실시한다
+;LOCAL:1, 3은 성공율, LOCAL:2, 4가 대성공율
+;1인에서도 빠지면 실패, 2명 모두 능숙하게 헤엄칠 수 있으면 대성공
+LOCAL:5 = ABL:(MPLY:0):무투 + (GROWTYPE_RATE(MPLY:0, "무투") - 100) / 4
+LOCAL:6 = ABL:(MTAR:0):무투 + (GROWTYPE_RATE(MTAR:0, "무투") - 100) / 4
+
+SELECTCASE LOCAL:5
+CASE IS < 30
+	LOCAL:1 = LOCAL:5 * 5 / 3
+	LOCAL:2 = 0
+CASE IS < 50
+	LOCAL:1 = (LOCAL:5 - 30) * 3 / 2 + 50
+	LOCAL:2 = LOCAL:5 - 30
+CASE IS < 70
+	LOCAL:1 = LOCAL:5 + 30
+	LOCAL:2 = LOCAL:5 - 30
+CASE IS < 100
+	LOCAL:1 = 100
+	LOCAL:2 = LOCAL:5 * 60 / 100
+CASEELSE
+	LOCAL:1 = 100
+	LOCAL:2 = 60
+ENDSELECT
+
+
+
+SELECTCASE LOCAL:6
+CASE IS < 30
+	LOCAL:3 = LOCAL:6 * 5 / 3
+	LOCAL:4 = 0
+CASE IS < 50
+	LOCAL:3 = (LOCAL:6 - 30) * 3 / 2 + 50
+	LOCAL:4 = LOCAL:6 - 30
+CASE IS < 70
+	LOCAL:3 = LOCAL:6 + 30
+	LOCAL:4 = LOCAL:6 - 30
+CASE IS < 100
+	LOCAL:3 = 100
+	LOCAL:4 = LOCAL:6 * 60 / 100
+CASEELSE
+	LOCAL:3 = 100
+	LOCAL:4 = 60
+ENDSELECT
+
+
+SIF LOCAL:1 <= RAND:100
+	TFLAG:17 += 1
+SIF LOCAL:3 <= RAND:100
+	TFLAG:17 += 2
+
+IF TFLAG:17 >= 1
+	TFLAG:18 = -1
+ELSEIF LOCAL:2 > RAND:100 && LOCAL:4 > RAND:100
+	TFLAG:18 = 1
+ELSE
+	TFLAG:18 = 0
+ENDIF
+
+;●플레이어측의 처리
+;고정으로 획득하는 소스
+SOURCE:(MPLY:0):환락 = 20
+
+;친밀하게 응한 환락의 소스 추가
+CALL ADD_SOURCE_KANRAKU(MPLY:0, 180)
+SOURCE:(MPLY:0):환락 = MAX(SOURCE:(MPLY:0):환락, 0)
+
+IF TALENT:(MPLY:0):겁쟁이
+	TIMES SOURCE:(MPLY:0):환락, 0.90
+ENDIF
+IF TALENT:(MPLY:0):얌전함
+	TIMES SOURCE:(MPLY:0):환락, 0.90
+ENDIF
+IF TALENT:(MPLY:0):수줍음
+	TIMES SOURCE:(MPLY:0):환락, 0.90
+ENDIF
+
+EXP:(MPLY:0):무투경험치 += (ABL:(MPLY:0):무투 < 30 ? 2 # 1) + TFLAG:18
+
+;주도권에 응한 소스의 추가
+CALL ADD_SOURCE_INITIATIVE_N(MPLY:0, 100, 100)
+
+;●타겟측의 처리
+;고정으로 획득하는 소스
+SOURCE:(MTAR:0):환락 = 20
+
+;친밀하게 응한 환락의 소스 추가
+CALL ADD_SOURCE_KANRAKU(MTAR:0, 180)
+SOURCE:(MTAR:0):환락 = MAX(SOURCE:(MTAR:0):환락, 0)
+
+IF TALENT:(MTAR:0):겁쟁이
+	TIMES SOURCE:(MTAR:0):환락, 0.90
+ENDIF
+IF TALENT:(MTAR:0):얌전함
+	TIMES SOURCE:(MTAR:0):환락, 0.90
+ENDIF
+IF TALENT:(MTAR:0):수줍음
+	TIMES SOURCE:(MTAR:0):환락, 0.90
+ENDIF
+
+EXP:(MTAR:0):무투경험치 += (ABL:(MTAR:0):무투 < 30 ? 2 # 1) + TFLAG:18
+
+;동성
+IF IS_SAMESEX(MPLY:0, MTAR:0)
+	SOURCE:(MPLY:0):노출 = 5
+	SOURCE:(MTAR:0):노출 = 5
+;이성
+ELSE
+	SOURCE:(MPLY:0):노출 = 20
+	SOURCE:(MTAR:0):노출 = 20
+ENDIF
+
+;주도권에 응한 소스의 추가
+CALL ADD_SOURCE_INITIATIVE_N(MTAR:0, 100, 100)
+
+;실패
+IF TFLAG:18 == -1
+	TIMES SOURCE:(MPLY:0):환락, 0.10
+	TIMES SOURCE:(MTAR:0):환락, 0.10
+	SOURCE:(MPLY:0):불만 += 500
+	SOURCE:(MTAR:0):불만 += 500
+	TFLAG:37 -= 5
+;성공
+ELSEIF TFLAG:18 == 0
+
+;대성공
+ELSE
+	TIMES SOURCE:(MPLY:0):환락, 2.00
+	TIMES SOURCE:(MTAR:0):환락, 2.00
+	TFLAG:37 += 5
+ENDIF
+
+;전신 운동하는 것으로써, 조임이 개선한다!
+;실패 0～1  성공 0～2  대성공 0～3
+SIF HAS_VAGINA(MPLY:0)
+	TALENT:(MPLY:0):Ｖ조임 = LIMIT(TALENT:(MPLY:0):Ｖ조임 + RAND:(TFLAG:18 + 3), 조임_최저치, 조임_최고치)
+TALENT:(MPLY:0):Ａ조임 = LIMIT(TALENT:(MPLY:0):Ａ조임 + RAND:(TFLAG:18 + 3), 조임_최저치, 조임_최고치)
+SIF HAS_VAGINA(MTAR:0)
+	TALENT:(MTAR:0):Ｖ조임 = LIMIT(TALENT:(MTAR:0):Ｖ조임 + RAND:(TFLAG:18 + 3), 조임_최저치, 조임_최고치)
+TALENT:(MTAR:0):Ａ조임 = LIMIT(TALENT:(MTAR:0):Ａ조임 + RAND:(TFLAG:18 + 3), 조임_최저치, 조임_최고치)
+
+;주도도 변화 기준치
+TFLAG:49 = 3
+
+;도착도 변화 기준치
+TFLAG:50 = -1
+
+RETURN 1
+
+;-------------------------------------------------
+;고유의 실행 판정(플레이어측)
+;-------------------------------------------------
+@COM_ORDER_PLAYER355(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 30
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+;호감도
+IF CFLAG:(ARG:0):2 < 300
+	IF CFLAG:(ARG:0):2 < 50
+		LOCAL:0 = -30
+	ELSEIF CFLAG:(ARG:0):2 < 150
+		LOCAL:0 = -15
+	ELSE
+		LOCAL:0 = -5
+	ENDIF
+	CALL COM_ORDER_ELEMENT(ARG:0, @"호감도 부족", LOCAL:0)
+ELSE
+	LOCAL:0 = CFLAG:(ARG:0):2 / 75
+	CALL COM_ORDER_ELEMENT(ARG:0, @"호감도", LOCAL:0)
+ENDIF
+
+IF TALENT:(ARG:0):겁쟁이
+	CALL COM_ORDER_ELEMENT(ARG:0, "겁쟁이", -3)
+ENDIF
+IF TALENT:(ARG:0):얌전함
+	CALL COM_ORDER_ELEMENT(ARG:0, "얌전함", -2)
+ENDIF
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -3)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE355
+;주도권이 주인공측
+IF IS_INITIATIVE(MASTER)
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 함께 강에서 헤엄치기로 했다
+;주도권이 상대측
+ELSE
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 이끌려 함께 강에서 헤엄쳤다
+ENDIF
+
+IF TFLAG:18 == 1
+	PRINTFORML 두 사람 모두 능숙하게 헤엄쳤다
+ELSEIF TFLAG:18 == -1
+	IF TFLAG:17 == 1
+		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 물에 빠져버렸다…
+	ELSEIF TFLAG:17 == 2
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 물에 빠져버렸다…
+	ELSE
+		PRINTFORML 둘이서 사이 좋게 물에 빠져 버렸다…
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;-------------------------------------------------
+@COM_TEXT_LAST355
+;일상 커맨드에 공통의 지문
+CALL COM_TEXT_LAST_LIFE
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN355
+RETURN 커맨드_일상

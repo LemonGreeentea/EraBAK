@@ -5,9 +5,9 @@
 ;-------------------------------------------------
 @COM_NAME310
 RESULTS:0 = 술을 먹인다
-RESULTS:1 = 잔을 하게 한다
-RESULTS:2 = 잔을 시킨다
-RESULTS:3 = 술을 먹게 된다
+RESULTS:1 = 술을 따라준다
+RESULTS:2 = 술을 달라한다
+RESULTS:3 = 술을 받는다
 
 
 ;-------------------------------------------------
@@ -231,7 +231,7 @@ RETURN 1
 ;-------------------------------------------------
 @COM_TEXT_BEFORE310
 IF MPLY:0 == MASTER
-	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 잔을\@ TFLAG:45 == MPLY:0 ? 했다 # 당했다 \@
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에게 잔을\@ TFLAG:45 == MPLY:0 ? 했다 # 당했다 \@
 	IF TFLAG:18 == 1
 		IF GROUPMATCH(FLAG:커맨드범용, 3, 4, 5, 6, 7, 8)
 			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 드문 술을 마실 수 있어 매우 기분이 좋다…

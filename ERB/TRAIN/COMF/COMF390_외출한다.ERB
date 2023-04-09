@@ -1,0 +1,599 @@
+﻿;둘이서 나간다
+; 2023-04-09 번역체 교정 - 레몬녹차
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME390
+RESULTS:0 = 외출한다
+RESULTS:1 = 외출한다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE390
+;공통 부분
+CALL COM_ABLE_COMMON(390)
+SIF RESULT == 0
+	RETURN 0
+;포로 회화에서는 불가
+SIF FLAG:조교모드 == 6
+	RETURN 0
+;주인공이 플레이어 때 한정
+SIF MPLY:0 != MASTER
+	RETURN 0
+;이미 데이트중이라면 선택 불가
+SIF TFLAG:54
+	RETURN 0
+;이미 나간 후라면 불가
+SIF TFLAG:57 > 0
+	RETURN 0
+;임월, 육아, 상처라면 불가
+SIF CFLAG:(MTAR:0):행동불능상태 == 행동불능_임월 || CFLAG:(MTAR:0):행동불능상태 == 행동불능_육아 || CFLAG:(MTAR:0):행동불능상태 == 3
+	RETURN 0
+;키스중은 불가
+SIF IS_EQUIP(MPLY:0, 342)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM390
+;실행할 수 있을까의 판정
+CALL COM_ORDER_COMMON
+IF RESULT == 0
+	RETURN 0
+ENDIF
+
+;TFLAG:17에 데이트의 종류를 설정
+;0=통상, 1=파트너가 멋대로 결정, 2=파트너의 가고 싶은 데이트처, 3=파트너가 가고 싶은 데이트처 이외
+TFLAG:17 = 0
+
+;상대가 가고 싶은 데이트처를 취득
+CALL PARTNER_SELECT_DATE
+LOCAL:0 = RESULT
+
+;주도권 포인트 계산
+LOCAL:2 = GET_INITIATIVE_RATE(MTAR:0)
+
+;상대의 주도권 포인트가 극단적으로 높은＆파트너에게 주도권이 있으면, 이따금 데이트의 행선지를 멋대로 결정된다
+IF LOCAL:2 >= 40 && MIN(50, LOCAL:2 / 2) > RAND:100 && TFLAG:45 == 1
+	;상대가 잡는다
+	PRINTFORMW %ANAME(MTAR:0)%가 가고 싶은 곳으로 이끌려졌다…
+	;강제적으로 대성공이 된다
+	TFLAG:18 = 1
+	TFLAG:54 = LOCAL:0
+	TFLAG:17 = 1
+
+ELSE
+	;1/10의 확률로 파트너에게 가고 싶은 데이트처 있어. 선택한 데이트처가 같은 경우 보너스 추가
+	IF RAND:10 == 0
+		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %GET_PLACENAME(LOCAL:0)%에 가고 싶은 것 같다…
+	ELSE
+		;파트너에게 가고 싶은 데이트처가 없는 경우 LOCAL:0을 클리어
+		LOCAL:0 = 0
+	ENDIF
+
+	;데이트처의 선택
+	CALL SELECT_DATE_PLACE
+	IF RESULT == 0
+		;캔슬했을 경우 커맨드를 중지
+		RETURN 0
+	ENDIF
+	TFLAG:54 = RESULT
+
+	;상대에게 가고 싶은 장소의 희망이 없는 경우
+	IF LOCAL:0 == 0
+		;커맨드의 성공 여부를 TFLAG:18에 세트
+		CALL JUDGE_COM_RESULT(MTAR:0, 5, 5)
+
+	;상대의 가고 싶은 장소를 선택했을 경우
+	ELSEIF TFLAG:54 == LOCAL:0
+		;강제적으로 대성공이 된다
+		TFLAG:18 = 1
+		TFLAG:17 = 2
+
+	;상대의 가고 싶은 장소와 다른 장소를 선택했을 경우
+	ELSE
+		;커맨드의 성공 여부를 TFLAG:18에 세트(통상보다 어렵다)
+		CALL JUDGE_COM_RESULT(MTAR:0, 0, 50)
+		TFLAG:17 = 3
+	ENDIF
+ENDIF
+
+;호감도에 응한 환락의 소스 추가
+CALL ADD_SOURCE_KANRAKU(MTAR:0, 120)
+
+LOCAL:1 = 0
+IF TALENT:(MTAR:0):친애
+	TIMES SOURCE:(MTAR:0):환락, 1.20
+	SOURCE:(MTAR:0):접촉 += 100
+	LOCAL:1 += 40
+ENDIF
+
+IF TALENT:(MTAR:0):연모
+	TIMES SOURCE:(MTAR:0):환락, 1.20
+	SOURCE:(MTAR:0):접촉 += 50
+	LOCAL:1 += 30
+ENDIF
+
+IF TALENT:(MTAR:0):연인
+	TIMES SOURCE:(MTAR:0):환락, 1.10
+	SOURCE:(MTAR:0):접촉 += 100
+	LOCAL:1 += 30
+ELSEIF CFLAG:(MTAR:0):2 > 800
+	SOURCE:(MTAR:0):접촉 += 50
+ENDIF
+
+;친밀하게 응한 애정의 소스 추가
+CALL ADD_SOURCE_AIZYOU(MTAR:0, LOCAL:1)
+
+;주도권에 응한 소스의 추가
+CALL ADD_SOURCE_INITIATIVE_N(MPLY:0, 100, 100)
+CALL ADD_SOURCE_INITIATIVE_N(MTAR:0, 100, 100)
+
+;실패
+IF TFLAG:18 == -1
+	TIMES SOURCE:(MTAR:0):환락, 0.20
+	TIMES SOURCE:(MTAR:0):애정, 0.20
+	TIMES SOURCE:(MTAR:0):접촉, 0.20
+	SOURCE:(MTAR:0):불만 += 500
+	TFLAG:37 -= 5
+;성공
+ELSEIF TFLAG:18 == 0
+
+;대성공
+ELSE
+	TIMES SOURCE:(MTAR:0):환락, 2.00
+	TIMES SOURCE:(MTAR:0):애정, 2.00
+	TIMES SOURCE:(MTAR:0):접촉, 2.00
+ENDIF
+
+EXP:(MPLY:0):데이트경험 += 1
+EXP:(MTAR:0):데이트경험 += 1
+
+;행선지로 응한 처리
+CALL DATE_START_BYPLACE
+
+TSTR:0 = %TRAIN_PLACE%
+TRAIN_PLACE = %GET_PLACENAME(TFLAG:54)%
+
+SIF CFLAG:(MTAR:0):행동불능상태 != 행동불능_아이 || !TALENT:(MTAR:0):유아
+	TFLAG:56 += 3
+
+;경과시간의 카운트 개시
+TFLAG:57 ++
+
+;주도도 변화 기준치
+TFLAG:49 = 3
+
+;도착도 변화 기준치
+TFLAG:50 = -1
+
+RETURN 1
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER390(ARG:0)
+CALL COM_ORDER_COMMON390(ARG:0)
+RETURN 1
+
+@COM_ORDER_TARGET390(ARG:0)
+CALL COM_ORDER_COMMON390(ARG:0)
+RETURN 1
+
+@COM_ORDER_COMMON390(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 20
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -5)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 3)
+ENDIF
+IF TALENT:(ARG:0):농땡이마왕
+	CALL COM_ORDER_ELEMENT(ARG:0, "농땡이마왕", 10)
+ENDIF
+IF IS_MALE(MASTER)
+	IF TALENT:(ARG:0):남성혐오
+		CALL COM_ORDER_ELEMENT(ARG:0, "남성혐오", -7)
+	ENDIF
+ELSE
+	IF TALENT:(ARG:0):여성혐오
+		CALL COM_ORDER_ELEMENT(ARG:0, "여성혐오", -7)
+	ENDIF
+ENDIF
+
+;호감도
+LOCAL:0 = 0
+IF CFLAG:(ARG:0):2 < 300
+	IF CFLAG:(ARG:0):2 < 100
+		LOCAL:0 = -12
+	ELSEIF CFLAG:(ARG:0):2 < 200
+		LOCAL:0 = -8
+	ELSE
+		LOCAL:0 = -4
+	ENDIF
+	CALL COM_ORDER_ELEMENT(ARG:0, @"호감도 부족", LOCAL:0)
+ELSE
+	LOCAL:0 = CFLAG:(ARG:0):2 / 75
+	CALL COM_ORDER_ELEMENT(ARG:0, @"호감도", LOCAL:0)
+ENDIF
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE390
+;주도권이 주인공측
+IF IS_INITIATIVE(MASTER)
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"를")% 데리고 %GET_PLACENAME(TFLAG:54)%로 갔다
+ELSE
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 이끌려서 %GET_PLACENAME(TFLAG:54)%로 갔다
+ENDIF
+
+IF TFLAG:18 == 1
+	PRINTFORML %조사처리(ANAME(MTAR:0),"는")%, %조사처리(ANAME(MPLY:0),"와")% 나가는 것을 기대하고 있는 것 같다…
+ELSEIF TFLAG:18 == -1
+	PRINTFORML 아무래도, %조사처리(ANAME(MTAR:0),"는")% 그다지 나가고 싶지 않은 것 같다…
+ENDIF
+
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST390
+;일상 커맨드에 공통의 지문
+CALL COM_TEXT_LAST_LIFE
+
+;---------------------------------------------------------
+;파트너의 가고 싶은 데이트처의 결정
+;---------------------------------------------------------
+@PARTNER_SELECT_DATE
+;선택 가능한 데이트처의 리스트를 작성
+LOCAL:1 = 0
+FOR LOCAL:0, 1, 50
+	IF GET_PLACENAME(LOCAL:0) != "" && LOCAL:0 != TFLAG:54
+		;장소마다의 조건 판정
+		TRYCCALLFORM DATE_PLACE_ABLE{LOCAL:0}
+			IF !RESULT
+				CONTINUE
+			ENDIF
+		CATCH
+		ENDCATCH
+
+		LOCAL:(LOCAL:1 + 10) = LOCAL:0
+		LOCAL:1 ++
+	ENDIF
+NEXT
+
+;리스트로부터 랜덤인 것을 선택해 돌려준다
+RETURN LOCAL:(RAND:(LOCAL:1) + 10)
+
+;※최종적으로는, 캐릭터마다를 좋아하는 장소(CSV로 설정)를 나오기 쉽게 한다
+
+;---------------------------------------------------------
+;행선지 결정
+;---------------------------------------------------------
+@SELECT_DATE_PLACE
+;표시 처리
+PRINTL 어디에 향합니까?
+
+LOCAL:1 = 0
+FOR LOCAL:0, 1, 20
+	;장소명이 미정도리, 또는 현재의 데이트 장소와 같으면 표시하지 않는다
+	IF GET_PLACENAME(LOCAL:0) == "" || TFLAG:54 == LOCAL:0
+		CONTINUE
+	ENDIF
+
+	;장소마다의 조건 판정
+	TRYCCALLFORM DATE_PLACE_ABLE{LOCAL:0}
+		IF !RESULT
+			CONTINUE
+		ENDIF
+	CATCH
+	ENDCATCH
+
+	;개행 처리
+	IF LOCAL:1 > 0 && LOCAL:1 % 3 == 0
+		PRINTL 
+	ENDIF
+	LOCAL:1 += 1
+
+	PRINTFORM [{LOCAL:0, 3}] %GET_PLACENAME(LOCAL:0), 16, LEFT%
+NEXT
+PRINTL 
+PRINTL [100] 역시 그만둔다
+
+$INPUT_LOOP0
+INPUT
+
+IF RESULT == 100
+	RETURN 0
+
+ELSEIF RESULT >= 0 && RESULT < 20
+	LOCAL:5 = RESULT
+
+	;장소명이 공백이 아니고, 현재의 데이트 장소와 다르다
+	IF GET_PLACENAME(LOCAL:5) != "" && LOCAL:5 != TFLAG:54
+		;장소마다의 조건 판정
+		TRYCCALLFORM DATE_PLACE_ABLE{LOCAL:5}
+			IF !RESULT
+				GOTO INPUT_LOOP0
+			ENDIF
+		CATCH
+		ENDCATCH
+
+		RETURN LOCAL:5
+	ENDIF
+ENDIF
+
+GOTO INPUT_LOOP0
+
+;---------------------------------------------------------
+;데이트중의 보정
+;---------------------------------------------------------
+@EQUIP_DATE(ARG:0)
+;호감도에 응한 환락의 소스 추가
+CALL ADD_SOURCE_KANRAKU(ARG:0, 60)
+
+IF TALENT:(ARG:0):농땡이마왕
+	TIMES SOURCE:(ARG:0):환락, 1.15
+	TIMES SOURCE:(ARG:0):반감, 0.80
+	TIMES SOURCE:(ARG:0):불안, 0.80
+ENDIF
+
+LOCAL:1 = 0
+IF TALENT:(ARG:0):친애
+	SOURCE:(ARG:0):접촉 += 40
+	LOCAL:1 += 20
+ENDIF
+
+IF TALENT:(ARG:0):연모
+	SOURCE:(ARG:0):접촉 += 20
+	LOCAL:1 += 20
+ENDIF
+
+IF TALENT:(ARG:0):연인
+	SOURCE:(ARG:0):접촉 += 40
+	LOCAL:1 += 20
+ELSEIF CFLAG:(ARG:0):2 > 800
+	SOURCE:(ARG:0):접촉 += 20
+ENDIF
+
+;친밀하게 응한 애정의 소스 추가
+CALL ADD_SOURCE_AIZYOU(ARG:0, LOCAL:1)
+
+;주도권에 응한 우월·수동의 소스 추가
+;CALL ADD_SOURCE_INITIATIVE(ARG:0, 100)
+
+;행선지로 응한 보정
+CALL DATE_EQUIP_BYPLACE(ARG:0)
+
+EXP:(ARG:0):데이트경험 += 1
+EXP:(ARG:0):데이트경험 += 1
+
+;---------------------------------------------------------
+;ARG:0번에 대응하는 장소명의 취득
+;---------------------------------------------------------
+@GET_PLACENAME(ARG:0)
+#FUNCTIONS
+SELECTCASE ARG:0
+	CASE 1
+		IF FLAG:우후후플래그
+			RETURNF "성 주변 마을(숙소)"
+		ELSE
+			RETURNF "성 주변 마을"
+		ENDIF
+	CASE 2
+		RETURNF "강변"
+	CASE 3
+		RETURNF "꽃밭"
+	CASE 4
+		RETURNF "삼림"
+	CASE 7
+		RETURNF "온천"
+	CASE 8
+		RETURNF "야외"
+ENDSELECT
+RETURNF ""
+
+;---------------------------------------------------------
+;ARG:0번에 대응하는 장소의 지면의 명칭을 취득(사정시의 지문에 사용)
+;---------------------------------------------------------
+@GET_GROUND_NAME(ARG:0)
+#FUNCTIONS
+SELECTCASE ARG:0
+	CASE 2
+		RETURNF "지면"
+	CASE 3
+		RETURNF "지면"
+	CASE 4
+		RETURNF "지면"
+	CASE 8
+		RETURNF "지면"
+	CASE 7
+		RETURNF "마루"
+	CASE 50
+		RETURNF "마루"
+	CASEELSE
+		RETURNF "침대"
+ENDSELECT
+
+;---------------------------------------------------------
+;장소 고유의 데이트 개시시의 처리
+;---------------------------------------------------------
+@DATE_START_BYPLACE
+;강변
+IF TFLAG:54 == 2
+;온천
+ELSEIF TFLAG:54 == 7
+ENDIF
+
+;---------------------------------------------------------
+;장소 고유의 데이트중의 보정
+;---------------------------------------------------------
+@DATE_EQUIP_BYPLACE(ARG:0)
+;성 주변 마을
+IF TFLAG:54 == 1
+	TIMES SOURCE:(ARG:0):환락, 1.20
+	;우후후중
+	IF FLAG:우후후플래그
+		TIMES SOURCE:(ARG:0):애정, 1.20
+	ENDIF
+
+;강변
+ELSEIF TFLAG:54 == 2
+	TIMES SOURCE:(ARG:0):환락, 1.07
+	;우후후중
+	IF FLAG:우후후플래그
+		TIMES SOURCE:(ARG:0):노출, 1.20
+		SOURCE:(ARG:0):노출 += 100
+	ELSE
+		;동성
+		IF IS_SAMESEX(MASTER, ARG:0)
+			SOURCE:(ARG:0):노출 += 5
+		;이성
+		ELSE
+			SOURCE:(ARG:0):노출 += 20
+		ENDIF
+	ENDIF
+	;무드의 상승
+	TFLAG:37 += 1
+
+;꽃밭
+ELSEIF TFLAG:54 == 3
+	;우후후중
+	IF FLAG:우후후플래그
+		TIMES SOURCE:(ARG:0):노출, 1.30
+		SOURCE:(ARG:0):노출 += 150
+	ENDIF
+	;무드의 상승
+	TFLAG:37 += RAND:2 + 2
+
+;삼림
+ELSEIF TFLAG:54 == 4
+	;우후후중
+	IF FLAG:우후후플래그
+		TIMES SOURCE:(ARG:0):노출, 1.10
+		SOURCE:(ARG:0):노출 += 80
+	ENDIF
+	;무드의 상승
+	TFLAG:37 += 1
+
+;온천
+ELSEIF TFLAG:54 == 7
+	;마다 턴 더러운 리셋트
+	STAIN:(ARG:0):0 = 0
+	STAIN:(ARG:0):1 = 0
+	STAIN:(ARG:0):2 = 2
+	STAIN:(ARG:0):3 = 1
+	STAIN:(ARG:0):4 = 8
+	STAIN:(ARG:0):5 = 0
+
+	;우후후중
+	IF FLAG:우후후플래그
+		TIMES SOURCE:(ARG:0):노출, 1.30
+		SOURCE:(ARG:0):노출 += 150
+	ELSE
+		;동성
+		IF IS_SAMESEX(MASTER, ARG:0)
+			SOURCE:(ARG:0):노출 += 30
+		;이성
+		ELSE
+			SOURCE:(ARG:0):노출 += 100
+		ENDIF
+	ENDIF
+ENDIF
+
+;---------------------------------------------------------
+;데이트 장소에 의한 파라미터 상승의 보정(쾌감계)
+;SOURCE 계산중에 불려 간다
+;---------------------------------------------------------
+@UP_DATE_CHECK1(ARG:0)
+;성 주변 마을
+IF TFLAG:54 == 1
+;강변
+ELSEIF TFLAG:54 == 2
+;꽃밭
+ELSEIF TFLAG:54 == 3
+;삼림
+ELSEIF TFLAG:54 == 4
+;온천
+ELSEIF TFLAG:54 == 7
+ENDIF
+
+;---------------------------------------------------------
+;데이트 장소에 의한 파라미터 상승의 보정(쾌감계 이외)
+;SOURCE 계산중에 불려 간다
+;---------------------------------------------------------
+@UP_DATE_CHECK2(ARG:0)
+;성 주변 마을
+IF TFLAG:54 == 1
+	IF PALAM:(ARG:0):액주 >= 0
+		TIMES PALAM:(ARG:0):액주, 0.90
+	ENDIF
+
+;강변
+ELSEIF TFLAG:54 == 2
+	IF PALAM:(ARG:0):로주 >= 0
+		TIMES PALAM:(ARG:0):로주, 0.90
+	ENDIF
+	IF PALAM:(ARG:0):포주 >= 0
+		TIMES PALAM:(ARG:0):포주, 1.10
+	ENDIF
+
+;꽃밭
+ELSEIF TFLAG:54 == 3
+	IF PALAM:(ARG:0):로주 >= 0
+		TIMES PALAM:(ARG:0):로주, 0.90
+	ENDIF
+	IF PALAM:(ARG:0):액주 >= 0
+		TIMES PALAM:(ARG:0):액주, 0.85
+	ENDIF
+
+;삼림
+ELSEIF TFLAG:54 == 4
+	IF PALAM:(ARG:0):로주 >= 0
+		TIMES PALAM:(ARG:0):로주, 0.70
+	ENDIF
+	IF PALAM:(ARG:0):포주 >= 0
+		TIMES PALAM:(ARG:0):포주, 1.30
+	ENDIF
+
+;온천
+ELSEIF TFLAG:54 == 7
+	IF PALAM:(ARG:0):로주 >= 0
+		TIMES PALAM:(ARG:0):로주, 0.80
+	ENDIF
+	IF PALAM:(ARG:0):액주 >= 0
+		TIMES PALAM:(ARG:0):액주, 0.85
+	ENDIF
+ENDIF
+
+;---------------------------------------------------------
+;데이트 장소가 선택 가능한가 어떤가를 판정하는 함수군
+;---------------------------------------------------------
+;온천
+@DATE_PLACE_ABLE7
+;동성으로 호감도 500이상, 또는 합의
+IF TALENT:(MTAR:0):합의 || (CFLAG:(MTAR:0):2 >= 500 && IS_SAMESEX(MPLY:0, MTAR:0))
+	RETURN 1
+ENDIF
+RETURN 0
+
+;야외
+;야외플레이로 이용할 뿐인 것이(가) 아님
+@DATE_PLACE_ABLE8
+RETURN 0
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN390
+RETURN 커맨드_일상

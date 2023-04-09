@@ -1,0 +1,222 @@
+﻿;성성지식을가르친다
+; 2023-04-09 번역체 교정 - 레몬녹차
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME550
+RESULTS:0 = 성지식을 가르친다
+RESULTS:1 = 성지식을 알려준다
+RESULTS:2 = 성지식을 배운다
+RESULTS:3 = 성지식을 알려달라한다
+RESULTS:4 = 성의 지식을 가르치게 한다
+RESULTS:5 = 성지식을 가르친다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE550
+;공통 부분
+CALL COM_ABLE_COMMON(550)
+SIF RESULT == 0
+	RETURN 0
+;육아중, 외래 역조교는 불가
+SIF !GROUPMATCH(FLAG:조교모드, 0, 1, 2, 5, 6)
+	RETURN 0
+;플레이어는 최대로 1명까지
+SIF MPLY_NUM <= 0 || MPLY_NUM > 1
+	RETURN 0
+;타겟은 최대로 1명까지
+SIF MTAR_NUM <= 0 || MTAR_NUM > 1
+	RETURN 0
+;플레이어가 행동불능이라면 불가
+SIF !IS_PLAYABLE(MPLY:0)
+	RETURN 0
+;플레이어의 입이 막히고 있다면 불가
+SIF IS_M_HOLD(MPLY:0)
+	RETURN 0
+;플레이어의 성지식이 Lv1 이상 또한 타겟의 성지식이 Lv0가 아니면 불가
+SIF ABL:(MPLY:0):성지식 < 1 || ABL:(MTAR:0):성지식 != 0
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM550
+SOURCE:(MTAR:0):환락 = 20
+
+;친밀하게 응한 환락의 소스 추가
+CALL ADD_SOURCE_KANRAKU(MTAR:0, 150)
+
+;주도권에 응한 소스의 추가
+CALL ADD_SOURCE_INITIATIVE_N(MTAR:0, 80, 80)
+
+EXP:(MTAR:0):성지식경험치 += 100
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = 0
+
+RETURN 1
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER550(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 55
+
+CALL COM_ORDER_BASE(ARG:0)
+
+IF TALENT:(ARG:0):반항적
+	CALL COM_ORDER_ELEMENT(ARG:0, "반항적", -5)
+ENDIF
+IF TALENT:(ARG:0):프라이드높음
+	CALL COM_ORDER_ELEMENT(ARG:0, "프라이드높음", -5)
+ENDIF
+IF TALENT:(ARG:0):자제심
+	CALL COM_ORDER_ELEMENT(ARG:0, "자제심", -4)
+ENDIF
+IF TALENT:(ARG:0):무관심
+	CALL COM_ORDER_ELEMENT(ARG:0, "무관심", -4)
+ENDIF
+IF TALENT:(ARG:0):호기심
+	CALL COM_ORDER_ELEMENT(ARG:0, "호기심", 7)
+ENDIF
+IF TALENT:(ARG:0):보수적
+	CALL COM_ORDER_ELEMENT(ARG:0, "보수적", -5)
+ENDIF
+IF TALENT:(ARG:0):고고함
+	CALL COM_ORDER_ELEMENT(ARG:0, "고고함", -(10 * KOKOU_RATE(MTAR:0) / 100))
+ENDIF
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -10)
+ENDIF
+IF TALENT:(ARG:0):수치심옅음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수치심옅음", 8)
+ENDIF
+IF TALENT:(ARG:0):쾌감에솔직
+	CALL COM_ORDER_ELEMENT(ARG:0, "쾌감에솔직", 8)
+ENDIF
+IF TALENT:(ARG:0):쾌감을부정
+	CALL COM_ORDER_ELEMENT(ARG:0, "쾌감을부정", -20)
+ENDIF
+IF GETBIT(TALENT:(ARG:0):음란계, 소질_음란_음란)
+	CALL COM_ORDER_ELEMENT(ARG:0, "음란", 10)
+ENDIF
+
+IF IS_SAMESEX(MPLY:0, ARG:0)
+	CALL COM_ORDER_ELEMENT(ARG:0, "동성", 35)
+ENDIF
+
+IF TALENT:(ARG:0):친애
+	CALL COM_ORDER_ELEMENT(ARG:0, "친애", 25)
+ELSEIF TALENT:(ARG:0):연모
+	CALL COM_ORDER_ELEMENT(ARG:0, "연모", 10)
+ENDIF
+
+IF TALENT:(ARG:0):연인
+	CALL COM_ORDER_ELEMENT(ARG:0, "연인", 20)
+ELSEIF TALENT:(ARG:0):친구
+	CALL COM_ORDER_ELEMENT(ARG:0, "친구", 20)
+ENDIF
+
+IF TALENT:(ARG:0):예속
+	CALL COM_ORDER_ELEMENT(ARG:0, "예속", 25)
+ELSEIF TALENT:(ARG:0):복종
+	CALL COM_ORDER_ELEMENT(ARG:0, "복종", 10)
+ENDIF
+
+IF TALENT:(ARG:0):낙인
+	CALL COM_ORDER_ELEMENT(ARG:0, "낙인", 20)
+ENDIF
+
+IF TALENT:(ARG:0):소유자
+	CALL COM_ORDER_ELEMENT(ARG:0, "소유자", 25)
+ELSEIF TALENT:(ARG:0):주인
+	CALL COM_ORDER_ELEMENT(ARG:0, "주인", 10)
+ENDIF
+
+
+CALL COM_ORDER_ELEMENT(ARG:0, "합의", 15)
+
+IF TALENT:(ARG:0):프라이드높음
+	LOCAL:0 = 4
+ELSEIF TALENT:(ARG:0):프라이드낮음
+	LOCAL:0 = 1
+ELSE
+	LOCAL:0 = 2
+ENDIF
+IF MARK:(ARG:0):기성사실 >= 1
+	CALL COM_ORDER_ELEMENT(ARG:0, @"기성 사실 Lv{MARK:(ARG:0):기성사실}", MARK:(ARG:0):기성사실 * 3 * LOCAL:0)
+ENDIF
+
+IF TALENT:MASTER:매혹
+	CALL COM_ORDER_ELEMENT(ARG:0, "주인공의 매혹", 6)
+ENDIF
+IF TALENT:MASTER:수수께끼의매력
+	CALL COM_ORDER_ELEMENT(ARG:0, "주인공의 수수께끼의매력", 6)
+ENDIF
+
+IF PALAM:(ARG:0):취기 >= 150
+	CALL COM_ORDER_ELEMENT(ARG:0, "취기", PALAM:(ARG:0):취기 / 150)
+ENDIF
+
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE550
+;플레이어가 주인공측
+IF MPLY:0 == MASTER
+	;주도권이 주인공측
+	IF IS_INITIATIVE(MASTER)
+		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에게 성의 지식을 알려줬다
+		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%의 이야기를 흥미롭게 듣고 있다…
+	;주도권이 상대측
+	ELSE
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 어른의 지식을 알려달라며 졸랐다
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"가")% 궁금한 것을 알려주며 성지식을 가르쳤다…
+	ENDIF
+	PRINTL 
+	PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 올바른 성의 지식을 배웠다
+
+;플레이어가 상대측
+ELSE
+	;주도권이 주인공측
+	IF IS_INITIATIVE(MASTER)
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에게 어른의 지식을 가르쳐 달라며 졸랐다
+		IF TALENT:(MPLY:0):소악마 || TALENT:(MPLY:0):수치심옅음
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 의기양양한 미소지으면, %ANAME(MTAR:0)%에게 한껏 성의 지식을 철저히 가르쳤다…
+		ELSEIF TALENT:(MPLY:0):수줍음
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 얼굴을 새빨갛게 하면서도, %ANAME(MTAR:0)%에게 성의 지식을 말하기 시작했다…
+		ELSE
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 곤란한 것 같은 표정을 띄우면서도, %ANAME(MTAR:0)%에게 성의 지식을 말했다…
+		ENDIF
+	;주도권이 상대측
+	ELSE
+		IF FLAG:우후후플래그
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에게 자신의 몸을 가르키며 성지식을 가르쳤다…
+		ELSE
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에게 성의 지식을 철저히 가르쳤다
+		ENDIF
+	ENDIF
+	PRINTL 
+	PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% 올바른 성의 지식을 배웠다
+ENDIF
+
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST550
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN550
+RETURN 커맨드_공통

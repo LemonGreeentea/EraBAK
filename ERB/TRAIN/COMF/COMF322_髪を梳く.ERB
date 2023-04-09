@@ -4,10 +4,10 @@
 ;커맨드 명칭
 ;-------------------------------------------------
 @COM_NAME322
-RESULTS:0 = 머리를빗는다
-RESULTS:1 = 머리를빗긴다
-RESULTS:2 = 머리카락을 빗어 받는다
-RESULTS:3 = 머리를깍는다
+RESULTS:0 = 머리를 빗는다
+RESULTS:1 = 머리를 빗겨준다
+RESULTS:2 = 머리를 빗겨달라한다
+RESULTS:3 = 머리를 빗겨진다
 
 ;-------------------------------------------------
 ;선택 가부 판정
@@ -159,10 +159,10 @@ ENDIF
 IF MPLY:0 == MASTER
 	;주도권이 주인공측
 	IF IS_INITIATIVE(MASTER)
-		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %ANAME(MTAR:0)%의 머리카락에 손가락 빗질을 넣었다
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %ANAME(MTAR:0)%의 머리카락을 손으로 빗겨줬다
 	;주도권이 상대측
 	ELSE
-		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %ANAME(MTAR:0)%에 부탁받아, 손가락 빗질로 머리카락을 빗고 빌려주었다
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %ANAME(MTAR:0)%에 부탁받아, 손으로 머리카락을 빗겨줬다
 	ENDIF
 
 	IF TFLAG:18 == 1

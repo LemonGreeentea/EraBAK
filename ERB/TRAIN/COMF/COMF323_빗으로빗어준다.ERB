@@ -1,0 +1,205 @@
+﻿;빗으로 빗어준다
+
+;-------------------------------------------------
+;커맨드 명칭
+;-------------------------------------------------
+@COM_NAME323
+RESULTS:0 = 빗으로 머리를 빗는다
+RESULTS:1 = 빗으로 머리를 빗겨준다
+RESULTS:2 = 빗으로 머리를 빗겨달라한다
+RESULTS:3 = 빗으로 머리를 빗겨진다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE323
+;공통 부분
+CALL COM_ABLE_COMMON(323)
+SIF RESULT == 0
+	RETURN 0
+SIF !ITEM:빗
+	RETURN 0
+;주인공 이외가 실행하는 경우, 호감도가 500이상 필요
+SIF MPLY:0 != MASTER && CFLAG:(MPLY:0):2 < 500
+	RETURN 0
+;부상당했다면 불가
+SIF CFLAG:(MTAR:0):행동불능상태 == 3
+	RETURN 0
+;키스중엔 불가
+SIF IS_EQUIP(MPLY:0, 342)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM323
+;실행할 수 있을까의 판정
+CALL COM_ORDER_COMMON
+IF RESULT == 0
+	RETURN 0
+ENDIF
+
+IF MPLY:0 == MASTER
+	;커맨드의 성공 여부를 TFLAG:18에 세트
+	CALL JUDGE_COM_RESULT(MTAR:0, 5, 10)
+	LOCAL:1 = MTAR:0
+ELSE
+	;커맨드의 성공 여부를 TFLAG:18에 세트
+	CALL JUDGE_COM_RESULT(MPLY:0, 5, 10)
+	LOCAL:1 = MPLY:0
+ENDIF
+
+;고정으로 들어가는 소스
+SOURCE:(MPLY:0):접촉 = 50
+SOURCE:(MTAR:0):접촉 = 50
+
+;친밀하게 응한 환락의 소스 추가
+SOURCE:(MPLY:0):환락 = -10
+SOURCE:(MTAR:0):환락 = -10
+CALL ADD_SOURCE_KANRAKU(MPLY:0, 140)
+CALL ADD_SOURCE_KANRAKU(MTAR:0, 140)
+SOURCE:(MPLY:0):환락 = MAX(SOURCE:(MPLY:0):환락, 0)
+SOURCE:(MTAR:0):환락 = MAX(SOURCE:(MTAR:0):환락, 0)
+
+;친밀하게 응한 애정의 소스 추가
+CALL ADD_SOURCE_AIZYOU(MPLY:0, 120)
+CALL ADD_SOURCE_AIZYOU(MTAR:0, 120)
+
+;주도권에 응한 소스의 추가
+CALL ADD_SOURCE_INITIATIVE_N(MPLY:0, 70, 70)
+CALL ADD_SOURCE_INITIATIVE_N(MTAR:0, 70, 70)
+
+;실패
+IF TFLAG:18 == -1
+	TIMES SOURCE:(MPLY:0):환락, 0.20
+	TIMES SOURCE:(MPLY:0):애정, 0.20
+	TIMES SOURCE:(MTAR:0):환락, 0.20
+	TIMES SOURCE:(MTAR:0):애정, 0.20
+	SOURCE:(MPLY:0):불만 += 500
+	SOURCE:(MTAR:0):불만 += 500
+	TFLAG:37 -= 5
+;성공
+ELSEIF TFLAG:18 == 0
+
+;대성공
+ELSE
+	TIMES SOURCE:(MPLY:0):환락, 2.00
+	TIMES SOURCE:(MPLY:0):애정, 2.00
+	TIMES SOURCE:(MTAR:0):환락, 2.00
+	TIMES SOURCE:(MTAR:0):애정, 2.00
+	TFLAG:37 += 5
+ENDIF
+
+;주도도 변화 기준치
+TFLAG:49 = 3
+
+;도착도 변화 기준치
+TFLAG:50 = -1
+
+RETURN 1
+
+;-------------------------------------------------
+;고유의 실행 판정
+;-------------------------------------------------
+@COM_ORDER_PLAYER323(ARG:0)
+;실행치의 설정
+TCVAR:(ARG:0):25 = 25
+
+;공통 부분
+CALL COM_ORDER(ARG:0)
+
+CALL COM_ORDER_ELEMENT(ARG:0, @"욕망 Lv{ABL:(ARG:0):욕망}", ABL:(ARG:0):욕망 * 1)
+CALL COM_ORDER_ELEMENT(ARG:0, @"봉사 Lv{ABL:(ARG:0):봉사}", ABL:(ARG:0):봉사 * 3)
+
+;호감도
+IF CFLAG:(ARG:0):2 < 400
+	IF CFLAG:(ARG:0):2 < 50
+		LOCAL:0 = -40
+	ELSEIF CFLAG:(ARG:0):2 < 150
+		LOCAL:0 = -20
+	ELSEIF CFLAG:(ARG:0):2 < 300
+		LOCAL:0 = -10
+	ELSE
+		LOCAL:0 = -5
+	ENDIF
+	CALL COM_ORDER_ELEMENT(ARG:0, @"호감도 부족", LOCAL:0)
+ELSE
+	LOCAL:0 = CFLAG:(ARG:0):2 / 75
+	CALL COM_ORDER_ELEMENT(ARG:0, @"호감도", LOCAL:0)
+ENDIF
+
+IF TALENT:(ARG:0):수줍음
+	CALL COM_ORDER_ELEMENT(ARG:0, "수줍음", -3)
+ENDIF
+IF TALENT:(ARG:0):헌신적
+	CALL COM_ORDER_ELEMENT(ARG:0, "헌신적", 6)
+ENDIF
+IF TALENT:(ARG:0):모성
+	CALL COM_ORDER_ELEMENT(ARG:0, "모성", 3)
+ENDIF
+IF TFLAG:54
+	CALL COM_ORDER_ELEMENT(ARG:0, "데이트중", 3)
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE323
+;플레이어가 주인공측
+IF MPLY:0 == MASTER
+	;주도권이 주인공측
+	IF IS_INITIATIVE(MASTER)
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 머리카락을 빗으로 빗겨줬다
+	;주도권이 상대측
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 부탁받아, 빗으로 머리카락을 빗겨줬다
+	ENDIF
+
+	IF TFLAG:18 == 1
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 눈을 감고 %ANAME(MPLY:0)%의 손길을 느끼고 있다…
+	ELSEIF TFLAG:18 == 0
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %조사처리(ANAME(MPLY:0),"의")% 손길에 몸을 맡기고 있다…
+	ELSEIF TFLAG:18 == -1
+		PRINTFORML 빗는 도중에 머리카락이 걸려 버렸다…
+		PRINTFORM %조사처리(ANAME(MTAR:0),"는")% 눈물을 글썽이며 
+		IF TALENT:(MTAR:0):수줍음 || TALENT:(MTAR:0):겁쟁이 || TALENT:(MTAR:0):얌전함
+			PRINTFORML 빗에 걸린 머리를 풀었다
+		ELSE
+			PRINTFORML %조사처리(ANAME(MPLY:0),"를")% 째려봤다
+		ENDIF
+	ENDIF
+;플레이어가 상대측
+ELSE
+	;주도권이 주인공측
+	IF IS_INITIATIVE(MASTER)
+		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에게 머리를 빗겨달라고 부탁했다
+	;주도권이 상대측
+	ELSE
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 머리카락을 빗으로 빗겨주었다
+	ENDIF
+
+	IF TFLAG:18 == 1
+		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 매우 즐거운 듯 하다
+	ELSEIF TFLAG:18 == 0
+		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 정중하게 %ANAME(MTAR:0)%의 머리카락을 빗겨주고 있다
+	ELSEIF TFLAG:18 == -1
+		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 곧바로 질려 버린 것 같다
+	ENDIF
+ENDIF
+
+;-------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;-------------------------------------------------
+@COM_TEXT_LAST323
+;일상 커맨드에 공통의 지문
+CALL COM_TEXT_LAST_LIFE
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN323
+RETURN 커맨드_일상

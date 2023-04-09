@@ -1,0 +1,141 @@
+﻿;순찰
+
+;-------------------------------------------------
+;커맨드 명칭
+;------------------------------------------------
+@COM_NAME305
+RESULTS:0 = 거리를 순찰한다
+RESULTS:1 = 거리를 순찰한다
+
+;-------------------------------------------------
+;선택 가부 판정
+;-------------------------------------------------
+@COM_ABLE305
+;공통 부분
+CALL COM_ABLE_COMMON(305)
+SIF RESULT == 0
+	RETURN 0
+;포로 회화에서는 불가
+SIF FLAG:조교모드 == 6
+	RETURN 0
+;주인공이 플레이어 때 한정
+SIF MPLY:0 != MASTER
+	RETURN 0
+;데이트중은 무리
+SIF TFLAG:54
+	RETURN 0
+;임월, 육아, 상처라면 불가
+SIF GROUPMATCH(CFLAG:(MTAR:0):행동불능상태, 1, 2, 3)
+	RETURN 0
+;포로라면 불가
+SIF CFLAG:(MTAR:0):포로처
+	RETURN 0
+;키스중은 불가
+SIF IS_EQUIP(MPLY:0, 342)
+	RETURN 0
+RETURN 1
+
+;-------------------------------------------------
+;메인 처리
+;-------------------------------------------------
+@COM305
+;커맨드의 성공 여부를 TFLAG:18에 세트
+CALL JUDGE_COM_RESULT(MTAR:0, 5, 5)
+
+;고정으로 획득하는 소스
+SOURCE:(MTAR:0):환락 = 20
+
+;친밀하게 응한 환락의 소스 추가
+CALL ADD_SOURCE_KANRAKU(MTAR:0, 160)
+
+;이 턴의 경제성장 파워 추가치
+LOCAL:0 = (ABL:(MPLY:0):무투 + ABL:(MTAR:0):무투 + ABL:(MPLY:0):정치 + ABL:(MTAR:0):정치 + 200) * 25
+
+;이 턴의 병수증강 파워 추가치
+LOCAL:1 = (ABL:(MPLY:0):무투 + ABL:(MTAR:0):무투 + ABL:(MPLY:0):정치 + ABL:(MTAR:0):정치 + 200) * 2 / 5
+
+;주도권에 응한 소스의 추가
+CALL ADD_SOURCE_INITIATIVE_N(MPLY:0, 100, 100)
+CALL ADD_SOURCE_INITIATIVE_N(MTAR:0, 100, 100)
+
+;타겟이 농땡이마왕라면 효과 감소
+IF TALENT:(MTAR:0):농땡이마왕
+	TIMES SOURCE:(MTAR:0):환락, 0.80
+	SOURCE:(MTAR:0):반감 = 70 - SOURCE:(MTAR:0):환락 / 3
+ENDIF
+
+;실패
+IF TFLAG:18 == -1
+	TIMES SOURCE:(MTAR:0):환락, 0.20
+	SOURCE:(MTAR:0):불만 += 300
+	TIMES LOCAL:0, 0.20
+	TIMES LOCAL:1, 0.20
+;성공
+ELSEIF TFLAG:18 == 0
+;대성공
+ELSE
+	TIMES SOURCE:(MTAR:0):환락, 2.00
+	TIMES LOCAL:0, 2.00
+	TIMES LOCAL:1, 2.00
+ENDIF
+
+SELECTCASE FLAG:경제성장추가치
+	CASE IS > 100000
+		TIMES LOCAL:0, 0.10
+	CASE IS > 50000
+		TIMES LOCAL:0, 0.25
+	CASE IS > 25000
+		TIMES LOCAL:0, 0.5
+ENDSELECT
+
+SELECTCASE FLAG:병수증가추가치
+	CASE IS > 3000
+		TIMES LOCAL:1, 0.10
+	CASE IS > 2000
+		TIMES LOCAL:1, 0.25
+	CASE IS > 1000
+		TIMES LOCAL:1, 0.5
+ENDSELECT
+
+FLAG:경제성장추가치 += LOCAL:0
+FLAG:병수증가추가치 += LOCAL:1
+
+;주도도 변화 기준치
+TFLAG:49 = 2
+
+;도착도 변화 기준치
+TFLAG:50 = -1
+
+RETURN 1
+
+;-------------------------------------------------
+;지문(전문)
+;-------------------------------------------------
+@COM_TEXT_BEFORE305
+;주도권이 주인공측
+IF IS_INITIATIVE(MASTER)
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %조사처리(ANAME(MTAR:0),"와")% 거리의 순찰을 나갔다
+ELSE
+	PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 이끌려 거리의 순찰을 나갔다
+ENDIF
+
+IF TFLAG:18 == 1
+	PRINTFORML 어쩐지 데이트 하고 있는 것 같은 분위기다…
+ELSEIF TFLAG:18 == -1
+	PRINTFORML ……골치아픈 사건이 생겨 처리하느라 고생했다
+ENDIF
+PRINTFORML (경제와 병수의 증가량에 보너스!)
+;--------------------------------------------------------
+;지문(파라미터·각인 변동 후)
+;--------------------------------------------------------
+@COM_TEXT_LAST305
+;일상 커맨드에 공통의 지문
+CALL COM_TEXT_LAST_LIFE
+
+;-------------------------------------------------
+
+;커맨드 구분
+;-------------------------------------------------
+
+@COM_AVAILABLE_WHEN305
+RETURN 커맨드_일상
