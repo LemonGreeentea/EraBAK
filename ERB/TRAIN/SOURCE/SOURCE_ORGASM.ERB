@@ -155,16 +155,16 @@ IF LOCAL:2 >= 10000 && SOURCE:(ARG:0):쾌Ｂ + SOURCE:(ARG:0):쾌Ｖ + SOURCE:(A
 
 	EXP:(ARG:0):분유경험치 += NOWEX:(ARG:0):분유
 
-	;촉수착유중이라면 상대의 요술경험치를 플러스
+	;촉수착유중이라면 상대의 신비경험치를 플러스
 	IF SELECTCOM == 207 && IS_MTAR(ARG:0)
 		FOR LOCAL:0, 0, MPLY_NUM
-			EXP:(MPLY:(LOCAL:0)):요술경험치 += NOWEX:(ARG:0):분유 * 2
+			EXP:(MPLY:(LOCAL:0)):신비경험치 += NOWEX:(ARG:0):분유 * 2
 		NEXT
 	ELSEIF IS_EQUIP_TARGET(ARG:0, 207)
 		LOCAL:1 = SEARCH_EQUIP(207, -1, ARG:0)
 		IF LOCAL:1 >= 0
 			FOR LOCAL:0, 0, MEQUIP_PLAYER_NUM:(LOCAL:1)
-				EXP:(MEQUIP_PLAYER:(LOCAL:1):(LOCAL:0)):요술경험치 += NOWEX:(ARG:0):분유 * 2
+				EXP:(MEQUIP_PLAYER:(LOCAL:1):(LOCAL:0)):신비경험치 += NOWEX:(ARG:0):분유 * 2
 			NEXT
 		ENDIF
 	ENDIF
@@ -706,9 +706,9 @@ FOR LOCAL:0, 400, 420
 	SIF (사정처 == 1 || (!HAS_VAGINA(사정상대) && 사정처 == 2)) && !IS_EQUIP_PLAYER(대상, 75)
 		CALL RECORD_INJECTION(사정상대, GET_ID(대상), 사정량)
 
-	;사정 개소가 촉수라면 상대의 요술경험치를 플러스
+	;사정 개소가 촉수라면 상대의 신비경험치를 플러스
 	IF 사정처 == 13
-		EXP:(사정상대):요술경험치 += 사정량 * 2
+		EXP:(사정상대):신비경험치 += 사정량 * 2
 	ENDIF
 
 	CUM_TO_COUNT:(대상):(사정처) += 사정량

@@ -9,6 +9,8 @@ RETURN (30 + INRANGE(DVAR:모금_안은회수, 0, 10) * 7)
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_FUND_RAISING_DECISION()
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
 SIF DAY < 10
 	RETURN 0
 ;자금이 50000이상의 경우

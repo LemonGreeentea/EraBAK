@@ -251,18 +251,18 @@
 #DIM BATTLE_정치, 2, 3
 #DIM BATTLE_가창, 2, 3
 #DIM BATTLE_요리, 2, 3
-#DIM BATTLE_요술, 2, 3
+#DIM BATTLE_신비, 2, 3
 #DIM BATTLE_소질, 2, 3
 #DIM BATTLE_무투파워, 2, 3
 #DIM BATTLE_방위파워, 2, 3
 #DIM BATTLE_지략파워, 2, 3
-#DIM BATTLE_요술파워, 2, 3
+#DIM BATTLE_신비파워, 2, 3
 #DIM BATTLE_가창파워, 2, 3
 #DIM BATTLE_요리파워, 2, 3
 #DIM BATTLE_SKILL_RATE, 2, 3
 #DIM BATTLE_SKILL_SEALED, 2, 3
 #DIM BATTLE_SUMMONED_CHARA, 2, 3
-;상으로부터순서에 데미지치, 병수, 공격, 방어, 지략, 요술, 유격 부대인가 어떤가의 플래그, 세력 명칭
+;상으로부터순서에 데미지치, 병수, 공격, 방어, 지략, 신비, 유격 부대인가 어떤가의 플래그, 세력 명칭
 #DIM BATTLE_DMG, 2
 #DIM BATTLE_SOL, 2
 #DIM BATTLE_ATK, 2

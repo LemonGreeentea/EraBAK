@@ -623,7 +623,7 @@ NEXT
 @TMP_PREPARE_CHARA_STARS()
 #DIM 합계포인트, 3000
 #DIM 캐릭터수
-#DIM 능력 = GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "요술"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창")
+#DIM 능력 = GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "신비"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창")
 VARSET 합계포인트, __INT_MAX__
 
 ;치 합계 준비
@@ -635,7 +635,7 @@ FOR LOCAL, 0, CHARANUM
 	합계포인트:LOCAL += ABL:LOCAL:방위
 	합계포인트:LOCAL += ABL:LOCAL:지략
 	합계포인트:LOCAL += ABL:LOCAL:정치
-	합계포인트:LOCAL += ABL:LOCAL:요술 * 3 / 2
+	합계포인트:LOCAL += ABL:LOCAL:신비 * 3 / 2
 	합계포인트:LOCAL += MAX(ABL:LOCAL:요리 - 50, 0)
 	합계포인트:LOCAL += MAX(ABL:LOCAL:가창 - 50, 0)
 	FOR LOCAL:1, 0, VARSIZE("능력")
@@ -649,7 +649,7 @@ FOR LOCAL, 0, CHARANUM
 					CASE "B"
 						합계포인트:LOCAL += 5
 				ENDSELECT
-			CASE GETNUM(ABL, "요술")
+			CASE GETNUM(ABL, "신비")
 				SELECTCASE ALPHABET_RANK(ABL:LOCAL:(능력:(LOCAL:1)), 1)
 					CASE "S"
 						합계포인트:LOCAL += 30

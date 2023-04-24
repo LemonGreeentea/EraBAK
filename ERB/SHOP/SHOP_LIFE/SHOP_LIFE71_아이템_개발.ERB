@@ -248,7 +248,7 @@ RETURN 0
 @ITEM_ABLE210
 ;촉수의방의 관리가 가능한 캐릭터가 필요
 FOR LOCAL:0, 0, CHARANUM
-	IF CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속 && CFLAG:(LOCAL:0):포로처 == 0 && TALENT:(LOCAL:0):요술지식 && (ABL:(LOCAL:0):촉수 >= 5 || LOCAL:0 == MASTER)
+	IF CFLAG:(LOCAL:0):소속 == CFLAG:MASTER:소속 && CFLAG:(LOCAL:0):포로처 == 0 && TALENT:(LOCAL:0):신비지식 && (ABL:(LOCAL:0):촉수 >= 5 || LOCAL:0 == MASTER)
 		RETURN 1
 	ENDIF
 NEXT
@@ -288,8 +288,8 @@ RETURN 0
 
 ;●최면술
 @ITEM_ABLE217
-;음구목록을 가지고 있어 주인공이 요술지식 떡
-IF ITEM:음구목록 && TALENT:MASTER:요술지식
+;음구목록을 가지고 있어 주인공이 신비지식 떡
+IF ITEM:음구목록 && TALENT:MASTER:신비지식
 	RETURN 1
 ENDIF
 RETURN 0
@@ -353,7 +353,7 @@ RETURN 0
 
 ;●회중시계
 @ITEM_ABLE267
-;음구목록을 가지고 있어 주인공이 요술지식 떡
+;음구목록을 가지고 있어 주인공이 신비지식 떡
 IF ITEM:음구목록
 	RETURN 1
 ENDIF

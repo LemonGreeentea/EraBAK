@@ -407,12 +407,12 @@ CALL CHANGE_COUNTRY(ARG:0, 0, 1, 1)
 SIF FINDELEMENT(PRISONER_TARGET, ARG:0) != -1
 	PRISONER_TARGET:(FINDELEMENT(PRISONER_TARGET, ARG:0)) = -1
 
-;손에 들어 오는 요술경험치를 계산해 취득＆표시
+;손에 들어 오는 신비경험치를 계산해 취득＆표시
 PRINTFORML <%ANAME(관리인)%>
 
 효과량= 30 + BASE:(ARG:0):정신력 / 20 + ABL:(ARG:0):촉수 * 10
 
-CALL PRINT_ADD_EXP(관리인, "요술경험치", 효과량)
+CALL PRINT_ADD_EXP(관리인, "신비경험치", 효과량)
 CALL TRAIN_AUTO_ABLUP(관리인)
 WAIT
 
@@ -532,12 +532,12 @@ IF RESULT == 0
 		PRISONER_TARGET:(FINDELEMENT(PRISONER_TARGET, ARG:0)) = -1
 
 
-	;손에 들어 오는 요술경험치를 계산해 취득＆표시
+	;손에 들어 오는 신비경험치를 계산해 취득＆표시
 	PRINTFORML <%ANAME(관리인)%>
 
 	효과량= 30 + BASE:(ARG:0):정신력 / 20 + ABL:(ARG:0):촉수 * 10
 
-	CALL PRINT_ADD_EXP(관리인, "요술경험치", 효과량)
+	CALL PRINT_ADD_EXP(관리인, "신비경험치", 효과량)
 	CALL TRAIN_AUTO_ABLUP(관리인)
 	WAIT
 	IF CALC_SHOP_TIME() == SHOP_TIME

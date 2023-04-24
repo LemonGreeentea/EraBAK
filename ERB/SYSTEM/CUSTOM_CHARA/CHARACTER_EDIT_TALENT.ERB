@@ -75,8 +75,8 @@ ELSEIF INRANGE(입력치, 0, 299) && 입력치 != GETNUM(TALENT, "성별")
 	TALENT:대상:입력치 = !TALENT:대상:입력치
 ENDIF
 
-SIF !TALENT:대상:요술지식
-	ABL:대상:요술 = 0
+SIF !TALENT:대상:신비지식
+	ABL:대상:신비 = 0
 
 SIF !TALENT:대상:모유체질
 	CFLAG:대상:일시적모유체질 = 0

@@ -20,7 +20,7 @@ TERRITORY_EVENT_NUM:분류 ++
 
 PRINTFORM %ANAME(대상)%의 %ABLNAME:능력번호%:
 
-IF GROUPMATCH(능력번호, GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "요술"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창"))
+IF GROUPMATCH(능력번호, GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "신비"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창"))
 	LOCAL = 랭크_ＳＬＧ
 ELSE
 	LOCAL = 랭크_그외

@@ -84,10 +84,10 @@ ELSE
 	PRINTFORM [{GETNUM(ABL, "정치")}] 정치 
 	CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:(대상):정치)
 	PRINTFORML {ABL:(대상):정치, 3, RIGHT}
-	IF TALENT:대상:요술지식
-		PRINTFORM [{GETNUM(ABL, "요술")}] 요술 
-		CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:(대상):요술)
-		PRINTFORML {ABL:(대상):요술, 3, RIGHT}
+	IF TALENT:대상:신비지식
+		PRINTFORM [{GETNUM(ABL, "신비")}] 신비 
+		CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:(대상):신비)
+		PRINTFORML {ABL:(대상):신비, 3, RIGHT}
 	ENDIF
 	PRINTFORM [{GETNUM(ABL, "가창")}] 가창 
 	CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:(대상):가창)
@@ -103,9 +103,9 @@ ELSE
 	INPUT
 	IF RESULT == 0
 		GOTO SHOW_LOOP
-	ELSEIF !GROUPMATCH(RESULT, GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창"), GETNUM(ABL, "요술"))
+	ELSEIF !GROUPMATCH(RESULT, GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창"), GETNUM(ABL, "신비"))
 		GOTO INPUT_LOOP2
-	ELSEIF RESULT == GETNUM(ABL, "요술") && !TALENT:(대상):요술지식
+	ELSEIF RESULT == GETNUM(ABL, "신비") && !TALENT:(대상):신비지식
 		GOTO INPUT_LOOP2
 	ELSE
 		대상항목 = RESULT
@@ -202,7 +202,7 @@ RETURNF (SPECIAL_TRAIN_COUNT == 0 || (DAY % 5 == 0 && SPECIAL_TRAIN_COUNT_THIS_T
 능력합계 = ABL:대상:무투 + ABL:대상:지략 + ABL:대상:정치 + ABL:대상:방위 + ABL:대상:가창 + ABL:대상:요리
 취득경험기초치 = (600 - 능력합계)
 
-SIF 대상항목 != GETNUM(ABL, "요술")
+SIF 대상항목 != GETNUM(ABL, "신비")
 	취득경험기초치 /= 6
 ;가창과 요리는 한층 더 반
 SIF GROUPMATCH(대상항목, GETNUM(ABL, "가창"), GETNUM(ABL, "요리"))

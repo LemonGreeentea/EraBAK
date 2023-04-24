@@ -212,10 +212,10 @@ IF TFLAG:54 == 7
 	IF MPLY:0 == MASTER
 		;주도권이 주인공측
 		IF IS_INITIATIVE(MASTER)
-			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %조사처리(ANAME(MTAR:0),"와")% 알몸 상태로 피부를 포갰다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% 알몸인 상태로 %LOCALS:0% %조사처리(ANAME(MTAR:0),"와")% 피부를 포갰다
 		;주도권이 상대측
 		ELSE
-			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 요구에 응해, %LOCALS:0%알몸 상태로 서로 접촉했다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에게 이끌려 알몸 상태로 %LOCALS:0% 피부을 맞닿는다
 		ENDIF
 
 		IF TFLAG:18 == 1
@@ -227,22 +227,22 @@ IF TFLAG:54 == 7
 	ELSE
 		;주도권이 주인공측
 		IF IS_INITIATIVE(MASTER)
-			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 요구에 응해, %LOCALS:0%알몸 상태로 피부를 서로 기대었다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 요구에 응해, 알몸 상태로 %LOCALS:0%피부를 서로 맞닿는다
 		;주도권이 상대측
 		ELSE
-			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %ANAME(MTAR:0)%의 팔을 잡아, 알몸 상태로 피부를 대어 왔다
+			PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %ANAME(MTAR:0)%의 팔을 잡아, 알몸 상태로 피부를 맞대었다
 		ENDIF
 
 		IF TFLAG:18 == 1
 			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 매우 즐거운 듯 하다…
 		ELSEIF TFLAG:18 == -1
-			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 반응이 담박했던 탓으로 등져 버린 것 같다…
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 반응이 마음에 안든건지 뾰로통해있다…
 		ENDIF
 	ENDIF
 
 ELSE
 	IF TFLAG:17 == 1
-		LOCALS:1 = 조금 농후한
+		LOCALS:1 = 조금 농후한 
 	ENDIF
 
 	;플레이어가 주인공측
@@ -256,9 +256,9 @@ ELSE
 		ENDIF
 
 		IF TFLAG:18 == 1
-			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 뭔가 기쁜듯이 하고 있다…
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 왠지 기쁜것 같다…
 		ELSEIF TFLAG:18 == -1
-			PRINTFORML 아무래도, 조금 너무 허물없게 한 것 같다…
+			PRINTFORML 아무래도, 너무 허물없게 한 것 같다…
 		ENDIF
 	;플레이어가 상대측
 	ELSE
@@ -273,7 +273,7 @@ ELSE
 		IF TFLAG:18 == 1
 			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 매우 즐거운 듯 하다…
 		ELSEIF TFLAG:18 == -1
-			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 반응이 담박했던 탓으로 등져 버린 것 같다…
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 반응이 마음에 안든건지 뾰로통해있다…
 		ENDIF
 	ENDIF
 ENDIF

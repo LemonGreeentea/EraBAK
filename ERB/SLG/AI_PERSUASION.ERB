@@ -62,7 +62,7 @@ NEXT
 FOR 대상, 0, CHARANUM
 	IF CFLAG:대상:소속 != 세력 && CFLAG:대상:포로처 == 세력
 		포로리스트:포로수 = 대상
-		능력치리스트:포로수 = ABL:대상:무투 + ABL:대상:지략 + ABL:대상:방위 + ABL:대상:요술 + ABL:대상:요리 + ABL:대상:가창 + ABL:대상:정치
+		능력치리스트:포로수 = ABL:대상:무투 + ABL:대상:지략 + ABL:대상:방위 + ABL:대상:신비 + ABL:대상:요리 + ABL:대상:가창 + ABL:대상:정치
 		호감도리스트:포로수 = REL_LIKE:대상:세력군주
 		불만도리스트:포로수 = IS_COUNTRY(CFLAG:대상:소속) ? REL_HATE:LOCAL:GET_COUNTRY_BOSS(CFLAG:대상:소속) # 1500
 		포로수 ++

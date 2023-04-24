@@ -467,7 +467,7 @@ LOCAL:13 = (LOCAL:11 >= 800) + (LOCAL:11 >= 300)
 
 REL_NUM = CONFIG:319 * 9 + LOCAL:12 * 3 + LOCAL:13
 
-REL_STR:0  '= " ・", " 악", " 원", " 호", " 주", " 적", " 우", " 라", " 라"
+REL_STR:0  '= " ・", " 험악", " 원한", " 호감", " 주시", " 천적", " 우호", " 라", " 라"
 REL_STR:9 '= " ・", " †", " ≠", " ○", " ◇", " ≫", " ◎", " ⇔", " ⇔"
 IF ARG:0 == ARG:1
 	SETCOLOR 칼라_선택불가
@@ -480,6 +480,7 @@ ELSEIF LOCAL:12 == 2 && LOCAL:13 == 2
 ;	PRINT 호적수 
 ;	PRINT  ⇔  
 	PRINTS REL_STR:REL_NUM
+
 ELSEIF LOCAL:12 == 2 && LOCAL:13 == 1
 	SETCOLOR 0x482889
 ;	PRINT 호적수 
@@ -520,4 +521,5 @@ ELSE
 ;	PRINT 중립 
 	PRINTS REL_STR:REL_NUM
 ENDIF
+RESULTS = %REL_STR:REL_NUM%
 RESETCOLOR

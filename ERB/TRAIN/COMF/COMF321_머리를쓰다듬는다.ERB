@@ -4,10 +4,10 @@
 ;커맨드 명칭
 ;-------------------------------------------------
 @COM_NAME321
-RESULTS:0 = 머리를쓰다듬는다
-RESULTS:1 = 머리를쓰다듬게한다
-RESULTS:2 = 머리를 어루만져 받는다
-RESULTS:3 = 머리를 어루만질 수 있다
+RESULTS:0 = 머리를 쓰다듬는다
+RESULTS:1 = 머리를 쓰다듬어준다
+RESULTS:2 = 머리를 쓰다듬어달라한다
+RESULTS:3 = 머리를 쓰다듬받는다
 
 ;-------------------------------------------------
 ;선택 가부 판정
@@ -164,7 +164,7 @@ RETURN 1
 @COM_TEXT_BEFORE321
 ;키스중
 IF IS_EQUIP(MPLY:0, 342)
-	LOCALS:0 = 키스를 하면서
+	LOCALS:0 = 키스 하면서
 	;지문 컷
 	LOCAL:0 = SEARCH_EQUIP_IC(342, MPLY:0, MTAR:0)
 	IF LOCAL:0 >= 0
@@ -178,19 +178,19 @@ ENDIF
 IF MPLY:0 == MASTER
 	;주도권이 주인공측
 	IF IS_INITIATIVE(MASTER)
-		PRINTFORM %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %ANAME(MTAR:0)%
+		PRINTFORM %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% 
 		IF CFLAG:(MTAR:0):2 >= 800
-			PRINTFORMW 를 껴안아 상냥하게 머리를 어루만졌다
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"를")% 껴안고 상냥하게 머리를 쓰다듬었다
 		ELSE
-			PRINTFORMW 의 머리를 어루만졌다
+			PRINTFORMW %ANAME(MTAR:0)%의 머리를 쓰다듬었다
 		ENDIF
 	;주도권이 상대측
 	ELSE
-		PRINTFORM %조사처리(ANAME(MTAR:0),"는")% %LOCALS:0% %ANAME(MPLY:0)%
+		PRINTFORM %조사처리(ANAME(MTAR:0),"는")% %LOCALS:0% %ANAME(MPLY:0)%에게
 		IF CFLAG:(MTAR:0):2 >= 800
-			PRINTFORMW 에 몸을 맡겨, 머리를 어루만지도록(듯이) 요구했다
+			PRINTFORMW 몸을 맡기며 머리를 머리를 쓰다듬어달라 요구했다
 		ELSE
-			PRINTFORMW 에, 머리를 어루만졌으면 좋겠다고 졸랐다
+			PRINTFORMW 머리를 쓰다듬어 달라고 말한다
 		ENDIF
 	ENDIF
 
@@ -198,50 +198,50 @@ IF MPLY:0 == MASTER
 		IF TALENT:(MTAR:0):유아 || TALENT:(MTAR:0):유치
 			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 눈을 가는, 마음 좋은 것같이 하고 있다…
 		ELSE
-			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 쑥스러운 듯이, 미소를 띄우고 있다…
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 쑥스러운 듯이 미소를 띄우고 있다…
 		ENDIF
 	ELSEIF TFLAG:18 == 0
 		IF TALENT:(MTAR:0):유아 || TALENT:(MTAR:0):유치
-			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 기쁜듯이 하고 있다…
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 기쁜 것 같다…
 		ELSE
-			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 뺨을 홍 조수시켜, 부끄러운 듯이 하고 있다…
+			PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 뺨을 붉게 물들이고 부끄러운 것 같다…
 		ENDIF
 	ELSEIF TFLAG:18 == -1
-		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 아이 취급해 되어 기분이 안좋은 것 같다…
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 아이 취급 당한다고 느끼는지, 기분이 좋지 않은 것 같다…
 	ENDIF
 ;플레이어가 상대측
 ELSE
 	;주도권이 주인공측
 	IF IS_INITIATIVE(MASTER)
-		PRINTFORM %조사처리(ANAME(MTAR:0),"는")% %LOCALS:0% %ANAME(MPLY:0)%에
+		PRINTFORM %조사처리(ANAME(MTAR:0),"는")% %LOCALS:0% %ANAME(MPLY:0)%에게 
 		IF CFLAG:(MPLY:0):2 >= 800
-			PRINTFORMW 껴안아, 응석부리면서 머리를 어루만져 받았다
+			PRINTFORMW 응석부리면서 머리를 쓰다듬받았다
 		ELSE
-			PRINTFORMW 두를 어루만져 받았다
+			PRINTFORMW 머리를 쓰다듬받았다
 		ENDIF
 
 		IF TFLAG:18 == 1
 			IF TALENT:(MPLY:0):모성
-				PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 우리 아이를 소중히 할까같이, 어루만져 주었다…
+				PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 아이를 다루듯 소중하게 머리를 어루만져 주었다…
 			ELSE
-				PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 웃는 얼굴로 상냥하게 어루만져 주었다…
+				PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 웃는 얼굴로 상냥하게 머리를 어루만져 주었다…
 			ENDIF
 		ELSEIF TFLAG:18 == 0
 			IF TALENT:(MPLY:0):모성
-				PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 웃는 얼굴로 상냥하게, 다만 어루만져 주었다…
+				PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 웃는 얼굴로 상냥하게, 어루만져 주었다…
 			ELSE
-				PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 기가 막힌 것처럼 쓴웃음 지으면서도, 상냥하게 어루만져 주었다…
+				PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 기가 곤란한 표정을 지으면서도, 머리를 상냥하게 어루만져 주었다…
 			ENDIF
 		ELSEIF TFLAG:18 == -1
-			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 마음 속 기가 막힌 것 같은 표정으로 한숨을 쉬었다…
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 어이가 없는 표정으로 한숨을 쉬었다…
 		ENDIF
 	;주도권이 상대측
 	ELSE
-		PRINTFORM %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %ANAME(MTAR:0)%
+		PRINTFORM %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% 
 		IF CFLAG:(MPLY:0):2 >= 800
-			PRINTFORMW 를 껴안으면, 응석부리게 하도록(듯이) 상냥하게 머리를 어루만졌다
+			PRINTFORMW %조사처리(ANAME(MTAR:0),"를")% 껴안으면서 상냥하게 머리를 어루만졌다
 		ELSE
-			PRINTFORMW 의 머리를 어루만져 왔다
+			PRINTFORMW %ANAME(MTAR:0)%의 머리를 어루만져 주었다
 		ENDIF
 
 		IF TFLAG:18 == 1
@@ -249,7 +249,7 @@ ELSE
 		ELSEIF TFLAG:18 == 0
 			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%의 반응을 보고 즐기고 있다…
 		ELSEIF TFLAG:18 == -1
-			PRINTFORML 가, %조사처리(ANAME(MPLY:0),"는")% 곧바로 질려 버린 것 같다…
+			PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 곧바로 질려 버린 것 같다…
 		ENDIF
 	ENDIF
 ENDIF

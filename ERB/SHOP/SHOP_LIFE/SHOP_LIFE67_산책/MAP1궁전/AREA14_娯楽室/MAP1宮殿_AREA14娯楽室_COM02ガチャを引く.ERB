@@ -199,27 +199,27 @@ PRINTFORML     【5등】 맥주 or 포도주 or 청주 각 5개
 PRINTFORML     【6등】 콘돔 5개
 PRINTFORML     【7등】 탁주 5개
 PRINTFORML     【SSS급】 스텟재분배티켓 or전능력UP++
-PRINTFORML     【 SS급】 태평요술서 or 최면술 or 음기술대전 or전능력UP+
+PRINTFORML     【 SS급】 태평신비서 or 최면술 or 음기술대전 or전능력UP+
 PRINTFORML     【  S급】 [ 전투계능력 ] UP++ or전능력UP
 PRINTFORML     【  A급】 [ 전투계능력 ] UP+  or [비전투계능력] UP++
 PRINTFORML     【  B급】 [ 전투계능력 ] UP   or [비전투계능력] UP+
 PRINTFORML     【  C급】 [비전투계능력] UP   or [ 기타아이템 ] 각 5개
 PRINTFORML     【  D급】 [ 기타아이템 ] 각 3개
 PRINTFORML
-PRINTFORML     [ 전투계능력 ] :【무투】【방위】【지략】【정치】【요술】
+PRINTFORML     [ 전투계능력 ] :【무투】【방위】【지략】【정치】【신비】
 PRINTFORML     [비전투계능력] :【가창】【요리】
 PRINTFORML     [ 기타아이템 ] : 이상한회중시계, 대역인형, 벌꿀수,
 PRINTFORML                     배란유발제, 미약, 도원향, 증류주
 [SKIPEND]
 CALL COLOR_PRINTL("     【",,"SSS",칼라_크림,"급】 스텟재분배티켓       or 전능력UP++",)
-CALL COLOR_PRINTL("     【",," SS",칼라_골드,"급】 태평요술서 or 최면술 or 음기술대전 or 전능력UP+",)
+CALL COLOR_PRINTL("     【",," SS",칼라_골드,"급】 태평신비서 or 최면술 or 음기술대전 or 전능력UP+",)
 CALL COLOR_PRINTL("     【",,"  S",칼라_연분홍,"급】 [ 전투계능력 ] UP++  or 전능력UP",)
 CALL COLOR_PRINTL("     【",,"  A",칼라_흰색,"급】 [ 전투계능력 ] UP+   or [비전투계능력] UP++",)
 CALL COLOR_PRINTL("     【",,"  B",칼라_연보라,"급】 [ 전투계능력 ] UP    or [비전투계능력] UP+",)
 CALL COLOR_PRINTL("     【",,"  C",칼라_연초록,"급】 [비전투계능력] UP    or [ 기타아이템 ] 각 5개",)
 CALL COLOR_PRINTL("     【",,"  D",칼라_명회색,"급】 [ 기타아이템 ] 각 3개",)
 PRINTFORML
-PRINTFORML     [ 전투계능력 ] : [무투] [방위] [지략] [정치] [요술]
+PRINTFORML     [ 전투계능력 ] : [무투] [방위] [지략] [정치] [신비]
 PRINTFORML     [비전투계능력] : [가창] [요리]
 PRINTFORML     [ 기타아이템 ] : 이상한회중시계, 대역인형, 벌꿀수,
 PRINTFORML                     배란유발제, 미약, 도원향, 증류주
@@ -340,10 +340,10 @@ PRINTW
 
 RETURN 0
 [SKIPEND]
-;0스텟재분배티켓,1무투UP,2방위UP,3지략UP,4정치UP,5요술UP,6가창UP,7요리UP,8전능력UP,
-;9무투UP+,10방위UP+,11지략UP+,12정치UP+,13요술UP+,14가창UP+,15요리UP+,16전능력UP+,
-;17무투UP++,18방위UP++,19지략UP++,20정치UP++,21요술UP++,22가창UP++,23요리UP++,24전능력UP++,
-;25태평요술서,26최면술,27음기술대전,28이상한회중시계,29대역인형,30벌꿀수,31절륜환,32배란유발제,33미약,34도원향,35증류주
+;0스텟재분배티켓,1무투UP,2방위UP,3지략UP,4정치UP,5신비UP,6가창UP,7요리UP,8전능력UP,
+;9무투UP+,10방위UP+,11지략UP+,12정치UP+,13신비UP+,14가창UP+,15요리UP+,16전능력UP+,
+;17무투UP++,18방위UP++,19지략UP++,20정치UP++,21신비UP++,22가창UP++,23요리UP++,24전능력UP++,
+;25태평신비서,26최면술,27음기술대전,28이상한회중시계,29대역인형,30벌꿀수,31절륜환,32배란유발제,33미약,34도원향,35증류주
 {
 #DIM ITEMID = 
 	171, 172, 175, 178, 181, 184, 187, 190, 193, 
@@ -440,7 +440,7 @@ FOR COUNT,0, ARG
 					;최면술
 					ITEMNUM:26 += 1
 				CASEELSE
-					;태평요술서
+					;태평신비서
 					ITEMNUM:25 += 1
 			ENDSELECT
 		CASEELSE

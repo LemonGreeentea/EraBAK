@@ -124,7 +124,7 @@ GOTO SHOW_LOOP
 
 ;==============================================================
 ; 데일리이벤트 장르 세부설정 - 레몬녹차
-; NTR 기능 끄기 위해 만들었어요
+; NTR 기능 끄기 위해 만들었음
 ;==============================================================
 @DAILY_EVENT_GENRE_DETAIL
 #DIM FIRST_LINE
@@ -144,7 +144,7 @@ ELSEIF FLAG:데일리이벤트_NTR == 1
 ELSE
 	PRINTFORML ERROR
 ENDIF
-PRINTFORM [1002] 인간남성 등장 이벤트 - 
+PRINTFORM [1002] 인간남성 등장 이벤트(미완성) - 
 IF FLAG:데일리이벤트_인간남성 == 0
 	PRINTFORML OFF
 ELSEIF FLAG:데일리이벤트_인간남성 == 1
@@ -152,7 +152,7 @@ ELSEIF FLAG:데일리이벤트_인간남성 == 1
 ELSE
 	PRINTFORML ERROR
 ENDIF
-PRINTFORM [1003] 에로계열 데일리 이벤트 - 
+PRINTFORM [1003] 에로계열 데일리 이벤트(미완성) - 
 IF FLAG:데일리이벤트_에로 == 0
 	PRINTFORML OFF
 ELSEIF FLAG:데일리이벤트_에로 == 1
@@ -160,9 +160,18 @@ ELSEIF FLAG:데일리이벤트_에로 == 1
 ELSE
 	PRINTFORML ERROR
 ENDIF
-PRINTFORML [1004] 
+PRINTFORM [1004] 미검수·환상향 데일리 이벤트 - 
+IF FLAG:데일리이벤트_미검수 == 0
+	PRINTFORML OFF
+ELSEIF FLAG:데일리이벤트_미검수 == 1
+	PRINTFORML ON
+ELSE
+	PRINTFORML ERROR
+ENDIF
 PRINTFORML [1005] 
 PRINTFORML [9999] 돌아온다
+
+
 INPUT
 IF RESULT == 9999
 	RETURN
@@ -217,7 +226,21 @@ ELSE
 				FLAG:데일리이벤트_에로 = 1
 			ENDIF
 		CASE 1004
-			
+			CALL SINGLE_DRAWLINE
+			PRINTFORML ☆ 미검수·환상향 데일리 이벤트
+			PRINTFORML 
+			PRINTFORML 아직 몰루K로 검수되지 않은 이벤트의 등장 여부를 설정할 수 있습니다. 
+			PRINTFORML 파생·특수세력 포함 약 100개정도의 이벤트가 해당됩니다.
+			PRINTFORML
+			CALL SINGLE_DRAWLINE
+			CALL ASK_MULTI("ON", "OFF")
+			IF RESULT == 1
+				PRINTFORMW 에로계열 이벤트가 등장하지 않습니다.
+				FLAG:데일리이벤트_미검수 = 0
+			ELSEIF RESULT == 0
+				PRINTFORMW 에로계열 이벤트가 등장합니다.
+				FLAG:데일리이벤트_미검수 = 1
+			ENDIF
 		CASE 1005
 			
 	ENDSELECT

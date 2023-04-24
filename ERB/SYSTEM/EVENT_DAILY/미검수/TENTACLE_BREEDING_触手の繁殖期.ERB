@@ -1,4 +1,5 @@
-﻿;---------------------
+﻿
+;---------------------
 ;발생 확률(1000분 율 100으로 10%)
 ;---------------------
 @EVENT_DAILY_TENTACLE_BREEDING_RATE()
@@ -9,7 +10,8 @@ RETURN 25
 ;---------------------
 @EVENT_DAILY_TENTACLE_BREEDING_DECISION()
 #DIM 촉수
-
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
 촉수 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_촉수))
 SIF 촉수 == -1
 	RETURN 0

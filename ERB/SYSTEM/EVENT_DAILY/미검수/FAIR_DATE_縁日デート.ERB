@@ -8,6 +8,8 @@ RETURN 25
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_FAIR_DATE_DECISION()
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
 SIF !HAS_PENIS(MASTER)
 	RETURN 0
 

@@ -189,7 +189,7 @@ IF MTAR:0 != MASTER
 	ELSE
 		SIF TCVAR:(MTAR:0):51
 			PRINT 지쳐 동작하지 못한 채
-		SIF TALENT:(MTAR:0):요술지식 || TALENT:(MTAR:0):기사
+		SIF TALENT:(MTAR:0):신비지식 || TALENT:(MTAR:0):기사
 			PRINT 먹게 된 약의 효과에 마음에 짚여,
 		IF IS_LOVER(MTAR:0) && MPLY:0 == MASTER
 			PRINTFORML 달아오르기 시작한 육체를 %ANAME(MTAR:0)% %조사처리(LOCALS:0,"는")% 주체 못하고 있다

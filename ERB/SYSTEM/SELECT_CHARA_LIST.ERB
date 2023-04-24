@@ -126,7 +126,7 @@ FOR LOCAL:0, 0, CHARANUM
 			FOR LOCAL:2, 0, VARSIZE("표시수치")
 				IF 표시수치:(LOCAL:2) != -1
 					SELECTCASE 표시수치:(LOCAL:2)
-						CASE GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "요술"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창")
+						CASE GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "신비"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창")
 							랭크종별 = 랭크_ＳＬＧ
 						CASE GETNUM(ABL, "성지식")
 							랭크종별 = 랭크_성지식
@@ -147,7 +147,7 @@ FOR LOCAL:0, 0, CHARANUM
 			FOR LOCAL:2, 0, VARSIZE("표시수치")
 				IF 표시수치:(LOCAL:2) != -1
 					SELECTCASE 표시수치:(LOCAL:2)
-						CASE GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "요술"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창")
+						CASE GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "신비"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창")
 							랭크종별 = 랭크_ＳＬＧ
 						CASE GETNUM(ABL, "성지식")
 							랭크종별 = 랭크_성지식
@@ -427,7 +427,7 @@ FOR LOCAL:0, 0, CHARANUM
 			FOR LOCAL:2, 0, VARSIZE("표시수치")
 				IF 표시수치:(LOCAL:2) != -1
 					SELECTCASE 표시수치:(LOCAL:2)
-						CASE GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "요술"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창")
+						CASE GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "신비"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창")
 							랭크종별 = 랭크_ＳＬＧ
 						CASE GETNUM(ABL, "성지식")
 							랭크종별 = 랭크_성지식
@@ -448,7 +448,7 @@ FOR LOCAL:0, 0, CHARANUM
 			FOR LOCAL:2, 0, VARSIZE("표시수치")
 				IF 표시수치:(LOCAL:2) != -1
 					SELECTCASE 표시수치:(LOCAL:2)
-						CASE GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "요술"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창")
+						CASE GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"), GETNUM(ABL, "신비"), GETNUM(ABL, "요리"), GETNUM(ABL, "가창")
 							랭크종별 = 랭크_ＳＬＧ
 						CASE GETNUM(ABL, "성지식")
 							랭크종별 = 랭크_성지식
@@ -691,14 +691,14 @@ RETURN GETDEFCOLOR()
 ;캐릭터 리스트 표시용의 범용 함수 능력표시 SLG판
 ;-------------------------------------------------
 @SELECT_CHARA_LIST_SLG()
-CALL SELECT_CHARA_LIST("DEFAULT", "DEFAULT", "DEFAULT", "무투", "방위", "지략", "정치", "요술", "가창", "요리")
+CALL SELECT_CHARA_LIST("DEFAULT", "DEFAULT", "DEFAULT", "무투", "방위", "지략", "정치", "신비", "가창", "요리")
 RETURN RESULT
 
 @SELECT_CHARA_LIST_ONLY_LOGIC_SLG(표시함수명, 선택함수명, 색지정함수명 = "DEFAULT")
 #DIMS 표시함수명
 #DIMS 선택함수명
 #DIMS 색지정함수명
-CALL SELECT_CHARA_LIST(표시함수명, 선택함수명, 색지정함수명, "무투", "방위", "지략", "정치", "요술", "가창", "요리")
+CALL SELECT_CHARA_LIST(표시함수명, 선택함수명, 색지정함수명, "무투", "방위", "지략", "정치", "신비", "가창", "요리")
 RETURN RESULT
 
 ;-------------------------------------------------
@@ -721,14 +721,14 @@ RETURN RESULT
 ;-------------------------------------------------
 @SELECT_CHARA_LIST_MULTI_SLG(인원수)
 #DIM 인원수
-CALL SELECT_CHARA_LIST_MULTI(인원수, "DEFAULT", "DEFAULT", "DEFAULT", "무투", "방위", "지략", "정치", "요술", "가창", "요리")
+CALL SELECT_CHARA_LIST_MULTI(인원수, "DEFAULT", "DEFAULT", "DEFAULT", "무투", "방위", "지략", "정치", "신비", "가창", "요리")
 
 @SELECT_CHARA_LIST_MULTI_ONLY_LOGIC_SLG(인원수, 표시함수명, 선택함수명, 색지정함수명 = "DEFAULT")
 #DIM 인원수
 #DIMS 표시함수명
 #DIMS 선택함수명
 #DIMS 색지정함수명
-CALL SELECT_CHARA_LIST_MULTI(인원수, 표시함수명, 선택함수명, 색지정함수명,  "무투", "방위", "지략", "정치", "요술", "가창", "요리")
+CALL SELECT_CHARA_LIST_MULTI(인원수, 표시함수명, 선택함수명, 색지정함수명,  "무투", "방위", "지략", "정치", "신비", "가창", "요리")
 
 ;-------------------------------------------------
 ;캐릭터 리스트 표시용의 범용 함수 멀티판 호색가

@@ -41,8 +41,8 @@ RETURN 0
 @SHOP_LIFE_BUTTON_ADD44(ARG:0)
 PRINTPLAIN  
 PRINTFORM 요:
-CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:(ARG:0):요술)
-PRINTFORM  {ABL:(ARG:0):요술, 2, RIGHT} 
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:(ARG:0):신비)
+PRINTFORM  {ABL:(ARG:0):신비, 2, RIGHT} 
 RETURN 1
 
 ;-------------------------------------------------
@@ -73,9 +73,9 @@ CALL COLUMN_RIGHT_PRINTL
 
 CALL COLOR_PRINT(" 촉수의 방의 관리를 실시하려면", 칼라_주석)
 CALL COLUMN_RIGHT_PRINTL
-CALL COLOR_PRINT(" <요술지식>·성지식 Lv5 이상·주인공 이외라면 촉수 Lv5 이상이 필요합니다", 칼라_주석)
+CALL COLOR_PRINT(" <신비지식>·성지식 Lv5 이상·주인공 이외라면 촉수 Lv5 이상이 필요합니다", 칼라_주석)
 CALL COLUMN_RIGHT_PRINTL
-CALL COLOR_PRINT(" 촉수의 방의 관리를 실시하면, 매턴 약간의 요술경험치와 촉수경험치를 얻을 수 있습니다", 칼라_주석)
+CALL COLOR_PRINT(" 촉수의 방의 관리를 실시하면, 매턴 약간의 신비경험치와 촉수경험치를 얻을 수 있습니다", 칼라_주석)
 CALL COLUMN_RIGHT_PRINTL
 CALL COLOR_PRINT(" 현재의 관리자는", 칼라_주석)
 IF ID_TO_CHARA(FLAG:촉수의방관리자) == -1
@@ -131,7 +131,7 @@ RETURN 1
 @IS_SYOKUSYU_MANAGE(ARG:0)
 #FUNCTION
 IF CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속 && CFLAG:(ARG:0):포로처 == 0
-	IF TALENT:(ARG:0):요술지식 && ABL:(ARG:0):성지식 >= 4 && (ARG:0 == MASTER || ABL:(ARG:0):촉수 >= 3)
+	IF TALENT:(ARG:0):신비지식 && ABL:(ARG:0):성지식 >= 4 && (ARG:0 == MASTER || ABL:(ARG:0):촉수 >= 3)
 		RETURNF 1
 	ENDIF
 ENDIF

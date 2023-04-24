@@ -40,7 +40,7 @@ ENDIF
 ;[공허]상태라면 구상을 표시하지 않는다
 IF TALENT:공허
 	PRINTFORML 아이리의 방에 들어갔지만 아무런 기척도 느껴지지 않는다.
-	PRINTFORML ...?
+	PRINTFORMW ...?
 	PRINTFORML 「......」
 	PRINTFORML 아이리는 방 구석에 앉아서 벽면만 바라보고 있다.
 	RETURN
@@ -714,7 +714,7 @@ IF SELECTCOM == 0
 				;PRINTGORMW
 			;복종
 			ELSEIF TALENT:복종
-				;PRINTFORMW 
+				;PRINTFORMW
 			;그 이외
 			ELSE
 				;PRINTFORMW
@@ -738,14 +738,20 @@ IF SELECTCOM == 0
 		IF IS_COM_FIRST()
 			;연모
 			IF TALENT:연모
-				;PRINTGORMW
+				PRINTFORMW 아이리의 갸냘픈 몸을 천천히 애무했다.
+				PRINTFORML 「아앗..♡ %LOCALS:0%, 기분이 이상해요...」
+				PRINTFORMW 아이리는 %ANAME(MASETER)%의 손놀림이 익숙하지 않은 것 같다.
 			;복종
 			ELSEIF TALENT:복종
-				;PRINTFORMW
+				PRINTFORMW 「우으... %LOCALS:0%, 어째서 제 몸을...」
+				PRINTFORML 아이리는 %ANAME(MASTER)%의 손길에 익숙하지 않은 듯 떨고 있다.
 			;그 이외
 			ELSE
-				;PRINTFORMW
+				PRINTFORMW 「햐앗... 뭐, 뭐하시는 건가요?!」
+				PRINTFORMW 아이리의 몸을 애무하자 깜짝 놀라서 %조사처리(ANAME(MASTER),"를")% 쳐다본다.
+				PRINTFORMW 「우으... 뭐어, 싫지는 않지만요...」
 			ENDIF
+
 		;2회째 이후
 		ELSE
 			;연모

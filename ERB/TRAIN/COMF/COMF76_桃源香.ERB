@@ -185,7 +185,7 @@ IF MTAR:0 != MASTER
 	ELSE
 		SIF TCVAR:(MTAR:0):51
 			PRINT 지쳐 좋든 싫든 들이마셔 버린다
-		IF TALENT:(MTAR:0):요술지식 || TALENT:(MTAR:0):기사
+		IF TALENT:(MTAR:0):신비지식 || TALENT:(MTAR:0):기사
 			PRINTFORML 주위를 감도는 달콤한 향기에 %조사처리(ANAME(MTAR:0),"가")% 깨달았을 때에는, 이미 신체의 욱신거림을 제지당하는 사람은 누구하나 없었다…
 		ELSE
 			PRINTFORML 근처에 충만하는 요염한 향기가, 그 자리에 있는 사람의 육체와 사고를 분홍색에 염색해 내 간다…

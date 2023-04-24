@@ -666,8 +666,8 @@ RETURN 0
 
 ;-------------------------------------------------
 ;# 11 COM_AUTO_CATEGORY_NUM_촉수를 취급한다
-;	일행력·요술지식·도착도 500이상·주도도Ｕ500이상
-;	위세력·요술지식·도착도 300이상·주도도Ｕ300이상
+;	일행력·신비지식·도착도 500이상·주도도Ｕ500이상
+;	위세력·신비지식·도착도 300이상·주도도Ｕ300이상
 ;-------------------------------------------------
 @COM_AUTOSELECT_SET_CATEGORY_PRIORITY_11(MAIN_PLAYER, MAIN_TARGET)
 #DIM MAIN_PLAYER
@@ -707,7 +707,7 @@ ENDIF
 ;-------------------------------------------------
 ; 불가
 ;-------------------------------------------------
-IF !TALENT:MAIN_PLAYER:요술지식
+IF !TALENT:MAIN_PLAYER:신비지식
 	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급한다 = -1
 ENDIF
 IF !CHECK_SP_SADIST_CHARA(MAIN_PLAYER)
@@ -1300,7 +1300,7 @@ RETURN 0
 
 ;-------------------------------------------------
 ;# 22 COM_AUTO_CATEGORY_NUM_촉수를 취급하게 한다
-;	요술지식·도착도 500이상·주도도Ｕ-500 미만
+;	신비지식·도착도 500이상·주도도Ｕ-500 미만
 ;-------------------------------------------------
 @COM_AUTOSELECT_SET_CATEGORY_PRIORITY_22(MAIN_PLAYER, MAIN_TARGET)
 #DIM MAIN_PLAYER
@@ -1339,7 +1339,7 @@ ENDIF
 ;-------------------------------------------------
 ; 불가
 ;-------------------------------------------------
-IF !TALENT:MAIN_TARGET:요술지식
+IF !TALENT:MAIN_TARGET:신비지식
 	COM_AUTO_CATEGORY_PRIORITY:COM_AUTO_CATEGORY_NUM_촉수를취급하게한다 = -1
 ENDIF
 IF ABL:MAIN_PLAYER:도착도 < 500 || ABL:MAIN_PLAYER:주도도Ｕ >= -500

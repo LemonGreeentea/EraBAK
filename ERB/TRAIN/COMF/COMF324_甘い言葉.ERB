@@ -4,10 +4,10 @@
 ;커맨드 명칭
 ;-------------------------------------------------
 @COM_NAME324
-RESULTS:0 = 달콤한 말을 건다
-RESULTS:1 = 달콤한 말을 졸라진다
-RESULTS:2 = 달콤한 말을 조른다
-RESULTS:3 = 달콤한 말을 속삭여진다
+RESULTS:0 = 달콤한 말을 한다
+RESULTS:1 = 달콤한 말을 해준다
+RESULTS:2 = 달콤한 말을 하게한다
+RESULTS:3 = 달콤한 말을 듣는다
 
 ;-------------------------------------------------
 ;선택 가부 판정
@@ -141,7 +141,7 @@ RETURN 1
 IF MPLY:0 == MASTER
 	;주도권이 주인공측
 	IF IS_INITIATIVE(MASTER)
-		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에 이빨이 뜨는 것 같은 달콤한 말을 걸었다
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %ANAME(MTAR:0)%에게 이가 녹을 것 같은 달콤한 말을 했다.
 
 		IF TFLAG:18 == 1
 			IF TALENT:(MTAR:0):반항적 || TALENT:(MTAR:0):거만함 || TALENT:(MTAR:0):보수적

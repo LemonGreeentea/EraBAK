@@ -21,7 +21,7 @@ FOR LOCAL, 0, AI_TRAIN_MAX_TARGET
 		CONTINUE
 	ENDIF
 	
-	상승능력 = IFRAND(@"{GETNUM(ABL, "무투")}, {GETNUM(ABL, "방위")}, {GETNUM(ABL, "지략")}, {GETNUM(ABL, "정치")}", 1, @"{GETNUM(ABL, "요리")}, {GETNUM(ABL, "가창")}", RAND:100 > 50, @"{GETNUM(ABL, "요술")}", TALENT:대상:요술지식 && RAND:100 > 30)
+	상승능력 = IFRAND(@"{GETNUM(ABL, "무투")}, {GETNUM(ABL, "방위")}, {GETNUM(ABL, "지략")}, {GETNUM(ABL, "정치")}", 1, @"{GETNUM(ABL, "요리")}, {GETNUM(ABL, "가창")}", RAND:100 > 50, @"{GETNUM(ABL, "신비")}", TALENT:대상:신비지식 && RAND:100 > 30)
 	상승량 = RAND:3
 	
 	SELECTCASE ABL:대상:상승능력
@@ -37,8 +37,8 @@ FOR LOCAL, 0, AI_TRAIN_MAX_TARGET
 	SIF FIND_PASSIVE_SKILL(대상, "노력가")
 		상승량 ++
 
-	;요술의 필요경험치 높기 때문에
-	SIF 상승능력 == GETNUM(ABL, "요술")
+	;신비의 필요경험치 높기 때문에
+	SIF 상승능력 == GETNUM(ABL, "신비")
 		상승량 *= 10
 
 	EXP:대상:GET_EXP(상승능력) += 상승량
@@ -71,7 +71,7 @@ NEXT
 FOR 대상, 0, CHARANUM
 	IF CFLAG:대상:소속 == 세력 && !CFLAG:대상:포로처
 		사관리스트:사관수 = 대상
-		능력치리스트:사관수 = ABL:대상:무투 + ABL:대상:지략 + ABL:대상:방위 + ABL:대상:요술 + ABL:대상:요리 + ABL:대상:가창 + ABL:대상:정치
+		능력치리스트:사관수 = ABL:대상:무투 + ABL:대상:지략 + ABL:대상:방위 + ABL:대상:신비 + ABL:대상:요리 + ABL:대상:가창 + ABL:대상:정치
 		사관수 ++
 	ENDIF
 NEXT

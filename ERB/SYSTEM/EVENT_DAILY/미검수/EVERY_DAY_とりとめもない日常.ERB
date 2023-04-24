@@ -8,6 +8,8 @@ RETURN 25
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_EVERY_DAY_DECISION()
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
 SIF DAY < 5
 	RETURN 0
 ;MASTER에 페니스가 있다

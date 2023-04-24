@@ -166,7 +166,7 @@ IF MPLY:0 == MASTER
 	ENDIF
 
 	IF TFLAG:18 == 1
-		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 눈을 감아 기분 좋은 것같이 하고 있다…
+		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% 기분이 좋은 것 같다…
 	ELSEIF TFLAG:18 == 0
 		PRINTFORML %조사처리(ANAME(MTAR:0),"는")% %조사처리(ANAME(MPLY:0),"로")% 되는 대로 몸을 맡기고 있다…
 	ELSEIF TFLAG:18 == -1
@@ -182,18 +182,18 @@ IF MPLY:0 == MASTER
 ELSE
 	;주도권이 주인공측
 	IF IS_INITIATIVE(MASTER)
-		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 부탁해, %LOCALS:0%손가락 빗질로 머리카락을 빗어 받았다
+		PRINTFORMW %조사처리(ANAME(MTAR:0),"는")% %ANAME(MPLY:0)%에 부탁하여, %LOCALS:0% 손가락으로 머리카락을 빗겨주었다
 	;주도권이 상대측
 	ELSE
-		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %ANAME(MTAR:0)%의 머리카락에 손가락 빗질을 넣었다
+		PRINTFORMW %조사처리(ANAME(MPLY:0),"는")% %LOCALS:0% %ANAME(MTAR:0)%의 머리카락을 손가락으로 빗겨주었다
 	ENDIF
 
 	IF TFLAG:18 == 1
 		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 매우 즐거운 듯 하다…
 	ELSEIF TFLAG:18 == 0
-		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 정중하게 %ANAME(MTAR:0)%의 머리카락에 손가락을 넣고 있다…
+		PRINTFORML %조사처리(ANAME(MPLY:0),"는")% 정중하게 %ANAME(MTAR:0)%의 머리카락을 손가락으로 정돈하고있다…
 	ELSEIF TFLAG:18 == -1
-		PRINTFORML 가, %조사처리(ANAME(MPLY:0),"는")% 곧바로 질려 버린 것 같다…
+		PRINTFORML 가, %조사처리(ANAME(MPLY:0),"는")% 얼마 안 가 질려 버린 것 같다…
 	ENDIF
 ENDIF
 

@@ -683,8 +683,8 @@ SELECTCASE 세력정수
 		ABL:대상:방위 = 30 + 4 * SP_COUNTRY_ABL_MODIFIER(세력정수)
 		ABL:대상:지략 = 15 + 3 * SP_COUNTRY_ABL_MODIFIER(세력정수)
 		ABL:대상:정치 = 10 + 4 * SP_COUNTRY_ABL_MODIFIER(세력정수)
-		TALENT:대상:요술지식 = 1
-		ABL:대상:요술 = 5 + 2 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+		TALENT:대상:신비지식 = 1
+		ABL:대상:신비 = 5 + 2 * SP_COUNTRY_ABL_MODIFIER(세력정수)
 	CASE 특수세력_자경단
 		ABL:대상:무투 = 20 + 4 * SP_COUNTRY_ABL_MODIFIER(세력정수)
 		ABL:대상:방위 = 40 + 6 * SP_COUNTRY_ABL_MODIFIER(세력정수)
@@ -701,8 +701,8 @@ SELECTCASE 세력정수
 		ABL:대상:지략 = 30 + 6 * SP_COUNTRY_ABL_MODIFIER(세력정수)
 		ABL:대상:정치 = 30 + 6 * SP_COUNTRY_ABL_MODIFIER(세력정수)
 		IF SP_COUNTRY_RANK:세력정수 > RAND:10
-			TALENT:대상:요술지식 = 1
-			ABL:대상:요술 = 3 + 2 * SP_COUNTRY_ABL_MODIFIER(세력정수)
+			TALENT:대상:신비지식 = 1
+			ABL:대상:신비 = 3 + 2 * SP_COUNTRY_ABL_MODIFIER(세력정수)
 		ENDIF
 ENDSELECT
 

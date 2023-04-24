@@ -58,7 +58,7 @@ SIF RESULT == 0
 
 ;●플레이어에 대해 처리
 EXP:(MPLY:0):성기술경험치 += 1
-EXP:(MPLY:0):요술경험치 += 1
+EXP:(MPLY:0):신비경험치 += 1
 EXP:(MPLY:0):촉수경험치 += 1
 
 SOURCE:(MPLY:0):기학 = 150
@@ -75,7 +75,7 @@ FOR LOCAL:0, 0, MTAR_NUM
 
 	EXP:(LOCAL:2):촉수경험치 += 2
 
-	SOURCE:(LOCAL:2):쾌Ａ = SENSE_HOUSHI(MPLY:0, LOCAL:2, 500 + ABL:(MPLY:0):요술 * 6) + (GETBIT(TALENT:(LOCAL:2):음란계, 소질_음란_모판) * 1000)
+	SOURCE:(LOCAL:2):쾌Ａ = SENSE_HOUSHI(MPLY:0, LOCAL:2, 500 + ABL:(MPLY:0):신비 * 6) + (GETBIT(TALENT:(LOCAL:2):음란계, 소질_음란_모판) * 1000)
 	SOURCE:(LOCAL:2):일탈 = 1100 - (GETBIT(TALENT:(LOCAL:2):음란계, 소질_음란_모판) * 550)
 	SOURCE:(LOCAL:2):촉수 = 1500 + (GETBIT(TALENT:(LOCAL:2):음란계, 소질_음란_모판) * 1500)
 	SOURCE:(LOCAL:2):성행동 = 240 + (GETBIT(TALENT:(LOCAL:2):음란계, 소질_음란_모판) * 240)

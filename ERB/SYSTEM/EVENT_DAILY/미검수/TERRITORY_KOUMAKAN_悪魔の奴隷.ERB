@@ -15,7 +15,8 @@ RETURN 50
 #DIM 홉고블린
 홍마관 = GET_CITYNUMBER("홍마관")
 홉고블린 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_홉고블린)
-
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
 SIF 홍마관 == -1
 	RETURN 0
 SIF CITY_OWNER:홍마관 != CFLAG:MASTER:소속

@@ -13,7 +13,8 @@ RETURN 100
 @EVENT_DAILY_SLAVE_TRADER_DECISION()
 #DIM 도둑
 도둑 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
-
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
 ;도둑 세력이 없었으면, 혹은 당신이 도둑 소속의 경우는 캔슬
 SIF 도둑 == -1 || CFLAG:MASTER:소속 == 도둑
 	RETURN 0

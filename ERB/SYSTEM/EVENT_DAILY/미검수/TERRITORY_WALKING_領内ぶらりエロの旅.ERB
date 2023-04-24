@@ -9,7 +9,8 @@ RETURN 50
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_TERRITORY_WALKING_DECISION()
-
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
 ;세력에 소속하지 않은가 포로라면 안 돼
 SIF CFLAG:MASTER:소속 == 0 || CFLAG:MASTER:포로처 != 0
 	RETURN 0

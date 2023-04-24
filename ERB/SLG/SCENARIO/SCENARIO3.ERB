@@ -341,7 +341,15 @@ CITY_OWNER:GET_CITYNUMBER("달토끼 거리")           = GET_COUNTRY_FROM_BOSS_
 CITY_OWNER:GET_CITYNUMBER("약도장")           = GET_COUNTRY_FROM_BOSS_NAME("미야코")
 
 
+;병력의 초기 배치
+CALL INIT_ARMY
 
+
+;무소속 도시의 병수는 경제의 15%
+FOR LOCAL:0, 0, MAX_CITY
+	SIF CITY_OWNER:(LOCAL:0) == 0
+		CITY_SOLDIER:(LOCAL:0) = CITY_ECONOMY:(LOCAL:0) * 150 / 1000
+NEXT
 
 ;-------------------------------------------------
 ;정례 이벤트

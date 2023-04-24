@@ -73,7 +73,7 @@ VARSET 배분후
 원의능력:1 = ABL:대상:방위
 원의능력:2 = ABL:대상:지략
 원의능력:3 = ABL:대상:정치
-원의능력:4 = ABL:대상:요술
+원의능력:4 = ABL:대상:신비
 원의능력:5 = ABL:대상:가창
 원의능력:6 = ABL:대상:요리
 포인트 = SUMARRAY(원의능력)
@@ -115,8 +115,8 @@ CALL PRINTBUTTON_FAVORITE("[ -1]", 231, 배분후:3, 포인트,  -1)
 CALL PRINTBUTTON_FAVORITE("[+10]", 232, 배분후:3, 포인트,  10)
 CALL PRINTBUTTON_FAVORITE("[-10]", 233, 배분후:3, 포인트, -10)
 PRINTL
-IF TALENT:대상:요술지식
-	PRINTFORM 요술:{배분후:4, 3} 원:{원의능력:4, 3} -- 
+IF TALENT:대상:신비지식
+	PRINTFORM 신비:{배분후:4, 3} 원:{원의능력:4, 3} -- 
 	CALL PRINTBUTTON_FAVORITE("[ +1]", 240, 배분후:4, 포인트,   1)
 	CALL PRINTBUTTON_FAVORITE("[ -1]", 241, 배분후:4, 포인트,  -1)
 	CALL PRINTBUTTON_FAVORITE("[+10]", 242, 배분후:4, 포인트,  10)
@@ -154,7 +154,7 @@ ELSEIF RESULT == 0
 		ABL:대상:방위 = 배분후:1
 		ABL:대상:지략 = 배분후:2
 		ABL:대상:정치 = 배분후:3
-		ABL:대상:요술 = 배분후:4
+		ABL:대상:신비 = 배분후:4
 		ABL:대상:가창 = 배분후:5
 		ABL:대상:요리 = 배분후:6
 		PRINTFORMW %조사처리(ANAME(대상),"를")% 마음에든다로 했습니다!
@@ -181,7 +181,7 @@ ELSE
 			CLEARLINE LINECOUNT - FIRST_LINE
 			GOTO SHOW_LOOP
 	ENDSELECT
-	IF !INRANGE(선택항목, 0, 6) || 선택항목 == 4 && !TALENT:대상:요술지식 || !FAVORITE_CAN_CHOOSE(배분후:선택항목, 포인트, 선택상세)
+	IF !INRANGE(선택항목, 0, 6) || 선택항목 == 4 && !TALENT:대상:신비지식 || !FAVORITE_CAN_CHOOSE(배분후:선택항목, 포인트, 선택상세)
 		CLEARLINE LINECOUNT - FIRST_LINE
 		GOTO SHOW_LOOP
 	ENDIF

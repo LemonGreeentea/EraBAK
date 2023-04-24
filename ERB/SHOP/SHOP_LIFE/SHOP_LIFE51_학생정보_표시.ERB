@@ -8,7 +8,7 @@
 {
 #DIM HEAD_SLG =
 GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"),
-GETNUM(ABL, "요술"), GETNUM(ABL, "가창"), GETNUM(ABL, "요리"), GETNUM(ABL, "야심")
+GETNUM(ABL, "신비"), GETNUM(ABL, "가창"), GETNUM(ABL, "요리"), GETNUM(ABL, "야심")
 }
 
 {
@@ -219,7 +219,7 @@ SELECTCASE 항목
 				NEXT
 			CASE 32
 				FOR LOCAL, 0, CHARANUM
-					SORT_VALUE:(LOCAL:0) = ABL:(LOCAL:0):무투 + ABL:(LOCAL:0):방위 + ABL:(LOCAL:0):정치 + ABL:(LOCAL:0):지략 + ABL:(LOCAL):요술 + ABL:LOCAL:가창 + ABL:LOCAL:요리
+					SORT_VALUE:(LOCAL:0) = ABL:(LOCAL:0):무투 + ABL:(LOCAL:0):방위 + ABL:(LOCAL:0):정치 + ABL:(LOCAL:0):지략 + ABL:(LOCAL):신비 + ABL:LOCAL:가창 + ABL:LOCAL:요리
 				NEXT
 			CASE 50
 				FOR LOCAL, 0, CHARANUM
@@ -294,7 +294,7 @@ GOTO INPUT_LOOP
 {
 #DIM HEAD_SLG =
 GETNUM(ABL, "무투"), GETNUM(ABL, "방위"), GETNUM(ABL, "지략"), GETNUM(ABL, "정치"),
-GETNUM(ABL, "요술"), GETNUM(ABL, "가창"), GETNUM(ABL, "요리"), GETNUM(ABL, "야심")
+GETNUM(ABL, "신비"), GETNUM(ABL, "가창"), GETNUM(ABL, "요리"), GETNUM(ABL, "야심")
 }
 
 {
@@ -323,7 +323,7 @@ SELECTCASE ARG:1
 		CALL TMP_PRINT_CHARA_STARS_NUM(ARG:0)
 		PRINT |
 		PRINTFORM {ABL:(ARG:0):무투 + ABL:(ARG:0):방위 + ABL:(ARG:0):지략 + ABL:(ARG:0):정치,5}|
-		PRINTFORM {ABL:(ARG:0):무투 + ABL:(ARG:0):방위 + ABL:(ARG:0):지략 + ABL:(ARG:0):정치 + ABL:(ARG:0):요술 + ABL:(ARG:0):가창+ABL:(ARG:0):요리,5}
+		PRINTFORM {ABL:(ARG:0):무투 + ABL:(ARG:0):방위 + ABL:(ARG:0):지략 + ABL:(ARG:0):정치 + ABL:(ARG:0):신비 + ABL:(ARG:0):가창+ABL:(ARG:0):요리,5}
 		FOR LOCAL, 0, VARSIZE("HEAD_SLG")
 			PRINT |
 			CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:(ARG:0):(HEAD_SLG:LOCAL))

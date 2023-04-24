@@ -322,7 +322,7 @@ NEXT
 ;촉수의방의 관리자에게 경험치를 가산
 IF ITEM:촉수의방 && ID_TO_CHARA(FLAG:촉수의방관리자) >= 0 && IS_SYOKUSYU_MANAGE(ID_TO_CHARA(FLAG:촉수의방관리자))
 	EXP:(ID_TO_CHARA(FLAG:촉수의방관리자)):촉수경험치 += 2
-	EXP:(ID_TO_CHARA(FLAG:촉수의방관리자)):요술경험치 += 2
+	EXP:(ID_TO_CHARA(FLAG:촉수의방관리자)):신비경험치 += 2
 	CALL TRAIN_AUTO_ABLUP(ID_TO_CHARA(FLAG:촉수의방관리자), 1)
 ENDIF
 
@@ -571,7 +571,7 @@ FOR LOCAL:0, 0, CHARANUM
 	;초성장력이나 노력가가 있으면 랜덤에 능력 경험치 획득
 	IF FIND_PASSIVE_SKILL(LOCAL:0, "초성장력")|| FIND_PASSIVE_SKILL(LOCAL:0, "노력가")
 		LOCAL:1 = RAND(1, 4)
-		SELECTCASE IFRAND("0TO5", 1, "6", TALENT:LOCAL:요술지식)
+		SELECTCASE IFRAND("0TO5", 1, "6", TALENT:LOCAL:신비지식)
 			CASE 0
 				LOCAL:2 = GETNUM(EXP, "무투경험치")
 			CASE 1
@@ -585,7 +585,7 @@ FOR LOCAL:0, 0, CHARANUM
 			CASE 5
 				LOCAL:2 = GETNUM(EXP, "가창경험치")
 			CASE 6
-				LOCAL:2 = GETNUM(EXP, "요술경험치")
+				LOCAL:2 = GETNUM(EXP, "신비경험치")
 				LOCAL:1 *= 20
 		ENDSELECT
 		EXP:(LOCAL:0):(LOCAL:2) += LOCAL:1

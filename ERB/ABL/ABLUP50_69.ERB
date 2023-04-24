@@ -130,18 +130,18 @@ ENDIF
 RETURN MAX(LOCAL:0, 1)
 
 ;-------------------------------------------------
-;요술
+;신비
 ;-------------------------------------------------
 @ABLUP_EXPNAME54
-RESULTS = 요술경험치
+RESULTS = 신비경험치
 
 @CALC_ABLUP_EXP54(ARG:0)
 ;최대치는 300
-IF ABL:(ARG:0):요술 >= 300
+IF ABL:(ARG:0):신비 >= 300
 	RETURN -1
 ENDIF
 
-LOCAL:0 = ABLUP_NEED_EXP_SLG(ABL:(ARG:0):요술) * 5 / GROWTYPE_RATE(ARG:0, "요술")
+LOCAL:0 = ABLUP_NEED_EXP_SLG(ABL:(ARG:0):신비) * 5 / GROWTYPE_RATE(ARG:0, "신비")
 
 SIF FIND_PASSIVE_SKILL(ARG:0, "초성장력")
 	TIMES LOCAL:0, 0.80
@@ -150,7 +150,7 @@ SIF ID_TO_CHARA(FLAG:마음에든다지정캐릭터) == ARG:0
 	TIMES LOCAL:0, 0.80
 
 IF TALENT:(ARG:0):농땡이마왕
-	SELECTCASE ABL:(ARG:0):요술
+	SELECTCASE ABL:(ARG:0):신비
 		CASE IS >= 50
 			TIMES LOCAL:0, 1.50
 		CASE IS >= 30

@@ -14,7 +14,8 @@ RETURN (DVAR:가정교사_마음에든다ID > 0 ? 250 # 20)
 #DIM 대상
 SIF DVAR:가정교사_발생플래그 == -1
 	RETURN 0
-
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
 IF DVAR:가정교사_수업실시회수 > 0
 	대상 = ID_TO_CHARA(DVAR:가정교사_마음에든다ID)
 	IF 대상 == -1

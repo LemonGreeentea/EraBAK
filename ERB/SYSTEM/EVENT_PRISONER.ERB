@@ -427,9 +427,9 @@ LOCAL:1 += MAX(ABL:(ARG:0):Ｂ감 - 1, 0) * 2
 LOCAL:1 += MAX(ABL:(ARG:0):Ｍ감 - 1, 0)
 LOCAL:1 = LOCAL:1 * (ABL:(ARG:0):욕망 + 2) / 2
 
-;촉수의방의 관리자에게 요술경험치와 촉수경험치를 준다
+;촉수의방의 관리자에게 신비경험치와 촉수경험치를 준다
 LOCAL:2 = SQRT(LOCAL:1 * 100) / 4 + 5
-LOCAL:2 = LOCAL:2 * MAX(100 - ABL:(ID_TO_CHARA(FLAG:촉수의방관리자)):요술, 20) / 100
+LOCAL:2 = LOCAL:2 * MAX(100 - ABL:(ID_TO_CHARA(FLAG:촉수의방관리자)):신비, 20) / 100
 IF TALENT:(ARG:0):공허
 	TIMES LOCAL:2, 0.50
 ELSEIF TALENT:(ARG:0):붕괴
@@ -438,7 +438,7 @@ ENDIF
 
 PRINTFORML <%ANAME(ID_TO_CHARA(FLAG:촉수의방관리자))%>
 CALL PRINT_ADD_EXP(ID_TO_CHARA(FLAG:촉수의방관리자), "촉수경험치", 10)
-CALL PRINT_ADD_EXP(ID_TO_CHARA(FLAG:촉수의방관리자), "요술경험치", LOCAL:2)
+CALL PRINT_ADD_EXP(ID_TO_CHARA(FLAG:촉수의방관리자), "신비경험치", LOCAL:2)
 CALL TRAIN_AUTO_ABLUP(ID_TO_CHARA(FLAG:촉수의방관리자))
 PRINTL
 

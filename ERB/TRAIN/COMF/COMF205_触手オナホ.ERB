@@ -69,7 +69,7 @@ NEXT
 
 ;●플레이어에 대해 처리
 EXP:(MPLY:0):성기술경험치 += 1
-EXP:(MPLY:0):요술경험치 += 1
+EXP:(MPLY:0):신비경험치 += 1
 EXP:(MPLY:0):촉수경험치 += 1
 
 SOURCE:(MPLY:0):봉사 = SERVE_HOUSHI(MPLY:0, 150)
@@ -90,7 +90,7 @@ FOR LOCAL:0, 0, MTAR_NUM
 
 	EXP:(LOCAL:2):촉수경험치 += 1
 
-	SOURCE:(LOCAL:2):쾌Ｐ = SENSE_HOUSHI_P(MPLY:0, LOCAL:2, 600 + ABL:(MPLY:0):요술 * 6) + (GETBIT(TALENT:(LOCAL:2):음란계, 소질_음란_모판) * 300)
+	SOURCE:(LOCAL:2):쾌Ｐ = SENSE_HOUSHI_P(MPLY:0, LOCAL:2, 600 + ABL:(MPLY:0):신비 * 6) + (GETBIT(TALENT:(LOCAL:2):음란계, 소질_음란_모판) * 300)
 	SOURCE:(LOCAL:2):일탈 = 350 - (GETBIT(TALENT:(LOCAL:2):음란계, 소질_음란_모판) * 175)
 	SOURCE:(LOCAL:2):촉수 = 400 + (GETBIT(TALENT:(LOCAL:2):음란계, 소질_음란_모판) * 200)
 	SOURCE:(LOCAL:2):성행동 = 180 + (GETBIT(TALENT:(LOCAL:2):음란계, 소질_음란_모판) * 90)
@@ -137,7 +137,7 @@ FOR LOCAL:0, 0, MEQUIP_TARGET_NUM:(ARG:0)
 
 	EXP:(LOCAL:3):촉수경험치 += 1
 
-	SOURCE:(LOCAL:3):쾌Ｐ += SENSE_HOUSHI_P(LOCAL:2, LOCAL:3, 400 + ABL:(LOCAL:2):요술 * 4) + (GETBIT(TALENT:(LOCAL:3):음란계, 소질_음란_모판) * 200)
+	SOURCE:(LOCAL:3):쾌Ｐ += SENSE_HOUSHI_P(LOCAL:2, LOCAL:3, 400 + ABL:(LOCAL:2):신비 * 4) + (GETBIT(TALENT:(LOCAL:3):음란계, 소질_음란_모판) * 200)
 	SOURCE:(LOCAL:3):일탈 += 150 - (GETBIT(TALENT:(LOCAL:3):음란계, 소질_음란_모판) * 75)
 	SOURCE:(LOCAL:3):촉수 += 200 + (GETBIT(TALENT:(LOCAL:3):음란계, 소질_음란_모판) * 100)
 	SOURCE:(LOCAL:3):성행동 += 60 + (GETBIT(TALENT:(LOCAL:3):음란계, 소질_음란_모판) * 30)

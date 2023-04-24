@@ -4,6 +4,8 @@ RETURN 80
 
 
 @EVENT_DAILY_SMUGGLER_DECISION()
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
 SIF FLAG:데일리이벤트_NTR == 0
 	RETURN 0
 ;베고 있으면 안 돼
@@ -100,7 +102,7 @@ ELSEIF RESULT == 2
 		CASE 2
 			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 남자를 촉수의방에 던져 넣었다
 			PRINTFORMW 사랑스러운 촉수들이 배를 내리지 않는가 조금 걱정이었지만 기우였던 것 같다.
-			CALL PRINT_ADD_EXP(ID_TO_CHARA(FLAG:촉수의방관리자), "요술경험치", 요금 / 1000)
+			CALL PRINT_ADD_EXP(ID_TO_CHARA(FLAG:촉수의방관리자), "신비경험치", 요금 / 1000)
 			CALL TRAIN_AUTO_ABLUP(ID_TO_CHARA(FLAG:촉수의방관리자))
 	ENDSELECT
 	DVAR:약팔이_발생플래그 = -1

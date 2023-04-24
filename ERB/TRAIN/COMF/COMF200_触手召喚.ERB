@@ -27,8 +27,8 @@ FOR LOCAL:0, 0, MPLY_NUM
 	;행동불능이라면 불가
 	SIF !IS_PLAYABLE(MPLY:(LOCAL:0))
 		RETURN 0
-	;요술지식이 필요
-	SIF !TALENT:(MPLY:(LOCAL:0)):요술지식
+	;신비지식이 필요
+	SIF !TALENT:(MPLY:(LOCAL:0)):신비지식
 		RETURN 0
 	;구속중이라면 불가
 	SIF IS_BIND(MPLY:(LOCAL:0))
@@ -50,7 +50,7 @@ SIF RESULT == 0
 
 ;모든 플레이어에 대해 판정
 FOR LOCAL:0, 0, MPLY_NUM
-	EXP:(MPLY:(LOCAL:0)):요술경험치 += 1
+	EXP:(MPLY:(LOCAL:0)):신비경험치 += 1
 	EXP:(MPLY:(LOCAL:0)):촉수경험치 += 1
 NEXT
 

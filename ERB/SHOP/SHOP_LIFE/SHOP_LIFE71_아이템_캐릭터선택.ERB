@@ -46,10 +46,10 @@ IF (((CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속 || GROUPMATCH(TMP_COUNTRY_RELA
 ENDIF
 RETURN 0
 
-;●태평요술서
+;●태평신비서
 @IS_ITEM_USE141(ARG:0)
 IF ((CFLAG:(ARG:0):소속 == CFLAG:MASTER:소속 || GROUPMATCH(TMP_COUNTRY_RELATION:(CFLAG:(ARG:0):소속):(CFLAG:(MASTER):소속), 3, 4)) && CFLAG:(ARG:0):포로처 == 0) || CFLAG:(ARG:0):포로처 == CFLAG:MASTER:소속
-	IF !TALENT:(ARG:0):요술지식
+	IF !TALENT:(ARG:0):신비지식
 		RETURN 1
 	ENDIF
 ENDIF
@@ -783,10 +783,10 @@ SELECTCASE 조작항목
 		ABL:(ARG:0):주도도Ｕ = 조작후치
 ENDSELECT
 
-;●태평요술서
+;●태평신비서
 @ITEM_EFFECT141(ARG:0)
-TALENT:(ARG:0):요술지식 = 1
-PRINTFORMW %TOSTR_SPACE(6)%%조사처리(ANAME(ARG:0),"가")%<요술지식>을 몸에 익혔습니다
+TALENT:(ARG:0):신비지식 = 1
+PRINTFORMW %TOSTR_SPACE(6)%%조사처리(ANAME(ARG:0),"가")%<신비지식>을 몸에 익혔습니다
 
 ;●음기술대전
 @ITEM_EFFECT142(ARG:0)
@@ -814,10 +814,10 @@ LOCAL:0 = RAND(1,4)
 CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 정치가 {LOCAL:0} 상승했다", 칼라_주의)
 ABL:(ARG:0):정치 += LOCAL:0
 
-IF TALENT:(ARG:0):요술지식 == 1
+IF TALENT:(ARG:0):신비지식 == 1
 	LOCAL:0 = RAND(1,4)
-	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 요술이 {LOCAL:0} 상승했다", 칼라_주의)
-	ABL:(ARG:0):요술 += LOCAL:0
+	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 신비이 {LOCAL:0} 상승했다", 칼라_주의)
+	ABL:(ARG:0):신비 += LOCAL:0
 ENDIF
 
 LOCAL:0 = RAND(1,4)
@@ -832,7 +832,7 @@ PRINTFORMW %조사처리(ANAME(ARG:0),"는")% 파견 불가능하게 되었습�
 
 ;●스텟재분배티켓
 @ITEM_EFFECT171(ARG:0)
-;PRINTFORMW %TOSTR_SPACE(6)%%조사처리(ANAME(ARG:0),"가")%<요술지식>을 몸에 익혔습니다
+;PRINTFORMW %TOSTR_SPACE(6)%%조사처리(ANAME(ARG:0),"가")%<신비지식>을 몸에 익혔습니다
 
 ;무투UP
 @ITEM_EFFECT172(ARG:0)
@@ -894,31 +894,31 @@ CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 정치가 5 상승했다", 칼라_주의)
 ABL:(ARG:0):정치 += 10
 CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 정치가 10 상승했다", 칼라_주의)
 
-;요술UP
+;신비UP
 @ITEM_EFFECT184(ARG:0)
-IF TALENT:(ARG:0):요술지식
-	ABL:(ARG:0):요술 += 1
-	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 요술이 1 상승했다", 칼라_주의)
+IF TALENT:(ARG:0):신비지식
+	ABL:(ARG:0):신비 += 1
+	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 신비이 1 상승했다", 칼라_주의)
 ELSE
-	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%에게 <요술지식>이 없어 아이템이 헛되이 낭비되었다!", 칼라_주의)
+	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%에게 <신비지식>이 없어 아이템이 헛되이 낭비되었다!", 칼라_주의)
 ENDIF
 
-;요술UP+
+;신비UP+
 @ITEM_EFFECT185(ARG:0)
-IF TALENT:(ARG:0):요술지식
-	ABL:(ARG:0):요술 += 5
-	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 요술이 5 상승했다", 칼라_주의)
+IF TALENT:(ARG:0):신비지식
+	ABL:(ARG:0):신비 += 5
+	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 신비이 5 상승했다", 칼라_주의)
 ELSE
-	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%에게 <요술지식>이 없어 아이템이 헛되이 낭비되었다!", 칼라_주의)
+	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%에게 <신비지식>이 없어 아이템이 헛되이 낭비되었다!", 칼라_주의)
 ENDIF
 
-;요술UP++
+;신비UP++
 @ITEM_EFFECT186(ARG:0)
-IF TALENT:(ARG:0):요술지식
-	ABL:(ARG:0):요술 += 10
-	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 요술이 10 상승했다", 칼라_주의)
+IF TALENT:(ARG:0):신비지식
+	ABL:(ARG:0):신비 += 10
+	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 신비이 10 상승했다", 칼라_주의)
 ELSE
-	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%에게 <요술지식>이 없어 아이템이 헛되이 낭비되었다!", 칼라_주의)
+	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%에게 <신비지식>이 없어 아이템이 헛되이 낭비되었다!", 칼라_주의)
 ENDIF
 
 ;가창UP
@@ -959,11 +959,11 @@ ABL:(ARG:0):지략 += 1
 ABL:(ARG:0):정치 += 1
 ABL:(ARG:0):가창 += 1
 ABL:(ARG:0):요리 += 1
-IF TALENT:(ARG:0):요술지식
-	ABL:(ARG:0):요술 += 1
+IF TALENT:(ARG:0):신비지식
+	ABL:(ARG:0):신비 += 1
 	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 모든 능력치가 1 상승했다", 칼라_주의)
 ELSE
-	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 요술을 제외한 모든 능력치가 1 상승했다", 칼라_주의)
+	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 신비을 제외한 모든 능력치가 1 상승했다", 칼라_주의)
 ENDIF
 
 ;전능력UP+
@@ -974,11 +974,11 @@ ABL:(ARG:0):지략 += 5
 ABL:(ARG:0):정치 += 5
 ABL:(ARG:0):가창 += 5
 ABL:(ARG:0):요리 += 5
-IF TALENT:(ARG:0):요술지식
-	ABL:(ARG:0):요술 += 5
+IF TALENT:(ARG:0):신비지식
+	ABL:(ARG:0):신비 += 5
 	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 모든 능력치가 5 상승했다", 칼라_주의)
 ELSE
-	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 요술을 제외한 모든 능력치가 5 상승했다", 칼라_주의)
+	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 신비을 제외한 모든 능력치가 5 상승했다", 칼라_주의)
 ENDIF
 
 ;전능력UP++
@@ -989,10 +989,10 @@ ABL:(ARG:0):지략 += 10
 ABL:(ARG:0):정치 += 10
 ABL:(ARG:0):가창 += 10
 ABL:(ARG:0):요리 += 10
-IF TALENT:(ARG:0):요술지식
-	ABL:(ARG:0):요술 += 10
+IF TALENT:(ARG:0):신비지식
+	ABL:(ARG:0):신비 += 10
 	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 모든 능력치가 10 상승했다", 칼라_주의)
 ELSE
-	TALENT:(ARG:0):요술지식 = 1
-	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 요술을 제외한 모든 능력치가 10 상승하고 <요술지식>을 습득했다", 칼라_주의)
+	TALENT:(ARG:0):신비지식 = 1
+	CALL COLOR_PRINTL(@"%ANAME(ARG:0)%의 신비을 제외한 모든 능력치가 10 상승하고 <신비지식>을 습득했다", 칼라_주의)
 ENDIF

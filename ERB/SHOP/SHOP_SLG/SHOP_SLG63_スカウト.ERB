@@ -218,8 +218,8 @@ PRINT  정:
 CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:대상:정치)
 PRINTFORM {ABL:대상:정치, 3, LEFT}
 PRINT  요:
-CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:대상:요술)
-PRINTFORM {ABL:대상:요술, 3, LEFT}
+CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:대상:신비)
+PRINTFORM {ABL:대상:신비, 3, LEFT}
 PRINT  료:
 CALL PRINT_ALPHABET_RANK(랭크_ＳＬＧ, ABL:대상:요리)
 PRINTFORM {ABL:대상:요리, 3, LEFT}
@@ -295,7 +295,7 @@ RETURNF 제시액
 #DIM 제시액
 
 ;기본액은 능력으로부터 산출
-제시액 = ABL:대상:무투 + ABL:대상:방위 + ABL:대상:지략 + ABL:대상:정치 + ABL:대상:요리 + ABL:대상:가창 + (ABL:대상:요술 * 5)
+제시액 = ABL:대상:무투 + ABL:대상:방위 + ABL:대상:지략 + ABL:대상:정치 + ABL:대상:요리 + ABL:대상:가창 + (ABL:대상:신비 * 5)
 제시액 *= 30
 
 FOR LOCAL, 0, VARSIZE("능력4종")

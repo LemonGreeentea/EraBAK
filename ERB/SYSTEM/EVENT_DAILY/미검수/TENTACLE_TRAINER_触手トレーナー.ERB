@@ -11,6 +11,8 @@ RETURN 25
 ;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
 ;---------------------
 @EVENT_DAILY_TENTACLE_TRAINER_DECISION()
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
 SIF DVAR:촉수트래이너_발생플래그 == -1
 	RETURN 0
 SIF !ITEM:촉수의방
@@ -36,7 +38,7 @@ RETURN 데일리_장르_트래이너
 
 ;5회이상 이용하면 모판을 붙일 수 있게 된다
 IF DVAR:촉수트래이너_발생플래그 == 5
-	PRINTFORMW 그 요술사가 다시 방문했다
+	PRINTFORMW 그 신비사가 다시 방문했다
 	PRINTFORML 「오래간만입니다…또“실험 소재”와“자금”의 제공을 부탁하러 왔습니다…」
 	PRINTFORML 「그리고, 평소부터 이용 해 받고 있는 답례로서…더욱 새롭다“트레이닝”를 준비했습니다…」
 	PRINTFORMW 새로운 트레이닝과는, 상대를 촉수 지어로 해【모판】로 해 버리는 것 같다
@@ -53,28 +55,28 @@ ELSEIF DVAR:촉수트래이너_발생플래그 == 0
 	PRINTFORMW 「%ANAME(MASTER)%같네요, 처음 뵙겠습니다. 만나뵙게 되어 영광입니다」
 	PRINTFORML 깊숙히 푸드를 써 얼굴을 숨긴 남자가 공손하게 고개를 숙인다
 	PRINTFORMW 과연, 확실히 그야말로 이상한 듯한 분위기다
-	PRINTFORML 「나는, 요술 가업을 하고 있어서…%ANAME(MASTER)%같으면 어떻게 말하는 것이나 아실까요?」
+	PRINTFORML 「나는, 신비 가업을 하고 있어서…%ANAME(MASTER)%같으면 어떻게 말하는 것이나 아실까요?」
 	PRINTFORMW 상대의 말을 (들)물어 그 분위기에도 납득이 말했다
-	PRINTFORML 「요술을 다하기 위해서(때문에) 여러가지 연구를 하고 있습니다만…유감스럽게도“실험 소재”와“자금”의 조달이 어렵고…」
-	PRINTFORML 「거기서 같은 요술 사용의 %ANAME(MASTER)%같으면, 나의 스폰서가 되어 주시는 것은 아닐까…방문한 나름입니다」
-	PRINTFORMW 「물론, 공짜로, 라고는 말하지 않습니다. 나는 요술지식을 다른 사람에게 전하고, 또 그 능력을 늘리는 것을 특기라고 하고 있습니다」
-	PRINTFORML 남의 말을 모으면, 돈을 지불하면 동료에게 요술지식을 하사해 주는 것 같다
+	PRINTFORML 「신비을 다하기 위해서(때문에) 여러가지 연구를 하고 있습니다만…유감스럽게도“실험 소재”와“자금”의 조달이 어렵고…」
+	PRINTFORML 「거기서 같은 신비 사용의 %ANAME(MASTER)%같으면, 나의 스폰서가 되어 주시는 것은 아닐까…방문한 나름입니다」
+	PRINTFORMW 「물론, 공짜로, 라고는 말하지 않습니다. 나는 신비지식을 다른 사람에게 전하고, 또 그 능력을 늘리는 것을 특기라고 하고 있습니다」
+	PRINTFORML 남의 말을 모으면, 돈을 지불하면 동료에게 신비지식을 하사해 주는 것 같다
 	PRINTFORMW 물론 그 때문에 어떤 행위가 필요한 것일지도 %ANAME(MASTER)%에는 아는, 실험 소재와는 그런 일일 것이다
 	PRINTFORML 비용은 1회 50000, 높다고 말하면 비싸지만 싸다고 말하면 싼가?
 	PRINTFORMW 요염한 듯한 것이긴 하지만, 남자가 엉터리를 말하고 있는 것이 아닌 것은 그 지식을 (들)물으면 알았다
 	PRINTFORMW 자, 그럼, 어떻게 하지……
 ;2회째 이후
 ELSE
-	PRINTFORMW 그 요술사가 다시 방문했다
+	PRINTFORMW 그 신비사가 다시 방문했다
 	PRINTFORMW 「오래간만입니다…또“실험 소재”와“자금”의 제공을 부탁하러 왔습니다…」
 	PRINTFORMW 자, 그럼, 어떻게 하지……
 ENDIF
 
 CALL SINGLE_DRAWLINE
 IF DVAR:촉수트래이너_발생플래그 >= 5
-	PRINTFORML 현재의 자금:{MONEY} 요술지식 비용:50000 모판 비용:70000
+	PRINTFORML 현재의 자금:{MONEY} 신비지식 비용:50000 모판 비용:70000
 ELSE
-	PRINTFORML 현재의 자금:{MONEY} 요술지식 비용:50000
+	PRINTFORML 현재의 자금:{MONEY} 신비지식 비용:50000
 ENDIF
 CALL ASK_MULTI_JUDGE("소재와 자금을 제공한다", MONEY >= 50000, "그만둔다", 1, "베어 버린다", 1)
 IF RESULT == 2
@@ -86,7 +88,7 @@ IF RESULT == 2
 ELSEIF RESULT == 1
 		PRINTFORML 나쁘지만 지금은 그것은 필요로 하지 않았다
 	PRINTFORML 「그렇습니까…그럼 또 방문합시다」
-	PRINTFORMW 요술사는 소리도 세우지 않고 떠나 갔다
+	PRINTFORMW 신비사는 소리도 세우지 않고 떠나 갔다
 	DVAR:촉수트래이너_발생플래그 += 1
 	RETURN 1
 ELSE
@@ -97,7 +99,7 @@ ELSE
 	IF 대상 == -1
 		PRINTFORML 역시 그만두자
 		PRINTFORML 「그렇습니까…그럼 또 방문합시다」
-		PRINTFORMW 요술사는 소리도 세우지 않고 떠나 갔다
+		PRINTFORMW 신비사는 소리도 세우지 않고 떠나 갔다
 		RETURN 1
 	ELSE
 		IF 대상 == MASTER
@@ -111,9 +113,9 @@ ELSE
 			IF RESULT == 1
 				PRINTFORMW 「그럼, 이쪽으로 오세요…」
 				IF ABL:대상:촉수 <= 4 && 대상 != PLAYER
-					PRINTFORMW 요술사는싫어하는 %조사처리(ANAME(대상),"를")% 로브아래로부터 늘린 무수한 촉수로 속박 해 데려 갔다
+					PRINTFORMW 신비사는싫어하는 %조사처리(ANAME(대상),"를")% 로브아래로부터 늘린 무수한 촉수로 속박 해 데려 갔다
 				ELSE
-					PRINTFORMW %조사처리(ANAME(대상),"는")% 머뭇머뭇 하면서도 얌전하고 요술사에 데리고 가졌다
+					PRINTFORMW %조사처리(ANAME(대상),"는")% 머뭇머뭇 하면서도 얌전하고 신비사에 데리고 가졌다
 				ENDIF
 				PRINTFORML ·
 				PRINTFORML ·
@@ -166,7 +168,7 @@ ELSE
 				MONEY -= 70000
 				DVAR:촉수트래이너_발생플래그 += 1
 				PRINTFORML 「협력 감사합니다…그러면 나는 이것으로…」
-				PRINTFORMW 요술사는 소리도 세우지 않고 떠나 갔다
+				PRINTFORMW 신비사는 소리도 세우지 않고 떠나 갔다
 				RETURN 1
 			ELSE
 				PRINTFORMW 「그럼, 이쪽으로 오세요…」
@@ -174,13 +176,13 @@ ELSE
 		ELSE
 			PRINTFORMW 「그럼, 이쪽으로 오세요…」
 		ENDIF
-		IF TALENT:대상:요술지식 == 0
+		IF TALENT:대상:신비지식 == 0
 			IF ABL:대상:촉수 <= 4 && 대상 != PLAYER
-				PRINTFORMW 요술사는싫어하는 %조사처리(ANAME(대상),"를")% 로브아래로부터 늘린 무수한 촉수로 속박 해 데려 갔다
+				PRINTFORMW 신비사는싫어하는 %조사처리(ANAME(대상),"를")% 로브아래로부터 늘린 무수한 촉수로 속박 해 데려 갔다
 			ELSEIF GETBIT(TALENT:대상:음란계, 소질_음란_모판) == 1
-				PRINTFORMW 완전히 촉수의 매력에 빠진 %조사처리(ANAME(대상),"는")% 기대에 뺨을 붉히면서 요술사를 뒤따라 갔다
+				PRINTFORMW 완전히 촉수의 매력에 빠진 %조사처리(ANAME(대상),"는")% 기대에 뺨을 붉히면서 신비사를 뒤따라 갔다
 			ELSE
-				PRINTFORMW %조사처리(ANAME(대상),"는")% 머뭇머뭇 하면서도 얌전하고 요술사에 데리고 가졌다
+				PRINTFORMW %조사처리(ANAME(대상),"는")% 머뭇머뭇 하면서도 얌전하고 신비사에 데리고 가졌다
 			ENDIF
 			PRINTFORML ·
 			PRINTFORML ·
@@ -195,9 +197,9 @@ ELSE
 			PRINTFORML ·
 			PRINTFORML ·
 			PRINTFORML ·
-			TALENT:대상:요술지식 = 1
-			ABL:대상:요술 += 10
-			CALL COLOR_PRINT(@"%조사처리(ANAME(대상),"는")% 요술지식을 몸에 익혔다", 칼라_주의)
+			TALENT:대상:신비지식 = 1
+			ABL:대상:신비 += 10
+			CALL COLOR_PRINT(@"%조사처리(ANAME(대상),"는")% 신비지식을 몸에 익혔다", 칼라_주의)
 			PRINTFORMW 
 			CALL FUCK(대상, "욕망, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 봉사, 정애, 펠라티오, 성교, 촉수, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("촉수"), "촉수", "촉수", "", "조교")
 			EXP:대상:촉수출산경험 += 6 + RAND:10
@@ -205,11 +207,11 @@ ELSE
 			DVAR:촉수트래이너_발생플래그 += 1
 		ELSE
 			IF ABL:대상:촉수 <= 4 && 대상 != PLAYER
-				PRINTFORMW 요술사는싫어하는 %조사처리(ANAME(대상),"를")% 로브아래로부터 늘린 무수한 촉수로 속박 해 데려 갔다
+				PRINTFORMW 신비사는싫어하는 %조사처리(ANAME(대상),"를")% 로브아래로부터 늘린 무수한 촉수로 속박 해 데려 갔다
 			ELSEIF GETBIT(TALENT:대상:음란계, 소질_음란_모판) == 1
-				PRINTFORMW 완전히 촉수의 매력에 빠진 %조사처리(ANAME(대상),"는")% 기대에 뺨을 붉히면서 요술사를 뒤따라 갔다
+				PRINTFORMW 완전히 촉수의 매력에 빠진 %조사처리(ANAME(대상),"는")% 기대에 뺨을 붉히면서 신비사를 뒤따라 갔다
 			ELSE
-				PRINTFORMW %조사처리(ANAME(대상),"는")% 머뭇머뭇 하면서도 얌전하고 요술사에 데리고 가졌다
+				PRINTFORMW %조사처리(ANAME(대상),"는")% 머뭇머뭇 하면서도 얌전하고 신비사에 데리고 가졌다
 			ENDIF
 			PRINTFORML ·
 			PRINTFORML ·
@@ -369,7 +371,7 @@ ELSE
 			PRINTFORML ·
 			PRINTFORML ·
 			PRINTFORML ·
-			CALL COLOR_PRINT(@"%ANAME(대상)%의 요술 능력이 올랐다", 칼라_주의)
+			CALL COLOR_PRINT(@"%ANAME(대상)%의 신비 능력이 올랐다", 칼라_주의)
 			PRINTFORMW 
 			CALL FUCK(대상, "욕망, Ｃ, Ｖ, Ａ, Ｂ, Ｍ, 봉사, 정애, 펠라티오, 성교, 촉수, Ｖ성교, Ａ성교", "키스상실, 처녀상실, Ａ처녀상실, 질내사정, 장내사정, 구강사정", GET_SPERM_ID("촉수"), "촉수", "촉수", "", "조교")
 			EXP:대상:촉수출산경험 += 6 + RAND:10
@@ -381,7 +383,7 @@ ELSE
 			DVAR:촉수트래이너_발생플래그 += 1
 		ENDIF
 		PRINTFORML 「협력 감사합니다…그러면 나는 이것으로…」
-		PRINTFORMW 요술사는 소리도 세우지 않고 떠나 갔다
+		PRINTFORMW 신비사는 소리도 세우지 않고 떠나 갔다
 	ENDIF
 ENDIF
 RETURN 1

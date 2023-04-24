@@ -9,6 +9,8 @@ RETURN (DVAR:갓파_안은회수 > 0 ? (120 + (DVAR:갓파_안은회수 * 30)) #
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_KAPPAPPA_DECISION()
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
 RETURN 10 <= DAY
 
 ;---------------------

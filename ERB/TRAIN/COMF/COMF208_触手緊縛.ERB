@@ -57,7 +57,7 @@ SIF RESULT == 0
 	RETURN 0
 
 ;●플레이어에 대해 처리
-EXP:(MPLY:0):요술경험치 += 1
+EXP:(MPLY:0):신비경험치 += 1
 EXP:(MPLY:0):촉수경험치 += 1
 EXP:(LOCAL:2):기학경험치 += 1
 
@@ -76,7 +76,7 @@ FOR LOCAL:0, 0, MTAR_NUM
 	EXP:(LOCAL:2):촉수경험치 += 1
 	EXP:(LOCAL:2):피학경험치 += 1
 
-	SOURCE:(LOCAL:2):고통 = 120 + MIN(ABL:(MPLY:0):요술, 90) / 2
+	SOURCE:(LOCAL:2):고통 = 120 + MIN(ABL:(MPLY:0):신비, 90) / 2
 	SOURCE:(LOCAL:2):노출 = 50 + GETBIT(TALENT:(LOCAL:2):음란계, 소질_음란_모판) * 25
 	SOURCE:(LOCAL:2):촉수 = 400 + GETBIT(TALENT:(LOCAL:2):음란계, 소질_음란_모판) * 200
 	SOURCE:(LOCAL:2):일탈 = 500 - GETBIT(TALENT:(LOCAL:2):음란계, 소질_음란_모판) * 250

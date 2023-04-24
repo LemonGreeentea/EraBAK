@@ -38,9 +38,9 @@ ELSEIF RESULT == 1
 ELSEIF RESULT == 2
 	PRINTFORMW 마술서에 손을 뻗었다
 	PRINTFORML 
-	IF TALENT:대상:요술지식 == 1
+	IF TALENT:대상:신비지식 == 1
 		PRINTFORMW 마술의 요령을 배웠다
-		CALL PRINT_ADD_EXP(대상, "요술경험치", RAND:8 + 6, 1)
+		CALL PRINT_ADD_EXP(대상, "신비경험치", RAND:8 + 6, 1)
 	ELSE
 		PRINTFORMW 하지만 무엇이 써 있을까 횡설수설이었다
 	ENDIF

@@ -170,13 +170,13 @@ BATTLE_무투:대상측:대상번호 = 0
 BATTLE_방위:대상측:대상번호 = 0
 BATTLE_지략:대상측:대상번호 = 0
 BATTLE_정치:대상측:대상번호 = 0
-BATTLE_요술:대상측:대상번호 = 0
+BATTLE_신비:대상측:대상번호 = 0
 BATTLE_요리:대상측:대상번호 = 0
 BATTLE_가창:대상측:대상번호 = 0
 BATTLE_무투파워:대상측:대상번호 = 0
 BATTLE_방위파워:대상측:대상번호 = 0
 BATTLE_지략파워:대상측:대상번호 = 0
-BATTLE_요술파워:대상측:대상번호 = 0
+BATTLE_신비파워:대상측:대상번호 = 0
 BATTLE_가창파워:대상측:대상번호 = 0
 BATTLE_요리파워:대상측:대상번호 = 0
 BATTLE_SKILL_RATE:대상측:대상번호 = 0
@@ -211,14 +211,14 @@ FOR LOCAL:0, 0, VARSIZE("BATTLE_COMMANDER", 1)
 	BATTLE_정치:발동측:LOCAL = ABL:대상:정치
 	BATTLE_가창:발동측:LOCAL = ABL:대상:가창
 	BATTLE_요리:발동측:LOCAL = ABL:대상:요리
-	BATTLE_요술:발동측:LOCAL = ABL:대상:요술
+	BATTLE_신비:발동측:LOCAL = ABL:대상:신비
 	BATTLE_무투파워:발동측:LOCAL = ABL_POWER(BATTLE_무투:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
 	BATTLE_방위파워:발동측:LOCAL = ABL_POWER(BATTLE_방위:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
 	BATTLE_지략파워:발동측:LOCAL = ABL_POWER(BATTLE_지략:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
-	BATTLE_요술파워:발동측:LOCAL = ABL_POWER(BATTLE_요술:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
+	BATTLE_신비파워:발동측:LOCAL = ABL_POWER(BATTLE_신비:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
 	BATTLE_가창파워:발동측:LOCAL = ABL_POWER(BATTLE_가창:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
 	BATTLE_요리파워:발동측:LOCAL = ABL_POWER(BATTLE_요리:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
-	BATTLE_요술파워:발동측:LOCAL = ABL_POWER(BATTLE_요술:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
+	BATTLE_신비파워:발동측:LOCAL = ABL_POWER(BATTLE_신비:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
 	BATTLE_SKILL_RATE:발동측:LOCAL = 0
 	BATTLE_SUMMONED_CHARA:발동측:LOCAL = 1
 	BATTLE_COMMANDER_NUM:발동측 ++
@@ -229,7 +229,7 @@ RETURN 0
 ;---------------------------------
 ;모브 소환계 스킬
 ;---------------------------------
-@BATTLE_ADD_MOB(발동측, 부대플래그, 이름, 무투치, 방위치, 지략치,  정치치, 요술치, 요리치, 가창치)
+@BATTLE_ADD_MOB(발동측, 부대플래그, 이름, 무투치, 방위치, 지략치,  정치치, 신비치, 요리치, 가창치)
 #DIM 발동측
 #DIM 부대플래그
 #DIM 대상
@@ -238,7 +238,7 @@ RETURN 0
 #DIM 방위치
 #DIM 지략치
 #DIM 정치치
-#DIM 요술치
+#DIM 신비치
 #DIM 요리치
 #DIM 가창치
 
@@ -251,7 +251,7 @@ ABL:대상:무투 = 무투치
 ABL:대상:방위 = 방위치
 ABL:대상:지략 = 지략치
 ABL:대상:정치 = 정치치
-ABL:대상:요술 = 요술치
+ABL:대상:신비 = 신비치
 ABL:대상:요리 = 요리치
 ABL:대상:가창 = 가창치
 FOR LOCAL, 0, VARSIZE("BATTLE_COMMANDER", 1)
@@ -266,14 +266,14 @@ FOR LOCAL, 0, VARSIZE("BATTLE_COMMANDER", 1)
 	BATTLE_정치:발동측:LOCAL = ABL:대상:정치
 	BATTLE_가창:발동측:LOCAL = ABL:대상:가창
 	BATTLE_요리:발동측:LOCAL = ABL:대상:요리
-	BATTLE_요술:발동측:LOCAL = ABL:대상:요술
+	BATTLE_신비:발동측:LOCAL = ABL:대상:신비
 	BATTLE_무투파워:발동측:LOCAL = ABL_POWER(BATTLE_무투:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
 	BATTLE_방위파워:발동측:LOCAL = ABL_POWER(BATTLE_방위:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
 	BATTLE_지략파워:발동측:LOCAL = ABL_POWER(BATTLE_지략:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
-	BATTLE_요술파워:발동측:LOCAL = ABL_POWER(BATTLE_요술:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
+	BATTLE_신비파워:발동측:LOCAL = ABL_POWER(BATTLE_신비:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
 	BATTLE_가창파워:발동측:LOCAL = ABL_POWER(BATTLE_가창:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
 	BATTLE_요리파워:발동측:LOCAL = ABL_POWER(BATTLE_요리:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
-	BATTLE_요술파워:발동측:LOCAL = ABL_POWER(BATTLE_요술:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
+	BATTLE_신비파워:발동측:LOCAL = ABL_POWER(BATTLE_신비:발동측:LOCAL, BATTLE_COMMANDER:발동측:LOCAL)
 	BATTLE_SKILL_RATE:발동측:LOCAL = 0
 	BATTLE_SUMMONED_CHARA:발동측:LOCAL = 1
 	BATTLE_COMMANDER_NUM:발동측 ++

@@ -17,7 +17,8 @@ RETURN 50
 VARSET 후보, -1
 VARSET 후보난수, __INT_MIN__
 VARSET 후보수
-
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
 ;호감도에 근거해 후보 배열을 준비
 FOR LOCAL, 0, CHARANUM
 	;소속이 MASTER와 동일해, 포로가 아니고, 임신하고 있지 않다

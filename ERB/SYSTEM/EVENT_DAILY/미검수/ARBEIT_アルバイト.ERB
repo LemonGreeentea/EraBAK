@@ -8,6 +8,8 @@ RETURN (DVAR:아르바이트_발생플래그 > 0 ? 500 # 50)
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_ARBEIT_DECISION()
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
 SIF !IS_FEMALE(MASTER)
 	RETURN 0
 SIF CFLAG:MASTER:포로처 != 0

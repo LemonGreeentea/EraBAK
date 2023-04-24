@@ -13,6 +13,8 @@ RETURN 50
 @EVENT_DAILY_TENTACLE_BIRTH_DECISION()
 #DIM 촉수
 촉수 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_촉수))
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
 SIF FLAG:데일리이벤트_NTR == 0
 	RETURN 0
 ;촉수 세력이 없는 경우는 캔슬

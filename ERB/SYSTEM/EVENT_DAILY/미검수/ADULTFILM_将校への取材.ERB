@@ -11,7 +11,8 @@ RETURN (DVAR:AV촬영_진행도 > 0 ? 330 # 30)
 #DIM 대상
 
 대상 = 0
-
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
 SIF FLAG:데일리이벤트_NTR == 0
 	RETURN 0
 
