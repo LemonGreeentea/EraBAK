@@ -12,23 +12,65 @@ RETURN
 MAPID '= "KIVOTOS"
  
 @SCENARIO_INTRO_1
-PRINTFORML
-PRINTFORML
+#DIM FIRST_LINE
+FIRST_LINE = LINECOUNT
+;$SHOW_LOOP
+PRINTFORML 
 PRINTFORMW
-PRINTFORMW 검은양복「장르는 뒤바뀌고 관계는 뒤틀린다.」
-PRINTFORMW 검은양복「더 이상 기적 같은 이야기는 없습니다.」
-PRINTFORMW 검은양복「반복되는 싸움.」
-PRINTFORMW 검은양복「강자는 약자를 약탈하고 지배한다.」
-PRINTFORMW 검은양복「이 혼란스러운 상황에서 당신은 어떤 선택을 하게될지...」
-PRINTFORMW 검은양복「이 혼란을 수습하고 영웅이 될 지,」
-PRINTFORMW 검은양복「몸과 마음이 타락해 악당이 될 지.」
-PRINTFORMW 검은양복「기대하도록 하겠습니다. 크크큭...」
-PRINTL
+PRINTFORML ☆ 게임 시작 전 설정
+PRINTFORML 
+PRINTFORML 1. 이미지를 표시하겠습니까?
+CALL ASK_YN
+IF RESULT == 0
+	FLAG:화상설정 = 1
+	PRINTFORMW 이미지를 표시합니다.
+ELSE
+	PRINTFORMW 이미지를 표시하지 않습니다.
+ENDIF
+
+PRINTFORML 2. 프롤로그를 보시겠습니까?
+CALL ASK_YN
+IF RESULT == 0
+
+	CLEARLINE LINECOUNT
+
+	FIRST_LINE = LINECOUNT
+	SETCOLOR 0xFA6B6D
+	PRINTFORML
+	PRINTFORMW 우리는 원한다. 일곱 개의 통곡을.
+	PRINTFORML 우리는 기억한다. 예리코의 화두話頭를.
+	PRINTFORMW
+	RESETCOLOR
+	;CLEARLINE LINECOUNT - FIRST_LINE
+	PRINTFORML
+	PRINTFORML 접속 패스워드 승인.
+	PRINTFORMW
+	;CLEARLINE LINECOUNT - FIRST_LINE
+	PRINTFORML
+	PRINTFORML <싯딤의 상자>에 접속하신 걸 환영합니다. ■■■ 선생님.
+	PRINTFORMW
+	CLEARLINE LINECOUNT
+
+	TWAIT 1000,1
+
+	PRINTFORMW 「...저의 실수였어요」
+	PRINTFORMW 「저의 결정들. 그리고 그로 인해 초래된 모든 상황들.」
+	PRINTFORML
+	PRINTFORMW 「결국 이 결과에 도달하고서야 당신이 옳았다는 걸 깨닫다니...」
+
+	CALL ILLUST_IMAGE_BLACK_FADEIN("프롤로그01")
+	PRINTFORMW
+	PRINTFORML
+	PRINTFORML
+	PRINTFORMW
+
+ELSE
+ENDIF
 
 ;랜덤 캐릭터는 선택에 맡긴다
 FLAG:OP랜덤캐릭터사용 = 0
 
-
+ 
 
 ;-------------------------------------------------
 ;시나리오측에서 배치 함수를 기술하고 있지 않는 경우의 Default 배치
