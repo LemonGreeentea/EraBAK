@@ -54,7 +54,7 @@ RETURN 1
 #DIM 대상세력
 #DIM 대상부대
 대상측 = !발동측
-CALL DECREASE_SOLDIER(대상세력, 대상부대, RAND(500, 1500), 1)
+CALL DECREASE_SOLDIER(대상세력, 대상부대, RAND(500, 2500), 1)
 SELECTCASE RAND:6
     CASE 0
         PRINTFORML 「짠! 불꽃놀이 시작해 볼까?」

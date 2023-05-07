@@ -86,7 +86,7 @@ PRINTFORML
 PRINTFORML      
 RETURN 0
 
-@ILLUST_IMAGE(String, YPOS)
+@ILLUST_IMAGE(String)
 #DIM iSize
 #DIMS sHtml
 #DIM iEnter_Con
@@ -100,7 +100,7 @@ SIF ! FLAG:화상설정
 PRINTFORML
 iEnter_Con = 0
 sHtml =  <p align='left'><nobr>
-sHtml += @"<shape type='space' param='{iSpace}'><img src='%String%' height='3500' ypos='{YPOS}'>"
+sHtml += @"<shape type='space' param='{iSpace}'><img src='%String%' height='3500' ypos='0'>"
 HTML_PRINT sHtml
 PRINTFORML
 PRINTFORML
@@ -160,137 +160,64 @@ HTML_PRINT sHtml
 #DIMS sHtmlBLACK
 #DIM iEnter_Con
 #DIM iSpace
-#DIM YPOS
 #DIMS String
 #DIM Integer
 #DIM iID
-YPOS = 0
+
 SIF ! FLAG:화상설정
     RETURN 0
 PRINTFORML
-FIRST_LINE = LINECOUNT
-FOR LOCAL:0, 0, 12
-    CLEARLINE LINECOUNT - FIRST_LINE + 1
+
+
+
+LOCAL:1 == 100
+FOR LOCAL:0, 0, 10
+    IF LOCAL:0 == 1
+        iEnter_Con = 0
+        sHtml = <p align='left'><nobr>
+        sHtml += @"<shape type='space' param='{iSpace}'><img src='%String%' height='3500' ypos='0'>"
+        HTML_PRINT sHtml
+        PRINTFORML 1
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML
+    ENDIF
+    CLEARLINE 1
     iEnter_Con = 0
-    sHtml =  <p align='left'><nobr>
-    sHtml += @"<shape type='space' param='{iSpace}'><img src='%String%' height='3500' ypos='0'>"
-    HTML_PRINT sHtml
-    IF LOCAL:0 <= 0
-        iEnter_Con = 0
-        sHtml =  <p align='left'><nobr>
-        sHtml += @"<shape type='space' param='{iSpace}'><img src='BLACK100' height='3500' ypos='-100'>"
-        HTML_PRINT sHtml
-    ELSE
-        PRINTFORML
-    ENDIF
-    IF LOCAL:0 <= 1
-        iEnter_Con = 0
-        sHtml =  <p align='left'><nobr>
-        sHtml += @"<shape type='space' param='{iSpace}'><img src='BLACK90' height='3500' ypos='-200'>"
-        HTML_PRINT sHtml
-    ELSE
-        PRINTFORML
-    ENDIF
-    IF LOCAL:0 <= 2
-        iEnter_Con = 0
-        sHtml =  <p align='left'><nobr>
-        sHtml += @"<shape type='space' param='{iSpace}'><img src='BLACK10' height='3500' ypos='-300'>"
-        HTML_PRINT sHtml
-    ELSE
-        PRINTFORML
-    ENDIF
-    IF LOCAL:0 <= 3
-        iEnter_Con = 0
-        sHtml =  <p align='left'><nobr>
-        sHtml += @"<shape type='space' param='{iSpace}'><img src='BLACK75' height='3500' ypos='-400'>"
-        HTML_PRINT sHtml
-    ELSE
-        PRINTFORML
-    ENDIF
-    IF LOCAL:0 <= 4
-        iEnter_Con = 0
-        sHtml =  <p align='left'><nobr>
-        sHtml += @"<shape type='space' param='{iSpace}'><img src='BLACK10' height='3500' ypos='-500'>"
-        HTML_PRINT sHtml
-    ELSE
-        PRINTFORML
-    ENDIF
-    IF LOCAL:0 <= 5
-        iEnter_Con = 0
-        sHtml =  <p align='left'><nobr>
-        sHtml += @"<shape type='space' param='{iSpace}'><img src='BLACK50' height='3500' ypos='-600'>"
-        HTML_PRINT sHtml
-    ELSE
-        PRINTFORML
-    ENDIF
-    IF LOCAL:0 <= 6
-        iEnter_Con = 0
-        sHtml =  <p align='left'><nobr>
-        sHtml += @"<shape type='space' param='{iSpace}'><img src='BLACK25' height='3500' ypos='-700'>"
-        HTML_PRINT sHtml
-    ELSE
-        PRINTFORML
-    ENDIF
-    IF LOCAL:0 <= 7
-        iEnter_Con = 0
-        sHtml =  <p align='left'><nobr>
-        sHtml += @"<shape type='space' param='{iSpace}'><img src='BLACK10' height='3500' ypos='-800'>"
-        HTML_PRINT sHtml
-    ELSE
-        PRINTFORML
-    ENDIF
-    IF LOCAL:0 <= 8
-        iEnter_Con = 0
-        sHtml =  <p align='left'><nobr>
-        sHtml += @"<shape type='space' param='{iSpace}'><img src='BLACK10' height='3500' ypos='-900'>"
-        HTML_PRINT sHtml
-    ELSE
-        PRINTFORML
-    ENDIF
-    IF LOCAL:0 <= 9
-        iEnter_Con = 0
-        sHtml =  <p align='left'><nobr>
-        sHtml += @"<shape type='space' param='{iSpace}'><img src='BLACK10' height='3500' ypos='-1000'>"
-        HTML_PRINT sHtml
-    ELSE
-        PRINTFORML
-    ENDIF
-    IF LOCAL:0 <= 10
-        iEnter_Con = 0
-        sHtml =  <p align='left'><nobr>
-        sHtml += @"<shape type='space' param='{iSpace}'><img src='BLACK10' height='3500' ypos='-1100'>"
-        HTML_PRINT sHtml
-    ELSE
-        PRINTFORML
-    ENDIF
-    IF LOCAL:0 <= 11
-        iEnter_Con = 0
-        sHtml =  <p align='left'><nobr>
-        sHtml += @"<shape type='space' param='{iSpace}'><img src='BLACK10' height='3500' ypos='-1200'>"
-        HTML_PRINT sHtml
-    ELSE
-        PRINTFORML
-    ENDIF
-    PRINTFORML
-    PRINTFORML
-    PRINTFORML
-    PRINTFORML
-    PRINTFORML
-    PRINTFORML
-    PRINTFORML
-    PRINTFORML
-    PRINTFORML
-    PRINTFORML
-    PRINTFORML
-    PRINTFORML
-    PRINTFORML
-    PRINTFORML
-    PRINTFORML
-    PRINTFORML
-    PRINTFORML
-    PRINTFORML
-    PRINTFORML
-    PRINTFORML
+    sHtmlBLACK =  <p align='left'><nobr>
+    sHtmlBLACK += @"<shape type='space' param='{iSpace}'><img src='BLACK{LOCAL:1}' height='3500' ypos='-3400'>"
+    HTML_PRINT sHtmlBLACK
+    PRINTFORML E
     TWAIT 150,1
 NEXT
+
+
+
+
 RETURN 0

@@ -11,10 +11,6 @@ RETURN 30
 ;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
 ;---------------------
 @EVENT_DAILY_RESCUE_DECISION()
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
-SIF FLAG:데일리이벤트_NTR == 0
-	RETURN 0
 LOCAL:1 = 0
 
 FOR LOCAL, 0, CHARANUM
@@ -42,16 +38,16 @@ RETURN 데일리_장르_에로
 #DIM 실행자
 #DIM 포로번호, 3000
 
-PRINTFORML 적국에 잡힌 동료를 구출하는 작전이 제안 되었다
+PRINTFORML 잡혀버린 동료를 구출하는 작전이 제안 되었다
 PRINTFORML 어떻게 하지?
 CALL ASK_YN("실행한다", "그만둔다")
 IF RESULT == 1
 	PRINTFORMW 위험하다, 지금은 기를 엿보자
 	RETURN 1
 ELSE
-	PRINTFORMW 동료를 버릴 수 없는, 구출 작전을 실시하기로 했다
+	PRINTFORMW 동료를 버릴 수 없다. 구출 작전을 실시하기로 했다
 	$RESCUE_LOOP 
-	PRINTFORML 누구를 구출에 향할까?
+	PRINTFORML 누구를 구출할까?
 	CALL SINGLE_DRAWLINE
 	FOR LOCAL, 0, CHARANUM
 		IF CFLAG:LOCAL:소속 == CFLAG:MASTER:소속 && CFLAG:LOCAL:포로처 != 0 && CFLAG:LOCAL:포로처 != CFLAG:MASTER:소속
@@ -74,13 +70,13 @@ ELSE
 	ELSE
 		대상 = 포로번호:(RESULT)
 		PRINTFORMW %조사처리(ANAME(대상),"를")% 구출하기로 했다
-		PRINTFORML 누가 구출에 향할까?
+		PRINTFORML 누가 구출하러 갈까?
 		CALL SELECT_CHARA_LIST_ONLY_LOGIC_SLG("RESCUE", "RESCUE")
 		SIF RESULT == -1
 			GOTO CANCEL
 		실행자 = RESULT
 		IF 실행자 == MASTER
-			PRINTFORMW %ANAME(실행자)%스스로 향하기로 했다
+			PRINTFORMW 스스로 향하기로 했다
 		ELSE
 			PRINTFORMW %ANAME(실행자)%를 향하게 하기로 했다
 		ENDIF
@@ -88,23 +84,23 @@ ELSE
 		PRINTFORML ·
 		PRINTFORMW ·
 		IF (ABL:실행자:무투 + ABL:실행자:지략 + ABL:실행자:정치) / 10 >= RAND:30 + DAY / 10
-			PRINTFORML 했다!
+			PRINTFORML 해냈다!
 			PRINTFORML 구출 작전은 성공했다!
-			PRINTFORMW 잡히고 있었던 %조사처리(ANAME(대상),"를")% 데리고 돌아왔다
+			PRINTFORMW 잡힌 %조사처리(ANAME(대상),"를")% 데리고 돌아왔다
 			CFLAG:대상:포로처 = 0
 			IF 실행자 == MASTER
-				PRINTFORMW %ANAME(대상)%의 %ANAME(실행자)%에의 평가가 크게 올랐다
+				PRINTFORMW %ANAME(대상)%는 %ANAME(실행자)%를 다시 바라보게 되었다.
 				CFLAG:대상:호감도 += 500
 			ENDIF
 		ELSE
-			PRINTFORML 끝냈다!
+			PRINTFORML 실수해버렸다.
 			PRINTFORMW 작전에 실패했다……
 			IF IS_MALE(실행자)
 				PRINTFORML %ANAME(실행자)%는 간신히 도망갔다
 				CALL ADD_COOLTIME(실행자, 3)
 			ELSE
-				PRINTFORML %ANAME(실행자)%는 스파이로서 적병에게 잡혀 버렸다
-				PRINTFORMW 다부지게 노려보는 %ANAME(실행자)%에 대해, 그들은 히죽히죽 웃으면서 심문을 위해서(때문에) 데려 갔다……
+				PRINTFORML %ANAME(실행자)%는 스파이로서 적에게 잡혀 버렸다
+				PRINTFORMW 다부지게 노려보는 %ANAME(실행자)%에 대해, 그들은 히죽히죽 웃으면서 심문을 빙자한 고문을 하러 갔다……
 				PRINTFORML 
 				CALL RESCUE_RAPE(실행자)
 				PRINTFORML 

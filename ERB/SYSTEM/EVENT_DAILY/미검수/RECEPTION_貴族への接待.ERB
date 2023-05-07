@@ -8,11 +8,7 @@ RETURN 20
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_RECEPTION_DECISION()
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
 ;주인공이 군주가 아닌 경우
-SIF FLAG:데일리이벤트_NTR == 0
-	RETURN 0
 SIF GET_COUNTRY_BOSS(CFLAG:MASTER:소속) == MASTER
 	RETURN 0
 
@@ -31,26 +27,27 @@ RETURN 데일리_장르_에로
 
 IF DVAR:접대_발생플래그 == 0
 	PRINTFORMW %ANAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))%로부터 호출을 받았다
-	PRINTFORMW %ANAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))%의 원래로 가면, 씁쓸한 표정으로 이런 이야기를 되었다
-	PRINTFORMW 뭐든지 가까운 시일내에와 있는 귀족을 접대하는 일이 되었지만, 그 귀족이라는 것은 여자를 좋아하고 유명한 남자다
-	PRINTFORMW 당연, 그쪽의 접대도 요구되겠지만, 하찮게 거절하는 일도 할 수 없는 상대다
-	PRINTFORMW 이니까 다른 사람과의 교류가 많은 %ANAME(MASTER)%에 접대시키는데 적임인 사람을 선택하면 좋다, 라고
-	PRINTFORMW 이런 접대의 상대를 스스로의 혼자의 생각으로 선택하지 않으면 안 된다고는 머리가 아픈 이야기다
-	PRINTFORMW 하지만 %ANAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))%도 같을 것이다
+	PRINTFORMW %ANAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))%은 씁쓸한 표정으로 이야기를 시작했다.
+	PRINTFORMW 가까운 시일내에 유력자를 접대하는 일이 되었지만, 그 귀족이라는 것은 여자를 좋아하기로 유명한 남자다
+	PRINTFORMW 당연하게도 그쪽의 접대를 요구되겠지만, 그렇다고 거절하는 일도 할 수 없는 상대다
+	PRINTFORMW 그렇기에 다른 학생과의 교류가 많은 %ANAME(MASTER)%의 의견을 듣고자 호출했다고 한다.
+	PRINTFORMW 물론 마음같아서는 말도 안 된다고 하고 싶지만, 심할 경우 이 학교가 폐교까지 당할 수 있다고 한다.
+	PRINTFORMW 분노에 치를 떨면서도, 그렇게 강한 유력자라면 어쩔 수 없는가. 
+	PRINTFORMW %ANAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))%의 생각도 같을 것이다
 	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 복잡한 표정으로 리스트를 바라보았다……
 ELSEIF GETBIT(TALENT:MASTER:데일리계, 소질_데일리_귀족의애인)
-	PRINTFORMW 그 (분)편이 다시 방문하는 것 같다
-	PRINTFORMW 또 즐겨 받기 위해서(때문에), 제대로 접대의 준비를 하지 않으면
+	PRINTFORMW 그 사람이 다시 방문하는 것 같다
+	PRINTFORMW 이번에는 제대로 즐길 수 있게 접대의 준비를 하지 않으면.
 	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 누구에게 맡길까하고 리스트를 바라보았다……
 ELSEIF DVAR:접대_발생플래그 == 1
 	PRINTFORMW 예의 귀족이 다시 방문하는 것 같다
-	PRINTFORMW 아무래도 전회의 접대가 의외로 호평이었던 것 같다
-	PRINTFORMW 정직 이제 관련되고 싶지는 않지만, 역시 접대 상대를 선택하는 것처럼 말해졌다
+	PRINTFORMW 아무래도 지난번의 접대가 의외로 호평이었던 것 같다
+	PRINTFORMW 솔직히 이제 관련되고 싶지는 않지만, 역시 접대 상대를 선택해야 한다고 말해졌다
 	PRINTFORMW 그런데, 누구를 선택해야할 것인가……
 ELSEIF DVAR:접대_발생플래그 == 2
 	PRINTFORMW 예의 귀족이 다시 방문하는 것 같다
 	PRINTFORMW 이번이야말로는 분명하게 대접해 주어라, 라고 다짐을 받아진 것 같다
-	PRINTFORMW 정직 이제 관련되고 싶지는 않지만, 역시 접대 상대를 선택하는 것처럼 말해졌다
+	PRINTFORMW 솔직히 이제 관련되고 싶지는 않지만, 역시 접대 상대를 선택해야 한다고 말해졌다
 	PRINTFORMW 그런데, 누구를 선택해야할 것인가……
 ENDIF
 CALL SINGLE_DRAWLINE
@@ -60,15 +57,15 @@ CALL SELECT_CHARA_LIST_ONLY_LOGIC_SEX("RECEPTION", "NONE")
 
 IF  대상 == -1
 	IF GETBIT(TALENT:MASTER:데일리계, 소질_데일리_귀족의애인)
-		PRINTFORMW 지금은 매우 바쁜 시기다, 장을 사용한 접대는 보류해 받을 수밖에 없다
-		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그에게 이번은 통상의 접대로 허락하면 좋겠다고 전했다
+		PRINTFORMW 지금은 중요한 시기이다. 학생 하나하나의 컨디션이 승패를 좌우한다.
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그에게 이번은 통상의 접대로 부탁한다고 전했다
 	ELSE
 		PRINTFORMW 역시 그런 일은 할 수 없다고 고했다
 		PRINTFORMW %ANAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))%도 거기에 수긍해, 이번은 통상의 접대만으로 끝마치기로 했다
 	ENDIF
 	PRINTFORML
 	PRINTFORMW 귀족은 접대의 내용이 불만이었던 것 같다
-	PRINTFORM 있는 일 없는 것을 퍼뜨려져
+	PRINTFORM 그는 여러 매스컴에서 학교에 대해서 모함을 하였다...
 	CALL COLOR_PRINT(@"%ANAME(GET_COUNTRY_BOSS(CFLAG:MASTER:소속))%의 평판을 내려졌습니다", 칼라_주의)
 	PRINTFORMW
 	FOR LOCAL, 1, MAX_COUNTRY
@@ -81,29 +78,29 @@ IF  대상 == -1
 	RETURN 1
 ELSEIF 대상 == MASTER
 	IF GETBIT(TALENT:대상:데일리계, 소질_데일리_귀족의애인)
-		PRINTFORMW 물론%ANAME(대상)%자신이 하기로 했다
-		PRINTFORMW 그 (분)편에게 또 귀여워해 받을 수 있다고 생각하는 것만으로 몸의 안쪽이 뜨거워지는 것을 느꼈다
+		PRINTFORMW 물론 자신이 하기로 했다
+		PRINTFORMW 그 분에게 또 귀여워해 받을 수 있다고 생각하는 것만으로 몸의 안쪽이 뜨거워지는 것을 느꼈다
 	ELSEIF GETBIT(TALENT:MASTER:데일리계, 소질_데일리_귀족의포로)
-		PRINTFORMW 어쩔 수 없는, 또 자신이 하기로 하자
-		PRINTFORMW %조사처리(ANAME(대상),"는")% 자신의 신체의 안쪽이 뜨거워지는것을 깨닫지 않았다
+		PRINTFORMW 어쩔 수 없다, 또 자신이 하기로 하자
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 자신의 신체의 안쪽이 뜨거워지는것을 깨닫지 못했다
 	ELSEIF GETBIT(TALENT:MASTER:음란계, 소질_음란_정액변소)　|| GETBIT(TALENT:MASTER:음란계, 소질_음란_음란)
 		PRINTFORMW 그러한 일이라면 자신이 할 것 하자
-		PRINTFORMW %조사처리(ANAME(대상),"는")% 조금 뺨을 느슨해지게 하면서 그렇게 대답했다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 조금 뺨이 풀어지는 것을 느끼며 그렇게 대답했다
 	ELSE
 		PRINTFORMW 다른 아이에게 이런 일은 시킬 수 없다
 		PRINTFORMW %조사처리(ANAME(대상),"는")% 뜻을 정해 스스로 접대를 실시하기로 했다
 	ENDIF
 ELSE
-	PRINTFORMW 제일의 적임은, 그녀일 것이다
-	PRINTFORMW %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"를")% 불러내면 접대을 전했다
+	PRINTFORMW 제일 적임은, 그녀일 것이다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"를")% 불러내서 접대의 준비를 전했다
 	IF GETBIT(TALENT:대상:데일리계, 소질_데일리_귀족의애인)
-		PRINTFORMW 그녀는 적극적으로 일을 맡으면, 허겁지겁 준비를 시작했다
+		PRINTFORMW 그녀는 적극적으로 일을 맡아, 부랴부랴 준비를 시작했다
 	ELSEIF GETBIT(TALENT:대상:데일리계, 소질_데일리_귀족의포로)
-		PRINTFORMW 그녀는 약간 뺨을 물들이면서, 어쩔 수 없는 것같이 일을 맡았다
+		PRINTFORMW 그녀는 약간 뺨을 물들이면서, 어쩔 수 없는 것처럼 일을 맡았다
 	ELSEIF GETBIT(TALENT:대상:음란계, 소질_음란_정액변소)　|| GETBIT(TALENT:대상:음란계, 소질_음란_음란)
-		PRINTFORMW 그녀는 명령을 들으면 싫은 표정 하나 보이지 않고 쾌히 승낙하는 일로 맡았다
+		PRINTFORMW 그녀는 명령을 듣고 싫은 표정 하나 보이지 않고 쾌히 승낙하는 일로 맡았다
 	ELSE
-		PRINTFORMW 그녀는 명령을 들으면 싫을 것 같은 표정을 보였지만, 마지못해 맡았다
+		PRINTFORMW 그녀는 명령을 듣고 싫은 표정을 보였지만, 마지못해 맡았다
 	ENDIF
 ENDIF
 PRINTFORML ·
@@ -424,11 +421,11 @@ ENDSELECT
 ;귀족의 포로, 문신을 넣어진 뒤로 1/3로 귀족의 애인으로 된다
 IF (GETBIT(TALENT:대상:데일리계, 소질_데일리_귀족의포로) && RAND:3 < 1)
 	PRINTFORML
-	PRINTFORMW %조사처리(ANAME(대상),"는")% 완전히 귀족의 포로가 되어 버렸다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 완전히 유력자의 포로가 되어 버렸다
 	PRINTFORMW 그토록 싫었는데, 지금은 그에게 안기는 것이 더 없는 행복의 시간이 되어 버리고 있다
-	PRINTFORMW 문득 웃는 남자에게, 나의 애인이 될까하고 거론되면, 넋을 잃은 표정으로 동의 했다
+	PRINTFORMW 웃는 남자에게 나의 애인이 될까하고 물어지면, 넋을 잃은 표정으로 동의 했다
 	PRINTFORM
-	CALL COLOR_PRINT(@"%조사처리(ANAME(대상),"는")% 애인에게 되어 내렸습니다", 칼라_주의)
+	CALL COLOR_PRINT(@"%조사처리(ANAME(대상),"는")% 유력자의 애인이 되어 버렸습니다", 칼라_주의)
 	PRINTFORMW
 	SETBIT TALENT:대상:데일리계, 소질_데일리_귀족의애인
 	CALL LOSE_RELATION_TALENT(대상)
@@ -442,19 +439,19 @@ IF !RAND:5
 	CALL SET_TATTOO_RANDOM(대상, STR_FOR_TATTOO(-1), 0)
 	IF RESULT != -1
 		PRINTFORML
-		PRINTFORMW 남은 %조사처리(ANAME(대상),"을")% 마음에 들어, 스스로의 물건이라는 증거로 삼아 %ANAME(대상)%의 신체에 추잡한 문신을 넣었다
+		PRINTFORMW 남자는 %조사처리(ANAME(대상),"을")% 마음에 들어, 스스로의 물건이라는 증거로 삼아 %ANAME(대상)%의 신체에 추잡한 문신을 넣었다
 		PRINTFORM
 		CALL COLOR_PRINT(@"%ANAME(대상)%의 %GET_TATTOO_NAME(RESULT)%에, 「%TATTOO:대상:RESULT%」%조사만처리(TATTOO:대상:RESULT,"라")%고 문신을 넣어졌다", 칼라_주의)
 		PRINTFORMW
 	ELSE
 		PRINTFORML
-		PRINTFORMW 남은 %조사처리(ANAME(대상),"을")% 마음에 들어, 스스로의 물건이라는 증거로 삼아 초커를 달았다……
+		PRINTFORMW 남자는 %조사처리(ANAME(대상),"을")% 마음에 들어, 스스로의 물건이라는 증거로 삼아 초커를 달았다……
 		PRINTFORM
 	ENDIF
 	IF GETBIT(TALENT:대상:데일리계, 소질_데일리_귀족의애인)
-		PRINTFORMW 남의 소유물이 된 증거를 새겨져 %조사처리(ANAME(대상),"는")% 기쁨으로 뺨을 느슨한, 사랑스러운 듯이\@ RESULT != -1 ? 문신 # 초커 \@를 어루만졌다
+		PRINTFORMW 남자의 소유물이 된 증거를 새겨져 %조사처리(ANAME(대상),"는")% 기쁨으로 활짝 웃어, 사랑스러운 듯이\@ RESULT != -1 ? 문신 # 초커 \@를 어루만졌다
 	ELSE
-		PRINTFORMW %ANAME(대상)%도 곤란한 표정을 보이면서도, 그렇지만도 않은 것 같았다
+		PRINTFORMW %ANAME(대상)%도 곤란한 표정을 보이면서, 그렇지만도 않은 것 같았다
 		SETBIT TALENT:대상:데일리계, 소질_데일리_귀족의포로
 	ENDIF
 ENDIF
@@ -464,7 +461,7 @@ CALL FUCK_RAPE(대상, GET_SPERM_ID("귀족"), @"귀족의 \@ RAND:2 ? 페니스
 PRINTFORML 
 PRINTFORMW 
 PRINTFORMW 다음날
-PRINTFORMW 남은 몹시 만족한 모습으로, 지원을 확약해 주었다
+PRINTFORMW 남자는 몹시 만족한 모습으로, 학교에 대한 지원을 확약해 주었다
 IF 대상 == MASTER
 	PRINTFORMW 다음도 아무쪼록 부탁한다, 라고
 	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 엉덩이를 더듬어지면서 말해졌다
@@ -480,7 +477,7 @@ ELSE
 ENDIF
 병수 = (RAND:9 * 1000 + 1000)
 PRINTFORM
-	CALL COLOR_PRINT(@"남의 지원에 의해, {병수}의 군사가 증가했다", 칼라_시안)
+	CALL COLOR_PRINT(@"남자의 지원에 의해, {병수}의 용병이 증가했다", 칼라_시안)
 	PRINTFORMW
 COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += 병수
 DVAR:접대_발생플래그 = 1

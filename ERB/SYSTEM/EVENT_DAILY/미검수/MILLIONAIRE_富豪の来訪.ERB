@@ -8,12 +8,9 @@ RETURN (DVAR:부호_마음에든다ID > 0 ? 250 # 30)
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_MILLIONAIRE_DECISION()
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
-SIF FLAG:데일리이벤트_NTR == 0
-	RETURN 0
 SIF DVAR:부호_발생플래그 == -1
 	RETURN 0
+
 ;SIF DAY < 10
 ;	RETURN 0
 
@@ -82,78 +79,81 @@ RETURN 데일리_장르_에로
 당신에게로의생각해 = (CFLAG:대상:호감도 + CFLAG:대상:의존도 + CFLAG:대상:종속도)
 
 IF DVAR:부호_발생플래그 == 0
-	PRINTFORML %조사처리(ANAME(MASTER),"가")% 정무를 해내고 있으면, 부하가 손님을 고했다
-	PRINTFORMW 환상향안에 이름을 이라고 진흙 빌려주는 부호가 방문해 온 것이라고 한다
-	PRINTFORML 오만하고 유명하고, 만나고 싶지 않은 상대이지만, 그가 한 번의 유흥으로 사용하는 돈은 자그만 세력의 예산(정도)만큼도 있다
-	PRINTFORMW 로 할 수는 없는 손님이라고 판단한 %조사처리(ANAME(MASTER),"는")%, 즉시 만나기로 했다……
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 업무를 하던 도중, 비서가 손님을 고했다
+	PRINTFORMW 블랙마켓에서 유명한 사채업자로, 고리대금업으로 큰 돈을 번 대부호라고 한다.
+	PRINTFORML 오만한 것으로 유명해 별로 만나고 싶지 않은 상대이지만, 그가 한 번의 유흥으로 사용하는 돈은 자그만 학교의 예산이라고 한다.
+	PRINTFORMW 못 본 체 할 수 없는 손님이라고 판단한 %조사처리(ANAME(MASTER),"는")%, 즉시 만나기로 했다……
 	PRINTFORML 
 	PRINTFORML 
 	PRINTFORML 
-	PRINTFORML 「야아. 너가 %ANAME(MASTER)%공?   소문과 달리 실물은 초라한데」
-	PRINTFORML 「뭐 좋다. 여기에 온 것은 시간 때우기를 위해서(때문에)다. 그렇지 않으면 누가 이런 드 시골에 와?」
-	PRINTFORMW 「그런데……, 시골의 사루야마의 대장전이, 어떻게 나를 즐겁게 해 주는지, 볼만하지만」
-	PRINTFORML 방에 있던 것은, 보기에도 벼락 부자 취미의, "매우 풍채가 좋다"남자였다
-	PRINTFORMW 목은 군살에 파묻혀 전혀 안보인다. 시가를 들이마시는 손가락의 모두에, 큰 보석포함의 반지가 빠지고 있었다
+	PRINTFORML 「아아. 당신이 %ANAME(MASTER)%공?   소문과 달리 실물은 초라한데」
+	PRINTFORML 「농담이다, 농담. 그렇게 험상궂은 얼굴 하지 말게.」
+	PRINTFORMW 재미없다는 듯 주머니에서 시가를 꺼내는, 덩치가 산만한 남성이 한 명 있었다.
+	PRINTFORML 가진 돈만큼 살도 많은지, 자신의 두 배 이상되는 그 덩치에 눈살을 찌푸리고 싶었다.
+	PRINTFORML 물론 그런 감정을 겉으로 드러낼 자신이 아니다. 각설하고 용건을 물었다.
+	PRINTFORMW 「용무? 뭐 별 건 아니다. 그냥 심심해서 시간 때우기 용으로 방문했을 뿐이다.」
+	PRINTFORMW 목은 군살에 파묻혀 전혀 안보인다. 시가를 들이마시는 그의 다섯 손가락 모두에 큰 보석이 박힌 반지가 있었다
 	PRINTFORML 「어이쿠. 시간 때우기라고는 말했지만, 어떻게 즐겁게 할까 생각할 필요는 없어」
-	PRINTFORML 「실제, 너와 같은 빈민이 없는 뇌수를 필사적으로 짜고 생각나는 것 따위, 나에게는 아무것도 안 된다」
-	PRINTFORML 「무엇을 생각해 냈는지, 들려주어 봐 줄래?   쓰레기 바지락조개인가, 그렇지 않으면 시시한 우물가의 쑥덕공론인가?」
-	PRINTFORMW 「여자다. 이런 드 시골에서도, 있을 것이다, 한사람 정도는, 나의 안경에 필적하는 아가씨가」
-	PRINTFORMW 여자. 그렇다면 특출의 창녀에서도 불러 올까하고 생각한 %조사처리(ANAME(MASTER),"이지만")%, 남자는 파묻힌 목을 옆에 흔든다
+	PRINTFORML 「너 정도가 내가 즐겁다고 생각할만한 놀잇거리를 생각할 수는 없지.」
+	PRINTFORML 「여러 유흥을 하며 세상 향락을 모두 누렸지만, 결국 모두 질려버렸다. 그리고 남은 것은 단 하나 뿐이다.」
+	PRINTFORMW 「여자다. 이런 낡은 학교에도 있을 것이다, 경국지색에 필적하는 아가씨가」
 	PRINTFORML
-	CALL ICPRINT(@"「<%ANAME(대상)%>라든가 하는, 상당한 상등품이 있는 것 같지 않은가?  그것을 빌려 주게」", "W", 칼라_주의)
-	PRINTFORMW 「그 녀석의 "기능"에 응해, 돈을 지불해 주지 않겠는가」
-	PRINTFORML 「별로 상관없을 것이다?   너희들도 돈은 필요할 것이고」
-	PRINTFORMW 「소속하는 조직에 봉사할 일이 생기니까, %ANAME(대상)%도 만족할 것이다」
+	CALL ICPRINT(@"「<%ANAME(대상)%>였던가, 상당히 괜찮은 여자가 있지 않은가?  그것을 빌려 주게」", "W", 칼라_주의)
+	PRINTFORMW 「그 녀석의 "봉사"정도면, 충분한 돈을 지불하지.」
+	PRINTFORML 「괜찮은 거래이지 않나?   너희들도 돈은 필요할 것이고」
+	PRINTFORMW 「그것도 학교에 기여할 수 있으니까, %ANAME(대상)%도 만족할 것이다」
 	SIF IS_LOVER(대상)
-		PRINTFORMW 「……그렇게 생각하면, 좋아하는 사람이 한사람이나 두 명 있던 곳에서, 어떻다고 할 일도 없을 것이다?」
-	PRINTFORMW 「물론 피임은 하자. 그 근처는 걱정하지 마」
-	PRINTFORML 무려 장난친 발언일 것이다. %조사처리(ANAME(MASTER),"는")% 입술을 악문다
-	PRINTFORML ……이지만, 이 남자의 위세의 좋은 점은 사람의 입에 오를 정도다. 내밀면, 상당한 지불은 기대할 수 있을 것이다……
+		PRINTFORMW 「……좋아하는 사람이 한 명이나 두 명 있다고 해서, 별 문제도 없을 것이다?」
+	PRINTFORMW 「물론 피임은 하자. 그 정도는 걱정하지 마」
+	PRINTFORML 장난,이 아니다. 남자는 씨익 웃으며 시가를 피고 있다.
+	PRINTFORML 학생들을 성노릿감으로 삼다니, 지금이라도 당장 주먹이 날아갈 것 같았다.
+	PRINTFORMW 하지만 뒷일을 생각하면 결코 좋지 않기에, %조사처리(ANAME(MASTER),"는")% 입술을 악물며 참았다.
+	PRINTFORML  이 남자는 진심이기에, <%ANAME(대상)%>을 내밀면 상당한 댓가는 기대할 수 있을 것이다……
 ELSEIF 대상 == ID_TO_CHARA(DVAR:부호_마음에든다ID)
 	PRINTFORMW 예의 부호의 남자가 방문해 왔다
 	PRINTFORML 「야아, 또 와 주었어」
-	CALL ICPRINT(@"「용건은 하나. 그<%ANAME(대상)%>라든가 하는 것을 또 빌려 주게」", "W", 칼라_주의)
+	CALL ICPRINT(@"「용건은 하나. 그<%ANAME(대상)%>를 또 빌려 주게」", "W", 칼라_주의)
 	IF DVAR:부호_마음에든다조교횟수 >= 3
-		PRINTFORMW 「피임?   아, 해 주고 (어) 준다. 알았다 알았다」
+		PRINTFORMW 「피임?   아, 해 준다고.」
 	ELSE
 		PRINTFORMW 「물론 피임은 하자. 그 근처는 걱정하지 마」
 	ENDIF
-	PRINTFORMW 「기능에 응해, 많이 보수를 준다」
+	PRINTFORMW 「좋은 대접을 받으면, 많은 보수를 준다」
 	PRINTFORML 자, 그럼, 어떻게 하지……
 ELSE
 	PRINTFORMW 예의 부호의 남자가 방문해 왔다
-	PRINTFORML 「야아, 또 와 주었어」
+	PRINTFORML 「야아, 또 왔다.」
 	CALL ICPRINT(@"「그렇네, 이번은<%ANAME(대상)%>라든가 하는 것을 빌려 주게」", "W", 칼라_주의)
-	PRINTFORMW 「물론 피임은 하자. 그 근처는 걱정하지 마」
-	PRINTFORMW 「기능에 응해, 많이 보수를 준다」
-	PRINTFORML 자, 그럼, 어떻게 하지……
+	PRINTFORMW 「물론 피임은 한다. 그 근처는 걱정하지 마」
+	PRINTFORMW 「기술이 좋으면, 많이 보수를 준다」
+	PRINTFORML 그럼, 어떻게 하지……
 ENDIF
 CALL SINGLE_DRAWLINE
-CALL ASK_MULTI("대출한다", "그런 일은 할 수 없다", "포박 해, 몸값을 요구", "벤다")
+CALL ASK_MULTI("빌려준다", "그런 일은 할 수 없다", "포박 해, 몸값을 요구한다", "쏜다")
 IF RESULT == 1
 	PRINTFORMW 「……흠?   그런가」
-	PRINTFORMW 「바보 같은 녀석, 모처럼 큰돈을 손에 넣을 기회가 눈앞에 있었다는데」
-	PRINTFORMW 「뭐, 좋다. 그렇다면 그걸로, 이런 짜증이 난 곳에 용무는 없다. 그러면」
-	PRINTFORMW 남은 조속히 떠나 갔다……
+	PRINTFORMW 「바보 같은 녀석, 모처럼 큰돈을 손에 넣을 기회가 눈 앞에 있는데」
+	PRINTFORMW 「뭐, 좋다. 그렇다면 그걸로, 이런 답답한 곳에 용무는 없다.」
+	PRINTFORMW 남자는 떠나 갔다……
 	DVAR:부호_마음에든다ID = 0
 	DVAR:부호_마음에든다조교횟수 = 0
 	DVAR:부호_발생플래그 = 1
 	RETURN 1
 ELSEIF RESULT == 2
 	PRINTFORMW 「너, 너……!」
-	PRINTFORMW 병사에 명해 그를 잡았다
-	PRINTFORMW 그 후, 국원에 몸값을 요구했다
-	PRINTFORMW 남은 격노하고 있었지만, 최종적으로는 받아들이는 것 외에 없었다……
+	PRINTFORMW 비서에게 명령해 그를 잡았다
+	PRINTFORMW 그 후, 협박하여 몸값을 요구했다
+	PRINTFORMW 남자는 격노하고 있었지만, 최종적으로는 받아들이는 것 외에 없었다……
 	DVAR:부호_발생플래그 = -1
 	DVAR:부호_유괴카운터 = 5
 	DVAR:부호_유괴대상 = GET_ID(대상)
-	CALL ICPRINT("금<100000>을 손에 넣었다", "W", 칼라_주의)
+	CALL ICPRINT("<100000>크레딧을 손에 넣었다", "W", 칼라_주의)
 	MONEY += 100000
 	CALL COLOR_PRINTW("……부호의 미움을 샀다", 칼라_경고)
 	RETURN 1
 ELSEIF RESULT == 3
-	PRINTFORML 무려 뭐 무례한 녀석이다
-	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 남자를 베어 버렸다……
+	PRINTFORML 무례한 녀석이다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 남자를  쏴버렸다……
 	DVAR:부호_발생플래그 = -1
 	RETURN 1
 ENDIF

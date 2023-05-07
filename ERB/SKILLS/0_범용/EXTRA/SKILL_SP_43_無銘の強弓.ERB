@@ -66,7 +66,7 @@ RETURN 1
 PRINTFORML  이름도 없는 강궁으로부터 쏘아진 화살이, 적의 머리 위에게 쏟아졌다!
 LOCAL:1 = RAND(3, 4)
 FOR LOCAL, 0, LOCAL:1
-	CALL DECREASE_SOLDIER(대상세력, 대상부대, 4300, 1)
+	CALL DECREASE_SOLDIER(대상세력, 대상부대, RAND(600, 900), 1)
 NEXT
 
 ;스킬 설명.

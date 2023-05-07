@@ -11,10 +11,6 @@ RETURN 20
 ;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
 ;---------------------
 @EVENT_DAILY_TAVERN_SEX_DECISION()
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
-SIF FLAG:데일리이벤트_NTR == 0
-	RETURN 0
 RETURN DAY >= 10
 
 ;---------------------
@@ -36,7 +32,7 @@ RETURN 데일리_장르_에로
 #DIM 대상
 #DIM 청구액
 
-PRINTFORMW 영지민의 소리를 직접 (듣)묻기 위해서(때문에) 미행으로 술집에 가 보자
+PRINTFORMW 학생의 소리를 직접 듣기 위해서 미행으로 음식점에 가 보자
 PRINTFORMW 누구에게 가게 할까?
 
 CALL SINGLE_DRAWLINE
@@ -59,7 +55,7 @@ PRINTFORML
 ;술집에 갔던 것이 남성 혹은
 ;「성벽 필터(CONFIG:200)가 유효」한편 「술집에 갔던 것이 당신 이외의 여성」의 경우, 그대로 종료한다
 IF IS_MALE(대상) || (CONFIG:200 && 대상 != MASTER)
-	PRINTFORML %조사처리(ANAME(대상),"는")% 술집에서 손님과 의기 투합했다
+	PRINTFORML %조사처리(ANAME(대상),"는")% 가게에서 손님과 의기투합했다
 	PRINTFORMW 꽤 가치가 있는 미행이었다
 	;조금 술에 강해진다（주량경험치 1～5）
 	EXP:대상:주량경험치 += RAND:3 + RAND:3 + 1
@@ -69,7 +65,7 @@ IF IS_MALE(대상) || (CONFIG:200 && 대상 != MASTER)
 		PRINTFORML ……
 		PRINTFORML …
 		IF 대상 == MASTER
-			PRINTFORMW 덧붙여 경비로 떨어지지 않았던 모양
+			PRINTFORMW 덧붙여서, 경비로 되지 않았던 않았던 모양이다
 		ELSE
 			PRINTFORMW 어째서 여기에 청구서가 돌아 오고 있을까나?
 		ENDIF
@@ -81,19 +77,19 @@ IF IS_MALE(대상) || (CONFIG:200 && 대상 != MASTER)
 	RETURN 1
 ENDIF
 
-PRINTFORMW %조사처리(ANAME(대상),"는")% 술집에서 한사람의 손님과 의기 투합했다
+PRINTFORMW %조사처리(ANAME(대상),"는")% 가게에서 한사람의 손님과 의기투합했다
 PRINTFORMW 완전히 좋은 기분이 되어 가게를 나오려고 한 곳, 남자가 불렀다
 IF TALENT:대상:정조관념 == 1 || TALENT:대상:연인 == 1 || TALENT:대상:연모 == 1 || HAS_PENIS(대상)
-	PRINTFORMW 확실히 %조사처리(ANAME(대상),"는")% 그에게 매력을 느끼고 있지만, 더 이상은 안 된다고 생각한다
+	PRINTFORMW 확실히 %조사처리(ANAME(대상),"는")% 그에게 매력을 느끼고 있었지만, 더 이상은 안 된다고 생각한다
 	PRINTFORMW 그녀는 잠깐 고민하고 있었지만…
 	CALL ASK_YN("유혹에 넘어갔다", "권유를 거절했다")
 	IF RESULT == 1
-		PRINTFORMW 이윽고 단호히남자의 권유를 거절했다
-		PRINTFORMW 남은 유감스러운 듯이 하면서도 그 이상 강요해 올 것도 없게 떠나 갔다
+		PRINTFORMW 이윽고 단호히 남자의 권유를 거절했다
+		PRINTFORMW 남자는 유감스러운 듯 하면서도 그 이상 강요하지 않고 떠나 갔다
 		RETURN 1
 	ELSE
 		PRINTFORMW 이윽고 부끄러운 듯이 뺨을 물들이면서, 작게 수긍했다
-		PRINTFORMW 남은 기쁜듯이 그녀의 허리를 안아, 둘이서 다가붙어 여인숙으로 들어갔다
+		PRINTFORMW 남자는 기쁜듯이 그녀의 허리를 안아 다가붙으며 모텔로 들어갔다
 	ENDIF
 ELSE
 	PRINTFORMW %조사처리(ANAME(대상),"는")% 수줍으면서도 저항하지 않고, 연인같이 안기면서 여인숙에 들어갔다
@@ -333,11 +329,11 @@ CALL FUCK_MAKELOVE(대상, GET_SPERM_ID("지나가는 남자"), @"지나가는 �
 
 PRINTFORML
 PRINTFORML
-PRINTFORMW 이튿날 아침, 창으로부터 찔러넣는 아침해와 작은 새의 재잘거림으로 %조사처리(ANAME(대상),"는")% 눈을 떴다
-PRINTFORMW 눈부심에 이불 중(안)에서 몸을 비틀면, 남자의 팔에 해당된다
+PRINTFORMW 이튿 날 아침, 창문에서 비치는 아침 햇빛과 작은 새의 재잘거림으로 %조사처리(ANAME(대상),"는")% 눈을 떴다
+PRINTFORMW 눈이 부셔서 이불 안에서 몸을 뒤척이면, 남자의 팔이 느껴진다
 PRINTFORMW 아무래도 그의 팔에 안긴 채로 자고 있던 것 같다
 PRINTFORMW 그녀는 남자의 잠자는 얼굴을 들여다 봐 어젯밤을 떠올려, 무심코 뺨을 물들였다
-PRINTFORMW 남을 강탈 일으키면 가볍게 아침 식사를 먹어 몸치장을 정돈하고 나서 숙소를 뒤로 했다
+PRINTFORMW 남자를 일으키고 가볍게 아침 식사를 먹어 몸치장을 정돈하고 나서 숙소를 뒤로 했다
 PRINTFORMW 이별할 때, 어느 쪽으로부터랄 것도 없고 농후한 입맞춤을 주고 받아, 입술을 떼어 놓을 때에 마치 이별을 아끼는 것처럼 빛나는 다리가 가설되었다
 
 RETURN 1

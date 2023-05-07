@@ -9,10 +9,6 @@ RETURN 30
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_BLAIN_WASH_DECISION()
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
-SIF FLAG:데일리이벤트_NTR == 0
-	RETURN 0
 ;베어 버리고 있으면 발동하지 않는다
 SIF DVAR:최면_발생플래그 == -1
 	RETURN 0

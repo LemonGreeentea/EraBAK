@@ -8,8 +8,6 @@ RETURN (DVAR:최면트래이너_전회대상자ID > 0 ? 150 # 30)
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_HYPNOTISM_TRAINER_DECISION()
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
 SIF DAY < 10
 	RETURN 0
 SIF DVAR:최면트래이너_발생플래그 == 2

@@ -11,8 +11,6 @@ RETURN 75
 ;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
 ;---------------------
 @EVENT_DAILY_MEETING_WITH_ZAIYA_DECISION()
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
 RETURN DAY >= SLG_PP:1 && CFLAG:MASTER:소속 && !IS_SP_COUNTRY(CFLAG:MASTER:소속)
 
 ;---------------------
@@ -59,22 +57,22 @@ RETURN 1
 
 대상 = DAILY_TARGET:(RAND:DAILY_TARGET_NUM)
 
-PRINTFORMW 재야 무장의 %조사처리(ANAME(대상),"가")% 면회를 요구해 왔다……
+PRINTFORMW %조사처리(ANAME(대상),"가")% 면회를 요구해 왔다……
 
 ;특수한 패턴. 공짜로 고용할 수가 있다
 IF TALENT:대상:친애 || TALENT:대상:예속 || TALENT:대상:소유자
-	PRINTFORML 지금은 방랑의 몸이며 자유로운 것으로, 꼭%ANAME(MASTER)%의 옆에 있으면 좋다, 라고다
-	PRINTFORML 저쪽에서 사관을 요구해 온다고는 고마운 것이지만……
+	PRINTFORML 지금은 자유로운 몸으로, 꼭%ANAME(MASTER)%의 옆에 있으면 좋겠다, 라고 말했다.
+	PRINTFORML 저쪽에서 스스로 전학을 요구해 온다고 하면 고마운 것이지만……
 	PRINTFORML 
 	CALL ASK_YN("받아들인다", "거부한다")
 	IF RESULT == 0
-		PRINTFORML 거절할 합당한 이유가 없다
-		PRINTFORMW %조사처리(ANAME(대상),"를")% 사관으로서 맞아들이기로 했다……
+		PRINTFORML 거절할 이유가 없다
+		PRINTFORMW %조사처리(ANAME(대상),"를")% 전학생으로 맞아들이기로 했다……
 		CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"가")% 동료가 되었습니다", 칼라_주의)
 		CALL CHANGE_COUNTRY(대상, CFLAG:MASTER:소속)
 	ELSE
-		PRINTFORML 그렇게 말할 수는 없다
-		PRINTFORML 단호히거절했다……
+		PRINTFORML 그렇게 갑자기 승낙할 수는 없다.
+		PRINTFORML 아쉽지만 거절했다……
 	ENDIF
 	RETURN 1
 ENDIF
@@ -86,9 +84,9 @@ ENDIF
 SIF IS_LOVER(대상) || IS_SLAVE(대상)
 	고용액 /= 2
 
-CALL ICPRINT(@"지금은 방랑의 몸이며 자유로운 것이지만, 자신을 돈<{고용액}>로 고용해 보지 않겠는가, 라고다", "L", 칼라_주의)
+CALL ICPRINT(@"지금은 자유로운 몸이지만, 자신을 <{고용액}>크레딧으로 고용해 보지 않겠는가, 라고다", "L", 칼라_주의)
 SIF IS_LOVER(대상) || IS_SLAVE(대상) || IS_SLAVED_BY(대상) || IS_SLAVED_BY(대상)
-	PRINTFORML 상대가 %조사처리(ANAME(MASTER),"라")%는 일로, 준비금을 상당히 소극적으로 해 준 것 같다
+	PRINTFORML 상대가 %조사처리(ANAME(MASTER),"라")%는 일로, 상당히 싼 값으로 해 준 것 같다
 PRINTFORML 자신만만하게 말하고 있지만, 실력은 확실할 것이다……
 
 FIRST_LINE = LINECOUNT
@@ -97,12 +95,12 @@ $SHOW_LOOP
 CALL SHOW_SIMPLE_INFO(대상)
 
 PRINTL
-CALL ASK_MULTI_JUDGE(@"금{고용액}로 고용하는 현재:{MONEY}", MONEY >= 고용액, "그만둔다", 1, "능력표시", 2)
+CALL ASK_MULTI_JUDGE(@"{고용액}크레딧으로 고용하는 현재:{MONEY}", MONEY >= 고용액, "그만둔다", 1, "능력표시", 2)
 
 SELECTCASE RESULT
 	CASE 0
-		PRINTFORML 전력은 아무리 있어도 많다는 것은 없다
-		PRINTFORMW %조사처리(ANAME(대상),"를")% 사관으로서 맞아들이기로 했다……
+		PRINTFORML 전력은 아무리 있어도 부족하다.
+		PRINTFORMW %조사처리(ANAME(대상),"를")% 맞아들이기로 했다……
 		CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"가")% 동료가 되었습니다", 칼라_주의)
 		CALL CHANGE_COUNTRY(대상, CFLAG:MASTER:소속)
 		MONEY -= 고용액

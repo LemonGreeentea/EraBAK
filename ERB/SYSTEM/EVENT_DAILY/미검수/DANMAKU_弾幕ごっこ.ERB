@@ -10,8 +10,6 @@ RETURN 30
 ;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
 ;---------------------
 @EVENT_DAILY_DANMAKU_DECISION()
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
 RETURN DAY >= 5
 
 ;---------------------
@@ -74,23 +72,23 @@ IF IS_MALE(MASTER) || (HAS_PENIS(MASTER) && RAND:2)
 		대상해당능력 = ABL:대상:무투
 	ENDIF
 	
-	PRINTFORML 우연히 조우한 %조사처리(ANAME(대상),"로")%부터 탄막놀이를 도전해졌다
-	PRINTFORML 등을 돌릴 수도 없는, 받아 서는 일로 했다
-	PRINTFORML 준비하면, 그녀는 거리를 취하면서 탄막을 흩뿌려 왔다
+	PRINTFORML 우연히 만난 %조사처리(ANAME(대상),"로")%부터 모의전 신청이 들어왔다
+	PRINTFORML 그 호전적인 눈빛을 거절할 수 없어, 받아들이기로 했다
+	PRINTFORML 준비하면, 그녀는 엄폐하고 총을 발사했다
 	PRINTFORMW 어떻게 하지?
 	CALL ASK_MULTI("집중한다" , "옷을 노린다", "도망친다")
 	IF RESULT == 2
-		PRINTFORML 상대 하고 있을 수 없다
+		PRINTFORML 상대의 실력이 너무 뛰어났다
 		PRINTFORML 도망치기로 했다
 		RETURN 1
 	ELSEIF RESULT == 1
-		PRINTFORML 하늘을 나는 그녀의 지체는 매우 아름답고, 보고 있는 것만으로 불끈불끈 했다
-		PRINTFORML 어차피라면 좀 더 선정적으로 해 주자
-		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 기합을 넣어 그녀의 옷이 찢어지도록(듯이) 중점적으로 노렸다
+		PRINTFORML 그녀의 몸매가 너무 육감적이라 보고 있는 것만으로도 발기했다
+		PRINTFORML 하지면 실력은 이쪽이 한 수 위, 조금 장난을 쳐볼까.
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 기합을 넣어 그녀의 옷이 찢어지도록 노렸다
 		난이도 = 1
 	ELSE
-		PRINTFORML 진심으로 나돌지 않으면 위험한 상대다
-		PRINTFORMW 탄막을 피하는데 집중했다
+		PRINTFORML 진심으로 싸우지 않으면 위험한 상대다
+		PRINTFORMW 모의전에 모든 정신을 쏟기로 했다
 		난이도 = 0
 	ENDIF
 	PRINTFORML ·
@@ -99,21 +97,21 @@ IF IS_MALE(MASTER) || (HAS_PENIS(MASTER) && RAND:2)
 	IF  해당능력 / 10 >= (대상해당능력 / 10) + RAND:3 + 난이도
 		IF 난이도 == 1
 			PRINTFORML 이겼다!
-			PRINTFORML 목적 대로 그녀의 옷은 %ANAME(MASTER)%의 탄막으로 너덜너덜이 되었다
-			PRINTFORML 그녀는 지면에 주저앉아, 얼굴을 새빨갛게 해 양손으로 부드러운 살갗을 숨기려고 하고 있다
+			PRINTFORML 목적 대로 그녀의 옷은 피탄으로 너덜너덜하게 되었다
+			PRINTFORML 그녀는 지면에 주저앉아, 얼굴을 빨갛게 물들인 채 양손으로 부드러운 살갗을 숨기려고 하고 있다
 			PRINTFORMW 어떻게 하지?
 			CALL ASK_MULTI("돈" , "술" , "펠라치오" , "공개 자위" , "아무것도하지않는다")
 			IF RESULT == 4
-				PRINTFORML 좋은 승부였다고 그녀에게 손을 뻗쳤다
-				PRINTFORML 그녀는 맥 빠짐 한 모습이 되면서도, %ANAME(MASTER)%의 손을 잡았다
-				PRINTFORMW 하지만 곧바로 제 정신이 되면, 공공연하게 된 피부를 숨기는 것처럼 서둘러 달려갔다
+				PRINTFORML 좋은 승부였다고 그녀에게 손을 뻗었다
+				PRINTFORML 그녀는 맥이 빠진 모습이 되면서도, %ANAME(MASTER)%의 손을 잡았다
+				PRINTFORMW 하지만 곧바로 정신을 차리고 노출된 피부를 남은 옷가지로 숨기며 서둘러 달려갔다
 				CFLAG:대상:호감도 += 300
 				CALL COLOR_PRINT(@"%ANAME(대상)%의 평가가 올랐다", 칼라_주의)
 				PRINTFORMW
 			ELSEIF RESULT == 0
-				PRINTFORML 포상으로 해서 금품을 요구했다
-				PRINTFORML 그녀는 어쩔 수 없다고 말한 식으로 어깨를 움츠려 얌전하게 돈을 내몄다
-				PRINTFORMW 다음은 지지 않아요와 리벤지 선언을 하면, 공공연하게 된 피부를 숨기는 것처럼 서둘러 달려갔다
+				PRINTFORML 포상으로 금품을 요구했다
+				PRINTFORML 그녀는 어쩔 수 없다며 어깨를 움츠려 얌전하게 돈을 내몄다
+				PRINTFORMW 다음은 지지 않겠다는 말과 함께, 노출된 피부를 남은 옷가지로 숨기며 서둘러 달려갔다
 				금액 = 1000 + 500 * RAND:6 + 1
 				MONEY += 금액
 				CALL COLOR_PRINT(@"금{금액}를 손에 넣었다", 칼라_주의)
@@ -124,8 +122,8 @@ IF IS_MALE(MASTER) || (HAS_PENIS(MASTER) && RAND:2)
 			ELSEIF RESULT == 1
 				PRINTFORML 포상으로 해서 술을 요구했다
 				LOCAL = RAND:3 + 1
-				PRINTFORML 그녀는 어쩔 수 없다고 말한 식으로 어깨를 움츠려 청주를 내몄다
-				PRINTFORMW 다음은 지지 않아요와 리벤지 선언을 하면, 공공연하게 된 피부를 숨기는 것처럼 서둘러 달려갔다
+				PRINTFORML 그녀는 어쩔 수 없다고 말하며 청주를 내몄다
+				PRINTFORMW 다음은 지지 않겠다는 말과 함께, 노출된 피부를 남은 옷가지로 숨기며 서둘러 달려갔다
 				ITEM:청주 += LOCAL
 				CALL COLOR_PRINT(@"청주를 {LOCAL}개 손에 넣었다", 칼라_주의)
 				PRINTFORML
@@ -133,16 +131,16 @@ IF IS_MALE(MASTER) || (HAS_PENIS(MASTER) && RAND:2)
 				CALL COLOR_PRINT(@"%ANAME(대상)%의 평가가 올랐다", 칼라_주의)
 				PRINTFORMW 
 			ELSEIF RESULT == 2
-				PRINTFORML 므흣 온 %조사처리(ANAME(MASTER),"는")% 그녀에게 펠라치오를 요구했다
+				PRINTFORML 꼴린 %조사처리(ANAME(MASTER),"는")% 그녀에게 펠라치오를 요구했다
 				IF ABL:대상:성지식 == 0
-					PRINTFORML 하지만 %조사처리(ANAME(대상),"는")% 멍청히 하고 있어 무슨 일인가 모르고 있다
-					PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀를 그늘에 데리고 들어가면, 눈앞에 페니스를 노출했다
-					PRINTFORML %조사처리(ANAME(대상),"는")% 오싹 하고 있었지만, 처음 볼 것이다 거기에 못박음이 되어 있다
+					PRINTFORML 하지만 %조사처리(ANAME(대상),"는")% 무슨 일인지 전혀 눈치채지 못하고 있었다
+					PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀를 그늘에 데리고 들어가 눈앞에 페니스를 노출했다
+					PRINTFORML %조사처리(ANAME(대상),"는")% 처음 본 남성기에 얼어붙었지만, 그 우람한 자태에 눈을 뗄 수가 없다
 					PRINTFORMW %조사처리(ANAME(MASTER),"가")% 방식을 설명해 재촉 하면, 그녀는 흠칫흠칫 손을 뻗었다
 					PRINTFORML 
 					PRINTFORML 그녀의 손가락과 혀가 천천히 %ANAME(MASTER)%의 페니스를 훑는다
-					PRINTFORML 그 변변치않으면서 청순한 표정과 행동에 흥분이 높아져, 페니스가 터질듯이 된다
-					PRINTFORML 인내할 수 없게 되어 %ANAME(대상)%에 물게 하면, 목 안 노려 마음껏 정액을 발했다
+					PRINTFORML 그 변변치않으면서 청순한 표정과 행동에 흥분되어, 페니스가 터질듯이 된다
+					PRINTFORML 참을 수 없어 %ANAME(대상)%에 페니스를 물게 하고, 목 안 깊숙히 마음껏 정액을 발했다
 					PRINTFORMW 그녀는 얼굴을 진동시키고 피하려고 하지만, 단단히 얼굴을 잡아 사정을 계속한다
 					PRINTFORML 신음소리를 올리면서 빠지지 않게 정액을 삼켜 가는 목의 움직임이 더욱 마음 좋게 페니스를 자극했다
 					PRINTFORML 사정을 끝내고 해방해 주면, %조사처리(ANAME(대상),"는")% 콜록콜록 길들어 모이를 먹게 되어 입안에 남은 정액을 토해냈다
@@ -206,19 +204,19 @@ IF IS_MALE(MASTER) || (HAS_PENIS(MASTER) && RAND:2)
 		ELSE
 			PRINTFORML 이겼다!
 			PRINTFORML 그녀는 지면에 쓰러져, 패배를 인정했다
-			PRINTFORMW 뭔가 해 받을까?
+			PRINTFORMW 뭔가 요구할까?
 			CALL ASK_MULTI("돈" , "술", "펠라치오", "아무것도하지않는다")
 			IF RESULT == 3
 				PRINTFORML 좋은 승부였다고 그녀에게 손을 뻗쳤다
-				PRINTFORML 그녀는 맥 빠짐 한 모습이 되면서도, %ANAME(MASTER)%의 손을 잡았다
+				PRINTFORML 그녀는 허탈하게 웃으며, %ANAME(MASTER)%의 손을 잡았다
 				PRINTFORMW 그 후, 시시한 회화를 하고 나서 그녀와 헤어졌다
 				CFLAG:대상:호감도 += 300
 				CALL COLOR_PRINT(@"%ANAME(대상)%의 평가가 올랐다", 칼라_주의)
 				PRINTFORMW
 			ELSEIF RESULT == 0
 				PRINTFORML 포상으로 해서 금품을 요구했다
-				PRINTFORML 그녀는 어쩔 수 없다고 말한 식으로 어깨를 움츠려 얌전하게 돈을 내몄다
-				PRINTFORMW 다음은 지지 않아요와 리벤지 선언을 하면, 그녀는 날아가 버려 갔다
+				PRINTFORML 그녀는 어쩔 수 없다며 어깨를 움츠려 얌전하게 돈을 내몄다
+				PRINTFORMW 다음은 지지 않겠다는 리벤지 선언을 하고, 그녀는 조용히 물러났다
 				금액 = 1000 + 500 * RAND:6 + 1
 				MONEY += 금액
 				CALL COLOR_PRINT(@"금{금액}를 손에 넣었다", 칼라_주의)
@@ -229,8 +227,8 @@ IF IS_MALE(MASTER) || (HAS_PENIS(MASTER) && RAND:2)
 			ELSEIF RESULT == 1
 				PRINTFORML 포상으로 해서 술을 요구했다
 				LOCAL = RAND:3 + 1
-				PRINTFORML 그녀는 어쩔 수 없다고 말한 식으로 어깨를 움츠려 청주를 내몄다
-				PRINTFORMW 다음은 지지 않아요와 리벤지 선언을 하면, 그녀는 날아가 버려 갔다
+				PRINTFORML 그녀는 어쩔 수 없다며 어깨를 움츠려 청주를 내몄다
+				PRINTFORMW 다음은 지지 않겠다는 리벤지 선언과 함께, 그녀는 조용히 물러났다
 				ITEM:청주 += LOCAL
 				CALL COLOR_PRINT(@"청주를 {LOCAL}개 손에 넣었다", 칼라_주의)
 				PRINTFORML
@@ -280,7 +278,7 @@ IF IS_MALE(MASTER) || (HAS_PENIS(MASTER) && RAND:2)
 		ENDIF
 	ELSE
 		PRINTFORML 져 버렸다!
-		PRINTFORMW %조사처리(ANAME(대상),"는")% 소리 높이 승리를 선언하면서 날아가 버려 갔다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 소리 높이 승리를 선언하면서 호쾌한 걸음으로 사라졌다
 		CALL ADD_COOLTIME(MASTER, 2)
 		PRINTFORMW 
 	ENDIF
@@ -288,29 +286,29 @@ IF IS_MALE(MASTER) || (HAS_PENIS(MASTER) && RAND:2)
 	CFLAG:대상:안면 = 1
 ;당신이 여자의 경우
 ELSE
-	PRINTFORML 들요괴로부터 탄막놀이를 도전해졌다
+	PRINTFORML 모브로부터 모의전 신청이 왔다
 	PRINTFORMW 어떻게 하지?
-	CALL ASK_YN("받아 선다", "도망친다")
+	CALL ASK_YN("맞서 싸운다", "도망친다")
 	IF RESULT == 1
 		PRINTFORML 지금은 그런 기분은 아니다
-		PRINTFORMW 도망치지만 승리다
+		PRINTFORMW 적당히 도망쳤다
 		RETURN 1
 	ELSE
-		PRINTFORML 등을 돌릴 수도 없는, 받아 서는 일로 했다
-		PRINTFORMW 준비하면, 그는 몹시 거칠게 탄막을 흩뿌려 왔다
+		PRINTFORML  맞서 싸우기로 했다.
+		PRINTFORMW 준비하면, 그는 어느 새 엄폐하여 이쪽으로 총을 쏘고 있었다.
 	ENDIF
 	PRINTFORML ·
 	PRINTFORML ·
 	PRINTFORMW ·
 	IF  해당능력 * (RAND:10 + 1) >= RAND(40 ,70) * (RAND:10 + 1) + (DAY / 2)
 		PRINTFORML 이겼다!
-		PRINTFORMW 좋은 승부가 되어있고 자신이 붙었다
+		PRINTFORMW 좋은 승부가 되었고, 또 좋은 경험이 되었다.
 		CALL PRINT_ADD_EXP(MASTER, "무투경험치", RAND:10 + 6, 1)
 		CALL PRINT_ADD_EXP(MASTER, "지략경험치", RAND:10 + 6, 1)
 
 	ELSE
 		PRINTFORML 져 버렸다
-		PRINTFORMW 요괴는 너덜너덜이 된 %조사처리(ANAME(MASTER),"를")% 메면, 보금자리로 옮겼다
+		PRINTFORMW 모브는 너덜너덜이 된 %조사처리(ANAME(MASTER),"를")% 어께에 메고, 보금자리로 옮겼다
 		PRINTFORML 
 		SELECTCASE RAND:40
 			CASE 0

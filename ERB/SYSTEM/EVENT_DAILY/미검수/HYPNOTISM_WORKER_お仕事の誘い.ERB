@@ -8,8 +8,6 @@ RETURN 35
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_HYPNOTISM_WORKER_DECISION()
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
 SIF CFLAG:MASTER:포로처 != 0
 	RETURN 0
 SIF DVAR:최면일_상태관리플래그 != 0

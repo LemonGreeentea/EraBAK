@@ -11,10 +11,8 @@ RETURN 30
 ;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
 ;---------------------
 @EVENT_DAILY_ALCOHOL_DECISION()
-
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
 RETURN 1
+
 ;---------------------
 ;장르
 ;콘피그 설정으로 사용
@@ -37,14 +35,14 @@ CALL ASK_MULTI("부하와 마신다" ,"병사들과 연회를 연다" ,"동료�
 IF RESULT == 3
 	PRINTFORMW 혼자서 한가롭게 마시기로 했다
 ELSEIF RESULT == 1
-	PRINTFORMW 병사들의 평소의 노를 위로하기 위해서(때문에) 연회를 열었다
+	PRINTFORMW 학생들의 평소의 스트레스를 위로하기 위해서 연회를 열었다
 	PRINTFORMW …연회는 많이 분위기를 살려, 그들도 기뻐해 준 것 같다
 	IF MASTER != GET_COUNTRY_BOSS(CFLAG:MASTER:소속)
 		PRINTFORMW 연회에 대해 군주의 귀에 들려와, 평가를 올렸다
 		CFLAG:GET_COUNTRY_BOSS(CFLAG:MASTER:소속):호감도 += 100 + RAND:100
 	ENDIF
 ELSEIF RESULT == 0
-	PRINTFORMW 부하와 서로 마시기로 했다
+	PRINTFORMW 비서와 서로 마시기로 했다
 	PRINTFORMW …술의 덕분인가, 본심을 털어놓는 서로 이야기할 수 있었다
 	SELECTCASE RAND:4
 		CASE 0
@@ -59,13 +57,13 @@ ELSEIF RESULT == 0
 	PRINTFORMW 
 	IF IS_FEMALE(MASTER)
 		PRINTFORMW 
-		PRINTFORML 정도 좋게 취해 왔을 무렵, 그가 자연스럽게 신체에 닿아 왔다
+		PRINTFORML 기분 좋게 취해 왔을 무렵, 그가 자연스럽게 신체에 닿아 왔다
 		PRINTFORMW 그를 올려보면, 얼굴을 대어 응시하고 돌려주었다
 		CALL ASK_YN("저항한다", "저항하지 않는다")
 		IF RESULT == 0
-			PRINTFORMW 간언하기 위해서(때문에) 가볍게 핑거펀치를 하면 그는 유감스러운 듯이 어깨를 움츠렸다
+			PRINTFORMW  가볍게 딱밤을 때리면, 그는 유감스러운 듯이 어깨를 움츠렸다
 		ELSE
-			PRINTFORML 적당한 기분의 %조사처리(ANAME(MASTER),"는")% 저항하지 않고 그에게 의지했다
+			PRINTFORML 달아오른 기분으로, %조사처리(ANAME(MASTER),"는")% 저항하지 않고 그에게 의지했다
 			PRINTFORMW 그는 %ANAME(MASTER)%의 어깨를 안아 입술을 차지해, 천천히 쓰러트렸다
 			PRINTFORML ·
 			PRINTFORML ·
@@ -90,7 +88,7 @@ ELSE
 		PRINTFORMW 그는 기꺼이 교제해 주었다
 	ENDIF
 	PRINTFORML 
-	PRINTFORMW 맛있는 술을 술안주에 둘이서 서로 즐겁게 마셨다
+	PRINTFORMW 맛있는 술과 술안주에 둘이서 서로 즐겁게 마셨다
 	CFLAG:대상:안면 = 1
 	CFLAG:대상:호감도 += 50 + RAND:50
 	IF HAS_PENIS(MASTER) && IS_FEMALE(대상)
@@ -98,7 +96,7 @@ ELSE
 		PRINTFORML 어떻게 하지?
 		CALL ASK_YN("살그머니 몸을 댄다", "계속 이대로 마신다")
 		IF RESULT == 1
-			PRINTFORMW 이 분위기를 기다리거나와 즐기기로 했다
+			PRINTFORMW 이 분위기를 즐기기로 했다
 			CFLAG:대상:호감도 += 50 + RAND:50
 		ELSE
 			PRINTFORMW 당신은 살그머니 %ANAME(대상)%에 몸을 대었다
@@ -109,7 +107,7 @@ ELSE
 					SIF CFLAG:(LOCAL):소속 == CFLAG:MASTER:소속 && !CFLAG:(LOCAL):포로처 && IS_FEMALE(LOCAL) && !IS_ANIMAL(LOCAL)
 						CFLAG:(LOCAL):호감도 -= 200
 				NEXT
-				CALL COLOR_PRINT(@"이야기가 퍼져, 여성진의 평가가 내렸다…", 칼라_주의)
+				CALL COLOR_PRINT(@"이야기가 퍼져, 여학생들에게 평판이 내렸다…", 칼라_주의)
 				PRINTFORMW 
 			ELSE
 				PRINTFORML 그녀는 뺨을 붉히면서도 저항하지 않고 의지해 왔다
@@ -118,19 +116,19 @@ ELSE
 				PRINTFORML ·
 				PRINTFORMW ·
 				IF TALENT:대상:처녀 == 1
-					PRINTFORML 당신은 처음의 아픔으로 꼬옥 하고 껴안아 오는 그녀를 상냥하게 어르도록(듯이) 허리를 흔드는
-					PRINTFORML 신음할 뿐이었던 %ANAME(대상)%도, 신체가 풀려 오는 것에 따라 점차 목으로부터 달콤한 한숨을 루등 하기 시작한다
-					PRINTFORMW 조금씩 허리의 움직임을 빨리 해 가고 안쪽을 찔러 주면, 그녀는 흠칫 신체를 뛰게 했다
-					PRINTFORML 힘든 질의 조임에 인내의 한계에 이르러, 마음껏 사정하면, %조사처리(ANAME(대상),"는")% 크게 뒤로 젖히면서 교성을 올렸다
-					PRINTFORML …잠깐 절정의 여운에 잠기도록(듯이) 서로 껴안은 후, 페니스를 뽑아 내면 걸죽 빨강과 흰색의 체액이 넘쳐 나왔다
+					PRINTFORML 당신은 처음의 아픔으로 꼬옥 하고 껴안아 오는 그녀를 상냥하게 어르듯이 허리를 흔든다
+					PRINTFORML 고통으로 신음할 뿐이었던 %ANAME(대상)%도, 신체가 풀려 오는 것에 따라 점차 목으로부터 달콤한 한숨을 내뱉기 시작한다
+					PRINTFORMW 조금씩 허리의 움직임을 빠르게하고 안쪽을 찔러 주면, 그녀는 흠칫 허리를 뛰게 했다
+					PRINTFORML 빡빡한 질의 조임에 인내의 한계에 이르러, 마음껏 사정하면 %조사처리(ANAME(대상),"는")% 허리를 크게 뒤로 젖히면서 상스러운 교성을 올렸다
+					PRINTFORML …잠깐 절정의 여운에 잠기며 서로 껴안은 후, 페니스를 뽑아 내면 걸쭉한 빨강과 흰색의 체액이 넘쳐 나왔다
 					PRINTFORMW 처음을 끝낸 그녀는 숨을 거칠게 해, 눈물을 흘리면서도 황홀로 한 표정으로 넘치는 체액을 바라보고 있었다
-					PRINTFORMW 당신과 %조사처리(ANAME(대상),"는")% 그 뒤도 열에 들뜬 것처럼 밤새 한껏 서로 사랑했다
+					PRINTFORMW 당신과 %조사처리(ANAME(대상),"는")% 그 뒤로도 열에 들뜬 것처럼 밤새 한껏 서로 사랑했다
 				ELSE
 					SELECTCASE RAND:10
 						CASE 0
-							PRINTFORMW 사랑스럽게 교성을 올리는 그녀를 한껏 예의범절을 가르쳤다
+							PRINTFORMW 사랑스럽게 교성을 올리는 그녀에게 한껏 예의범절을 가르쳤다
 						CASE 1
-							PRINTFORMW 고조되는 육욕인 채 짐승과 같이 격렬하게 계속 교접했다
+							PRINTFORMW 고조되는 육욕으로 짐승과 같이 격렬하게 계속 교접했다
 						CASE 2
 							PRINTFORMW 정열적으로 요구해 오는 그녀에게 한껏 짜졌다
 						CASE 3

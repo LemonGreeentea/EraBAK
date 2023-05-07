@@ -11,10 +11,6 @@ RETURN 30
 ;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
 ;---------------------
 @EVENT_DAILY_HOUSEBOAT_DECISION()
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
-SIF FLAG:데일리이벤트_NTR == 0
-	RETURN 0
 RETURN DAY >= 12
 
 ;---------------------
@@ -35,33 +31,35 @@ RETURN 데일리_장르_에로
 #DIM 금액
 
 IF DVAR:지붕있는놀잇배_발생플래그 == 0
-	PRINTFORML 어느 날, 지붕있는 놀잇배의 초대장과 기모노가 도착했다
-	PRINTFORML 지저의 온천가로 요괴가 경영하고 있어서, 세련된 내장과 환상적인 분위기가 평판인것 같다
-	PRINTFORMW 초대주는 환상향 각지에서 마피아 비슷한 활동을 하고 있는 들요괴 집단의 수령이다
-	PRINTFORML …하지만 초대라고 해도 대부분 협박장과 같은 것이다
-	PRINTFORML 그 내용은 도둑에게 휩쓸어진 마을 아가씨를 보호했으므로, 그 취급에 대해 대화를 하고 싶은, 이라는 일이다
-	PRINTFORML 속이 빤한 내용이다, 사실은 무리가 휩쓸었을지도 모른다
-	PRINTFORMW 이지만 막힘없이 거절하면 그녀들이 어떻게 되어 버리는지는 상상하기 어렵지 않다
+	PRINTFORML 어느 날, 오딧세이 해양학교의 문양이 적힌 초대장과 기모노가 도착했다
+	PRINTFORML 학교함 중 '블랙 플래닛 호' 라는 배에서 보낸 초대장이었다.
+	PRINTFORML 학교의 이름을 빌리고 있지만, 오딧세이 해양학교의 성격 상 이 배는 범죄조직의 휘하의 선박임이 분명했다. 
+	PRINTFORMW 초대자의 이름은 블랙마켓에서 익히 들어온 범죄조직의 수장이었다.
+	PRINTFORML 불안한 마음에 열어본 편지에는, 눈살을 찌푸리게 하는 글이 적혀 있었다.
+	PRINTFORML 불량배에게 공격받던 학생들을 보호했으므로, 그 학생들에 대한 교섭을 하고 싶다는 내용이다
+	PRINTFORML 마치 좋은 일을 한 것 같아 보이지만, 사실은 그들이 억지로 학생들을 납치한 것이다.
+	PRINTFORMW 그 뻔뻔함에 치가 떨리고 당장 달려가서 때려눕혀주고 싶지만, 섣불리 행동하다간 학생들이 위험해진다. 
+	PRINTFORMW 그렇다고 초대를 거절하면 그녀들이 어떻게 되어 버리는지는 상상하기 어렵지 않았다.
 	DVAR:지붕있는놀잇배_발생플래그 = 1
 ELSEIF DVAR:지붕있는놀잇배_발생플래그 == 2
-	PRINTFORML %ANAME(MASTER)% 앞으로 다시, 지붕있는 놀잇배의 “초대장”이 닿았다
-	PRINTFORML 전회나 개들의 수령을 죽였을 텐데, 새로운 요괴가 조직을 계승한 것 같다
-	PRINTFORMW 내용은 전회같이, 영지민들의 취급해에 대한 대화에 대해 다
+	PRINTFORML %ANAME(MASTER)% 앞으로 다시 '블랙 플래닛 호'의 “초대장”이 도착했다
+	PRINTFORML 저번에 분명 수장을 죽였을 텐데, 새로운 사람이 조직을 계승한 것 같다
+	PRINTFORMW 내용은 전과 같이 학생들의 취급에 대한 교섭이었다.
 ELSE
-	PRINTFORML %ANAME(MASTER)% 앞으로 다시, 지붕있는 놀잇배의 “초대장”이 닿았다
-	PRINTFORML 내용은 전회같이, 영지민들의 취급해에 대한 대화에 대해 다
-	PRINTFORMW 저런 무리와는 이제 관련되고 싶지 않지만……
+	PRINTFORML %ANAME(MASTER)% 앞으로 다시 '블랙 플래닛 호'의 “초대장”이 닿았다
+	PRINTFORML 내용은 전과 같이 학생들의 취급에 대한 교섭이었다.
+	PRINTFORMW 저런 범죄조직과 이제 관련되고 싶지 않지만……
 ENDIF
 $ASK_LOOP
 PRINTFORML 어떻게 하지?
 CALL ASK_MULTI("초대를 받는다" ,"거절한다" ,"특수부대를 보낸다")
 IF RESULT == 2
-	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 지붕있는 놀잇배에 특수부대를 보내기로 했다
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 블랙 플래닛 호에 특수부대를 보내기로 했다
 	PRINTFORML ·
 	PRINTFORML ·
 	PRINTFORML ·
-	PRINTFORML 특수부대는 지붕있는 놀잇배의 수령을 암살해, 마을 아가씨를 구해 냈다!
-	PRINTFORMW 이것으로 한동안은 녀석들의 활동도 들어갈 것이다……
+	PRINTFORML 특수부대는 범죄조직의 수령을 암살해, 학생들을 구해 냈다!
+	PRINTFORMW 이것으로 한동안은 녀석들의 활동도 줄어들 것이다……
 	DVAR:지붕있는놀잇배_발생플래그 = 2
 	RETURN 1
 ELSEIF RESULT == 1
@@ -70,23 +68,23 @@ ELSEIF RESULT == 1
 	PRINTFORML ·
 	PRINTFORML ·
 	PRINTFORML ·
-	CALL COLOR_PRINT(@"%ANAME(MASTER)%의 행위의 대상으로서 휩쓸어진 아가씨들이 울분에 요괴들에게 능욕 되어 버린 것 같다……", 칼라_경고)
+	CALL COLOR_PRINT(@"%ANAME(MASTER)%의 행동으로, 잡힌 학생들이 범죄 조직의 사람들에게 능욕 되어 버린 것 같다……", 칼라_경고)
 	PRINTFORMW 
 	CALL HOUSEBOAT_INSULT
 	FOR LOCAL, 1, MAX_COUNTRY
 		SIF IS_COUNTRY(LOCAL)
 			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:1, -50, 50)
 	NEXT
-	CALL COLOR_PRINT(@"영지민을 버린 사실은 순식간에 퍼져, 타국의 평판이 내렸다……", 칼라_주의)
+	CALL COLOR_PRINT(@"학생들을 버린 사실은 순식간에 퍼져, 타국의 평판이 내렸다……", 칼라_주의)
 	PRINTFORMW 
 	DVAR:지붕있는놀잇배_발생플래그 = 1
 	RETURN 1
 ELSE
 	PRINTFORML 부득이 초대를 받기로 했다
-	PRINTFORML 초대장에는 사자에게는 꼭 동봉의 기모노를 입고 왔으면 좋겠다고 쓰여져 있다
-	PRINTFORMW 넓혀 보면 마치 기녀가 입는 것 같은 눈부신 호사스러운 것이다
-	PRINTFORML 함정등은 없는 것 같지만…초대주의 취미인 것일까
-	PRINTFORML 어쨌든, 이것을 입고 가게 한다면 사자는 여성이 된다
+	PRINTFORML 초대장에는 꼭 동봉의 기모노를 입고 왔으면 좋겠다고 쓰여져 있다
+	PRINTFORMW 기모노를 펼쳐 보면, 마치 화류계의 여성이 입는 것 같은 화려한 문양이 있었다.
+	PRINTFORML 특별한 장치는 없는 것 같지만… 초대주의 취미인 것일까
+	PRINTFORML 어쨌든, 이것을 입고 가게 한다면 교섭가는 여성이 된다
 	PRINTFORMW 누구를 보내자?
 	CALL SINGLE_DRAWLINE
 	CALL SELECT_CHARA_LIST_ONLY_LOGIC_SEX("HOUSEBOAT", "HOUSEBOAT")
@@ -100,82 +98,84 @@ ELSE
 	ELSE
 		PRINTFORML %조사처리(ANAME(대상),"를")% 배웅했다
 	ENDIF
-	PRINTFORMW %조사처리(ANAME(대상),"는")% 지정된 기모노로 갈아입으면, 지저로 향했다……
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 지정된 기모노로 갈아입고 블랙 플래닛 호로 향했다……
 	PRINTFORML 
-	PRINTFORML 약속 장소에 향한다고 편지의 발신인인것 같은 요괴가 기다리고 있었다
-	PRINTFORML 그는 몸치장한 %조사처리(ANAME(대상),"를")% 보면 휘파람을 불어 만족한 것 같게 웃었다
-	PRINTFORMW 그는 익숙해진 손놀림으로 %ANAME(대상)%의 어깨를 안으면, 묵게 해 있던 지붕있는 놀잇배에 데리고 들어갔다
-	PRINTFORML 다수의 부하에게 둘러싸이는 것을 각오 하고 있었지만, 전세포장마차배로 1대 1의 대화가 되었다
-	PRINTFORML 고상한 장식안, 호화로운 식사와 술을 늘어놓을 수 있어 공식상은 환영 무드였다
-	PRINTFORMW 하지만 %조사처리(ANAME(대상),"는")% 그의 시선이 추잡하게 자신을 품평 하고 있는 것을 느꼈다
-	PRINTFORML %조사처리(ANAME(대상),"가")% 적당하게 그에게 교제한 뒤로 주제를 자르면, 그는 힐쭉 웃음구를 열었다
-	PRINTFORML 이야기의 내용은 편지대로, 영내의 아가씨를“보호”했으므로 매입하기 바란다는 일이다
-	PRINTFORML 얼마라고 물으면, 그는 입맛을 다심 하면서 얼굴을 즈이와 접근하고
-	PRINTFORMW 「돈 대신에 너의 신체를 보내라」라고 고해 왔다
-	PRINTFORML 그 끈적한 말에 %조사처리(ANAME(대상),"는")% 무심코 오싹 등줄기를 진동시킨다
-	PRINTFORML 무심코 거절의 말을 토할 것 같게 되었지만, 아가씨들을 생각해 훨씬 견뎠다
+	PRINTFORML 약속 장소에 도착하니 편지의 발신인인 것 같은 불량배가 기다리고 있었다
+	PRINTFORML 그는 치장한 %조사처리(ANAME(대상),"를")% 보면 휘파람을 불어 만족한 것 같았다.
+	PRINTFORMW 그는 익숙한 손놀림으로 %ANAME(대상)%의 어깨를 안고, 블랙 플래닛 호에 데리고 들어갔다
+	PRINTFORML 배 안에는 많은 사람들이 있었지만, 그들의 용모나 복장으로 보아 범죄 조직의 일원인 것 같았다.
+	PRINTFORML 잡힌 학생들은 어디 있을까 둘러보았지만, 눈에 띄는 곳에는 없었다.
+	PRINTFORML 다수의 부하에게 둘러싸이는 것을 각오하고 있었지만, 화려한 방에 데려가져 1대 1의 대화가 되었다
+	PRINTFORML 고상한 장식과, 호화로운 식사와 술을 제공받아 분위기는 환영하는 느낌이였다
+	PRINTFORMW 하지만 %조사처리(ANAME(대상),"는")% 그의 시선이 추잡하게 자신을 품평하고 있는 것을 느꼈다
+	PRINTFORML %조사처리(ANAME(대상),"가")% 적당하게 그에게 교제한 뒤로 본심을 물으면, 그는 힐쭉 웃었다
+	PRINTFORML 이야기의 내용은 편지대로, 학생들을 “보호”했으므로 넘겨주는 대신 댓가를 바란다는 것이다.
+	PRINTFORML 얼마라고 물으면, 그는 입맛을 다시면서 얼굴을 가까이 대고
+	PRINTFORMW 「돈 대신에 너의 몸을 바쳐라」라고 고해 왔다
+	PRINTFORML 그 혐오스러운 말에 %조사처리(ANAME(대상),"는")% 무심코 오싹 등줄기를 진동시킨다
+	PRINTFORML 당장에다로 거절하고 자리를 박차고 싶었지만, 잡힌 학생들을 생각하며 참았다.
 	PRINTFORMW …어떻게 하지?
-	CALL ASK_MULTI("참고 받아들인다" ,"금전 교섭에 반입한다" ,"베기 시작한다")
+	CALL ASK_MULTI("참고 받아들인다" ,"금전 교섭으로 이끈다" ,"쏜다")
 	IF RESULT == 1
 		PRINTFORML 그런 요구에는 따를 수 없다
-		PRINTFORMW %조사처리(ANAME(대상),"는")% 노력해 정중하게 거절해, 금전에서의 거래를 가져 걸었다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 침착하고 정중하게 거절해, 금전 거래를 제안했다.
 		PRINTFORML ·
 		PRINTFORML ·
 		PRINTFORMW ·
 		IF ABL:대상:정치 * (RAND:5 + 1) > 30 * (RAND:9 + 1)
 			PRINTFORMW 성공했다!
-			PRINTFORML 그는 %ANAME(대상)%의 이야기에 기분을 자주(잘) 해, 거래를 타고 왔다
+			PRINTFORML 그는 %ANAME(대상)%의 이야기를 듣고 금전 거래를 하기로 했다.
 			금액 = 10000 + 5000 * (RAND:5) + DAY * 400
-			PRINTFORMW 아가씨들전원의 대금으로서 닫아 돈{금액}를 요구했다
+			PRINTFORMW 학생들 전원의 대금으로서 크레딧{금액}을 요구했다
 			CALL ASK_MULTI_JUDGE("지불한다", MONEY >= 금액,"거절한다", 1)
 			IF RESULT == 0
-				PRINTFORML 높지만 아가씨들의 생명에는 대신할 수 없다
-				PRINTFORML 금을 지불해 그녀들을 되샀다
-				PRINTFORML 그는 돈을 받으면, 천하게 보인 미소를 띄우면서 떠나 갔다
-				PRINTFORMW %조사처리(ANAME(대상),"는")% 눈물을 흘려 감사하는 아가씨들을 데려 돌아갔다
+				PRINTFORML 상당히 비싸지만 학생들을 대신할 수 없다
+				PRINTFORML 크레딧을 지불해 그녀들을 되샀다
+				PRINTFORML 그는 크레딧을 받으면, 천박한 미소를 띄우면서 떠나 갔다
+				PRINTFORMW %조사처리(ANAME(대상),"는")% 눈물을 흘려 감사하는 학생들을 데려 돌아갔다
 				MONEY -= 금액
-				CALL COLOR_PRINT(@"금{금액}를 지불했다", 칼라_주의)
+				CALL COLOR_PRINT(@"크레딧{금액}를 지불했다", 칼라_주의)
 				PRINTFORMW 
 			ELSE
 				PRINTFORML 그렇게 불합리한 금액은 지불할 수 없다
 				PRINTFORML 어떻게든 깎으려고 했지만 그는 완고하게 거절해 왔다
-				PRINTFORMW 결국 마을 아가씨들을 해방시킬 수 없었다
+				PRINTFORMW 결국 학생들을 해방시킬 수 없었다
+				PRINTFORML %ANAME(대상)%는 교섭에 실패한 채로 터덜터덜 학교로 돌아갔다...
 				PRINTFORML ·
 				PRINTFORML ·
-				PRINTFORML ·
-				CALL COLOR_PRINT(@"%ANAME(대상)%의 행위의 대상으로서 휩쓸어진 아가씨들은 요괴모두의 노리겟감에게 능욕 되어 버린 것 같다……", 칼라_경고)
+				CALL COLOR_PRINT(@"%ANAME(대상)%의 행동으로 학생들은 범죄조직에게 능욕되어 버린 것 같다……", 칼라_경고)
 				PRINTFORMW 
 				CALL HOUSEBOAT_INSULT
 				FOR LOCAL, 1, MAX_COUNTRY
 					SIF IS_COUNTRY(LOCAL)
 						CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:1, -50, 50)
 				NEXT
-				CALL COLOR_PRINT(@"마을 아가씨들이 된 일은 순식간에 퍼져, 타국의 평판이 내렸다……", 칼라_주의)
+				CALL COLOR_PRINT(@"이 일은 순식간에 퍼져, 타국의 평판이 내렸다……", 칼라_주의)
 				PRINTFORMW 
 			ENDIF
 		ELSE
 			PRINTFORMW 실패해 버렸다……
-			PRINTFORML %ANAME(대상)%의 장황한 이야기에 그는 인내심의 한계를 느껴 난폭하게 쓰러트렸다
-			PRINTFORMW 그리고 떨리는 %ANAME(대상)%에게 천하게 보인 미소를 띄워, 흉포한 페니스를 노출해 덤벼 들어 왔다
+			PRINTFORML %ANAME(대상)%의 장황한 이야기에 그는 인내심의 한계를 느껴 %ANAME(대상)%를 난폭하게 쓰러트렸다
+			PRINTFORMW 그리고 떨리는 %ANAME(대상)%에게 천박한 미소를 띄워, 흉포한 페니스를 발기시켰다.
 			CALL HOUSEBOAT_RAPE(대상)
-			PRINTFORML 그는 %조사처리(ANAME(대상),"를")% 심하게 범해진 후, 지저의 입구에 내던졌다
-			PRINTFORMW %조사처리(ANAME(대상),"는")% 자궁에 계속 남는 그의 열에 몸을 진동시키면서, 휘청거리는 발걸음으로 귀로에 들었다
+			PRINTFORML 그는 %조사처리(ANAME(대상),"를")% 심하게 범해진 후 항구에 내던졌다
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 자궁에 남아 있는 정액의 열기를 느끼며 휘청거리는 발걸음으로 학교로 돌아갔다
 			PRINTFORML ·
 			PRINTFORML ·
 			PRINTFORML ·
-			CALL COLOR_PRINT(@"%ANAME(대상)%의 행위의 대상으로서 휩쓸어진 아가씨들은 본보기로 요괴들에게 능욕 되어 버린 것 같다……", 칼라_경고)
+			CALL COLOR_PRINT(@"학생들은 범죄조직에 능욕 되어 버린 것 같다……", 칼라_경고)
 			PRINTFORMW 
 			CALL HOUSEBOAT_INSULT
 			FOR LOCAL, 1, MAX_COUNTRY
 				SIF IS_COUNTRY(LOCAL)
 					CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:1, -50, 50)
 			NEXT
-			CALL COLOR_PRINT(@"%ANAME(대상)%의 경솔한 행동의 전말은 순식간에 퍼져, 타국의 평판이 내렸다……", 칼라_주의)
+			CALL COLOR_PRINT(@"이 일은 순식간에 퍼져, 타국의 평판이 내렸다……", 칼라_주의)
 			PRINTFORMW 
 		ENDIF
 		DVAR:지붕있는놀잇배_발생플래그 = 1
 	ELSEIF RESULT == 2
-		PRINTFORML 지나친 무례한 요구에 %조사처리(ANAME(대상),"는")% 딱 되어 검을 뽑았다
+		PRINTFORML 지나치게 무례한 요구에 %조사처리(ANAME(대상),"는")% 분노하며 총을 겨눴다.
 		PRINTFORMW 하지만 그는 기가 죽는 모습도 없고 겁없는 미소를 띄워, 덤벼 들어 왔다
 		PRINTFORML ·
 		PRINTFORML ·
@@ -184,50 +184,50 @@ ELSE
 			LOCAL:2 = 20
 		IF ABL:대상:무투 * (RAND:5 + 1) > 30 * (RAND:9 + 1) + LOCAL:2
 			PRINTFORMW 이겼다!
-			PRINTFORML 피 젖고로 쓰러지고 와그의 모습에 시원해진 %조사처리(ANAME(대상),"였")%지만, 아가씨들을 생각해 내 제 정신이 되었다
-			PRINTFORMW 그 후 당황해 그녀들을 수색했지만, 끝내 찾아낼 수 없었다
+			PRINTFORML 피에 젖은 그의 시체를 보며 웃는 %조사처리(ANAME(대상),"였")%지만, 학생들을 생각해 내 제정신이 되었다
+			PRINTFORMW 그 후 다급하게 그녀들을 수색했지만, 끝내 찾아낼 수 없었다.
 			PRINTFORML ·
 			PRINTFORML ·
 			PRINTFORML ·
-			CALL COLOR_PRINT(@"%ANAME(대상)%의 행위의 대상으로서 휩쓸어진 아가씨들은 보복으로 잔당의 요괴들에게 능욕 되어 버린 것 같다……", 칼라_경고)
+			CALL COLOR_PRINT(@"%ANAME(대상)%의 행동으로, 범죄조직의 잔당은 보복으로 학생들을 능욕하였다...", 칼라_경고)
 			PRINTFORMW 
 			CALL HOUSEBOAT_INSULT
 			FOR LOCAL, 1, MAX_COUNTRY
 				SIF IS_COUNTRY(LOCAL)
 					CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:1, -50, 50)
 			NEXT
-			CALL COLOR_PRINT(@"%ANAME(대상)%의 대응은 파문을 불렀다……", 칼라_주의)
+			CALL COLOR_PRINT(@"%ANAME(대상)%의 대응은 순식간에 퍼졌다……", 칼라_주의)
 			PRINTFORMW 
 			DVAR:지붕있는놀잇배_발생플래그 = 2
 		ELSE
 			PRINTFORMW 져 버렸다……
-			PRINTFORML 그는 기모노를 흐트러지게 해 부드러운 살갗을 쬐면서 쓰러진 %조사처리(ANAME(대상),"를")% 내려다 봐
-			PRINTFORMW 천하게 보인 미소를 띄우면, 흉포한 페니스를 노출해 덤벼 들어 왔다
+			PRINTFORML 그는 찢긴 기모노 사이로 부드러운 살갗을 보이며 쓰러진 %조사처리(ANAME(대상),"를")% 내려다 보았다.
+			PRINTFORMW 천하게 보인 미소를 띄우면, 흉포한 페니스를 노출해 덮쳤다.
 			CALL HOUSEBOAT_RAPE(대상)
-			PRINTFORML 그는 %조사처리(ANAME(대상),"를")% 심하게 범해진 후, 지저의 입구에 내던졌다
-			PRINTFORMW %조사처리(ANAME(대상),"는")% 자궁에 계속 남는 그의 열에 몸을 진동시키면서, 휘청거리는 발걸음으로 귀로에 들었다
+			PRINTFORML 그는 %조사처리(ANAME(대상),"를")% 심하게 범해진 후, 항구에 내던져졌다
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 자궁에 남은 정액의 열기에 몸을 떨며, 휘청거리는 발걸음으로 학교로 돌아갔다.
 			PRINTFORML ·
 			PRINTFORML ·
 			PRINTFORML ·
-			CALL COLOR_PRINT(@"%ANAME(대상)%의 행위의 대상으로서 휩쓸어진 아가씨들은 본보기로 요괴들에게 능욕 되어 버린 것 같다……", 칼라_경고)
+			CALL COLOR_PRINT(@"%ANAME(대상)%의 행동으로 학생들은 본보기로 요괴들에게 능욕되어 버린 것 같다……", 칼라_경고)
 			PRINTFORMW 
 			CALL HOUSEBOAT_INSULT
 			FOR LOCAL, 1, MAX_COUNTRY
 				SIF IS_COUNTRY(LOCAL)
 					CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:1, -50, 50)
 			NEXT
-			CALL COLOR_PRINT(@"%ANAME(대상)%의 경솔한 행동의 전말은 순식간에 퍼져, 타국의 평판이 내렸다……", 칼라_주의)
+			CALL COLOR_PRINT(@"%ANAME(대상)%의 경솔한 행동의 결과는 순식간에 퍼져, 타국의 평판이 내렸다……", 칼라_주의)
 			PRINTFORMW 
 			DVAR:지붕있는놀잇배_발생플래그 = 1
 		ENDIF
 	ELSE
-		PRINTFORML 아가씨들의 생명에는 대신할 수 없다
-		PRINTFORML 훨씬 참아 그의 요구를 삼키기로 했다
+		PRINTFORML 학생들의 생명에는 대신할 수 없다
+		PRINTFORML 침을 꿀꺽 삼키고, 그의 요구를 삼키기로 했다
 		PRINTFORMW 그는 천하게 보인 미소를 띄우면, 흉포한 페니스를 노출해 덤벼 들어 왔다
 		CALL HOUSEBOAT_RAPE(대상)
-		PRINTFORML 심하게 %조사처리(ANAME(대상),"를")% 범한 후, 만족한 그는 마을 아가씨들을 해방했다
+		PRINTFORML 심하게 %조사처리(ANAME(대상),"를")% 범한 후, 만족한 그는 학생들을 해방했다
 		PRINTFORML 그녀들은 눈물을 흘려%ANAME(대상)%에 깊이 감사했다
-		PRINTFORMW %조사처리(ANAME(대상),"는")% 자궁에 계속 남는 그의 열에 희미하게 몸을 진동시키면서, 그녀들을 데려 돌아갔다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% 강간으로 떨리는 몸을 간신히 진정시키며, 학생들을 데려 돌아갔다
 		DVAR:지붕있는놀잇배_발생플래그 = 1
 	ENDIF
 ENDIF
@@ -249,7 +249,7 @@ RETURN CFLAG:대상:포로처 == 0
 @HOUSEBOAT_RAPE(ARG:0)
 
 PRINTFORML 
-PRINTFORMW 깜깜한 어둠안에 감도는 지붕있는 놀잇배의 미닫이창에, 범해져 흐트러진 %ANAME(ARG:0)%의 실루엣이 떠오르고 있다
+PRINTFORMW 깜깜한 어둠안에 감도는 블랙 플래닛 호의 미닫이창에, 범해져 흐트러진 %ANAME(ARG:0)%의 실루엣이 떠오르고 있다
 SELECTCASE RAND:30
 	CASE 0
 		PRINTFORML 그는 %조사처리(ANAME(ARG:0),"를")% 쓰러트리고 기모노를 난폭하게 벗겨내, 갑자기 그 흉포한 페니스를 깊숙히 쑤셔 넣어 왔다
@@ -475,7 +475,7 @@ SELECTCASE RAND:10
 		PRINTFORMW 이미 단순한 암컷이 된 그녀는 강한 수컷에게 안기는 기쁨에 쳐 떨려, 그가 만족할 때까지 몇 번이나 씨뿌리기 되었다
 ENDSELECT
 PRINTFORML ………
-PRINTFORML 마을 아가씨들은 요괴들이 질릴 때까지 끝없이 희롱해진 후, 본보기같이 해방되었다
-PRINTFORMW 대부분의 아가씨는 제정신을 잃어 버리고 있어 안에는 요괴의 아이를 임신해 버린 사람도 있던 것 같다……
+PRINTFORML 학생들은 질릴 때까지 끝없이 희롱해진 후 해방되었다
+PRINTFORMW 대부분의 학생들은 제정신을 잃어버리고 있고, 안에는 아이를 임신해 버린 사람도 있던 것 같다……
 
 RETURN 1

@@ -13,10 +13,6 @@ RETURN 50
 @EVENT_DAILY_TENTACLE_BIRTH_DECISION()
 #DIM 촉수
 촉수 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_촉수))
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
-SIF FLAG:데일리이벤트_NTR == 0
-	RETURN 0
 ;촉수 세력이 없는 경우는 캔슬
 SIF 촉수 == -1
 	RETURN 0
@@ -68,8 +64,8 @@ RETURN 1
 대상 = DAILY_TARGET:(RAND:DAILY_TARGET_NUM)
 
 PRINTFORML 번식을 위한 새로운 모판을 요구해 방황하고 있던 촉수가, 방랑중의 %조사처리(ANAME(대상),"를")% 찾아냈다
-PRINTFORML 촉수는 %ANAME(대상)%에 눈치채지지 않게 저보다, 그녀가 인기의 없는 장소에 도달했을 때에 덤벼 들었다!
-PRINTFORMW 돌연의 습격에 %조사처리(ANAME(대상),"는")% 반응하지 못하고 잡혀 버려, 전신을 안자 묶음으로 되면서 그늘로 데리고 들어가졌다……
+PRINTFORML 촉수는 %ANAME(대상)%에 눈치채지지 않게 지켜보다, 그녀가 인기의 없는 장소에 도달했을 때에 덤벼 들었다!
+PRINTFORMW 갑작스러운 습격에 %조사처리(ANAME(대상),"는")% 반응하지 못하고 잡혀 버려, 전신이 묶여 그늘로 데리고 들어가졌다……
 PRINTFORML 
 PRINTFORMW %조사처리(ANAME(대상),"가")% 촉수에 범해지고 있다
 SELECTCASE RAND:25
@@ -207,7 +203,7 @@ COUNTRY_SOLDIER:촉수 += 병수
 CALL COLOR_PRINT(@"촉수 세력의 병수가 {병수} 증가했다!", 칼라_초록)
 PRINTFORMW
 PRINTFORML 
-PRINTFORMW 만족한 촉수는 질척질척이 된 %조사처리(ANAME(대상),"를")% 방치해 떠나 갔다
+PRINTFORMW 만족한 촉수는 질척질척 젖은 %조사처리(ANAME(대상),"를")% 방치해 떠나 갔다
 RETURN 1
 
 @EVENT_DAILY_TENTACLE_BIRTH_ALLOW_WHEN_WANDERING

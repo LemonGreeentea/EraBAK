@@ -13,8 +13,7 @@ RETURN 100
 @EVENT_DAILY_SLAVE_TRADER_DECISION()
 #DIM 도둑
 도둑 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
+
 ;도둑 세력이 없었으면, 혹은 당신이 도둑 소속의 경우는 캔슬
 SIF 도둑 == -1 || CFLAG:MASTER:소속 == 도둑
 	RETURN 0
@@ -53,18 +52,18 @@ RETURN 데일리_장르_에로
 
 도둑 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
 
-PRINTFORML 노예 상인이 왔다
-PRINTFORML 「이쪽에서 포로를 잡고 있다고 들어왔습니다」
-PRINTFORML 「만약 취급해 곤란하다면 우리가 매입합니다만, 어떻게 합시다?」
+PRINTFORML 이상한 협상가가 왔다
+PRINTFORML 「이쪽에서 다른 학교의 학생을 잡고 있다고 들었습니다」
+PRINTFORML 「만약 취급이 곤란하다면 우리 쪽에서 매입합니다만, 어떻게 하시겠습니까?」
 PRINTFORMW 어떻게 하지?
 CALL ASK_YN("판다", "그만둔다")
 IF RESULT == 1
 	PRINTFORML 소중한 교섭 재료다, 그런 일은 할 수 없다
-	PRINTFORMW 단호히라고 거절하면 상인은 어깨를 움츠려 돌아갔다
+	PRINTFORMW 단호히 거절하면 협상가는 어깨를 움츠려 돌아갔다
 	RETURN 1
 ELSE
-	PRINTFORML 돈이 된다면 팔지 않는 손은 없다
-	PRINTFORML 노예 상인을 포로의 곳으로 안내했다
+	PRINTFORML 돈이 된다면 팔지 않는 것은 없다
+	PRINTFORML 협상가를 포로가 있는 곳으로 안내했다
 	PRINTFORMW 그는 포로들 상태를 조사해 매입 가격을 제시했다
 ENDIF
 CALL SINGLE_DRAWLINE
@@ -84,7 +83,7 @@ $INPUT_LOOP
 INPUT
 IF RESULT == 1000
 	PRINTFORML 역시 소중한 교섭 재료다, 파는 것은 그만두자
-	PRINTFORMW 거절하면 상인은 어깨를 움츠려 돌아갔다
+	PRINTFORMW 거절하면 협상가는 어깨를 움츠려 돌아갔다
 	RETURN 1
 ELSEIF RESULT < 0 || RESULT >= LOCAL:1
 	GOTO INPUT_LOOP
@@ -101,8 +100,8 @@ ELSE
 		PRINTFORML %조사처리(ANAME(대상),"를")% 파는 일로 했다
 		PRINTFORML 「감사합니다. 이쪽이 요금이 됩니다」
 		MONEY += SLAVE_TRADER_PRICE(대상)
-		PRINTFORMW 금{SLAVE_TRADER_PRICE(대상)}를 손에 넣었다
-		PRINTFORML %조사처리(ANAME(대상),"는")% %조사처리(ANAME(MASTER),"를")% 노려보면서 노예 상인에 질질 끌어져 갔다……
+		PRINTFORMW {SLAVE_TRADER_PRICE(대상)}크레딧을 손에 넣었다
+		PRINTFORML %조사처리(ANAME(대상),"는")% %조사처리(ANAME(MASTER),"를")% 노려보면서 협상가에 질질 끌려 갔다……
 		CFLAG:대상:호감도 -= 300
 		CFLAG:대상:종속도 -= 300
 		CALL CAPTURE(대상, 0)
@@ -111,19 +110,17 @@ ELSE
 	PRINTFORML ·
 	PRINTFORMW ·
 	IF IS_FEMALE(대상)
-		SELECTCASE RAND:5
+		SELECTCASE RAND:4
 			CASE 0
 				LOCALS = 부호
 			CASE 1
 				LOCALS = 야쿠자
 			CASE 2
-				LOCALS = 귀족
+				LOCALS = 블랙마켓
 			CASE 3
-				LOCALS = 요괴
-			CASE 4
-				LOCALS = 외래인
+				LOCALS = 변태
 		ENDSELECT
-		PRINTFORMW %조사처리(ANAME(대상),"는")% %LOCALS%에 사진 것 같다
+		PRINTFORMW %조사처리(ANAME(대상),"는")% %LOCALS%에게 사진 것 같다
 		PRINTFORML 
 		SELECTCASE RAND:20
 			CASE 0
@@ -214,13 +211,13 @@ ELSE
 		PRINTFORMW ·
 		LOCAL:2 = RAND:16
 		IF LOCAL:2 == 0
-			PRINTFORML %LOCALS%에 마음에 들었던 %조사처리(ANAME(대상),"는")%, 그의 성노예로서 일생을 보내는 일이 되었다
+			PRINTFORML %LOCALS%에게 마음에 들었던 %조사처리(ANAME(대상),"는")%, 그의 성노예로서 일생을 보내게 되었다
 			PRINTFORMW 하지만 그 표정은 행복하게 가득 차 있어 이미 어떤 후회도 불안도 없고 스스로의 처지를 받아들이고 있었다……
 			CALL CHANGE_COUNTRY(대상, 0, 1, 1)
 		ELSEIF LOCAL:2 <= 4 && CFLAG:대상:소속 != 0 && CFLAG:대상:소속 != CFLAG:MASTER:소속
 			PRINTFORMW %조사처리(ANAME(대상),"는")% 어떻게든 탈출해 원래의 세력에 복귀한 것 같다
 		ELSE
-			PRINTFORMW 심하게 범해진 뒤로 질릴 수 있었던 %조사처리(ANAME(대상),"는")%, 도둑에게 팔린 것 같다
+			PRINTFORMW 심하게 범해진 뒤, %조사처리(ANAME(대상),"는")%, 도둑에게 팔린 것 같다
 			CALL CAPTURE(대상, 도둑)
 		ENDIF
 	ELSE
@@ -241,8 +238,8 @@ RETURN 1
 ;기초치에 능력과 호색가 능력을 가산한다
 ;노예시장의 가격의 반(정도)만큼
 금액 = 2500
-금액 += (ABL:대상:무투 + ABL:대상:방위 + ABL:대상:지략 + ABL:대상:정치) * 40
-금액 += (ABL:대상:가창 + ABL:대상:요리) * 20
+금액 += (ABL:대상:무투 + ABL:대상:방위 + ABL:대상:지략 + ABL:대상:정치) * 30
+금액 += (ABL:대상:가창 + ABL:대상:요리) * 50
 금액 += (ABL:대상:욕망 + ABL:대상:성기술 + ABL:대상:봉사 + ABL:대상:성교) * 250
 
 ;처녀라면 고가로 팔린다

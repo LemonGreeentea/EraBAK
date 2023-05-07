@@ -11,8 +11,6 @@ RETURN 70
 ;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
 ;---------------------
 @EVENT_DAILY_STEMA_DECISION()
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
 RETURN 1
 
 ;---------------------
@@ -53,14 +51,14 @@ RETURN 1
 
 대상 = DAILY_TARGET:(RAND:DAILY_TARGET_NUM)
 
-PRINTFORML %ANAME(GET_COUNTRY_BOSS(CFLAG:대상:소속))% 세력에 있는 %조사처리(ANAME(대상),"는")%, 일행력의 동료에게
+PRINTFORML %ANAME(GET_COUNTRY_BOSS(CFLAG:대상:소속))% 의 아래에 있는 %조사처리(ANAME(대상),"는")%, 동료들에게
 PRINTFORM %조사처리(ANAME(MASTER),"을")%
 IF IS_SLAVE(대상)
-	PRINTFORM 도취하는 것 같은 표정으로 열정적이고
+	PRINTFORM 도취하는 것 같은 표정으로 열정적으로
 ELSE
 	PRINTFORM 뺨을 붉히면서 열심히
 ENDIF
-PRINTFORMW 선전해 돌고 있다
+PRINTFORMW 홍보하고 있다
 
 FOR LOCAL, 0, CHARANUM
 	IF CFLAG:(LOCAL):소속 == CFLAG:(대상):소속 && !CFLAG:(LOCAL):포로처 && !IS_ANIMAL(LOCAL)

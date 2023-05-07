@@ -8,8 +8,6 @@ RETURN (DVAR:악마의최면술 == 2 ? 150 # 30)
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_HYPNOTISM_RAPE_DECISION()
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
 SIF DAY < 10
 	RETURN 0
 ;MASTER가 페니스 있음
@@ -53,36 +51,36 @@ RETURN 1
 ;시스터가 오는 이벤트
 ;---------------------
 @HYPNOTISM_RAPE_SISTER
-PRINTFORML 어느 날, 시스터가 왔다
-PRINTFORML 그녀는 %조사처리(ANAME(MASTER),"가")% 악마와 계약해 악마의최면술을 손에 넣은 것을 알고 있었다
-PRINTFORML 그대로는 %조사처리(ANAME(MASTER),"는")% 언젠가 터무니 없는 꼴을 당한다고 충고된다
-PRINTFORMW 「이제라도 악마의 힘을 버리고 회개하도록 하세요」
+PRINTFORML 어느 날, 시스터후드의 시스터가 왔다
+PRINTFORML 그녀는 %조사처리(ANAME(MASTER),"가")% 악마와 계약해 악마의 최면술을 손에 넣은 것을 알고 있었다
+PRINTFORML 그대로는 %조사처리(ANAME(MASTER),"는")% 언젠가 터무니 없는 꼴을 당한다고 충고했다.
+PRINTFORMW 「이제라도 악마의 힘을 버리고 회개하도록 하세요.」
 PRINTFORML 어떻게 하지?
 CALL ASK_MULTI("충고에 따른다" , "최면 레이프" , "쫓아버린다")
 IF RESULT == 2
-    PRINTFORML 「읏…후회하시게 될겁니다」
+    PRINTFORML 「읏… 후회하시게 될 겁니다!」
 	PRINTFORML 쓸데없는 참견이다
 	PRINTFORMW 그녀를 쫓아버렸다
 ELSEIF RESULT == 0
 	PRINTFORML 그녀의 말에 거짓말은 없는 것 같다
 	PRINTFORML 충고에 따르는 일로 했다
     PRINTFORML 「잘 생각하셨습니다. 당신에게 신의 축복이 있기를……」
-	PRINTFORMW %조사처리(ANAME(MASTER),"과")% 악마와의 계약은 파기해, 악마의최면술을 잃었다
+	PRINTFORMW %조사처리(ANAME(MASTER),"과")% 악마와의 계약은 파기해, 악마의 최면술을 잃었다
 	DVAR:악마의최면술 = -1
 	DVAR:최면술경험치 = 0
 ELSE
 	IF DVAR:시스터 == 0
-		PRINTFORML 장황히 한 설교에 초조해지고 있었던 %조사처리(ANAME(MASTER),"이지만")%
+		PRINTFORML 장황한 설교에 짜증난 %조사처리(ANAME(MASTER),"는")% 문득
 		PRINTFORMW 그녀가 꽤 좋은 바디 라인을 하고 있는 것을 깨달았다
-		PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀의 말에 감명을 받고 따르는척 해 가까워져, 악마의최면술을 걸었다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀의 말에 감명을 받고 따르는 척 가까이 다가가 악마의 최면술을 걸었다
 		PRINTFORMW …너무 어이없게도 그녀는 순식간에 최면 상태에 빠졌다
 	ELSE
-		PRINTFORML %조사처리(ANAME(MASTER),"는")% 전회 그녀가 쬔 추태를 생각해 내 웃어 버렸다
-		PRINTFORML 화를 내면서 다가오는 그녀에게, 다시 악마의최면술을 걸었다
+		PRINTFORML %조사처리(ANAME(MASTER),"는")% 지난 날 그녀가 보인 추태를 생각해 웃어 버렸다
+		PRINTFORML 화를 내면서 다가오는 그녀에게, 다시 악마의 최면술을 걸었다
 		PRINTFORMW …역시나 어이없게도 간단히 최면 상태에 빠졌다
 	ENDIF
     PRINTFORML
-	PRINTFORML 신체에 타이트하게 달라붙어 음란한 바디라인을 그대로 드러내는 수녀복을 보면 
+	PRINTFORML 신체에 타이트하게 달라붙어 음란한 바디라인을 그대로 드러내는 수녀복을 보면서 
     PRINTFORML 그녀의 개인 취향인지 아니면 그녀가 모시는 신의 취향인지 궁금해졌다
 	PRINTFORML 껴안고 신체를 만지작거리면, 그녀는 열정적으로 허덕였다
     PRINTFORML 얇은 천 위로 자기주장을 하고 있는 풍만한 가슴을 움켜쥐면 음란한 교성이 새어나온다
@@ -111,8 +109,8 @@ ELSE
 	ENDSELECT
 	CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, "시스터의 입술", "", @"시스터의 질", "최면")
 	PRINTFORML 
-	PRINTFORMW 그녀는 다음날, 아무 일도 없었던것 같이 %ANAME(MASTER)%에 이별을 고했다
-	PRINTFORMW 돌아갈 때에 한껏 사정한 정액이 흘러넘치는 하복부를 어루만졌지만, 그녀는 멍청히 할 뿐이었다
+	PRINTFORMW 그녀는 다음 날, 아무 일도 없었던 것처럼 %ANAME(MASTER)%에 이별을 고했다
+	PRINTFORMW 돌아갈 때에 한껏 사정한 정액이 흘러넘치는 하복부를 어루만졌지만, 그녀는 깨닫지 못했다.
 	DVAR:최면술경험치 += RAND:10 + 1
 	DVAR:시스터 = 1
 ENDIF
@@ -122,14 +120,14 @@ RETURN 1
 ;확률로 발동하는 상실 이벤트
 ;---------------------
 @HYPNOTISM_RAPE_FUMBLE
-PRINTFORML 어느 날, 보통 최면 레이프에도 질린%조사처리(ANAME(MASTER),"는")% 화려한 일을 하려고 생각났다
-PRINTFORMW %조사처리(ANAME(MASTER),"는")% 여성들로 뒤끓는 목욕탕에 탑승해, 그 자리의 전원에게 최면을 걸었다!
-PRINTFORML …하지만 왠지 악마의최면술은 발동하지 않았다
+PRINTFORML 어느 날, 보통 최면 레이프에도 질린%조사처리(ANAME(MASTER),"는")% 대담한 생각이 났다
+PRINTFORMW %조사처리(ANAME(MASTER),"는")% 여탕으로 잠입해, 그 자리의 전원에게 최면을 걸었다!
+PRINTFORML …하지만 왠지 악마의 최면술은 발동하지 않았다
 PRINTFORMW 당황하면서 몇 번이나 발동 시키려고 하지만 아무것도 일어나지 않는다
 PRINTFORML 그런 일을 하고 있는 동안에 여성들에게 둘러싸여 잡혀 버렸다
-PRINTFORMW 어떤 변명도 의미를 만들어내지 않고, 그녀들에게 두들겨 맞았다………
+PRINTFORMW 어떤 변명도 통하지 않아, 그녀들에게 두들겨 맞았다………
 CALL ADD_COOLTIME(MASTER, 3)
-CALL COLOR_PRINT(@"이 이후, %조사처리(ANAME(MASTER),"는")% 악마의최면술을 잃어 버렸다…", 칼라_주의)
+CALL COLOR_PRINT(@"이 이후, %조사처리(ANAME(MASTER),"는")% 악마의 최면술을 잃어 버렸다…", 칼라_주의)
 PRINTFORMW 
 DVAR:악마의최면술 = -1
 DVAR:최면술경험치 = 0
@@ -142,21 +140,21 @@ RETURN 1
 
 IF DVAR:악마의최면술 == 0
 	PRINTFORML 어느 날, 꿈 속에 악마가 나타났다
-	PRINTFORMW 그는 거액과 교환에, 모든 것을 따르게 할 수 있는 강력한 악마의최면술을 하사해 준다고 한다
-	CALL ICPRINT("구체적으로는, 금<30000>을 보내라고다", "W", 칼라_주의)
+	PRINTFORMW 그는 거액과 교환에, 모든 것을 따르게 할 수 있는 강력한 악마의 최면술을 하사해 준다고 한다
+	CALL ICPRINT("구체적으로는, 크레딧 <30000>을 보내라고다", "W", 칼라_주의)
 ELSEIF DVAR:악마의최면술 == 1
-	PRINTFORML 다시 그 악마가 현상 계약을 임박해 왔다
-	PRINTFORMW 계약 내용은 같이 금 30000으로 교환에 악마의최면술을 하사해 준다는 것이다
+	PRINTFORML 다시 그 악마가 계약을 하러 나타났다.
+	PRINTFORMW 계약 내용은 전과 같이 크레딧 30000으로 악마의 최면술을 하사해 준다는 것이다
 ELSEIF DVAR:악마의최면술 == -1
-	PRINTFORML 그때의 악마가 또다시 나타나 당신을 비웃는다
+	PRINTFORML 그때의 악마가 또 다시 나타나 당신을 비웃는다
 	PRINTFORML 멍청하게도 나의 힘을 잃어버리긴 했지만 자신은 관대한 악마이므로 다시 기회를 주기로 한다는 것이다
-	PRINTFORMW 다만 비용은 이전의 두배인 금 60000을 내놓으라고 말했다
+	PRINTFORMW 다만 비용은 이전의 두배인 크레딧 60000을 내놓으라고 말했다
 ENDIF
 PRINTFORML 어떻게 하지?
 IF DVAR:악마의최면술 == -1
 	CALL ASK_MULTI_JUDGE("거래한다", MONEY >= 60000, "쫓아버린다", 1)
 	IF RESULT == 1
-		PRINTFORML 또다시 악마와 계약할 생각 따위 없다
+		PRINTFORML 또 다시 악마와 계약할 생각 따위 없다
 		PRINTFORMW 쫓아버렸다
 		DVAR:악마의최면술 = -1
 		RETURN 0
@@ -165,24 +163,24 @@ IF DVAR:악마의최면술 == -1
 ELSE
 	CALL ASK_MULTI_JUDGE("거래한다", MONEY >= 30000, "쫓아버린다", 1)
 	IF RESULT == 1
-		PRINTFORML 과연 악마와 계약할 생각 따위 없다
+		PRINTFORML 악마와 계약할 생각 따위 없다
 		PRINTFORMW 쫓아버렸다
 		DVAR:악마의최면술 = 1
 		RETURN 0
 	ENDIF
 	MONEY -= 30000
 ENDIF
-PRINTFORML 악마의 힘의 매력에 진 %조사처리(ANAME(MASTER),"는")% 계약하기로 했다
+PRINTFORML 악마의 힘의 매력에 홀린 %조사처리(ANAME(MASTER),"는")% 악마와 계약하기로 했다
 PRINTFORMW 악마는 힐쭉 웃으면서 %ANAME(MASTER)%에 손을 가리켰다
-PRINTFORMW 그러자 %조사처리(ANAME(MASTER),"는")% 힘이 솟아 올라 오는 감각과 악마의최면술을 사용할 수 있을 것이라는 확신을 얻었다
+PRINTFORMW 그러자 %조사처리(ANAME(MASTER),"는")% 힘이 솟아 올라 오는 감각과 악마의 최면술을 사용할 수 있을 것이라는 확신을 얻었다
 CALL COLOR_PRINTW(@"%조사처리(ANAME(MASTER),"는")% 【악마의최면술】을 손에 넣었다", 칼라_주의)
 SIF DVAR:악마의최면술 == -1
-	CALL COLOR_PRINTW("금 60000을 지불했다", 칼라_주의)
-CALL COLOR_PRINTW("금 30000을 지불했다", 칼라_주의)
+	CALL COLOR_PRINTW("크레딧 60000을 지불했다", 칼라_주의)
+CALL COLOR_PRINTW("크레딧 30000을 지불했다", 칼라_주의)
 PRINTFORMW 
 DVAR:악마의최면술 = 2
 PRINTFORMW 악마는 기분 나쁘게 웃으면서 안개처럼 사라졌다…
-PRINTFORMW 뒤가 되어 조사하면, 지갑으로부터 금이 없어져 있었다
+PRINTFORMW 일어나서 지갑을 살펴보니, 크레딧이 없어져 있었다
 RETURN 1
 
 ;---------------------
@@ -206,7 +204,7 @@ IF RESULT == 1
 	RETURN
 ENDIF
 
-PRINTFORML 물론 악마의최면술을 즐겁게 해 받자
+PRINTFORML 물론 악마의 최면술을 즐겁게 해 받자
 PRINTFORMW 그런데, 누구를 노릴까?
 CALL SINGLE_DRAWLINE
 CALL SELECT_CHARA_LIST_ONLY_LOGIC_SEX("HYPONOTISM_RAPE", "NONE")
@@ -216,12 +214,12 @@ IF RESULT == -1
 ENDIF
 대상 = RESULT
 PRINTFORML %조사처리(ANAME(대상),"로")% 하자
-PRINTFORMW %조사처리(ANAME(MASTER),"는")% 표적을 정하면 조속히 나갔다
+PRINTFORMW %조사처리(ANAME(MASTER),"는")% 타겟을 정하고 조속히 나갔다
 PRINTFORML ·
 PRINTFORML ·
 PRINTFORMW ·
-PRINTFORML 능숙한 상태에 그녀가 혼자 있을 때에 조우했다
-PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀에게 친한 듯이 말을 걸면, 악마의최면술을 걸었다
+PRINTFORML 마침 그녀가 혼자 있을 때에 조우했다
+PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀에게 친한 듯이 말을 걸면, 악마의 최면술을 걸었다
 PRINTFORML 하면 그녀의 눈동자로부터 빛이 사라져, 어안이 벙벙히 해 그 자리에서 우두커니 섰다
 PRINTFORMW 아무래도 최면 상태가 된 것 같다
 PRINTFORML 어떻게 하지?
@@ -245,7 +243,7 @@ RETURN
 @HYPNOTISM_RAPE_PRACTICE_INVESTMENT(대상)
 #DIM 대상
 #DIM 실행메뉴
-PRINTFORMW 육체를 %ANAME(MASTER)% 기호에 개발 하기로 했다
+PRINTFORMW 육체를 %ANAME(MASTER)%의 취향으로 개발하기로 했다
 PRINTFORML 어떻게 하지?
 CALL ASK_MULTI("문신을 새긴다", "피어스를 붙인다", "육체 민감화")
 실행메뉴 = RESULT
@@ -255,7 +253,7 @@ SELECTCASE 실행메뉴
 	CASE 1
 		PRINTFORML %조사처리(ANAME(MASTER),"는")% %조사처리(ANAME(대상),"을")% 멋있게 해 주기로 했다……
 	CASE 2
-		PRINTFORMW 향후의 즐거움을 위해서(때문에) 육체를 민감하게 해 주는 것으로 했다……
+		PRINTFORMW 향후의 즐거움을 위해서 육체를 민감하게 해주는 것으로 했다……
 ENDSELECT
 ;확률 판정 실패
 IF MIN(DVAR:최면술경험치) < 10
@@ -264,7 +262,7 @@ IF MIN(DVAR:최면술경험치) < 10
 	PRINTFORML 
 	IF RAND:5 > 0
 		PRINTFORML 무사하게 다 도망칠 수 있었다…
-		PRINTFORMW 이런 일도 있을 것이다, 최면은 또 다음번 즐기는 일로 해 궁전에 돌아왔다
+		PRINTFORMW 이런 일도 있을 것이다, 최면은 또 다음에 즐기는 일로 해 학교에 돌아왔다
 		DVAR:최면술경험치 += RAND:6 + 1
 	ELSE
 		PRINTFORML 도망치지 못했다…
@@ -273,7 +271,7 @@ IF MIN(DVAR:최면술경험치) < 10
 			SIF ! IS_ANIMAL(LOCAL)
 				CFLAG:(LOCAL):호감도 -= 500
 		NEXT
-		CALL COLOR_PRINT(@"이 일은 자국내에 머무르지 않고 환상향안에 퍼져, %ANAME(MASTER)%의 평판은 큰폭으로 내렸다", 칼라_주의)
+		CALL COLOR_PRINT(@"이 일은 여러 학교에 퍼져 %ANAME(MASTER)%의 평판은 큰 폭으로 내렸다", 칼라_주의)
 		PRINTFORMW 
 	ENDIF
 	RETURN
@@ -328,7 +326,7 @@ SELECTCASE 실행메뉴
 			GOTO INPUT_LOOP
 		ENDIF
 		PRINTFORML 그녀에게 잘 어울리는 문신을 넣어 주었다
-		PRINTFORMW 솜씨에 만족한 %조사처리(ANAME(MASTER),"는")% 그녀의 최면을 풀면 그 자리를 떠났다
+		PRINTFORMW 솜씨에 만족한 %조사처리(ANAME(MASTER),"는")% 그녀의 최면을 풀고 그 자리를 떠났다
 	CASE 1
 		PRINTFORML 어디에 피어스를 붙여 줄까?
 		PRINTFORML
@@ -350,16 +348,16 @@ SELECTCASE 실행메뉴
 		INPUT
 		IF RESULT == 99
 			PRINTFORMW 역시 그만두었다
-			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀의 최면을 풀면 그 자리를 떠났다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀의 최면을 풀고 그 자리를 떠났다
 			RETURN
 		ELSEIF IS_PIERCED(대상, RESULT)
 			CALL REMOVE_PIERCE(대상, RESULT)
 			PRINTFORML 그녀에 어울리지 않는 피어스를 없애 주었다
-			PRINTFORMW 솜씨에 만족한 %조사처리(ANAME(MASTER),"는")% 그녀의 최면을 풀면 그 자리를 떠났다
+			PRINTFORMW 솜씨에 만족한 %조사처리(ANAME(MASTER),"는")% 그녀의 최면을 풀고 그 자리를 떠났다
 		ELSEIF CAN_PIERCE(대상, RESULT)
 			CALL SET_PIERCE(대상, RESULT)
 			PRINTFORML 그녀에게 잘 어울리는 피어스를 붙여 주었다
-			PRINTFORMW 솜씨에 만족한 %조사처리(ANAME(MASTER),"는")% 그녀의 최면을 풀면 그 자리를 떠났다
+			PRINTFORMW 솜씨에 만족한 %조사처리(ANAME(MASTER),"는")% 그녀의 최면을 풀고 그 자리를 떠났다
 		ELSE
 			GOTO INPUT_LOOP_02
 		ENDIF
@@ -368,9 +366,9 @@ SELECTCASE 실행메뉴
 		CALL ASK_MULTI_JUDGE("입", 1, "가슴", 1, "여성기", 1, "엉덩이", 1, "클리",! HAS_PENIS(대상), "페니스", HAS_PENIS(대상))
 		SELECTCASE RESULT
 			CASE 0
-				PRINTFORML %조사처리(ANAME(MASTER),"가")% 명하면 그녀는 앙-하고 입을 열었다
-				PRINTFORML 손가락으로 입안을 만지작거리면서 악마의최면술로 반복해 민감하게 되는 것처럼 가르쳐 간다
-				PRINTFORMW 점차 그녀는 숨을 거칠게 하고 몽롱하게 한 표정이 되어 갔다
+				PRINTFORML %조사처리(ANAME(MASTER),"가")% 명령하면 그녀는 앙-하고 입을 열었다
+				PRINTFORML 손가락으로 입안을 만지작거리면서 악마의 최면술을 반복해 감도를 올린다
+				PRINTFORMW 점차 그녀는 숨을 거칠게 하고 몽롱한 표정이 되어 갔다
 				LOCALS:0 = 입
 				LOCAL = TALENT:대상:Ｍ둔감
 				IF LOCAL
@@ -380,9 +378,9 @@ SELECTCASE 실행메뉴
 				ENDIF
 				CALL PRINT_ADD_EXP(대상, "Ｍ감경험치", RAND:5 + 6, 1)
 			CASE 1
-				PRINTFORML %조사처리(ANAME(MASTER),"가")% 명하면 그녀는 가슴을 열었다
-				PRINTFORML 주무르면서 악마의최면술로 반복해 민감하게 되는 것처럼 가르쳐 간다
-				PRINTFORMW 점차 그녀는 숨을 거칠게 하고 유두가 펄떡펄떡 발기 하기 시작했다
+				PRINTFORML %조사처리(ANAME(MASTER),"가")% 명령하면 그녀는 가슴을 열었다
+				PRINTFORML 주무르면서 악마의 최면술로 반복해 감도를 올린다
+				PRINTFORMW 점차 그녀는 숨을 거칠게 하고 유두가 발딱 발기하기 시작했다
 				LOCALS:0 = 가슴
 				LOCAL = TALENT:대상:Ｂ둔감
 				IF LOCAL
@@ -392,9 +390,9 @@ SELECTCASE 실행메뉴
 				ENDIF
 				CALL PRINT_ADD_EXP(대상, "Ｂ감경험치", RAND:5 + 6, 1)
 			CASE 2
-				PRINTFORML %조사처리(ANAME(MASTER),"가")% 명하면 그녀는 속옷을 벗어 떠나 가랑이를 열었다
-				PRINTFORML 손가락끝을 쑤셔 넣어 자극하면서 악마의최면술로 반복해 민감하게 되는 것처럼 가르쳐 간다
-				PRINTFORMW 점차 그녀는 숨을 거칠게 하고 애액이 끝 없게 넘치기 시작했다
+				PRINTFORML %조사처리(ANAME(MASTER),"가")% 명하면 그녀는 속옷을 벗어 양손으로 보지를 열었다
+				PRINTFORML 손가락을 쑤셔넣어 자극하면서 악마의 최면술을 반복해 감도를 올린다.
+				PRINTFORMW 점차 그녀는 숨을 거칠게 하고 애액이 분수처럼 넘치기 시작했다
 				LOCALS:0 = 보지
 				LOCAL = TALENT:대상:Ｖ둔감
 				IF LOCAL
@@ -405,7 +403,7 @@ SELECTCASE 실행메뉴
 				CALL PRINT_ADD_EXP(대상, "Ｖ감경험치", RAND:5 + 6, 1)
 			CASE 3
 				PRINTFORML %조사처리(ANAME(MASTER),"가")% 명하면 그녀는 속옷을 벗어 엉덩이를 내밀었다
-				PRINTFORML 양손으로 격렬하게 비비면서 악마의최면술로 반복해 민감하게 되는 것처럼 가르쳐 간다
+				PRINTFORML 양손으로 격렬하게 비비면서 악마의 최면술을 반복해 감도를 올린다.
 				PRINTFORMW 점차 그녀는 숨을 거칠게 하고 움찔움찔 전신을 경련시키기 시작했다
 				LOCALS:0 = 애널
 				LOCAL = TALENT:대상:Ａ둔감
@@ -416,8 +414,8 @@ SELECTCASE 실행메뉴
 				ENDIF
 				CALL PRINT_ADD_EXP(대상, "Ａ감경험치", RAND:5 + 6, 1)
 			CASE 4
-				PRINTFORML %조사처리(ANAME(MASTER),"가")% 명하면 그녀는 속옷을 벗어 비부를 쬐었다
-				PRINTFORML 비부를 스스로 자극시켜, 스스로의 몸을 개발 시킨다
+				PRINTFORML %조사처리(ANAME(MASTER),"가")% 명하면 그녀는 속옷을 벗어 클리를 내밀었다. 
+				PRINTFORML 클리를 빙글빙글 돌리면서, 악마의 최면술을 반복해 감도를 올린다.
 				PRINTFORMW 점차 그녀는 숨을 거칠게 하고, 클리를 스스로 비비기 시작했다
 				LOCALS:0 = 클리토리스
 				LOCAL = TALENT:대상:Ｃ둔감
@@ -428,7 +426,7 @@ SELECTCASE 실행메뉴
 				ENDIF
 			CASE 5
 				PRINTFORML %조사처리(ANAME(MASTER),"가")% 명하면 그녀는 속옷을 벗어 비부를 쬐었다
-				PRINTFORML 비부를 스스로 자극시켜, 스스로의 몸을 개발 시킨다
+				PRINTFORML 비부를 스스로 자극시켜, 스스로의 몸을 개발시킨다
 				PRINTFORMW 점차 그녀는 숨을 거칠게 하고, 페니스를 펄떡펄떡 발기시켰다
 				LOCALS:0 = 페니스
 				LOCAL = TALENT:대상:Ｃ둔감
@@ -442,7 +440,7 @@ SELECTCASE 실행메뉴
 		CALL COLOR_PRINTW(@"%ANAME(대상)%의 %조사처리(LOCALS:0,"가")% \@ LOCAL ? 다른 사람들 수준에 # 다른 사람의 두배 \@ 민감하게 되었다……", 칼라_주의)
 ENDSELECT
 PRINTFORML 
-PRINTFORMW 일단 최면을 끝낸 %조사처리(ANAME(MASTER),"는")% 오늘 밤을 잊게 한 그녀를 집에 돌아갔다
+PRINTFORMW 일단 최면을 끝낸 %조사처리(ANAME(MASTER),"는")% 오늘 밤을 잊게 하고 그녀를 집에 돌려보냈다.
 PRINTFORMW 최면을 실시한 것으로 능력이 성장한 것 같았다
 DVAR:최면술경험치 += RAND:6 + 1
 
@@ -465,18 +463,18 @@ SELECTCASE 실행메뉴
 	CASE 0
 		PRINTFORMW 기억을 조종하고 즐기는 일로 했다
 	CASE 1
-		PRINTFORMW 육체를 장악 하고 즐기는 일로 했다
+		PRINTFORMW 육체를 장악하고 즐기는 일로 했다
 	CASE 2
-		PRINTFORMW 음란화해 즐겁게 해 받는 일로 했다
+		PRINTFORMW 그녀를 음란화해 즐기는 일로 했다
 ENDSELECT
 
 IF DVAR:최면술경험치 + RAND:30 < 20
 	PRINTFORML 하지만 직전에 그녀가 의식을 되찾아 버렸다
-	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 순간에 도망치기 시작했다!
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 순식간에 도망치기 시작했다!
 	PRINTFORML 
 	IF RAND:5 > 0
 		PRINTFORML 무사하게 다 도망칠 수 있었다…
-		PRINTFORMW 이런 일도 있을 것이다, 최면은 또 다음번 즐기는 일로 해 궁전에 돌아왔다
+		PRINTFORMW 이런 일도 있을 것이다, 최면은 또 다음번 즐기는 일로 해 학교에 돌아왔다
 		DVAR:최면술경험치 += RAND:6 + 1
 	ELSE
 		PRINTFORML 도망치지 못했다…
@@ -487,12 +485,12 @@ IF DVAR:최면술경험치 + RAND:30 < 20
 ENDIF
 
 PRINTFORML 
-PRINTFORMW %조사처리(ANAME(대상),"는")% 정신나간 표정으로 %ANAME(MASTER)%의 최면을 받아들이고 있다…
+PRINTFORMW %조사처리(ANAME(대상),"는")% 멍한 표정으로 %ANAME(MASTER)%의 최면을 받아들이고 있다…
 SELECTCASE 실행메뉴
 	CASE 0
 		PRINTFORML 그녀에게 거짓의 기억을 심었다
-		PRINTFORML 의식을 흔들어 깨우면 그녀는 멍청한 표정으로 %조사처리(ANAME(MASTER),"과")% 주위를 둘러보았다
-		PRINTFORMW 최면의 효과를 확인하기 때문에(위해), 그녀에게 자신의 입장을 확인한다
+		PRINTFORML 의식을 깨우면 그녀는 멍청한 표정으로 %조사처리(ANAME(MASTER),"과")% 주위를 둘러보았다
+		PRINTFORMW 최면의 효과를 확인하기 위해, 그녀에게 자신의 입장을 확인한다
 		SELECTCASE RAND:5
 			CASE 0
 				PRINTFORML 그녀는 그 물음에 고개를 갸웃하면서도 당연한님이, 자신은 %ANAME(MASTER)%의 애완동물이라고 대답했다
@@ -547,11 +545,11 @@ SELECTCASE 실행메뉴
 		ENDSELECT
 	CASE 1
 		PRINTFORMW 그녀의 육체를 장악 했다
-		PRINTFORML 의식을 흔들어 깨우면 그녀는 멍청히 한 표정으로 %조사처리(ANAME(MASTER),"과")% 주위를 둘러보았다
-		PRINTFORMW 최면의 효과를 확인하기 때문에(위해), 그녀의 가슴에 손을 뻗어 비볐다
-		PRINTFORML 그녀는 당연 놀라움 비명을 올렸다…하지만, 신체는 미동조차 하지 않았다
-		PRINTFORML 혼란해 당황하는 그녀를 무시해 부드러운 가슴의 감촉을 즐겁게 해 받는다
-		PRINTFORMW 이만큼 해 움직일 수 없으면 성공일거라고 확신한 %조사처리(ANAME(MASTER),"는")%, 노려봐 오는 그녀를 동반해 밤의 거리에 향했다
+		PRINTFORML 의식을 깨우면 그녀는 멍청한 표정으로 %조사처리(ANAME(MASTER),"과")% 주위를 둘러보았다
+		PRINTFORMW 최면의 효과를 확인하기 위해, 그녀의 가슴에 손을 뻗어 비볐다
+		PRINTFORML 그녀는 깜짝 놀라며 비명을 올렸다…하지만, 신체는 미동조차 하지 않았다
+		PRINTFORML 혼란해 당황하는 그녀를 무시해 부드러운 가슴의 감촉을 즐긴다.
+		PRINTFORMW 이렇게 해도 움직일 수 없으면 성공일거라고 확신한 %조사처리(ANAME(MASTER),"는")%, 노려보는 그녀를 동반해 밤의 거리에 향했다
 		SELECTCASE RAND:5
 			CASE 0
 				PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀를 부랑자의 집합소에 데리고 가, 공개 강간을 실시했다
@@ -581,8 +579,8 @@ SELECTCASE 실행메뉴
 		ENDSELECT
 	CASE 2
 		PRINTFORMW 그녀의 의식을 개변해 음란화했다
-		PRINTFORML 의식을 흔들어 깨우면 그녀는 멍청히 한 표정으로 %조사처리(ANAME(MASTER),"과")% 주위를 둘러보았다
-		PRINTFORMW 최면의 효과를 확인하기 때문에(위해), %조사처리(ANAME(MASTER),"는")% 그녀에게 강간해도 될까 물었다
+		PRINTFORML 의식을 깨우면 그녀는 멍청한 표정으로 %조사처리(ANAME(MASTER),"과")% 주위를 둘러보았다
+		PRINTFORMW 최면의 효과를 확인하기 위해, %조사처리(ANAME(MASTER),"는")% 그녀에게 강간해도 될까 물었다
 		SELECTCASE RAND:5
 			CASE 0
 				PRINTFORML 그러자 그녀는 발정한 같은 표정이 되어, 음미로운 미소를 띄워 수긍했다
@@ -629,7 +627,7 @@ ENDSELECT
 CALL FUCK_RAPE(대상, GET_ID(MASTER), @"%ANAME(MASTER)%의 \@ RAND:2? 페니스 # 입술\@", @"%ANAME(MASTER)%")
 CALL FUCK(대상, "성기술, 성교, Ｃ, 사정", "동정상실, 키스상실", 0, @"%ANAME(대상)%의 입술", "", @"%ANAME(대상)%의 질", "최면")
 PRINTFORML 
-PRINTFORMW 마음껏 즐겁게 해 받은 후, 오늘 밤을 잊게 한 그녀를 집에 돌아갔다
+PRINTFORMW 마음껏 즐긴 후, 오늘 밤을 잊게 하고 그녀를 집에 돌려보냈다.
 PRINTFORMW 최면을 실시한 것으로 능력이 성장한 것 같았다
 DVAR:최면술경험치 += RAND:10 + 2
 
@@ -639,17 +637,17 @@ DVAR:최면술경험치 += RAND:10 + 2
 @HYPONOTISM_RAPE_PRACTICE_ENSLAVEMENT(대상)
 #DIM 대상
 
-PRINTFORML 그녀를 예속 시키는 일로 했다
-PRINTFORMW 최면을 더욱 강하게 걸쳐 가 그녀의 의식의 안쪽 깊게까지 자신에게로의 예속을 스며들게 해 갔다…
+PRINTFORML 그녀를 예속시키는 일로 했다
+PRINTFORMW 최면을 더욱 강하게 걸쳐 가 그녀의 의식의 안쪽 깊게까지 자신에게로의 예속을 스며들게 했다…
 PRINTFORML ·
 PRINTFORML ·
 PRINTFORMW ·
 IF DVAR:최면술경험치 + RAND:40 <= 50
-	PRINTFORMW 하지만 과연 어려웠던 것일까 실패해 버렸다…
-	PRINTFORML 도망치려고 했지만 최면 실패의 반동인가, 신체가 움직이지 않고 잡혀 버렸다
+	PRINTFORMW 하지만 아직 어려웠던 것일까, 실패해 버렸다…
+	PRINTFORML 도망치려고 했지만 최면 실패의 반동인가, 몸이 움직이지 않고 잡혀 버렸다
 	PRINTFORMW 잡힌 %조사처리(ANAME(MASTER),"는")% 두들겨 맞았다……
 	CALL ADD_COOLTIME(MASTER, 3)
-	CALL COLOR_PRINT(@"이 이후, %조사처리(ANAME(MASTER),"는")% 악마의최면술을 잃어 버렸다…", 칼라_주의)
+	CALL COLOR_PRINT(@"이 이후, %조사처리(ANAME(MASTER),"는")% 악마의 최면술을 잃어 버렸다…", 칼라_주의)
 	PRINTFORMW 
 	DVAR:악마의최면술 = -1
 	DVAR:최면술경험치 = 0
@@ -658,7 +656,7 @@ ENDIF
 
 PRINTFORMW 성공했다!
 PRINTFORML 경험을 쌓은 강력한 최면의 효과에 의해, 그녀의 몸도 마음도 지배하에 두었다
-PRINTFORMW 시험삼아 최면 상태를 풀어도 그것은 변함없이, 아양을 떠는 것 같은 시선을 향하여 왔다
+PRINTFORMW 시험삼아 최면 상태를 풀어도 %조사처리(ANAME(대상),"는")% 변함없이 아양을 떨고 있었다.
 CALL COLOR_PRINT(@"%조사처리(ANAME(대상),"는")% %ANAME(MASTER)%의 노예가 되었습니다", 칼라_핑크)
 PRINTFORMW 
 CFLAG:대상:의존도 += 1000
@@ -672,19 +670,19 @@ ENDIF
 TALENT:대상:합의 = 1
 DVAR:최면술경험치 += RAND:14 + 3
 PRINTFORML 
-PRINTFORML 목적의 여자를 손에 넣고 만열의 %조사처리(ANAME(MASTER),"는")% 이 능력에 완전히 빠졌다
-PRINTFORMW 하지만 계속 이대로 사용하면 언젠가 대갚음이 올 것 같다…
+PRINTFORML 여자를 손에 넣은 %조사처리(ANAME(MASTER),"는")% 이 능력에 완전히 빠졌다
+PRINTFORMW 하지만 계속 이대로 사용하면 언젠가 부작용이 올 것 같다…
 PRINTFORML 어떻게 하지?
-CALL ASK_MULTI(@"아직도 능력을 사용하게 해 받는다" , "능력을 파기한다")
+CALL ASK_MULTI(@"계속 능력을 사용한다" , "능력을 파기한다")
 IF RESULT == 1
-	PRINTFORML 이제(이미/벌써/더는/정말) 충분함
+	PRINTFORML 이제 충분하다
 	PRINTFORML 그렇게 생각한 %조사처리(ANAME(MASTER),"는")% 능력을 파기했다
-	PRINTFORMW 이후, 악마의최면술은 일절 사용할 수 없게 되었다…
+	PRINTFORMW 이후, 악마의 최면술은 일절 사용할 수 없게 되었다…
 	DVAR:악마의최면술 = -1
 	DVAR:최면술경험치 = 0
 ELSE
 	PRINTFORML 아니, 아직이다
-	PRINTFORML 비싼 대상을 지불한 것이니까 아직도 즐겁게 해 받는다
-	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 빙긋 웃으면서 그녀를 동반해 밤의 거리에 사라졌다
+	PRINTFORML 비싼 값을 지불한 것이니까 더 사용하지 않으면 안 된다.
+	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 빙긋 웃으면서 그녀를 동반해 밤의 거리로 나아갔다.
 ENDIF
 

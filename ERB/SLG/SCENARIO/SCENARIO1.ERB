@@ -28,12 +28,12 @@ ELSE
 	PRINTFORMW 이미지를 표시하지 않습니다.
 ENDIF
 
-PRINTFORML 2. 프롤로그를 보시겠습니까?
+PRINTFORML 2. 프롤로그를 보시겠습니까?(미완성, 임시)
 CALL ASK_YN
 IF RESULT == 0
-
+	PRINTFORMW
 	CLEARLINE LINECOUNT
-
+	PRINTFORMW
 	FIRST_LINE = LINECOUNT
 	SETCOLOR 0xFA6B6D
 	PRINTFORML
@@ -49,24 +49,37 @@ IF RESULT == 0
 	PRINTFORML
 	PRINTFORML <싯딤의 상자>에 접속하신 걸 환영합니다. ■■■ 선생님.
 	PRINTFORMW
+	TWAIT 1000,1
 	CLEARLINE LINECOUNT
 
+	CALL ILLUST_IMAGE("프롤로그01")
 	TWAIT 1000,1
 
 	PRINTFORMW 「...저의 실수였어요」
 	PRINTFORMW 「저의 결정들. 그리고 그로 인해 초래된 모든 상황들.」
 	PRINTFORML
 	PRINTFORMW 「결국 이 결과에 도달하고서야 당신이 옳았다는 걸 깨닫다니...」
-
-	CALL ILLUST_IMAGE_BLACK_FADEIN("프롤로그01")
-	PRINTFORMW
+	CLEARLINE LINECOUNT
+	CALL ILLUST_IMAGE("프롤로그02")
 	PRINTFORML
-	PRINTFORML
-	PRINTFORMW
+	PRINTFORMW 「책임을 지는 사람에 대해 얘기한 적이 있었지요.」
+	PRINTFORMW 「그때의 저는 알지 못했지만.... 지금은 이해할 수 있습니다.」
+	PRINTFORMW 「어른. 책임과 의무, 그리고 그 너머에 있는 당신의 선택.」
+	PRINTFORMW 「그러니까, 선생님」
+	PRINTFORMW 「제가 믿을 수 있는 어른인 당신만이,」
+	PRINTFORMW 「이 뒤틀리고 일그러진 종착지가 아닌 다른 결과를......」
+	PRINTFORMW 「그곳으로 이어지는 선택지를 찾을 수 있을 겁니다.」
+	PRINTFORMW 「그러니까, 선생님. 부디......」
 
 ELSE
 ENDIF
 
+CLEARLINE LINECOUNT
+CALL SINGLE_DRAWLINE
+PRINTFORML ☆ 시나리오 요약
+PRINTFORML 
+PRINTFORML 총학생회장의 실종으로 키보토스는 연일 혼란에 빠졌다.
+PRINTFORML 일곱 죄수의 탈옥과  
 ;랜덤 캐릭터는 선택에 맡긴다
 FLAG:OP랜덤캐릭터사용 = 0
 

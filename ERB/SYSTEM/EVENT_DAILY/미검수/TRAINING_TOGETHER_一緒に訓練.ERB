@@ -7,8 +7,6 @@ RETURN 30
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_TRAINING_TOGETHER_DECISION()
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
 SIF DAY < 5
 	RETURN 0
 ;MASTER가 페니스를 가지고 있다
@@ -61,7 +59,7 @@ IF RAND:2 == 0
 	PRINTFORML 어떻게 하지?
 	CALL ASK_YN("함께 훈련한다", "떠난다")
 	IF RESULT == 1
-		PRINTFORMW 방해 해선 안 되는, %조사처리(ANAME(MASTER),"는")% 떠났다
+		PRINTFORMW 방해하지 말자, %조사처리(ANAME(MASTER),"는")% 떠났다
 	ELSE
 		PRINTFORMW 함께 훈련을 신청하면 그녀는 기꺼이 받아들였다
 		PRINTFORML ·
@@ -70,16 +68,16 @@ IF RAND:2 == 0
 		LOCAL = (ABL:MASTER:무투 + ABL:MASTER:방위) * (RAND:5 + 1) - (ABL:대상:무투 + ABL:대상:방위) * (RAND:4 + 1)
 		IF LOCAL >= 100
 			PRINTFORMW 훈련은 매우 진전되었다
-			PRINTFORML 답례에 식사 제의를 해지고 기뻐해 동반했다
+			PRINTFORML 답례에 같이 식사를 권해, 기뻐해 동반했다
 			PRINTFORMW 식사는 맛있게 회화도 활기를 띠어 분위기를 살려, 오후도 둘이서 즐겁게 보냈다
 			CALL PRINT_ADD_EXP(대상, "무투경험치", RAND:10 + 6, 1)
 			CALL PRINT_ADD_EXP(대상, "방위경험치", RAND:10 + 6, 1)
 			CFLAG:대상:호감도 += RAND:300 + 500
 		ELSEIF LOCAL >= 0
 			PRINTFORMW 충실한 훈련이 되었다
-			PRINTFORMW 좋은 땀을 흘릴 수 있었다고 타올로 닦으면서 예의를 표한다 그녀의 웃는 얼굴이 눈부셨다
+			PRINTFORMW 좋은 땀을 흘릴 수 있었다고 타올로 닦으면서 예의를 표하는 그녀의 웃는 얼굴이 눈부셨다
 			CALL PRINT_ADD_EXP(대상, "무투경험치", RAND:5 + 3, 1)
-			CALL PRINT_ADD_EXP(대상, "방위경험치", RAND:5 + 3, 1)
+			CALL PRINT_ADD_EXP(대상, "방위경험치", RAND:5 + 3, 1) 
 			CFLAG:대상:호감도 += RAND:100 + 300
 		ELSE
 			PRINTFORMW 훈련은 특히 순조롭게 끝났다
@@ -94,23 +92,23 @@ ELSE
 	PRINTFORML 어떻게 하지?
 	CALL ASK_YN("함께 공부한다", "떠난다")
 	IF RESULT == 1
-		PRINTFORMW 방해 해선 안 되는, %조사처리(ANAME(MASTER),"는")% 떠났다
+		PRINTFORMW 방해하지 말자, %조사처리(ANAME(MASTER),"는")% 떠났다
 	ELSE
-		PRINTFORMW 함께 공부를 신청하면 그녀는 기꺼이 받아들였다
+		PRINTFORMW 함께 공부를 하자고 제의하니 그녀는 기꺼이 받아들였다
 		PRINTFORML ·
 		PRINTFORML ·
 		PRINTFORMW ·
 		LOCAL = (ABL:MASTER:지략 + ABL:MASTER:정치) * (RAND:5 + 1) - (ABL:대상:지략 + ABL:대상:정치) * (RAND:4 + 1)
 		IF LOCAL >= 100
 			PRINTFORMW 공부는 매우 진전되었다
-			PRINTFORML 답례에 식사 제의를 해지고 기뻐해 동반했다
+			PRINTFORML 답례에 같이 식사하자고 권해, 기뻐하며 동반했다
 			PRINTFORMW 식사는 맛있게 회화도 활기를 띠어 분위기를 살려, 오후도 둘이서 즐겁게 보냈다
 			CALL PRINT_ADD_EXP(대상, "지략경험치", RAND:10 + 6, 1)
 			CALL PRINT_ADD_EXP(대상, "정치경험치", RAND:10 + 6, 1)
 			CFLAG:대상:호감도 += RAND:300 + 500
 		ELSEIF LOCAL >= 0
 			PRINTFORMW 충실한 스터디 그룹이 되었다
-			PRINTFORMW 함께 공부 되어있고 즐거웠다고 예의를 표한다 그녀의 웃는 얼굴이 눈부셨다
+			PRINTFORMW 함께 공부해서 즐거웠다고 예의를 표하는 그녀의 웃는 얼굴이 눈부셨다
 			CALL PRINT_ADD_EXP(대상, "지략경험치", RAND:5 + 3, 1)
 			CALL PRINT_ADD_EXP(대상, "정치경험치", RAND:5 + 3, 1)
 			CFLAG:대상:호감도 += RAND:100 + 300

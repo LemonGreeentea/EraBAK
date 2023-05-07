@@ -11,10 +11,6 @@ RETURN 30
 ;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
 ;---------------------
 @EVENT_DAILY_COMFORT_DECISION()
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
-SIF FLAG:데일리이벤트_NTR == 0
-	RETURN 0
 SIF !IS_COUNTRY(CFLAG:MASTER:소속) || CFLAG:MASTER:포로처
 	RETURN 0
 SIF IS_SP_COUNTRY(CFLAG:MASTER:소속)
@@ -44,8 +40,8 @@ CALL DAILY_EVENT_RAND_CITYSELECT(0)
 
 금액 = 1000 + (500 * (RAND:8 + 1)) + (DAY * 100)
 
-PRINTFORML 오래 끄는 싸움으로 %CITY_NAME:대상도시%의 병사의 불만이 쌓여 있다
-PRINTFORML 이대로는 사기에 관련될지도 모른다
+PRINTFORML 오래 끄는 싸움으로 %CITY_NAME:대상도시%에 학생은 불만이 쌓여 있다
+PRINTFORML 이대로는 사기에 악영향을 미칠지도 모른다
 PRINTFORMW 어떻게 하지?
 CALL ASK_MULTI_JUDGE("연회를 개최한다", MONEY >= 금액,"위안한다", 1,"아무것도하지않는다", 1)
 IF RESULT == 2
@@ -54,11 +50,11 @@ IF RESULT == 2
 	PRINTFORMW 아무것도 하지 않는 것으로 했다
 	IF RAND:2 == 0
 		CITY_GUARD:대상도시 = MAX(CITY_GUARD:대상도시 - 20, 1)
-		CALL COLOR_PRINT(@"병들의 불만이 모여, %CITY_NAME:대상도시%의 방위율이 내렸다", 칼라_주의)
+		CALL COLOR_PRINT(@"학생들의 불만이 모여, %CITY_NAME:대상도시%의 방위율이 내렸다", 칼라_주의)
 		PRINTFORMW 
 	ENDIF
 ELSEIF RESULT == 0
-	PRINTFORMW 병들을 위해서(때문에) 성대한 연회를 개최하는 일로 했다
+	PRINTFORMW 학생들을 위해서 성대한 연회를 개최하는 일로 했다
 	PRINTFORML ·
 	PRINTFORML ·
 	PRINTFORMW ·
@@ -67,17 +63,17 @@ ELSEIF RESULT == 0
 		PRINTFORMW 그들은 오랜만의 숨돌리기에 많이 마셔 떠들었다
 		MONEY -= 금액
 		CITY_GUARD:대상도시 += 15
-		CALL COLOR_PRINT(@"병들의 불만이 해소되어 %CITY_NAME:대상도시%의 방위율이 올랐다", 칼라_주의)
+		CALL COLOR_PRINT(@"학생들의 불만이 해소되어 %CITY_NAME:대상도시%의 방위율이 올랐다", 칼라_주의)
 		PRINTFORML 
 		CALL COLOR_PRINT(@"금{금액}를 소비했다", 칼라_주의)
 		PRINTFORMW 
 	ELSE
 		PRINTFORML 연회는 대성공에 끝났다!
-		PRINTFORML 그들은 오랜만의 숨돌리기에 많이 마셔 떠들었다
-		PRINTFORMW 또, %ANAME(MASTER)%아래도에 즐겁게 해 받았다
+		PRINTFORML 그들은 오랜만에 한숨을 돌리며 떠들석하게 즐기고 마셨다
+		PRINTFORMW %ANAME(MASTER)%는 그 광경을 보며 미소를 지었다
 		MONEY -= 금액
 		CITY_GUARD:대상도시 += 25
-		CALL COLOR_PRINT(@"병들의 불만이 해소되어 %CITY_NAME:대상도시%의 방위율이 크게 올랐다", 칼라_주의)
+		CALL COLOR_PRINT(@"학생들의 불만이 해소되어 %CITY_NAME:대상도시%의 방위율이 크게 올랐다", 칼라_주의)
 		PRINTFORML 
 		CALL COLOR_PRINT(@"금{금액}를 소비했다", 칼라_주의)
 		PRINTFORMW 
@@ -90,36 +86,36 @@ ELSE
 	IF RESULT == -1
 		GOTO DO_NOTHING
 	ELSEIF 대상 == MASTER
-		PRINTFORMW %ANAME(대상)%스스로 위안에 향했다
+		PRINTFORMW %ANAME(대상)%스스로 위안을 하러 갔다
 	ELSE
-		PRINTFORMW %조사처리(ANAME(대상),"를")% 위안에 향하게 했다
+		PRINTFORMW %조사처리(ANAME(대상),"에")% 위안을 시켰다
 	ENDIF
 	LOCAL = RAND:6 + 1
 	SIF TALENT:대상:인기 == 1
 		LOCAL += 1
 	IF IS_FEMALE(대상)
 		PRINTFORML 
-		PRINTFORML 위안활동을 하고 있으면 군사의 한사람에게 말을 걸려졌다
-		PRINTFORMW 그는 %ANAME(대상)%에 얼굴을 접근하면, 좀 더“여자다운 위안”를 부탁해 왔다
+		PRINTFORML 위안활동을 하고 있으면 한 사람이 말을 걸어왔다
+		PRINTFORMW 그는 %ANAME(대상)%에게 좀 더 “여자다운 위안”를 부탁해 왔다
 		IF ABL:대상:성지식 == 0
-			PRINTFORML %ANAME(대상)%에는 무슨 일인가 몰랐지만, 병들을 위해서(때문에) 승낙했다
-			PRINTFORMW 그는 뛰어 오를 정도로 기뻐하면, %ANAME(대상)%의 팔을 당겨 병사에 데리고 들어갔다
+			PRINTFORML %ANAME(대상)%는 무슨 일을 하는 건지 몰랐지만, 학생들의 적극적인 권유에 승낙했다
+			PRINTFORMW 그는 뛰어 오를 정도로 기뻐하며 %ANAME(대상)%의 팔을 당겨 기숙사에 데리고 들어갔다
 			CALL COMFORT_SEX(대상)
 			LOCAL += 2
 			ABL:대상:성지식 = 1
 		ELSE
-			PRINTFORML %조사처리(ANAME(대상),"는")% 돌연의 말에 일순간 굳어져 버렸다
-			PRINTFORML 화낼까하고 생각했지만, 그의 눈동자는 진검 그 자체인데 깨닫는다
-			PRINTFORML 전선에서 싸우고 있는 그의 부탁을 거절하는 것도 어떨까단념했다……
-			PRINTFORMW 어떻게 하지?
+			PRINTFORML %조사처리(ANAME(대상),"는")% 갑작스러운 그 말에 당황했다
+			PRINTFORML 장난이라 생각하고 화를 낼까 생각했지만, 그의 눈동자가 진심이라는 것을 깨닫는다
+			PRINTFORML 전선에서 싸우고 있는 그의 부탁을 거절하는 것도 마음에 걸렸다……
+			PRINTFORMW 어떻게 하지?   
 			CALL ASK_YN("맡는다", "거절한다")
 			IF RESULT == 1
 				PRINTFORML 하지만 역시 그런 창녀와 같은 흉내는 할 수 없다
-				PRINTFORMW 거절하면 군사는 유감스러운 듯이 떠나 갔다
+				PRINTFORMW 거절하면 학생는 유감스럽다는듯 떠나 갔다
 			ELSE
-				PRINTFORML %조사처리(ANAME(대상),"는")% 잠깐 숙이고 생각하고 있었지만
-				PRINTFORML 그의 진지한 눈빛에 져, 위안을 맡는 일로 했다
-				PRINTFORMW 그는 뛰어 오를 정도로 기뻐하면, %ANAME(대상)%의 팔을 당겨 병사에 데리고 들어갔다
+				PRINTFORML %조사처리(ANAME(대상),"는")% 잠깐 생각하고 있었지만
+				PRINTFORML 그의 진지한 눈빛에 위안을 맡는 일로 했다
+				PRINTFORMW 그는 뛰어 오를 정도로 기뻐하면, %ANAME(대상)%의 팔을 당겨 기숙사에 데리고 들어갔다
 				CALL COMFORT_SEX(대상)
 				LOCAL += 2
 			ENDIF
@@ -130,23 +126,23 @@ ELSE
 	PRINTFORMW ·
 	IF LOCAL >= 6
 		PRINTFORML 위안은 대성공에 끝났다!
-		PRINTFORML 그들은 %ANAME(대상)%의 행사에 갈채 하고 즐겼다
-		PRINTFORMW %ANAME(대상)%도 그들의 기뻐하는 얼굴을 봐 자연히(과) 웃는 얼굴이 되었다
+		PRINTFORML 그들은 %ANAME(대상)%를 칭송하고 즐거워했다
+		PRINTFORMW %ANAME(대상)%도 그들의 기뻐하는 얼굴을 봐 저절로 웃는 얼굴이 되었다
 		CITY_GUARD:대상도시 += 25
-		CALL COLOR_PRINT(@"병들의 불만이 해소되어 %CITY_NAME:대상도시%의 방위율이 크게 올랐다", 칼라_주의)
+		CALL COLOR_PRINT(@"학생들의 불만이 해소되어 %CITY_NAME:대상도시%의 방위율이 크게 올랐다", 칼라_주의)
 		PRINTFORML 
 	ELSEIF LOCAL >= 4
 		PRINTFORMW 
 		PRINTFORML 위안은 성공에 끝났다!
-		PRINTFORMW 그들은 %ANAME(대상)%의 행사에 갈채 하고 즐겼다
+		PRINTFORMW 그들은 %ANAME(대상)%를 칭송하고 즐거워했다
 		CITY_GUARD:대상도시 += 15
-		CALL COLOR_PRINT(@"병들의 불만이 해소되어 %CITY_NAME:대상도시%의 방위율이 올랐다", 칼라_주의)
+		CALL COLOR_PRINT(@"학생들의 불만이 해소되어 %CITY_NAME:대상도시%의 방위율이 올랐다", 칼라_주의)
 		PRINTFORML 
 	ELSE
-		PRINTFORML 병들의 반응은 지금 1이었다
-		PRINTFORMW %조사처리(ANAME(대상),"는")% 어깨를 떨어뜨려 돌아갔다
+		PRINTFORML 학생들의 반응은 매우 처참했다.
+		PRINTFORMW %조사처리(ANAME(대상),"도")% 머리를 떨구며 침울해졌다
 		CITY_GUARD:대상도시 -= 20
-		CALL COLOR_PRINT(@"병들의 불만이 모여, %CITY_NAME:대상도시%의 방위율이 내렸다", 칼라_주의)
+		CALL COLOR_PRINT(@"학생들의 불만이 모여, %CITY_NAME:대상도시%의 방위율이 내렸다", 칼라_주의)
 		PRINTFORMW 
 	ENDIF
 ENDIF

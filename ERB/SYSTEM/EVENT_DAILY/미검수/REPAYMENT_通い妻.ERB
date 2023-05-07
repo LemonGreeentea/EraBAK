@@ -9,8 +9,6 @@ RETURN (DVAR:보은_발생플래그 || DVAR:보은_내왕아내플래그 > 0 ? 2
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_REPAYMENT_DECISION()
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
 SIF DVAR:보은_발생플래그 == -1
 	RETURN 0
 SIF DAY < 10

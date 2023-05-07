@@ -9,8 +9,6 @@ RETURN (DVAR:몽마의꿈_발생플래그 || DVAR:몽마의꿈그후_발생플�
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_SUCCUBUS_DECISION()
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
 
 SIF DVAR:몽마의꿈_발생플래그 == -1
 	RETURN 0
@@ -45,10 +43,10 @@ RETURN 1
 ;---------------------
 @EVENT_DAILY_SUCCUBUS_0()
 #DIM 대상
-PRINTFORML 일끝의 심야
+PRINTFORML 일을 마치고 난 후의 늦은 밤,
 PRINTFORML 침실의 앞에서 %조사처리(ANAME(MASTER),"는")% 묘한 것을 찾아냈다
-PRINTFORMW 여자용품의 팬티다. 게다가 대단히 요염한…
-PRINTFORML …왠지, 보고 있는 것만으로 자꾸자꾸와 정욕이 들끓어 온다
+PRINTFORMW 여자의 팬티다. 게다가 대단히 요염한…
+PRINTFORML …왠지, 보고 있는 것만으로 자꾸 정욕이 들끓어 온다
 PRINTFORMW 어떻게 하지……
 PRINTFORML
 CALL ASK_MULTI("받는다", "방치한다")

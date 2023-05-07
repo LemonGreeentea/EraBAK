@@ -1,0 +1,102 @@
+﻿;-----------------------------------
+;기본치 계산에 앞서 처리하는 것
+;-----------------------------------
+@SKILL_54_SP_3_EXIST
+RETURN 1
+
+@SKILL_54_SP_3_NAME
+RESULTS = 함께하면 부끄럽지 않아요
+
+;레벨은 1-5까지
+@SKILL_54_SP_3_LEVEL
+RETURN 4
+
+;대상 선택
+@SKILL_54_SP_3_SETTARGET(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+대상측 = !발동측
+;부대 대상
+
+RETURN 1
+
+;발동 판정
+@SKILL_54_SP_3_CAN_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+대상측 = !발동측
+SIF 대상부대 < 0
+	RETURN 0
+RETURN 1
+
+;발동 텍스트를 오바라이드 하고 싶을 때에.
+;「아무개의 스킬 발동!   00했다!」의 「00했다!」의 부분을 실장하고 싶은 경우는,
+;이것이 아니고 INVOKE로 쓰면 좋습니다.
+;@SKILL_54_SP_3_INVOKE_TEXT(발동자, 스킬, 장르)
+;#DIM 발동자
+;#DIM 스킬
+;#DIMS 장르
+
+;효과를 여기에 기술
+@SKILL_54_SP_3_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+#DIM 빼앗는병수
+#DIM 군주
+대상측 = !발동측
+
+
+IF 대상부대 >= 0
+	군주 = GET_COUNTRY_BOSS(대상세력)
+ELSE
+	군주 = GET_COUNTRY_BOSS(CITY_OWNER:대상세력)
+ENDIF
+
+빼앗는병수 = MIN(GET_SOLDIER(대상세력, 대상부대) * RAND(3, 10) / 100, 2000)
+PRINTFORML \@ 군주 >= 0 ? %ANAME(군주)% # 적 \@군의 군사는, %ANAME(발동자)%의 말투에 속아 차례차례로 돌아서고 있다!
+CALL DECREASE_SOLDIER(대상세력, 대상부대, 빼앗는병수, 1)
+CALL INCREASE_SOLDIER(발동세력, 발동부대, 빼앗는병수, 1)
+
+
+@SKILL_54_SP_3_EXPLANATION
+RESULTS = 적 병력을 유혹해 자신의 병력으로 만든다. 
+
+@SKILL_54_SP_3_CANT_TELL
+
+
+@SKILL_54_SP_3_RATE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+RETURN 180

@@ -11,8 +11,6 @@ RETURN 100
 ;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
 ;---------------------
 @EVENT_DAILY_DAILY_MISC_DECISION()
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
 RETURN 1
 
 ;---------------------
@@ -63,7 +61,7 @@ CASE 0 TO 21
 				ABL:대상:정치 += LOCAL:1
 				LOCAL:2 = GETNUM(ABL, "정치")
 		ENDSELECT
-		PRINTFORML %조사처리(ANAME(대상),"는")% 비밀의 특훈에 힘쓰고 있다……
+		PRINTFORML %조사처리(ANAME(대상),"는")% 몰래 특훈을 하고 있다......
 		CALL COLOR_PRINTL(@"%ANAME(대상)%의 %조사처리(LOCALS,"가")%{LOCAL:1}올라, {ABL:대상:(LOCAL:2)}가 되었다!", 칼라_오렌지)
 	ENDIF
 
@@ -72,7 +70,7 @@ CASE 22 TO 38
 	CALL DAILY_EVENT_RAND_CITYSELECT(0)
 	대상 = RESULT
 	IF 대상 > 0
-		PRINTFORML %CITY_NAME:대상%는 호경기인 같다……
+		PRINTFORML %CITY_NAME:대상%의 경제는 매우 활성화된 것 같다……
 		SETCOLOR 칼라_오렌지
 		CALL MODIFY_CITY_ECONOMY(대상, RAND(10000, 30000))
 		RESETCOLOR
@@ -84,9 +82,9 @@ CASE 39 TO 55
 	LOCAL:1 = GET_OWN_CITY(CFLAG:MASTER:소속)
 	LOCAL:2 = RAND(LOCAL:1 * 300, LOCAL:1 * 300 + 500)
 	COUNTRY_SOLDIER:(CFLAG:MASTER:소속) += LOCAL:2
-	PRINTFORML %LOCALS%의 덕망에, 의용군이 결성되었다……
+	PRINTFORML %LOCALS%의 덕망에, 신입생이 증가하였다……
 	SETCOLOR 칼라_오렌지
-	PRINTFORML 병 수가 {LOCAL:2} 증가해, {COUNTRY_SOLDIER:(CFLAG:MASTER:소속)}가 되었다!
+	PRINTFORML 학생 수가 {LOCAL:2} 증가해, {COUNTRY_SOLDIER:(CFLAG:MASTER:소속)}가 되었다!
 	RESETCOLOR
 
 ;농땡이마왕을 취득하는지, 삭제한다
@@ -95,13 +93,13 @@ CASE 56 TO 77
 	대상 = RESULT
 	IF 대상 >= 0
 		IF TALENT:대상:농땡이마왕
-			PRINTFORML 최근의 %조사처리(ANAME(대상),"는")% 어쩐지 의지로 가득 차 넘치고 있다……
+			PRINTFORML 최근의 %조사처리(ANAME(대상),"는")% 어쩐지 의지가 충만하다……
 			SETCOLOR 칼라_오렌지
 			PRINTFORML %조사처리(ANAME(대상),"는")%【농땡이마왕】를 극복했다!
 			RESETCOLOR
 			TALENT:대상:농땡이마왕 = 0
 		ELSE
-			PRINTFORML 최근의 %조사처리(ANAME(대상),"는")% 어쩐지 의지가 보여지지 않는다……
+			PRINTFORML 최근의 %조사처리(ANAME(대상),"는")% 만사가 매우 귀찮아졌다......
 			SETCOLOR 칼라_경고
 			PRINTFORML %조사처리(ANAME(대상),"는")%【농땡이마왕】(이)가 되어 버렸다!
 			RESETCOLOR
@@ -115,14 +113,14 @@ CASE 78 TO 82
 	대상 = RESULT
 	IF 대상 >= 0
 		IF COOLTIME:대상:0
-			PRINTFORML %ANAME(대상)%의 상처는 예상 외로 빨리 나은 것 같다
+			PRINTFORML 구호대의 간호로 %ANAME(대상)%의 상처는 예상 외로 빨리 나은 것 같다
 			SETCOLOR 칼라_오렌지
 			PRINTFORML %조사처리(ANAME(대상),"는")% 쿨 타임부터 복귀했다!
 			RESETCOLOR
 			COOLTIME:대상:0 = 0
 		ELSE
 			LOCAL:1 = RAND:3 + 1
-			PRINTFORML %조사처리(ANAME(대상),"는")% 훈련중에 상처를 입어 버린 것 같다
+			PRINTFORML %조사처리(ANAME(대상),"는")% 수업 중에 상처를 입어 버린 것 같다
 			CALL SET_COOLTIME(대상, LOCAL:1)
 		ENDIF
 	ENDIF
@@ -134,8 +132,8 @@ CASE 83 TO 99
 	IF 대상 >= 0 && IS_COUNTRY(대상)
 		LOCAL:1 = RAND(MIN(DAY * 100, 5000), MIN(DAY * 200, 10000))
 		COUNTRY_SOLDIER:(대상) += LOCAL:1
-		PRINTFORML %ANAME(GET_COUNTRY_BOSS(대상))%는 징병을 실시했다!
-		CALL COLOR_PRINTL(@"병 수가 {LOCAL:1} 증가했다", 칼라_주의)
+		PRINTFORML %ANAME(GET_COUNTRY_BOSS(대상))%는 학교 홍보를 실행했다!
+		CALL COLOR_PRINTL(@"학생 수가 {LOCAL:1} 증가했다", 칼라_주의)
 	ENDIF
 ;그 외=이상종료(ABEND)
 CASEELSE

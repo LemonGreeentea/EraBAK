@@ -9,8 +9,7 @@ RETURN 50
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_TERRITORY_WALKING_DECISION()
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
+
 ;세력에 소속하지 않은가 포로라면 안 돼
 SIF CFLAG:MASTER:소속 == 0 || CFLAG:MASTER:포로처 != 0
 	RETURN 0
@@ -55,15 +54,15 @@ RETURN 1
 
 대상 = DAILY_TARGET:(RAND:DAILY_TARGET_NUM)
 
-PRINTFORMW 어떤일. 특별히 하는 일도 없고 지루한 휴일이다……
-PRINTFORMW %조사처리(ANAME(MASTER),"는")% 시간 때우기도 겸해, 시찰겸 영내를 훌쩍과 돌아보기로 했다
+PRINTFORMW  특별히 하는 일도 없고 지루한 휴일이다……
+PRINTFORMW %조사처리(ANAME(MASTER),"는")% 시간 때우기도 겸해, 시찰 겸 마을을 돌아보기로 했다
 PRINTFORMW 그런데, 어디에 가자……
 PRINTFORML 
-CALL ASK_MULTI("술집", "환락가", "온 마을을 흔들흔들", "밤의 번화가", "유곽", "슬럼가", "그만둔다")
+CALL ASK_MULTI("음식점", "환락가", "온 마을 산책", "밤의 번화가", "유곽", "뒷골목", "그만둔다")
 SELECTCASE RESULT
 	;술집（유부녀 루트）
 	CASE 0
-		PRINTFORMW 술집에 가 보자
+		PRINTFORMW 음식점에 가 보자
 		PRINTFORML …
 		PRINTFORMW ……
 		;1/4로 술집에서 마시고 있는 캐릭터와 만남
@@ -71,11 +70,11 @@ SELECTCASE RESULT
 			PRINTFORMW 술집에 도착하면, 가게의 안쪽에서 %조사처리(ANAME(대상),"가")% 마시고 있었다
 			SIF CFLAG:대상:안면 == 0
 				CFLAG:대상:안면 = 1
-			PRINTFORMW …글쎄. 분명히 %조사처리(ANAME(대상),"는")% 지금, 근무중일 것으로는……
+			PRINTFORMW …글쎄. 분명히 %조사처리(ANAME(대상),"는")% 지금, 수업중일 텐데……
 			PRINTFORML %조사처리(ANAME(대상),"가")% %ANAME(MASTER)%의 모습을 찾아내면
 			PRINTFORMW 여기에 와, 이라는 듯이 손짓함 된다
-			PRINTFORML 아무래도 완전하게 몹시 취하고 있는 것 같다
-			PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(대상)%의 관련술에 교제해졌다……
+			PRINTFORML 아무래도, 술을 마셔 몹시 취한 것 같다
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(대상)%과 술의 대화를 나누었다……
 			CALL PRINT_ADD_EXP(MASTER, "주량경험치", RAND(5, 15), 1)
 			CALL PRINT_ADD_EXP(대상, "주량경험치", RAND(10, 30), 1)
 			CALL TRAIN_AUTO_ABLUP(MASTER)
@@ -86,12 +85,12 @@ SELECTCASE RESULT
 		;애인화 이후
 		IF DVAR:영내훌쩍에로의여행_유부녀 >= 4
 			PRINTFORML %ANAME(MASTER)%의 애인이 된 유부녀가, 오늘도 마시고 있었다
-			PRINTFORMW 말을 걸어 보면, 그녀는 매우 기쁜 듯한 얼굴로 %조사처리(ANAME(MASTER),"를")% 맞이해 주었다
+			PRINTFORMW 말을 걸어 보면, 그녀는 매우 기쁜 듯한 얼굴로 %조사처리(ANAME(MASTER),"을")% 맞이해 주었다
 			PRINTFORML 잠깐 그녀와의 시시한 회화를 즐겼다…
-			PRINTFORMW 그리고 해가 떨어지기 시작했을 무렵에, 그녀는 %ANAME(MASTER)%에 껴안아,   또 자신을 안으면 좋겠다  와 열정적이게 속삭여 왔다
+			PRINTFORMW 그리고 해가 떨어지기 시작했을 무렵에, 그녀는 %ANAME(MASTER)%을 껴안아, 또 자신과 했으면 좋겠다고 열정적이게 속삭여 왔다
 			PRINTFORML 아무래도 %ANAME(MASTER)%에 안기는 것을 기대해, 매일 여기서 기다리고 있던 것 같다
-			PRINTFORML 그렇게 기특한 그녀의 요망에 응할 수 있도록, %조사처리(ANAME(MASTER),"는")% 그녀를 껴안아, 남녀동반 숙소에서 서로 사랑하기로 했다
-			PRINTFORMW 그리고 %조사처리(ANAME(MASTER),"과")%의 행위의 전에, 그녀는 약지의 링을 제외했다……
+			PRINTFORML 그렇게 기특한 그녀의 요망에 응할 수 있도록, %조사처리(ANAME(MASTER),"는")% 그녀를 껴안아, 러브호텔에서 서로 사랑하기로 했다
+			PRINTFORMW 그리고 %조사처리(ANAME(MASTER),"과")%의 섹스 전에, 그녀는 약지의 반지를 손가락에서 뺐다……
 			PRINTFORML 
 			SELECTCASE RAND:4
 				CASE 0
@@ -129,19 +128,19 @@ SELECTCASE RESULT
 			PRINTFORML 몇번이나 관계를 가진 유부녀가, 오늘도 마시고 있었다
 			PRINTFORMW 말을 걸어 보면, 그녀는 기쁜 듯한 얼굴로 %조사처리(ANAME(MASTER),"를")% 맞이해 주었다
 			PRINTFORML 이번 취기 정도인 것 같아, 온화한 회화를 즐겼다…
-			PRINTFORMW 즐거운 한때가 끝나면, 그녀는 %ANAME(MASTER)%에 껴안아,   자신을 안아 줘  와 열정적이게 속삭여 왔다
+			PRINTFORMW 즐거운 한때가 끝나면, 그녀는 %ANAME(MASTER)%에 껴안아, 자신을 안아 달라고 열정적이게 속삭여 왔다
 			PRINTFORML
 			PRINTFORML 사정, %조사처리(ANAME(MASTER),"과")% 관계를 가지고 나서 육체의 욕구 불만이 채워진 덕분인가,
 			PRINTFORMW 남편과의 싸움도 제법 적게 되어, 공식상의 관계는 양호하게 되었다
-			PRINTFORMW 에서도, 자신을 여자로서 안아 주는 것은 %ANAME(MASTER)% 뿐이다. 자신을 채워 주는 것은 %ANAME(MASTER)%의 (분)편이다
-			PRINTFORMW 이니까 자신을, %ANAME(MASTER)%의 여자로 하면 좋겠다  와……
+			PRINTFORMW 그렇지만, 자신을 여자로서 안아 주는 것은 %ANAME(MASTER)% 뿐이다. 자신을 채워 주는 것은 %ANAME(MASTER)%이다
+			PRINTFORMW 이니까 자신을, %ANAME(MASTER)%의 여자로 하면 좋겠다……
 			PRINTFORML
 			PRINTFORMW 그녀는 물기를 띤 눈동자로 %조사처리(ANAME(MASTER),"를")% 올려본다. 그 표정은 사랑하는 아가씨 그 자체였다
 			PRINTFORML …
 			PRINTFORMW 이런 매력적인 여성이, 여자로서 볼 수 없다는 것은 잔혹한 일이다
-			PRINTFORMW 소망 대로, 그녀를 자신의 여자로 해 주자
-			PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀를 껴안아, 남녀동반 숙소에서 서로 사랑하기로 했다
-			PRINTFORMW 그리고 %조사처리(ANAME(MASTER),"과")%의 행위의 전에, 그녀는 약지의 링을 제외했다……
+			PRINTFORMW 소망대로, 그녀를 자신의 여자로 해 주자
+			PRINTFORML %조사처리(ANAME(MASTER),"는")% 그녀를 껴안아, 러브호텔에서 서로 사랑하기로 했다
+			PRINTFORMW 그리고 %조사처리(ANAME(MASTER),"과")%의 섹스 전에, 그녀는 약지의 링을 뺐다……
 			PRINTFORML 
 			SELECTCASE RAND:4
 				CASE 0
@@ -181,14 +180,14 @@ SELECTCASE RESULT
 			PRINTFORMW 그러고 보니, 전에 관계를 가진 유부녀가 연락처를 건네주었다
 			PRINTFORML 거기에 쓰여져 있는 술집에 가 보면, 그녀는 거기서 마시고 있었다
 			PRINTFORML 오늘도 함께 마실까하고, 조금 말을 걸어 보았다
-			PRINTFORMW 이번도 이미 몹시 취하고 있어 또 다시 관련되어 술에 맞대졌다
-			PRINTFORML 이전의 %조사처리(ANAME(MASTER),"과")%의 섹스로, 신체를 겹치는 쾌감을 재확인했다고이지만
-			PRINTFORML 그녀의 남편은 밤의 생활에 관심이 적은 것 같아, 섹스레스 기색으로 불만이 쌓여 있는 것 같아
+			PRINTFORMW 이번도 이미 몹시 취하고 있어 또 다시 술에 맞대졌다
+			PRINTFORML 이전의 %조사처리(ANAME(MASTER),"과")%의 섹스로, 신체를 겹치는 쾌감을 재확인했다고 하지만
+			PRINTFORML 그녀의 남편은 밤의 생활에 관심이 적은 것 같아, 섹스리스 기색으로 불만이 쌓여 있는 것 같다
 			PRINTFORMW 오늘도 싸움을 해 홧술을 하고 있는 것, 이라는 일이다
 			PRINTFORMW 만취하는 그녀에게 껴안아진%조사처리(ANAME(MASTER),"는")%, 이번도 함께 마시는 일로 했다
 			PRINTFORML …
 			PRINTFORMW …
-			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 취기가 돈 그녀에게 이번도 요구되어 흐르게 되는 대로 남녀동반 숙소에서 신체를 겹치기로 했다……
+			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 취기가 돈 그녀에게 이번도 요구되어 흐르게 되는 대로 러브호텔에서 신체를 겹치기로 했다……
 			PRINTFORML 
 			SELECTCASE RAND:4
 				CASE 0
@@ -229,21 +228,21 @@ SELECTCASE RESULT
 				PRINTFORMW 귀찮게 안 되게 떨어졌다
 				RETURN
 			ENDIF
-			PRINTFORMW 한사람술도 무엇인 것으로, 조금 말을 걸어 보았다
-			PRINTFORMW 하지만 그녀는 꽤 몹시 취하고 있는 것 같고, 관련술에 맞대졌다
+			PRINTFORMW 혼술도 이라니, 조금 말을 걸어 보았다
+			PRINTFORMW 하지만 그녀는 꽤 몹시 취하고 있는 것 같고, 술에 맞대졌다
 			PRINTFORML 그녀는 남편과의 관계가 차가워지고 있는 것 같다
 			PRINTFORMW 오늘도 싸움을 해 홧술을 하고 있다라는 일이다
 			PRINTFORMW 만취하는 그녀에게 껴안아진%조사처리(ANAME(MASTER),"는")% 어쩔 수 없이 함께 마시는 일로 했다
 			PRINTFORML …
 			PRINTFORMW …
 			PRINTFORMW %ANAME(MASTER)%들은 숙소의 한 방으로 침대를 삐걱거리게 하면서 짐승과 같이 서로 같이 탐내고 있다
-			PRINTFORML 그 후%조사처리(ANAME(MASTER),"는")% 완전히 만취한 그녀에게 요구되는 대로 남녀동반 숙소에 들어갔다
+			PRINTFORML 그 후%조사처리(ANAME(MASTER),"는")% 완전히 만취한 그녀에게 요구되는 대로 러브호텔에 들어갔다
 			PRINTFORMW 그녀는 머리카락을 흩뜨리면서 격렬하게 허리를 흔들어, %ANAME(MASTER)%의 이름을 불러 요구해 온다
 			PRINTFORMW 격렬하고 교묘한 허리자세에 하나의 물건을 자극 받으며, 참지 못하고 그녀의 허리를 강하게 잡아 버린다
 			PRINTFORMW 참지 못하고 그녀에게 요구되는 대로 허리를 쳐박아, 몇 번이나 그 중에 정액을 발했다……
 			CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정", "동정상실", 0, "", "", "스침의 여자의 질", "화간")
 			PRINTFORML 
-			PRINTFORMW 충분히 즐긴 후, 새벽전에 숙소를 나왔다
+			PRINTFORMW 충분히 즐긴 후, 새벽 전에 숙소를 나왔다
 			PRINTFORMW 그녀는 마지막에 %ANAME(MASTER)%에 키스를 해 연락처를 건네주면 빠른 걸음에 떠나 갔다
 			DVAR:영내훌쩍에로의여행_유부녀 = 1
 		ENDIF
@@ -258,8 +257,8 @@ SELECTCASE RESULT
 			SIF CFLAG:대상:안면 == 0
 				CFLAG:대상:안면 = 1
 			PRINTFORML 아무래도 %ANAME(대상)%도, 한가한 휴일을 주체 못하고 있는 것 같다
-			PRINTFORMW 여기도 한가했다고 무렵이다. 함께 흔들거리려고 제안해, %ANAME(대상)%도 거기에 탔다
-			PRINTFORMW 둘이서 바득바득 말하면서 환락가를 산책했다……
+			PRINTFORMW 여기도 한가했다고 무렵이다. 함께 노닥거리자고 제안해, %ANAME(대상)%도 거기에 탔다
+			PRINTFORMW 둘이서 즐겁게 환락가를 산책했다……
 			CFLAG:대상:호감도 += 50
 			RETURN
 		ENDIF
@@ -314,8 +313,8 @@ SELECTCASE RESULT
 		ELSE
 			PRINTFORMW 환락가를 산책중, 그야말로 이상한 낯선 남자가 다가왔다
 			PRINTFORML 좋은 일을 하고 있지만 함께 어때, 라고다
-			PRINTFORMW 신경이 쓰인 %조사처리(ANAME(MASTER),"는")% 상세를 (들)물어 보았다
-			PRINTFORMW 이 앞의 가게의 지하에서 남녀가 모여, 마다없는 일을 하고 있는 것이라고 한다
+			PRINTFORMW 신경이 쓰인 %조사처리(ANAME(MASTER),"는")% 자세히 물어 보았다
+			PRINTFORMW 이 앞의 가게의 지하에서 남녀가 모여, 자유롭게 즐기고 있는 것이라고 한다
 			PRINTFORMW ……즉, 난교 파티의 참가자를 모으고 있는 것 같다
 			PRINTFORMW 환락가라고는 해도 대낮 당당 그런 권유를 받는다고는 생각하지 않았지만……
 			PRINTFORML
@@ -348,7 +347,7 @@ SELECTCASE RESULT
 		
 	;온 마을을 흔들흔들（복수 패턴 있어）
 	CASE 2
-		PRINTFORMW 온 마을을 흔들거리자
+		PRINTFORMW 온 마을을 산책하자
 		PRINTFORML …
 		PRINTFORML ……
 		;1/4로 마을을 흔들거리고 있는 캐릭터와 만남
@@ -356,9 +355,9 @@ SELECTCASE RESULT
 			PRINTFORMW 거리를 걷고 있으면, %조사처리(ANAME(대상),"과")% 우연히 정면충돌했다
 			SIF CFLAG:대상:안면 == 0
 				CFLAG:대상:안면 = 1
-			PRINTFORML 아무래도 점심밥을 어디의 가게에서 먹을까, 흔들거리고 있던 것 같다
+			PRINTFORML 아무래도 점심밥을 어디의 가게에서 먹을까, 산책하고 있던 것 같다
 			PRINTFORMW …그러고 보니 자신도 배가 고파져 왔다
-			PRINTFORML 그 다음에인 것로 %ANAME(MASTER)%도 함께 점심을 먹기로 했다
+			PRINTFORML 함께 밥을 먹자고 권해 %ANAME(MASTER)%도 함께 점심을 먹기로 했다
 			PRINTFORML …
 			PRINTDATAW
 			DATAFORM %조사처리(ANAME(대상),"과")% 함께, 튀김 소바에 입맛을 다셨다
@@ -375,7 +374,7 @@ SELECTCASE RESULT
 			;연애 편지
 			CASE 0
 				IF DVAR:영내훌쩍에로의여행_연애편지 >= 4
-					PRINTFORMW 고백을 받아, 개여 연인이 된 소녀의 곳에 놀러 갔다
+					PRINTFORMW 고백을 받아, 연인이 된 소녀의 집에 놀러 갔다
 					PRINTFORML 가까지 나가면, %ANAME(MASTER)%의 얼굴을 본 그녀가 만면의 미소가 되었다
 					PRINTFORMW 오늘도 함께 데이트 하려고 제안한다
 					PRINTFORMW 그녀는 두말 할 것 없이 찬성해, 함께 나가는 일이 되었다
@@ -383,7 +382,7 @@ SELECTCASE RESULT
 					PRINTFORMW …
 					PRINTFORML 이윽고 그녀의 집까지 보내면, 그녀는 얼굴을 붉히면서도 %ANAME(MASTER)%의 손을 잡고, 물기를 띤 눈동자를 향하여,
 					PRINTFORMW 오늘은 부모님이 부재중이야  라고 고한다
-					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀의 의사를 짜 그녀를 껴안아, 안내되어 그녀의 방에 들어갔다……
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀의 의사를 존중하여 껴안아, 그녀의 방에 들어갔다……
 					PRINTFORML
 					SELECTCASE RAND:3
 						CASE 0
@@ -402,18 +401,18 @@ SELECTCASE RESULT
 					CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "연인이 된 소녀의 입술", "", "연인이 된 소녀의 질", "화간")
 					PRINTFORML 
 					PRINTFORMW …밤 늦게까지, 충분히 서로 사랑했다
-					PRINTFORMW 그리고 이별할 때, 두 명은 정열적인 긴 키스를 주고 받아, 또 만나러 올 것을 맹세했다……
+					PRINTFORMW 그리고 이별할 때, 두 명은 정열적인 긴 키스를 주고 받아, 또 만나러 올 것을 약속했다……
 					
 				ELSEIF DVAR:영내훌쩍에로의여행_연애편지 >= 2
 					PRINTFORMW 전에 고백을 받은 소녀의 곳에 놀러 갔다
 					PRINTFORML ……
 					PRINTFORMW 온 마을을 걸어, %ANAME(MASTER)%에 연애 편지를 건네준 소녀의 집까지 왔다
 					PRINTFORML 호출하면, 얼굴을 붉게 한 그녀가 모습을 나타냈다
-					PRINTFORMW 오늘도 서로를 잘 알기 위해서(때문에) 데이트 하려고 제안한다
+					PRINTFORMW 오늘도 서로를 잘 알기 때문에 데이트 하려고 제안한다
 					PRINTFORMW 그녀는 두말 할 것 없이 찬성해, 함께 나가는 일이 되었다
 					PRINTFORML 두 명은 즐거운 한때를 보냈다……
 					PRINTFORMW …
-					PRINTFORMW 이윽고 남녀동반 숙소의 앞을 지나면, 그녀는 얼굴을 붉히면서도 %ANAME(MASTER)%에 껴안아 물기를 띤 눈동자를 향한다
+					PRINTFORMW 이윽고 러브호텔의 앞을 지나면, 그녀는 얼굴을 붉히면서도 %ANAME(MASTER)%에 껴안아 물기를 띤 눈동자를 향한다
 					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 그녀의 요망에 응해, 어깨를 안아 숙소에 들어갔다……
 					PRINTFORML
 					SELECTCASE RAND:3
@@ -435,7 +434,7 @@ SELECTCASE RESULT
 					PRINTFORML 
 					PRINTFORMW 보다 깊고, 서로를 알려졌다…
 					SIF DVAR:영내훌쩍에로의여행_연애편지 == 4
-						PRINTFORML 두 명은 신체를 겹치는 것으로 서로를 알게 되어, 개여 연인이 되었다
+						PRINTFORML 두 명은 신체를 겹치는 것으로 서로를 알게 되어, 연인이 되었다
 					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 재회의 약속을 해, 그녀와 헤어졌다
 					PRINTFORMW 그녀는 얼굴을 붉히면서, %ANAME(MASTER)%의 모습이 안보이게 될 때까지 손을 흔들고 전송해 주었다
 					
@@ -447,13 +446,13 @@ SELECTCASE RESULT
 					PRINTFORMW 온 마을을 걸어, %ANAME(MASTER)%에 연애 편지를 건네준 소녀의 집까지 왔다
 					PRINTFORML 호출하면, 얼굴을 붉게 한 그녀가 모습을 나타냈다
 					PRINTFORMW 그녀는 결과가 어떻게 되는지, 머뭇머뭇 하면서 기다리고 있다…
-					PRINTFORML 그리고 편지를 읽은 %조사처리(ANAME(MASTER),"는")%, 서로를 잘 모르는 채로는 교제하는 것도 아무것도 없다고 전했다
-					PRINTFORMW 어떻게 하면, 이라고 멍청히 하는 그녀에게, 서로 붙어 좀 더 알려고 제안했다
-					PRINTFORMW 말의 의미를 헤아린 그녀는, 얼굴을 붉히면서 %조사처리(ANAME(MASTER),"과")% 따랐다고 숙소에 들어갔다……
+					PRINTFORML 그리고 편지를 읽은 %조사처리(ANAME(MASTER),"는")%, 서로를 잘 모르는 채로는 교제할 수 없다고 전했다
+					PRINTFORMW 어떻게 하면, 이라고 멍청히 하는 그녀에게, 서로 좀 더 알자고 제안했다
+					PRINTFORMW 말의 의미를 헤아린 그녀는, 얼굴을 붉히면서 %조사처리(ANAME(MASTER),"과")% 숙소에 들어갔다……
 					PRINTFORMW
-					PRINTFORML 그녀의 몸은 튀도록(듯이) 부드럽고, %ANAME(MASTER)%기호였다
-					PRINTFORMW 숫처녀면서 감도도 자주(잘), 사랑스럽게 몸을 뛰게 해 이쪽의 눈을 즐겁게 한다
-					PRINTFORMW 응석부리도록(듯이) 달라붙는 소녀에게, %ANAME(MASTER)%의 존재를 새겨 주었다……
+					PRINTFORML 그녀의 몸은 매우 부드러워, %ANAME(MASTER)%의 취향이었다
+					PRINTFORMW 숫처녀면서 감도도 좋고, 사랑스럽게 몸을 뛰게 해 이쪽의 눈을 즐겁게 한다
+					PRINTFORMW 응석부리듯이 달라붙는 소녀에게, %ANAME(MASTER)%의 존재를 새겨 주었다……
 					CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "화간")
 					PRINTFORML 
 					PRINTFORMW 재회의 약속을 해, 그녀와 헤어졌다
@@ -475,13 +474,13 @@ SELECTCASE RESULT
 						PRINTFORML 유감이지만 생각에는 따를 수 없다
 						PRINTFORMW 그렇게 전하면, 그녀는 어깨를 떨어뜨려 떠났다
 					ELSE
-						PRINTFORML 편지를 읽은 %조사처리(ANAME(MASTER),"는")%, 서로를 모르는 채로는 교제하는 것도 아무것도 없다고 전했다
-						PRINTFORMW 어떻게 하면, 이라고 멍청히 하는 그녀에게, 서로 붙어 좀 더 알려고 제안했다
-						PRINTFORMW 말의 의미를 헤아린 그녀는, 얼굴을 붉히면서 %조사처리(ANAME(MASTER),"과")% 따랐다고 숙소에 들어갔다……
+						PRINTFORML 편지를 읽은 %조사처리(ANAME(MASTER),"는")%, 서로를 모르는 채로는 교제할 수 없다고 전했다
+						PRINTFORMW 어떻게 하죠, 멍하게 서있는 그녀에게, 서로 좀 더 알자고 제안했다
+						PRINTFORMW 말의 의미를 헤아린 그녀는, 얼굴을 붉히면서 %조사처리(ANAME(MASTER),"과")% 숙소에 들어갔다……
 						PRINTFORMW
-						PRINTFORML 그녀의 몸은 튀도록(듯이) 부드럽고, %ANAME(MASTER)%기호였다
-						PRINTFORMW 숫처녀면서 감도도 자주(잘), 사랑스럽게 몸을 뛰게 해 이쪽의 눈을 즐겁게 한다
-						PRINTFORMW 응석부리도록(듯이) 달라붙는 소녀에게, %ANAME(MASTER)%의 존재를 새겨 주었다……
+						PRINTFORML 그녀의 몸은 매우 부드럽고, %ANAME(MASTER)%의 취향이었다
+						PRINTFORMW 숫처녀면서 감도도 좋고, 사랑스럽게 몸을 뛰게 해 이쪽의 눈을 즐겁게 한다
+						PRINTFORMW 응석부리듯이 달라붙는 소녀에게, %ANAME(MASTER)%의 존재를 새겨 주었다……
 						CALL FUCK(MASTER, "성기술, 성교, Ｃ, 사정, Ｖ삽입", "동정상실, 키스상실", 0, "스침의 여자의 입술", "", "스침의 여자의 질", "화간")
 						PRINTFORML 
 						PRINTFORMW 재회의 약속을 해, 그녀와 헤어졌다
@@ -494,7 +493,7 @@ SELECTCASE RESULT
 					PRINTFORMW 그러고 보니 이 근처에, 헌팅되어 섹스프렌드가 된 그녀가 있었을 것이다
 					PRINTFORMW 모처럼이고, 또 만나러 가 보자
 					PRINTFORML …
-					PRINTFORMW ……
+					PRINTFORMW …
 					PRINTFORMW 연락처의 장소에 그녀가 있었다. 변함 없이 %ANAME(MASTER)%기호가 좋은 여자다
 					PRINTFORML 그녀는 모습을 보인 %조사처리(ANAME(MASTER),"를")% 확인하면, 키스를 날려%조사처리(ANAME(MASTER),"를")% 권해 온다
 					PRINTFORMW %조사처리(ANAME(MASTER),"는")% 상대의 유혹에 넘어가, 그녀와 팔짱을 껴 그녀의 자택으로 들어갔다…
@@ -956,35 +955,35 @@ SELECTCASE RESULT
 			PRINTFORMW %조사처리(ANAME(MASTER),"는")% 일류 창녀의 테크닉에 만열[滿悅]으로 귀로에 도착했다……
 		ENDIF
 		
-	;슬럼가
+	;뒷골목
 	CASE 5
-		PRINTFORML 그러고 보니 최근, 슬럼가의 치안이 문제가 되고 있는 것 같다
-		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 슬럼가를 순회하는 일로 했다
+		PRINTFORML 그러고 보니 최근, 뒷골목의 치안이 문제가 되고 있는 것 같다
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 뒷골목을 순회하는 일로 했다
 		PRINTFORML …
 		PRINTFORML ……
 		;1/4로 순찰중의 캐릭터와 만남
 		IF ! RAND:4
-			PRINTFORMW 슬럼가에 도착하면, 순찰중의 %조사처리(ANAME(대상),"과")% 정면충돌했다
+			PRINTFORMW 뒷골목을 돌아다니다, 순찰중의 %조사처리(ANAME(대상),"과")% 만났다
 			SIF CFLAG:대상:안면 == 0
 				CFLAG:대상:안면 = 1
 			PRINTFORML %ANAME(대상)%도 이 지구의 치안을 신경쓰고 있던 것 같아, 돌아보러 온 것 같다
 			PRINTFORMW 그 다음에인 것으로 함께 돌아보고 있으면, 강도의 현장에 조우했다!
-			PRINTFORML 두 명은 즉석에서 사태의 진압하러 달렸다!
+			PRINTFORML 두 명은 즉시 사태를 진압하러 달렸다!
 			PRINTFORML
 			PRINTFORMW …
 			PRINTFORML
-			PRINTFORMW 무사, 강도의 진압에 성공했다
-			PRINTFORML %ANAME(MASTER)%등은 강도들을 병사들에게 인도
-			PRINTFORMW 그것을 보며 있던 슬럼가의 소녀들은, 감사의 말을 걸어 주었다……
+			PRINTFORMW 무사히, 강도의 진압에 성공했다
+			PRINTFORML %ANAME(MASTER)%등은 강도들을 경찰들에게 인도하였다.
+			PRINTFORMW 그것을 보던 뒷골목의 소녀들은, 감사의 말을 걸어 주었다……
 			CFLAG:대상:호감도 += 70
 			RETURN
 		ENDIF
 		;4회째 이후
 		IF DVAR:영내훌쩍에로의여행_슬럼가의창녀 >= 4
 			PRINTFORMW 추잡한 의복의 여성이 나란히 서 있는 골목에 나왔다
-			PRINTFORML 전에 소녀를 산, 슬럼가의 창녀들이 모이는 장소다
+			PRINTFORML 전에 소녀를 산, 뒷골목의 창녀들이 모이는 장소다
 			PRINTFORMW 그리고, 마음에 드는 소녀가 %조사처리(ANAME(MASTER),"를")% 기다리고 있었다
-			PRINTFORMW 그녀는 요염하게 웃음을 띄워, %조사처리(ANAME(MASTER),"를")% 권하도록(듯이) 응시해 온다…
+			PRINTFORMW 그녀는 요염하게 웃음을 띄워, %조사처리(ANAME(MASTER),"를")% 응시해 온다…
 			PRINTFORMW 그 행동에 두근이라고 한 %조사처리(ANAME(MASTER),"는")%, 또 그녀를 사 안기로 했다
 			;1/3로 로리하렘프레이에
 			IF ! RAND:3
@@ -1064,7 +1063,7 @@ SELECTCASE RESULT
 		;2회째 이후
 		ELSEIF DVAR:영내훌쩍에로의여행_슬럼가의창녀 >= 1
 			PRINTFORMW 추잡한 의복의 여성이 나란히 서 있는 골목에 나왔다
-			PRINTFORML 전에 소녀를 산, 슬럼가의 창녀들이 모이는 장소다
+			PRINTFORML 전에 소녀를 산, 뒷골목의 창녀들이 모이는 장소다
 			PRINTFORMW 그리고, 전에 산 소녀가 또 있었다
 			PRINTFORMW 그녀는 얼굴을 붉혀 %조사처리(ANAME(MASTER),"를")% 응시해 온다…
 			PRINTFORML 어떻게 하지?
@@ -1133,8 +1132,8 @@ SELECTCASE RESULT
 		ENDIF
 	;멈춘다
 	CASE 6
-		PRINTFORMW …아니, 역시 이대로 질질 하고 있자
-		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 오늘 하루, 자신의 방에서 질질 하기로 했다……
+		PRINTFORMW …아니, 역시 이대로 여유부리며 있자
+		PRINTFORMW %조사처리(ANAME(MASTER),"는")% 오늘 하루, 자신의 방에서 휴식하기로 했다……
 ENDSELECT
 
 RETURN 0

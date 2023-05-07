@@ -11,10 +11,6 @@ RETURN 30
 ;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
 ;---------------------
 @EVENT_DAILY_ZEGEN_DECISION()
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
-SIF FLAG:데일리이벤트_NTR == 0
-	RETURN 0
 RETURN 12 <= DAY
 
 ;---------------------
@@ -41,33 +37,33 @@ VARSET LOCAL
 VARSET 포로번호
 
 PRINTFORML 유괴범 조직의 정보를 잡았다
-PRINTFORML 이 조직은 나라들을 돌어다나며 활약해 암약 하고 있는 것 같다
+PRINTFORML 이 조직은 여러 학교들을 돌아다나며 학생을 유괴하고 있는 것 같다
 PRINTFORMW 어떻게 하지?
 CALL ASK_MULTI("수사한다" ,"거래한다" ,"무시한다")
 IF RESULT == 2
 	PRINTFORMW 무시했다
 ELSEIF RESULT == 1
 	PRINTFORML 거래하기로 했다
-	PRINTFORMW 조직에 심부름을 보냈다
+	PRINTFORMW 조직에 서신을 보냈다
 	PRINTFORML ·
 	PRINTFORML ·
 	PRINTFORMW ·
 	PRINTFORML 조직의 사람이 왔다
 	PRINTFORMW 어떻게 하지?
-	CALL ASK_MULTI_JUDGE("마을 아가씨를 판다", 1,"타국의 포로를 산다", 1,"자신을 판다", IS_FEMALE(MASTER) && !TALENT:MASTER:처녀)
+	CALL ASK_MULTI_JUDGE("학생을 판다", 1,"다른 학교의 학생을 산다", 1,"자신을 판다", IS_FEMALE(MASTER) && !TALENT:MASTER:처녀)
 	IF RESULT == 0
-		PRINTFORMW 마을 아가씨를 팔았다
+		PRINTFORMW 학생을 팔았다
 		금액 = 3000 + 1000 * (DAY / 5)
 		MONEY += 금액 
 		FOR LOCAL, 1, MAX_COUNTRY
 			CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:1, -50, 50)
 		NEXT
-		CALL COLOR_PRINT(@"금{금액}를 손에 넣었다", 칼라_시안)
+		CALL COLOR_PRINT(@"{금액}크레딧을 손에 넣었다", 칼라_시안)
 		PRINTFORML 
-		CALL COLOR_PRINT(@"소문이 퍼져 타국의 평판이 내렸다", 칼라_경고)
+		CALL COLOR_PRINT(@"소문이 퍼져 다른 학교 평판이 내렸다", 칼라_경고)
 		PRINTFORMW 
 	ELSEIF RESULT == 1
-		PRINTFORML 타국의 포로를 휩쓸어 와 받기로 했다
+		PRINTFORML 다른 학교의 포로를 받기로 했다
 		$SHOW_LOOP
 		PRINTFORMW 누구를 잡아 와 받을까?
 		FOR LOCAL, 0, CHARANUM
@@ -90,50 +86,50 @@ ELSEIF RESULT == 1
 		INPUT
 		IF RESULT == 1000
 			PRINTFORML 역시 그만두자
-			PRINTFORMW 유괴범은 어깨를 움츠려 떠나 갔다
+			PRINTFORMW 유괴범은 떠나 갔다
 			RETURN 1
 		ELSEIF RESULT < 0 || RESULT >= LOCAL:1 || SLAVE_TRADER_PRICE(포로번호:RESULT) > MONEY
 			GOTO INPUT_LOOP
 		ELSE
 			대상 = 포로번호:(RESULT)
-			PRINTFORMW 「%조사처리(ANAME(대상),"를")% 잡아 준다면 좋군요?」
+			PRINTFORMW 「%조사처리(ANAME(대상),"를")% 잡아와 주면 되겠죠?」
 			CALL ASK_YN("부탁한다", "다시 생각한다")
 			IF RESULT == 1
 				PRINTFORMW 아니, 역시 한 번 더 다시 생각하자
 				CALL SINGLE_DRAWLINE
 				GOTO SHOW_LOOP
 			ELSE
-				PRINTFORMW 유괴범을 부탁했다
+				PRINTFORMW 유괴범에게 부탁했다
 				PRINTFORML ·
 				PRINTFORML ·
 				PRINTFORMW ·
-				PRINTFORML 그들은 보기좋게 %PRONOUN(대상)%를 휩쓸어 와 주었다
-				PRINTFORMW 비싼 쇼핑이었지만 당신은 만족해 %PRONOUN(대상)%를 내려다 보았다
+				PRINTFORML 그들은 %PRONOUN(대상)%를 유괴해 주었다
+				PRINTFORMW 비싼 쇼핑이었지만, 당신은 만족하며 %PRONOUN(대상)%를 내려다 보았다
 				IF CFLAG:MASTER:소속 == CFLAG:대상:소속
 					CALL CAPTURE(대상, 0)
 				ELSE
 					CALL CAPTURE(대상, CFLAG:MASTER:소속)
 				ENDIF
 				MONEY -= SLAVE_TRADER_PRICE(대상)
-				CALL COLOR_PRINT(@"금{SLAVE_TRADER_PRICE(대상)}를 지불했다", 칼라_주의)
+				CALL COLOR_PRINT(@"{SLAVE_TRADER_PRICE(대상)}크레딧을 지불했다", 칼라_주의)
 				PRINTFORML 
 				IF CFLAG:대상:소속 != CFLAG:MASTER:소속
 					FOR LOCAL, 1, MAX_COUNTRY
 						SIF IS_COUNTRY(LOCAL)
 							CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -100, 100)
 					NEXT
-					CALL COLOR_PRINT(@"유괴범 조직과의 연결이 발각되어 타국의 평판이 내렸다", 칼라_경고)
+					CALL COLOR_PRINT(@"유괴범 조직과의 연결이 발각되어 다른 학교의 평판이 내렸다", 칼라_경고)
 					PRINTFORMW
 				ENDIF
 			ENDIF
 		ENDIF
 	ELSE
 		PRINTFORML 자신을 팔기로 했다
-		PRINTFORMW 유곽에서 일해졌다
+		PRINTFORMW 창관에서 일해졌다
 		CALL ZEGEN_SEXWORK(MASTER)
 		금액 = 1000 + (ABL:MASTER:성교 + ABL:MASTER:성기술 + ABL:MASTER:봉사 + ABL:MASTER:Ｖ감) * 500
 		MONEY += 금액 
-		CALL COLOR_PRINT(@"금{금액}를 손에 넣었다", 칼라_시안)
+		CALL COLOR_PRINT(@"{금액}크레딧을 손에 넣었다", 칼라_시안)
 		PRINTFORMW
 	ENDIF
 ELSE
@@ -144,7 +140,7 @@ ELSE
 	CALL SELECT_CHARA_LIST_ONLY_LOGIC_SLG("ZEGEN", "ZEGEN")
 	대상 = RESULT
 	IF RESULT == -1
-		PRINTFORMW ……아니, 역시 위험함
+		PRINTFORMW ……아니, 역시 위험하다
 		PRINTFORMW 그만두기로 하자……
 		RETURN 1
 	ELSEIF 대상 == MASTER
@@ -154,10 +150,10 @@ ELSE
 	ENDIF
 	CALL DAILY_EVENT_RAND_CITYSELECT(0)
 	대상도시 = RESULT
-	PRINTFORML 마을 아가씨에게 잊혀져 잠입에 성공했다
-	PRINTFORML 다른 아가씨와 함께 유곽에 데려가졌다
+	PRINTFORML 납치당한 것처럼 꾸며 잠입에 성공했다
+	PRINTFORML 다른 아가씨와 함께 창관에 데려가졌다
 	PRINTFORMW 어떻게 하지?
-	CALL ASK_MULTI("무력 제압한다" ,"손님으로부터 정보를 얻는다" ,"아가씨들을 놓친다")
+	CALL ASK_MULTI("무력 제압한다" ,"손님으로부터 정보를 얻는다" ,"아가씨들을 해방한다")
 	IF RESULT == 0
 		PRINTFORMW 무력으로 제압을 시도했다
 		PRINTFORML ·
@@ -165,7 +161,7 @@ ELSE
 		PRINTFORMW ·
 		IF ABL:대상:무투 * (RAND:5 + 1) > 40 * (RAND:9 + 1)
 			PRINTFORML 거점을 제압했다!
-			PRINTFORMW 이것으로 국내에서의 무리의 활동은 줄어들 것이다
+			PRINTFORMW 이것으로 국내에서 무리의 활동은 줄어들 것이다
 			IF 대상도시 > 0
 				CITY_GUARD:대상도시 += 20
 				CALL COLOR_PRINT(@"%CITY_NAME:대상도시%의 방위율이 20 상승해, {CITY_GUARD:대상도시}가 되었다", 칼라_시안)
@@ -173,7 +169,7 @@ ELSE
 			ENDIF
 		ELSE
 			PRINTFORML 실패해 버렸다……
-			PRINTFORMW 약을 맞아 꿈꾸는 듯한 기분이 된 %조사처리(ANAME(대상),"는")%, 손님의 상대를 하게 하는 일이 되었다
+			PRINTFORMW 미약을 맞아 꿈꾸는 듯한 기분이 된 %조사처리(ANAME(대상),"는")%, 손님의 상대를 하게 하는 일이 되었다
 			CALL ZEGEN_SEXWORK(대상)
 			CFLAG:대상:약물의존 += RAND(30, 60)
 			PRINTFORMW 그 후, %조사처리(ANAME(대상),"는")% 어떻게든 도망치기 시작했다
@@ -185,12 +181,12 @@ ELSE
 		PRINTFORMW ·
 		IF ABL:대상:지략 * (RAND:5 + 1) > 40 * (RAND:9 + 1)
 			PRINTFORML 성공했다!
-			PRINTFORMW 구출한 아가씨들은 가족들과 재회 되어있고 울어 기뻐하고 있었다
+			PRINTFORMW 구출한 아가씨들은 가족들과 재회해 울며 기뻐하고 있었다
 			FOR LOCAL, 1, MAX_COUNTRY
 				SIF IS_COUNTRY(LOCAL)
 					CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:1, 50, -50)
 			NEXT
-			CALL COLOR_PRINT(@"아가씨들을 도운 것으로 타국의 평판이 올랐다", 칼라_시안)
+			CALL COLOR_PRINT(@"아가씨들을 도운 것으로 다른 학교의 평판이 올랐다", 칼라_시안)
 			PRINTFORMW 
 		ELSE
 			PRINTFORML 실패해 버렸다……
@@ -206,8 +202,8 @@ ELSE
 		PRINTFORML ·
 		PRINTFORMW ·
 		IF (ABL:대상:성교 + ABL:대상:성기술 + ABL:대상:봉사 + ABL:대상:Ｖ감) > 10 + DAY / 10
-			PRINTFORML %ANAME(대상)%의 봉사에 만족한 손님은 나불나불 정보를 이야기해 주었다
-			PRINTFORMW 그 정보를 손에 유곽을 빠져 나간 %조사처리(ANAME(대상),"는")% 녀석들의 조직을 적발했다
+			PRINTFORML %ANAME(대상)%의 봉사에 만족한 손님은 떠벌떠벌 정보를 이야기해 주었다
+			PRINTFORMW 그 정보를 얻어 유곽을 빠져 나간 %조사처리(ANAME(대상),"는")% 녀석들의 조직을 적발했다
 			IF 대상도시 > 0
 				CITY_GUARD:대상도시 += 25
 				CALL COLOR_PRINT(@"%CITY_NAME:대상도시%의 방위율이 25 상승해, {CITY_GUARD:대상도시}가 되었다", 칼라_시안)
@@ -217,10 +213,10 @@ ELSE
 				SIF IS_COUNTRY(LOCAL)
 					CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:1, 100, -100)
 			NEXT
-			CALL COLOR_PRINT(@"조직 적발에 의해 타국의 평판이 올랐다", 칼라_시안)
+			CALL COLOR_PRINT(@"조직 적발에 의해 다른 학교의 평판이 올랐다", 칼라_시안)
 			PRINTFORMW 
 		ELSE
-			PRINTFORML 하지만 손님을 만족 당하지 않고 정보도 얻을 수 없었다
+			PRINTFORML 하지만 손님을 만족시키지 못해 정보도 얻을 수 없었다
 			PRINTFORMW 그 후, %조사처리(ANAME(대상),"는")% 어떻게든 도망치기 시작했다
 		ENDIF
 	ENDIF
@@ -246,10 +242,10 @@ PRINTFORML
 SELECTCASE RAND:6
 	CASE 0
 		PRINTFORML 손님은 추잡한 미소를 한 중년남성이었다
-		PRINTFORMW 그는 %조사처리(ANAME(ARG:0),"를")% 봐 입맛을 다신다와 난폭하게 이불에 쓰러트렸다
+		PRINTFORMW 그는 %조사처리(ANAME(ARG:0),"를")% 봐 입맛을 다시며 난폭하게 이불에 쓰러트렸다
 	CASE 1
 		PRINTFORML 손님은 단단하게 한 체구의 청년이었다
-		PRINTFORMW 그는 %조사처리(ANAME(ARG:0),"를")% 봐 기쁜듯이 휘파람을 불면, 조속히 옷을 벗겼다
+		PRINTFORMW 그는 %조사처리(ANAME(ARG:0),"를")% 봐 기쁜듯이 휘파람을 불어, 조속히 옷을 벗겼다
 	CASE 2
 		PRINTFORML 손님은 기름기가 돈 약간 통통함의 아저씨였다
 		PRINTFORMW 그는 %조사처리(ANAME(ARG:0),"를")% 봐 숨을 거칠게 하면, 무리하게 껴안고 입술을 거듭해 왔다

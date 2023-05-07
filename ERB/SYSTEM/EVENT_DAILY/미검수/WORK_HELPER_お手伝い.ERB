@@ -11,8 +11,6 @@ RETURN 25
 ;0기 이후가 되면 발생한다든가, 데일리측에서 이용하고 있는 변수가-1이라면 일으키지 않는다  같은 튕기는 방법을 할 경우에 사용한다
 ;---------------------
 @EVENT_DAILY_WORK_HELPER_DECISION()
-SIF FLAG:데일리이벤트_미검수 == 0
-	RETURN 0
 RETURN 15 <= DAY
 
 ;---------------------
@@ -55,32 +53,32 @@ RETURN 1
 
 대상 = DAILY_TARGET:(RAND:DAILY_TARGET_NUM)
 
-PRINTFORML 어느 날, 궁전안을 걷고 있으면 %조사처리(ANAME(대상),"가")% 보였다
+PRINTFORML 어느 날, 학교 안을 걷고 있는 도중 %조사처리(ANAME(대상),"가")% 보였다
 PRINTFORMW 뭔가 곤란해 하고 있는 모습이다
 PRINTFORMW 어떻게 하지?
 CALL ASK_YN("말을 건다", "보고도 못 본 척을 한다")
 IF RESULT == 1
-	PRINTFORMW 귀찮은 일에 말려 들어가서는 이길 수 없다
+	PRINTFORMW 귀찮은 일에 말려 들어가기 싫다
 	PRINTFORMW %조사처리(ANAME(MASTER),"는")% 보고도 못 본 척을 하기로 했다
 	RETURN 1
 ELSE
 	IF CFLAG:대상:안면 == 1
 		PRINTFORML %ANAME(대상)%에 말을 걸었다
-		PRINTFORMW 하면 %조사처리(ANAME(대상),"는")% 꼭 좋은 곳에 와 주었다고 해 %조사처리(ANAME(MASTER),"를")% 손짓했다
-		PRINTFORML 이야기를 들으면 일에 애먹이고 있는 것 같다
+		PRINTFORMW 그러면 %조사처리(ANAME(대상),"는")% 마침 잘됐다고 %조사처리(ANAME(MASTER),"를")% 손짓했다
+		PRINTFORML 이야기를 들으니 귀찮은 일에 애먹이고 있는 것 같다
 		PRINTFORMW 답례는 하기 때문에 도와 주지 않을까 부탁받았다
 	ELSE
 		PRINTFORML %ANAME(대상)%에 말을 걸었다
-		PRINTFORMW 첫대면의 %ANAME(MASTER)%에 대해 %조사처리(ANAME(대상),"는")% 조금 어색하게 인사를 주고 받는다
+		PRINTFORMW 첫 대면의 %ANAME(MASTER)%에 대해 %조사처리(ANAME(대상),"는")% 조금 어색하게 인사를 주고 받는다
 		PRINTFORML 무엇을 하고 있는지 물으면, %조사처리(ANAME(대상),"는")% 조금 주저하고 있었지만
-		PRINTFORMW 일로 애먹이고 있어 손을 빌리고 싶다고 털어 놓아 왔다
+		PRINTFORMW 귀찮은 일로 애먹이고 있어 손을 빌리고 싶다고 털어 놓아 왔다
 		CFLAG:대상:안면 = 1
 	ENDIF
 	PRINTFORMW 어떻게 하지?
 	CALL ASK_YN("돕자", "미안하지만 거절한다")
 	IF RESULT == 1
 		PRINTFORML 미안하지만 지금부터 자신도 일이 있다
-		PRINTFORMW 그렇게 말해 거절하면 %조사처리(ANAME(대상),"는")% 유감스러운 듯이 하면서도 그 이상은 아무것도 말하지 않았다
+		PRINTFORMW 그렇게 말해 거절하면 %조사처리(ANAME(대상),"는")% 유감스러운 얼굴을 했지만 그 이상은 아무것도 말하지 않았다
 		RETURN 1
 	ELSE
 		PRINTFORML 맡으면 %조사처리(ANAME(대상),"는")% 웃는 얼굴로 예를 고했다
@@ -105,17 +103,17 @@ ELSE
 				대응수치 = 100
 		ENDSELECT
 		IF ABL:MASTER:대응능력 * (RAND:4 + 1) >= 대응수치
-			PRINTFORML 일을 완벽에 해내 보였다!
-			PRINTFORML %ANAME(MASTER)%의 일하는 태도에 %조사처리(ANAME(대상),"는")% 기쁨, 적지만과 돈을 내몄다
+			PRINTFORML 일을 완벽히 해내 보였다!
+			PRINTFORML %ANAME(MASTER)%의 일하는 태도에 %조사처리(ANAME(대상),"는")% 기뻐하며, 적은 크레딧을 내밀었다
 			CALL ASK_MULTI_JUDGE("사양말고 받는다", 1, "신사적으로 거절한다", 1, "그것보다 몸을 요구한다", HAS_PENIS(MASTER) && IS_FEMALE(대상))
 			IF RESULT == 0
-				PRINTFORML 사양말고 받으면
+				PRINTFORML 사양말고 받자
 				PRINTFORMW 거듭해 예를 고하는 %조사처리(ANAME(대상),"와")% 헤어졌다
 				MONEY += 5000
 				CFLAG:대상:호감도 += 100
 				RETURN 1
 			ELSEIF RESULT == 1
-				PRINTFORML 동료로서 당연하구나 일이라면 %조사처리(ANAME(MASTER),"가")% 거절하면
+				PRINTFORML 동료로서 당연하구나 일이라면 %조사처리(ANAME(MASTER),"가")% 거절했다
 				IF IS_FEMALE(대상)
 					PRINTFORML %조사처리(ANAME(대상),"는")% 웃으면서 너무 폼을 잡아요 라고 말해 왔다
 				ELSE
@@ -125,13 +123,13 @@ ELSE
 				CFLAG:대상:호감도 += 300
 				RETURN 1
 			ELSE
-				PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(대상)%의 손을 잡아 얼굴을 접근해, 그것 보다 더 좋은 물건을 주라고 강요한다
+				PRINTFORML %조사처리(ANAME(MASTER),"는")% %ANAME(대상)%의 손을 잡아 얼굴을 접근해, 그것 보다 더 좋은 것을 달라고 요구한다
 				PRINTFORMW %조사처리(ANAME(대상),"는")% 무슨 일인가 모르면 곤란한 것 같은 얼굴을 보인다
-				PRINTFORM %조사처리(ANAME(MASTER),"는")% %PRONOUN(대상)%를 생각과 끌어 들이고 귓전으로 「알고 있을까?」라고 속삭이면서 엉덩이를 어루만진다
+				PRINTFORM %조사처리(ANAME(MASTER),"는")% %PRONOUN(대상)%를 껴안으며 귓전으로 「알고 있을까?」라고 속삭이면서 엉덩이를 어루만진다
 				IF CFLAG:대상:호감도 > 1500 || CFLAG:대상:종속도 > 1500 || TALENT:대상:합의 == 1
-					PRINTFORMW %조사처리(ANAME(대상),"는")% 돌연의 일에 작게 비명을 올려몸을 굳어지게 했지만, 저항은 하지 않았다
+					PRINTFORMW %조사처리(ANAME(대상),"는")% 돌연의 일에 작게 비명을 올려 몸을 굳어지게 했지만, 저항은 하지 않았다
 					PRINTFORMW 더욱 엉덩이를 더듬으면 %조사처리(ANAME(대상),"는")% 몸부림 하면서, 작게 수긍했다
-					PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(대상)%의 허리를 안으면서 가까이의 방으로 데리고 들어가면, 그 육체를 마음껏 만끽했다
+					PRINTFORMW %조사처리(ANAME(MASTER),"는")% %ANAME(대상)%의 허리를 안으면서 가까운 교실로 데리고 들어가면, 그 육체를 마음껏 만끽했다
 					CALL FUCK_MAKELOVE(대상, GET_ID(MASTER), @"%ANAME(MASTER)%의 \@ RAND:2 ? 페니스 # 입술\@", @"%ANAME(MASTER)%")
 					CALL FUCK(MASTER, "Ｃ, 성교, 사정, 봉사", "키스상실, 동정상실", 0, @"%ANAME(대상)%의 \@ RAND:2 ? 음부 # 입술\@", "", @"%ANAME(대상)%의 질")
 					CFLAG:대상:호감도 += 300
@@ -141,14 +139,14 @@ ELSE
 					ENDIF
 					PRINTFORMW 헤어질 때, %조사처리(ANAME(대상),"는")% 뺨을 붉히고 %조사처리(ANAME(MASTER),"를")% 응시하고 있었다
 				ELSE
-					PRINTFORML 하면 %조사처리(ANAME(대상),"는")% 비명을 올려%조사처리(ANAME(MASTER),"를")% 냅다 밀쳤다
+					PRINTFORML %조사처리(ANAME(대상),"는")% 비명을 올려%조사처리(ANAME(MASTER),"를")% 냅다 밀쳤다
 					PRINTFORMW 무심코 넘어진 %조사처리(ANAME(MASTER),"를")% 거들떠보지도 않고, %조사처리(ANAME(대상),"는")% 쏜살같이 떠나 갔다
 					CFLAG:대상:호감도 -= 100
 				ENDIF
 			ENDIF
 		ELSE
 			PRINTFORML 아무래도 잘 되지 않았다……
-			PRINTFORMW %조사처리(ANAME(대상),"는")% 유감스러운 듯이 하고 있었지만, %조사처리(ANAME(MASTER),"를")% 고문은 하지 않았다
+			PRINTFORMW %조사처리(ANAME(대상),"는")% 유감스러운 듯이 하고 있었지만, %조사처리(ANAME(MASTER),"를")% 탓하진 않았다
 		ENDIF
 	ENDIF
 ENDIF
