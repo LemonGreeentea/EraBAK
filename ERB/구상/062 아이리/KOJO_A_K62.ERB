@@ -1823,7 +1823,7 @@ IF SELECTCOM == 30
 					;PRINTFORMW 
 				;그 이외
 				ELSE
-					PRINTFORMW 허접 ㅋㅋ
+					PRINTFORMW 
 				ENDIF
 			ENDIF
 		;2회째 이후
@@ -5823,15 +5823,59 @@ ENDIF
 IF SELECTCOM == 300
 	;처음(주도권을 고려하지 않는다)
 	IF IS_COM_FIRST()
-		PRINTFORMW 안녕하세요~
+		IF IS_SLAVE(TARGET)
+			PRINTFORML 「네 %LOCALS:0%, 필요하신게 있으신가요?」
+			PRINTFORMW 아이리는 살짝 떨면서 %ANAME(MASTER)%의 말을 듣고 있다.
+		ELSEIF TALENT:MASTER:선생 == 1
+			IF CFLAG:호감도 <= -500
+				PRINTFORML 「이런 곳에서 까지 %조사처리(LOCALS:0,"을")% 봐야 한다니...」
+				PRINTFORMW 「우우.. 도망치고 싶어요」
+			ELSEIF CFLAG:호감도 >= 500
+				PRINTFORMW 「%조사처리(LOCALS:0,"와")% 이런 곳 에서 만나게 될 줄은 몰랐는데 굉장히 기쁘네요!」
+			ELSE
+				PRINTFORMW 「%LOCALS:0%, 간식 드실래요?」
+			ENDIF
+		ELSE
+
+		ENDIF
 	;2회째 이후
 	ELSE
-		;연모 or 복종 or 친구
-		IF TALENT:연모 || TALENT:복종 || TALENT:친구
+		;연모
+		IF TALENT:연모
 			;PRINTFORMW 
-		;그 이외
+
+		;복종
+		ELSEIF TALENT:복종
+
+		;친구
+		ELSEIF TALENT:친구
+
+		;비호감
+		ELSEIF CFLAG:호감도 <= -500
+			SELECTCASE RAND:3
+				CASE 0
+					PRINTFORML 「...」
+					PRINTFORMW 아이리는 곤란한 표정으로 %ANAME(MASTER)%의 말을 듣고 있다.
+				CASE 1
+					PRINTFORMW 「아 네... 그렇군요.」
+				CASE 2
+					PRINTFORMW 아이리는 당신의 말에 대꾸도 하지 않는다.
+			ENDSELECT
+		;그 외
 		ELSE
-			PRINTFORMW 
+			SELECTCASE RAND:4
+				CASE 0
+					PRINTFORML 「네? 정말요?!」
+					PRINTFORML 「신기하네요!! 전혀 몰랐어요!」
+					PRINTFORMW 아이리와 사소한 잡담을 했다.
+				CASE 1
+					PRINTFORML 「에헤헤... %조사처리(LOCALS:0,"과")% 이야기 하면 즐거워요!」
+					PRINTFORMW 아이리는 %LOCALS:0%의 말을 경청하고 있다.
+				CASE 2
+					PRINTFORMW 「정말이지... 나츠쨩의 생각은 알 수 없을 때가 많다니까요!」
+				CASE 3
+					PRINTFORMW 「에헤헤... 달콤한 디저트 생각만 하면 기분이 좋아져요!」
+			ENDSELECT
 		ENDIF
 	ENDIF
 ENDIF
