@@ -41,8 +41,7 @@ RETURN 1
 #DIM 대상세력
 #DIM 대상부대
 대상측 = !발동측
-SIF 대상부대 < 0
-	RETURN 0
+ 
 RETURN 1
 
 ;발동 텍스트를 오바라이드 하고 싶을 때에.
@@ -69,7 +68,7 @@ RETURN 1
 CALL DECREASE_SOLDIER(대상세력, 대상부대, 1000, 1)
 
 @SKILL_43_SP_1_EXPLANATION
-RESULTS = 자신의 무투를 증가시키고 포박될 확률을 줄인다.
+RESULTS = 적 부대에 데미지를 준다.
 
 
 @SKILL_43_SP_1_CANT_TELL

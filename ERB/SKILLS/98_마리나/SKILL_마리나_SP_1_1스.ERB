@@ -1,0 +1,109 @@
+﻿;-----------------------------------
+;기본치 계산에 앞서 처리하는 것
+;-----------------------------------
+@SKILL_98_SP_1_EXIST
+RETURN 1
+
+@SKILL_98_SP_1_NAME
+RESULTS = 후퇴는 없다!
+
+;레벨은 1-5까지
+@SKILL_98_SP_1_LEVEL
+RETURN 5
+
+;대상 선택
+@SKILL_98_SP_1_SETTARGET(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+대상측 = !발동측
+;부대 대상
+RETURN 1
+
+;발동 판정
+@SKILL_98_SP_1_CAN_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+대상측 = !발동측
+RETURN GET_SOLDIER(발동세력, 발동부대) > 0 && GET_SOLDIER(대상세력, 대상부대) > 0
+RETURN 1
+
+;발동 텍스트를 오바라이드 하고 싶을 때에.
+;「아무개의 스킬 발동!   00했다!」의 「00했다!」의 부분을 실장하고 싶은 경우는,
+;이것이 아니고 INVOKE로 쓰면 좋습니다.
+;@SKILL_98_SP_1_INVOKE_TEXT(발동자, 스킬, 장르)
+;#DIM 발동자
+;#DIM 스킬
+;#DIMS 장르
+
+;효과를 여기에 기술
+@SKILL_98_SP_1_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+대상측 = !발동측	
+PRINTFORML 둘 중 하나가 전멸 할 때까지 전투를 한다!
+
+WHILE GET_SOLDIER(발동세력, 발동부대) > 0 && GET_SOLDIER(대상세력, 대상부대) > 0
+	IF 발동측 == 0
+		CALL BATTLE_PREPARE_VARS(발동세력, 발동부대, 대상세력, 대상부대)
+	ELSE
+		CALL BATTLE_PREPARE_VARS(대상세력, 대상부대, 발동세력, 발동부대)
+	ENDIF
+
+	BATTLE_INT:발동측 = 1
+	BATTLE_INT:대상측 = 1
+
+	IF 발동측 == 0
+		CALL BATTLE_CALC_CORE(발동세력, 발동부대, 대상세력, 대상부대)
+	ELSE
+		CALL BATTLE_CALC_CORE(대상세력, 대상부대, 발동세력, 발동부대)
+	ENDIF
+
+	VARSET BATTLE_RATE_DMG
+
+	CALL DECREASE_SOLDIER(발동세력, 발동부대, MAX(BATTLE_DMG:발동측, 100), 1)
+	CALL DECREASE_SOLDIER(대상세력, 대상부대, MAX(BATTLE_DMG:대상측, 100), 1)
+WEND
+
+
+@SKILL_98_SP_1_EXPLANATION
+RESULTS = 둘 중 하나가 전멸 할 때까지 전투한다.
+
+@SKILL_98_SP_1_CANT_TELL
+
+
+@SKILL_98_SP_1_RATE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+RETURN 150

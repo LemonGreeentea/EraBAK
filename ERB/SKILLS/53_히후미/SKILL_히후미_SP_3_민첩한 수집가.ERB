@@ -28,7 +28,6 @@ RETURN 5
 SIF BATTLE_COMMANDER_NUM:발동측 == 0
 	RETURN 0
 COMBAT_SKILL_TARGET = RAND:(BATTLE_COMMANDER_NUM:발동측)
-
 RETURN 1
 
 ;발동 판정
@@ -44,8 +43,6 @@ RETURN 1
 #DIM 대상세력
 #DIM 대상부대
 대상측 = !발동측
-SIF 대상부대 < 0
-	RETURN 0
 RETURN 1
 
 ;발동 텍스트를 오바라이드 하고 싶을 때에.
@@ -70,11 +67,11 @@ RETURN 1
 #DIM 대상부대
 대상측 = !발동측
 PRINTFORML %ANAME(BATTLE_COMMANDER:발동측:COMBAT_SKILL_TARGET)%의 스킬이 발동하기 쉬워졌다!
-BATTLE_SKILL_RATE:발동측:COMBAT_SKILL_TARGET += 50
+BATTLE_SKILL_RATE:발동측:COMBAT_SKILL_TARGET += 30
 
 
 @SKILL_53_SP_3_EXPLANATION
-RESULTS = 아군 한 명의 스킬 발동이 쉬워진다.
+RESULTS = 아군 한 명의 스킬 발동 확률을 크게 올린다.
 
 @SKILL_53_SP_3_CANT_TELL
 

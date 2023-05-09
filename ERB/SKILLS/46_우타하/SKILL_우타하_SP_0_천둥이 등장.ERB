@@ -66,7 +66,6 @@ RETURN (발동부대 < 0 ? BATTLE_COMMANDER_NUM:발동측 <= 1 # BATTLE_COMMANDE
 대상측 = !발동측
 PRINTFORML "경이로운 기술력, 두 눈에 똑똑히 새기도록 해."
 PRINTFORML %ANAME(발동자)%는 천둥이를 소환했다!
-CALL BATTLE_ADD_MOB(발동측, 발동부대 >= 0, "천둥이", 80, 80, 10, 50, 0, 15, 15)
 
 @SKILL_46_SP_0_EXPLANATION
 RESULTS = 자신 부대의 빈 자리가 있을 경우, 천둥이를 소환한다.

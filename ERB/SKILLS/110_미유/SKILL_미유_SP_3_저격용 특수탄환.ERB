@@ -41,7 +41,6 @@ RETURN 1
 #DIM 대상부대
 대상측 = !발동측
 RETURN GET_SOLDIER(발동세력, 발동부대) > 0 && GET_SOLDIER(대상세력, 대상부대) > 0
-RETURN 1
 
 
 ;발동 텍스트를 오바라이드 하고 싶을 때에.
@@ -84,7 +83,7 @@ ENDIF
 
 VARSET BATTLE_RATE_DMG
 
-CALL DECREASE_SOLDIER(대상세력, 대상부대, MAX(BATTLE_DMG:대상측 / 3, 100), 1)
+CALL DECREASE_SOLDIER(대상세력, 대상부대, MAX(BATTLE_DMG:대상측 / 2, 500), 1)
 
 @SKILL_110_SP_3_EXPLANATION
 RESULTS = 전투에 앞서, 자신의 부대가 선제공격한다.

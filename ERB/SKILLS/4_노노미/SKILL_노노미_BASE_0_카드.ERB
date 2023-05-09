@@ -1,0 +1,78 @@
+﻿;-----------------------------------
+;기본치 계산에 앞서 처리하는 것
+;-----------------------------------
+@SKILL_4_BASE_0_EXIST
+RETURN 1
+
+@SKILL_4_BASE_0_NAME
+RESULTS = 골드 카드
+
+;레벨은 1-5까지
+@SKILL_4_BASE_0_LEVEL
+RETURN 4
+
+;대상 선택
+@SKILL_4_BASE_0_SETTARGET(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+;자부대 대상
+RETURN 1
+
+;발동 판정
+@SKILL_4_BASE_0_CAN_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+대상측 = !발동측
+RETURN 1
+
+;효과를 여기에 기술
+@SKILL_4_BASE_0_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+대상측 = !발동측
+LOCAL = RAND(1000, 3000)
+PRINTFORML %ANAME(발동자)%는 몰래 골드 카드를 사용했다!
+PRINTFORML 크레딧이 {LOCAL} 상승!
+MONEY:(CFLAG:(발동자):소속) += LOCAL
+
+@SKILL_4_BASE_0_EXPLANATION
+RESULTS = 전투 시, 크레딧이 증가한다.
+
+@SKILL_4_BASE_0_CANT_TELL
+
+@SKILL_4_BASE_0_RATE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+#DIM 발동자
+#DIM 발동번호
+#DIM 스킬
+#DIMS 장르
+#DIM 발동측
+#DIM 발동세력
+#DIM 발동부대
+#DIM 대상측
+#DIM 대상세력
+#DIM 대상부대
+RETURN 500

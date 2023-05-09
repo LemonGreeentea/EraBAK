@@ -40,8 +40,7 @@ RETURN 1
 #DIM 대상세력
 #DIM 대상부대
 대상측 = !발동측
-SIF 대상부대 < 0
-	RETURN 0
+ 
 RETURN 1
 
 ;발동 텍스트를 오바라이드 하고 싶을 때에.
@@ -66,7 +65,7 @@ RETURN 1
 #DIM 대상부대
 대상측 = !발동측
 PRINTFORML "천재미소녀 해커의 진가를 보여드리죠."
-TIMES BATTLE_ATK:발동측, 2
+TIMES BATTLE_ATK:발동측, 2.5
 
 @SKILL_36_SP_0_EXPLANATION
 RESULTS = 부대의 무투를 큰 폭으로 증가시킨다.
