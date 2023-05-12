@@ -5,11 +5,11 @@
 RETURN 1
 
 @SKILL_7_SP_3_NAME
-RESULTS = 사기충전
+RESULTS = 다들 제대로 해주세요.
 
 ;레벨은 1-5까지
 @SKILL_7_SP_3_LEVEL
-RETURN 2
+RETURN 4
 
 ;대상 선택
 @SKILL_7_SP_5_SETTARGET(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
@@ -63,11 +63,11 @@ RETURN 1
 #DIM 대상세력
 #DIM 대상부대
 대상측 = !발동측
-PRINTFORML 자신 부대의 받는 피해가 감소했다!
-BATTLE_RATE_GRD:발동측 += 5
+PRINTFORML 자신 부대의 무투가 증가했다!
+TIMES BATTLE_ATK:발동측, 1.5
 
 @SKILL_7_SP_3_EXPLANATION
-RESULTS = 자신 부대의 받는 피해를 감소시킨다.
+RESULTS = 자신 부대의 무투를 증가시킨다.
 
 
 @SKILL_7_SP_3_CANT_TELL
@@ -84,4 +84,4 @@ RESULTS = 자신 부대의 받는 피해를 감소시킨다.
 #DIM 대상측
 #DIM 대상세력
 #DIM 대상부대
-RETURN 200
+RETURN 350

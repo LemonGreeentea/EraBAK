@@ -40,6 +40,8 @@ RETURN 1
 #DIM 대상세력
 #DIM 대상부대
 대상측 = !발동측
+SIF 발동부대 < 0
+	RETURN 0
 RETURN 1
 
 ;발동 텍스트를 오바라이드 하고 싶을 때에.
@@ -63,13 +65,15 @@ RETURN 1
 #DIM 대상세력
 #DIM 대상부대
 대상측 = !발동측
-PRINTFORML 자신 부대의 병력이 회복되었다!
-CALL INCREASE_SOLDIER(발동세력, 발동부대, RAND(300, 900), 1)
+PRINTFORML 자신 부대의 피로도가 회복되었다!
+UNIT_TIRED_COUNT:발동세력:발동부대 = MAX(UNIT_TIRED_COUNT:발동세력:발동부대 - 3, 0)
+
+
 
 
 
 @SKILL_66_SP_1_EXPLANATION
-RESULTS = 자신 부대의 병력을 회복시킨다.
+RESULTS = 자신 부대의 피로도가 회복시킨다.
 
 @SKILL_66_SP_1_CANT_TELL
 

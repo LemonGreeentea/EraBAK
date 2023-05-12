@@ -40,7 +40,8 @@ RETURN 1
 #DIM 대상세력
 #DIM 대상부대
 대상측 = !발동측
- 
+SIF 발동부대 < 0
+	RETURN 0
 RETURN 1
 
 ;발동 텍스트를 오바라이드 하고 싶을 때에.
@@ -65,7 +66,9 @@ RETURN 1
 #DIM 대상부대
 대상측 = !발동측
 PRINTFORML "도움이 필요하시면, 제게 맡겨주세요!"
-CALL INCREASE_SOLDIER(발동세력, 발동부대, RAND(2500, 4000), 1)
+CALL INCREASE_SOLDIER(발동세력, 발동부대, RAND(1000, 2000), 1)
+UNIT_TIRED_COUNT:발동세력:발동부대 = MAX(UNIT_TIRED_COUNT:발동세력:발동부대 - RAND(2, 4), 0)
+
 
 @SKILL_16_BASE_0_EXPLANATION
 RESULTS = 자신 부대의 벙력을 회복한다.
@@ -85,4 +88,4 @@ RESULTS = 자신 부대의 벙력을 회복한다.
 #DIM 대상측
 #DIM 대상세력
 #DIM 대상부대
-RETURN 400
+RETURN 350

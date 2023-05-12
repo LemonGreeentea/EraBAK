@@ -1,19 +1,18 @@
 ﻿;-----------------------------------
 ;기본치 계산에 앞서 처리하는 것
 ;-----------------------------------
-@SKILL_7_SP_0_EXIST
+@SKILL_120_SP_1_EXIST
 RETURN 1
 
-@SKILL_7_SP_0_NAME
-RESULTS = 갑니다, 토라마루
-
+@SKILL_120_SP_1_NAME
+RESULTS = 꼬리치기
 
 ;레벨은 1-5까지
-@SKILL_7_SP_0_LEVEL
+@SKILL_120_SP_1_LEVEL
 RETURN 3
 
 ;대상 선택
-@SKILL_7_SP_0_SETTARGET(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+@SKILL_120_SP_1_SETTARGET(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
 #DIM 발동자
 #DIM 발동번호
 #DIM 스킬
@@ -29,7 +28,7 @@ RETURN 3
 RETURN 1
 
 ;발동 판정
-@SKILL_7_SP_0_CAN_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+@SKILL_120_SP_1_CAN_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
 #DIM 발동자
 #DIM 발동번호
 #DIM 스킬
@@ -41,19 +40,19 @@ RETURN 1
 #DIM 대상세력
 #DIM 대상부대
 대상측 = !발동측
- 
 RETURN 1
+
 
 ;발동 텍스트를 오바라이드 하고 싶을 때에.
 ;「아무개의 스킬 발동!   00했다!」의 「00했다!」의 부분을 실장하고 싶은 경우는,
 ;이것이 아니고 INVOKE로 쓰면 좋습니다.
-;@SKILL_7_SP_0_INVOKE_TEXT(발동자, 스킬, 장르)
+;@SKILL_120_SP_1_INVOKE_TEXT(발동자, 스킬, 장르)
 ;#DIM 발동자
 ;#DIM 스킬
 ;#DIMS 장르
 
 ;효과를 여기에 기술
-@SKILL_7_SP_0_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+@SKILL_120_SP_1_INVOKE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
 #DIM 발동자
 #DIM 발동번호
 #DIM 스킬
@@ -65,16 +64,17 @@ RETURN 1
 #DIM 대상세력
 #DIM 대상부대
 대상측 = !발동측
-PRINTFORML "다들 제대로 해주세요."
-CALL INCREASE_SOLDIER(발동세력, 발동부대, RAND(1000, 3000), 1)
-
-@SKILL_7_SP_0_EXPLANATION
-RESULTS = 적에게 연속 데미지를 준다.
-
-@SKILL_7_SP_0_CANT_TELL
+PRINTFORML 적 부대에 데미지!
+CALL DECREASE_SOLDIER(대상세력, 대상부대, RAND(800, 1500), 1)
 
 
-@SKILL_7_SP_0_RATE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
+@SKILL_120_SP_1_EXPLANATION
+RESULTS = 적 부대에 데미지를 준다.
+
+@SKILL_120_SP_1_CANT_TELL
+
+
+@SKILL_120_SP_1_RATE(발동자, 발동번호, 발동측, 발동세력, 발동부대, 대상세력, 대상부대)
 #DIM 발동자
 #DIM 발동번호
 #DIM 스킬
@@ -85,4 +85,4 @@ RESULTS = 적에게 연속 데미지를 준다.
 #DIM 대상측
 #DIM 대상세력
 #DIM 대상부대
-RETURN 450
+RETURN 500

@@ -65,14 +65,15 @@ RETURN 1
 #DIM 대상세력
 #DIM 대상부대
 대상측 = !발동측
-PRINTFORML 자신 부대의 공격력이 상승!
-TIMES BATTLE_ATK:발동측, 1.20
+PRINTFORML 자신 부대의 피로도가 감소했다!
+UNIT_TIRED_COUNT:발동세력:발동부대 = MAX(UNIT_TIRED_COUNT:발동세력:발동부대 - RAND(1, 2), 0)
+
 
 
 
 
 @SKILL_129_BASE_3_EXPLANATION
-RESULTS = 자신 부대의 공격력을 상승시킨다.
+RESULTS = 자신 부대의 피로도를 감소시킨다.
 
 
 @SKILL_129_BASE_3_CANT_TELL

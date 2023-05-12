@@ -5,7 +5,7 @@
 RETURN 1
 
 @SKILL_7_SP_1_NAME
-RESULTS = 학습지원
+RESULTS = 귀찮네요…....
 
 ;레벨은 1-5까지
 @SKILL_7_SP_1_LEVEL
@@ -63,12 +63,14 @@ RETURN 1
 #DIM 대상세력
 #DIM 대상부대
 대상측 = !발동측
-PRINTFORML 자신 부대의 지략이 증가했다!
-TIMES BATTLE_INT:발동측, 1.1
+LOCAL:1 = RAND(1, 4)
+FOR LOCAL, 0, LOCAL:1
+	CALL DECREASE_SOLDIER(대상세력, 대상부대, 500, 1)
+NEXT
 
 
 @SKILL_7_SP_1_EXPLANATION
-RESULTS = 자신 부대의 지략를 증가시킨다.
+RESULTS = 적 부대에 연속 데미지를 준다.
 
 
 @SKILL_7_SP_1_CANT_TELL
@@ -85,4 +87,4 @@ RESULTS = 자신 부대의 지략를 증가시킨다.
 #DIM 대상측
 #DIM 대상세력
 #DIM 대상부대
-RETURN 800
+RETURN 500
