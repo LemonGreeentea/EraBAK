@@ -722,7 +722,7 @@ IF 보스
 	ABL:대상:가창 += 5
 	ABL:대상:요리 += 5
 ENDIF
-
+[SKIPSTART]
 SELECTCASE 세력정수
 	CASE 특수세력_도둑
 		CALL SET_CLOTH_BY_NAME(대상, 의상부위_상의, "옷")
@@ -764,7 +764,7 @@ SELECTCASE 세력정수
 		CALL SET_CLOTH_BY_NAME(대상, 의상부위_양말, "양말")
 		CALL SET_CLOTH_BY_NAME(대상, 의상부위_구두, "구두")
 ENDSELECT
-
+[SKIPEND]
 SELECTCASE 세력정수
 	CASE 특수세력_도둑
 		COM_TENDENCY:대상:GETNUM(TRAINNAME, "번갈아삽입") = 1

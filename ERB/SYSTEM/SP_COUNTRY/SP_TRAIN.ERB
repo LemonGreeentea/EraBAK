@@ -55,7 +55,6 @@ FOR 대상, 0, CHARANUM
 		SIF 대상 == MASTER
 			CALL PLAYER_FALLEN_TO_SP_COUNTRY(세력)
 		CALL CLOTH_RESET(대상)
-		CALL SET_CLOTH_BY_NAME(대상, 의상부위_목, "노예목걸이")
 
 		IF 대상 != MASTER && CFLAG:대상:소속 == CFLAG:MASTER:소속
 			CFLAG:대상:호감도 = MAX(CFLAG:대상:호감도, 500)

@@ -39,21 +39,6 @@ CATCH
 	ID = 0
 ENDCATCH
 
-IF ID > 0
-	SELECTCASE 부위
-		CASE 의상부위_상의, 의상부위_하의
-			CLOTH:대상:의상부위_상하의 = 0
-		CASE 의상부위_상하의
-			CLOTH:대상:의상부위_상의 = 0
-			CLOTH:대상:의상부위_하의 = 0
-		CASE 의상부위_속옷상, 의상부위_속옷하
-			CLOTH:대상:의상부위_속옷세트 = 0
-		CASE 의상부위_속옷세트
-			CLOTH:대상:의상부위_속옷상 = 0
-			CLOTH:대상:의상부위_속옷하 = 0
-	ENDSELECT
-ENDIF
-
 CLOTH:대상:부위 = ID
 
 RETURN 1
@@ -116,7 +101,7 @@ FOR LOCAL, 0, CLOTH_PART_NUM
 	CALL GET_CLOTH_NAME(LOCAL, CLOTH:대상:LOCAL)
 	PRINTFORML %RESULTS%
 NEXT
-
+ 
 ;-------------------------------------------------
 ;의상 설정 메뉴
 ;-------------------------------------------------

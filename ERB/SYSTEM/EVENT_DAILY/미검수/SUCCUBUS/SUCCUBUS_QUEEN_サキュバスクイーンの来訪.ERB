@@ -230,7 +230,6 @@ ELSE
 		CALL COLOR_PRINTW (@"%조사처리(ANAME(대상),"는")% 정액을 짜내지는 쾌락을 잊을 수 있지 못하고 서큐버스 세력에 내려 버렸다…", 칼라_핑크)
 		CALL CHANGE_COUNTRY(대상, 서큐버스)
 		CALL CLOTH_RESET(대상)
-		CALL SET_CLOTH_BY_NAME(대상, 의상부위_목, "노예목걸이")
 		CALL SUCCUBUS_FALLEN_LEAVE_MARK(대상) ;SETBIT TALENT:대상:특수 세력 함락계, 특수 세력_서큐버스
 		CFLAG:(대상:1):호감도 += 100
 		CFLAG:(대상:1):지배도 += 1000
