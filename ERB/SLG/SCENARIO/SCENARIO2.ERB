@@ -177,8 +177,8 @@ CFLAG:NAME_TO_CHARA("미치루"):소속              = GET_COUNTRY_FROM_BOSS_NAM
 CFLAG:NAME_TO_CHARA("이즈나"):소속              = GET_COUNTRY_FROM_BOSS_NAME("니야")
 CFLAG:NAME_TO_CHARA("츠쿠요"):소속              = GET_COUNTRY_FROM_BOSS_NAME("니야")
 CFLAG:NAME_TO_CHARA("와카모"):소속              = GET_COUNTRY_FROM_BOSS_NAME("니야")
-CFLAG:NAME_TO_CHARA("쿠즈노하"):소속              = GET_COUNTRY_FROM_BOSS_NAME("니야")
-CFLAG:NAME_TO_CHARA("나구사"):소속              = GET_COUNTRY_FROM_BOSS_NAME("니야")
+;CFLAG:NAME_TO_CHARA("쿠즈노하"):소속              = GET_COUNTRY_FROM_BOSS_NAME("니야")
+;CFLAG:NAME_TO_CHARA("나구사"):소속              = GET_COUNTRY_FROM_BOSS_NAME("니야")
 CITY_OWNER:GET_CITYNUMBER("백귀야행 왕벚신목")           = GET_COUNTRY_FROM_BOSS_NAME("니야")
 CITY_OWNER:GET_CITYNUMBER("메이키리산")           = GET_COUNTRY_FROM_BOSS_NAME("니야")
 CITY_OWNER:GET_CITYNUMBER("소용돌이 영화촌")           = GET_COUNTRY_FROM_BOSS_NAME("니야")
@@ -288,17 +288,23 @@ CITY_OWNER:GET_CITYNUMBER("총학생회 운영국")           = GET_COUNTRY_FROM
 CITY_OWNER:GET_CITYNUMBER("시립 도서관")           = GET_COUNTRY_FROM_BOSS_NAME("린")
 
 ;--------아로나(샬레)--------
-COUNTRY_BOSS:12                                = GET_ID(NAME_TO_CHARA("아로나"))
-COUNTRY_COLOR:12                               = 0x5DCDF1
-CFLAG:NAME_TO_CHARA("아로나"):소속              = GET_COUNTRY_FROM_BOSS_NAME("아로나")
-CFLAG:NAME_TO_CHARA("소라"):소속              = GET_COUNTRY_FROM_BOSS_NAME("아로나")
-CITY_OWNER:GET_CITYNUMBER("연방수사동아리 샬레")           = GET_COUNTRY_FROM_BOSS_NAME("아로나")
+;COUNTRY_BOSS:12                                = GET_ID(NAME_TO_CHARA("아로나"))
+;COUNTRY_COLOR:12                               = 0x5DCDF1
+;CFLAG:NAME_TO_CHARA("아로나"):소속              = GET_COUNTRY_FROM_BOSS_NAME("아로나")
+;CFLAG:NAME_TO_CHARA("소라"):소속              = GET_COUNTRY_FROM_BOSS_NAME("아로나")
+;CITY_OWNER:GET_CITYNUMBER("연방수사동아리 샬레")           = GET_COUNTRY_FROM_BOSS_NAME("아로나")
 
+
+;---------미등장 캐릭터 설정----------
+CFLAG:NAME_TO_CHARA("소라"):특수상태 = 특수상태_미등장
+CFLAG:NAME_TO_CHARA("아로나"):특수상태 = 특수상태_미등장
+CFLAG:NAME_TO_CHARA("쿠즈노하"):특수상태 = 특수상태_미등장
+CFLAG:NAME_TO_CHARA("나구사"):특수상태 = 특수상태_미등장
 
 
 ;지정되지 않았던 캐릭터는 방랑 「당신」는 제외（MASTER 바꿔 넣었을 때에 방랑하는 것을 막는다）.
 FOR LOCAL:0, 1, CHARANUM
-	SIF CFLAG:(LOCAL:0):1 == 0  && CSTR:(LOCAL:0):99 != "당신"
+	SIF CFLAG:(LOCAL:0):1 == 0  && CFLAG:(LOCAL:0):특수상태 != 특수상태_미등장 && CSTR:(LOCAL:0):99 != "당신"
 		CFLAG:(LOCAL:0):특수상태 = 특수상태_방랑
 NEXT
 
@@ -346,3 +352,17 @@ CALL INIT_RELATION("사오리", "나기사", 0, 1500)
 CALL INIT_RELATION("린", "칸나", 500, 0)
 CALL INIT_RELATION("린", "미야코", 300, 300)
 CALL INIT_RELATION("린", "아로나", 300, 0)
+
+@SCENARIO_EVENT_2
+CUSTOMDRAWLINE =
+PRINTFORML 시나리오 진행
+CALL COLOR_LINE
+;나구사 등장 테스트
+IF DAY >= 25 && CFLAG:NAME_TO_CHARA("나구사"):특수상태 == 특수상태_미등장
+	CALL FACE_IMAGE_N("표정_131_일반_2")
+	PRINTFORMW 「... 원래라면 이런 일에 개입하지 않아야하지만, 어쩔 수 없네」
+	PRINTFORMW 나구사가 등장했습니다.
+	CFLAG:NAME_TO_CHARA("나구사"):특수상태 = 특수상태_방랑
+ENDIF
+
+CALL SINGLE_DRAWLINE

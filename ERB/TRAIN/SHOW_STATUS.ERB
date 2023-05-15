@@ -39,10 +39,6 @@ IF FLAG:화상설정
 	PRINTBUTTON @"[그림종류변경]", 3104
 	PRINTFORM %TOSTR_SPACE(2)%
 	PRINTBUTTON @"[테두리 표시]", 3103
-	IF FLAG:우후후플래그
-		PRINTFORM %TOSTR_SPACE(2)%
-		PRINTBUTTON @"[의복 표시 : \@ FLAG:의복표시 ? 의복 # 알몸 \@]", 3105
-	ENDIF
 ;	PRINTBUTTON @"[%@"삽화표시 : \@ FLAG:삽화표시 ? ON # OFF \@", 14, LEFT%]", 3105
 ;	SIF FLAG:삽화표시
 ;		PRINTBUTTON @" [애니메이션 \@ FLAG:애니메이션 ? 반복수 : {FLAG:애니메이션}회 # OFF \@]", 3106

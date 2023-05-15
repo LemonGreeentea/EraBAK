@@ -26,7 +26,7 @@ CFLAG:부친 = CFLAG:(ARG:0):아이의부친
 
 ;소질과 능력의 결정
 CALL CHILD_SETTING
-
+ 
 ;초기설정(※소질 결정 후에 실시한다)
 CALL INIT_NEWCHARA(TARGET)
 
@@ -34,6 +34,7 @@ CALL RANDOM_CHARA_SKILL_SETTING
 CALL CHILD_SKILL_SETTING
 CALL RANDOM_CHARA_CLOTH_SETTING()
 CALL CHILD_TAG_SETTING()
+CALL CHILD_IMAGE_SETTING(TARGET, ARG:0)
 ;타겟의 재설정
 TARGET = LOCAL:0
 RETURN CHARANUM - 1
@@ -564,21 +565,13 @@ FOR 장르, 0, SKILL_GENRE_NUM
 NEXT
 
 ;-------------------------
-;아이에게 태그를 설정하는 것으로 있는 것 권
+;아이의 태그(소속학원)는 엄마쪽을 따라감.
 ;-------------------------
 @CHILD_TAG_SETTING
 #DIM 아버지
 #DIM 어머니
 아버지 = ID_TO_CHARA(CFLAG:부친)
 어머니 = ID_TO_CHARA(CFLAG:모친)
-SIF 아버지 < 0
-	GOTO FATHER_CANCEL
-FOR LOCAL, 0, MAX_TAG
-	SIF TAG:아버지:LOCAL != -1 && RAND:2
-		CALL ADD_TAG(TARGET, TAG:아버지:LOCAL)
-NEXT
-
-$FATHER_CANCEL
 
 SIF 어머니 < 0
 	RETURN

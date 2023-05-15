@@ -218,6 +218,11 @@ ENDSELECT
 RESULTS = %clothes%
 RETURN
 
+@PRINT_IMAGE_CHILD
+#DIMS 화상
+
+RESULTS = %화상%
+
 ;======================================================
 ;  ☆ 이미지 출력 함수
 ;  따로따로 퍼져있는 화상출력을 한 함수로 통합함(by. 레몬녹차)
@@ -231,69 +236,74 @@ RETURN
 #DIMS 표정
 #DIMS 종류
 #DIMS sName
+
 IF 대상 == -1
 	sName = 더미캐릭터
-
-ELSEIF IS_RANDOM_CHARA(대상)
-		IF IS_FEMALE(대상)
-			sName = 커스텀_F_얼굴_의복_통상_{TALENT:대상:커스텀페이스}
+ELSE
+	;대상의 주인공 여부 확인
+	IF 대상 == 0
+		;커스텀 페이스 적용 유무
+		IF TALENT:대상:커스텀페이스
+			;커스텀페이스(남캐)
+			IF IS_MALE(대상)
+				sName = 커스텀_M_얼굴_의복_통상_{TALENT:대상:커스텀페이스}
+			;커스텀페이스(여캐)
+			ELSE
+				sName = 커스텀_F_얼굴_의복_통상_{TALENT:대상:커스텀페이스}
+			ENDIF
+		;주인공이 고정캐릭일 때
+		ELSEIF !FLAG:주인공화상 == 0
+				CALL PRINT_IMAGE_OTHER_CLOTHES(FLAG:주인공화상)
+				sName = %종류%%RESULTS%_%표정%_{FLAG:주인공화상}
 		ELSE
-			sName = 커스텀_M_얼굴_의복_통상_{TALENT:대상:커스텀페이스}
+			;기본 남캐 화상
+			IF IS_MALE(대상)
+				sName = 스탠딩_의복_통상_남
+			;기본 여캐 화상
+			ELSE
+				sName = 스탠딩_의복_통상_여
+			ENDIF
+		ENDIF
+	;해당 캐릭터가 고정 캐릭터라면
+	ELSEIF IS_FIXED_CHARA(대상)
+		CALL PRINT_IMAGE_OTHER_CLOTHES(대상)
+		sName = %종류%%RESULTS%_%표정%_{대상}
+	;해당 캐릭터가 아이라면
+	ELSEIF IS_CHILD(대상)
+		sName = 아이_AI_%종류%_%표정%_{TALENT:대상:아이화상}_{TALENT:대상:아이화상번호}
+	;해당 캐릭터가 특수세력이라면
+	ELSEIF IS_SP_CHARA(대상)
+		IF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
+			sName = 스탠딩_의복_통상_도둑
+		ELSEIF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_홉고블린)
+			sName = 스탠딩_의복_통상_홉고블린
+		ELSEIF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_외래인)
+			sName = 스탠딩_의복_통상_외래인
+		ELSEIF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_촉수)
+			sName = 스탠딩_의복_통상_촉수
+		ELSEIF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_자경단)
+			sName = 스탠딩_의복_통상_자경단
+		ELSEIF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_서큐버스)
+			sName = 스탠딩_의복_통상_서큐버스
+		ELSEIF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_광신도)
+			sName = 스탠딩_의복_통상_광신도
+		ELSE
+			sName = 더미캐릭터
+		ENDIF
+	ELSEIF IS_RANDOM_CHARA(대상)
+		IF TALENT:대상:커스텀페이스
+			IF IS_FEMALE(대상)
+				sName = 커스텀_F_얼굴_의복_통상_{TALENT:대상:커스텀페이스}
+			ELSE
+				sName = 커스텀_M_얼굴_의복_통상_{TALENT:대상:커스텀페이스}
+			ENDIF
+		ELSE
+			sName = 더미캐릭터
 		ENDIF
 	ELSE
-		SELECTCASE 대상
-			;플레이어 일 때
-			CASE 0
-				;커스텀 페이스 적용 유무
-				IF TALENT:대상:커스텀페이스
-					;커스텀페이스(남캐)
-					IF IS_MALE(대상)
-						sName = 커스텀_M_얼굴_의복_통상_{TALENT:대상:커스텀페이스}
-					;커스텀페이스(여캐)
-					ELSE
-						sName = 커스텀_F_얼굴_의복_통상_{TALENT:대상:커스텀페이스}
-					ENDIF
-				;주인공이 고정캐릭일 때
-				ELSEIF !FLAG:주인공화상 == 0
-						CALL PRINT_IMAGE_OTHER_CLOTHES(FLAG:주인공화상)
-						sName = %종류%%RESULTS%_%표정%_{FLAG:주인공화상}
-				ELSE
-					;기본 남캐 화상
-					IF IS_MALE(대상)
-						sName = 스탠딩_의복_통상_남
-					;기본 여캐 화상
-					ELSE
-						sName = 스탠딩_의복_통상_여
-					ENDIF
-				ENDIF
-			CASE 1 TO CHARANUM
-				CALL PRINT_IMAGE_OTHER_CLOTHES(대상)
-				sName = %종류%%RESULTS%_%표정%_{대상}
-			CASEELSE
-				IF TALENT:대상:커스텀페이스
-					IF IS_FEMALE(대상)
-						sName = 커스텀_F_얼굴_의복_통상_{TALENT:대상:커스텀페이스}
-					ELSE
-						sName = 커스텀_M_얼굴_의복_통상_{TALENT:대상:커스텀페이스}
-					ENDIF
-				ELSEIF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
-					sName = 스탠딩_의복_통상_도둑
-				ELSEIF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_홉고블린)
-					sName = 스탠딩_의복_통상_홉고블린
-				ELSEIF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_외래인)
-					sName = 스탠딩_의복_통상_외래인
-				ELSEIF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_촉수)
-					sName = 스탠딩_의복_통상_촉수
-				ELSEIF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_자경단)
-					sName = 스탠딩_의복_통상_자경단
-				ELSEIF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_서큐버스)
-					sName = 스탠딩_의복_통상_서큐버스
-				ELSEIF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_광신도)
-					sName = 스탠딩_의복_통상_광신도
-				ENDIF
-		ENDSELECT
+		sName = 더미캐릭터
 	ENDIF
-
+ENDIF
 
 RESULTS = %sName%
 RETURN
@@ -369,9 +379,8 @@ iFont_Hei_mag = (iFont_Hei_mag/10) + (iFont_Hei_mag%10 >= 5? 1#0)
 VARSET sTemp
 
 
-
 ;뒷부분 최대 캐릭터 수
-FOR iID, 1, CHARANUM
+FOR iID, 0, CHARANUM
 ;	IF CFLAG:(iID):조교참가플래그
 	IF IS_PARTICIPATE_TRAIN(iID)
 		;-----------------
@@ -398,7 +407,6 @@ FOR iID, 1, CHARANUM
 		ELSEIF FLAG:스탠딩종류 == 1
 			sTemp:2 = 얼굴
 		ENDIF
-
 		sPrint_Text = <p align='left'><shape type = 'space'param = '{1000 * (iEnter_Wid)}'>
 		;화상표시 함수
 		CALL PRINT_IMAGE_CHARA(iID, sTemp:2, sTemp:1)
@@ -531,253 +539,7 @@ FOR LOCAL,0,iAnime_Num
 	NEXT
 NEXT
 RETURN RESULT
-[SKIPSTART]
-;=========================================================
-;	정상위のアニメーション画像表示
-;
-;	sRes_Name	：最後に表示する画像のリソース名
-;	iSize		：一行の高さに対するサイズ％数値　縦基準　縦横比維持　省略で1000(10倍)
-;	sAlign		：align属性　省略で左寄せ　left, center, rightの三種が指定できます
-;=========================================================
-@PRINT_IMAGE_ANIMATION_정상위(sRes_Name,iSize=1000,sAlign="left")
-#DIMS sRes_Name
-#DIM iSize
-#DIMS sAlign
 
-#DIM iStart
-#DIMS sPrint_Res_Name
-#DIMS sAnime_Res_Name
-
-SIF !FLAG:그림표시 || sRes_Name == "" || !FLAG:삽화표시
-	RETURN RESULT
-
-IF sRes_Name == "정상위_사정"
-	sPrint_Res_Name = %sRes_Name%_{FLAG:사정화상종류}
-ELSE
-	sPrint_Res_Name = %sRes_Name%
-ENDIF
-
-IF !FLAG:애니메이션
-	CALL PRINT_IMAGE(sPrint_Res_Name,iSize,sAlign)
-	RETURN RESULT
-ENDIF
-
-sAnime_Res_Name = 정상위_삽입_
-
-IF sRes_Name == "정상위_사정" || sRes_Name == "정상위_절정"
-	iStart = 1
-ELSE
-	iStart= 0
-ENDIF
-
-CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,iStart,4-iStart,FLAG:애니메이션,1,,iSize,sAlign)
-CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,iStart,4-iStart,1,0,,iSize,sAlign)
-
-IF sRes_Name == "정상위_사정"
-	sAnime_Res_Name = 정상위_사정_{FLAG:사정화상종류}_
-	CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,0,2,FLAG:애니메이션,0,,iSize,sAlign)
-	CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,2,2,FLAG:애니메이션,1,,iSize,sAlign)
-ENDIF
-CALL PRINT_IMAGE(sPrint_Res_Name,iSize,sAlign)
-
-RETURN RESULT
-
-;=========================================================
-;	후배위のアニメーション画像表示
-;	コマ数など変わったので別で
-;
-;	sRes_Name	：最後に表示する画像のリソース名
-;	iSize		：一行の高さに対するサイズ％数値　縦基準　縦横比維持　省略で1000(10倍)
-;	sAlign		：align属性　省略で左寄せ　left, center, rightの三種が指定できます
-;=========================================================
-@PRINT_IMAGE_ANIMATION_후배위(sRes_Name,대상=0,iSize=1000,sAlign="left")
-#DIMS sRes_Name
-#DIM 대상
-#DIM iSize
-#DIMS sAlign
-
-#DIMS sPrint_Res_Name
-#DIMS sAnime_Res_Name
-#DIM iAnimeCon
-
-SIF !FLAG:그림표시 || sRes_Name == "" || !FLAG:삽화표시
-	RETURN RESULT
-
-IF sRes_Name == "후배위_사정"
-	sPrint_Res_Name = %sRes_Name%_{FLAG:사정화상종류}
-	SIF NOWEX:대상:사정 > 6
-		sPrint_Res_Name = %sRes_Name%_{FLAG:사정화상종류}_9
-ELSE
-	sPrint_Res_Name = %sRes_Name%
-ENDIF
-
-IF !FLAG:애니메이션
-	CALL PRINT_IMAGE(sPrint_Res_Name,iSize,sAlign)
-	RETURN RESULT
-ENDIF
-
-
-IF sRes_Name == "후배위_삽입"
-	
-	iAnimeCon = FLAG:애니메이션/2?FLAG:애니메이션/2#1
-	CALL PRINT_IMAGE_ANIMATION("후배위_삽입_",0,6,iAnimeCon,1,,iSize,sAlign)
-	
-	iAnimeCon = (FLAG:애니메이션-iAnimeCon)?FLAG:애니메이션-iAnimeCon#-1
-	CALL PRINT_IMAGE_ANIMATION("후배위_삽입2_",0,12,iAnimeCon,0)
-ELSE
-	IF sRes_Name == "후배위_절정"
-		iAnimeCon = FLAG:애니메이션/2?FLAG:애니메이션/2#1
-		CALL PRINT_IMAGE_ANIMATION("후배위_삽입2_",0,12,iAnimeCon,0)
-	ENDIF
-	
-	CALL PRINT_IMAGE_ANIMATION("후배위_절정_",0,4,FLAG:애니메이션,0)
-	CALL PRINT_IMAGE_ANIMATION("후배위_절정_",0,2,1,0)
-ENDIF
-IF sRes_Name == "후배위_사정"
-	sAnime_Res_Name = 후배위_사정_{FLAG:사정화상종류}_
-	CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,0,8,1,0,,iSize,sAlign)
-	CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,6,2,FLAG:애니메이션,1,,iSize,sAlign)
-	
-	;大量なら追加で
-	IF NOWEX:대상:사정 > 6
-		CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,8,2,FLAG:애니메이션,1,,iSize,sAlign)
-	ENDIF
-	
-ENDIF
-CALL PRINT_IMAGE(sPrint_Res_Name,iSize,sAlign)
-
-RETURN RESULT
-;=========================================================
-;	후배위のアニメーション画像表示
-;	コマ数など変わったので別で
-;
-;	sRes_Name	：最後に表示する画像のリソース名
-;	iSize		：一行の高さに対するサイズ％数値　縦基準　縦横比維持　省略で1000(10倍)
-;	sAlign		：align属性　省略で左寄せ　left, center, rightの三種が指定できます
-;=========================================================
-@PRINT_IMAGE_ANIMATION_파이즈리(sRes_Name,iSize=1000,sAlign="left")
-#DIMS sRes_Name
-#DIM iSize
-#DIMS sAlign
-
-#DIMS sPrint_Res_Name
-#DIMS sAnime_Res_Name
-#DIM iAnimeCon
-
-SIF !FLAG:그림표시 || sRes_Name == "" || !FLAG:삽화표시
-	RETURN RESULT
-
-IF sRes_Name == "파이즈리_사정"
-	sPrint_Res_Name = %sRes_Name%_{FLAG:사정화상종류}
-ELSE
-	sPrint_Res_Name = %sRes_Name%
-ENDIF
-
-sAnime_Res_Name = 파이즈리_삽입_
-
-IF !FLAG:애니메이션
-	CALL PRINT_IMAGE(sPrint_Res_Name,iSize,sAlign)
-	RETURN RESULT
-ENDIF
-
-CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,0,5,FLAG:애니메이션,1,,iSize,sAlign)
-CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,0,5,1,0,,iSize,sAlign)
-
-IF sRes_Name == "파이즈리_사정"
-	sAnime_Res_Name = 파이즈리_사정_{FLAG:사정화상종류}_
-	CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,0,5,FLAG:애니메이션,0,,iSize,sAlign)
-	CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,4,1,FLAG:애니메이션,1,,iSize,sAlign)
-ENDIF
-
-CALL PRINT_IMAGE(sPrint_Res_Name,iSize,sAlign)
-
-RETURN RESULT
-;=========================================================
-;	사정後のアニメーション画像表示
-;
-;	sRes_Name	：最後に表示する画像のリソース名
-;	iSize		：一行の高さに対するサイズ％数値　縦基準　縦横比維持　省略で1000(10倍)
-;	sAlign		：align属性　省略で左寄せ　left, center, rightの三種が指定できます
-;=========================================================
-@PRINT_IMAGE_ANIMATION_사정후(sRes_Name="정상위_질내사정",iSize=1000,sAlign="left")
-#DIMS sRes_Name
-#DIM iSize
-#DIMS sAlign
-
-#DIM iWait
-#DIMS sAnime_Res_Name
-#DIMS sType
-#DIM SAVE_RESULT
-
-SIF !FLAG:그림표시 || sRes_Name == "" || !FLAG:삽화표시
-	RETURN RESULT
-
-IF !FLAG:애니메이션
-	CALL PRINT_IMAGE(sRes_Name,iSize,sAlign)
-	RETURN RESULT
-ENDIF
-SAVE_RESULT = RESULT
-SPLIT sRes_Name,"_",sType
-
-IF sType == "후배위"
-	sAnime_Res_Name = %sType%_사정_{FLAG:사정화상종류}_\@NOWEX:MASTER:사정>1?9#7\@
-ELSE
-	sAnime_Res_Name = %sType%_사정_{FLAG:사정화상종류}_3
-ENDIF
-
-iWait = 500
-CALL PRINT_IMAGE(@"%sAnime_Res_Name%",iSize,sAlign)
-sAnime_Res_Name = %sType%_삽입_
-TWAIT iWait, 0
-CLEARLINE iSize/100
-
-iWait = 100
-FOR LOCAL,3,0,-1
-	CALL PRINT_IMAGE(@"%sAnime_Res_Name%{LOCAL}",iSize,sAlign)
-	TWAIT iWait, 0
-	CLEARLINE iSize/100
-NEXT
-
-;후배위のみアニメ
-IF sType == "후배위"
-	sAnime_Res_Name = %sType%_사정후_
-	CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,0,2,1,0,iWait,iSize,sAlign)
-	CALL PRINT_IMAGE_ANIMATION(sAnime_Res_Name,2,2,0,0,iWait,iSize,sAlign)
-ENDIF
-
-CALL PRINT_IMAGE(sRes_Name,iSize,sAlign)
-
-RESULT = SAVE_RESULT
-RETURN RESULT
-
-;홍조する条件
-;@BLUSH(ARG)
-;#FUNCTION
-;SIF TCVAR:ARG:만취 || TCVAR:ARG:미약 || TCVAR:ARG:발정
-;	RETURNF 1
-;SIF GETPALAMLV(PALAM:ARG:호의, 15) >= 10
-;	RETURNF 1
-;SIF GETPALAMLV(PALAM:ARG:욕정, 15) + CFLAG:ARG:욕구불만도 / 200 >= 8
-;	RETURNF 1
-;SIF CFLAG:ARG:우후후 && (GETPALAMLV(PALAM:ARG:욕정, 15) + CFLAG:ARG:욕구불만도 / 200 >= 5)
-;	RETURNF 1
-;RETURNF 0
-;
-;@TARGET_BLUSH_EXCEPTION(ARG)
-;#FUNCTION
-;SELECTCASE ARG
-;	CASE 29,69
-;		SIF INRANGE(CFLAG:ARG:현재위치, 200, 299) && TEQUIP:ARG:하반신착의상황 && TEQUIP:ARG:상반신착의상황
-;			RETURNF 1
-;ENDSELECT
-;SIF CFLAG:ARG:モブ顔パターン == 5
-;	RETURNF 1
-;RETURNF 0
-
-@GET_TARGETNUM()
-#FUNCTION
-RETURNF MAX(0, FINDELEMENT(TARGET, 0) - 1)
-[SKIPEND]
 ;=========================================================
 ;	VS 화면의 그림표시
 ;
@@ -889,3 +651,46 @@ ELSE
 ENDIF
 
 RETURNF sName
+
+
+;=======================================================================
+; ☆ 아이 이미지 적용 - 레몬녹차
+; * ERB\R_CHARA\CHILD.ERB의 @CREATE_CHILD와 연결됩니다.
+; 
+; ☆ 함수 설명
+; 아이가 태어나면 화상을 지정해준다.
+; ○ 기본설정 : 학교 태그가 있다면 해당 학교의 모브
+; ○ AI 추가 이미지(확장)
+;   - 고정캐릭터의 아이 -> 고정 캐릭을 닮은 화상
+;   - 랜덤캐릭터의 아이(주인공 포함) -> 학원 태그에 맞는 화상(태그가 없다면 랜덤)
+;
+;=======================================================================
+@CHILD_IMAGE_SETTING(TARGET, MOTHER)
+#DIM MOTHER
+
+;☆ 엄마가 고정캐릭터인지 확인
+IF MOTHER == 0 && FLAG:주인공화상 != 0
+	;PRINTFORMW 주인공이 엄마 + 주인공이 고정캐릭터
+	LOCAL:0 = FLAG:주인공화상
+ELSEIF IS_FIXED_CHARA(MOTHER)
+	;PRINTFORMW 엄마가 고정캐릭터
+	LOCAL:0 = MOTHER
+ENDIF
+
+
+IF LOCAL:0 >= 1
+;엄마가 고정캐릭터 혹은 플레이어가 고정캐릭터 LOCAL:0을 확인
+;	PRINTFORML 고정캐릭터 설정완료
+
+	SELECTCASE LOCAL:0
+		CASE 62
+			;PRINTFORML 아이리 설정완료
+			TALENT:TARGET:아이화상 = 62
+			TALENT:TARGET:아이화상번호 = 1
+		CASEELSE
+			;PRINTFORML 고정이지만 화상대응 없음!
+	ENDSELECT
+ELSE
+;엄마가 비고정캐릭터
+	;PRINTFORMW 비고정캐릭터
+ENDIF

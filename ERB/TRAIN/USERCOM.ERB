@@ -747,7 +747,7 @@ IF RESULT == 3100
 	FLAG:화상설정 = !FLAG:화상설정
 ELSEIF RESULT == 3101
 	;그림표시 인원수 -
-	FLAG:그림표시 = MAX(FLAG:그림표시-1,1)
+	FLAG:그림표시 = MAX(FLAG:그림표시-1,2)
 ELSEIF RESULT == 3102
 	;그림표시 인원수 +
 	FLAG:그림표시 = MIN(FLAG:그림표시+1, 8)
