@@ -270,7 +270,16 @@ ELSE
 		sName = %종류%%RESULTS%_%표정%_{대상}
 	;해당 캐릭터가 아이라면
 	ELSEIF IS_CHILD(대상)
-		sName = 아이_AI_%종류%_%표정%_{TALENT:대상:아이화상}_{TALENT:대상:아이화상번호}
+		TRYCALLFORM ADDON_AI_CHILD_IMAGE_CORE
+		IF RESULT == 1
+			IF TALENT:대상:아이화상 >= 0
+				sName = 아이_AI_%종류%_통상_{TALENT:대상:아이화상}_{TALENT:대상:아이화상번호}
+			ELSE
+				sName = 아이_AI_%종류%_통상_모브_{TALENT:대상:아이화상번호}
+			ENDIF
+		ELSE
+			sNAME = 더미캐릭터
+		ENDIF
 	;해당 캐릭터가 특수세력이라면
 	ELSEIF IS_SP_CHARA(대상)
 		IF CFLAG:대상:소속 == GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:특수세력_도둑)
@@ -299,6 +308,14 @@ ELSE
 			ENDIF
 		ELSE
 			sName = 더미캐릭터
+		ENDIF
+	ELSEIF TALENT:대상:커스텀페이스
+		;커스텀페이스(남캐)
+		IF IS_MALE(대상)
+			sName = 커스텀_M_얼굴_의복_통상_{TALENT:대상:커스텀페이스}
+		;커스텀페이스(여캐)
+		ELSE
+			sName = 커스텀_F_얼굴_의복_통상_{TALENT:대상:커스텀페이스}
 		ENDIF
 	ELSE
 		sName = 더미캐릭터
@@ -668,6 +685,7 @@ RETURNF sName
 @CHILD_IMAGE_SETTING(TARGET, MOTHER)
 #DIM MOTHER
 
+LOCAL:0 = -1
 ;☆ 엄마가 고정캐릭터인지 확인
 IF MOTHER == 0 && FLAG:주인공화상 != 0
 	;PRINTFORMW 주인공이 엄마 + 주인공이 고정캐릭터
@@ -675,22 +693,27 @@ IF MOTHER == 0 && FLAG:주인공화상 != 0
 ELSEIF IS_FIXED_CHARA(MOTHER)
 	;PRINTFORMW 엄마가 고정캐릭터
 	LOCAL:0 = MOTHER
+;엄마가 아이 캐릭터이고 고정캐릭이라면
+ELSEIF IS_CHILD(MOTHER) && TALENT:MOTHER:아이화상 >= 0
+	LOCAL:0 = TALENT:MOTHER:아이화상
 ENDIF
 
 
-IF LOCAL:0 >= 1
-;엄마가 고정캐릭터 혹은 플레이어가 고정캐릭터 LOCAL:0을 확인
-;	PRINTFORML 고정캐릭터 설정완료
-
-	SELECTCASE LOCAL:0
-		CASE 62
-			;PRINTFORML 아이리 설정완료
-			TALENT:TARGET:아이화상 = 62
-			TALENT:TARGET:아이화상번호 = 1
-		CASEELSE
-			;PRINTFORML 고정이지만 화상대응 없음!
-	ENDSELECT
-ELSE
-;엄마가 비고정캐릭터
-	;PRINTFORMW 비고정캐릭터
-ENDIF
+;아이 확인
+SELECTCASE LOCAL:0
+	CASE 1
+		;시로코 아이
+		TALENT:TARGET:아이화상 = 1
+		TALENT:TARGET:아이화상번호 = 1
+	CASE 62
+		;아이리 아이
+		;PRINTFORML 아이리 설정완료
+		TALENT:TARGET:아이화상 = 62
+		TALENT:TARGET:아이화상번호 = 1
+	CASEELSE
+		SELECTCASE RAND:1
+			CASE 0
+				TALENT:TARGET:아이화상 = -1
+				TALENT:TARGET:아이화상번호 = 1
+		ENDSELECT
+ENDSELECT

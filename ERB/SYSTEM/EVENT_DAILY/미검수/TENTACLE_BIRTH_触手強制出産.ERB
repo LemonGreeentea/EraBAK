@@ -12,6 +12,9 @@ RETURN 50
 ;---------------------
 @EVENT_DAILY_TENTACLE_BIRTH_DECISION()
 #DIM 촉수
+;미검수 OFF면 스킵
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
 촉수 = GET_COUNTRY_FROM_ID(SP_COUNTRY_ID:(특수세력_촉수))
 ;촉수 세력이 없는 경우는 캔슬
 SIF 촉수 == -1

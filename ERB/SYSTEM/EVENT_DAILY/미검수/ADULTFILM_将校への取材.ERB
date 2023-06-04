@@ -1,8 +1,23 @@
-﻿;---------------------
-;발생 확률(1000분 율 100으로 10%)
+﻿; =============================================
+; ☆ 촬영회 데일리 이벤트
+;  ○ 토호K 기본 데일리 이벤트
+;  ○ 1차 수정 : 몰텍 (몰루에 맞게 교정)
+;  ○ 2차 수정 : 레몬녹차 (이벤트명 변경, 이벤트 전개 추가, 필터 설정)
+;  -----------------------
+;  ○ 소  개 : 크로노스 연예부 학생과 한 남성이 촬영회를 하자고 찾아오는데...
+;  ○ 대  상 : 여성 캐릭터(제외 : AV 배우 소질)
+;  ○ 조  건 : 인간남성 플래그 ON, 에로 플래그 ON, 촬영회 이벤트는 딱 한 명에게만 진행
+;  ○ 이벤트 내 특수조건
+;     - NTR 플래그 OFF면 NTR 전개로 흘러가지 않음
+;     - 여주 위험 플래그 OFF면 여자 주인공이 강요당하는 전개로 흘러가지 않음
+; =============================================
+;---------------------
+; ☆ 발생 확률(천분율)
+; - 촬영회 이벤트가 진행중이면 20%, 아니면 0.5%
 ;---------------------
 @EVENT_DAILY_ADULTFILM_RATE()
-RETURN (DVAR:AV촬영_진행도 > 0 ? 330 # 30)
+RETURN 1000
+;RETURN (DVAR:촬영회_진행도 > 0 ? 200 # 5)
 
 ;---------------------
 ;확률 이외의 발생 판정
@@ -12,9 +27,17 @@ RETURN (DVAR:AV촬영_진행도 > 0 ? 330 # 30)
 
 대상 = 0
 
+;미검수 OFF면 스킵
+;SIF FLAG:데일리이벤트_미검수 == 0
+;	RETURN 0
+;인간남성 이벤트 OFF면 스킵
+;SIF FLAG:데일리이벤트_인간남성 == 0
+;	RETURN 0
+
+;10일 이후에 발동
 SIF DAY < 10
 	RETURN 0
-SIF DVAR:AV촬영_진행도 == 10
+SIF DVAR:촬영회_진행도 == 10
 	RETURN 0
 FOR LOCAL, 0, CHARANUM
 	;포로가 아니고, 죽지 않고, AV여배우미소지자의 여자가 자국에 있을지 어떨지 판정
@@ -37,63 +60,81 @@ RETURN 데일리_장르_에로
 @EVENT_DAILY_ADULTFILM
 #DIM 대상
 
-IF DVAR:AV촬영_진행도 > 0
-	대상 = ID_TO_CHARA(DVAR:AV촬영_대상ID)
+IF DVAR:촬영회_진행도 > 0
+	대상 = ID_TO_CHARA(DVAR:촬영회_대상ID)
 	IF 대상 == -1 || CFLAG:대상:특수상태 == 특수상태_사망
-		DVAR:AV촬영_대상ID = 0
-		DVAR:AV촬영_중독진행도 = 0
-		DVAR:AV촬영_진행도 = 0
+		DVAR:촬영회_대상ID = 0
+		DVAR:촬영회_중독진행도 = 0
+		DVAR:촬영회_진행도 = 0
 	ENDIF
 ENDIF
 
-IF DVAR:AV촬영_진행도 == 0
+IF TALENT:MASTER:선생
+	LOCALS:0 == 선생님
+ELSE
+	LOCALS:0 == %ANAME(MASTER)%씨
+ENDIF
+
+
+IF DVAR:촬영회_진행도 == 0
 	;%조사처리(ANAME(MASTER),"가")% 저속해지고 있는 경우
-	IF GETBIT(TALENT:MASTER:음란계, 소질_음란_ＡＶ여배우) && IS_FEMALE(MASTER) && DVAR:AV촬영_발생플래그 == 1
-		PRINTFORML 다시 AV촬영의 프로듀서가 왔다
-		PRINTFORMW 그는 %조사처리(ANAME(MASTER),"를")% 보면 히죽히죽 웃으면서 당연하게도 엉덩이를 주물러 왔다
-		PRINTFORML %조사처리(ANAME(MASTER),"는")% 기쁜듯이 신음소리를 올리고 움찔하면서도 저항하지 않아 받아들인다
-		PRINTFORML 「또 신세를 져요, 시청자는 항상 새로운 아이돌을 요구하고 있습니다」
-		PRINTFORMW 귓전으로 속삭여진 %조사처리(ANAME(MASTER),"는")% 부들부들 등줄기를 진동시켰다
+	IF GETBIT(TALENT:MASTER:음란계, 소질_음란_ＡＶ여배우) && IS_FEMALE(MASTER) && DVAR:촬영회_발생플래그 == 1 && FLAG:데일리이벤트_여주위험 == 1
+		PRINTFORMW 크로노스 연예부 기자와 남자가 찾아왔다
+		TRYCALLFORM ADDON_AI_DAILYEVENTMOB_IMAGE_N("DAILY_AI_촬영회_스탠딩_통상_1")
+		PRINTFORML 「안녕하세요. %LOCALS:0%, 저희가 왜 왔는지는 알고계시죠?」
+		PRINTFORMW 크로노스 기자와 남성은 %ANAME(MASTER)%의 곁에 다가와 엉덩이를 쓰다듬는다
+		PRINTFORML 「새로운 모델이 필요해요. 무슨 뜻인지 알죠?」
+		PRINTFORMW 남자의 속삭임에 %조사처리(ANAME(MASTER),"는")% 몸을 작게 떨었다
+
 	;2회째 이후
-	ELSEIF DVAR:AV촬영_발생플래그 == 1
-		PRINTFORMW 다시 학교 학생의 다큐멘터리 촬영을 신청받았다
-		PRINTFORML 「이 기획은 맞아요! 그러면 학교의 홍보도 되겠지요!」
-		PRINTFORMW 프로듀서를 자칭하는 남자는 웃는 얼굴로 그렇게 설명하지만…
+	ELSEIF DVAR:촬영회_발생플래그 == 1
+		PRINTFORMW 크로노스 연예부 기자가 또 다시 찾아왔다.
+		TRYCALLFORM ADDON_AI_DAILYEVENTMOB_IMAGE_N("DAILY_AI_촬영회_스탠딩_통상_1")
+		PRINTFORML 「다시 한 번 생각해보세요! 홍보와 돈 모두를 얻을 수 있다구요!」
+		PRINTFORMW 기자는 옆의 남자의 눈치를 보며 %ANAME(MASTER)%에게 촬영회의 장점을 설명했다…
 	;처음의 경우
-	ELSE 
-		PRINTFORML 어느 날, 취재의 신청이 왔다
-		PRINTFORML 학교의 다큐멘터리를 찍고 싶은 것 같다
-		PRINTFORML 「이 기획은 맞아요! 그러면 학교의 홍보도 되겠지요!」
-		PRINTFORMW 프로듀서를 자칭하는 남자는 웃는 얼굴로 그렇게 설명하지만…
+	ELSE
+		PRINTFORML 어느 날, 크로노스 스쿨 연예부 학생이 찾아왔다
+		PRINTFORML 접객실에서 만난 그녀는 방긋 웃으며 %ANAME(MASTER)%에게 인사를 건냈다
+		TRYCALLFORM ADDON_AI_DAILYEVENTMOB_IMAGE_N("DAILY_AI_촬영회_스탠딩_통상_1")
+		PRINTFORMW 「안녕하세요! %LOCALS:0%, 저는 크로노스 스쿨 연예부 기자입니다」
+		PRINTFORML 「다름이 아니라 동아리 홍보를 위한 사진 촬영을 하고 싶어서 왔습니다」
+		PRINTFORMW ... 그런데 옆의 남성은 누구지...?
+		PRINTFORMW 「아, 이 분은 제 일을 도와주시는 분입니다. 신경쓰지 말아 주세요」
+		PRINTFORML 기밀이 새어 나가지 않을 거라고 장담하며 촬영회의 장점을 늘어놓는다
 	ENDIF
 	PRINTFORML 어떻게 하지?
-	CALL ASK_YN("맡는다" ,"거절한다")
+	CALL ASK_YN("허락한다" ,"거절한다")
 	IF RESULT == 1
 		$OKOTOWARI
 		;%조사처리(ANAME(MASTER),"가")% 저속해지고 있는 경우
-		IF GETBIT(TALENT:MASTER:음란계, 소질_음란_ＡＶ여배우) && DVAR:AV촬영_발생플래그 == 1
-			PRINTFORML 하지만 지금은 분쟁에 바쁘고, 협력하는 것은 어렵다
-			PRINTFORML %조사처리(ANAME(MASTER),"가")% 미안한 것같이 거절하면, 그는 노골적으로 혀를 찼다
-			PRINTFORMW 그리고 강제로 %조사처리(ANAME(MASTER),"를")% 침실에 데리고 들어가면, 무책임하게 몇 번이나 씨뿌리기를 해 갔다
+		IF GETBIT(TALENT:MASTER:음란계, 소질_음란_ＡＶ여배우) && DVAR:촬영회_발생플래그 == 1 && FLAG:데일리이벤트_여주위험 == 1
+			PRINTFORML 지금은 사정상 곤란하다... 라고 말하자 분위기가 뒤바꼈다
+			PRINTFORML 「... 뭐어, 어쩔 수 없죠. 그럼 %조사처리(LOCALS:0,"가")% 대신해 줘야겠네요」
+			PRINTFORMW 크로노스 기자와 남자는 강제로 %조사처리(ANAME(MASTER),"를")% 침실로 끌고가서 몇 번이나 질내사정을 했다
 			CALL FUCK(MASTER, "Ｃ, Ｖ, Ｂ, Ｍ, 성교, 정애, 봉사, 펠라티오, Ｖ성교", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("AV남배우"), @"남배우의 \@RAND:2 ? 페니스 # 입술\@", "AV남배우", "", "강간")
+			PRINTFORML 「뭐어, 촬영회는 물건너 갔지만 %LOCALS:0% 덕분에 자지님이 만족하셨네요♡」
+			PRINTFORMW 크로노스 기자는 질내사정을 마치고 뽑아낸 자지를 깨끗히 빨아내며 웃음을 짓는다
+
 		ELSE
-			PRINTFORML 군사 기밀을 흘려질지도 모른다
-			PRINTFORMW 역시 이번은 거절하기로 했다
-			SIF DVAR:AV촬영_발생플래그 != 1
-				DVAR:AV촬영_발생플래그 = 1
+			PRINTFORML ... 아무래도 껄끄럽다
+			PRINTFORMW 크로노스 기자에게 거절의 의사를 건냈다
+			SIF DVAR:촬영회_발생플래그 != 1
+				DVAR:촬영회_발생플래그 = 1
 		ENDIF
 		RETURN
 	ELSEIF RESULT == 0
 		;%조사처리(ANAME(MASTER),"가")% 저속해지고 있는 경우
-		IF GETBIT(TALENT:MASTER:음란계, 소질_음란_ＡＶ여배우) && DVAR:AV촬영_발생플래그 == 1
-			PRINTFORMW 물론 맡게 해 받는 일로 했다
+		IF GETBIT(TALENT:MASTER:음란계, 소질_음란_ＡＶ여배우) && DVAR:촬영회_발생플래그 == 1
+			PRINTFORMW 아랫배가 쿡쿡 쑤셔지는걸 느끼면서 고개를 끄덕였다
+			PRINTFORMW 「좋아요. 촬영회에 어울리는 여성분을 소개시켜주세요」
 			PRINTFORML 누구를 선택할까?
 		ELSE
-			PRINTFORML 그 웃는 얼굴에 다소 수상함을 느꼈지만 협력하기로 했다
-			PRINTFORML 「훌륭하다! 반드시 그렇게 말해 주실거라고 생각하고 있었어요!」
-			PRINTFORML 「그러면 취재를 시켜 받을 수 있는 학생 소개해 주세요
-			PRINTFORMW 「여성분으로 부탁드릴게요! 그 쪽이 시청자의 인기가 좋은 것이에요, 예예!」
-			PRINTFORML 누구를 선택할까?
+			PRINTFORML 기자의 웃는 얼굴에 다소 수상함을 느꼈지만 협력하기로 했다
+			PRINTFORML 「감사합니다! 허락해주실거라 믿었어요!」
+			PRINTFORML 「그러면 취재를 시켜 받을 수 있는 학생을 소개해 주세요」
+			PRINTFORMW 「여성분으로 부탁드릴게요! 그게 홍보 효과가 제일 좋아요」
+			PRINTFORML ...누구를 선택할까?
 		ENDIF
 		CALL SINGLE_DRAWLINE
 		CALL SELECT_CHARA_LIST_ONLY_LOGIC_SEX("ADULTFILM", "ADULTFILM")
@@ -101,31 +142,34 @@ IF DVAR:AV촬영_진행도 == 0
 		IF RESULT < 0
 			GOTO OKOTOWARI
 		ELSEIF 대상 == MASTER
-			PRINTFORMW %ANAME(대상)%자신이 취재를 받는 일로 했다
+			PRINTFORMW %ANAME(대상)% 자신이 취재를 받기로 했다
+			LOCALS:1 = %LOCALS:0%
 		ELSE
-			PRINTFORMW %ANAME(대상)%에 취재를 받게 하는 일로 했다
+			PRINTFORMW %조사처리(ANAME(대상),"가")% 취재를 받는기로 했다
+			LOCALS:1 = %ANAME(대상)%씨
 		ENDIF
-		PRINTFORML 그는 %조사처리(ANAME(대상),"를")% 평가하는 것처럼 바라본 후 빙그레 웃었다
-		PRINTFORMW %조사처리(ANAME(대상),"는")% 조속히 남자에게 촉구받는 대로 취재로 향했다
+		PRINTFORML 「아, %조사처리(LOCALS:1,"이")% 맡는건가요?」
+		PRINTFORMW 크로노스 기자와 남자는 %조사처리(ANAME(대상),"을")% 유심히 바라보더니 남자가 고개를 끄덕이자 기자는 방긋 웃었다
+		PRINTFORMW 「좋습니다. 바로 촬영 시작하겠습니다!」
 	ENDIF
-	PRINTFORML 
-	PRINTFORMW …긴장하고 있었지만, 별다름도 없는 보통 취재였다
-	PRINTFORML 그들은 학교나 사생활에 관한 질문을 몇개인가 한 후
-	PRINTFORML 일상의 업무나 훈련의 모습을 열심히 촬영해 갔다
-	PRINTFORML 취재중, 기자와의 회화가 활기를 띠어 사이 좋게 될 수 있었다
-	PRINTFORMW %조사처리(ANAME(대상),"는")% 다음의 취재일의 확인을 해 그들과 헤어졌다
+	PRINTFORMW ...
+	PRINTFORMW …긴장하고 있었지만, 별다를 것 없는 사진촬영회다
+	PRINTFORMW %ANAME(대상)%의 사진과 학교 전경 등을 찍었다
+	PRINTFORML 「혹시 학업 생활 중 불편하신 건 없으셨나요?」
+	PRINTFORML 잡지에 함께 실을 학교나 사생활에 관한 질문을 몇 개정도 한 뒤 촬영을 마쳤다
+	PRINTFORMW %조사처리(ANAME(대상),"는")% 다음 촬영회의 일정을 잡은 뒤 기자 일행과 헤어졌다
 	PRINTFORML 
 	FOR LOCAL, 1, MAX_COUNTRY
 		CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, 15, -15)
 	NEXT
-	CALL COLOR_PRINTW("그 날의 취재 내용이 방송되서 타국의 평가가 올랐다", 칼라_주의)
+	CALL COLOR_PRINTW("그 날의 잡지가 발행되어 타국의 평가가 올랐다", 칼라_주의)
 	MONEY += 5000
-	CALL COLOR_PRINTW("출연료로 해서 금 5000을 받았다", 칼라_주의)
-	DVAR:AV촬영_진행도 ++
-	DVAR:AV촬영_대상ID = GET_ID(대상)
-	DVAR:AV촬영_발생플래그 = 1
-ELSEIF DVAR:AV촬영_진행도 == 1
-	PRINTFORMW 다시 밀착 취재가 왔다
+	CALL COLOR_PRINTW("출연료로 크레딧 5000을 받았다", 칼라_주의)
+	DVAR:촬영회_진행도 ++
+	DVAR:촬영회_대상ID = GET_ID(대상)
+	DVAR:촬영회_발생플래그 = 1
+ELSEIF DVAR:촬영회_진행도 == 1
+	PRINTFORMW 다시 밀착 취재가 왔다 
 	PRINTFORML 이번도 전회같이 몇개의 질문을 된다
 	PRINTFORML 「그런데 이러한 곳에 있으면, 여성으로서는 다양하게 불편하지 않을까요?」
 	PRINTFORML 유창하게 대답 하고 있었던 %조사처리(ANAME(대상),"이지만")%, 돌연의 모색이 다른 질문에 일순간 당황했다
@@ -154,8 +198,8 @@ ELSEIF DVAR:AV촬영_진행도 == 1
 	CALL COLOR_PRINTW("그 날의 취재 내용이 방송되면 신입생이 증가했다", 칼라_주의)
 	MONEY += 5000
 	CALL COLOR_PRINTW("출연료로 해서 금 5000을 받았다", 칼라_주의)
-	DVAR:AV촬영_진행도 ++
-ELSEIF DVAR:AV촬영_진행도 == 2
+	DVAR:촬영회_진행도 ++
+ELSEIF DVAR:촬영회_진행도 == 2
 	PRINTFORMW 다시 밀착 취재가 왔다
 	PRINTFORML 프로듀서는 변함없는 웃는 얼굴로 %ANAME(대상)%에 가까워져 온다
 	PRINTFORML 전회의 일로 경계하면서도 %조사처리(ANAME(대상),"는")% 단순히 일로 대응했다
@@ -178,8 +222,8 @@ ELSEIF DVAR:AV촬영_진행도 == 2
 	MONEY += 5000
 	CALL COLOR_PRINTW("출연료로 해서 금 5000을 받았다", 칼라_주의)
 	CALL PRINT_ADD_EXP(대상, "노출경험치", RAND:20 + 1, 1)
-	DVAR:AV촬영_진행도 ++
-ELSEIF DVAR:AV촬영_진행도 == 3
+	DVAR:촬영회_진행도 ++
+ELSEIF DVAR:촬영회_진행도 == 3
 	PRINTFORMW 다시 밀착 취재가 왔다
 	PRINTFORML 프로듀서는 변함없는 웃는 얼굴로 %ANAME(대상)%에 가까워져 온다
 	PRINTFORMW 하지만 지금까지을 생각해 낸 %조사처리(ANAME(대상),"는")% 이대로 계속해도 좋은 것인지 불안하게 된다
@@ -200,9 +244,9 @@ ELSEIF DVAR:AV촬영_진행도 == 3
 				CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -50, 50)
 			NEXT
 			CALL COLOR_PRINTW(@"하지만 그 후 한동안 %ANAME(대상)%의 단정치 못한 영상이 인터넷에 떠돌았고, 타국의 평판은 크게 떨어지는 일이 되었다", 칼라_주의)
-			DVAR:AV촬영_중독진행도 = 0
-			DVAR:AV촬영_진행도 = 0
-			DVAR:AV촬영_대상ID = 0
+			DVAR:촬영회_중독진행도 = 0
+			DVAR:촬영회_진행도 = 0
+			DVAR:촬영회_대상ID = 0
 			RETURN
 		ELSEIF RESULT == 0
 			PRINTFORML 분위기에 압도된 %조사처리(ANAME(대상),"가")% 계속한다고 하면 다시 그는 웃는 얼굴이 되었다
@@ -230,8 +274,8 @@ ELSEIF DVAR:AV촬영_진행도 == 3
 	MONEY += 5000
 	CALL COLOR_PRINTW("출연료로 해서 금 5000을 받았다", 칼라_주의)
 	CALL PRINT_ADD_EXP(대상, "노출경험치", RAND:20 + 1, 1)
-	DVAR:AV촬영_진행도 ++
-ELSEIF DVAR:AV촬영_진행도 == 4
+	DVAR:촬영회_진행도 ++
+ELSEIF DVAR:촬영회_진행도 == 4
 	PRINTFORMW 다시 밀착 취재가 왔다
 	PRINTFORML 프로듀서는 변함없는 웃는 얼굴로 %ANAME(대상)%에 가까워져 온다
 	PRINTFORMW 하지만 지금까지을 생각해 낸 %조사처리(ANAME(대상),"는")% 이대로 계속해도 좋은 것인지 불안하게 된다
@@ -252,9 +296,9 @@ ELSEIF DVAR:AV촬영_진행도 == 4
 				CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -50, 50)
 			NEXT
 			CALL COLOR_PRINTW(@"하지만 그 후 한동안 %ANAME(대상)%의 단정치 못한 영상이 인터넷에 떠돌았고, 타국의 평판은 크게 떨어지는 일이 되었다", 칼라_주의)
-			DVAR:AV촬영_중독진행도 = 0
-			DVAR:AV촬영_진행도 = 0
-			DVAR:AV촬영_대상ID = 0
+			DVAR:촬영회_중독진행도 = 0
+			DVAR:촬영회_진행도 = 0
+			DVAR:촬영회_대상ID = 0
 			RETURN
 		ELSEIF RESULT == 0
 			PRINTFORML 압도된 %조사처리(ANAME(대상),"가")% 계속한다고 하면 다시 그는 웃는 얼굴이 되었다
@@ -301,8 +345,8 @@ ELSEIF DVAR:AV촬영_진행도 == 4
 	COUNTRY_SOLDIER:(CFLAG:대상:소속) += 500 + 100 * (RAND:10 + RAND:10 + 6)
 	CALL COLOR_PRINTW("그 날의 취재 내용이 방송되면 신입생이 증가했다", 칼라_주의)
 	CALL PRINT_ADD_EXP(대상, "노출경험치", RAND:20 + 1, 1)
-	DVAR:AV촬영_진행도 ++
-ELSEIF DVAR:AV촬영_진행도 == 5
+	DVAR:촬영회_진행도 ++
+ELSEIF DVAR:촬영회_진행도 == 5
 	PRINTFORMW 다시 밀착 취재가 왔다
 	PRINTFORML 프로듀서는 변함없는 웃는 얼굴로 %ANAME(대상)%에 가까워져 온다
 	PRINTFORMW 하지만 지금까지을 생각해 낸 %조사처리(ANAME(대상),"는")% 이대로 계속해도 좋은 것인지와 불안하게 된다
@@ -323,9 +367,9 @@ ELSEIF DVAR:AV촬영_진행도 == 5
 				CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -50, 50)
 			NEXT
 			CALL COLOR_PRINTW(@"하지만 그 후 한동안 %ANAME(대상)%의 단정치 못한 영상이 인터넷에 떠돌았고, 타국의 평판은 크게 떨어지는 일이 되었다", 칼라_주의)
-			DVAR:AV촬영_중독진행도 = 0
-			DVAR:AV촬영_진행도 = 0
-			DVAR:AV촬영_대상ID = 0
+			DVAR:촬영회_중독진행도 = 0
+			DVAR:촬영회_진행도 = 0
+			DVAR:촬영회_대상ID = 0
 			RETURN
 		ELSEIF RESULT == 0
 			PRINTFORML 압도된 %조사처리(ANAME(대상),"가")% 계속한다고 하면 다시 그는 웃는 얼굴이 되었다
@@ -408,7 +452,7 @@ ELSEIF DVAR:AV촬영_진행도 == 5
 	CALL FUCK(대상, "Ｃ, Ｖ, Ｂ, Ｍ, 성교, 정애, 펠라티오, Ｖ성교", "키스상실, 처녀상실, 질내사정, 구강사정", GET_SPERM_ID("AV남배우"), @"남배우의 \@RAND:2 ? 페니스 # 입술\@", "AV남배우", "", "촬영중의 강간")
 	PRINTFORML 
 	CALL COLOR_PRINTW(@"%조사처리(ANAME(대상),"는")% AV여배우로 강제로 데뷔하고 말았다......", 칼라_주의)
-	DVAR:AV촬영_진행도  = 10
+	DVAR:촬영회_진행도  = 10
 ENDIF
 
 RETURN 1

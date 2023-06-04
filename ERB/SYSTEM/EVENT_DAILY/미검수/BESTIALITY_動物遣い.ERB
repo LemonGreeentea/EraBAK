@@ -9,6 +9,10 @@ RETURN 30
 ;---------------------
 @EVENT_DAILY_BESTIALITY_DECISION()
 
+;미검수 OFF면 스킵
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
+
 SIF DVAR:동물써_발생플래그 == 3
 	RETURN 0
 

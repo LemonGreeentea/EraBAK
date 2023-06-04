@@ -8,6 +8,10 @@
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_LENDER_DECISION()
+;미검수 OFF면 스킵
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
+	
 SIF DVAR:대금업자_발생플래그 == -1
 	RETURN 0
 

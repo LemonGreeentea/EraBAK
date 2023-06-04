@@ -13,7 +13,9 @@ RETURN 50
 @EVENT_DAILY_TERRITORY_LOST_SPOT_DECISION()
 #DIM 마요이
 마요이 = GET_CITYNUMBER("마요이가")
-
+;미검수 OFF면 스킵
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
 SIF 마요이 == -1
 	RETURN 0
 SIF 마요이 != CFLAG:MASTER:소속

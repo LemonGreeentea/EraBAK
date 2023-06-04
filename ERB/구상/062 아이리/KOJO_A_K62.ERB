@@ -711,25 +711,25 @@ IF SELECTCOM == 0
 		IF IS_COM_FIRST()
 			;연모
 			IF TALENT:연모
-				;PRINTGORMW
+				PRINTFORMW 「좋아요, 좀 더 만져주세요」
 			;복종
 			ELSEIF TALENT:복종
-				;PRINTFORMW
+				PRINTFORMW 「%LOCALS:0%의 손길... 제가 감히 받아도 되는걸까요」
 			;그 이외
 			ELSE
-				;PRINTFORMW
+				PRINTFORMW 「제, 제가 해달라고 한거지만 뭔가 이상한 기분이네요」
 			ENDIF
 		;2회째 이후
 		ELSE
 			;연모
 			IF TALENT:연모
-				;PRINTGORMW
+				PRINTFORMW 「좋아요, 좀 더 만져주세요」
 			;복종
 			ELSEIF TALENT:복종
-				;PRINTFORMW
+				PRINTFORMW 「%LOCALS:0%의 손길... 제가 감히 받아도 되는걸까요」
 			;그 이외
 			ELSE
-				;PRINTFORMW
+				PRINTFORMW 「제, 제가 해달라고 한거지만 뭔가 이상한 기분이네요」
 			ENDIF
 		ENDIF
 	;이 캐릭터가 주도권을 가지고 있지 않다
@@ -743,8 +743,8 @@ IF SELECTCOM == 0
 				PRINTFORMW 아이리는 %ANAME(MASETER)%의 손놀림이 익숙하지 않은 것 같다.
 			;복종
 			ELSEIF TALENT:복종
-				PRINTFORMW 「우으... %LOCALS:0%, 어째서 제 몸을...」
-				PRINTFORML 아이리는 %ANAME(MASTER)%의 손길에 익숙하지 않은 듯 떨고 있다.
+				PRINTFORML 「우으... %LOCALS:0%, 어째서 제 몸을...」
+				PRINTFORMW 아이리는 %ANAME(MASTER)%의 손길에 익숙하지 않은 듯 떨고 있다.
 			;그 이외
 			ELSE
 				PRINTFORMW 「햐앗... 뭐, 뭐하시는 건가요?!」
@@ -756,13 +756,13 @@ IF SELECTCOM == 0
 		ELSE
 			;연모
 			IF TALENT:연모
-				;PRINTGORMW
+				PRINTFORMW 「햐아... 좀 더 만져주세요」
 			;복종
 			ELSEIF TALENT:복종
-				;PRINTFORMW
+				PRINTFORMW 「우으... %LOCALS:0% 기분 좋아요」
 			;그 이외
 			ELSE
-				;PRINTFORMW
+				PRINTFORMW 「%LOCALS:0%의 손길 야해요...」
 			ENDIF
 		ENDIF
 	ENDIF
@@ -779,13 +779,13 @@ IF SELECTCOM == 1
 		IF IS_COM_FIRST()
 			;연모
 			IF TALENT:연모
-				;PRINTGORMW
+				PRINTFORMW 「」
 			;복종
 			ELSEIF TALENT:복종
-				;PRINTFORMW
+				PRINTFORMW 「」
 			;그 이외
 			ELSE
-				;PRINTFORMW 
+				PRINTFORMW 「」
 			ENDIF
 		;2회째 이후
 		ELSE
@@ -1793,113 +1793,154 @@ ENDIF
 ;정상위(타겟)
 ;-------------------------------------------------
 IF SELECTCOM == 30
-	;이 캐릭터가 주도권을 가지고 있다
-	IF IS_INITIATIVE(TARGET)
-		;처음
-		IF IS_COM_FIRST()
-			;처녀
-			IF TALENT:처녀
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
-				ELSE
-					PRINTFORMW 「우으... %LOCALS:0%... 이거 들어갈 수 있을까요?」
-					PRINTFORMW 아이리의 음부에 %ANAME(MASTER)%의 것을 갖다대자 긴장이 된 듯 몸이 굳어진다.
-					PRINTFORMW 「괜찮다고요...? 네, %LOCALS:0%만 믿을게요.」
-					PRINTFORML 「으긋...」
-					PRINTFORMW %ANAME(MASTER)%가 허리에 힘을 주자 끝부분이 천천히 아이리의 안에 파고들어간다.
-					PRINTFORMW 「아파...」
-					PRINTFORMW 아이리는 처녀막이 찢어지는 감각이 아팠는지 눈물을 글썽인다.
-					PRINTFORMW 「우우... 잠시만 움직이지 말아주세요.」
-					PRINTFORMW 잠시동안 아이리를 달래주자 고통이 줄어들었는지 살짝 웃는다.
-					PRINTFORMW 「에헤헤... 이제 움직이셔도 될 거 같아요.」
-					PRINTFORMW 그 말을 듣고 허리를 흔들자 아이리는 눈을 감고 그 감각을 느끼고 있다.
-				ENDIF
-			;비처녀
+
+	;처녀
+	IF CFLAG:230 == 1
+		;연모 첫 섹스
+		IF TALENT:연모
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
 			ELSE
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
-				ELSE
-					PRINTFORMW 
-				ENDIF
+
 			ENDIF
-		;2회째 이후
+		;복종 첫 섹스
+		ELSEIF TALENT:복종
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
+			ELSE
+
+			ENDIF
+		;해당 캐릭터가 지배
+		ELSEIF TALENT:주인	
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
+			ELSE
+
+			ENDIF
+		;(선택)호감도가 -500에서 첫 섹스
+		;ELSEIF CFLAG:호감도 <= -500
+
+		;그 외 첫 섹스
 		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
-				;Ｖ감 Lv3 이상
-				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
-				ELSE
-					;PRINTFORMW 
-				ENDIF
-			;그 이외
-			ELSE
-				;Ｖ감 Lv3 이상
-				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
-				ELSE
-					;PRINTFORMW 
-				ENDIF
-			ENDIF
+			PRINTFORMW 「우으... %LOCALS:0%... 이거 들어갈 수 있을까요?」
+			PRINTFORMW 아이리의 음부에 %ANAME(MASTER)%의 것을 갖다대자 긴장이 된 듯 몸이 굳어진다.
+			PRINTFORMW 「괜찮다고요...? 네, %LOCALS:0%만 믿을게요.」
+			PRINTFORML 「으긋...」
+			PRINTFORMW %ANAME(MASTER)%가 허리에 힘을 주자 끝부분이 천천히 아이리의 안에 파고들어간다.
+			PRINTFORMW 「아파...」
+			PRINTFORMW 아이리는 처녀막이 찢어지는 감각이 아팠는지 눈물을 글썽인다.
+			PRINTFORMW 「우우... 잠시만 움직이지 말아주세요.」
+			PRINTFORMW 잠시동안 아이리를 달래주자 고통이 줄어들었는지 살짝 웃는다.
+			PRINTFORMW 「에헤헤... 이제 움직이셔도 될 거 같아요.」
+			PRINTFORMW 그 말을 듣고 허리를 흔들자 아이리는 눈을 감고 그 감각을 느끼고 있다.
 		ENDIF
-	;이 캐릭터가 주도권을 가지고 있지 않다
+	;2회차 이후
 	ELSE
-		;처음
-		IF IS_COM_FIRST()
-			;처녀
-			IF TALENT:처녀
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
+		;연모
+		IF TALENT:연모
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
 				ELSE
-					PRINTFORMW 「우으... %LOCALS:0%... 이거 들어갈 수 있을까요?」
-					PRINTFORMW 아이리의 음부에 %ANAME(MASTER)%의 것을 갖다대자 긴장이 된 듯 몸이 굳어진다.
-					PRINTFORMW 「괜찮다고요...? 네, %LOCALS:0%만 믿을게요.」
-					PRINTFORML 「으긋...」
-					PRINTFORMW %ANAME(MASTER)%가 허리에 힘을 주자 끝부분이 천천히 아이리의 안에 파고들어간다.
-					PRINTFORMW 「아파...」
-					PRINTFORMW 아이리는 처녀막이 찢어지는 감각이 아팠는지 눈물을 글썽인다.
-					PRINTFORMW 「우우... 잠시만 움직이지 말아주세요.」
-					PRINTFORMW 잠시동안 아이리를 달래주자 고통이 줄어들었는지 살짝 웃는다.
-					PRINTFORMW 「에헤헤... 이제 움직이셔도 될 거 같아요.」
-					PRINTFORMW 그 말을 듣고 허리를 흔들자 아이리는 눈을 감고 그 감각을 느끼고 있다.
+				
 				ENDIF
-			;비처녀
+			;실행자가 주도권
 			ELSE
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
 				ELSE
-					PRINTFORMW 「우으... %LOCALS:0%... 이거 들어갈 수 있을까요?」
+				
 				ENDIF
 			ENDIF
-		;2회째 이후
-		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
-				;Ｖ감 Lv3 이상
+		;복종
+		ELSEIF TALENT:복종
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
 				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
 				ENDIF
-			;그 이외
+			;실행자가 주도권
 			ELSE
-				;Ｖ감 Lv3 이상
+				;V감도 3 이상
 				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
+				
+				;V감도 2 이하
 				ELSE
-					PRINTFORMW 아이리의 안을 오가며 질의 감촉을 느꼈다.
+				
+				ENDIF
+			ENDIF
+		;대상이 주인인 정상위
+		ELSEIF TALENT:주인
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
+				ENDIF
+			;실행자가 주도권
+			ELSE
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
+				ENDIF
+			ENDIF
+		;(선택)호감도가 -500에서 첫 섹스
+		;ELSEIF CFLAG:호감도 <= -500
+
+		;그 외
+		ELSE
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
+				ENDIF
+			;실행자가 주도권
+			ELSE
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+					SELECTCASE RAND:4
+						CASE 0
+							PRINTFORMW 아이리는 아직 익숙하지 않은 듯 눈을 감고 %ANAME(MASTER)%의 물건을 느끼고 있다.
+						CASE 1
+							PRINTFORMW 약한 부분에 닿았는지 아이리는 움찔 하고 질내를 꽉 조였다
+							PRINTFORMW 「햐앗... 방금... 오싹해져서... 우으...」
+						CASE 2
+							PRINTFORMW 「제 안쪽 어떠신가요?」
+							PRINTFORMW 「흣.. 하... 저는 아직 잘 모르겠어요」
+						CASE 3
+							PRINTFORMW 「하아... 흣.. 하아...」
+						CASE 4
+							PRINTFORMW 아이리의 안을 오가며 질의 감촉을 느꼈다.
+							PRINTFORMW 「읏... 하아... 안쪽이 이상해요」
+					ENDSELECT
 				ENDIF
 			ENDIF
 		ENDIF
@@ -1907,97 +1948,141 @@ IF SELECTCOM == 30
 	RETURN 0
 ENDIF
 
+
 ;-------------------------------------------------
 ;후배위(타겟)
 ;-------------------------------------------------
 IF SELECTCOM == 31
-	;이 캐릭터가 주도권을 가지고 있다
-	IF IS_INITIATIVE(TARGET)
-		;처음
-		IF IS_COM_FIRST()
-			;처녀
-			IF TALENT:처녀
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
-				ELSE
-					;PRINTFORMW 
-				ENDIF
-			;비처녀
+
+	;처녀
+	IF CFLAG:230 == 1
+		;연모 첫 섹스
+		IF TALENT:연모
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
 			ELSE
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
-				ELSE
-					;PRINTFORMW 
-				ENDIF
+
 			ENDIF
-		;2회째 이후
-		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
-				;Ｖ감 Lv3 이상
-				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
-				ELSE
-					;PRINTFORMW 
-				ENDIF
-			;그 이외
+		;복종 첫 섹스
+		ELSEIF TALENT:복종
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
 			ELSE
-				;Ｖ감 Lv3 이상
-				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
-				ELSE
-					;PRINTFORMW 
-				ENDIF
+
+			ENDIF
+		;해당 캐릭터가 지배
+		ELSEIF TALENT:주인	
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
+			ELSE
+
+			ENDIF
+		;(선택)호감도가 -500에서 첫 섹스
+		;ELSEIF CFLAG:호감도 <= -500
+
+		;그 외 첫 섹스
+		ELSE
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
+			ELSE
+
 			ENDIF
 		ENDIF
-	;이 캐릭터가 주도권을 가지고 있지 않다
+	;2회차 이후
 	ELSE
-		;처음
-		IF IS_COM_FIRST()
-			;처녀
-			IF TALENT:처녀
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
+		;연모
+		IF TALENT:연모
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
 				ENDIF
-			;비처녀
+			;실행자가 주도권
 			ELSE
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
 				ENDIF
 			ENDIF
-		;2회째 이후
-		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
-				;Ｖ감 Lv3 이상
+		;복종
+		ELSEIF TALENT:복종
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
 				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
 				ENDIF
-			;그 이외
+			;실행자가 주도권
 			ELSE
-				;Ｖ감 Lv3 이상
+				;V감도 3 이상
 				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
+				ENDIF
+			ENDIF
+		;대상이 주인
+		ELSEIF TALENT:주인
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
+				ENDIF
+			;실행자가 주도권
+			ELSE
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
+				ENDIF
+			ENDIF
+		;(선택)호감도가 -500에서 첫 섹스
+		;ELSEIF CFLAG:호감도 <= -500
+
+		;그 외
+		ELSE
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
+				ENDIF
+			;실행자가 주도권
+			ELSE
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
 				ENDIF
 			ENDIF
 		ENDIF
@@ -2009,93 +2094,136 @@ ENDIF
 ;대면좌위(타겟)
 ;-------------------------------------------------
 IF SELECTCOM == 32
-	;이 캐릭터가 주도권을 가지고 있다
-	IF IS_INITIATIVE(TARGET)
-		;처음
-		IF IS_COM_FIRST()
-			;처녀
-			IF TALENT:처녀
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
-				ELSE
-					;PRINTFORMW 
-				ENDIF
-			;비처녀
+
+	;처녀
+	IF CFLAG:230 == 1
+		;연모 첫 섹스
+		IF TALENT:연모
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
 			ELSE
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
-				ELSE
-					;PRINTFORMW 
-				ENDIF
+
 			ENDIF
-		;2회째 이후
-		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
-				;Ｖ감 Lv3 이상
-				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
-				ELSE
-					;PRINTFORMW 
-				ENDIF
-			;그 이외
+		;복종 첫 섹스
+		ELSEIF TALENT:복종
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
 			ELSE
-				;Ｖ감 Lv3 이상
-				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
-				ELSE
-					;PRINTFORMW 
-				ENDIF
+
+			ENDIF
+		;해당 캐릭터가 지배
+		ELSEIF TALENT:주인	
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
+			ELSE
+
+			ENDIF
+		;(선택)호감도가 -500에서 첫 섹스
+		;ELSEIF CFLAG:호감도 <= -500
+
+		;그 외 첫 섹스
+		ELSE
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
+			ELSE
+
 			ENDIF
 		ENDIF
-	;이 캐릭터가 주도권을 가지고 있지 않다
+	;2회차 이후
 	ELSE
-		;처음
-		IF IS_COM_FIRST()
-			;처녀
-			IF TALENT:처녀
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
+		;연모
+		IF TALENT:연모
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
 				ENDIF
-			;비처녀
+			;실행자가 주도권
 			ELSE
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
 				ENDIF
 			ENDIF
-		;2회째 이후
-		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
-				;Ｖ감 Lv3 이상
+		;복종
+		ELSEIF TALENT:복종
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
 				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
 				ENDIF
-			;그 이외
+			;실행자가 주도권
 			ELSE
-				;Ｖ감 Lv3 이상
+				;V감도 3 이상
 				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
+				ENDIF
+			ENDIF
+		;대상이 주인
+		ELSEIF TALENT:주인
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
+				ENDIF
+			;실행자가 주도권
+			ELSE
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
+				ENDIF
+			ENDIF
+		;(선택)호감도가 -500에서 첫 섹스
+		;ELSEIF CFLAG:호감도 <= -500
+
+		;그 외
+		ELSE
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
+				ENDIF
+			;실행자가 주도권
+			ELSE
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
 				ENDIF
 			ENDIF
 		ENDIF
@@ -2107,93 +2235,136 @@ ENDIF
 ;배면좌위(타겟)
 ;-------------------------------------------------
 IF SELECTCOM == 33
-	;이 캐릭터가 주도권을 가지고 있다
-	IF IS_INITIATIVE(TARGET)
-		;처음
-		IF IS_COM_FIRST()
-			;처녀
-			IF TALENT:처녀
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
-				ELSE
-					;PRINTFORMW 
-				ENDIF
-			;비처녀
+
+	;처녀
+	IF CFLAG:230 == 1
+		;연모 첫 섹스
+		IF TALENT:연모
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
 			ELSE
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
-				ELSE
-					;PRINTFORMW 
-				ENDIF
+
 			ENDIF
-		;2회째 이후
-		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
-				;Ｖ감 Lv3 이상
-				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
-				ELSE
-					;PRINTFORMW 
-				ENDIF
-			;그 이외
+		;복종 첫 섹스
+		ELSEIF TALENT:복종
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
 			ELSE
-				;Ｖ감 Lv3 이상
-				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
-				ELSE
-					;PRINTFORMW 
-				ENDIF
+
+			ENDIF
+		;해당 캐릭터가 지배
+		ELSEIF TALENT:주인	
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
+			ELSE
+
+			ENDIF
+		;(선택)호감도가 -500에서 첫 섹스
+		;ELSEIF CFLAG:호감도 <= -500
+
+		;그 외 첫 섹스
+		ELSE
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
+			ELSE
+
 			ENDIF
 		ENDIF
-	;이 캐릭터가 주도권을 가지고 있지 않다
+	;2회차 이후
 	ELSE
-		;처음
-		IF IS_COM_FIRST()
-			;처녀
-			IF TALENT:처녀
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
+		;연모
+		IF TALENT:연모
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
 				ENDIF
-			;비처녀
+			;실행자가 주도권
 			ELSE
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
 				ENDIF
 			ENDIF
-		;2회째 이후
-		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
-				;Ｖ감 Lv3 이상
+		;복종
+		ELSEIF TALENT:복종
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
 				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
 				ENDIF
-			;그 이외
+			;실행자가 주도권
 			ELSE
-				;Ｖ감 Lv3 이상
+				;V감도 3 이상
 				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
+				ENDIF
+			ENDIF
+		;대상이 주인
+		ELSEIF TALENT:주인
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
+				ENDIF
+			;실행자가 주도권
+			ELSE
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
+				ENDIF
+			ENDIF
+		;(선택)호감도가 -500에서 첫 섹스
+		;ELSEIF CFLAG:호감도 <= -500
+
+		;그 외
+		ELSE
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
+				ENDIF
+			;실행자가 주도권
+			ELSE
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
 				ENDIF
 			ENDIF
 		ENDIF
@@ -2205,93 +2376,136 @@ ENDIF
 ;기승위(타겟)
 ;-------------------------------------------------
 IF SELECTCOM == 34
-	;이 캐릭터가 주도권을 가지고 있다
-	IF IS_INITIATIVE(TARGET)
-		;처음
-		IF IS_COM_FIRST()
-			;처녀
-			IF TALENT:처녀
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
-				ELSE
-					;PRINTFORMW 
-				ENDIF
-			;비처녀
+
+	;처녀
+	IF CFLAG:230 == 1
+		;연모 첫 섹스
+		IF TALENT:연모
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
 			ELSE
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
-				ELSE
-					;PRINTFORMW 
-				ENDIF
+
 			ENDIF
-		;2회째 이후
-		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
-				;Ｖ감 Lv3 이상
-				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
-				ELSE
-					;PRINTFORMW 
-				ENDIF
-			;그 이외
+		;복종 첫 섹스
+		ELSEIF TALENT:복종
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
 			ELSE
-				;Ｖ감 Lv3 이상
-				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
-				ELSE
-					;PRINTFORMW 
-				ENDIF
+
+			ENDIF
+		;해당 캐릭터가 지배
+		ELSEIF TALENT:주인	
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
+			ELSE
+
+			ENDIF
+		;(선택)호감도가 -500에서 첫 섹스
+		;ELSEIF CFLAG:호감도 <= -500
+
+		;그 외 첫 섹스
+		ELSE
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
+			ELSE
+
 			ENDIF
 		ENDIF
-	;이 캐릭터가 주도권을 가지고 있지 않다
+	;2회차 이후
 	ELSE
-		;처음
-		IF IS_COM_FIRST()
-			;처녀
-			IF TALENT:처녀
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
+		;연모
+		IF TALENT:연모
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
 				ENDIF
-			;비처녀
+			;실행자가 주도권
 			ELSE
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
 				ENDIF
 			ENDIF
-		;2회째 이후
-		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
-				;Ｖ감 Lv3 이상
+		;복종
+		ELSEIF TALENT:복종
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
 				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
 				ENDIF
-			;그 이외
+			;실행자가 주도권
 			ELSE
-				;Ｖ감 Lv3 이상
+				;V감도 3 이상
 				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
+				ENDIF
+			ENDIF
+		;대상이 주인
+		ELSEIF TALENT:주인
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
+				ENDIF
+			;실행자가 주도권
+			ELSE
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
+				ENDIF
+			ENDIF
+		;(선택)호감도가 -500에서 첫 섹스
+		;ELSEIF CFLAG:호감도 <= -500
+
+		;그 외
+		ELSE
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
+				ENDIF
+			;실행자가 주도권
+			ELSE
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
 				ENDIF
 			ENDIF
 		ENDIF
@@ -2303,93 +2517,136 @@ ENDIF
 ;배면 기승위(타겟)
 ;-------------------------------------------------
 IF SELECTCOM == 35
-	;이 캐릭터가 주도권을 가지고 있다
-	IF IS_INITIATIVE(TARGET)
-		;처음
-		IF IS_COM_FIRST()
-			;처녀
-			IF TALENT:처녀
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
-				ELSE
-					;PRINTFORMW 
-				ENDIF
-			;비처녀
+
+	;처녀
+	IF CFLAG:230 == 1
+		;연모 첫 섹스
+		IF TALENT:연모
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
 			ELSE
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
-				ELSE
-					;PRINTFORMW 
-				ENDIF
+
 			ENDIF
-		;2회째 이후
-		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
-				;Ｖ감 Lv3 이상
-				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
-				ELSE
-					;PRINTFORMW 
-				ENDIF
-			;그 이외
+		;복종 첫 섹스
+		ELSEIF TALENT:복종
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
 			ELSE
-				;Ｖ감 Lv3 이상
-				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
-				ELSE
-					;PRINTFORMW 
-				ENDIF
+
+			ENDIF
+		;해당 캐릭터가 지배
+		ELSEIF TALENT:주인	
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
+			ELSE
+
+			ENDIF
+		;(선택)호감도가 -500에서 첫 섹스
+		;ELSEIF CFLAG:호감도 <= -500
+
+		;그 외 첫 섹스
+		ELSE
+			;대상이 주도권 가짐
+			IF IS_INITIATIVE(TARGET)
+
+			;실행자가 주도권 가짐
+			ELSE
+
 			ENDIF
 		ENDIF
-	;이 캐릭터가 주도권을 가지고 있지 않다
+	;2회차 이후
 	ELSE
-		;처음
-		IF IS_COM_FIRST()
-			;처녀
-			IF TALENT:처녀
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
+		;연모
+		IF TALENT:연모
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
 				ENDIF
-			;비처녀
+			;실행자가 주도권
 			ELSE
-				;연모 or 복종
-				IF TALENT:연모 || TALENT:복종
-					;PRINTFORMW 
-				;그 이외
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
 				ENDIF
 			ENDIF
-		;2회째 이후
-		ELSE
-			;연모 or 복종
-			IF TALENT:연모 || TALENT:복종
-				;Ｖ감 Lv3 이상
+		;복종
+		ELSEIF TALENT:복종
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
 				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
 				ENDIF
-			;그 이외
+			;실행자가 주도권
 			ELSE
-				;Ｖ감 Lv3 이상
+				;V감도 3 이상
 				IF ABL:Ｖ감 >= 3
-					;PRINTFORMW 
-				;Ｖ감 Lv3 미만
+				
+				;V감도 2 이하
 				ELSE
-					;PRINTFORMW 
+				
+				ENDIF
+			ENDIF
+		;대상이 주인
+		ELSEIF TALENT:주인
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
+				ENDIF
+			;실행자가 주도권
+			ELSE
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
+				ENDIF
+			ENDIF
+		;(선택)호감도가 -500에서 첫 섹스
+		;ELSEIF CFLAG:호감도 <= -500
+
+		;그 외
+		ELSE
+			;대상이 주도권
+			IF IS_INITIATIVE(TARGET)
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
+				ENDIF
+			;실행자가 주도권
+			ELSE
+				;V감도 3 이상
+				IF ABL:Ｖ감 >= 3
+				
+				;V감도 2 이하
+				ELSE
+				
 				ENDIF
 			ENDIF
 		ENDIF
@@ -12134,23 +12391,4 @@ SELECTCASE TCVAR:0
 	CASE 4
 		;PRINTFORMW 
 ENDSELECT
-RESETCOLOR
-
-
-
-
-
-
-@KOJO_K62_COLOR(대사, 종류)
-#DIMS 대사
-#DIM 종류
-
-SETCOLOR 0x7CCEC3
-IF 종류 == 1
-	PRINTFORMW %대사%
-ELSEIF 종류 == 2
-	PRINTFORML %대사%
-ELSE
-	PRINTFORM %대사%
-ENDIF
 RESETCOLOR

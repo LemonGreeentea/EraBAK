@@ -13,6 +13,22 @@
 ;=================================================
 @KOJO_TRAIN_START_K62
 
+;커맨드 시작 시 처녀 여부 확인
+SIF TALENT:처녀
+	CFLAG:230 = 1
+
+;커맨드 시작 시 애널처녀 여부 확인
+SIF TALENT:애널처녀
+	CFLAG:231 = 1
+
+;커맨드 시작 시 키스미경험 여부 확인
+SIF TALENT:키스미경험
+	CFLAG:232 = 1
+
+;커맨드 시작 시 동정 여부 확인
+SIF TALENT:동정
+	CFLAG:232 = 1
+
 ;=================================================
 ;●종료시
 ;※상황에 관계없이 항상 실행된다. 취급 주의※
@@ -36,9 +52,45 @@
 ;※상황에 관계없이 항상 실행된다. 취급 주의※
 ;=================================================
 @KOJO_COM_AFTER_K62
+
+;커맨드 시작 시 처녀 여부 확인
+SIF !TALENT:처녀
+	CFLAG:230 = 0
+
+;커맨드 시작 시 애널처녀 여부 확인
+SIF !TALENT:애널처녀
+	CFLAG:231 = 0
+
+;커맨드 시작 시 키스미경험 여부 확인
+SIF !TALENT:키스미경험
+	CFLAG:232 = 0
+
+;커맨드 시작 시 동정 여부 확인
+SIF !TALENT:동정
+	CFLAG:232 = 0
+
 ;[공허]상태의 경우, 입이 막히고 있는 경우는 구상을 표시하지 않는다
 IF TALENT:공허 || IS_EQUIP_CONTINUE(TARGET, "입장착")
 	RETURN 0
+ENDIF
+
+SETCOLOR 0x7CCEC3
+
+;------------------------------------------------
+;호칭의 설정
+;------------------------------------------------
+;노예면 '주인님'이라고 부름
+IF IS_SLAVE(TARGET)
+	LOCALS:0 = 주인님
+;아나타가 [선생]이면 '선생님'이라고 부름
+ELSEIF TALENT:MASTER:선생 == 1
+	LOCALS:0 = 선생님
+;친구라면 ~쨩으로 부름
+ELSEIF TALENT:친구
+	LOCALS:0 = %ANAME(MASTER)%쨩
+;그 외엔 이름으로 부름
+ELSE
+	LOCALS:0 = %ANAME(MASTER)%
 ENDIF
 
 ;-------------------------------------------------
@@ -48,21 +100,48 @@ ENDIF
 ;처음Ｃ절정
 ;-------------------------------------------------
 IF NOWEX:Ｃ절정 > 0
+	;첫 C절정
 	IF CFLAG:220 == 0
 		CFLAG:220 = 1
-		;PRINTFORMW 
+		PRINTFORMW C 첫절정 
+	;그 이후 절정
+	ELSE
+	PRINTFORMW c 절정
 	ENDIF
 ENDIF
 
 ;-------------------------------------------------
-;처음Ｖ절정
+;Ｖ절정
 ;-------------------------------------------------
 IF NOWEX:Ｖ절정 > 0
+	;첫 V절정
 	IF CFLAG:221 == 0
 		CFLAG:221 = 1
 		PRINTFORMW 「아앗.. 와요... 이상한게 와요...」
 		PRINTFORMW 아이리는 질로 절정에 달했다.
+	ELSE
+		SELECTCASE RAND:3
+			CASE 0
+				PRINTFORML 아이리는 몸을 떨며 절정했다
+				PRINTFORMW 「흐읏.... 후으...」
+			CASE 1
+				PRINTFORML 「햐앗.. 가요... 가버려요...」
+				PRINTFORMW 아이리의 질내가 확 조이면서 절정에 달했다.
+			CASE 2
+				IF TALENT:연모
+					PRINTFORML 「하아 하앗... %LOCALS:0%의 자지로 가버려요...♡」
+					PRINTFORMW 아이리는 %ANAME(MASTER)%의 자지를 조이면서 가버렸다
+				ELSEIF TALENT:복종
+					PRINTFORML 「우으... %LOCALS:0%의 자지로 가버려요..」
+					PRINTFORMW 아이리는 %ANAME(MASTER)%의 피스톤질에 가버렸다
+				ELSE
+					PRINTFORML 「햐앗... 뭔가 와요...」
+					PRINTFORML 아이리는 %ANAME(MASTER)%의 자지로 가버렸다
+					PRINTFORML 「크으읏... 하아... 하아...」
+				ENDIF
+		ENDSELECT
 	ENDIF
+
 ENDIF
 
 ;-------------------------------------------------
@@ -94,6 +173,8 @@ IF NOWEX:Ｍ절정 > 0
 		;PRINTFORMW 
 	ENDIF
 ENDIF
+
+RESETCOLOR
 
 ;=================================================
 ;●단체 엔딩 관계

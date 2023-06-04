@@ -9,7 +9,9 @@ RETURN (DVAR:몽마의꿈_발생플래그 || DVAR:몽마의꿈그후_발생플�
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_SUCCUBUS_DECISION()
-
+;미검수 OFF면 스킵
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
 SIF DVAR:몽마의꿈_발생플래그 == -1
 	RETURN 0
 	

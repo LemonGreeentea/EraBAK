@@ -11,6 +11,10 @@ RETURN 40
 ;---------------------
 @EVENT_DAILY_SABORI_TRAINER_DECISION()
 ;RETURN DAY >= 15
+;스미레가 등장 상태일 때
+SIF CFLAG:129:특수상태 != 0
+	RETURN 0
+;같은 소속의 농땡이마왕 캐락터 확인
 FOR LOCAL, 0, CHARANUM
 	SIF CFLAG:MASTER:소속 == CFLAG:LOCAL:소속 && TALENT:LOCAL:농땡이마왕
 		RETURN 1
@@ -39,10 +43,10 @@ RETURN 데일리_장르_트래이너
 
 대금 = 20000
 
-IF DVAR:소질트래이너_발생플래그 == 0
-	PRINTFORML %조사처리(ANAME(MASTER),"가")% 일을 하고 있으면, 당번인 학생이 손님이 왔다고 한다.
+IF DVAR:소질트래이너_발생플래그 == 0 && CFLAG:129:17 == 0
+	PRINTFORML %조사처리(ANAME(MASTER),"가")% 일을 하던 중, 어떤 학생이 손님으로 왔다고 한다.
 	PRINTFORML 들어보니, 「건강한 학생이 왔다」라고 한다
-	PRINTFORMW 얼마나 건강한 것일까 생각한 %조사처리(ANAME(MASTER),"는")%, 만나기로 해 보았다
+	PRINTFORMW 건강한게 뭘까 생각한 %조사처리(ANAME(MASTER),"는")%, 만나기로 해 보았다
 	PRINTFORML ·
 	PRINTFORML ·
 	PRINTFORML ·
@@ -54,8 +58,11 @@ IF DVAR:소질트래이너_발생플래그 == 0
 ELSE
 	PRINTFORML 「아아,   또 만났군요.」
 	PRINTFORMW 「기억하고 계십니까?   트레이닝 클럽의 스미레입니다.」
-
+	PRINTFORML 「【농땡이마왕】 인 학생이 있을까요?   저는 그러한 사람의 근성을 근육으로 트레이닝하고 있습니다.」
+	PRINTFORML 「농땡이마왕의 학생은 좀처럼 성장하지 않아서 말썽입니다. 매일매일 단련해야 하죠.」
 ENDIF
+;스미레와 만남 처리
+CFLAG:129:17 = 1
 CALL ICPRINT(@"「가격은 돈<{대금}>입니다.", "W", 칼라_주의)
 PRINTFORMW 「좋은 이야기라고 생각하시지 않습니까?」
 PRINTFORML 이 학생이 가져온 이야기 자체는 상당히 괜찮았다.
@@ -92,15 +99,14 @@ PRINTFORMW ·
 PRINTFORMW ·
 SELECTCASE RAND:3
 	CASE 0	
-		PRINTFORMW 「좋은가!!!!!!!!!!!!!   근육이다!!!!!!!!!!!!!  근육이 모두야!!!!!!!」
-		PRINTFORMW 「근육에 모두를 바쳐라!!!!!!!!!  워!!!!!   머슬 머슬!!!!!!!!!!!!!」
+		PRINTFORMW 「잽!! 펀치!!! 잽!!!! 펀치!!!!! 라스트 원!!!!!」
+		PRINTFORMW 「점프!! 흣!!!  하!!!! 점프!! 흣!!! 하!!!!」
 	CASE 1
-		PRINTFORMW 「좋은가!!!!!!!!!!!   근육이 요령이다!!!!!!!!!!   힘내라!!!!!!! 1」
-		PRINTFORMW 「가진 근육을 모두 사용해라!!!!!!!!!!!!!!!   !!!!!!!!!」
+		PRINTFORMW 「잽!!! 펀치!!! 훅!!!」
+		PRINTFORMW 「사이드 킥!!! 잽!!! 펀치!! 점프!!!!!」
 	CASE 2
-		PRINTFORMW 「근육!!!!!!!!  육!!!!!!!!   머슬!!!!!!!!   우우!!!!!」
-		PRINTFORMW 「어떻게 했다!!!!   소리가 작아!!!!!!!!   이봐요!!!!   부끄러워하지 말라고!!!!!!!」
-		PRINTFORMW 「근육!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!」
+		PRINTFORMW 「잽!!! 사이트킥!!!  점프!!! 킥!!!!」
+		PRINTFORMW 「목소리가 작다!!!!!」
 ENDSELECT
 PRINTFORMW ·
 PRINTFORMW ·

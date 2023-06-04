@@ -29,6 +29,10 @@ RETURN 데일리_장르_에로
 @EVENT_DAILY_ALCOHOL()
 #DIM 대상
 
+;미검수 OFF면 스킵
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
+
 PRINTFORML 조금 시간이 생겼다
 PRINTFORMW 수중에는 술이 있지만…어떻게 하지?
 CALL ASK_MULTI("부하와 마신다" ,"병사들과 연회를 연다" ,"동료를 유혹한다" ,"혼자서 한가로이 마신다")

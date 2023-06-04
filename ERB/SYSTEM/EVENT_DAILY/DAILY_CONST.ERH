@@ -43,8 +43,7 @@
 #DIM CONST 보은_캐릭터ID = 75;추가분
 #DIM CONST 보은_데이트 = 76;추가분
 
-;마따끄
-#DIM CONST 마따끄_실행여부 = 0
+
 
 ;내기
 #DIM CONST 내기_첫회실행이끝난상태 = 80
@@ -171,11 +170,11 @@
 ;마요이가데이리
 #DIM CONST 고양이너무좋아_발생플래그 = 520
 
-;AV촬영 데일리
-#DIM CONST AV촬영_중독진행도 = 530
-#DIM CONST AV촬영_진행도 = 531
-#DIM CONST AV촬영_대상ID = 532
-#DIM CONST AV촬영_발생플래그 = 533
+;촬영회 데일리
+#DIM CONST 촬영회_중독진행도 = 530
+#DIM CONST 촬영회_진행도 = 531
+#DIM CONST 촬영회_대상ID = 532
+#DIM CONST 촬영회_발생플래그 = 533
 
 ;원조교제_발생 플래그 데일리
 #DIM CONST 원조교제_발생플래그 = 540
@@ -224,3 +223,6 @@
 #DIM CONST 영내훌쩍에로의여행_섹스옥션 = 615
 #DIM CONST 영내훌쩍에로의여행_유곽의창녀 = 616
 #DIM CONST 영내훌쩍에로의여행_슬럼가의창녀 = 617
+
+;마따끄
+#DIM CONST 마따끄_실행여부 = 621

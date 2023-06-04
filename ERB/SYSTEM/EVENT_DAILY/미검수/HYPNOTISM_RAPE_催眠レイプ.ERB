@@ -8,6 +8,9 @@ RETURN (DVAR:악마의최면술 == 2 ? 150 # 30)
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_HYPNOTISM_RAPE_DECISION()
+;미검수 OFF면 스킵
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
 SIF DAY < 10
 	RETURN 0
 ;MASTER가 페니스 있음

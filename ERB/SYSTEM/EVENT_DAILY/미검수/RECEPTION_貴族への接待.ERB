@@ -8,6 +8,9 @@ RETURN 20
 ;확률 이외의 발생 판정
 ;---------------------
 @EVENT_DAILY_RECEPTION_DECISION()
+;미검수 OFF면 스킵
+SIF FLAG:데일리이벤트_미검수 == 0
+	RETURN 0
 ;주인공이 군주가 아닌 경우
 SIF GET_COUNTRY_BOSS(CFLAG:MASTER:소속) == MASTER
 	RETURN 0

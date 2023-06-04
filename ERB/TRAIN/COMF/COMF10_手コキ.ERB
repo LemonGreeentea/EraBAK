@@ -1,4 +1,4 @@
-﻿;자위
+﻿;수음
 
 ;-------------------------------------------------
 ;커맨드 명칭
@@ -6,11 +6,11 @@
 @COM_NAME10
 
 IF MTAR_NUM > 1
-	LOCALS:0 = 동시대딸
+	LOCALS:0 = 동시수음
 ELSEIF MPLY_NUM == 3
-	LOCALS:0 = Ｔ대딸
+	LOCALS:0 = 트리플수음
 ELSEIF MPLY_NUM == 2
-	LOCALS:0 = Ｗ대딸
+	LOCALS:0 = 더블수음
 ELSE
 	LOCALS:1 = 
 	LOCALS:2 = 
@@ -34,7 +34,7 @@ ELSE
 				LOCALS:2 = 배면기승위
 		ENDSELECT
 	ENDIF
-	LOCALS:0 = 대딸%LOCALS:1% %LOCALS:2%
+	LOCALS:0 = 수음%LOCALS:1% %LOCALS:2%
 ENDIF
 
 RESULTS:0 = %LOCALS:0%한다
@@ -42,7 +42,7 @@ RESULTS:1 = %LOCALS:0%당한다
 RESULTS:2 = %LOCALS:0%시킨다
 RESULTS:3 = %LOCALS:0%된다
 RESULTS:4 = %LOCALS:0%시킨다
-RESULTS:5 = %LOCALS:0%과시하고
+RESULTS:5 = %LOCALS:0%과시한다
 
 ;-------------------------------------------------
 ;선택 가부 판정

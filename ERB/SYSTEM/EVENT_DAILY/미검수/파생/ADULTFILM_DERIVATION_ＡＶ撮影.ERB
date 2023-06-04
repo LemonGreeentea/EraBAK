@@ -11,14 +11,14 @@ RETURN DAILY_GET_DISABLE_CONFIG("ADULTFILM")
 ;---------------------
 @EVENT_DAILY_DERIVATION_ADULTFILM_DERIVATION_DECISION()
 #DIM 대상
-대상 = ID_TO_CHARA(DVAR:AV촬영_대상ID)
+대상 = ID_TO_CHARA(DVAR:촬영회_대상ID)
 
 ;이니까 내가 이런 곳기술되지 않아 것이다
 ;본체 제작에 주력 하고 싶다
 IF 대상 == -1
-	DVAR:AV촬영_대상ID = 0
-	DVAR:AV촬영_중독진행도 = 0
-	DVAR:AV촬영_진행도 = 0
+	DVAR:촬영회_대상ID = 0
+	DVAR:촬영회_중독진행도 = 0
+	DVAR:촬영회_진행도 = 0
 	RETURN 0
 ENDIF
 
@@ -26,13 +26,13 @@ SIF CFLAG:대상:포로처 != 0
 	RETURN 0
 
 IF CFLAG:대상:특수상태 == 특수상태_사망
-	DVAR:AV촬영_대상ID = 0
-	DVAR:AV촬영_중독진행도 = 0
-	DVAR:AV촬영_진행도 = 0
+	DVAR:촬영회_대상ID = 0
+	DVAR:촬영회_중독진행도 = 0
+	DVAR:촬영회_진행도 = 0
 	RETURN 0
 ENDIF
 
-RETURN DVAR:AV촬영_진행도 == 10 && RAND:3 == 0
+RETURN DVAR:촬영회_진행도 == 10 && RAND:3 == 0
 
 ;---------------------
 ;본체
@@ -40,9 +40,9 @@ RETURN DVAR:AV촬영_진행도 == 10 && RAND:3 == 0
 @EVENT_DAILY_DERIVATION_ADULTFILM_DERIVATION()
 #DIM 대상
 
-대상 = ID_TO_CHARA(DVAR:AV촬영_대상ID)
+대상 = ID_TO_CHARA(DVAR:촬영회_대상ID)
 
-PRINTFORML %조사처리(ANAME(대상),"는")% 오늘도 AV촬영을 위해서(때문에) 불려 갔다
+PRINTFORML %조사처리(ANAME(대상),"는")% 오늘도 촬영회을 위해서(때문에) 불려 갔다
 PRINTFORMW 도망이고 싶지도 그렇게 말할 수도 없는, 무거운 발걸음으로 "일"에 향했다……
 PRINTFORML 
 SELECTCASE RAND:30
@@ -102,7 +102,7 @@ SELECTCASE RAND:30
 		CALL FUCK(대상, "Ｃ, Ｖ, Ｂ, Ｍ, 성교, 정애, 펠라티오, Ｖ성교", "키스상실, 처녀상실, CFLAG 감소, 성벽 취득, 질내사정, 구강사정", GET_SPERM_ID("AV남배우"), @"남배우의 \@RAND:2 ? 페니스 # 입술\@", "AV남배우", "", "촬영중의 화간")
 	CASE 6
 		PRINTFORMW 메이드 모습의 %조사처리(ANAME(대상),"가")% 있는 호사스러운 저택에서 가사를 하고 있다
-		PRINTFORML 물론 정말로 메이드가 되었을 것은 아니고 AV촬영을 위한 코스츔이다
+		PRINTFORML 물론 정말로 메이드가 되었을 것은 아니고 촬영회을 위한 코스츔이다
 		PRINTFORML %조사처리(ANAME(대상),"가")% 청소를 하고 있으면 주인님이 나타나, 갑자기 엉덩이를 비비고 왔다
 		PRINTFORMW 돌연의 일에 %조사처리(ANAME(대상),"는")% 흠칫 뛰어 올라 근처에 장식해 있던 항아리를 나누어 버렸다
 		PRINTFORML 격노한 주는 %조사처리(ANAME(대상),"를")% 침실에 데리고 들어가면, 벌이라고 칭해 침대에 붙들어매었다
@@ -316,9 +316,9 @@ SELECTCASE RAND:30
 		PRINTFORMW 촬영 후, 스스로의 자지러지는 모습과 아헤얼굴을 보여진 %조사처리(ANAME(대상),"는")% 참지 못하고 자궁이 쑤시는 것을 느꼈다
 		CALL FUCK(대상, "Ｃ, Ｖ, Ｂ, Ｍ, 봉사, 성교, 정애, 펠라티오, Ｖ성교", "키스상실, 처녀상실, CFLAG 감소, 성벽 취득, 질내사정, 구강사정", GET_SPERM_ID("AV남배우"), @"남배우의 \@RAND:2 ? 페니스 # 입술\@", "AV남배우", "", "촬영중의 화간")
 ENDSELECT
-DVAR:AV촬영_중독진행도 += RAND:3 + 1
+DVAR:촬영회_중독진행도 += RAND:3 + 1
 PRINTFORML 
-IF DVAR:AV촬영_중독진행도 >= 15 || GETBIT(TALENT:대상:음란계, 소질_음란_ＡＶ여배우)
+IF DVAR:촬영회_중독진행도 >= 15 || GETBIT(TALENT:대상:음란계, 소질_음란_ＡＶ여배우)
 	PRINTFORML %조사처리(ANAME(대상),"는")% 완전히 촬영되는 것을 빠져 버렸다
 	PRINTFORML 이미 위협해져는 아니고 스스로의 의사로 촬영을 바라는 것처럼 되어 있다
 	PRINTFORMW 그런 %ANAME(대상)%의 상태를 본 프로듀서로부터 이야기를 꺼내졌다
@@ -332,9 +332,9 @@ IF DVAR:AV촬영_중독진행도 >= 15 || GETBIT(TALENT:대상:음란계, 소질
 		CALL CHANGE_RELATION_C_TO_C(LOCAL, CFLAG:MASTER:소속, -50, 50)
 	NEXT
 	CALL COLOR_PRINTW("그 소문은 곧바로 퍼져, 타국의 평판은 크게 떨어지는 일이 되었다", 칼라_주의)
-	DVAR:AV촬영_중독진행도 = 0
-	DVAR:AV촬영_진행도 = 0
-	DVAR:AV촬영_대상ID = 0
+	DVAR:촬영회_중독진행도 = 0
+	DVAR:촬영회_진행도 = 0
+	DVAR:촬영회_대상ID = 0
 ENDIF
 
 RETURN 1
