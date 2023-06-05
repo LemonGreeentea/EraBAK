@@ -12,18 +12,27 @@ RETURN
 MAPID '= "KIVOTOS"
 
 @SCENARIO_INTRO_2
-PRINTFORML
-PRINTFORML
+PRINTFORML 
 PRINTFORMW
-PRINTFORMW 검은양복「장르는 뒤바뀌고 관계는 뒤틀린다.」
-PRINTFORMW 검은양복「더 이상 기적 같은 이야기는 없습니다.」
-PRINTFORMW 검은양복「반복되는 싸움.」
-PRINTFORMW 검은양복「강자는 약자를 약탈하고 지배한다.」
-PRINTFORMW 검은양복「이 혼란스러운 상황에서 당신은 어떤 선택을 하게될지...」
-PRINTFORMW 검은양복「이 혼란을 수습하고 영웅이 될 지,」
-PRINTFORMW 검은양복「몸과 마음이 타락해 악당이 될 지.」
-PRINTFORMW 검은양복「기대하도록 하겠습니다. 크크큭...」
-PRINTL
+PRINTFORML ☆ 게임 시작 전 설정
+PRINTFORML 
+PRINTFORML 1. 이미지를 표시하겠습니까?
+CALL ASK_YN
+IF RESULT == 0
+	FLAG:화상설정 = 1
+	PRINTFORMW 이미지를 표시합니다.
+ELSE
+	PRINTFORMW 이미지를 표시하지 않습니다.
+ENDIF
+CLEARLINE LINECOUNT
+CALL SINGLE_DRAWLINE
+PRINTFORML ☆ 시나리오 요약
+PRINTFORML 
+PRINTFORML 총학생회장의 실종으로 키보토스는 연일 혼란에 빠졌다.
+PRINTFORML 일곱 죄수의 탈옥과 생텀타워의 제어권 상실을 해결하고자 총학생회는 각 학교의 지도부를 호출하는데...
+PRINTFORML 
+PRINTFORML 
+CALL SINGLE_DRAWLINE
 
 ;랜덤 캐릭터는 선택에 맡긴다
 FLAG:OP랜덤캐릭터사용 = 0

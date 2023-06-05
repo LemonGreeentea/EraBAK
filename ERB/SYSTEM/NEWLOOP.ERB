@@ -26,6 +26,8 @@ ELSEIF RESULT == 0
 	RESTART
 ENDIF
 
+CALL START_SENSEI
+CALL START_SCHOOL
 CALL EXTRA_SETTING
 
 ;특수 세력의 설정
@@ -40,7 +42,7 @@ ENDIF
 
 CALL LEVEL_SETTING
 
-;CALL START_CONFIG_SETTING
+CALL START_CONFIG_SETTING
 
 ;여러가지 끝나고 나서의 리셋트 처리
 CALL NEWLOOP_ADDITIONAL_RESET_VARS
@@ -69,6 +71,32 @@ NEXT
 ; 소속, 학생 선생 설정
 ;-------------------------------
 @START_SENSEI
+CALL SINGLE_DRAWLINE
+PRINTFORML ☆ 당신의 신분을 선택해주세요
+;PRINTFORML 선생 : 전투 편성이 안되지만 여러가지 능력이 있다.
+;PRINTFORML 학생 : 키보토스의 일반적인 학생
+PRINTFORML
+CALL ASK_MULTI("선생", "학생", "선생도 학생도 아니다.")
+;선생
+IF RESULT == 0
+	TALENT:MASTER:학생 = 0
+	TALENT:MASTER:선생 = 1
+ELSEIF RESULT == 1
+	TALENT:MASTER:학생 = 1
+	TALENT:MASTER:선생 = 0
+ELSEIF RESULT == 2
+	TALENT:MASTER:학생 = 0
+	TALENT:MASTER:선생 = 0
+ENDIF
+
+@START_SCHOOL
+CALL SINGLE_DRAWLINE
+PRINTFORML 당신의 소속을 정해주세요.
+PRINTFORML
+PRINTFORML
+PRINTFORML 
+
+
 
 
 
@@ -91,10 +119,20 @@ ENDIF
 @SATRT_CONFIG_SETTING_EVENTBASIC
 PRINTFORMW 기본 설정으로 시작합니다.
 
+
+
+
+
 @START_CONFIG_SETTING_EVENTMANUALLY
 
 
+
+
+
 @START_CONFIG_SETTING_EVENTSAMPLE
+
+
+
 
 
 ;-------------------------------------
@@ -1002,7 +1040,7 @@ SELECTCASE 선택보너스
 		PRINTFORML (연모·종속 어느 쪽의 루트에서도 필요한 값인 것으로 편리합니다)
 	CASE 4
 		PRINTFORML 촉수를 취급할 수 있게 되는 소질 「신비지식」이라고, ＳＬＧ스테이터스 「신비」10살트로 합니까?
-		PRINTFORML (신비은 매우 단련하기 어렵기 때문에 10에서도 귀중합니다）
+		PRINTFORML (신비은 매우 단련하기 어렵기 때문에 10에서도 귀중합니다)
 	CASE 5
 		PRINTFORML  아이템 개발이 빨리 되어, 효과가 높아지는 소질 「기사」로 합니까?
 		PRINTFORML (많은 아이템은 개발→구입이라는 프로세스를 거치므로, 가져 두면 수수하게 편리합니다)
