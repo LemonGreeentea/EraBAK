@@ -203,6 +203,24 @@ SELECTCASE 대상
 			clothes = _의복
 		ENDIF
 
+	CASE 29
+		;노아(체육복)
+		IF CLOTH:옷대상:의상부위_상하의 == 9
+			clothes = _체육복
+		ELSE
+			clothes = _의복
+		ENDIF
+
+	CASE 30
+		;유우카(체육복)
+		IF CLOTH:옷대상:의상부위_상하의 == 9
+			clothes = _체육복
+		ELSEIF CLOTH:옷대상:의상부위_상하의 == 12
+			clothes = _샬레
+		ELSE
+			clothes = _의복
+		ENDIF
+
 	CASE 42
 		;아스나(바니걸, 교복) 
 		IF CLOTH:옷대상:의상부위_상하의 == 1

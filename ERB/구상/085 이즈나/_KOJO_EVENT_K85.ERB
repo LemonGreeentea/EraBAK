@@ -21,7 +21,7 @@ IF ARG == 1
 		PRINTFORMW 「에헤헤... 퍼스트 키스네요?」
 		PRINTFORMW 「주군과 사귀기 전까지도 언제해주시나 기다리고 있었어요」
 		RESETCOLOR
-		PRINTFORMW %조사처리(ANAME(MASTER),"은")% 이즈나가 소중했기에 지금껏 하지 않았다 답했다
+		CALL ASK_MULTI("이즈나를 생각해서 지금껏 기다렸어")
 		SETCOLOR 칼라_핑크
 		PRINTFORMW 「이즈나를 소중히 해줬기에 지금까지 안해주신건가요?」
 		PRINTFORMW 「주군께서 그렇게 생각해주신다면 이즈나는 기뻐요!」
@@ -83,7 +83,7 @@ IF ARG == 2
 			PRINTFORMW 「캐앵... 이건 주군꼐 사랑을 받아서 기쁜 기쁨의 눈물과 거절했었던 죄송함의 눈물이에요...」
 			PRINTFORMW
 			RESETCOLOR
-			PRINTFORMW %조사처리(ANAME(MASTER),"은")% 이즈나가 진정될 떄 까지 이즈나를 안고있었다
+			CALL ASK_MULTI("이즈나를 껴안는다")
 			PRINTFORMW
 			SETCOLOR 칼라_핑크
 			PRINTFORMW 「...네 진정 됐어요 주군... 그럼 지금부터 연인이라는거네요 주군? 에헤헤... 앞으로도 잘 부탁해요 주군? 닌닌♥」
@@ -114,7 +114,7 @@ IF ARG == 2
 			PRINTFORMW 「캐앵... 이건 주군꼐 사랑을 받아서 기쁜 기쁨의 눈물일까요...?」
 			PRINTFORMW
 			RESETCOLOR
-			PRINTFORMW %조사처리(ANAME(MASTER),"은")% 이즈나가 진정될 떄 까지 이즈나를 안고있었다
+			CALL ASK_MULTI("이즈나를 껴안는다")
 			PRINTFORMW
 			SETCOLOR 칼라_핑크
 			PRINTFORMW 「...네 진정 됐어요 주군... 그럼 지금부터 연인이라는거네요 주군? 에헤헤... 앞으로도 잘 부탁해요 주군? 닌닌♥」
@@ -206,7 +206,7 @@ IF ARG == 5
 		PRINTFORMW 「이래봬도 이즈나는 닌자라서 미인게에는 자신 있었습니다만」
 		PRINTFORMW 「주군께 사용해도 되는 것 이였나요...?」
 		RESETCOLOR
-		PRINTFORMW %조사처리(ANAME(MASTER),"은")% 이즈나에게 그래도 된다며 말했다
+		CALL ASK_MULTI("내가 괜찮으니 상관없어")
 		SETCOLOR 칼라_핑크
 		PRINTFORMW 「네... 그것이 주군의 명령이라면♥」
 		RESETCOLOR
@@ -225,7 +225,7 @@ IF ARG == 5
 		SETCOLOR 칼라_핑크
 		PRINTFORMW 「이즈나가 상대여도 괜찮은건가요? 」
 		RESETCOLOR
-		PRINTFORMW %조사처리(ANAME(MASTER),"은")% 이즈나에게 그래도 오히려 괜찮다 말했다
+		CALL ASK_MULTI("이즈나이기에 부탁하는거야")
 		SETCOLOR 칼라_핑크
 		PRINTFORMW 「네... 선생님이 그리 말하신다면 어쩔 수 없겠네요」
 		RESETCOLOR
