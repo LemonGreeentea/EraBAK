@@ -3304,7 +3304,7 @@ PRINTFORML ·
 	IF ! ARG:0
 		ARG:0 = DAY
 	ENDIF
-	LOCAL:0 = (ARG:0 + 48) / 48
+	LOCAL:0 = (ARG:0 + 365) / 365
 	RETURNF LOCAL:0
 
 ;============================================================================== 
@@ -3322,14 +3322,40 @@ PRINTFORML ·
 ;============================================================================== 
 ;◆금기가 몇주인지를 돌려준다
 ;============================================================================== 
-@DISPLAY_WEEK(ARG:0)
+@DISPLAY_DAY(ARG:0)
 	#FUNCTION
 	IF ! ARG:0
 		ARG:0 = DAY
 	ENDIF
-	LOCAL:0 = (ARG:0 + 48) % 4
-	SIF LOCAL:0 == 0
-		LOCAL:0 = 4
+	LOCAL:0 = (ARG:0 + 365) % 365
+
+	SELECTCASE LOCAL:0
+		CASE IS <= 31
+			LOCAL:0 -= 0
+		CASE IS <= 59
+			LOCAL:0 -= 31
+		CASE IS <= 90
+			LOCAL:0 -= 59
+		CASE IS <= 120
+			LOCAL:0 -= 90
+		CASE IS <= 151
+			LOCAL:0 -= 120
+		CASE IS <= 181
+			LOCAL:0 -= 151
+		CASE IS <= 212
+			LOCAL:0 -= 181
+		CASE IS <= 243
+			LOCAL:0 -= 212
+		CASE IS <= 273
+			LOCAL:0 -= 273
+		CASE IS <= 304
+			LOCAL:0 -= 304
+		CASE IS <= 334
+			LOCAL:0 -= 334
+		CASE IS <= 365
+			LOCAL:0 -= 365
+	ENDSELECT
+
 	RETURNF LOCAL:0
 
 ;============================================================================== 
@@ -3340,32 +3366,32 @@ PRINTFORML ·
 	IF ! ARG:0
 		ARG:0 = DAY
 	ENDIF
-	LOCAL:0 = (ARG:0 + 48) % 48
+	LOCAL:0 = (ARG:0 + 365) % 365
 
 	SELECTCASE LOCAL:0
-		CASE IS <= 4
+		CASE IS <= 31
 			LOCALS:0 = 1월
-		CASE IS <= 8
+		CASE IS <= 59
 			LOCALS:0 = 2월
-		CASE IS <= 12
+		CASE IS <= 90
 			LOCALS:0 = 3월
-		CASE IS <= 16
+		CASE IS <= 120
 			LOCALS:0 = 4월
-		CASE IS <= 20
+		CASE IS <= 151
 			LOCALS:0 = 5월
-		CASE IS <= 24
+		CASE IS <= 181
 			LOCALS:0 = 6월
-		CASE IS <= 28
+		CASE IS <= 212
 			LOCALS:0 = 7월
-		CASE IS <= 32
+		CASE IS <= 243
 			LOCALS:0 = 8월
-		CASE IS <= 36
+		CASE IS <= 273
 			LOCALS:0 = 9월
-		CASE IS <= 40
+		CASE IS <= 304
 			LOCALS:0 = 10월
-		CASE IS <= 44
+		CASE IS <= 334
 			LOCALS:0 = 11월
-		CASE IS <= 48
+		CASE IS <= 365
 			LOCALS:0 = 12월
 	ENDSELECT
 	RETURNF LOCALS:0

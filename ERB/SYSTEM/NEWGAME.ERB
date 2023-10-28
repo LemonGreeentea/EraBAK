@@ -8,64 +8,16 @@
 #DIM LCOUNT,2
 #DIMS sPrint_Text
 RESETDATA
-[SKIPSTART]
-ALIGNMENT CENTER
-FOR LOCAL , 0 , 50
-	CLEARLINE LINECOUNT
-	SETCOLOR 255 * MIN(LOCAL , 30) / 30 , 255 * MIN(LOCAL , 30) / 30 , 255 * MIN(LOCAL , 30) / 30
-	FOR LCOUNT, 0, 23
-		PRINTBUTTON " " * 80 , "0"
-		PRINTL
-	NEXT
-	PRINTBUTTON " " * 23 + "　본 게임은　픽션으로" + " " * 23 , "0"
-	PRINTL
-	PRINTBUTTON " " * 23 +  "등장 하는 인물이나 집단은　실재의 인물 " + " " * 23 , "0"
-	PRINTL
-	PRINTBUTTON " " * 23 + "및 단체와는　일체의 관련이 없습니다" + " " * 23 , "0"
-	PRINTL
-	FOR LCOUNT, 0, 22
-		PRINTBUTTON " " * 80 , 0
-		PRINTL
-	NEXT
-	;[クリックorEnter待ち]표시
-	STARTA = (GETMILLISECOND()) % 3000
-	STARTA =  255 * ( STARTA > 1500 ? (3000 - STARTA) # (STARTA) ) / 1500
-	SETCOLOR STARTA , STARTA , 0
-	PRINTBUTTON " " * 27 +  "[Click or Hit Return key]" + " " * 27 , "1"
-	PRINTL
-	;ALIGNMENT LEFT
-	RESETCOLOR
-	TINPUTS 100, "-1" , 0
-	SIF RESULTS != "-1"
-		GOTO PRINT_TITLE
-NEXT
-CLEARLINE LINECOUNT
-ALIGNMENT LEFT
-[SKIPEND]
 $PRINT_TITLE
 CALL SINGLE_DRAWLINE
 ALIGNMENT CENTER
 PRINTFORML
-PRINTFORML EraBlueArchiveK
+PRINTFORML EraBlueArchive
 PRINTFORML
 sPrint_Text = <p align='center'>
 sPrint_Text += @"<img src='TITLE' height='2000'>"
 HTML_PRINT sPrint_Text
 PRINTFORML
-[SKIPSTART]
-PRINTFORML 　　　　　　　　　　　　　　　　　　　　　　 ,ll'''''''ll　　,.|''''''''ll　　　　　　　　　　　　　　
-PRINTFORML 　　　　　　　　　　　　　　　　　　　　　　,ll'　　　lll,l'''　　　,,,l''　　　　　　　　　　　　　　
-PRINTFORML 　　　　　　　　　　　　　　　　　　　　 　,ll'　　　ll''　　　,,,ll''　　　　　　　　　　　　　　　　
-PRINTFORML 　　　　　　　　　　　　　　　　　　　　　,ll'　　　　　　,,,ll''　　　　　　　　 　　　　　　　　　　
-PRINTFORML 　　　　　　　　　　　　　　　　　　　　　ll　　　　　 ,,ll'''　　　　　　　　　　　　　　　　　　　　
-PRINTFORML 　　　　　　　　　　　　　　　　　　　 　l'　　　　　　ll,　　　　　　　　　　　　　　　　　　　　　　
-PRINTFORML 　　　　　　　　　　　　　　　　　　　　l'　　　, 　　　ll　　　　　　　　　　　　　　　　　　　　　　
-PRINTFORML 　　　　　　　　　　　　　　　　　　　 ll 　　　lll,　　　ll　　　　　　　　　　　　　　　　　　　　　
-PRINTFORML 　　　　　　　　　　　　　　　　　　　ll 　　　ll' l, 　 　'll　　　　　　　　　　　　　　　　　　　　
-PRINTFORML 　　　　　　　　　　　　　　　　　　 ll　　　 ,l'　　ll　　 　ll　　　　　　　　　　　　　　　　　　　
-PRINTFORML 　　　　　　　　　　　　　　　　　 ,ll　　 　,l' 　　'll　　　　ll　　　　　　　　　　　　　　　　　　
-PRINTFORML 　　　　　　　　　　　　　　　　　 '''''''''　　　　　　'''''''''''　　　　　　　　　　　　　　　　　 
-[SKIPEND]
 PRINTFORML 
 PRINTFORML 
 PRINTFORML 
